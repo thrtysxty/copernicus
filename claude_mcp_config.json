@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@context7/server"
+      ],
+      "env": {
+        "API_KEY": "ctx7sk-106a5c9d-3d02-4322-b60d-91cf9ec8e4e6"
+      },
+      "description": "Smart file summarization and context management"
+    },
+    "lynkr": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@lynkr/server"
+      ],
+      "description": "Fetch Etsy Open API specs and Pytest documentation",
+      "disabled": false
+    }
+  },
+  "lifecycle_hooks": {
+    "PreToolUse": "scripts/lifecycle/pre_tool_use.py"
+  }
+}

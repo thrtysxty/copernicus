@@ -1,0 +1,105 @@
+name: high-plains-hipster
+version: 0.0.1
+schema: v1# Continue.dev
+
+#Configuration for High Plains Hipster
+# Unified local-first agentic workflow using named Ollama personas.
+#
+# Usage:
+#   - Select a persona (e.g., Architect, Senior Developer) from the model dropdown.
+#   - Use slash commands (/architect, /product) to load persona system prompts.
+
+# =============================================================================
+# MODEL DEFINITIONS
+# =============================================================================
+# These models now point to the centrally-defined Ollama personas from
+# `scripts/setup_ollama_personas.sh`, aligning with Story #042.
+models:
+  - name: Architect
+    provider: ollama
+    model: architect
+    apiBase: http://localhost:11434
+    roles:
+      - chat
+
+  - name: Senior Developer
+    provider: ollama
+    model: senior-dev
+    apiBase: http://localhost:11434
+
+  - name: Junior Developer
+    provider: ollama
+    model: junior-dev
+    apiBase: http://localhost:11434
+
+  - name: Product Owner
+    provider: ollama
+    model: product-owner
+    apiBase: http://localhost:11434
+
+  - name: CI/CD
+    provider: ollama
+    model: ci-cd
+    apiBase: http://localhost:11434
+
+  - name: Scribe
+    provider: ollama
+    model: scribe
+    apiBase: http://localhost:11434
+
+  - name: Llama 3.1 (Default)
+    provider: ollama
+    model: llama3.1:8b-instruct-q4_0
+    apiBase: http://localhost:11434
+
+# =============================================================================
+# PERSONA PROMPTS (Slash Commands)
+# =============================================================================
+prompts:
+  - uses: /Users/dadmin/Projects/high-plains-hipster/.continue/prompts/architect.md
+  - uses: /Users/dadmin/Projects/high-plains-hipster/.continue/prompts/senior.md
+  - uses: /Users/dadmin/Projects/high-plains-hipster/.continue/prompts/junior.md
+  - uses: /Users/dadmin/Projects/high-plains-hipster/.continue/prompts/product.md
+  - uses: /Users/dadmin/Projects/high-plains-hipster/.continue/prompts/deployer.md
+  - uses: /Users/dadmin/Projects/high-plains-hipster/.continue/prompts/coach.md
+  - uses: /Users/dadmin/Projects/high-plains-hipster/.continue/prompts/scribe.md
+
+# =============================================================================
+# MCP SERVERS (For Tool Commands)
+# =============================================================================
+# These provide /story, /pi_check, /test_webhook, etc. as tools in Agent mode
+mcpServers:
+  - name: highplains-tools
+    type: stdio
+    command: /Users/dadmin/Projects/high-plains-hipster/.venv/bin/python
+    args:
+      - scripts/mcp_server.py
+
+# =============================================================================
+# CONTEXT PROVIDERS
+# =============================================================================
+context:
+  - provider: file
+  - provider: code
+  - provider: terminal
+  - provider: diff
+  - provider: folder
+
+# =============================================================================
+# RULES (System-wide guidelines)
+# =============================================================================
+rules:
+  - Always consider Raspberry Pi 3B+ memory constraints (1GB RAM)
+  - Use generators instead of loading full lists into memory
+  - Follow TDD - write tests before implementation
+  - Keep changes minimal and focused
+  - Document architectural decisions
+
+# =============================================================================
+# DOCUMENTATION SOURCES
+# =============================================================================
+docs:
+  - name: Architecture Reference
+    startUrl: docs/planning/architecture_quick_ref.md
+  - name: Backlog
+    startUrl: BACKLOG.md
