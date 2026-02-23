@@ -317,10 +317,11 @@ As a Developer, I want a dedicated chat panel that communicates directly with Cl
    - `gemini-2.0-pro`
    - Model selector persists to `~/.atlas/preferences.json`
 
-3. **API key configuration** via `Settings > API Keys`:
-   - Reads from environment: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`
-   - Falls back to UI input (stored in OS keychain via `keytar`)
-   - Never stored in plaintext files
+3. **Authentication** is fully delegated to `AuthManager` (Story 085):
+   - Chat Panel calls `AuthManager.getToken(provider)` for every API request
+   - Supports all methods: existing CLI OAuth files, env vars, PKCE browser flow, manual key
+   - No auth logic in Chat Panel itself — it only knows "give me a token"
+   - See Story 085 for the full credential priority ladder and security constraints
 
 4. **Context injection:**
    - `@file path/to/file` attaches file content to the current message
@@ -668,16 +669,40 @@ As a Developer, I want ATLAS to be installable as a native macOS app with a sing
 
 ---
 
+## Amendment: Story 085 — Universal Auth Manager
+
+**Added:** 2026-02-23. See `docs/stories/story_085_atlas_auth_manager.md` for full spec.
+
+Story 079 (Chat Panel) originally assumed API key entry as the sole auth method.
+This is insufficient: Gemini CLI and Jules already store OAuth credentials on disk
+(`~/.gemini/oauth_creds.json`, `~/.config/gcloud/application_default_credentials.json`)
+and users expect the same site-login OAuth redirect UX they have in VSCode.
+
+**Story 085 adds:**
+- `AuthManager` that resolves credentials via a priority ladder:
+  existing CLI credential files → env vars → ATLAS PKCE browser flow → manual key
+- Google token auto-refresh from `~/.gemini/oauth_creds.json` without user interaction
+- Anthropic: `ANTHROPIC_API_KEY` env var → Claude.ai PKCE OAuth flow → manual key entry
+- Bearer token passthrough for any future/custom provider
+- Raw tokens confined to Electron main process; renderer only sees `AuthStatus`
+- `Settings > Authentication` panel showing method and account per provider
+
+Story 085 **blocks** Story 079. Story 084 first-run wizard auth step defers to Story 085.
+
+---
+
 ## Implementation Order & Dependencies
 
 ```
 Story 077 (Foundation)
     │
+    ├── Story 085 (Auth Manager)  ← NEW, blocks 079
+    │       │
+    │       └── Story 079 (Chat Panel)
+    │
     ├── Story 078 (Slash Commands)
     │       │
     │       └── Story 082 (Agent Interop)
-    │
-    ├── Story 079 (Chat Panel)
     │
     ├── Story 080 (CapEx Tracker)
     │
@@ -685,18 +710,19 @@ Story 077 (Foundation)
     │
     └── Story 083 (Telemetry)   ← depends on 081
             │
-            └── Story 084 (Packaging) ← depends on all
+            └── Story 084 (Packaging) ← depends on all, defers auth to 085
 ```
 
 **Recommended delivery sequence for Jules:**
 1. Story 077 (get terminals working — proves the hardest part first)
-2. Story 080 (CapEx — high business value, low complexity)
-3. Story 078 (Slash commands — low complexity, high daily use)
-4. Story 079 (Chat panel — medium complexity)
-5. Story 081 (Status bar — polish, pulls from 079/080)
-6. Story 082 (Interop — medium complexity, high value)
-7. Story 083 (Telemetry — medium complexity)
-8. Story 084 (Packaging — last, after everything works)
+2. Story 085 (Auth Manager — unblocks Chat Panel; no new npm deps needed)
+3. Story 080 (CapEx — high business value, low complexity)
+4. Story 078 (Slash commands — low complexity, high daily use)
+5. Story 079 (Chat panel — now auth-capable via AuthManager)
+6. Story 081 (Status bar — polish, pulls from 079/080)
+7. Story 082 (Interop — medium complexity, high value)
+8. Story 083 (Telemetry — medium complexity)
+9. Story 084 (Packaging — last, after everything works)
 
 ---
 
@@ -705,6 +731,7 @@ Story 077 (Foundation)
 | Story | Title | Estimate | Notes |
 | :--- | :--- | :--- | :--- |
 | 077 | Foundation | L (4-8h) | Hardest story; PTY + Electron scaffold |
+| 085 | Auth Manager | M (2-4h) | File readers + PKCE flow; no new deps |
 | 078 | Slash Commands | M (2-4h) | Registry pattern is clean |
 | 079 | Chat Panel | L (4-8h) | Streaming + context injection |
 | 080 | CapEx Tracker | M (2-4h) | SQLite reuse from HPH schema |
@@ -712,7 +739,7 @@ Story 077 (Foundation)
 | 082 | Agent Interop | M (2-4h) | PTY write + clipboard |
 | 083 | Telemetry Popout | M (2-4h) | PTY parsing regex is the hard part |
 | 084 | Packaging | S (< 2h) | Electron Forge handles most of it |
-| **Total** | | **~25-40h** | Parallelizable after Story 077 |
+| **Total** | | **~27-44h** | Parallelizable after Story 077 |
 
 ---
 
