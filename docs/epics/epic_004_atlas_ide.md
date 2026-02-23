@@ -691,30 +691,53 @@ Story 085 **blocks** Story 079. Story 084 first-run wizard auth step defers to S
 
 ---
 
+## Amendment: Story 086 — Security Boundary Layer
+
+**Added:** 2026-02-23. See `docs/stories/story_086_atlas_security_boundary.md` for full spec.
+
+The original epic did not account for the risk of uncontainerized CLI agents with
+unrestricted access to the host filesystem, network, and environment variables.
+
+**Story 086 adds (process-level, no Docker):**
+- `env-sanitizer.ts` — strips `SSH_AUTH_SOCK`, `AWS_*`, `*_TOKEN`, `*_SECRET`,
+  `*_PASSWORD`, and similar vars from the environment passed to CLI processes
+- Working directory enforcement — CLI processes spawn in workspace root, not `$HOME`
+- `pty-auditor.ts` — logs all PTY I/O to `~/.atlas/logs/pty-{agent}-{date}.log`
+- `pattern-detector.ts` — scans output for 16 named risk patterns (CRITICAL/HIGH/MEDIUM);
+  shows coloured alert banners in the terminal tab header
+- `git-guard.ts` — intercepts ATLAS-injected `git push` commands; requires confirmation
+- `sandbox-manager.ts` — optional OS-level sandbox via `sandbox-exec` (macOS) or
+  `firejail` (Linux); user opt-in per agent in Settings
+
+Story 086 **ships with Story 077** (integrated before first release, not after).
+It is parallel work, not blocked by anything.
+
+---
+
 ## Implementation Order & Dependencies
 
 ```
-Story 077 (Foundation)
+Story 077 (Foundation) ══ Story 086 (Security) ← parallel, ships together
     │
-    ├── Story 085 (Auth Manager)  ← NEW, blocks 079
+    ├── Story 085 (Auth Manager)  ← blocks 079
     │       │
     │       └── Story 079 (Chat Panel)
     │
     ├── Story 078 (Slash Commands)
     │       │
-    │       └── Story 082 (Agent Interop)
+    │       └── Story 082 (Agent Interop) ← 086 git-guard hooks here
     │
     ├── Story 080 (CapEx Tracker)
     │
-    ├── Story 081 (Status Bar)  ← depends on 079, 080
+    ├── Story 081 (Status Bar)  ← depends on 079, 080, 086 (security indicator)
     │
-    └── Story 083 (Telemetry)   ← depends on 081
+    └── Story 083 (Telemetry)   ← depends on 081; shows security alert section
             │
-            └── Story 084 (Packaging) ← depends on all, defers auth to 085
+            └── Story 084 (Packaging) ← depends on all
 ```
 
 **Recommended delivery sequence for Jules:**
-1. Story 077 (get terminals working — proves the hardest part first)
+1. Story 077 + 086 (terminals + security boundary — ship together, parallel work)
 2. Story 085 (Auth Manager — unblocks Chat Panel; no new npm deps needed)
 3. Story 080 (CapEx — high business value, low complexity)
 4. Story 078 (Slash commands — low complexity, high daily use)
