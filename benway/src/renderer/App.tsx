@@ -1,7 +1,67 @@
+import { useEffect } from 'react'
 import { useLayoutStore, StoryboardView } from './store/layout'
+import { StatusBar } from './components/layout/StatusBar'
+
+const ipcRenderer = (window as any).ipcRenderer
 
 function App() {
-  const { activeView, setView, isFlipped, toggleFlip, spotlightPane, setSpotlight } = useLayoutStore()
+  const { 
+    activeView, 
+    setView, 
+    isFlipped, 
+    toggleFlip, 
+    spotlightPane, 
+    setSpotlight, 
+    setTelemetry,
+    activeStoryId
+  } = useLayoutStore()
+
+  // Git Branch Polling
+  useEffect(() => {
+    const pollGit = async () => {
+      try {
+        const branch = await ipcRenderer.invoke('git:branch')
+        if (branch) setTelemetry({ gitBranch: branch })
+      } catch (e) {}
+    }
+    
+    pollGit()
+    const interval = setInterval(pollGit, 30000)
+    return () => clearInterval(interval)
+  }, [setTelemetry])
+
+  // Touch Bar Hardware Sync
+  useEffect(() => {
+    // 1. Listen for View changes from Touch Bar
+    const removeViewListener = ipcRenderer.on('layout:set-view', (_event: any, view: StoryboardView) => {
+      setView(view)
+    })
+
+    // 2. Listen for Flip toggles from Touch Bar
+    const removeFlipListener = ipcRenderer.on('layout:toggle-flip', () => {
+      // For now, toggle sidebar flip as the primary hardware action
+      toggleFlip('sidebar')
+    })
+
+    // 3. Listen for Spotlight toggles
+    const removeSpotListener = ipcRenderer.on('layout:toggle-spotlight', () => {
+      // Toggle spotlight on the editor by default from hardware
+      setSpotlight(spotlightPane ? null : 'editor')
+    })
+
+    return () => {
+      removeViewListener()
+      removeFlipListener()
+      removeSpotListener()
+    }
+  }, [setView, toggleFlip, setSpotlight, spotlightPane])
+
+  // Push Telemetry to Touch Bar
+  useEffect(() => {
+    ipcRenderer.send('telemetry:update-touchbar', {
+      storyId: activeStoryId || 'NONE'
+    })
+  }, [activeStoryId])
 
   return (
     <div className="flex flex-col h-screen w-screen bg-benway-bg text-zinc-300 overflow-hidden font-mono">
@@ -132,19 +192,7 @@ function App() {
 
       </div>
 
-      {/* Status Bar */}
-      <footer className="h-5 w-full bg-benway-bg border-t border-hairline border-benway-steel flex items-center justify-between px-2 text-[10px] text-zinc-600 select-none">
-         <div className="flex items-center gap-4">
-           <span className="text-benway-phosphor/80">branch:main*</span>
-           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-benway-phosphor animate-pulse"></span> secure</span>
-           <span className="text-zinc-500 underline underline-offset-2 italic">STORY_077</span>
-         </div>
-         <div className="flex items-center gap-2">
-           <span className="text-benway-phosphor phosphor-glow">● ONLINE</span>
-           <span>UTF-8</span>
-           <span>TypeScript React</span>
-         </div>
-      </footer>
+      <StatusBar />
     </div>
   )
 }
