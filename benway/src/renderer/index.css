@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --benway-bg: #050505;
+  --benway-phosphor: #4ADE80;
+  --benway-steel: #3F3F46;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--benway-bg);
+  color: #e4e4e7; /* zinc-200 */
+  font-family: 'JetBrains Mono', monospace; /* Assuming font is available or fallback */
+  overflow: hidden; /* Zero-gap tiling usually implies no scrolling on body */
+}
+
+/* Surgical Phosphor Glow */
+.phosphor-glow {
+  text-shadow: 0 0 2px rgba(74, 222, 128, 0.8), 0 0 8px rgba(74, 222, 128, 0.4);
+}
+
+/* Scrollbar styling for a "surgical" feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--benway-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--benway-steel);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--benway-phosphor);
+}

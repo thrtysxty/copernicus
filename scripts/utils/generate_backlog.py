@@ -3,11 +3,11 @@ import re
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-STORIES_DIR = PROJECT_ROOT / "docs" / "dev" / "stories"
+STORIES_DIR = PROJECT_ROOT / "docs" / "stories"
 OUTPUT_FILE = PROJECT_ROOT / "BACKLOG.md"
 
 # Define the sort order for priority
-PRIORITY_ORDER = {"CRITICAL": 0, "High": 1, "Medium": 2, "Low": 3, "N/A": 4}
+PRIORITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "N/A": 4}
 
 
 def parse_story_file(filepath: Path):
@@ -41,14 +41,16 @@ def main():
     """Generates the BACKLOG.md file."""
     stories = []
 
-    # Recursively find all story files to support status subdirectories (Story #031)
+    # Recursively find all story files but exclude archived ones
     for filepath in sorted(STORIES_DIR.rglob("story_*.md")):
+        if "archived" in filepath.parts:
+            continue
         story_data = parse_story_file(filepath)
         if story_data:
             stories.append(story_data)
 
     # Sort stories by priority, then by status
-    stories.sort(key=lambda s: (PRIORITY_ORDER.get(s["priority"], 99), s["status"]))
+    stories.sort(key=lambda s: (PRIORITY_ORDER.get(s["priority"].upper().split()[0], 99), s["status"]))
 
     # Generate Markdown content
     md_content = ["# Project Backlog\n\n"]

@@ -27,7 +27,15 @@ fi
 echo "📖 Reading story from $STORY_PATH..."
 STORY_CONTENT=$(cat "$STORY_PATH")
 
-# 3a. Inject Project Standards (Context Injection)
+# 3a. Inject Persona & Standards (Context Injection)
+PERSONA_CONTEXT=""
+if [ -f "docs/personas/08_jules.md" ]; then
+    echo "🤖 Injecting Jules Persona..."
+    PERSONA_CONTEXT="YOUR PERSONA & ROLE:
+$(cat docs/personas/08_jules.md)
+"
+fi
+
 STANDARDS_CONTEXT=""
 if [ -f "CLAUDE.md" ]; then
     echo "📋 Injecting CLAUDE.md standards..."
@@ -44,20 +52,17 @@ $(cat DESIGN_SYSTEM.md)
 "
 fi
 
-PROMPT="Act as a Senior Software Engineer. Your task is to implement the following User Story.
+PROMPT="${PERSONA_CONTEXT}
 
 ${STANDARDS_CONTEXT}
+
 CONTEXT & REQUIREMENTS:
 $STORY_CONTENT
 
 ADDITIONAL NOTES:
 ${EXTRA_NOTES:-"None"}
 
-Please:
-1. Analyze the requirements.
-2. Plan the implementation.
-3. Write the code and tests.
-4. Verify the tests pass."
+Please follow your persona instructions and the project standards to implement this story. Your implementation is not 'Done' until it is build-verified, tested, and documented per the industrial pipeline."
 
 # 4. Fire and Forget
 echo "🚀 Sending task to Jules..."

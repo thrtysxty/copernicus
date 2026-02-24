@@ -1,6 +1,6 @@
 # CLAUDE.md
-**Project:** High Plains Hipster (Vintage Inventory System)
-**Stack:** Python 3.11/Flask, PostgreSQL 16, React 18/TS, Raspberry Pi 3B+ (Docker)
+**Project:** BENWAY (Formerly High Plains Hipster)
+**Stack:** Python 3.11/Flask, PostgreSQL 16, React 18/TS (Electron), Raspberry Pi 3B+ (Docker)
 **Context:** `docs/planning/architecture_quick_ref.md` for schema/API details.
 **Tooling:** `claude_mcp_config.json` (Context7 + Lynkr)
 **Knowledge Source:** Local Repo (Primary) + Lynkr (External Docs).
@@ -18,7 +18,7 @@ You have access to tools. To use them, output strict XML tags in your response.
 
 ## Common Commands
 ```bash
-make dev             # Start Backend (5001) + Frontend (3000)
+make dev             # Start Backend (5001) + BENWAY (3000)
 make test            # Run test suite
 make deploy          # Push to Pi and restart containers
 make db-deploy       # Deploy database schema to Pi
@@ -91,38 +91,23 @@ Execution order matters due to foreign keys:
 - `src/core/schema.py` - Pydantic schema for inventory item lifecycle
 - `src/agentic/` - Platform infrastructure (Telemetry, Audit, Personas)
 - `database/schema/*.sql` - Table definitions (deploy via `scripts/deploy_database.sh`)
-- `frontend/src/` - React app (api/, components/, pages/, store/)
+- `benway/src/` - BENWAY IDE (Electron/React app) (api/, components/, pages/, store/)
 - `data/seed/card_sets.csv` - 38 card set metadata (source of truth for generation)
 - `data-local/imports/` - Working CSV files for import (gitignored)
 
-### Frontend Structure
+### BENWAY Frontend Structure
 ```
-frontend/
+benway/
+├── electron/         # Main process & preload
 ├── src/
-│   ├── api/          # API client modules (client, auth, inventory, tools, sourcing)
-│   ├── components/   # Reusable UI (common/SourcingModal, layout/Header+Layout)
-│   ├── pages/        # Route pages:
-│   │   ├── Login.tsx          # Authentication
-│   │   ├── Dashboard.tsx      # Stats, charts (Recharts), ROI summary
-│   │   ├── QuickAdd.tsx       # Mobile-first: price check → profit calc → add item
-│   │   ├── Inventory.tsx      # Item list with filters
-│   │   ├── InventoryDetail.tsx # Item detail view
-│   │   └── Sourcing.tsx       # Sourcing events list + modal
-│   ├── store/        # Zustand auth store
-│   └── types/        # TypeScript interfaces (inventory, sourcing, tools)
-├── package.json      # Dependencies (React Query, Zustand, React Hook Form, Recharts)
-└── vite.config.ts    # Vite with API proxy to :5001
+│   ├── renderer/     # React renderer process
+│   │   ├── App.tsx   # Main layout (Zero-Gap Tiling)
+│   │   ├── main.tsx  # Entry point
+│   │   └── index.css # Surgical Phosphor Theme
+│   ├── store/        # Zustand stores (benway, layout)
+├── package.json      # Dependencies (Electron, React, Tailwind)
+└── vite.config.ts    # Vite with Electron plugin
 ```
-
-### Frontend Routes
-| Route | Page | Purpose |
-|-------|------|---------|
-| `/` | Dashboard | Stats, charts, ROI summary, quick actions |
-| `/add` | QuickAdd | Mobile-first item acquisition workflow |
-| `/inventory` | Inventory | Item list with filters and search |
-| `/inventory/:id` | InventoryDetail | Single item view and management |
-| `/sourcing` | Sourcing | Sourcing events list with ROI tracking |
-| `/login` | Login | Authentication |
 
 ### SKU System
 Format: `YY-CC-NNN` (e.g., `24-03-127` = 2024, Crate 3, Item 127)
