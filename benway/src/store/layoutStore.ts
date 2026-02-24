@@ -7,7 +7,7 @@ interface LayoutState {
   toggleTelemetry: () => void
 }
 
-export const useLayoutStore = create<LayoutState>((set) => ({
+export const useBenwayLayoutStore = create<LayoutState>((set) => ({
   sidebarOpen: true,
   telemetryOpen: true,
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),

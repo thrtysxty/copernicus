@@ -34,3 +34,7 @@ atlas/node_modules/
 atlas/dist/
 atlas/out/
 .gemini/
+
+# Databases
+*.db
+*.sqlite3

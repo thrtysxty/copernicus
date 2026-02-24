@@ -1,24 +1,25 @@
 """
-Agent Telemetry
+Agent Telemetry & State Ledger
 
-Lightweight SQLite-backed telemetry for sub-agent tracking.
-Stores agent records and events in agent_telemetry.db at the project root.
+Lightweight SQLite-backed telemetry for sub-agent tracking and shared asset registry.
+Stores agent records, events, and shared assets in benway.db at the project root.
 """
 
 import os
 import sqlite3
 import uuid
+import json
 from datetime import datetime, timezone
 
 
 PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
-DB_PATH = os.path.join(PROJECT_ROOT, "agent_telemetry.db")
+DB_PATH = os.path.join(PROJECT_ROOT, "benway.db")
 
 
 class Telemetry:
-    """SQLite-backed agent telemetry tracker."""
+    """SQLite-backed agent telemetry tracker and state ledger."""
 
     def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
@@ -52,6 +53,19 @@ class Telemetry:
                     data TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (agent_id) REFERENCES agents(id)
+                )
+            """)
+            # Surgical Registry for Shared Assets
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS shared_assets (
+                    id TEXT PRIMARY KEY,
+                    asset_type TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    content TEXT,
+                    metadata TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(asset_type, name)
                 )
             """)
             conn.commit()
@@ -95,8 +109,6 @@ class Telemetry:
 
     def log_event(self, agent_id: str, event_type: str, data: dict | None = None):
         """Log an event for an agent."""
-        import json
-
         event_id = str(uuid.uuid4())
         conn = self._connect()
         try:
@@ -143,6 +155,43 @@ class Telemetry:
             )
             conn.commit()
             return cursor.rowcount
+        finally:
+            conn.close()
+    
+    # --- Surgical Registry (Shared Assets) ---
+
+    def register_asset(
+        self,
+        asset_type: str,
+        name: str,
+        content: str,
+        metadata: dict | None = None
+    ) -> str:
+        """Register a shared asset in the Surgical Registry."""
+        asset_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc).isoformat()
+        conn = self._connect()
+        try:
+            conn.execute(
+                "INSERT OR REPLACE INTO shared_assets (id, asset_type, name, content, metadata, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (asset_id, asset_type, name, content, json.dumps(metadata) if metadata else None, now, now),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return asset_id
+
+    def get_asset(self, asset_type: str, name: str) -> dict | None:
+        """Retrieve an asset by type and name."""
+        conn = self._connect()
+        try:
+            cursor = conn.execute(
+                "SELECT * FROM shared_assets WHERE asset_type = ? AND name = ?",
+                (asset_type, name)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
         finally:
             conn.close()
 

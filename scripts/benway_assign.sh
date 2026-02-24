@@ -1,15 +1,15 @@
 #!/bin/bash
-# atlas_assign.sh
-# Usage: ./scripts/atlas_assign.sh docs/stories/story_xxx.md
+# benway_assign.sh
+# Usage: ./scripts/benway_assign.sh docs/stories/story_xxx.md
 # Reads a local story file and sends its content to Google Jules as a task,
-# specifically using ATLAS.md standards instead of the legacy CLAUDE.md.
+# specifically using BENWAY standards.
 
 STORY_PATH="$1"
 EXTRA_NOTES="$2"
 
 # 1. Validation
 if [ -z "$STORY_PATH" ]; then
-    echo "Usage: ./scripts/atlas_assign.sh <path_to_story_file> [optional_notes]"
+    echo "Usage: ./scripts/benway_assign.sh <path_to_story_file> [optional_notes]"
     exit 1
 fi
 
@@ -28,16 +28,21 @@ fi
 echo "📖 Reading story from $STORY_PATH..."
 STORY_CONTENT=$(cat "$STORY_PATH")
 
-# 3a. Inject ATLAS Standards (Context Injection)
+# 3a. Inject BENWAY Standards (Context Injection)
 STANDARDS_CONTEXT=""
-if [ -f "atlas/ATLAS.md" ]; then
-    echo "📋 Injecting atlas/ATLAS.md standards..."
+if [ -f "benway/BENWAY.md" ]; then
+    echo "📋 Injecting benway/BENWAY.md standards..."
     STANDARDS_CONTEXT="PROJECT STANDARDS & PATTERNS:
-$(cat atlas/ATLAS.md)
+$(cat benway/BENWAY.md)
+"
+elif [ -f "CLAUDE.md" ]; then
+     echo "📋 Injecting CLAUDE.md standards..."
+    STANDARDS_CONTEXT="PROJECT STANDARDS & PATTERNS:
+$(cat CLAUDE.md)
 "
 fi
 
-PROMPT="Act as a Senior Software Engineer specializing in Electron and React. Your task is to implement the following User Story for the ATLAS IDE.
+PROMPT="Act as a Senior Software Engineer specializing in Electron and React. Your task is to implement the following User Story for the BENWAY IDE.
 
 ${STANDARDS_CONTEXT}
 CONTEXT & REQUIREMENTS:
@@ -54,5 +59,5 @@ Please:
 "
 
 # 4. Fire and Forget
-echo "🚀 Sending ATLAS task to Jules..."
+echo "🚀 Sending BENWAY task to Jules..."
 jules new "$PROMPT"
