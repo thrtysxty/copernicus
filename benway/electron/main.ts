@@ -1,10 +1,13 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
+import { spawn } from 'node:child_process'
 import { AuthManager } from './auth-manager'
 import { ModelRegistry } from './models/model-registry'
 import { registerSecurityHandlers } from './security'
 import { SettingsStore } from './settings-store'
 import { createTouchBar } from './touch-bar'
+import { StoriesManager } from './stories'
+import { parseMakefile } from './utils/makefile-parser'
 
 // The built directory structure
 //
@@ -18,6 +21,8 @@ import { createTouchBar } from './touch-bar'
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
 
+// Determine project root (docs/ folder is in parent of benway/)
+const ROOT_PATH = path.resolve(__dirname, '../../')
 
 let win: BrowserWindow | null
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
@@ -26,6 +31,7 @@ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 const authManager = new AuthManager()
 const modelRegistry = new ModelRegistry()
 const settingsStore = new SettingsStore()
+const storiesManager = new StoriesManager(ROOT_PATH)
 // const _ptyAuditor = new PTYAuditor() // Placeholder: Will be used when pty.ts is implemented
 
 function createWindow() {
@@ -41,6 +47,9 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
     },
   })
+
+  // Connect stories manager
+  storiesManager.setWindow(win)
 
   // Initialize Touch Bar Hardware
   createTouchBar(win);
@@ -110,10 +119,48 @@ function registerIpcHandlers() {
     });
   });
 
-  // System Execution Placeholder (To be refined by Jules in Story 091)
+  // Story Handlers
+  ipcMain.handle('stories:list', () => {
+    return storiesManager.listStories()
+  })
+
+  ipcMain.handle('stories:update', (_event, id, status) => {
+    storiesManager.updateStoryStatus(id, status)
+  })
+
+  ipcMain.handle('stories:hydrate', (_event, id) => {
+    console.log(`[SYSTEM] Hydrating story: ${id}`)
+    win?.webContents.send('editor:open', id) 
+  })
+
+  // Makefile Handlers
+  ipcMain.handle('makefile:list', () => {
+    return parseMakefile(ROOT_PATH)
+  })
+
+  ipcMain.handle('makefile:run', (_event, target) => {
+    console.log(`[SYSTEM] Running make target: ${target}`)
+    const child = spawn('make', [target], { cwd: ROOT_PATH, shell: true })
+    
+    child.stdout.on('data', (data) => {
+        win?.webContents.send('terminal:data', data.toString())
+    })
+    
+    child.stderr.on('data', (data) => {
+        win?.webContents.send('terminal:data', data.toString())
+    })
+    
+    child.on('close', (code) => {
+        win?.webContents.send('terminal:data', `\n[Process exited with code ${code}]`)
+    })
+  })
+
+  // System Execution Hardware Bridge
   ipcMain.on('system:make', (_, target: string) => {
-    console.log(`[SYSTEM] Hardware trigger: make ${target}`);
-    // implementation coming in Kanban surgery
+    const child = spawn('make', [target], { cwd: ROOT_PATH, shell: true })
+    child.on('close', (code) => {
+      console.log(`[SYSTEM] make ${target} exited with code ${code}`)
+    })
   });
 }
 

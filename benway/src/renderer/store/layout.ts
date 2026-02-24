@@ -16,6 +16,10 @@ interface LayoutState {
   spotlightPane: PaneId | null
   activeStoryId: string | null
   
+  // Panel Modes
+  leftPanelMode: 'explorer' | 'command-deck'
+  rightPanelMode: 'telemetry' | 'kanban'
+  
   // Telemetry
   workingDir: string
   gitBranch: string
@@ -31,6 +35,8 @@ interface LayoutState {
   setActiveStoryId: (id: string | null) => void
   setTelemetry: (data: Partial<LayoutState>) => void
   updateAgentTelemetry: (agentId: string, data: Partial<AgentTelemetry>) => void
+  toggleLeftPanelMode: () => void
+  toggleRightPanelMode: () => void
 }
 
 export const useLayoutStore = create<LayoutState>((set) => ({
@@ -41,6 +47,9 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   },
   spotlightPane: null,
   activeStoryId: 'STORY_089',
+  
+  leftPanelMode: 'explorer',
+  rightPanelMode: 'telemetry',
 
   workingDir: '~/Projects/agentic-platform',
   gitBranch: 'main',
@@ -73,5 +82,13 @@ export const useLayoutStore = create<LayoutState>((set) => ({
       ...state.agentTelemetry,
       [agentId]: { ...state.agentTelemetry[agentId], ...data }
     }
+  })),
+
+  toggleLeftPanelMode: () => set((state) => ({
+    leftPanelMode: state.leftPanelMode === 'explorer' ? 'command-deck' : 'explorer'
+  })),
+
+  toggleRightPanelMode: () => set((state) => ({
+    rightPanelMode: state.rightPanelMode === 'telemetry' ? 'kanban' : 'telemetry'
   }))
 }))
