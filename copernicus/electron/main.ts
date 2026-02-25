@@ -1,0 +1,394 @@
+import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import path from 'node:path'
+import { spawn, exec } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import log from 'electron-log'
+import { autoUpdater } from 'electron-updater'
+import { AuthManager } from './auth-manager'
+import { ModelRegistry } from './models/model-registry'
+import { registerSecurityHandlers } from './security'
+import { SettingsStore } from './settings-store'
+import { createTouchBar } from './touch-bar'
+import { StoriesManager } from './stories'
+import { parseMakefile } from './utils/makefile-parser'
+import { ptyManager } from './pty-manager'
+import { StateLedger } from './db/state-ledger'
+import { setupCommandHandlers } from './commands/dispatcher'
+import { DevtimeManager } from './devtime-manager'
+import { GithubManager } from './github-manager'
+import './interop/dispatcher' // Initialize Interop Dispatcher
+
+// The built directory structure
+//
+// ├─┬─┬ dist
+// │ │ └── index.html
+// │ │
+// │ ├─┬ dist-electron
+// │ │ ├── main.js
+// │ │ └── preload.js
+// │
+process.env.DIST = path.join(__dirname, '../dist')
+process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
+
+// Initialize Logging
+const COPERNICUS_HOME = path.join(os.homedir(), '.copernicus')
+const LOG_DIR = path.join(COPERNICUS_HOME, 'logs')
+log.transports.file.resolvePathFn = () => path.join(LOG_DIR, 'copernicus.log')
+Object.assign(console, log.functions)
+
+// Determine project root (docs/ folder is in parent of copernicus/)
+const ROOT_PATH = path.resolve(__dirname, '../../')
+
+let win: BrowserWindow | null
+let splashWin: BrowserWindow | null
+let isFirstRun = false;
+
+// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
+const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
+
+const authManager = new AuthManager()
+const githubManager = new GithubManager(authManager)
+const modelRegistry = new ModelRegistry()
+const settingsStore = new SettingsStore()
+const storiesManager = new StoriesManager(ROOT_PATH)
+const stateLedger = new StateLedger()
+new DevtimeManager()
+
+function ensureCopernicusDirectory() {
+  try {
+    if (!fs.existsSync(COPERNICUS_HOME)) {
+      fs.mkdirSync(COPERNICUS_HOME, { recursive: true });
+    }
+    if (!fs.existsSync(LOG_DIR)) {
+      fs.mkdirSync(LOG_DIR, { recursive: true });
+    }
+    const preferencesPath = path.join(COPERNICUS_HOME, 'preferences.json');
+    if (!fs.existsSync(preferencesPath)) {
+      isFirstRun = true;
+    }
+  } catch (error) {
+    console.error('Failed to initialize .copernicus directory:', error);
+  }
+}
+
+function createSplashWindow() {
+  splashWin = new BrowserWindow({
+    width: 600,
+    height: 400,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  })
+  
+  const distPath = process.env.DIST || path.join(__dirname, '../dist');
+  
+  if (VITE_DEV_SERVER_URL) {
+    splashWin.loadURL(`${VITE_DEV_SERVER_URL}?window=splash`)
+  } else {
+    splashWin.loadFile(path.join(distPath, 'index.html'), { query: { 'window': 'splash' } })
+  }
+
+  splashWin.on('closed', () => {
+    splashWin = null
+  })
+}
+
+function createWindow(show = true) {
+  win = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    show,
+    backgroundColor: '#050505', // --copernicus-bg
+    titleBarStyle: 'hiddenInset', // Translucent headers
+    trafficLightPosition: { x: 10, y: 10 },
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  })
+
+  // Connect stories manager
+  storiesManager.setWindow(win)
+
+  // Initialize Touch Bar Hardware
+  createTouchBar(win);
+
+  // Test active push message to Renderer-process.
+  win.webContents.on('did-finish-load', () => {
+    win?.webContents.send('main-process-message', (new Date).toLocaleString())
+  })
+
+  if (isFirstRun) {
+     if (VITE_DEV_SERVER_URL) {
+        win.loadURL(`${VITE_DEV_SERVER_URL}?window=wizard`)
+     } else {
+        const distPath = process.env.DIST || path.join(__dirname, '../dist');
+        win.loadFile(path.join(distPath, 'index.html'), { query: { window: 'wizard' } })
+     }
+  } else {
+    if (VITE_DEV_SERVER_URL) {
+        win.loadURL(VITE_DEV_SERVER_URL)
+    } else {
+        const distPath = process.env.DIST || path.join(__dirname, '../dist');
+        win.loadFile(path.join(distPath, 'index.html'))
+    }
+  }
+}
+
+// Auto-updater
+function setupAutoUpdater() {
+  autoUpdater.logger = log;
+  autoUpdater.checkForUpdatesAndNotify();
+  
+  autoUpdater.on('update-available', () => {
+      dialog.showMessageBox({
+          type: 'info',
+          title: 'Update Available',
+          message: 'A new version of COPERNICUS is available. Downloading now...',
+          buttons: ['OK']
+      })
+  })
+  
+  autoUpdater.on('update-downloaded', () => {
+      dialog.showMessageBox({
+          type: 'info',
+          title: 'Update Ready',
+          message: 'Update downloaded. Restart now to install?',
+          buttons: ['Restart', 'Later']
+      }).then((result) => {
+          if (result.response === 0) {
+              autoUpdater.quitAndInstall()
+          }
+      })
+  })
+}
+
+function registerIpcHandlers() {
+  // Auth Handlers
+  ipcMain.handle('auth:status', () => {
+    return authManager.getAuthStatus();
+  });
+
+  ipcMain.handle('auth:store-api-key', async (_, provider: string, apiKey: string, baseUrl?: string) => {
+    return await authManager.storeApiKey(provider, apiKey, baseUrl);
+  });
+
+  ipcMain.handle('auth:get-api-key', (_, provider: string) => {
+    if (provider === 'openai' || provider === 'openrouter' || provider === 'deepinfra') {
+       const resolved = authManager.resolveOpenAICompatibleKey();
+       return resolved ? resolved.key : null;
+    }
+    return authManager.getApiKey(provider);
+  });
+  
+  ipcMain.handle('auth:resolve-openai-config', () => {
+      return authManager.resolveOpenAICompatibleKey();
+  });
+
+  // Model Handlers
+  ipcMain.handle('models:list', () => {
+    return modelRegistry.getModels();
+  });
+
+  ipcMain.handle('models:active', () => {
+    return modelRegistry.getActiveModel();
+  });
+
+  ipcMain.handle('models:set-active', (_, modelId: string) => {
+    return modelRegistry.setActiveModel(modelId);
+  });
+
+  // Security Handlers
+  registerSecurityHandlers(ipcMain, settingsStore);
+
+  // Git Handlers
+  ipcMain.handle('git:branch', async () => {
+    return new Promise((resolve) => {
+      const { exec } = require('child_process');
+      exec('git rev-parse --abbrev-ref HEAD', (error: any, stdout: string) => {
+        if (error) {
+          resolve('unknown');
+        } else {
+          resolve(stdout.trim());
+        }
+      });
+    });
+  });
+
+  // Story Handlers
+  ipcMain.handle('stories:list', () => {
+    return storiesManager.listStories()
+  })
+
+  ipcMain.handle('stories:update', (_event, id, status) => {
+    storiesManager.updateStoryStatus(id, status)
+  })
+
+  ipcMain.handle('stories:hydrate', (_event, id) => {
+    console.log(`[SYSTEM] Hydrating story: ${id}`)
+    win?.webContents.send('editor:open', id) 
+  })
+
+  // Makefile Handlers
+  ipcMain.handle('makefile:list', () => {
+    return parseMakefile(ROOT_PATH)
+  })
+
+  ipcMain.handle('makefile:run', (_event, target) => {
+    console.log(`[SYSTEM] Running make target: ${target}`)
+    const child = spawn('make', [target], { cwd: ROOT_PATH, shell: true })
+    
+    child.stdout.on('data', (data) => {
+        win?.webContents.send('terminal:data', data.toString())
+    })
+    
+    child.stderr.on('data', (data) => {
+        win?.webContents.send('terminal:data', data.toString())
+    })
+    
+    child.on('close', (code) => {
+        win?.webContents.send('terminal:data', `\n[Process exited with code ${code}]`)
+    })
+  })
+
+  // System Execution Hardware Bridge
+  ipcMain.on('system:make', (_, target: string) => {
+    const child = spawn('make', [target], { cwd: ROOT_PATH, shell: true })
+    child.on('close', (code) => {
+      console.log(`[SYSTEM] make ${target} exited with code ${code}`)
+    })
+  });
+
+  // Touch Bar Telemetry Sync
+  ipcMain.on('layout:update-telemetry', (_event, { storyId, timer }) => {
+    ipcMain.emit('telemetry:update-touchbar', null, { storyId, timer });
+  });
+
+  // --- Terminal IPC ---
+  ipcMain.on('terminal-create', (_event, { id, cols, rows, cwd }) => {
+    if (win) {
+      ptyManager.create(id, cols, rows, cwd || os.homedir(), win);
+    }
+  });
+
+  ipcMain.on('terminal-resize', (_event, { id, cols, rows }) => {
+    ptyManager.resize(id, cols, rows);
+  });
+
+  ipcMain.on('terminal-write', (_event, { id, data }) => {
+    ptyManager.write(id, data);
+  });
+
+  ipcMain.on('terminal-kill', (_event, { id }) => {
+    ptyManager.kill(id);
+  });
+
+  // --- Database IPC (State Ledger) ---
+  ipcMain.handle('db:log-intent', (_, content, status, agentId) => {
+    return stateLedger.logIntent(content, status, agentId);
+  });
+
+  ipcMain.handle('db:get-intents', (_, limit) => {
+    return stateLedger.getRecentIntents(limit);
+  });
+
+  ipcMain.handle('db:log-event', (_, type, content, metadata, agentId) => {
+    return stateLedger.logEvent(type, content, metadata, agentId);
+  });
+
+  ipcMain.handle('db:get-events', (_, limit) => {
+    return stateLedger.getRecentEvents(limit);
+  });
+
+  ipcMain.handle('db:add-memory', (_, content, tags, agentId) => {
+    return stateLedger.addMemory(content, tags, agentId);
+  });
+
+  ipcMain.handle('db:search-memory', (_, query) => {
+    return stateLedger.searchMemory(query);
+  });
+
+  // --- Wizard Handlers ---
+  ipcMain.handle('check-cli-tools', async () => {
+    const tools = ['claude', 'gemini', 'jules'];
+    const results: Record<string, boolean> = {};
+    const cmd = process.platform === 'win32' ? 'where' : 'which';
+    for (const tool of tools) {
+        results[tool] = await new Promise<boolean>((res) => {
+            exec(`${cmd} ${tool}`, (err) => res(!err));
+        });
+    }
+    return results;
+  });
+
+  ipcMain.handle('select-folder', async () => {
+    if (!win) return null;
+    const res = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+    return res.canceled ? null : res.filePaths[0];
+  });
+
+  ipcMain.handle('save-preferences', async (_, preferences) => {
+    try {
+        fs.writeFileSync(path.join(COPERNICUS_HOME, 'preferences.json'), JSON.stringify(preferences, null, 2));
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: String(e) };
+    }
+  });
+
+  ipcMain.handle('restart-app', () => {
+    app.relaunch();
+    app.quit();
+  });
+
+  // --- Slash Commands ---
+  setupCommandHandlers();
+
+  // Splash Ready
+  ipcMain.on('splash-ready', () => {
+    if (win) {
+      win.show();
+      splashWin?.close();
+    }
+  });
+
+  // App Lifecycle
+  ipcMain.handle('app:quit', () => {
+    app.quit();
+  });
+}
+
+// Quit when all windows are closed, except on macOS.
+app.on('window-all-closed', () => {
+  ptyManager.killAll();
+  stateLedger.close();
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow(true)
+  }
+})
+
+app.whenReady().then(() => {
+  ensureCopernicusDirectory();
+  registerIpcHandlers();
+  createSplashWindow();
+  createWindow(false);
+  
+  // Simulate Initialization Sequence
+  setTimeout(() => splashWin?.webContents.send('splash-status', 'LOADING KERNEL...'), 1000);
+  setTimeout(() => splashWin?.webContents.send('splash-status', 'IGNITING AGENTS...'), 2500);
+  setTimeout(() => splashWin?.webContents.send('splash-status', 'ESTABLISHING ORBIT...'), 3500);
+
+  if (app.isPackaged) setupAutoUpdater();
+})

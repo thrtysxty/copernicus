@@ -2,7 +2,7 @@ name: high-plains-hipster
 version: 0.0.1
 schema: v1# Continue.dev
 
-#Configuration for High Plains Hipster
+#Configuration for COPERNICUS IDE
 # Unified local-first agentic workflow using named Ollama personas.
 #
 # Usage:

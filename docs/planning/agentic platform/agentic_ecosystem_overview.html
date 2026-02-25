@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High Plains Hipster Ecosystem</title>
+    <title>COPERNICUS IDE Ecosystem</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Merriweather:wght@700&display=swap');
 
@@ -119,9 +119,9 @@
 </head>
 <body>
 
-    <h1>The World of High Plains Hipster:<br><span style="font-size: 0.6em; color: #666; font-weight: 300;">An Overview of Our Agentic Ecosystem</span></h1>
+    <h1>The World of COPERNICUS IDE:<br><span style="font-size: 0.6em; color: #666; font-weight: 300;">An Overview of Our Agentic Ecosystem</span></h1>
 
-    <p>At its core, our project is built on a simple but powerful philosophy: <strong>harden the process by replacing manual, error-prone steps with deterministic, automated tooling.</strong></p>
+    <p>At its.copernicus, our project is built on a simple but powerful philosophy: <strong>harden the process by replacing manual, error-prone steps with deterministic, automated tooling.</strong></p>
 
     <p>Every time we find ourselves repeating a manual task or fixing a mistake caused by human error (like forgetting to update the backlog or archiving a completed story), we treat it as a bug in our process. We then fix that bug by building a tool—usually a script triggered by a slash command or a <code>make</code> command—that automates the task and makes it reliable.</p>
 
@@ -213,7 +213,7 @@
     </table>
 
     <h2>3. The Application: What We're Building</h2>
-    <p>The agentic workflow exists to build the High Plains Hipster application, a vintage reselling inventory management system.</p>
+    <p>The agentic workflow exists to build the COPERNICUS IDE application, a vintage reselling inventory management system.</p>
     <ul>
         <li><strong>Backend:</strong> A robust <strong>Flask REST API</strong> with over 60 endpoints, providing full CRUD operations for inventory, images, sourcing events, and more. It's secured with JWT for authentication.</li>
         <li><strong>Frontend:</strong> A modern <strong>React and TypeScript</strong> single-page application built with Vite. It features a dashboard with analytics, a mobile-first "Quick Add" workflow for sourcing, and detailed inventory management pages.</li>
@@ -301,7 +301,7 @@
     <h2>5. Critical Analysis: The "Crystal Palace" Problem</h2>
     <p>While the fully deterministic model outlined above is powerful in theory, it has significant weaknesses that must be addressed. The system, in its current design, is a "crystal palace": intricate, beautiful, and easily shattered.</p>
     <h3>A. Brittleness of the File-System-as-Database</h3>
-    <p>The core of our workflow relies on using the file system as a database (e.g., <code>work_queue/</code>, <code>review_queue/</code>, status directories). This is inherently fragile.</p>
+    <p>The.copernicus of our workflow relies on using the file system as a database (e.g., <code>work_queue/</code>, <code>review_queue/</code>, status directories). This is inherently fragile.</p>
     <ul>
         <li><strong>Race Conditions & State Corruption:</strong> A script crashing mid-operation (e.g., moving a file but failing to update the backlog) can leave the system in an inconsistent state.</li>
         <li><strong>No Transactions:</strong> File system operations are not transactional. There is no built-in mechanism for rollback if one step in a multi-step process fails.</li>

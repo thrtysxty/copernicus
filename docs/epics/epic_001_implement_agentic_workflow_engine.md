@@ -42,7 +42,7 @@ This Epic will be broken down into the following phased stories. Story IDs are p
 
 | Story | Description | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| TBD | **Create Workflow Manifest & Engine Core:** Define the `workflow.yaml` structure and build the core `run_transition.py` script that can parse it. | DRAFT | |
+| TBD | **Create Workflow Manifest & Engine Core:** Define the `workflow.yaml` structure and build the.copernicus `run_transition.py` script that can parse it. | DRAFT | |
 | TBD | **Implement Transactional State Database:** Create the SQLite database (`workflow.db`) and the services to manage `work_queue`, `review_queue`, etc. | DRAFT | |
 | TBD | **Implement `idea` and `approve` Transitions:** Build the first two transitions to prove the engine works for story creation and promotion. | DRAFT | |
 | **Story #041** | **Build Workflow Engine MVP:** SQLite-backed state, transactional transitions, basic 3-step workflow execution. | APPROVED | Existing story — covers much of Phase 1 scope |

@@ -17,7 +17,7 @@
         "-y",
         "@lynkr/server"
       ],
-      "description": "Fetch Etsy Open API specs and Pytest documentation",
+      "description": "Fetch External Open API specs and Pytest documentation",
       "disabled": false
     }
   },

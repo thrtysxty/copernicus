@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-High Plains Hipster - Agent TUI (Claude Code Style)
+COPERNICUS IDE - Agent TUI (Claude Code Style)
 A single-stream, chat-based interface for the agentic workflow.
 """
 
@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import difflib
+import datetime
 from pathlib import Path
 
 # Load environment variables early, before any imports that might need them
@@ -28,6 +29,8 @@ from textual.widgets import (
     Collapsible,
     TextArea,
     OptionList,
+    Select,
+    Button,
 )
 from textual.widgets.option_list import Option
 from textual.containers import Vertical, VerticalScroll, Horizontal
@@ -55,6 +58,15 @@ try:
 except ImportError:
     HAS_TELEMETRY = False
     telemetry = None  # type: ignore[assignment]
+
+# Import DevTimeManager gracefully
+try:
+    from devtime_manager import DevTimeManager
+
+    HAS_DEVTIME = True
+except ImportError:
+    HAS_DEVTIME = False
+    DevTimeManager = None  # type: ignore[assignment]
 
 # File size limit for attachments (100KB)
 MAX_FILE_SIZE = 100 * 1024  # 100KB to support larger source files
@@ -401,6 +413,290 @@ class SubagentStatusScreen(ModalScreen):
     """
 
 
+class DevTimeModal(ModalScreen):
+    """Modal to start a development session.
+
+    Test: Should display on startup if no session active
+    Test: Should capture entity, component, phase, story_id
+    Test: Should show capitalizable status live
+    Test: Should handle existing session (crash recovery)
+    """
+
+    CSS = """
+    DevTimeModal {
+        align: center middle;
+        background: $background 80%;
+    }
+    #devtime-container {
+        width: 60;
+        height: auto;
+        background: $surface;
+        border: solid $surface-lighten-1;
+        padding: 1 2;
+    }
+    #devtime-title {
+        text-align: center;
+        background: $primary;
+        color: $text;
+        padding: 1;
+        margin-bottom: 1;
+    }
+    .devtime-row {
+        height: auto;
+        margin-bottom: 1;
+    }
+    .devtime-label {
+        width: 12;
+        padding-top: 1;
+    }
+    #devtime-cap-status {
+        text-align: center;
+        margin: 1 0;
+        padding: 1;
+        border: dashed $text-muted;
+    }
+    #devtime-buttons {
+        align: center middle;
+        height: 3;
+        margin-top: 1;
+    }
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def __init__(self, manager):
+        super().__init__()
+        self.manager = manager
+        self.existing_session = manager.get_context()
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="devtime-container"):
+            if self.existing_session:
+                yield Static("⚠ Session Already Open", id="devtime-title")
+
+                # Format duration
+                start_time = self.existing_session.get("start_time", "")
+                elapsed = "unknown"
+                if start_time:
+                    try:
+                        st = datetime.datetime.fromisoformat(start_time)
+                        diff = datetime.datetime.now() - st
+                        h, r = divmod(diff.seconds, 3600)
+                        m = r // 60
+                        elapsed = f"{h}h {m}m"
+                    except:
+                        pass
+
+                info = f"{self.existing_session.get('financial_category')} · {self.existing_session.get('component')} · {elapsed} elapsed"
+                yield Static(info, classes="devtime-row")
+
+                with Horizontal(id="devtime-buttons"):
+                    yield Button("Continue", variant="primary", id="btn-continue")
+                    yield Button("Close & Start New", variant="error", id="btn-close-new")
+
+            else:
+                yield Static("Dev Session", id="devtime-title")
+
+                with Horizontal(classes="devtime-row"):
+                    yield Label("Type:", classes="devtime-label")
+                    yield Select.from_values(["CAPEX", "OPEX", "NONE"], value="CAPEX", id="sel-financial")
+
+                with Horizontal(classes="devtime-row"):
+                    yield Label("Component:", classes="devtime-label")
+                    # List from requirements
+                    components = [
+                        "platform_core",
+                        "agent_logic",
+                        "ui_shell",
+                        "security_gate",
+                        "telemetry",
+                        "scaffolding",
+                        "deployment",
+                        "other",
+                    ]
+                    yield Select.from_values(
+                        components, value="platform_core", id="sel-component"
+                    )
+
+                with Horizontal(classes="devtime-row"):
+                    yield Label("Phase:", classes="devtime-label")
+                    phases = [
+                        "DEVELOPMENT",
+                        "PRELIMINARY",
+                        "POST_IMPLEMENTATION",
+                    ]
+                    yield Select.from_values(
+                        phases, value="DEVELOPMENT", id="sel-phase"
+                    )
+
+                with Horizontal(classes="devtime-row"):
+                    yield Label("Story ID:", classes="devtime-label")
+                    yield Input(placeholder="story_087", id="inp-story")
+
+                yield Static(
+                    "✅ CAPITALIZABLE (CAPEX · DEVELOPMENT)", id="devtime-cap-status"
+                )
+
+                with Horizontal(id="devtime-buttons"):
+                    yield Button("Start Session", variant="success", id="btn-start")
+                    yield Button("Skip", variant="default", id="btn-skip")
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        self._update_cap_status()
+
+    def _update_cap_status(self) -> None:
+        if self.existing_session:
+            return
+
+        financial = self.query_one("#sel-financial", Select).value
+        phase = self.query_one("#sel-phase", Select).value
+
+        status = self.query_one("#devtime-cap-status", Static)
+        if financial == "CAPEX" and phase == "DEVELOPMENT":
+            status.update("✅ CAPITALIZABLE (CAPEX · DEVELOPMENT)")
+            status.styles.color = "$success"
+        else:
+            status.update("⬜ NOT CAPITALIZABLE")
+            status.styles.color = "$text-muted"
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-skip":
+            self.dismiss(None)
+
+        elif event.button.id == "btn-continue":
+            self.dismiss("continue")
+
+        elif event.button.id == "btn-close-new":
+            # Close existing session first
+            try:
+                self.manager.close_session("Closed to start new session", None)
+            except Exception as e:
+                self.app.notify(f"Error closing session: {e}", severity="error")
+
+            self.dismiss("restart")
+
+        elif event.button.id == "btn-start":
+            financial = self.query_one("#sel-financial", Select).value
+            component = self.query_one("#sel-component", Select).value
+            phase = self.query_one("#sel-phase", Select).value
+            story_id = self.query_one("#inp-story", Input).value
+
+            if not all([financial, component, phase]):
+                self.app.notify("Please fill all fields", severity="error")
+                return
+
+            try:
+                self.manager.open_session(financial, component, phase, story_id)
+                self.dismiss("started")
+            except Exception as e:
+                self.app.notify(f"Error starting session: {e}", severity="error")
+
+
+class DevTimeCloseModal(ModalScreen):
+    """Modal to close a development session.
+
+    Test: Should display on quit if session active
+    Test: Should show duration and recent commits
+    Test: Should capture description and commits
+    """
+
+    CSS = """
+    DevTimeCloseModal {
+        align: center middle;
+        background: $background 80%;
+    }
+    #close-container {
+        width: 70;
+        height: auto;
+        background: $surface;
+        border: solid $surface-lighten-1;
+        padding: 1 2;
+    }
+    #close-title {
+        text-align: center;
+        background: $primary;
+        color: $text;
+        padding: 1;
+        margin-bottom: 1;
+    }
+    .close-row {
+        height: auto;
+        margin-bottom: 1;
+    }
+    #close-commits-list {
+        height: 5;
+        border: solid $surface-lighten-2;
+        background: $surface-darken-1;
+        margin-bottom: 1;
+        padding: 0 1;
+        color: $text-muted;
+    }
+    """
+
+    def __init__(self, manager):
+        super().__init__()
+        self.manager = manager
+        self.duration = manager.get_elapsed_seconds() / 3600.0
+        self.recent_commits = manager.get_recent_commits()
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="close-container"):
+            yield Static("Close Session", id="close-title")
+
+            duration_text = f"{self.duration:.2f}h"
+            yield Static(f"Duration: {duration_text}", classes="close-row")
+
+            yield Label("Recent commits:", classes="close-row")
+            commits_text = (
+                "\n".join(self.recent_commits)
+                if self.recent_commits
+                else "[No recent commits]"
+            )
+            yield Static(commits_text, id="close-commits-list")
+
+            yield Label("Commits (copy/paste from above):", classes="close-row")
+            # Pre-fill with top commit if available?
+            default_commit = (
+                self.recent_commits[0].split(" ", 1)[0] if self.recent_commits else ""
+            )
+            yield Input(
+                value=default_commit, placeholder="e.g. a1b2c3d", id="inp-commits"
+            )
+
+            yield Label("Notes:", classes="close-row")
+            yield Input(placeholder="Work description...", id="inp-notes")
+
+            with Horizontal(classes="close-row"):
+                yield Button("Save & Quit", variant="success", id="btn-save")
+                yield Button(
+                    "Quit Without Saving", variant="error", id="btn-quit-nosave"
+                )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-quit-nosave":
+            try:
+                if self.manager.LOCK_PATH.exists():
+                    self.manager.LOCK_PATH.unlink()
+            except:
+                pass
+            self.dismiss("quit")
+
+        elif event.button.id == "btn-save":
+            commits = self.query_one("#inp-commits", Input).value
+            notes = self.query_one("#inp-notes", Input).value
+
+            if not notes:
+                self.app.notify("Please add notes", severity="error")
+                return
+
+            try:
+                self.manager.close_session(notes, commits)
+                self.dismiss("quit")
+            except Exception as e:
+                self.app.notify(f"Error saving session: {e}", severity="error")
+
+
 class InlineDiffViewer(Static):
     """An inline diff viewer."""
 
@@ -721,6 +1017,12 @@ class StatusBar(Static):
         self.current_task = ""  # Current task description (persona + query preview)
         self.subagent_count = 0  # Number of running subagents
         self.running_agents: list[dict] = []  # Full agent info from telemetry
+        self.session_info = None
+
+    def set_session_info(self, info: str) -> None:
+        """Set the session info text and update display."""
+        self.session_info = info
+        self.update(self.compose_status_text())
 
     def get_git_branch(self) -> str:
         """Fetch current git branch name."""
@@ -751,6 +1053,9 @@ class StatusBar(Static):
         """Compose the status line text - Claude Code style: minimal."""
         branch = self.get_git_branch()
         parts = [branch, self.provider.lower()]
+
+        if self.session_info:
+            parts.append(self.session_info)
 
         # Show working indicator with task details
         if self.is_working:
@@ -1233,8 +1538,13 @@ class AgentTui(App):
         # Test: Stores list of (path, old_content, new_content) tuples for "Accept All" feature
         self.pending_writes_queue: list[tuple[str, str, str]] = []
         # Test: pending_edit should be None initially
-        # Test: Stores (path, old_string, new_string) for surgical edit approval
+        # Test: Stores (path, old_string, new_string) for technical edit approval
         self.pending_edit: tuple[str, str, str] | None = None
+
+        # DevTime Manager
+        self.dev_time_manager = (
+            DevTimeManager() if HAS_DEVTIME and DevTimeManager else None
+        )
 
     def compose(self) -> ComposeResult:
         # Claude Code style: no Header/Footer chrome, just content
@@ -1291,6 +1601,76 @@ class AgentTui(App):
             except Exception:
                 pass
             self.set_interval(2.0, self.refresh_subagent_count)
+
+        # DevTime: Check for active session or start new one
+        if self.dev_time_manager:
+            try:
+                # Always show modal on startup (either to start new or recover existing)
+                self.push_screen(
+                    DevTimeModal(self.dev_time_manager), self.on_devtime_modal_result
+                )
+
+                # Set interval for session duration refresh (60s)
+                self.set_interval(60.0, self.refresh_session_elapsed)
+            except Exception as e:
+                self.notify(f"DevTime error: {e}", severity="error")
+
+    def on_devtime_modal_result(self, result: str | None) -> None:
+        """Handle result from DevTimeModal."""
+        if result == "restart":
+            # Re-open modal
+            self.push_screen(
+                DevTimeModal(self.dev_time_manager), self.on_devtime_modal_result
+            )
+        elif result == "started" or result == "continue":
+            self.refresh_session_elapsed()
+        else:
+            # Skip or dismissed
+            if self.status_bar:
+                self.status_bar.set_session_info("[dim]no session[/dim]")
+
+    def refresh_session_elapsed(self) -> None:
+        """Refresh the session elapsed time in status bar."""
+        if not self.dev_time_manager or not self.status_bar:
+            return
+
+        if not self.dev_time_manager.is_active():
+            return
+
+        context = self.dev_time_manager.get_context()
+        if not context:
+            return
+
+        elapsed = self.dev_time_manager.get_elapsed_seconds()
+        h, r = divmod(int(elapsed), 3600)
+        m = r // 60
+
+        time_str = f"{h}h {m}m" if h > 0 else f"{m}m"
+
+        entity = context.get("entity", "?")
+        component = context.get("component", "?")
+        phase = context.get("phase", "")
+
+        # Capitalizable check
+        is_cap = entity == "CORE" and phase == "APPLICATION_DEVELOPMENT"
+        icon = "✅" if is_cap else "⬜"
+
+        status_text = f"{entity}/{component} · {time_str} {icon}"
+        self.status_bar.set_session_info(status_text)
+
+    def action_quit(self) -> None:
+        """Quit the application, checking for active dev session."""
+        if self.dev_time_manager and self.dev_time_manager.is_active():
+            self.push_screen(
+                DevTimeCloseModal(self.dev_time_manager), self.on_close_modal_result
+            )
+        else:
+            self.exit()
+
+    def on_close_modal_result(self, result: str | None) -> None:
+        """Handle result from DevTimeCloseModal."""
+        if result == "quit":
+            self.exit()
 
     def refresh_subagent_count(self) -> None:
         """Refresh the subagent count and details from telemetry."""
@@ -1667,7 +2047,7 @@ class AgentTui(App):
         """Handle tool execution UI updates.
 
         Test: Should intercept write_file events and show diff screen
-        Test: Should intercept edit_file events and show surgical edit diff
+        Test: Should intercept edit_file events and show technical edit diff
         Test: Should read existing file content if it exists
         Test: Should handle new files (no existing content)
         Test: Should only write/edit file if diff is accepted
@@ -1690,7 +2070,7 @@ class AgentTui(App):
                 self.current_tool_msg = ToolExecution(event_type, str(data))
                 self.current_agent_msg.mount(self.current_tool_msg)
         elif event_type == "edit_file":
-            # edit_file is for surgical edits to existing files
+            # edit_file is for technical edits to existing files
             if isinstance(data, dict) and all(
                 k in data for k in ("path", "old_string", "new_string")
             ):
@@ -1915,7 +2295,7 @@ class AgentTui(App):
         self.scroll_to_bottom()
 
     def _show_edit_diff(self, file_path: str, old_string: str, new_string: str) -> None:
-        """Show an inline diff for a surgical edit and apply if accepted."""
+        """Show an inline diff for a technical edit and apply if accepted."""
         self.pending_edit = (file_path, old_string, new_string)
 
         self.current_tool_msg = ToolExecution("edit_file", file_path)
@@ -1943,7 +2323,7 @@ class AgentTui(App):
         # Tool widget was already created in _show_edit_diff, just update result
 
         if accepted is True:
-            # Apply the surgical edit (bypass console confirmation)
+            # Apply the technical edit (bypass console confirmation)
             result = self.bridge.tool_executor.edit_file(
                 file_path, old_string, new_string, confirm=False
             )

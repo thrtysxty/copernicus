@@ -44,7 +44,7 @@ def get_error_template():
     # Fallback template
     return """# Error #[ID]: [Short Descriptive Name]
 **Date:** [Date]
-**Project/Context:** High Plains Hipster
+**Project/Context:** COPERNICUS IDE
 ..."""
 
 
@@ -52,7 +52,7 @@ def get_success_template():
     """Provides a template for success logs."""
     return """# Success #[ID]: [Short Descriptive Name]
 **Date:** [Date]
-**Project/Context:** High Plains Hipster
+**Project/Context:** COPERNICUS IDE
 
 ## What Went Well
 [Describe the successful outcome.]

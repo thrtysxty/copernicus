@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COPERNICUS // CORE_BOOT_MOCKUP</title>
+    <style>
+        :root {
+            /* Saturated Genesis Green */
+            --phosphor: #00FF66; 
+            --phosphor-glow: #4ADE80;
+            --bg: #020205; /* Deep space blue-black */
+            --steel: #3F3F46;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: #111; /* Off-state */
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 1500px;
+        }
+
+        /* 
+           Sega Genesis Style Neon Ignite: click......click...click..on 
+        */
+        @keyframes neon-ignite {
+            0% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            
+            /* CLICK 1 */
+            20% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            21% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 25px var(--phosphor); opacity: 1; }
+            22% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            
+            /* CLICK 2 */
+            45% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            46% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 25px var(--phosphor); opacity: 1; }
+            47% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            
+            /* CLICK 3 */
+            65% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            66% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 25px var(--phosphor); opacity: 1; }
+            67% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            
+            /* ON */
+            80% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
+            85% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 20px var(--phosphor), 0 0 40px var(--phosphor); opacity: 1; }
+            100% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 15px var(--phosphor); opacity: 1; }
+        }
+
+        .splash-container {
+            animation: neon-ignite 4.5s step-end forwards;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 3D Orbital Engine */
+        .system-viewport {
+            position: relative;
+            width: 700px;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+            transform: rotateX(70deg) rotateY(-10deg);
+        }
+
+        /* The Brightest Center Mass - Core Sun */
+        .center-mass {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: var(--phosphor);
+            border-radius: 50%;
+            transform: rotateX(-70deg) rotateY(10deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 16px;
+            z-index: 10;
+            
+            /* Intense Core Glow */
+            box-shadow: 
+                0 0 20px #fff,
+                0 0 40px var(--phosphor),
+                0 0 80px var(--phosphor),
+                inset 0 0 20px rgba(255,255,255,0.8);
+            color: var(--bg);
+            border: 4px solid #fff;
+        }
+
+        .orbit {
+            position: absolute;
+            border: 1px solid rgba(74, 222, 128, 0.1);
+            border-radius: 50%;
+            transform-style: preserve-3d;
+        }
+
+        .orbit-1 { width: 250px; height: 250px; animation: rotate 12s linear infinite; }
+        .orbit-2 { width: 420px; height: 420px; animation: rotate 22s linear infinite reverse; }
+        .orbit-3 { width: 580px; height: 580px; animation: rotate 40s linear infinite; }
+
+        @keyframes rotate {
+            from { transform: rotateZ(0deg); }
+            to { transform: rotateZ(360deg); }
+        }
+
+        /* Rounded Planetary Orbs with Rim-Lighting */
+        .planet {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background-color: var(--phosphor);
+            border-radius: 50%;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%) rotateX(-70deg) rotateY(10deg);
+            
+            /* Planet Glow */
+            box-shadow: 
+                0 0 15px var(--phosphor),
+                0 0 30px var(--phosphor),
+                inset -4px -4px 10px rgba(0,0,0,0.5), /* Shadow side */
+                inset 4px 4px 10px rgba(255,255,255,0.6); /* Highlight side */
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--bg);
+        }
+
+        .status-feed {
+            margin-top: 40px;
+            width: 500px;
+            border-top: 2px solid #111;
+            padding-top: 25px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .log-line {
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .log-line span { color: #fff; text-shadow: 0 0 5px #fff; }
+
+        /* Chunky 16-bit Scanlines */
+        .scanline {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg, 
+                rgba(255, 0, 0, 0.06), 
+                rgba(0, 255, 0, 0.02), 
+                rgba(0, 0, 255, 0.06)
+            );
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Subtle "Screen Bloom" for center mass */
+        .bloom {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(74, 222, 128, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanline"></div>
+
+    <div class="splash-container">
+        <div class="system-viewport">
+            <div class="bloom"></div>
+            
+            <!-- Central Platform Core -->
+            <div class="center-mass">
+                CORE
+            </div>
+
+            <!-- Orbit 1 (Architect) -->
+            <div class="orbit orbit-1">
+                <div class="planet">A</div>
+            </div>
+
+            <!-- Orbit 2 (Senior Dev) -->
+            <div class="orbit orbit-2">
+                <div class="planet" style="width: 24px; height: 24px; top: -12px;">S</div>
+            </div>
+
+            <!-- Orbit 3 (Sentinel) -->
+            <div class="orbit orbit-3">
+                <div class="planet" style="width: 40px; height: 40px; top: -20px;">!</div>
+            </div>
+        </div>
+
+        <div class="status-feed">
+            <div class="log-line">INITIALIZING_CORE... [ <span>READY</span> ]</div>
+            <div class="log-line">UPLINK_ESTABLISHED... [ <span>READY</span> ]</div>
+            <div class="log-line" style="color: #fff; opacity: 1;">COPERNICUS_ENVIRONMENT_ACTIVE</div>
+        </div>
+    </div>
+
+    <div style="position: absolute; bottom: 20px; right: 20px; font-size: 10px; opacity: 0.2; color: #fff; letter-spacing: 2px;">
+        16_BIT // CORE_OS_V0.1.0
+    </div>
+
+</body>
+</html>

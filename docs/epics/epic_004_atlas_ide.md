@@ -1,4 +1,4 @@
-# Epic 004: ATLAS IDE — Industrial Agentic OS
+# Epic 004: COPERNICUS IDE — Industrial Agentic OS
 
 **Status:** APPROVED FOR IMPLEMENTATION
 **Priority:** CRITICAL
@@ -11,9 +11,9 @@
 
 ## Executive Summary
 
-ATLAS is an "Industrial-Grade" Agentic Operating System purpose-built for deterministic, multi-agent software development. It moves beyond "Chat-with-Code" to a **State-First** architecture where a persistent SQLite Ledger serves as the universal memory for all agents, subagents, and tools. 
+COPERNICUS is an "Industrial-Grade" Agentic Operating System purpose-built for deterministic, multi-agent software development. It moves beyond "Chat-with-Code" to a **State-First** architecture where a persistent SQLite Ledger serves as the universal memory for all agents, subagents, and tools. 
 
-ATLAS utilizes an adaptive, flippable UI that manages cognitive load through "Spotlight" (Center Stage) views and an "Industrial Kanban" that enforces a rigid 6-column validation pipeline (Blueprint → Engine Room → Test Bench → QA → Documenting → Done).
+COPERNICUS utilizes an adaptive, flippable UI that manages cognitive load through "Spotlight" (Center Stage) views and an "Industrial Kanban" that enforces a rigid 6-column validation pipeline (Blueprint → Engine Room → Test Bench → QA → Documenting → Done).
 
 ---
 
@@ -21,7 +21,7 @@ ATLAS utilizes an adaptive, flippable UI that manages cognitive load through "Sp
 
 ### State-First Memory (The Ledger)
 
-The core of ATLAS is the **State Ledger (Story 041)**. Unlike standard IDEs that rely on ephemeral model context, ATLAS persists every intent, PTY I/O, tool call, and agent "thought" in a structured SQLite database. This allows for **Hot-Swappable Models** (OpenRouter, Anthropic, Google) to be swapped mid-session without losing context.
+The.copernicus of COPERNICUS is the **State Ledger (Story 041)**. Unlike standard IDEs that rely on ephemeral model context, COPERNICUS persists every intent, PTY I/O, tool call, and agent "thought" in a structured SQLite database. This allows for **Hot-Swappable Models** (OpenRouter, Anthropic, Google) to be swapped mid-session without losing context.
 
 ### The Industrial Workflow
 
@@ -29,7 +29,7 @@ We implement a "Measure Twice, Cut Once" factory model. No code is written witho
 
 ### Space-Saving Adaptive UI
 
-To manage the complexity of three agent PTYs, a UI Canvas, a Kanban, and a Chat panel, ATLAS uses **Flippable Panels (Story 093)**. Each pane has a "Backside" for utility functions (e.g., Navigator flips to Command Deck) and a "Center Stage" button for focused work.
+To manage the complexity of three agent PTYs, a UI Canvas, a Kanban, and a Chat panel, COPERNICUS uses **Flippable Panels (Story 093)**. Each pane has a "Backside" for utility functions (e.g., Navigator flips to Command Deck) and a "Center Stage" button for focused work.
 
 ### Technology Stack (Updated)
 

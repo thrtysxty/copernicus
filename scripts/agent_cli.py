@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unified Agent CLI - BENWAY
+Unified Agent CLI - COPERNICUS
 
 A single entry point for the agentic workflow that supports multiple backends:
 - Ollama (Local, Default)

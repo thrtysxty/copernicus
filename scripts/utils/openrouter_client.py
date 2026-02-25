@@ -33,7 +33,7 @@ class OpenRouterClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/high-plains-hipster",
-            "X-Title": "High Plains Hipster Agent",
+            "X-Title": "COPERNICUS IDE Agent",
         }
 
         payload = {

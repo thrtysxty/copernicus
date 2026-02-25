@@ -1,37 +1,41 @@
 .PHONY: help dev test test-e2e backlog deploy db-deploy db-migrate clean
 
+# Infrastructure Config
+CORE_SERVER_IP ?= 192.168.1.18  # Dell R210ii
+PI_BASELINE_IP ?= 192.168.1.19  # Performance Baseline (Pi 3B+)
+
 help:
-	@echo "BENWAY IDE - Development Commands"
+	@echo "COPERNICUS IDE - Development Commands"
 	@echo ""
 	@echo "Usage: make <command> [ARG=value]"
 	@echo ""
 	@echo "Core Workflow:"
-	@echo "  dev          - Start development server (backend + benway)"
+	@echo "  dev          - Start development server (backend + copernicus)"
 	@echo "  test         - Run backend pytest suite"
 	@echo "  test-e2e     - Run frontend Playwright E2E test suite"
-	@echo "  deploy       - Deploy to Raspberry Pi"
+	@echo "  deploy       - Deploy to Dell R210ii Core"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  backlog      - Generate the master backlog document"
 	@echo "make import-data TYPE=<type> - Import CSV data (sets, checklists, inventory, all)"
-	@echo "make db-deploy - Deploy database schema"
-	@echo "make db-migrate - Run pending database migrations on Pi"
+	@echo "make db-deploy - Deploy database schema to Core"
+	@echo "make db-migrate - Run pending database migrations on Core"
 	@echo "  clean        - Clean build artifacts"
 
 dev:
-	(trap 'kill 0' SIGINT; source .venv/bin/activate && python backend/app.py & cd benway && npm run dev)
+	(trap 'kill 0' SIGINT; source .venv/bin/activate && python backend/app.py & cd copernicus && npm run dev)
 
 dev-backend:
 	source .venv/bin/activate && python backend/app.py
 
 dev-frontend:
-	cd benway && npm run dev
+	cd copernicus && npm run dev
 
 test:
 	source .venv/bin/activate && pytest tests/ -v
 
 test-e2e:
-	cd benway && npx playwright test
+	cd copernicus && npx playwright test
 
 backlog:
 	source .venv/bin/activate && python scripts/utils/generate_backlog.py
@@ -41,14 +45,14 @@ import-data:
 
 deploy:
 	git push origin main
-	ssh pi@192.168.1.18 'cd ~/projects/high-plains-hipster && git pull && docker compose -f docker/docker-compose.yml restart'
+	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/high-plains-hipster && git pull && docker compose -f docker/docker-compose.yml restart'
 
 db-deploy:
-	ssh pi@192.168.1.18 'cd ~/projects/high-plains-hipster && ./scripts/deployment/deploy_database.sh'
+	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/high-plains-hipster && ./scripts/deployment/deploy_database.sh'
 
 db-migrate:
-	@echo "Running database migration on Pi..."
-	ssh pi@192.168.1.18 'cd ~/projects/high-plains-hipster && source .venv/bin/activate && python scripts/migrations/backfill_card_inventory.py --execute'
+	@echo "Running database migration on Core Server..."
+	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/high-plains-hipster && source .venv/bin/activate && python scripts/migrations/backfill_card_inventory.py --execute'
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true # nosec

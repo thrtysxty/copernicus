@@ -23,16 +23,16 @@ out/
 
 # Logs
 *.log
-atlas_debug.log*
+copernicus_debug.log*
 
 # IDEs
 .vscode/
 .idea/
 
 # Project specific
-atlas/node_modules/
-atlas/dist/
-atlas/out/
+copernicus/node_modules/
+copernicus/dist/
+copernicus/out/
 .gemini/
 
 # Databases

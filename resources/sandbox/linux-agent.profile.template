@@ -1,4 +1,4 @@
-# firejail profile for ATLAS agent
+# firejail profile for COPERNICUS agent
 noblacklist WORKSPACE_ROOT
 whitelist WORKSPACE_ROOT
 whitelist ${HOME}/.claude

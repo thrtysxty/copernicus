@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BENWAY - MCP Server for Continue.dev
+COPERNICUS - MCP Server for Continue.dev
 
 Provides utility tools for the agentic workflow:
 - story: Scaffold a new user story file

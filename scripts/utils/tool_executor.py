@@ -61,7 +61,7 @@ class ToolExecutor:
         return "Action cancelled by user."
 
     def edit_file(self, rel_path, old_string, new_string, confirm=True):
-        """Perform a surgical edit on an existing file.
+        """Perform a technical edit on an existing file.
 
         Args:
             rel_path: Path relative to repo root

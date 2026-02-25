@@ -1,6 +1,6 @@
-# The World of High Plains Hipster: An Overview of Our Agentic Ecosystem
+# The World of COPERNICUS IDE: An Overview of Our Agentic Ecosystem
 
-At its core, our project is built on a simple but powerful philosophy: **harden the process by replacing manual, error-prone steps with deterministic, automated tooling.**
+At its.copernicus, our project is built on a simple but powerful philosophy: **harden the process by replacing manual, error-prone steps with deterministic, automated tooling.**
 
 Every time we find ourselves repeating a manual task or fixing a mistake caused by human error (like forgetting to update the backlog or archiving a completed story), we treat it as a bug in our process. We then fix that bug by building a tool—usually a script triggered by a slash command or a `make` command—that automates the task and makes it reliable.
 
@@ -45,7 +45,7 @@ This is the heart of our hardened process. These tools are not optional; they ar
 
 ## 3. The Application: What We're Building
 
-The agentic workflow exists to build the High Plains Hipster application, a vintage reselling inventory management system.
+The agentic workflow exists to build the COPERNICUS IDE application, a vintage reselling inventory management system.
 
 *   **Backend:** A robust **Flask REST API** with over 60 endpoints, providing full CRUD operations for inventory, images, sourcing events, and more. It's secured with JWT for authentication.
 *   **Frontend:** A modern **React and TypeScript** single-page application built with Vite. It features a dashboard with analytics, a mobile-first "Quick Add" workflow for sourcing, and detailed inventory management pages.
@@ -225,7 +225,7 @@ transitions:
     post_hook: scripts/workflow/run_backlog.sh
 ```
 
-By focusing on building a resilient and extensible framework rather than a rigid process, we can mitigate the risks and create something truly powerful. This framework is the core of the platform extraction (Story #030).
+By focusing on building a resilient and extensible framework rather than a rigid process, we can mitigate the risks and create something truly powerful. This framework is the.copernicus of the platform extraction (Story #030).
 
 ---
 
@@ -245,7 +245,7 @@ To that end, the recent creation of the "PLATFORM" column in our HTML status rep
 3. Incrementalism: The approach of using a file-based queue (Story #070) as an interim step toward the full database engine (Story #041) is a good example of pragmatic, incremental progress. We should continue to favor this approach.
 
 ### Strategic Pivot: The Two-Product Strategy
-**Update (2026-02-03):** We have recognized that the "Agentic Platform" is not just infrastructure, but a potential standalone product. We will proceed with extracting the core workflow engine into its own repository (Story #030).
+**Update (2026-02-03):** We have recognized that the "Agentic Platform" is not just infrastructure, but a potential standalone product. We will proceed with extracting the.copernicus workflow engine into its own repository (Story #030).
 *   **Benefit:** This decouples the lifecycle of the Platform from the App.
-*   **Role:** High Plains Hipster will serve as the "Customer Zero" implementation to validate the Platform.
-*   **Architecture:** The Platform will be designed as a "Hidden Framework." The core logic (CLI, SQLite, Hooks) will be packaged as a binary/library, exposing only configuration files (`workflow.yaml`, `personas/`) to the end user.
+*   **Role:** COPERNICUS IDE will serve as the "Customer Zero" implementation to validate the Platform.
+*   **Architecture:** The Platform will be designed as a "Hidden Framework." The.copernicus logic (CLI, SQLite, Hooks) will be packaged as a binary/library, exposing only configuration files (`workflow.yaml`, `personas/`) to the end user.

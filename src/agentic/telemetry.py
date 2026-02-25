@@ -2,7 +2,7 @@
 Agent Telemetry & State Ledger
 
 Lightweight SQLite-backed telemetry for sub-agent tracking and shared asset registry.
-Stores agent records, events, and shared assets in benway.db at the project root.
+Stores agent records, events, and shared assets in copernicus.db at the project root.
 """
 
 import os
@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
-DB_PATH = os.path.join(PROJECT_ROOT, "benway.db")
+DB_PATH = os.path.join(PROJECT_ROOT, "copernicus.db")
 
 
 class Telemetry:
@@ -55,7 +55,7 @@ class Telemetry:
                     FOREIGN KEY (agent_id) REFERENCES agents(id)
                 )
             """)
-            # Surgical Registry for Shared Assets
+            # Shared Registry for Shared Assets
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS shared_assets (
                     id TEXT PRIMARY KEY,
@@ -158,7 +158,7 @@ class Telemetry:
         finally:
             conn.close()
     
-    # --- Surgical Registry (Shared Assets) ---
+    # --- Shared Registry (Shared Assets) ---
 
     def register_asset(
         self,
@@ -167,7 +167,7 @@ class Telemetry:
         content: str,
         metadata: dict | None = None
     ) -> str:
-        """Register a shared asset in the Surgical Registry."""
+        """Register a shared asset in the Shared Registry."""
         asset_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
         conn = self._connect()

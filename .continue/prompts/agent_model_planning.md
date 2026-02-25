@@ -46,7 +46,7 @@ Task: Validation Loop. Sanity checks Architect's schema against PRD.
 
 Senior Dev (qwen2.5-coder:7b)
 
-Input: Schema ➡️ Output: Detailed Task List & core logic modules.
+Input: Schema ➡️ Output: Detailed Task List &.copernicus logic modules.
 
 Junior Devs (qwen2.5-coder:1.5b)
 
@@ -68,7 +68,7 @@ Product Owner (llama3.2:1b)
 
 Task: Final Summary Report & Handoff to User.
 
-📦 Specialized Tool: Etsy Sourcing Automation
+📦 Specialized Tool: Agentic Task Automation
 The platform includes a dedicated "Sourcing-to-Listing" pipeline for vintage goods (figurines, prints, teapots).
 
 Vision Logic: llama3.2-vision:11b (Server) looks for maker marks and hallmarks.
@@ -91,12 +91,12 @@ Memory Management: Sequential loading is enforced by the platform controller to 
 **Reviewed:** 2026-01-27
 **Status:** APPROVED IN PRINCIPLE
 
-**Finding:** This document presents a compelling and ambitious vision for our agentic workflow. The hybrid hardware strategy is cost-effective and pragmatic, and the sequential handoff loop provides a clear, structured process that mimics a high-functioning software team. The focus on a concrete, high-value outcome like the "Etsy Sourcing Automation" tool is exactly right.
+**Finding:** This document presents a compelling and ambitious vision for our agentic workflow. The hybrid hardware strategy is cost-effective and pragmatic, and the sequential handoff loop provides a clear, structured process that mimics a high-functioning software team. The focus on a concrete, high-value outcome like the "Agentic Task Automation" tool is exactly right.
 
 However, from a product perspective, I have two primary concerns:
 
 1.  **Complexity & Risk:** The 8-step handoff loop is intricate. While deterministic in theory, it introduces numerous potential points of failure. A failure at any step could derail the entire process. We must prioritize resilience and the ability to recover from errors.
-2.  **Platform vs. Product:** This plan focuses heavily on building the "factory" (the agentic platform). We must ensure this does not overshadow the goal of building the "car" (the High Plains Hipster application and its features). The "platform controller" mentioned seems like a significant project in itself.
+2.  **Platform vs. Product:** This plan focuses heavily on building the "platform" (the agentic platform). We must ensure this does not overshadow the goal of building the "car" (the COPERNICUS IDE application and its features). The "platform controller" mentioned seems like a significant project in itself.
 
 **Recommendation:**
 I approve this plan in principle, but with the recommendation that we approach it iteratively. Let's define an MVP for this workflow. Perhaps a 3-step loop (e.g., Architect -> Senior Dev -> Review) to prove the concept and build the foundational "platform controller." Once that is stable, we can incrementally add more steps and personas.
@@ -111,7 +111,7 @@ Let's prioritize delivering user-facing value while we build this powerful autom
 **Status:** APPROVED IN PRINCIPLE (with critical architectural alignment and implementation strategy adjustments)
 
 **Overall Assessment:**
-The `docs/agent_model_planning.md` document presents a compelling and well-reasoned vision for our agentic workflow, aligning strongly with our project's core philosophy: "**harden the process by replacing manual, error-prone steps with deterministic, automated tooling.**" The hybrid hardware strategy is pragmatic, and the concept of a sequential handoff loop is powerful.
+The `docs/agent_model_planning.md` document presents a compelling and well-reasoned vision for our agentic workflow, aligning strongly with our project's.copernicus philosophy: "**harden the process by replacing manual, error-prone steps with deterministic, automated tooling.**" The hybrid hardware strategy is pragmatic, and the concept of a sequential handoff loop is powerful.
 
 However, a critical architectural drift has been identified, and the implementation strategy for the proposed complex workflow needs to be carefully re-prioritized given our current tooling and known limitations.
 
@@ -129,7 +129,7 @@ However, a critical architectural drift has been identified, and the implementat
 
 This is the most immediate and pressing concern.
 
-*   **The Plan (`agent_model_planning.md`):** Explicitly assigns *local, Ollama-supported models* (`qwen2.5-coder`, `deepseek-r1`, `qwen3`) to *all* core agent personas (Product Owner, Architect, Senior Dev, Junior Dev, Scribe).
+*   **The Plan (`agent_model_planning.md`):** Explicitly assigns *local, Ollama-supported models* (`qwen2.5-coder`, `deepseek-r1`, `qwen3`) to *all*.copernicus agent personas (Product Owner, Architect, Senior Dev, Junior Dev, Scribe).
 *   **The Reality (Your Feedback & `claude-code-handoff.md`):** You are currently experiencing "Claude session limits" and the `claude-code-handoff.md` document explicitly details a historical "Context Transfer" from "Web UI Planning Sessions" *to* "Claude Code Development Environment," mentioning "AI research integration (Claude API)" as future development.
 
 **Architectural Finding:** There is a **critical misalignment** between our approved architectural plan for agent models and the current operational setup. The `agent_model_planning.md` is the *desired state*, but the system is currently configured to use external Claude models for roles intended for local Ollama instances. This directly contradicts our "zero operational costs" and "local privacy" principles and is the root cause of your production downtime.
@@ -161,7 +161,7 @@ The `agent_model_planning.md` proposes an 8-step sequential handoff loop. While 
 
 *   **Story #030 (Agentic Project Boilerplate):** This story, currently `BLOCKED` but `CRITICAL`, is essential for standardizing our agentic setup. The `agent_model_planning.md` provides the blueprint for what this boilerplate should contain (model assignments, hardware strategy).
 *   **Story #024 (Project Bootstrap Templates):** This `ON HOLD` story could be re-evaluated to help scaffold the workflow engine's configuration files (e.g., `workflow.yaml`).
-*   **Etsy Sourcing Automation:** This concrete feature is an excellent target for the agentic platform. Once the core workflow engine is stable, automating this pipeline will demonstrate significant value.
+*   **Agentic Task Automation:** This concrete feature is an excellent target for the agentic platform. Once the.copernicus workflow engine is stable, automating this pipeline will demonstrate significant value.
 
 ---
 

@@ -7,7 +7,7 @@
 ## Narrative
 **As a** Platform Engineer,
 **I want** to standardize the extracted codebase and provide initialization tooling,
-**So that** new projects can be bootstrapped from this repository without manual refactoring of "High Plains Hipster" artifacts.
+**So that** new projects can be bootstrapped from this repository without manual refactoring of "COPERNICUS IDE" artifacts.
 
 ## Context
 The assets have been migrated from the product monorepo (Epic 002). Now they must be scrubbed of product-specific logic and prepared as a generic template. This includes creating the interactive setup script defined in Story #030.
@@ -20,9 +20,9 @@ The assets have been migrated from the product monorepo (Epic 002). Now they mus
     *   Install pre-commit hooks.
 2.  **Generic Configuration:**
     *   `Makefile` uses variables for project names/paths.
-    *   `CLAUDE.md` is a generic template, not the HPH specific one.
+    *   `CLAUDE.md` is a generic template, not the LEGACY specific one.
     *   `device_audit.py` is configurable via `config/devices/*.yaml`.
-3.  **Clean Slate:** No "High Plains Hipster" specific code (e.g., inventory routes, etsy logic) remains in the core paths.
+3.  **Clean Slate:** No "COPERNICUS IDE" specific code (e.g., inventory routes, external logic) remains in the.copernicus paths.
 4.  **Git Readiness:** The repo is ready for `git init` and initial commit.
 
 ## Task List
