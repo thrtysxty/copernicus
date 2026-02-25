@@ -4,6 +4,8 @@ This file is auto-generated. Run `make backlog` to update.
 
 | ID | Title | Status | Priority |
 |:---|:------|:-------|:---------|
+| #112 | Llm Streaming Service | APPROVED FOR IMPLEMENTATION | CRITICAL |
+| #113 | Filesystem Integration | APPROVED FOR IMPLEMENTATION | CRITICAL |
 | #000 | Agent Logging | COMPLETE | Critical (Foundation) |
 | #030 | Agentic Project Boilerplate | COMPLETE | CRITICAL |
 | #039 | Cli Migration | COMPLETE | CRITICAL |
@@ -19,7 +21,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #091 | Industrial Kanban | COMPLETE | CRITICAL — Defines the Workflow State Machine |
 | #094 | Copernicus Rebranding | COMPLETE | CRITICAL — Establishes the Formidable Identity |
 | #097 | Dell R210Ii Infrastructure Migration | COMPLETE | CRITICAL |
-| #102 | Copernicus Platform Hardening | COMPLETE | CRITICAL |
+| #102 | Copernicus Platform Hardening | IN PROGRESS | CRITICAL |
+| #111 | Ipc Security Hardening | APPROVED FOR IMPLEMENTATION | HIGH |
+| #114 | Slash Commands Agent Launcher | APPROVED FOR IMPLEMENTATION | HIGH |
+| #115 | Context Injection Code Apply | APPROVED FOR IMPLEMENTATION | HIGH |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -29,6 +34,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #096 | Github Dashboard Integration | COMPLETE | HIGH |
 | #098 | Industrial Manual & Operator Onboarding | COMPLETE | HIGH |
 | #050 | Implement Agent Tool Use | DONE | High |
+| #116 | Phosphor System Toast Settings | APPROVED FOR IMPLEMENTATION | MEDIUM |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |

@@ -17,6 +17,7 @@ import { StateLedger } from './db/state-ledger'
 import { setupCommandHandlers } from './commands/dispatcher'
 import { DevtimeManager } from './devtime-manager'
 import { GithubManager } from './github-manager'
+import { llmService } from './llm/service'
 import './interop/dispatcher' // Initialize Interop Dispatcher
 
 // The built directory structure

@@ -12,6 +12,8 @@ const SEND_CHANNELS = new Set([
   'auth:resolve-openai-config',
   // Models
   'models:list', 'models:active', 'models:set-active',
+  // LLM Chat
+  'chat:send',
   // Git
   'git:branch',
   // Stories
@@ -39,6 +41,7 @@ const SEND_CHANNELS = new Set([
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
 const LISTEN_CHANNELS = new Set([
   'main-process-message',
+  'chat:token', 'chat:done', 'chat:error',
   'terminal-incoming', 'terminal-closed', 'terminal:data', 'terminal-blocked',
   'stories:updated',
   'editor:open',

@@ -9,14 +9,16 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
-  tokens?: { in: number; out: number; cost: number }
+  tokens?: number // Representing total output tokens
 }
 
 export const ChatPanel: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [model, _setModel] = useState('claude-3-5-sonnet')
+  const [model, _setModel] = useState('claude-3-5-sonnet-20240620')
   const [context, setContext] = useState<string[]>([])
+  const [isStreaming, setIsStreaming] = useState(false)
+  const streamingIdRef = useRef<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -25,8 +27,68 @@ export const ChatPanel: React.FC = () => {
     }
   }, [messages])
 
+  useEffect(() => {
+    const removeToken = ipcRenderer.on(
+      'chat:token',
+      ({ sessionId, token }: { sessionId: string; token: string }) => {
+        if (sessionId !== streamingIdRef.current) return
+        setMessages(prev => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          if (last?.role === 'assistant') {
+            updated[updated.length - 1] = { ...last, content: last.content + token }
+          }
+          return updated
+        })
+      }
+    )
+
+    const removeDone = ipcRenderer.on(
+      'chat:done',
+      ({ sessionId, outputTokens }: { sessionId: string; outputTokens: number }) => {
+        if (sessionId !== streamingIdRef.current) return
+        setIsStreaming(false)
+        streamingIdRef.current = null
+        setMessages(prev => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          if (last?.role === 'assistant') {
+            updated[updated.length - 1] = { ...last, tokens: outputTokens }
+          }
+          return updated
+        })
+      }
+    )
+
+    const removeError = ipcRenderer.on(
+      'chat:error',
+      ({ sessionId, error }: { sessionId: string; error: string }) => {
+        if (sessionId !== streamingIdRef.current) return
+        setIsStreaming(false)
+        streamingIdRef.current = null
+        setMessages(prev => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          if (last?.role === 'assistant') {
+            updated[updated.length - 1] = {
+              ...last,
+              content: `⚠ Error: ${error}`,
+            }
+          }
+          return updated
+        })
+      }
+    )
+
+    return () => {
+      removeToken()
+      removeDone()
+      removeError()
+    }
+  }, [])
+
   const handleSendMessage = async () => {
-    if (!input.trim() && context.length === 0) return
+    if ((!input.trim() && context.length === 0) || isStreaming) return
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -36,6 +98,7 @@ export const ChatPanel: React.FC = () => {
 
     setMessages(prev => [...prev, userMsg])
     const currentInput = input.trim();
+    const currentEnrichedInput = currentInput; // Placeholder for context attachment logic
     setInput('')
     setContext([])
 
@@ -46,7 +109,7 @@ export const ChatPanel: React.FC = () => {
     }
 
     // Context Injection Handling
-    let enrichedContent = currentInput;
+    let enrichedContent = currentEnrichedInput;
     if (currentInput.includes('@help')) {
         try {
             const helpContent = await ipcRenderer.invoke('fs:read-file', 'docs/help/USER_GUIDE.md');
@@ -56,8 +119,30 @@ export const ChatPanel: React.FC = () => {
         }
     }
 
-    // Placeholder for LLM streaming integration (waiting for llm.ts service)
-    console.log(`[CHAT] Sending to ${model} with context:`, context, enrichedContent)
+    // Resolves AC 4: Real LLM Integration
+    const sessionId = `chat-${Date.now()}`
+    streamingIdRef.current = sessionId
+    setIsStreaming(true)
+
+    // Add placeholder assistant message
+    setMessages(prev => [...prev, {
+      id: `msg-${Date.now()}`,
+      role: 'assistant',
+      content: '',
+    }])
+
+    // Prepare history for API
+    const history = messages.map(m => ({ role: m.role, content: m.content }))
+
+    ipcRenderer.invoke('chat:send', {
+      sessionId,
+      messages: [...history, { role: 'user', content: enrichedContent }],
+      model,
+    }).catch((err: any) => {
+      console.error('[ChatPanel] chat:send failed:', err)
+      setIsStreaming(false)
+      streamingIdRef.current = null
+    })
   }
 
   return (
@@ -100,17 +185,19 @@ export const ChatPanel: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-            placeholder="Type strategic intent... (@file to attach context)"
-            className="w-full bg-transparent border-none focus:ring-0 text-xs text-zinc-300 resize-none min-h-[40px] max-h-[200px]"
+            placeholder={isStreaming ? "Streaming in progress..." : "Type strategic intent... (@file to attach context)"}
+            disabled={isStreaming}
+            className="w-full bg-transparent border-none focus:ring-0 text-xs text-zinc-300 resize-none min-h-[40px] max-h-[200px] disabled:opacity-50"
           />
           <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
             <div className="flex gap-2 text-zinc-500">
-              <button className="hover:text-copernicus-phosphor transition-colors" title="Attach File (@)"><Paperclip size={12} /></button>
-              <button className="hover:text-copernicus-phosphor transition-colors" title="Attach Story (#)"><FileText size={12} /></button>
+              <button className="hover:text-copernicus-phosphor transition-colors" title="Attach File (@)" disabled={isStreaming}><Paperclip size={12} /></button>
+              <button className="hover:text-copernicus-phosphor transition-colors" title="Attach Story (#)" disabled={isStreaming}><FileText size={12} /></button>
             </div>
             <button 
               onClick={handleSendMessage}
-              className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors"
+              disabled={isStreaming}
+              className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Send size={14} />
             </button>
