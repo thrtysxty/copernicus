@@ -1,13 +1,13 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'node:path'
-import { spawn, exec } from 'node:child_process'
+import { spawn, execFile } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
 import { AuthManager } from './auth-manager'
 import { ModelRegistry } from './models/model-registry'
-import { registerSecurityHandlers } from './security'
+import { registerSecurityHandlers, initializeSecurityManager, GitGuardDecision, GitPushRequest } from './security'
 import { SettingsStore } from './settings-store'
 import { createTouchBar } from './touch-bar'
 import { StoriesManager } from './stories'
@@ -55,6 +55,26 @@ const storiesManager = new StoriesManager(ROOT_PATH)
 const stateLedger = new StateLedger()
 new DevtimeManager()
 
+// Initialize Security Manager with IPC bridge for UI confirmation
+initializeSecurityManager({
+  requestConfirmation: async (request: GitPushRequest): Promise<GitGuardDecision> => {
+    if (!win) return 'BLOCK';
+    
+    // Send request to renderer to show modal
+    win.webContents.send('security:git-push-request', request);
+    
+    // Wait for response via one-time IPC handler
+    return new Promise((resolve) => {
+      ipcMain.once(`security:git-push-response:${request.command}`, (_event, decision: GitGuardDecision) => {
+        resolve(decision);
+      });
+      
+      // Safety timeout
+      setTimeout(() => resolve('BLOCK'), 60000);
+    });
+  }
+});
+
 function ensureCopernicusDirectory() {
   try {
     if (!fs.existsSync(COPERNICUS_HOME)) {
@@ -82,6 +102,9 @@ function createSplashWindow() {
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
   })
   
@@ -106,10 +129,13 @@ function createWindow(show = true) {
     backgroundColor: '#050505', // --copernicus-bg
     titleBarStyle: 'hiddenInset', // Translucent headers
     trafficLightPosition: { x: 10, y: 10 },
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
+    vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
+    visualEffectState: process.platform === 'darwin' ? 'active' : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
   })
 
@@ -210,8 +236,8 @@ function registerIpcHandlers() {
   // Git Handlers
   ipcMain.handle('git:branch', async () => {
     return new Promise((resolve) => {
-      const { exec } = require('child_process');
-      exec('git rev-parse --abbrev-ref HEAD', (error: any, stdout: string) => {
+      // Resolves C-5: Use execFile for safe command execution
+      execFile('git', ['rev-parse', '--abbrev-ref', 'HEAD'], (error: any, stdout: string) => {
         if (error) {
           resolve('unknown');
         } else {
@@ -227,10 +253,18 @@ function registerIpcHandlers() {
   })
 
   ipcMain.handle('stories:update', (_event, id, status) => {
+    if (!/^story_\d+$/.test(id)) {
+        console.error(`[SECURITY] Blocked malicious story ID: ${id}`);
+        return;
+    }
     storiesManager.updateStoryStatus(id, status)
   })
 
   ipcMain.handle('stories:hydrate', (_event, id) => {
+    if (!/^story_\d+$/.test(id)) {
+        console.error(`[SECURITY] Blocked malicious story ID: ${id}`);
+        return;
+    }
     console.log(`[SYSTEM] Hydrating story: ${id}`)
     win?.webContents.send('editor:open', id) 
   })
@@ -241,8 +275,15 @@ function registerIpcHandlers() {
   })
 
   ipcMain.handle('makefile:run', (_event, target) => {
+    const ALLOWED_TARGETS = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy'];
+    if (!ALLOWED_TARGETS.includes(target)) {
+        console.error(`[SECURITY] Blocked unauthorized make target: ${target}`);
+        return;
+    }
+
     console.log(`[SYSTEM] Running make target: ${target}`)
-    const child = spawn('make', [target], { cwd: ROOT_PATH, shell: true })
+    // Resolves C-5: Remove shell: true, use explicit arg list
+    const child = spawn('make', [target], { cwd: ROOT_PATH })
     
     child.stdout.on('data', (data) => {
         win?.webContents.send('terminal:data', data.toString())
@@ -259,7 +300,11 @@ function registerIpcHandlers() {
 
   // System Execution Hardware Bridge
   ipcMain.on('system:make', (_, target: string) => {
-    const child = spawn('make', [target], { cwd: ROOT_PATH, shell: true })
+    const ALLOWED_TARGETS = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy'];
+    if (!ALLOWED_TARGETS.includes(target)) return;
+
+    // Resolves C-5: Remove shell: true, use explicit arg list
+    const child = spawn('make', [target], { cwd: ROOT_PATH })
     child.on('close', (code) => {
       console.log(`[SYSTEM] make ${target} exited with code ${code}`)
     })
@@ -273,7 +318,16 @@ function registerIpcHandlers() {
   // --- Terminal IPC ---
   ipcMain.on('terminal-create', (_event, { id, cols, rows, cwd }) => {
     if (win) {
-      ptyManager.create(id, cols, rows, cwd || os.homedir(), win);
+      // Resolves AC 3: Validate CWD
+      const resolvedCwd = path.resolve(cwd || os.homedir());
+      const isSafe = resolvedCwd.startsWith(ROOT_PATH) || resolvedCwd.startsWith(os.homedir());
+      
+      if (!isSafe) {
+          console.error(`[SECURITY] Blocked terminal creation in unauthorized path: ${resolvedCwd}`);
+          return;
+      }
+
+      ptyManager.create(id, cols, rows, resolvedCwd, win);
     }
   });
 
@@ -321,7 +375,8 @@ function registerIpcHandlers() {
     const cmd = process.platform === 'win32' ? 'where' : 'which';
     for (const tool of tools) {
         results[tool] = await new Promise<boolean>((res) => {
-            exec(`${cmd} ${tool}`, (err) => res(!err));
+            // Resolves C-5: Use execFile for safe tool checking
+            execFile(cmd, [tool], (err) => res(!err));
         });
     }
     return results;

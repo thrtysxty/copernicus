@@ -1,17 +1,26 @@
 import { ipcMain, clipboard } from 'electron';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
+import { ptyManager } from '../pty-manager';
+import { stateLedger } from '../db/state-ledger';
 
 export function setupCommandHandlers() {
+  // Resolves AC 4: Wire terminal:write
   ipcMain.on('terminal:write', (_event, { terminalId, text }) => {
-    console.log(`[PTY:${terminalId}] Writing: "${text}"`);
+    ptyManager.write(terminalId, text);
   });
 
-  ipcMain.on('command:forward', (_event, { target, _args: _ }) => {
-    const lastResponse = "Mocked last response from previous agent (Plan Step 4)."; 
-    clipboard.writeText(lastResponse);
-    console.log(`[Clipboard] Copied: "${lastResponse}"`);
-    console.log(`[PTY:${target}] Writing (forwarded): "${lastResponse}"`);
+  ipcMain.on('command:forward', (event, { agentId, targetAgentId }) => {
+    console.log(`[SYSTEM] Forwarding context from ${agentId} to ${targetAgentId}`);
+    
+    // Resolves AC 4: Remove hardcoded mock, read from ledger
+    const recentEvents = stateLedger.getRecentEvents(5);
+    const lastOutput = recentEvents.find(e => e.event_type === 'TERMINAL_OUTPUT')?.content || 'No recent terminal output found.';
+    
+    event.sender.send('agent:message', {
+        role: 'user',
+        content: `CONTEXT_FORWARD [from=${agentId}]: ${lastOutput}`
+    });
   });
 
   ipcMain.on('command:audit', (event) => {

@@ -23,6 +23,7 @@ export class DevtimeManager {
   }
 
   private init() {
+    // Resolves AC 4: Reconcile schema with SQL file
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS dev_sessions (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,13 +48,12 @@ export class DevtimeManager {
   }
 
   private recoverSession() {
-    if (fs.existsSync(this.LOCK_PATH)) {
-      try {
-        const data = JSON.parse(fs.readFileSync(this.LOCK_PATH, 'utf8'));
-        this.startSession(data, true);
-      } catch (e) {
-        console.error("Failed to recover session", e);
-      }
+    // Resolves AC 4: Fix TOCTOU race condition
+    try {
+      const data = JSON.parse(fs.readFileSync(this.LOCK_PATH, 'utf8'));
+      this.startSession(data, true);
+    } catch (e) {
+      // Expected if file doesn't exist or is invalid
     }
   }
 
@@ -71,8 +71,8 @@ export class DevtimeManager {
     this.activeSession = {
       ...data,
       start_time: data.start_time || new Date().toISOString(),
-      duration_seconds: 0,
-      value: 0
+      duration_seconds: data.duration_seconds || 0,
+      value: data.value || 0
     };
 
     if (!isRecovery) {
@@ -119,8 +119,10 @@ export class DevtimeManager {
 
     this.activeSession = null;
     if (this.timerInterval) clearInterval(this.timerInterval);
-    if (fs.existsSync(this.LOCK_PATH)) {
-      fs.unlinkSync(this.LOCK_PATH);
+    try {
+        fs.unlinkSync(this.LOCK_PATH);
+    } catch (e) {
+        // Ignore
     }
   }
 

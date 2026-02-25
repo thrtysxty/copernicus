@@ -37,8 +37,15 @@ export class GitGuard {
    * 
    * @returns true if allowed, false if blocked.
    */
-  public async check(agentId: string, command: string): Promise<boolean> {
-    // Basic check: is it a git push?
+  public async check(agent_id: string, command: string): Promise<boolean> {
+    // 1. Critical Hard Block: Destructive or ID-spoofing commands
+    const blockRegex = /\bgit\s+(push\s+.*(--force|-f)|remote\s+add|config\s+.*user)\b/;
+    if (blockRegex.test(command)) {
+      console.warn(`[SECURITY] Hard block on destructive git command: ${command}`);
+      return false;
+    }
+
+    // 2. Interactive Block: basic git push
     if (!/\bgit\s+push\b/.test(command)) {
       return true;
     }

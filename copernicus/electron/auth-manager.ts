@@ -2,6 +2,7 @@ import { app, safeStorage } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import yaml from 'js-yaml';
 
 export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'deepinfra' | string;
 
@@ -121,10 +122,19 @@ export class AuthManager {
     if (provider === 'github') {
         const ghConfigPath = path.join(os.homedir(), '.config', 'gh', 'hosts.yml');
         if (fs.existsSync(ghConfigPath)) {
-            // Note: Simplistic parse for demo, ideally use a YAML parser
-            const content = fs.readFileSync(ghConfigPath, 'utf-8');
-            const match = content.match(/oauth_token:\s+(\S+)/);
-            if (match) return match[1];
+            try {
+                // Resolves AC 4: Use js-yaml for reliable parsing
+                const content = fs.readFileSync(ghConfigPath, 'utf-8');
+                const parsed = yaml.load(content) as any;
+                // gh hosts.yml usually has a structure like:
+                // github.com:
+                //   user: name
+                //   oauth_token: token
+                const host = Object.keys(parsed)[0];
+                return parsed[host]?.oauth_token || null;
+            } catch (e) {
+                console.error('Failed to parse gh hosts.yml:', e);
+            }
         }
     }
     return null;

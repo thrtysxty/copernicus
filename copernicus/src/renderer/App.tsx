@@ -73,14 +73,18 @@ function App() {
     }
 
     // Check session status on start
-    ipcRenderer.invoke('devtime:status').then((res: any) => {
-        if (!res.session) {
-            setCapexType('start')
-            setIsCapexOpen(true)
-        } else {
-            setActiveSession(res.session)
-        }
-    })
+    ipcRenderer.invoke('devtime:status')
+        .then((res: any) => {
+            if (!res.session) {
+                setCapexType('start')
+                setIsCapexOpen(true)
+            } else {
+                setActiveSession(res.session)
+            }
+        })
+        .catch((err: any) => {
+            console.error('Failed to fetch devtime status:', err)
+        })
   }, [])
 
   // Timer simulation

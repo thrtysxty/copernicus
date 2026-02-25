@@ -3,6 +3,7 @@ export * from './pty-auditor';
 export * from './pattern-detector';
 export * from './git-guard';
 export * from './sandbox-manager';
+export * from './security-manager';
 
 /**
  * Registers IPC handlers for security-related features.

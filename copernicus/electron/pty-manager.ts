@@ -1,11 +1,17 @@
 import * as pty from 'node-pty';
 import os from 'os';
 import { BrowserWindow } from 'electron';
+import { PTYAuditor, securityManager } from './security';
 
 const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
 
 class PTYManager {
   private sessions: Map<string, { id: string, ptyProcess: pty.IPty }> = new Map();
+  private auditor: PTYAuditor;
+
+  constructor() {
+    this.auditor = new PTYAuditor();
+  }
 
   create(id: string, cols: number, rows: number, cwd: string = os.homedir(), window: BrowserWindow) {
     if (this.sessions.has(id)) {
@@ -13,15 +19,28 @@ class PTYManager {
       return;
     }
 
-    const ptyProcess = pty.spawn(shell, [], {
+    // Resolves AC 2: Use SecurityManager to prepare the environment
+    const { env, sandboxPrefix } = securityManager.prepareSecureExecution(id);
+
+    let executable = shell;
+    let args: string[] = [];
+
+    if (sandboxPrefix.length > 0) {
+        executable = sandboxPrefix[0];
+        args = [...sandboxPrefix.slice(1), shell];
+    }
+
+    const ptyProcess = pty.spawn(executable, args, {
       name: 'xterm-256color',
       cols: cols,
       rows: rows,
       cwd: cwd,
-      env: process.env as any
+      env: env as any
     });
 
     ptyProcess.onData((data) => {
+      this.auditor.log(id, 'OUT', data);
+      
       if (window && !window.isDestroyed()) {
         window.webContents.send('terminal-incoming', { id, data });
       }
@@ -53,6 +72,14 @@ class PTYManager {
   write(id: string, data: string) {
     const session = this.sessions.get(id);
     if (session) {
+      // Resolves AC 2: Pass every byte through PatternDetector analysis
+      const analysis = securityManager.analyseData(data);
+      if (analysis.length > 0) {
+          console.warn(`[SECURITY] Potential dangerous pattern detected in PTY write:`, analysis);
+          // For now we log and continue, but could block here if high-risk
+      }
+
+      this.auditor.log(id, 'IN', data);
       session.ptyProcess.write(data);
     } else {
       console.warn(`Write failed: Terminal ${id} not found.`);
@@ -71,6 +98,7 @@ class PTYManager {
     for (const id of this.sessions.keys()) {
       this.kill(id);
     }
+    this.auditor.close();
   }
 }
 
