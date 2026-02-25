@@ -181,3 +181,5 @@ export class AuthManager {
     return headers;
   }
 }
+
+export const authManager = new AuthManager();

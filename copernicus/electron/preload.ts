@@ -14,6 +14,8 @@ const SEND_CHANNELS = new Set([
   'models:list', 'models:active', 'models:set-active',
   // LLM Chat
   'chat:send',
+  // File System
+  'fs:list-dir', 'fs:open-file', 'fs:save-file', 'app:get-root-path',
   // Git
   'git:branch',
   // Stories
@@ -34,8 +36,6 @@ const SEND_CHANNELS = new Set([
   // Splash / wizard
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
-  // File System (Restricted)
-  'fs:read-file',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */

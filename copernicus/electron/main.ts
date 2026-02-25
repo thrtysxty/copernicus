@@ -18,6 +18,7 @@ import { setupCommandHandlers } from './commands/dispatcher'
 import { DevtimeManager } from './devtime-manager'
 import { GithubManager } from './github-manager'
 import { llmService } from './llm/service'
+import { fsManager } from './fs-manager'
 import './interop/dispatcher' // Initialize Interop Dispatcher
 
 // The built directory structure
@@ -424,6 +425,54 @@ function registerIpcHandlers() {
 
   // --- Slash Commands ---
   setupCommandHandlers();
+
+  // --- LLM Chat ──────────────────────────────────────────────────────────────
+  ipcMain.handle('chat:send', async (_event, payload: unknown) => {
+    if (
+      typeof payload !== 'object' || payload === null ||
+      typeof (payload as any).sessionId !== 'string' ||
+      !Array.isArray((payload as any).messages) ||
+      typeof (payload as any).model !== 'string'
+    ) {
+      throw new Error('[chat:send] Invalid payload')
+    }
+
+    // Fire-and-forget — LLMService resolves provider/key internally
+    // Tokens broadcast via chat:token, chat:done, chat:error IPC events
+    llmService.streamChat(payload as any).catch(err => {
+      console.error('[LLM] streamChat error:', err)
+    })
+
+    return { ok: true }
+  })
+
+  // --- File System ────────────────────────────────────────────────────────────
+  ipcMain.handle('fs:list-dir', (_event, dirPath: unknown) => {
+    if (typeof dirPath !== 'string') throw new Error('[fs:list-dir] dirPath must be a string')
+    return fsManager.listDir(dirPath)
+  })
+
+  ipcMain.handle('fs:open-file', (_event, filePath: unknown) => {
+    if (typeof filePath !== 'string') throw new Error('[fs:open-file] filePath must be a string')
+    return fsManager.readFile(filePath)
+  })
+
+  ipcMain.handle('fs:save-file', (_event, payload: unknown) => {
+    if (
+      typeof payload !== 'object' || payload === null ||
+      typeof (payload as any).filePath !== 'string' ||
+      typeof (payload as any).content !== 'string'
+    ) {
+      throw new Error('[fs:save-file] Invalid payload')
+    }
+    const { filePath, content } = payload as { filePath: string; content: string }
+    fsManager.writeFile(filePath, content)
+    return { ok: true }
+  })
+
+  ipcMain.handle('app:get-root-path', () => {
+    return fsManager.getRootPath()
+  })
 
   // Splash Ready
   ipcMain.on('splash-ready', () => {

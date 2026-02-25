@@ -1,7 +1,17 @@
 import React from 'react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 
-export const MonacoEditor: React.FC = () => {
+interface MonacoEditorProps {
+  value: string
+  language: string
+  onChange?: (value: string | undefined) => void
+}
+
+export const MonacoEditor: React.FC<MonacoEditorProps> = ({
+  value,
+  language,
+  onChange,
+}) => {
   const monaco = useMonaco();
 
   React.useEffect(() => {
@@ -31,8 +41,9 @@ export const MonacoEditor: React.FC = () => {
     <div className="h-full w-full bg-copernicus-bg">
         <Editor
         height="100%"
-        defaultLanguage="typescript"
-        defaultValue="// COPERNICUS IDE :: System Pulse Active"
+        language={language}
+        value={value}
+        onChange={onChange}
         options={{
             minimap: { enabled: false },
             fontSize: 13,

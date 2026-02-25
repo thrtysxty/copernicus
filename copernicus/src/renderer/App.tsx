@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useAgentStore } from '../store/agentStore'
 import { useThemeManager } from './hooks/useThemeManager'
@@ -9,11 +9,12 @@ import { ChatPanel } from './components/chat/ChatPanel'
 import { KanbanBoard } from './components/KanbanBoard'
 import { CommandDeck } from './components/CommandDeck'
 import { MonacoEditor } from './components/Editor/MonacoEditor'
+import { FileTree } from './components/FileTree/FileTree'
 import { HelpPanel } from './components/HelpPanel'
 import { GithubDashboard } from './components/github/GithubDashboard'
 import { CapexModal } from './components/CapexModal'
 import Wizard from './components/wizard/Wizard'
-import { FileText, Terminal, Folder, Github } from 'lucide-react'
+import { Terminal, Folder, Github } from 'lucide-react'
 
 const ipcRenderer = (window as any).ipcRenderer
 
@@ -33,15 +34,6 @@ const PanelHeader = ({ title, onSpotlight, onFlip, isSpotlightActive }: any) => 
          </button>
        )}
      </div>
-  </div>
-)
-
-const FileNavigator = () => (
-  <div className="flex-1 p-2 text-xs font-mono">
-     <div className="text-copernicus-phosphor/80">src/</div>
-     <div className="pl-4 text-zinc-500">renderer/</div>
-     <div className="pl-8 text-zinc-400 flex items-center gap-2"><FileText size={10}/> App.tsx</div>
-     <div className="pl-8 text-zinc-400 flex items-center gap-2"><FileText size={10}/> main.tsx</div>
   </div>
 )
 
@@ -67,6 +59,12 @@ function App() {
   const [capexType, setCapexType] = useState<'start' | 'close'>('start')
   const [activeSession, setActiveSession] = useState<any>(null)
 
+  // Editor and Filesystem state
+  const [rootPath, setRootPath] = useState<string>('')
+  const [editorValue, setEditorValue] = useState<string>('// Select a file to open it here.')
+  const [editorLanguage, setEditorLanguage] = useState<string>('plaintext')
+  const [openFilePath, setOpenFilePath] = useState<string | null>(null)
+
   useEffect(() => {
     // Initialise agent store IPC listeners (agent:input routing)
     useAgentStore.getState().initIPCListeners()
@@ -89,7 +87,40 @@ function App() {
         .catch((err: any) => {
             console.error('Failed to fetch devtime status:', err)
         })
+
+    // Fetch project root path
+    ipcRenderer.invoke('app:get-root-path')
+        .then((rp: string) => setRootPath(rp))
+        .catch((err: any) => console.error('Failed to get root path:', err))
   }, [])
+
+  // Listen for external "editor:open" commands (e.g. from stories hydration)
+  useEffect(() => {
+    const removeEditorOpen = ipcRenderer.on(
+      'editor:open',
+      ({ path: filePath, content }: { path: string; content: string }) => {
+        setEditorValue(content)
+        setOpenFilePath(filePath)
+        const ext = filePath.split('.').pop() ?? ''
+        const langMap: Record<string, string> = {
+          ts: 'typescript', tsx: 'typescript', js: 'javascript',
+          jsx: 'javascript', py: 'python', md: 'markdown',
+          json: 'json', css: 'css', html: 'html', sh: 'shell',
+        }
+        setEditorLanguage(langMap[ext] ?? 'plaintext')
+      }
+    )
+    return () => removeEditorOpen()
+  }, [])
+
+  const handleFileOpen = useCallback(
+    (filePath: string, content: string, language: string) => {
+      setEditorValue(content)
+      setEditorLanguage(language)
+      setOpenFilePath(filePath)
+    },
+    []
+  )
 
   // Timer simulation
   useEffect(() => {
@@ -135,7 +166,7 @@ function App() {
 
   // Touch Bar Hardware Sync
   useEffect(() => {
-    const removeViewListener = ipcRenderer.on('layout:set-view', (_event: any, view: StoryboardView) => {
+    const removeViewListener = ipcRenderer.on('layout:set-view', (view: StoryboardView) => {
       setView(view)
     })
     const removeFlipListener = ipcRenderer.on('layout:toggle-flip', () => {
@@ -215,7 +246,7 @@ function App() {
                                 onFlip={() => toggleFlip('sidebar')}
                                 isSpotlightActive={spotlightPane === 'explorer'}
                             />
-                            <FileNavigator />
+                            <FileTree rootPath={rootPath} onFileOpen={handleFileOpen} />
                         </>
                     ) : (
                         <GithubDashboard />
@@ -241,12 +272,16 @@ function App() {
                 front={
                 <div className="flex flex-col h-full bg-copernicus-bg">
                     <PanelHeader 
-                    title="EDITOR" 
+                    title={openFilePath ? openFilePath.split('/').slice(-2).join('/') : 'EDITOR'}
                     onSpotlight={() => setSpotlight('editor')} 
                     onFlip={() => toggleFlip('center')}
                     isSpotlightActive={spotlightPane === 'editor'}
                     />
-                    <MonacoEditor />
+                    <MonacoEditor 
+                        value={editorValue}
+                        language={editorLanguage}
+                        onChange={(v) => { if (v !== undefined) setEditorValue(v) }}
+                    />
                 </div>
                 }
                 back={

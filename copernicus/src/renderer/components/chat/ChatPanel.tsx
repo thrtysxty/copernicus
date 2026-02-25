@@ -167,7 +167,14 @@ export const ChatPanel: React.FC = () => {
             <div className="text-[10px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
           </div>
         ) : (
-          messages.map(m => <ChatMessage key={m.id} {...m} />)
+          messages.map(m => (
+            <ChatMessage 
+              key={m.id} 
+              role={m.role} 
+              content={m.content} 
+              tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined} 
+            />
+          ))
         )}
       </div>
 
