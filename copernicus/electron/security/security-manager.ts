@@ -32,9 +32,10 @@ export class SecurityManager {
 
   /**
    * Analyses data for dangerous patterns.
+   * Fires alert events and writes to security log via PatternDetector.
    */
-  public analyseData(data: string) {
-    return this.detector.analyse(data);
+  public analyseData(agentId: string, data: string): void {
+    this.detector.detect(agentId, data);
   }
 
   /**

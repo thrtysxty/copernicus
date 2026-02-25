@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { app, ipcMain } from 'electron';
+import { ipcMain } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -93,7 +93,6 @@ export class DevtimeManager {
   private closeSession(data: any) {
     if (!this.activeSession) return;
 
-    const endTime = new Date().toISOString();
     const durationHours = Math.max(0.25, Math.round((this.activeSession.duration_seconds / 3600) * 4) / 4);
     const value = durationHours * 65;
 

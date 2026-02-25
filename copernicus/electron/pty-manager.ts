@@ -69,21 +69,35 @@ class PTYManager {
     }
   }
 
-  write(id: string, data: string) {
+  // Resolves AC 3: Async write with GitGuard check
+  async write(id: string, data: string): Promise<void> {
     const session = this.sessions.get(id);
-    if (session) {
-      // Resolves AC 2: Pass every byte through PatternDetector analysis
-      const analysis = securityManager.analyseData(data);
-      if (analysis.length > 0) {
-          console.warn(`[SECURITY] Potential dangerous pattern detected in PTY write:`, analysis);
-          // For now we log and continue, but could block here if high-risk
-      }
-
-      this.auditor.log(id, 'IN', data);
-      session.ptyProcess.write(data);
-    } else {
+    if (!session) {
       console.warn(`Write failed: Terminal ${id} not found.`);
+      return;
     }
+
+    // Pattern detection — fires alert events and writes to security-alerts.jsonl
+    securityManager.analyseData(id, data);
+
+    // GitGuard check — blocks git push/force/remote-add/config-user until confirmed
+    const GIT_GATE_PATTERN = /\bgit\s+(push|remote\s+add|config\s+.*user)\b/;
+    if (GIT_GATE_PATTERN.test(data)) {
+      const allowed = await securityManager.checkGitCommand(id, data);
+      if (!allowed) {
+        console.warn(`[PTY:${id}] GitGuard BLOCKED: ${data.trim().substring(0, 80)}`);
+        // Inform the renderer that the command was blocked
+        const focusedWin = (await import('electron')).BrowserWindow.getFocusedWindow();
+        focusedWin?.webContents.send('terminal-blocked', {
+          id,
+          reason: 'GitGuard denied this operation',
+        });
+        return;
+      }
+    }
+
+    this.auditor.log(id, 'IN', data);
+    session.ptyProcess.write(data);
   }
 
   kill(id: string) {

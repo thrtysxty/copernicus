@@ -29,7 +29,7 @@ const SplashScreen: React.FC = () => {
       { t: 3000, s: 'on' },
     ];
 
-    let timeouts: NodeJS.Timeout[] = [];
+    const timeouts: NodeJS.Timeout[] = [];
 
     sequence.forEach(({ t, s }) => {
       const timeout = setTimeout(() => {

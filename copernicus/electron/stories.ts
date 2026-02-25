@@ -50,7 +50,7 @@ export class StoriesManager {
     title = title.replace(/^Story \d+:\s*/, '')
     
     const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)$/m)
-    let statusRaw = statusMatch ? statusMatch[1].trim() : 'UNKNOWN'
+    const statusRaw = statusMatch ? statusMatch[1].trim() : 'UNKNOWN'
     
     let status = 'UNKNOWN'
     if (statusRaw.includes('READY')) status = 'READY'

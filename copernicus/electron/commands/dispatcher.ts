@@ -1,4 +1,4 @@
-import { ipcMain, clipboard } from 'electron';
+import { ipcMain } from 'electron';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { ptyManager } from '../pty-manager';
@@ -15,7 +15,7 @@ export function setupCommandHandlers() {
     
     // Resolves AC 4: Remove hardcoded mock, read from ledger
     const recentEvents = stateLedger.getRecentEvents(5);
-    const lastOutput = recentEvents.find(e => e.event_type === 'TERMINAL_OUTPUT')?.content || 'No recent terminal output found.';
+    const lastOutput = recentEvents.find(e => e.type === 'TERMINAL_OUTPUT')?.content || 'No recent terminal output found.';
     
     event.sender.send('agent:message', {
         role: 'user',

@@ -129,3 +129,6 @@ export class StateLedger {
     this.db.close();
   }
 }
+
+// Module-level singleton for use across main-process modules
+export const stateLedger = new StateLedger()

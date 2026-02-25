@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLayoutStore, StoryboardView } from './store/layout'
+import { useAgentStore } from '../store/agentStore'
 import { useThemeManager } from './hooks/useThemeManager'
 import { StatusBar } from './components/layout/StatusBar'
 import { SpotlightContainer } from './components/layout/SpotlightContainer'
@@ -67,6 +68,9 @@ function App() {
   const [activeSession, setActiveSession] = useState<any>(null)
 
   useEffect(() => {
+    // Initialise agent store IPC listeners (agent:input routing)
+    useAgentStore.getState().initIPCListeners()
+
     const params = new URLSearchParams(window.location.search)
     if (params.get('window') === 'wizard') {
       setShowWizard(true)
@@ -121,7 +125,7 @@ function App() {
       try {
         const branch = await ipcRenderer.invoke('git:branch')
         if (branch) setTelemetry({ gitBranch: branch })
-      } catch (e) {}
+      } catch { /* git:branch unavailable during startup */ }
     }
     
     pollGit()

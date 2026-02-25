@@ -13,20 +13,16 @@ export class InteropDispatcher {
   private setupListeners() {
     // Listen for delegation requests from frontend
     // Channel: 'agent:delegate'
-    ipcMain.on('agent:delegate', (event, { target, task }) => {
+    ipcMain.on('agent:delegate', (_event, { target, task }) => {
       console.log(`[Interop] DELEGATE -> ${target}: ${task}`)
-      
-      // Echo back to the renderer as "input" for the target agent
-      event.sender.send('agent:input', { target, content: task })
+      this.broadcast('agent:input', { target, content: task })
     })
 
     // Listen for forwarding requests
     // Channel: 'agent:forward'
-    ipcMain.on('agent:forward', (event, { target, content }) => {
+    ipcMain.on('agent:forward', (_event, { target, content }) => {
       console.log(`[Interop] FORWARD -> ${target} (${content.length} chars)`)
-      
-      // Echo back as input
-      event.sender.send('agent:input', { target, content })
+      this.broadcast('agent:input', { target, content })
     })
     
     // Listen for logging intents

@@ -48,7 +48,7 @@ let isFirstRun = false;
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 const authManager = new AuthManager()
-const githubManager = new GithubManager(authManager)
+new GithubManager(authManager) // constructor registers IPC handlers; instance not retained
 const modelRegistry = new ModelRegistry()
 const settingsStore = new SettingsStore()
 const storiesManager = new StoriesManager(ROOT_PATH)
@@ -101,7 +101,7 @@ function createSplashWindow() {
     alwaysOnTop: true,
     resizable: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'splash-preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -335,8 +335,27 @@ function registerIpcHandlers() {
     ptyManager.resize(id, cols, rows);
   });
 
-  ipcMain.on('terminal-write', (_event, { id, data }) => {
-    ptyManager.write(id, data);
+  ipcMain.on('terminal-write', (_event, payload: unknown) => {
+    if (
+      typeof payload !== 'object' || payload === null ||
+      typeof (payload as any).id !== 'string' ||
+      typeof (payload as any).data !== 'string'
+    ) {
+      console.warn('[SECURITY] terminal-write blocked — invalid payload type');
+      return;
+    }
+
+    const { id, data } = payload as { id: string; data: string };
+
+    // Clamp data length to prevent memory exhaustion
+    if (data.length > 65_536) {
+      console.warn(`[SECURITY] terminal-write blocked — data exceeds 64KB (${data.length} bytes)`);
+      return;
+    }
+
+    ptyManager.write(id, data).catch((err) => {
+      console.error(`[PTY] write() error for terminal ${id}:`, err);
+    });
   });
 
   ipcMain.on('terminal-kill', (_event, { id }) => {
