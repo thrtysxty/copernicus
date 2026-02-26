@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useAgentStore } from '../store/agentStore'
 import { useThemeManager } from './hooks/useThemeManager'
+import { useIpcError } from './hooks/useIpcError'
 import { StatusBar } from './components/layout/StatusBar'
 import { SpotlightContainer } from './components/layout/SpotlightContainer'
 import { FlippablePanel } from './components/layout/FlippablePanel'
@@ -42,6 +43,7 @@ const PanelHeader = ({ title, onSpotlight, onFlip, isSpotlightActive }: any) => 
 
 function App() {
   useThemeManager()
+  const invoke = useIpcError()
   
   const { 
     activeView, 
@@ -83,7 +85,7 @@ function App() {
     }
 
     // Check session status on start
-    ipcRenderer.invoke('devtime:status')
+    invoke<any>('devtime:status')
         .then((res: any) => {
             if (!res.session) {
                 setCapexType('start')
@@ -97,10 +99,10 @@ function App() {
         })
 
     // Fetch project root path
-    ipcRenderer.invoke('app:get-root-path')
+    invoke<string>('app:get-root-path')
         .then((rp: string) => setRootPath(rp))
         .catch((err: any) => console.error('Failed to get root path:', err))
-  }, [])
+  }, [invoke])
 
   // Listen for external "editor:open" commands (e.g. from stories hydration)
   useEffect(() => {
@@ -153,8 +155,8 @@ function App() {
 
   // Sync with Touch Bar (Push to Main)
   useEffect(() => {
-    if ((window as any).ipcRenderer) {
-      (window as any).ipcRenderer.send('layout:update-telemetry', { storyId: activeStoryId, timer: capexTimer })
+    if (ipcRenderer) {
+      ipcRenderer.send('layout:update-telemetry', { storyId: activeStoryId, timer: capexTimer })
     }
   }, [activeStoryId, capexTimer])
 
@@ -162,7 +164,7 @@ function App() {
   useEffect(() => {
     const pollGit = async () => {
       try {
-        const branch = await ipcRenderer.invoke('git:branch')
+        const branch = await invoke<string>('git:branch')
         if (branch) setTelemetry({ gitBranch: branch })
       } catch { /* git:branch unavailable during startup */ }
     }
@@ -170,7 +172,7 @@ function App() {
     pollGit()
     const interval = setInterval(pollGit, 30000)
     return () => clearInterval(interval)
-  }, [setTelemetry])
+  }, [setTelemetry, invoke])
 
   // Hardware and Agent UI listeners
   useEffect(() => {

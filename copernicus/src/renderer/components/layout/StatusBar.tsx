@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLayoutStore } from '../../store/layout'
+
+const ipcRenderer = (window as any).ipcRenderer
 
 export const StatusBar: React.FC = () => {
   const { 
@@ -13,6 +15,8 @@ export const StatusBar: React.FC = () => {
     setTelemetry
   } = useLayoutStore()
 
+  const [hasError, setHasError] = useState(false)
+
   // Session Timer Effect
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,6 +24,15 @@ export const StatusBar: React.FC = () => {
     }, 1000)
     return () => clearInterval(timer)
   }, [capexSessionTime, setTelemetry])
+
+  // Listen for critical errors
+  useEffect(() => {
+    if (!ipcRenderer) return
+    const removeListener = ipcRenderer.on('app:critical-error', () => {
+      setHasError(true)
+    })
+    return () => removeListener()
+  }, [])
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600)
@@ -68,6 +81,17 @@ export const StatusBar: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30">
+        {/* Error Indicator */}
+        {hasError && (
+          <button
+            className="text-red-400 text-[8px] font-mono px-3 animate-pulse flex items-center gap-1 hover:text-red-300 transition-colors"
+            onClick={() => ipcRenderer.invoke('app:open-log')}
+            title="Critical error — click to open log"
+          >
+            ● ERROR
+          </button>
+        )}
+
         {/* CapEx Segment */}
         <div className="flex items-center gap-3 px-3 cursor-pointer hover:text-zinc-400 transition-colors">
           <div className="flex items-center gap-1.5">

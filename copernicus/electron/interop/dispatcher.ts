@@ -14,20 +14,32 @@ export class InteropDispatcher {
     // Listen for delegation requests from frontend
     // Channel: 'agent:delegate'
     ipcMain.on('agent:delegate', (_event, { target, task }) => {
-      console.log(`[Interop] DELEGATE -> ${target}: ${task}`)
-      this.broadcast('agent:input', { target, content: task })
+      try {
+        console.log(`[Interop] DELEGATE -> ${target}: ${task}`)
+        this.broadcast('agent:input', { target, content: task })
+      } catch (err: unknown) {
+        console.error('[dispatcher] Error in agent:delegate:', err)
+      }
     })
 
     // Listen for forwarding requests
     // Channel: 'agent:forward'
     ipcMain.on('agent:forward', (_event, { target, content }) => {
-      console.log(`[Interop] FORWARD -> ${target} (${content.length} chars)`)
-      this.broadcast('agent:input', { target, content })
+      try {
+        console.log(`[Interop] FORWARD -> ${target} (${content.length} chars)`)
+        this.broadcast('agent:input', { target, content })
+      } catch (err: unknown) {
+        console.error('[dispatcher] Error in agent:forward:', err)
+      }
     })
     
     // Listen for logging intents
     ipcMain.on('ledger:log-intent', (_event, logEntry) => {
+      try {
         console.log(`[Ledger] INTENT: ${JSON.stringify(logEntry)}`)
+      } catch (err: unknown) {
+        console.error('[dispatcher] Error in ledger:log-intent:', err)
+      }
     })
   }
 

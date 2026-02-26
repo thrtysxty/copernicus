@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen } from 'lucide-react'
-
-const ipcRenderer = (window as any).ipcRenderer
+import { useIpcError } from '../../hooks/useIpcError'
 
 interface FileNode {
   name: string
@@ -29,21 +28,26 @@ function getLanguage(filePath: string): string {
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onFileOpen }) => {
+  const invoke = useIpcError()
   const [expanded, setExpanded] = useState(false)
   const [children, setChildren] = useState<FileNode[]>([])
 
   const handleClick = async () => {
     if (node.isDir) {
       if (!expanded) {
-        const kids: FileNode[] = await ipcRenderer.invoke('fs:list-dir', node.path)
-        setChildren(kids)
+        const result = await invoke<{ ok: boolean; data?: FileNode[]; error?: string }>('fs:list-dir', node.path)
+        if (result.ok && result.data) {
+          setChildren(result.data)
+        }
       }
       setExpanded(prev => !prev)
     } else {
       try {
-        const content: string = await ipcRenderer.invoke('fs:open-file', node.path)
-        const language = getLanguage(node.path)
-        onFileOpen(node.path, content, language)
+        const result = await invoke<{ ok: boolean; data?: string; error?: string }>('fs:open-file', node.path)
+        if (result.ok && result.data !== undefined) {
+          const language = getLanguage(node.path)
+          onFileOpen(node.path, result.data, language)
+        }
       } catch (err) {
         console.error('[FileTree] Failed to open file:', err)
       }
@@ -94,14 +98,17 @@ interface FileTreeProps {
 }
 
 export const FileTree: React.FC<FileTreeProps> = ({ rootPath, onFileOpen }) => {
+  const invoke = useIpcError()
   const [rootChildren, setRootChildren] = useState<FileNode[]>([])
 
   useEffect(() => {
     if (!rootPath) return
-    ipcRenderer.invoke('fs:list-dir', rootPath).then((nodes: FileNode[]) => {
-      setRootChildren(nodes)
+    invoke<{ ok: boolean; data: FileNode[] }>('fs:list-dir', rootPath).then((result) => {
+      if (result.ok) {
+        setRootChildren(result.data)
+      }
     }).catch(console.error)
-  }, [rootPath])
+  }, [rootPath, invoke])
 
   if (!rootPath) {
     return <div className="text-zinc-600 text-xs p-2 italic">Loading...</div>

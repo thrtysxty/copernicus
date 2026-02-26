@@ -4,6 +4,7 @@ import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
 import { commandRegistry, CommandContext, Command } from '../../commands/registry'
 import { DiffViewer } from '../Editor/DiffViewer'
+import { useIpcError } from '../../hooks/useIpcError'
 
 const ipcRenderer = (window as any).ipcRenderer
 
@@ -35,6 +36,7 @@ interface CodeBlockProps {
 }
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onApply }) => {
+  const invoke = useIpcError()
   const [applyError, setApplyError] = useState('')
   const [applied, setApplied] = useState(false)
   const [showDiff, setShowDiff] = useState(false)
@@ -47,24 +49,32 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
     }
     setApplyError('')
     try {
-      const existing = await ipcRenderer.invoke('fs:open-file', openFilePath)
-      setExistingContent(existing)
-      setShowDiff(true)
+      const result = await invoke<{ ok: boolean; data?: string; error?: string }>('fs:open-file', openFilePath)
+      if (result.ok && result.data !== undefined) {
+        setExistingContent(result.data)
+        setShowDiff(true)
+      } else {
+        // File might be new or unreadable — proceed directly to apply
+        confirmApply()
+      }
     } catch {
-      // File might be new or unreadable — proceed directly to apply
-      confirmApply()
+      // Error already toasted by useIpcError
     }
   }
 
   const confirmApply = () => {
     setShowDiff(false)
-    ipcRenderer.invoke('fs:save-file', { filePath: openFilePath, content: code })
-      .then(() => {
-        setApplied(true)
-        onApply?.(code)
-        setTimeout(() => setApplied(false), 2000)
+    invoke<{ ok: boolean; error?: string }>('fs:save-file', { filePath: openFilePath, content: code })
+      .then((result) => {
+        if (result.ok) {
+          setApplied(true)
+          onApply?.(code)
+          setTimeout(() => setApplied(false), 2000)
+        } else if (result.error) {
+          setApplyError(result.error)
+        }
       })
-      .catch((err: Error) => setApplyError(err.message))
+      .catch(() => { /* error already toasted */ })
   }
 
   return (
@@ -104,6 +114,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
 // ── Main ChatPanel Component ───────────────────────────────────────────────
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootPath = '' }) => {
+  const invoke = useIpcError()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [model, setModel] = useState('claude-3-5-sonnet-20240620')
@@ -128,6 +139,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [messages])
 
   useEffect(() => {
+    if (!ipcRenderer) return
+
     const removeToken = ipcRenderer.on(
       'chat:token',
       ({ sessionId, token }: { sessionId: string; token: string }) => {
@@ -196,7 +209,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     if (currentMode === 'file') {
       try {
-        injectedContent = await ipcRenderer.invoke('fs:open-file', item.value)
+        const result = await invoke<{ ok: boolean; data?: string; error?: string }>('fs:open-file', item.value)
+        if (result.ok && result.data !== undefined) {
+          injectedContent = result.data
+        } else {
+          injectedContent = `[Failed to read ${item.label}: ${result.error}]`
+        }
       } catch {
         injectedContent = `[Failed to read ${item.label}]`
       }
@@ -219,7 +237,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       const idx = prev.lastIndexOf(atMarker)
       return idx !== -1 ? prev.slice(0, idx) : prev
     })
-  }, [pickerMode])
+  }, [pickerMode, invoke])
 
   const handleSendMessage = async () => {
     if ((!input.trim() && context.length === 0) || isStreaming) return
@@ -266,8 +284,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     // Context Injection Handling for legacy @help
     if (currentInput.includes('@help')) {
         try {
-            const helpContent = await ipcRenderer.invoke('fs:open-file', 'docs/help/USER_GUIDE.md');
-            enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${helpContent}\n`);
+            const result = await invoke<{ ok: boolean; data?: string }>('fs:open-file', 'docs/help/USER_GUIDE.md');
+            if (result.ok && result.data) {
+              enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${result.data}\n`);
+            }
         } catch (e) {
             console.error('Failed to inject @help context:', e);
         }
@@ -287,7 +307,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     // Prepare history for API
     const history = messages.map(m => ({ role: m.role, content: m.content }))
 
-    ipcRenderer.invoke('chat:send', {
+    invoke('chat:send', {
       sessionId,
       messages: [...history, { role: 'user', content: enrichedContent }],
       model,
@@ -325,7 +345,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       <div className="h-8 flex items-center justify-between px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel">
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-tighter">Planning_Chat</span>
-          <div className="flex items-center bg-zinc-900 border border-copernicus-steel rounded px-1.5 py-0.5 cursor-pointer hover:border-copernicus-phosphor transition-colors group">
+          <div className="flex items-center bg-zinc-900 border border-copernicus-steel rounded px-1.5 py-0.5 cursor-pointer hover:border-copernicus-phosphor transition-colors group" onClick={() => {}}>
             <span className="text-[9px] text-copernicus-phosphor">{model}</span>
             <ChevronDown size={10} className="text-zinc-600 group-hover:text-copernicus-phosphor" />
           </div>
@@ -422,20 +442,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
                 const query = newValue.slice(atIndex + 1)
                 setPickerMode('file')
-                ipcRenderer.invoke('fs:list-dir', rootPath ?? '').then((nodes: any[]) => {
-                  const filtered = nodes.filter(n =>
-                    !n.isDir && n.name.toLowerCase().includes(query.toLowerCase())
-                  )
-                  setPickerResults(filtered.map(n => ({
-                    label: n.name,
-                    value: n.path,
-                    payload: n.path,
-                  })))
+                invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '').then((result) => {
+                  if (result.ok) {
+                    const filtered = result.data.filter(n =>
+                      !n.isDir && n.name.toLowerCase().includes(query.toLowerCase())
+                    )
+                    setPickerResults(filtered.map(n => ({
+                      label: n.name,
+                      value: n.path,
+                      payload: n.path,
+                    })))
+                  }
                 }).catch(console.error)
               } else if (hashIndex !== -1 && hashIndex > atIndex && !newValue.slice(hashIndex).includes(' ')) {
                 const query = newValue.slice(hashIndex + 1)
                 setPickerMode('story')
-                ipcRenderer.invoke('stories:list').then((stories: any[]) => {
+                invoke<any[]>('stories:list').then((stories) => {
                   const filtered = stories.filter((s: any) =>
                     s.id?.toLowerCase().includes(query.toLowerCase()) ||
                     s.title?.toLowerCase().includes(query.toLowerCase())
