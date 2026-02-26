@@ -57,3 +57,16 @@ db-migrate:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true # nosec
 	find . -type f -name "*.pyc" -delete
+
+## ── Ollama Inference Server (Dell R210ii Core) ────────────────────────
+ollama-deploy:
+	ssh core "cd agentic-platform && docker compose -f docker-compose.ollama.yml up -d"
+	ssh core "cd agentic-platform && bash scripts/setup_ollama_server.sh"
+
+ollama-status:
+	@echo "=== Ollama on Core ==="
+	@curl -sf http://core:11434/api/tags | python3 -m json.tool 2>/dev/null \
+	  || echo "[!] Ollama unreachable at http://core:11434"
+
+ollama-stop:
+	ssh core "docker stop copernicus-ollama || true"

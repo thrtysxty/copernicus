@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type StoryboardView = 'blueprint' | 'studio' | 'engine-room'
+export type StoryboardView = 'blueprint' | 'studio' | 'engine-room' | 'capex' | 'workflow'
 export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban'
 
 export const PHOSPHOR_PRESETS = {
@@ -26,7 +26,8 @@ interface LayoutState {
   spotlightPane: PaneId | null
   activeStoryId: string | null
   phosphorColor: PhosphorColor
-  
+  reviewEnabled: boolean
+
   // Panel Modes
   leftPanelMode: 'explorer' | 'command-deck'
   rightPanelMode: 'telemetry' | 'kanban'
@@ -52,6 +53,7 @@ interface LayoutState {
   toggleLeftPanelMode: () => void
   toggleRightPanelMode: () => void
   setPhosphorColor: (color: PhosphorColor) => void
+  setReviewEnabled: (enabled: boolean) => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -65,7 +67,8 @@ export const useLayoutStore = create<LayoutState>()(
       spotlightPane: null,
       activeStoryId: 'STORY_089',
       phosphorColor: 'green',
-      
+      reviewEnabled: false,
+
       leftPanelMode: 'explorer',
       rightPanelMode: 'telemetry',
       flippedPanes: [],
@@ -119,6 +122,7 @@ export const useLayoutStore = create<LayoutState>()(
       })),
 
       setPhosphorColor: (color) => set({ phosphorColor: color }),
+      setReviewEnabled: (enabled) => set({ reviewEnabled: enabled }),
     }),
     {
       name: 'copernicus-layout-storage',

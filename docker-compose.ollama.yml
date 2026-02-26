@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: copernicus-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama   # persist models across container restarts
+    environment:
+      - OLLAMA_HOST=0.0.0.0           # bind to all interfaces (not just localhost)
+      - OLLAMA_NUM_PARALLEL=2         # allow 2 concurrent requests (embed + chat)
+      - OLLAMA_MAX_LOADED_MODELS=2    # keep nomic-embed-text + one chat model hot
+    deploy:
+      resources:
+        limits:
+          memory: 16G                 # headroom for 7B model + OS + other containers
+
+volumes:
+  ollama_models:

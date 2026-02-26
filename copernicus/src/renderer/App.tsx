@@ -16,9 +16,12 @@ import { GithubDashboard } from './components/github/GithubDashboard'
 import { CapexModal } from './components/CapexModal'
 import { TerminalTabs } from './components/Terminal/TerminalTabs'
 import Wizard from './components/wizard/Wizard'
-import { Terminal, Folder, Github, Settings } from 'lucide-react'
+import { Terminal, Folder, Github, Settings, BarChart2, GitBranch } from 'lucide-react'
 import { ToastContainer } from './components/layout/ToastContainer'
 import { SettingsPanel } from './components/settings/SettingsPanel'
+import { CommandPalette } from './components/layout/CommandPalette'
+import { CapexDashboard } from './components/capex/CapexDashboard'
+import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 
 const ipcRenderer = (window as any).ipcRenderer
 
@@ -64,6 +67,15 @@ function App() {
   const [capexType, setCapexType] = useState<'start' | 'close'>('start')
   const [activeSession, setActiveSession] = useState<any>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [paletteMode, setPaletteMode] = useState<'all' | 'commands' | null>(null)
+
+  // Command Palette Listener
+  useEffect(() => {
+    const removePalette = ipcRenderer.on('layout:open-palette', (_e: any, { mode }: any) => {
+      setPaletteMode(mode)
+    })
+    return () => removePalette()
+  }, [])
 
   // Editor and Filesystem state
   const [rootPath, setRootPath] = useState<string>('')
@@ -210,12 +222,14 @@ function App() {
             COPERNICUS // IDE
           </div>
           <nav className="flex gap-2 text-[9px] uppercase tracking-tighter text-zinc-500">
-            {(['blueprint', 'studio', 'engine-room'] as StoryboardView[]).map((view) => (
+            {(['blueprint', 'studio', 'engine-room', 'capex', 'workflow'] as StoryboardView[]).map((view) => (
               <button
                 key={view}
                 onClick={() => setView(view)}
-                className={`hover:text-copernicus-phosphor transition-colors ${activeView === view ? 'text-copernicus-phosphor underline underline-offset-4' : ''}`}
+                className={`hover:text-copernicus-phosphor transition-colors flex items-center gap-1 ${activeView === view ? 'text-copernicus-phosphor underline underline-offset-4' : ''}`}
               >
+                {view === 'capex' && <BarChart2 size={10} />}
+                {view === 'workflow' && <GitBranch size={10} />}
                 {view}
               </button>
             ))}
@@ -255,6 +269,11 @@ function App() {
             </button>
         </div>
 
+        {activeView === 'capex' ? (
+            <CapexDashboard />
+        ) : activeView === 'workflow' ? (
+            <WorkflowCanvas />
+        ) : (
         <SpotlightContainer
             sidebar={
             <FlippablePanel 
@@ -350,6 +369,7 @@ function App() {
             />
             }
         />
+        )}
       </div>
 
       {/* Terminal Panel */}
@@ -382,6 +402,15 @@ function App() {
 
       {/* Toast Notifications */}
       <ToastContainer />
+
+      {paletteMode && (
+        <CommandPalette 
+          mode={paletteMode} 
+          onClose={() => setPaletteMode(null)} 
+          onFileOpen={handleFileOpen}
+          rootPath={rootPath}
+        />
+      )}
 
       {/* Settings Panel */}
       {settingsOpen && (

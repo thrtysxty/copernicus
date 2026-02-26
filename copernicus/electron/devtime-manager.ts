@@ -65,6 +65,7 @@ export class DevtimeManager {
     }));
     ipcMain.handle('devtime:close', (_event, data) => this.closeSession(data));
     ipcMain.handle('devtime:defaults', () => this.getDefaults());
+    ipcMain.handle('devtime:report', () => this.getReport());
   }
 
   private startSession(data: any, isRecovery = false) {
@@ -138,5 +139,28 @@ export class DevtimeManager {
       phase: 'DEVELOPMENT',
       stories: ['story_098', 'story_099', 'story_100']
     };
+  }
+
+  public getReport(): { ok: boolean; data?: any[]; error?: string } {
+    try {
+      const sql = `
+        SELECT 
+          story_id, 
+          component, 
+          financial_category,
+          SUM(value) as total_hours,
+          COUNT(*) as session_count,
+          MIN(start_time) as start_date,
+          MAX(start_time) as end_date
+        FROM dev_sessions 
+        GROUP BY story_id, component, financial_category
+        ORDER BY end_date DESC
+      `;
+      const rows = this.db.prepare(sql).all();
+      return { ok: true, data: rows };
+    } catch (err: any) {
+      console.error('[DevtimeManager] Report error:', err);
+      return { ok: false, error: err.message };
+    }
   }
 }

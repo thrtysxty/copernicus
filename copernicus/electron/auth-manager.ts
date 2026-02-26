@@ -169,7 +169,46 @@ export class AuthManager {
     key = this.getApiKey('deepinfra');
     if (key) return { key, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra' };
 
+    // Lowest priority: local Ollama server (R210ii or localhost)
+    // OLLAMA_BASE_URL is set via env var — no API key required
+    const ollamaUrl = process.env.OLLAMA_BASE_URL
+    if (ollamaUrl) {
+      return {
+        key: 'ollama',           // Ollama ignores key value; any string works
+        baseUrl: ollamaUrl.replace(/\/$/, '') + '/v1',
+        provider: 'ollama',
+        headers: {},
+      }
+    }
+
     return null;
+  }
+
+  public resolveForProvider(provider: 'deepinfra' | 'openai' | 'openrouter' | 'ollama') {
+    switch (provider) {
+      case 'openrouter': {
+        const key = this.getApiKey('openrouter');
+        if (!key) return null;
+        return { key, baseUrl: 'https://openrouter.ai/api/v1', provider: 'openrouter', headers: this.getProviderHeaders('openrouter') };
+      }
+      case 'openai': {
+        const key = this.getApiKey('openai');
+        if (!key) return null;
+        return { key, baseUrl: 'https://api.openai.com/v1', provider: 'openai', headers: {} };
+      }
+      case 'deepinfra': {
+        const key = this.getApiKey('deepinfra');
+        if (!key) return null;
+        return { key, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra', headers: {} };
+      }
+      case 'ollama': {
+        const url = process.env.OLLAMA_BASE_URL;
+        if (!url) return null;
+        return { key: 'ollama', baseUrl: url.replace(/\/$/, '') + '/v1', provider: 'ollama', headers: {} };
+      }
+      default:
+        return null;
+    }
   }
 
   private getProviderHeaders(provider: string) {
