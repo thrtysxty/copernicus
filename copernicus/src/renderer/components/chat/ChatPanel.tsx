@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, Hash, FileText, Paperclip, ChevronDown } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
+import { commandRegistry, CommandContext, Command } from '../../commands/registry'
+import { DiffViewer } from '../Editor/DiffViewer'
 
 const ipcRenderer = (window as any).ipcRenderer
 
@@ -12,12 +14,110 @@ interface Message {
   tokens?: number // Representing total output tokens
 }
 
-export const ChatPanel: React.FC = () => {
+interface ContextItem {
+  type: 'file' | 'story' | 'help'
+  label: string
+  content: string
+}
+
+interface ChatPanelProps {
+  openFilePath?: string | null
+  rootPath?: string
+}
+
+// ── CodeBlock Sub-component ────────────────────────────────────────────────
+
+interface CodeBlockProps {
+  language: string
+  code: string
+  openFilePath: string | null
+  onApply?: (code: string) => void
+}
+
+const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onApply }) => {
+  const [applyError, setApplyError] = useState('')
+  const [applied, setApplied] = useState(false)
+  const [showDiff, setShowDiff] = useState(false)
+  const [existingContent, setExistingContent] = useState('')
+
+  const handleApply = async () => {
+    if (!openFilePath) {
+      setApplyError('No file open — open a file in the editor first')
+      return
+    }
+    setApplyError('')
+    try {
+      const existing = await ipcRenderer.invoke('fs:open-file', openFilePath)
+      setExistingContent(existing)
+      setShowDiff(true)
+    } catch {
+      // File might be new or unreadable — proceed directly to apply
+      confirmApply()
+    }
+  }
+
+  const confirmApply = () => {
+    setShowDiff(false)
+    ipcRenderer.invoke('fs:save-file', { filePath: openFilePath, content: code })
+      .then(() => {
+        setApplied(true)
+        onApply?.(code)
+        setTimeout(() => setApplied(false), 2000)
+      })
+      .catch((err: Error) => setApplyError(err.message))
+  }
+
+  return (
+    <div className="relative group my-2">
+      <div className="flex items-center justify-between bg-[#1a1a1a] border border-copernicus-steel/50 rounded-t px-3 py-1">
+        <span className="text-[9px] text-zinc-500 uppercase">{language || 'code'}</span>
+        <button
+          onClick={handleApply}
+          className={`text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider transition-colors
+            ${applied
+              ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor'
+              : 'bg-zinc-700 text-zinc-300 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor'
+            }`}
+        >
+          {applied ? '✓ Applied' : 'Apply'}
+        </button>
+      </div>
+      <pre className="bg-[#111] border border-t-0 border-copernicus-steel/50 rounded-b p-3 overflow-x-auto text-xs text-zinc-300 whitespace-pre-wrap">
+        <code>{code}</code>
+      </pre>
+      {applyError && (
+        <div className="text-[10px] text-red-400 mt-1">{applyError}</div>
+      )}
+      {showDiff && (
+        <DiffViewer
+          original={existingContent}
+          modified={code}
+          language={language}
+          onConfirm={confirmApply}
+          onCancel={() => setShowDiff(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Main ChatPanel Component ───────────────────────────────────────────────
+
+export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootPath = '' }) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [model, _setModel] = useState('claude-3-5-sonnet-20240620')
-  const [context, setContext] = useState<string[]>([])
+  const [model, setModel] = useState('claude-3-5-sonnet-20240620')
+  const [context, setContext] = useState<ContextItem[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  
+  const [slashSuggestions, setSlashSuggestions] = useState<Command[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
+  // Picker state
+  type PickerMode = 'none' | 'file' | 'story'
+  const [pickerMode, setPickerMode] = useState<PickerMode>('none')
+  const [pickerResults, setPickerResults] = useState<Array<{ label: string; value: string; payload: string }>>([])
+
   const streamingIdRef = useRef<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -87,8 +187,63 @@ export const ChatPanel: React.FC = () => {
     }
   }, [])
 
+  const handlePickerSelect = useCallback(async (item: { label: string; value: string; payload: string }) => {
+    const currentMode = pickerMode
+    setPickerMode('none')
+    setPickerResults([])
+
+    let injectedContent = item.payload
+
+    if (currentMode === 'file') {
+      try {
+        injectedContent = await ipcRenderer.invoke('fs:open-file', item.value)
+      } catch {
+        injectedContent = `[Failed to read ${item.label}]`
+      }
+      setContext(prev => [...prev, {
+        type: 'file',
+        label: item.label,
+        content: `\n// File: ${item.value}\n${injectedContent}\n`,
+      }])
+    } else if (currentMode === 'story') {
+      setContext(prev => [...prev, {
+        type: 'story',
+        label: item.label,
+        content: injectedContent,
+      }])
+    }
+
+    // Remove the @query or #query from the input
+    const atMarker = currentMode === 'file' ? '@' : '#'
+    setInput(prev => {
+      const idx = prev.lastIndexOf(atMarker)
+      return idx !== -1 ? prev.slice(0, idx) : prev
+    })
+  }, [pickerMode])
+
   const handleSendMessage = async () => {
     if ((!input.trim() && context.length === 0) || isStreaming) return
+
+    const currentInput = input.trim();
+    
+    // Build the CommandContext that registry commands can use
+    const cmdContext: CommandContext = {
+      appendMessage: (role, content) =>
+        setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role, content }]),
+      clearMessages: () => setMessages([]),
+      setModel: (m) => setModel(m),
+      getCurrentModel: () => model,
+    }
+
+    // Try slash command first
+    if (currentInput.startsWith('/')) {
+      const handled = commandRegistry.execute(currentInput, cmdContext)
+      if (handled) {
+        setInput('')
+        setShowSuggestions(false)
+        return
+      }
+    }
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -97,29 +252,27 @@ export const ChatPanel: React.FC = () => {
     }
 
     setMessages(prev => [...prev, userMsg])
-    const currentInput = input.trim();
-    const currentEnrichedInput = currentInput; // Placeholder for context attachment logic
+    
+    // Enrich with context
+    let enrichedContent = currentInput
+    if (context.length > 0) {
+      const contextBlocks = context.map(c => `[CONTEXT: ${c.type.toUpperCase()} - ${c.label}]\n${c.content}`).join('\n\n')
+      enrichedContent = `${contextBlocks}\n\n---\n\nUSER_INPUT: ${currentInput}`
+    }
+
     setInput('')
     setContext([])
 
-    // Slash Command Handling
-    if (currentInput.startsWith('/audit')) {
-        ipcRenderer.send('command:audit');
-        return;
-    }
-
-    // Context Injection Handling
-    let enrichedContent = currentEnrichedInput;
+    // Context Injection Handling for legacy @help
     if (currentInput.includes('@help')) {
         try {
-            const helpContent = await ipcRenderer.invoke('fs:read-file', 'docs/help/USER_GUIDE.md');
+            const helpContent = await ipcRenderer.invoke('fs:open-file', 'docs/help/USER_GUIDE.md');
             enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${helpContent}\n`);
         } catch (e) {
             console.error('Failed to inject @help context:', e);
         }
     }
 
-    // Resolves AC 4: Real LLM Integration
     const sessionId = `chat-${Date.now()}`
     streamingIdRef.current = sessionId
     setIsStreaming(true)
@@ -142,6 +295,27 @@ export const ChatPanel: React.FC = () => {
       console.error('[ChatPanel] chat:send failed:', err)
       setIsStreaming(false)
       streamingIdRef.current = null
+    })
+  }
+
+  function renderMessageContent(
+    content: string,
+    openPath: string | null
+  ): React.ReactNode {
+    const parts = content.split(/(```[\w]*\n[\s\S]*?```)/g)
+    return parts.map((part, i) => {
+      const match = part.match(/^```([\w]*)\n([\s\S]*?)```$/)
+      if (match) {
+        return (
+          <CodeBlock
+            key={i}
+            language={match[1]}
+            code={match[2]}
+            openFilePath={openPath}
+          />
+        )
+      }
+      return <span key={i} className="whitespace-pre-wrap">{part}</span>
     })
   }
 
@@ -171,7 +345,7 @@ export const ChatPanel: React.FC = () => {
             <ChatMessage 
               key={m.id} 
               role={m.role} 
-              content={m.content} 
+              content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content} 
               tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined} 
             />
           ))
@@ -181,16 +355,101 @@ export const ChatPanel: React.FC = () => {
       {/* Context Area (Chips) */}
       {context.length > 0 && (
         <div className="px-2 py-1 flex flex-wrap gap-1 bg-zinc-900/50 border-t border-hairline border-copernicus-steel">
-          {context.map(c => <ContextChip key={c} label={c} onRemove={() => setContext(prev => prev.filter(i => i !== c))} />)}
+          {context.map(c => <ContextChip key={c.label} label={c.label} onRemove={() => setContext(prev => prev.filter(i => i.label !== c.label))} />)}
         </div>
       )}
 
       {/* Input Area */}
       <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
         <div className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5">
+          {/* Slash Suggestions */}
+          {showSuggestions && slashSuggestions.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded overflow-hidden z-50">
+              {slashSuggestions.map(cmd => (
+                <button
+                  key={cmd.name}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 flex items-center gap-3"
+                  onClick={() => {
+                    setInput(cmd.name + ' ')
+                    setShowSuggestions(false)
+                  }}
+                >
+                  <span className="text-copernicus-phosphor font-mono">{cmd.name}</span>
+                  <span className="text-zinc-500">{cmd.description}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Context Picker Popover */}
+          {pickerMode !== 'none' && pickerResults.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded overflow-hidden z-50 max-h-48 overflow-y-auto">
+              <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel">
+                {pickerMode === 'file' ? '@ File Context' : '# Story Context'}
+              </div>
+              {pickerResults.map(item => (
+                <button
+                  key={item.value}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors"
+                  onClick={() => handlePickerSelect(item)}
+                >
+                  <span className="text-zinc-300">{item.label}</span>
+                  <span className="text-zinc-600 ml-2 text-[10px] truncate">{item.value}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              const newValue = e.target.value
+              setInput(newValue)
+
+              // Slash suggestions logic
+              if (newValue.startsWith('/') && !newValue.includes(' ')) {
+                const suggestions = commandRegistry.suggest(newValue)
+                setSlashSuggestions(suggestions)
+                setShowSuggestions(suggestions.length > 0)
+              } else {
+                setShowSuggestions(false)
+              }
+
+              // Context Picker logic
+              const atIndex = newValue.lastIndexOf('@')
+              const hashIndex = newValue.lastIndexOf('#')
+
+              if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
+                const query = newValue.slice(atIndex + 1)
+                setPickerMode('file')
+                ipcRenderer.invoke('fs:list-dir', rootPath ?? '').then((nodes: any[]) => {
+                  const filtered = nodes.filter(n =>
+                    !n.isDir && n.name.toLowerCase().includes(query.toLowerCase())
+                  )
+                  setPickerResults(filtered.map(n => ({
+                    label: n.name,
+                    value: n.path,
+                    payload: n.path,
+                  })))
+                }).catch(console.error)
+              } else if (hashIndex !== -1 && hashIndex > atIndex && !newValue.slice(hashIndex).includes(' ')) {
+                const query = newValue.slice(hashIndex + 1)
+                setPickerMode('story')
+                ipcRenderer.invoke('stories:list').then((stories: any[]) => {
+                  const filtered = stories.filter((s: any) =>
+                    s.id?.toLowerCase().includes(query.toLowerCase()) ||
+                    s.title?.toLowerCase().includes(query.toLowerCase())
+                  )
+                  setPickerResults(filtered.map((s: any) => ({
+                    label: s.title ?? s.id,
+                    value: s.id,
+                    payload: s.content ?? '',
+                  })))
+                }).catch(console.error)
+              } else {
+                setPickerMode('none')
+              }
+            }}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
             placeholder={isStreaming ? "Streaming in progress..." : "Type strategic intent... (@file to attach context)"}
             disabled={isStreaming}

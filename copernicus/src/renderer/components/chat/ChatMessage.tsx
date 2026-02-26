@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 
 interface ChatMessageProps {
   role: 'user' | 'assistant'
-  content: string
+  content: React.ReactNode
   tokens?: { in: number; out: number; cost: number }
 }
 
