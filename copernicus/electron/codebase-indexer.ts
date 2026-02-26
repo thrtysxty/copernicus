@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import sqliteVec from 'sqlite-vec'
+import { load as sqliteVecLoad } from 'sqlite-vec'
 import { stateLedger } from './db/state-ledger'
 import { authManager } from './auth-manager'
 import { SettingsStore } from './settings-store'
@@ -24,7 +24,7 @@ export class CodebaseIndexer {
 
   constructor() {
     // Initialize vector extension
-    sqliteVec.load(stateLedger.db)
+    sqliteVecLoad(stateLedger.db)
     this.initSchema()
   }
 
