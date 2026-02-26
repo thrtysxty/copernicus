@@ -559,6 +559,24 @@ If running fewer than 5 parallel agents, execute in this order:
 4. Track D (Review Gate) — high competitive value
 5. Track E (Workflow Canvas) — most complex, highest long-term value
 
+## Wave 1 — Implementation (Simultaneous)
+
+| Track | Story | Focus | Implementer | Identity Overlay | Status |
+|:---|:---|:---|:---|:---|:---|
+| **Track A** | 125 | Dell R210ii Provision | Jules-A | [Standard] | **COMPLETE** |
+| **Track B** | 124 | Command Palette (Cmd+P) | Jules-B | [PALETTE 🎨] | **COMPLETE** |
+| **Track C** | 123 | CAPEX Dashboard (SVG) | Jules-C | [PALETTE 🎨] | **COMPLETE** |
+| **Track D** | 121 | Agent Review Gate | Jules-D | [SENTINEL 🛡️] | **COMPLETE** |
+| **Track E** | 120 | Workflow Canvas | Jules-E | [BOLT ⚡] | **COMPLETE** |
+
+---
+
+## Wave 2 — Implementation
+
+| Track | Story | Focus | Implementer | Status |
+|:---|:---|:---|:---|:---|
+| **Track F** | 122 | Codebase Semantic Index | Jules-A | 🚀 In Progress |
+
 ---
 
 ## Architect Sign-off
