@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
+import { useToastStore } from '../../store/toastStore'
 import { BarChart2, Download } from 'lucide-react'
 
 interface CapexReportRow {
@@ -47,8 +48,12 @@ export const CapexDashboard: React.FC = () => {
       const root = await invoke<string>('app:get-root-path')
       const filePath = `${root}/reports/capex_report_${Date.now()}.csv`
       
-      await invoke('fs:save-file', { filePath, content: headers + rows })
-      // Ideally trigger a success toast here
+      const result = await invoke<{ ok: boolean; error?: string }>('fs:save-file', { filePath, content: headers + rows })
+      if (result.ok) {
+        useToastStore.getState().addToast('CSV exported successfully', 'success')
+      } else {
+        useToastStore.getState().addToast(`Export failed: ${result.error ?? 'unknown error'}`, 'error')
+      }
   }
 
   const stats = report.reduce((acc, row) => {
