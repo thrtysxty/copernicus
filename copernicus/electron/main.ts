@@ -162,22 +162,41 @@ function createSplashWindow() {
 }
 
 function createWindow(show = true) {
-  win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    show,
-    backgroundColor: '#050505',
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 10, y: 10 },
-    vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
-    visualEffectState: process.platform === 'darwin' ? 'active' : undefined,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  })
+  if (isFirstRun) {
+    win = new BrowserWindow({
+      width: 900,
+      height: 640,
+      show,
+      frame: false,
+      resizable: false,
+      center: true,
+      backgroundColor: '#050505',
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+      },
+    })
+  } else {
+    win = new BrowserWindow({
+      width: 1200,
+      height: 800,
+      show,
+      frame: false,
+      backgroundColor: '#050505',
+      titleBarStyle: 'hiddenInset',
+      trafficLightPosition: { x: 10, y: 10 },
+      vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
+      visualEffectState: process.platform === 'darwin' ? 'active' : undefined,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+      },
+    })
+  }
 
   storiesManager.setWindow(win)
   createTouchBar(win);

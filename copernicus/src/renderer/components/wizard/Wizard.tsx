@@ -74,8 +74,12 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans select-none p-8">
-      <div className="w-full max-w-lg bg-zinc-900/50 border border-copernicus-steel/30 rounded-lg p-6 backdrop-blur-md shadow-2xl">
+    <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans select-none">
+      {/* Draggable Title Region */}
+      <div className="h-8 w-full flex-none" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}></div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-8">
         <header className="mb-8 flex items-center justify-between border-b border-copernicus-steel/20 pb-4">
           <div className="flex items-center gap-2">
              <div className="w-3 h-3 bg-copernicus-phosphor rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
@@ -84,7 +88,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
           <div className="text-xs text-zinc-500 font-mono">Step {step + 1}/4</div>
         </header>
 
-        <div className="min-h-[300px] relative">
+        <div className="flex-1 relative">
             <AnimatePresence mode='wait'>
             <motion.div
                 key={step}
@@ -93,10 +97,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.2 }}
-                className="absolute w-full"
+                className="absolute w-full h-full flex flex-col justify-center"
             >
                 {step === 0 && (
-                <div className="space-y-4">
+                <div className="space-y-6 max-w-2xl mx-auto w-full">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Terminal size={18} /> CLI Tool Detection</h2>
                     <p className="text-sm text-zinc-400">Scanning your environment for required AI agents...</p>
                     
@@ -118,11 +122,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                 )}
 
                 {step === 1 && (
-                <div className="space-y-4">
+                <div className="space-y-6 max-w-2xl mx-auto w-full">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Maximize2 size={18} /> Credentials</h2>
                     <p className="text-sm text-zinc-400">Configure your AI providers (stored securely in OS Keychain).</p>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <div>
                             <label className="block text-xs font-mono text-zinc-500 mb-1">ANTHROPIC_API_KEY</label>
                             <input 
@@ -148,7 +152,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                 )}
 
                 {step === 2 && (
-                <div className="space-y-4">
+                <div className="space-y-6 max-w-2xl mx-auto w-full">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2"><FolderOpen size={18} /> Workspace Setup</h2>
                     <p className="text-sm text-zinc-400">Where should COPERNICUS store your projects and memory?</p>
                     
@@ -170,7 +174,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                 )}
 
                 {step === 3 && (
-                <div className="space-y-4">
+                <div className="space-y-6 max-w-2xl mx-auto w-full">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2"><DollarSign size={18} /> CapEx Setup</h2>
                     <p className="text-sm text-zinc-400">Set your hourly rate for development cost tracking.</p>
                     
@@ -190,7 +194,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
             </AnimatePresence>
         </div>
 
-        <footer className="mt-8 flex justify-between border-t border-copernicus-steel/20 pt-4">
+        <footer className="mt-8 flex justify-between border-t border-copernicus-steel/20 pt-4 flex-none">
             <button 
                 onClick={handleBack}
                 disabled={step === 0}
