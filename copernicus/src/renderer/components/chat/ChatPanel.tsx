@@ -125,7 +125,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const [showSuggestions, setShowSuggestions] = useState(false)
 
   // Picker state
-  type PickerMode = 'none' | 'file' | 'story'
+  type PickerMode = 'none' | 'file' | 'story' | 'codebase'
   const [pickerMode, setPickerMode] = useState<PickerMode>('none')
   const [pickerResults, setPickerResults] = useState<Array<{ label: string; value: string; payload: string }>>([])
 
@@ -229,10 +229,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         label: item.label,
         content: injectedContent,
       }])
+    } else if (currentMode === 'codebase') {
+      setContext(prev => [...prev, {
+        type: 'file',
+        label: `@codebase: ${item.label}`,
+        content: `\n// Semantic match: ${item.value}\n${injectedContent}\n`,
+      }])
     }
 
     // Remove the @query or #query from the input
-    const atMarker = currentMode === 'file' ? '@' : '#'
+    const atMarker = (currentMode === 'file' || currentMode === 'codebase') ? '@' : '#'
     setInput(prev => {
       const idx = prev.lastIndexOf(atMarker)
       return idx !== -1 ? prev.slice(0, idx) : prev
@@ -405,7 +411,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           {pickerMode !== 'none' && pickerResults.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded overflow-hidden z-50 max-h-48 overflow-y-auto">
               <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel">
-                {pickerMode === 'file' ? '@ File Context' : '# Story Context'}
+                {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
               </div>
               {pickerResults.map(item => (
                 <button
@@ -439,7 +445,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               const atIndex = newValue.lastIndexOf('@')
               const hashIndex = newValue.lastIndexOf('#')
 
-              if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
+              // @codebase <query> — semantic search
+              const codebaseMatch = newValue.slice(atIndex).match(/^@codebase\s+(.+)$/)
+              if (atIndex !== -1 && codebaseMatch) {
+                const query = codebaseMatch[1]
+                setPickerMode('codebase')
+                invoke<Array<{ path: string; content: string; similarity: number }>>('codebase:search', query)
+                  .then(results => {
+                    setPickerResults(results.map(r => ({
+                      label: r.path.split('/').pop() ?? r.path,
+                      value: r.path,
+                      payload: r.content,
+                    })))
+                  })
+                  .catch(console.error)
+              } else if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
                 const query = newValue.slice(atIndex + 1)
                 setPickerMode('file')
                 invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '').then((result) => {
@@ -471,6 +491,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               } else {
                 setPickerMode('none')
               }
+
             }}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
             placeholder={isStreaming ? "Streaming in progress..." : "Type strategic intent... (@file to attach context)"}

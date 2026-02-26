@@ -382,9 +382,7 @@ function registerIpcHandlers() {
   setupCommandHandlers();
 
   // Codebase Indexing
-  ipcMain.on('codebase:index-status', (event) => {
-    event.reply('codebase:index-status', codebaseIndexer.getStatus())
-  })
+  ipcMain.handle('codebase:index-status', () => codebaseIndexer.getStatus())
   ipcMain.handle('codebase:search', async (_event, query: string) => codebaseIndexer.search(query))
 
   // File System

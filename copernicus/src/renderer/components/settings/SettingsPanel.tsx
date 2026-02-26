@@ -1,8 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLayoutStore, PHOSPHOR_PRESETS, PhosphorColor } from '../../store/layout'
 import { useToastStore } from '../../store/toastStore'
 import { useIpcError } from '../../hooks/useIpcError'
-import { X } from 'lucide-react'
+import { X, ChevronUp, ChevronDown } from 'lucide-react'
+
+type EmbeddingProvider = 'ollama' | 'google' | 'deepinfra' | 'openai' | 'openrouter'
+const DEFAULT_PROVIDER_ORDER: EmbeddingProvider[] = ['ollama', 'google', 'deepinfra', 'openai', 'openrouter']
 
 // Use the canonical presets from the store — keys are 'green' | 'amber' | 'white' | 'blue'
 const PRESET_ENTRIES = Object.entries(PHOSPHOR_PRESETS) as [PhosphorColor, { label: string; hex: string }][]
@@ -20,6 +23,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   const [openRouterKey, setOpenRouterKey] = useState('')
   const [googleKey, setGoogleKey] = useState('')
   const [saving, setSaving] = useState(false)
+  const [providerOrder, setProviderOrder] = useState<EmbeddingProvider[]>(DEFAULT_PROVIDER_ORDER)
+
+  useEffect(() => {
+    invoke<any>('settings:load').then(s => {
+      if (Array.isArray(s?.embeddingProviderOrder)) {
+        setProviderOrder(s.embeddingProviderOrder)
+      }
+    }).catch(() => {})
+  }, [invoke])
+
+  const moveProvider = (index: number, direction: -1 | 1) => {
+    const newOrder = [...providerOrder]
+    const swapIndex = index + direction
+    if (swapIndex < 0 || swapIndex >= newOrder.length) return
+    ;[newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]]
+    setProviderOrder(newOrder)
+    invoke('settings:save', { embeddingProviderOrder: newOrder }).catch(() => {})
+  }
 
   const handleSaveKeys = async () => {
     setSaving(true)
@@ -103,6 +124,35 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
           <p className="text-[9px] text-zinc-600 mt-1">
             Require Claude & Gemini approval before applying diffs.
           </p>
+        </section>
+
+        {/* Codebase Index */}
+        <section>
+          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Codebase Index</h3>
+          <p className="text-[9px] text-zinc-600 mb-3">Embedding provider priority. First available provider is used.</p>
+          <div className="space-y-1">
+            {providerOrder.map((provider, idx) => (
+              <div key={provider} className="flex items-center justify-between bg-[#111] border border-zinc-800 px-2 py-1.5 rounded">
+                <span className="text-[11px] font-mono text-zinc-300 uppercase">{provider}</span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => moveProvider(idx, -1)}
+                    disabled={idx === 0}
+                    className="text-zinc-600 hover:text-copernicus-phosphor disabled:opacity-20 transition-colors"
+                  >
+                    <ChevronUp size={12} />
+                  </button>
+                  <button
+                    onClick={() => moveProvider(idx, 1)}
+                    disabled={idx === providerOrder.length - 1}
+                    className="text-zinc-600 hover:text-copernicus-phosphor disabled:opacity-20 transition-colors"
+                  >
+                    <ChevronDown size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* API Keys */}

@@ -16,6 +16,7 @@ export const StatusBar: React.FC = () => {
   } = useLayoutStore()
 
   const [hasError, setHasError] = useState(false)
+  const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
 
   // Session Timer Effect
   useEffect(() => {
@@ -24,6 +25,18 @@ export const StatusBar: React.FC = () => {
     }, 1000)
     return () => clearInterval(timer)
   }, [capexSessionTime, setTelemetry])
+
+  // Poll codebase index status every 5s
+  useEffect(() => {
+    const poll = () => {
+      invoke<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string }>('codebase:index-status')
+        .then(status => setIndexStatus(status))
+        .catch(() => {})
+    }
+    poll()
+    const interval = setInterval(poll, 5000)
+    return () => clearInterval(interval)
+  }, [invoke])
 
   // Listen for critical errors
   useEffect(() => {
@@ -103,6 +116,21 @@ export const StatusBar: React.FC = () => {
             <span className="text-copernicus-phosphor phosphor-glow font-bold">${capexTotal.toLocaleString()}</span>
           </div>
         </div>
+
+        {/* Codebase Index Status */}
+        {indexStatus && (
+          <div className="flex items-center gap-1.5 px-3 text-[10px]">
+            {indexStatus.provider === 'none' ? (
+              <span className="text-zinc-600 italic">No embedding provider</span>
+            ) : indexStatus.indexing ? (
+              <span className="text-zinc-500 animate-pulse uppercase tracking-tighter">
+                Indexing [{indexStatus.provider}]… {indexStatus.filesIndexed}/{indexStatus.totalFiles}
+              </span>
+            ) : (
+              <span className="text-zinc-600 uppercase tracking-tighter">Index ready</span>
+            )}
+          </div>
+        )}
 
         {/* Story ID & Status */}
         <div className="flex items-center gap-3 pl-3">
