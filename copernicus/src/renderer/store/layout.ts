@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type StoryboardView = 'blueprint' | 'studio' | 'engine-room'
+export type StoryboardView = 'blueprint' | 'studio' | 'engine-room' | 'capex' | 'workflow'
 export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban'
 
 export const PHOSPHOR_PRESETS = {

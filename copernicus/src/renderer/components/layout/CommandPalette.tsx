@@ -54,7 +54,7 @@ function calculateScore(query: string, text: string): number {
         score += 5
       }
       // Bonus for match at start or after separator
-      if (i === 0 || /[\/\-_ ]/.test(lowerText[i - 1])) {
+      if (i === 0 || /[/\-_ ]/.test(lowerText[i - 1])) {
         score += 5
       }
       prevMatchIdx = i
@@ -90,10 +90,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
 
     if (mode === 'all') {
       // Load Files (recursive list-dir if possible, or just top level for now)
-      // The prompt says "recursive or top-level only for MVP". 
-      // fs:list-dir likely returns top level. 
-      // If we want recursive, we might need to change backend or call recursively. 
-      // For MVP, let's just call it on rootPath.
       invoke<{ ok: boolean, data: any[] }>('fs:list-dir', rootPath)
         .then(res => {
           if (res.ok) setRawFiles(res.data.filter((f: any) => !f.isDir))
@@ -189,13 +185,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
     const ipcRenderer = (window as any).ipcRenderer
 
     switch (item.type) {
-      case 'file':
+      case 'file': {
         // Open file
         invoke<{ ok: boolean, data?: string }>('fs:open-file', item.payload.path)
           .then(res => {
             if (res.ok && res.data !== undefined) {
               const ext = item.payload.name.split('.').pop() || 'txt'
-              // Simple language mapping (can be improved or moved to shared utility)
               const langMap: Record<string, string> = {
                   ts: 'typescript', tsx: 'typescript', js: 'javascript',
                   jsx: 'javascript', py: 'python', md: 'markdown',
@@ -205,20 +200,22 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
             }
           })
         break
+      }
 
-      case 'story':
+      case 'story': {
         // Hydrate story (opens in editor per existing logic)
         invoke('stories:hydrate', item.payload.id)
         break
+      }
 
-      case 'agent':
+      case 'agent': {
         // Spawn agent
         ipcRenderer.send('terminal:spawn-agent', { agentId: item.payload.id })
         break
+      }
 
-      case 'command':
+      case 'command': {
         // Execute command
-        // Create a dummy context
         const cmdContext: CommandContext = {
           appendMessage: (role, content) => {
              useToastStore.getState().addToast(`[${role.toUpperCase()}] ${content}`, 'info')
@@ -231,6 +228,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
         }
         commandRegistry.execute(item.label, cmdContext)
         break
+      }
     }
     
     onClose()

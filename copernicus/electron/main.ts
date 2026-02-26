@@ -19,6 +19,7 @@ import { DevtimeManager } from './devtime-manager'
 import { GithubManager } from './github-manager'
 import { llmService } from './llm/service'
 import { fsManager } from './fs-manager'
+import { workflowEngine } from './workflow/engine'
 import './interop/dispatcher' // Initialize Interop Dispatcher
 
 // The built directory structure
@@ -593,6 +594,27 @@ function registerIpcHandlers() {
   ipcMain.handle('app:get-root-path', () => {
     return fsManager.getRootPath()
   })
+
+  // --- Workflow ---
+  ipcMain.handle('workflow:run', (_event, graph) => {
+    if (!graph || typeof graph !== 'object') {
+      throw new Error('[workflow:run] Invalid graph payload');
+    }
+    
+    // Execute asynchronously (fire-and-forget from IPC perspective)
+    workflowEngine.runGraph(graph).catch(err => {
+      console.error('[Workflow] Execution error:', err);
+    });
+    
+    return { ok: true, status: 'started' };
+  });
+
+  ipcMain.handle('workflow:status', () => {
+    return {
+      state: workflowEngine.getState(),
+      nodeStatuses: workflowEngine.getNodeStatuses()
+    };
+  });
 
   // Splash Ready
   ipcMain.on('splash-ready', () => {

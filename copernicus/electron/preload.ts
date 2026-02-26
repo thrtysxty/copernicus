@@ -36,6 +36,10 @@ const SEND_CHANNELS = new Set([
   'security:git-push-response',
   // Settings
   'settings:save', 'settings:load',
+  // Devtime
+  'devtime:start', 'devtime:status', 'devtime:close', 'devtime:defaults', 'devtime:report',
+  // Workflow
+  'workflow:run', 'workflow:status',
   // Splash / wizard
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
@@ -52,8 +56,7 @@ const LISTEN_CHANNELS = new Set([
   'stories:updated',
   'editor:open',
   'agent:input', 'agent:message', 'agent:error',
-  'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight',
-  'layout:open-palette',
+  'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',
   'telemetry:update-touchbar',
   'security:git-push-request',
   'splash-status',
