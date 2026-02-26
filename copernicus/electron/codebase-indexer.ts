@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { load as sqliteVecLoad } from 'sqlite-vec'
+import { app } from 'electron'
 import { stateLedger } from './db/state-ledger'
 import { authManager } from './auth-manager'
 import { SettingsStore } from './settings-store'
@@ -23,9 +23,28 @@ export class CodebaseIndexer {
   private activeProvider = 'none'
 
   constructor() {
-    // Initialize vector extension
-    sqliteVecLoad(stateLedger.db)
-    this.initSchema()
+    try {
+      this.loadVectorExtension()
+      this.initSchema()
+    } catch (err) {
+      console.error('[CodebaseIndexer] Failed to initialize — semantic search unavailable:', err)
+    }
+  }
+
+  private loadVectorExtension() {
+    const os = process.platform === 'darwin' ? 'darwin'
+      : process.platform === 'win32' ? 'windows' : 'linux'
+    const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64'
+    const pkgName = `sqlite-vec-${os}-${arch}`
+
+    // In packaged app: use real filesystem path from unpacked ASAR directory.
+    // In dev: resolve via node_modules.
+    // Pass WITHOUT extension — SQLite appends .dylib/.so/.dll automatically.
+    const dir = app.isPackaged
+      ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', pkgName)
+      : path.dirname(require.resolve(`${pkgName}/package.json`))
+
+    stateLedger.db.loadExtension(path.join(dir, 'vec0'))
   }
 
   private initSchema() {
