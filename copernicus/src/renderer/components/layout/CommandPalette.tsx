@@ -182,8 +182,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
 
   // 3. Execution Logic
   const execute = (item: SearchResult) => {
-    const ipcRenderer = (window as any).ipcRenderer
-
     switch (item.type) {
       case 'file': {
         // Open file
@@ -210,7 +208,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
 
       case 'agent': {
         // Spawn agent
-        ipcRenderer.send('terminal:spawn-agent', { agentId: item.payload.id })
+        invoke('terminal:spawn-agent', { agentId: item.payload.id })
         break
       }
 

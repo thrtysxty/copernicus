@@ -40,6 +40,10 @@ const SEND_CHANNELS = new Set([
   'devtime:start', 'devtime:status', 'devtime:close', 'devtime:defaults', 'devtime:report',
   // Workflow
   'workflow:run', 'workflow:status',
+  // Review gate
+  'review:log',
+  // Codebase semantic index
+  'codebase:search', 'codebase:index-status',
   // Splash / wizard
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',

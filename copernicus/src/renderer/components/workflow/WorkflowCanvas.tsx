@@ -151,7 +151,11 @@ export default function WorkflowCanvas() {
       edges
     };
     
-    await invoke('workflow:run', graph);
+    const result = await invoke<{ ok: boolean; error?: string }>('workflow:run', graph)
+    if (!result.ok) {
+      console.error('[WorkflowCanvas] workflow:run failed:', result.error)
+      setIsRunning(false)
+    }
   };
 
   const saveWorkflow = async () => {
@@ -168,10 +172,13 @@ export default function WorkflowCanvas() {
       const filePath = `${rootPath}${sep}workflow${sep}workflow.json`;
       
       try {
-          await invoke('fs:save-file', {
+          const result = await invoke<{ ok: boolean; error?: string }>('fs:save-file', {
               filePath,
               content: JSON.stringify(workflowData, null, 2)
-          });
+          })
+          if (!result.ok) {
+              console.error('[WorkflowCanvas] fs:save-file failed:', result.error)
+          }
       } catch (err) {
           console.error("Failed to save workflow:", err);
       }

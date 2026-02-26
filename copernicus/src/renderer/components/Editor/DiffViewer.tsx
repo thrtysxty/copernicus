@@ -2,8 +2,7 @@ import React, { useState } from 'react'
 import { DiffEditor } from '@monaco-editor/react'
 import { useLayoutStore } from '../../store/layout'
 import { ReviewPanel, Verdict } from './ReviewPanel'
-
-const ipcRenderer = (window as any).ipcRenderer
+import { useIpcError } from '../../hooks/useIpcError'
 
 interface DiffViewerProps {
   original: string
@@ -20,6 +19,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const invoke = useIpcError()
   const { reviewEnabled } = useLayoutStore()
   const [reviewState, setReviewState] = useState<'idle' | 'reviewing' | 'done'>('idle')
   const [sessionIds, setSessionIds] = useState<{ claude: string; gemini: string } | null>(null)
@@ -47,14 +47,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     
     const content = `Please review this code change.\n\nORIGINAL:\n${original}\n\nMODIFIED:\n${modified}\n\n[REVIEW] Does this change look correct? List any concerns.`
 
-    // Fire requests
-    ipcRenderer.invoke('chat:send', {
+    // Fire requests — results arrive via chat:token / chat:done IPC events
+    invoke('chat:send', {
       sessionId: claudeId,
       model: 'claude-3-5-sonnet-20240620',
       messages: [{ role: 'user', content }]
     })
 
-    ipcRenderer.invoke('chat:send', {
+    invoke('chat:send', {
       sessionId: geminiId,
       model: 'gemini-1.5-pro',
       messages: [{ role: 'user', content }]
@@ -63,7 +63,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
   const handleConfirm = async () => {
     if (reviewEnabled && reviewState === 'done' && verdicts) {
-      await ipcRenderer.invoke('review:log', {
+      await invoke('review:log', {
         original,
         modified,
         verdicts
