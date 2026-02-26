@@ -9,18 +9,23 @@ export interface FileNode {
   children?: FileNode[]
 }
 
-const ROOT_PATH = process.env.COPERNICUS_ROOT ?? process.cwd()
-
-function assertSafe(filePath: string): void {
-  const resolved = path.resolve(filePath)
-  if (!resolved.startsWith(ROOT_PATH) && !resolved.startsWith(os.homedir())) {
-    throw new Error(`[fs-manager] Path traversal blocked: ${filePath}`)
-  }
-}
-
 export class FSManager {
+  private rootPath: string = process.env.COPERNICUS_ROOT ?? process.cwd()
+
+  setRootPath(p: string): void {
+    this.rootPath = path.resolve(p)
+    console.log(`[FSManager] Sandbox root established: ${this.rootPath}`)
+  }
+
+  private assertSafe(filePath: string): void {
+    const resolved = path.resolve(filePath)
+    if (!resolved.startsWith(this.rootPath) && !resolved.startsWith(os.homedir())) {
+      throw new Error(`[fs-manager] Path traversal blocked: ${filePath} (Root: ${this.rootPath})`)
+    }
+  }
+
   listDir(dirPath: string): FileNode[] {
-    assertSafe(dirPath)
+    this.assertSafe(dirPath)
     const entries = fs.readdirSync(dirPath, { withFileTypes: true })
     return entries
       .filter(e => !e.name.startsWith('.') && e.name !== 'node_modules')
@@ -38,17 +43,17 @@ export class FSManager {
   }
 
   readFile(filePath: string): string {
-    assertSafe(filePath)
+    this.assertSafe(filePath)
     return fs.readFileSync(filePath, 'utf-8')
   }
 
   writeFile(filePath: string, content: string): void {
-    assertSafe(filePath)
+    this.assertSafe(filePath)
     fs.writeFileSync(filePath, content, 'utf-8')
   }
 
   getRootPath(): string {
-    return ROOT_PATH
+    return this.rootPath
   }
 }
 
