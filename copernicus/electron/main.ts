@@ -42,6 +42,9 @@ Object.assign(console, log.functions)
 // Determine project root (docs/ folder is in parent of copernicus/)
 const ROOT_PATH = path.resolve(__dirname, '../../')
 
+// Initialize FS Manager with project root
+fsManager.setRootPath(ROOT_PATH)
+
 let win: BrowserWindow | null
 let splashWin: BrowserWindow | null
 let isFirstRun = false;
@@ -94,7 +97,26 @@ function ensureCopernicusDirectory() {
   }
 }
 
+// ── Settings Persistence ───────────────────────────────────────────────────
+const SETTINGS_PATH = path.join(app.getPath('userData'), 'copernicus-settings.json')
+
+function loadSettings(): Record<string, unknown> {
+  try {
+    return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'))
+  } catch {
+    return {}
+  }
+}
+
+function saveSettings(patch: Record<string, unknown>): void {
+  const current = loadSettings()
+  fs.writeFileSync(SETTINGS_PATH, JSON.stringify({ ...current, ...patch }, null, 2))
+}
+
 function createSplashWindow() {
+  const settings = loadSettings()
+  const phosphorHex = (settings.phosphorColor as string | undefined) ?? '#4ADE80'
+
   splashWin = new BrowserWindow({
     width: 600,
     height: 400,
@@ -113,9 +135,9 @@ function createSplashWindow() {
   const distPath = process.env.DIST || path.join(__dirname, '../dist');
   
   if (VITE_DEV_SERVER_URL) {
-    splashWin.loadURL(`${VITE_DEV_SERVER_URL}?window=splash`)
+    splashWin.loadURL(`${VITE_DEV_SERVER_URL}?window=splash&phosphor=${encodeURIComponent(phosphorHex)}`)
   } else {
-    splashWin.loadFile(path.join(distPath, 'index.html'), { query: { 'window': 'splash' } })
+    splashWin.loadFile(path.join(distPath, 'index.html'), { query: { window: 'splash', phosphor: phosphorHex } })
   }
 
   splashWin.on('closed', () => {
@@ -198,6 +220,15 @@ function setupAutoUpdater() {
 }
 
 function registerIpcHandlers() {
+  ipcMain.handle('settings:save', (_event, patch: unknown) => {
+    if (typeof patch === 'object' && patch !== null) {
+      saveSettings(patch as Record<string, unknown>)
+    }
+    return { ok: true }
+  })
+  
+  ipcMain.handle('settings:load', () => loadSettings())
+
   // Auth Handlers
   ipcMain.handle('auth:status', () => {
     return authManager.getAuthStatus();
@@ -363,6 +394,45 @@ function registerIpcHandlers() {
   ipcMain.on('terminal-kill', (_event, { id }) => {
     ptyManager.kill(id);
   });
+
+  ipcMain.on('terminal:spawn-agent', (_event, payload: unknown) => {
+    if (
+      typeof payload !== 'object' || payload === null ||
+      typeof (payload as any).agentId !== 'string'
+    ) {
+      console.warn('[security] terminal:spawn-agent blocked — invalid payload')
+      return
+    }
+
+    const { agentId } = payload as { agentId: string }
+
+    // Validate agentId
+    if (!/^[a-z0-9_-]+$/.test(agentId)) {
+      console.warn(`[security] terminal:spawn-agent blocked — invalid agentId: ${agentId}`)
+      return
+    }
+
+    // Look up the agent command from model registry or a static map
+    const AGENT_COMMANDS: Record<string, string[]> = {
+      sentinel: ['python', ['scripts/agent_cli.py', '--persona', 'sentinel']],
+      claude:   ['node',   ['scripts/claude_ollama_cli.py']],
+      gemini:   ['python', ['scripts/agent_cli.py', '--persona', 'gemini']],
+      jules:    ['python', ['scripts/agent_cli.py', '--persona', 'jules']],
+    } as any
+
+    const agentCmd = AGENT_COMMANDS[agentId]
+    if (!agentCmd) {
+      console.warn(`[terminal:spawn-agent] Unknown agentId: ${agentId}`)
+      return
+    }
+
+    // Broadcast to renderer: open the terminal tab for this agent
+    BrowserWindow.getAllWindows().forEach(win => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('terminal:activate-tab', { agentId })
+      }
+    })
+  })
 
   // --- Database IPC (State Ledger) ---
   ipcMain.handle('db:log-intent', (_, content, status, agentId) => {

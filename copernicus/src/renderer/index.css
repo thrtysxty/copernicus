@@ -5,6 +5,7 @@
 :root {
   --copernicus-bg: #050505;
   --copernicus-phosphor-rgb: 74 222 128; /* #4ADE80 */
+  --phosphor: #4ADE80;
   --copernicus-phosphor: rgb(var(--copernicus-phosphor-rgb));
   --copernicus-steel: #3F3F46;
 }
@@ -36,5 +37,5 @@ body {
   border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--copernicus-phosphor);
+  background: var(--phosphor);
 }

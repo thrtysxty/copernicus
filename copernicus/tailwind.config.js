@@ -9,7 +9,7 @@ export default {
       colors: {
         copernicus: {
           bg: '#050505',     // Deep black
-          phosphor: 'rgb(var(--copernicus-phosphor-rgb) / <alpha-value>)', // VT420 Green
+          phosphor: 'var(--phosphor)', // Dynamic Phosphor Color
           steel: '#3F3F46',  // Cold dividers
         },
       },

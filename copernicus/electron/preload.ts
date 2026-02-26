@@ -31,6 +31,10 @@ const SEND_CHANNELS = new Set([
   'layout:update-telemetry',
   // Agent interop
   'agent:delegate', 'agent:forward',
+  // Terminal
+  'terminal:spawn-agent',
+  // Stories
+  'story:scaffold',
   // Security
   'security:git-push-response',
   // Splash / wizard

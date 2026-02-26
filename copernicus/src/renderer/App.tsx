@@ -13,8 +13,11 @@ import { FileTree } from './components/FileTree/FileTree'
 import { HelpPanel } from './components/HelpPanel'
 import { GithubDashboard } from './components/github/GithubDashboard'
 import { CapexModal } from './components/CapexModal'
+import { TerminalTabs } from './components/Terminal/TerminalTabs'
 import Wizard from './components/wizard/Wizard'
-import { Terminal, Folder, Github } from 'lucide-react'
+import { Terminal, Folder, Github, Settings } from 'lucide-react'
+import { ToastContainer } from './components/layout/ToastContainer'
+import { SettingsPanel } from './components/settings/SettingsPanel'
 
 const ipcRenderer = (window as any).ipcRenderer
 
@@ -58,12 +61,17 @@ function App() {
   const [isCapexOpen, setIsCapexOpen] = useState(false)
   const [capexType, setCapexType] = useState<'start' | 'close'>('start')
   const [activeSession, setActiveSession] = useState<any>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Editor and Filesystem state
   const [rootPath, setRootPath] = useState<string>('')
   const [editorValue, setEditorValue] = useState<string>('// Select a file to open it here.')
   const [editorLanguage, setEditorLanguage] = useState<string>('plaintext')
   const [openFilePath, setOpenFilePath] = useState<string | null>(null)
+
+  // Terminal state
+  const [terminalOpen, setTerminalOpen] = useState(false)
+  const TERMINAL_HEIGHT = 240
 
   useEffect(() => {
     // Initialise agent store IPC listeners (agent:input routing)
@@ -164,7 +172,7 @@ function App() {
     return () => clearInterval(interval)
   }, [setTelemetry])
 
-  // Touch Bar Hardware Sync
+  // Hardware and Agent UI listeners
   useEffect(() => {
     const removeViewListener = ipcRenderer.on('layout:set-view', (view: StoryboardView) => {
       setView(view)
@@ -175,11 +183,15 @@ function App() {
     const removeSpotListener = ipcRenderer.on('layout:toggle-spotlight', () => {
       setSpotlight(spotlightPane ? null : 'editor')
     })
+    const removeActivateTab = ipcRenderer.on('terminal:activate-tab', () => {
+      setTerminalOpen(true)
+    })
 
     return () => {
       removeViewListener()
       removeFlipListener()
       removeSpotListener()
+      removeActivateTab()
     }
   }, [setView, toggleFlip, setSpotlight, spotlightPane])
 
@@ -207,8 +219,17 @@ function App() {
             ))}
           </nav>
         </div>
-        <div className="text-[9px] text-copernicus-steel">
-          v0.1.0 :: {activeView.toUpperCase()} :: PRODUCTION_READY
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSettingsOpen(prev => !prev)}
+            className="text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+            title="Settings"
+          >
+            <Settings size={12} />
+          </button>
+          <div className="text-[9px] text-copernicus-steel">
+            v0.1.0 :: {activeView.toUpperCase()} :: PRODUCTION_READY
+          </div>
         </div>
       </header>
 
@@ -310,7 +331,7 @@ function App() {
                     onFlip={() => toggleFlip('right')}
                     isSpotlightActive={spotlightPane === 'telemetry'}
                     />
-                    <ChatPanel />
+                    <ChatPanel openFilePath={openFilePath} rootPath={rootPath} />
                 </div>
                 }
                 back={
@@ -329,6 +350,25 @@ function App() {
         />
       </div>
 
+      {/* Terminal Panel */}
+      <div
+        className="w-full border-t border-copernicus-steel overflow-hidden transition-all duration-200 ease-in-out"
+        style={{ height: terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px' }}
+      >
+        <TerminalTabs />
+      </div>
+
+      {/* Terminal Toggle Bar */}
+      <div
+        className="h-5 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer select-none hover:bg-copernicus-phosphor/5"
+        onClick={() => setTerminalOpen(prev => !prev)}
+      >
+        <span className="text-[9px] uppercase tracking-widest text-zinc-500">
+          {terminalOpen ? '▼ TERMINAL' : '▲ TERMINAL'}
+        </span>
+        <span className="text-[8px] text-zinc-600">claude · gemini · jules</span>
+      </div>
+
       <StatusBar />
 
       <CapexModal 
@@ -337,6 +377,14 @@ function App() {
         onClose={() => setIsCapexOpen(false)}
         session={activeSession}
       />
+
+      {/* Toast Notifications */}
+      <ToastContainer />
+
+      {/* Settings Panel */}
+      {settingsOpen && (
+        <SettingsPanel onClose={() => setSettingsOpen(false)} />
+      )}
     </div>
   )
 }

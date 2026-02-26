@@ -9,8 +9,18 @@ const ipcRenderer = (window as any).ipcRenderer || {
 };
 
 const SplashScreen: React.FC = () => {
+  // Read the phosphor color passed from main process as a query param
+  const params = new URLSearchParams(window.location.search)
+  const phosphorHex = params.get('phosphor') ?? '#4ADE80'
+
   const [status, setStatus] = useState<string>('INITIALIZING SYSTEMS...');
   const [stage, setStage] = useState<'off' | 'igniting' | 'on'>('off');
+
+  // Apply as CSS custom property so Tailwind arbitrary [var(--phosphor)] classes work
+  // Also used for inline styles below
+  useEffect(() => {
+    document.documentElement.style.setProperty('--phosphor', phosphorHex)
+  }, [phosphorHex])
 
   useEffect(() => {
     // Neon Ignite Sequence
@@ -64,7 +74,7 @@ const SplashScreen: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-[#050505] text-[#4ADE80] font-mono overflow-hidden flex flex-col items-center justify-center relative select-none cursor-wait">
+    <div className="h-screen w-screen bg-[#050505] font-mono overflow-hidden flex flex-col items-center justify-center relative select-none cursor-wait" style={{ color: phosphorHex }}>
       {/* Scanline Overlay */}
       <div className="absolute inset-0 z-50 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] pointer-events-none"></div>
       
@@ -83,19 +93,23 @@ const SplashScreen: React.FC = () => {
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           >
             {/* Central Core */}
-            <div className="absolute top-1/2 left-1/2 w-12 h-12 bg-[#4ADE80] rounded-full blur-[2px] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_40px_rgba(74,222,128,0.6)]"></div>
+            <div 
+              className="absolute top-1/2 left-1/2 w-12 h-12 rounded-full blur-[2px] -translate-x-1/2 -translate-y-1/2"
+              style={{ backgroundColor: phosphorHex, boxShadow: `0 0 40px ${phosphorHex}60` }}
+            ></div>
             <div className="absolute top-1/2 left-1/2 w-8 h-8 bg-white rounded-full blur-[1px] -translate-x-1/2 -translate-y-1/2 mix-blend-overlay"></div>
 
             {/* Orbit Rings */}
             {[1, 2, 3].map((ring) => (
               <div 
                 key={ring}
-                className="absolute top-1/2 left-1/2 border border-[#4ADE80]/30 rounded-full"
+                className="absolute top-1/2 left-1/2 border rounded-full"
                 style={{ 
                   width: `${ring * 80}px`, 
                   height: `${ring * 80}px`,
                   transform: `translate(-50%, -50%) rotateX(70deg)`, // Flat rings
-                  borderWidth: '1px'
+                  borderWidth: '1px',
+                  borderColor: phosphorHex + '4D'
                 }}
               ></div>
             ))}
@@ -104,9 +118,11 @@ const SplashScreen: React.FC = () => {
             {[0, 120, 240].map((deg, i) => (
                 <motion.div
                     key={i}
-                    className="absolute top-1/2 left-1/2 w-3 h-3 bg-[#4ADE80] rounded-full shadow-[0_0_10px_#4ADE80]"
+                    className="absolute top-1/2 left-1/2 w-3 h-3 rounded-full"
                     style={{
                         transform: `translate(-50%, -50%) rotateY(${deg}deg) translateZ(120px)`,
+                        backgroundColor: phosphorHex,
+                        boxShadow: `0 0 10px ${phosphorHex}`
                     }}
                 />
             ))}
@@ -116,15 +132,15 @@ const SplashScreen: React.FC = () => {
         {/* Text & Status */}
         <div className="z-10 text-center">
           <h1 className="text-4xl font-bold tracking-[0.3em] mb-4 phosphor-glow">COPERNICUS</h1>
-          <div className="h-px w-32 bg-[#4ADE80]/50 mx-auto mb-4"></div>
-          <div className="text-xs text-[#4ADE80] tracking-widest uppercase">
+          <div className="h-px w-32 mx-auto mb-4" style={{ backgroundColor: phosphorHex + '80' }}></div>
+          <div className="text-xs tracking-widest uppercase" style={{ color: phosphorHex }}>
             {status}
           </div>
         </div>
       </motion.div>
 
       {/* Footer Version */}
-      <div className="absolute bottom-6 text-[9px] text-[#4ADE80]/30 tracking-widest">
+      <div className="absolute bottom-6 text-[9px] tracking-widest" style={{ color: phosphorHex + '4D' }}>
         SYSTEM READY :: v0.1.0
       </div>
     </div>
