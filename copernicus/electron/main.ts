@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, session, globalShortcut } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, session, globalShortcut, dialog } from 'electron'
 import path from 'node:path'
 import { spawn, execFile } from 'node:child_process'
 import fs from 'node:fs'
@@ -237,6 +237,50 @@ function registerIpcHandlers() {
     const logFilePath = path.join(LOG_DIR, 'copernicus.log')
     return shell.openPath(logFilePath)
   })
+
+  ipcMain.handle('app:open-external', (_event, url: string) => {
+    return shell.openExternal(url);
+  })
+
+  // Wizard Handlers
+  ipcMain.handle('check-cli-tools', async () => {
+    const tools = ['claude', 'gemini', 'git', 'node'];
+    const results: Record<string, boolean> = {};
+    const cmd = process.platform === 'win32' ? 'where' : 'which';
+    
+    await Promise.all(tools.map(tool => new Promise<void>(resolve => {
+       execFile(cmd, [tool], (error) => {
+         results[tool] = !error;
+         resolve();
+       });
+    })));
+    return results;
+  });
+
+  ipcMain.handle('select-folder', async () => {
+    if (!win) return null;
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      properties: ['openDirectory']
+    });
+    return canceled ? null : filePaths[0];
+  });
+
+  ipcMain.handle('save-preferences', async (_event, preferences: any) => {
+    const { keys, ...settings } = preferences;
+    
+    if (keys) {
+        if (keys.anthropic && keys.anthropic !== 'saved') await authManager.storeApiKey('anthropic', keys.anthropic);
+        if (keys.google && keys.google !== 'saved') await authManager.storeApiKey('google', keys.google);
+    }
+    
+    saveSettings(settings);
+    return { ok: true };
+  });
+
+  ipcMain.handle('restart-app', () => {
+    app.relaunch();
+    app.exit(0);
+  });
 
   // Auth Handlers
   ipcMain.handle('auth:status', () => authManager.getAuthStatus());

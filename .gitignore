@@ -32,6 +32,7 @@ copernicus_debug.log*
 # Project specific
 copernicus/node_modules/
 copernicus/dist/
+copernicus/dist-electron/
 copernicus/out/
 .gemini/
 

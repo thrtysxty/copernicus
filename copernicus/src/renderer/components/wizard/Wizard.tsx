@@ -46,6 +46,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
     }
   };
 
+  const handleOpenAuth = (url: string) => {
+    invoke('app:open-external', url);
+  };
+
   const handleFinish = async () => {
     const preferences = {
       workspace: workspacePath,
@@ -54,8 +58,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
         currency: 'USD'
       },
       keys: {
-        anthropic: anthropicKey ? 'saved' : null,
-        google: googleKey ? 'saved' : null
+        anthropic: anthropicKey,
+        google: googleKey
       },
       ui: {
         theme: 'technical-phosphor'
@@ -128,7 +132,15 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                     
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-xs font-mono text-zinc-500 mb-1">ANTHROPIC_API_KEY</label>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-xs font-mono text-zinc-500">ANTHROPIC_API_KEY</label>
+                                <button 
+                                    onClick={() => handleOpenAuth('https://console.anthropic.com')}
+                                    className="text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
+                                >
+                                    Sign in with Anthropic
+                                </button>
+                            </div>
                             <input 
                                 type="password" 
                                 className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
@@ -138,7 +150,15 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-mono text-zinc-500 mb-1">GOOGLE_API_KEY</label>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-xs font-mono text-zinc-500">GOOGLE_API_KEY</label>
+                                <button 
+                                    onClick={() => handleOpenAuth('https://aistudio.google.com/app/apikey')}
+                                    className="text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
+                                >
+                                    Sign in with Google
+                                </button>
+                            </div>
                             <input 
                                 type="password" 
                                 className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"

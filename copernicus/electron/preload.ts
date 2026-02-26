@@ -48,7 +48,7 @@ const SEND_CHANNELS = new Set([
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
   // App Control
-  'app:open-log',
+  'app:open-log', 'app:open-external',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
