@@ -161,21 +161,33 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Anthropic</span>
-                                <button
-                                    onClick={() => handleOpenAuth('https://console.anthropic.com/settings/keys')}
-                                    className="flex items-center gap-1 text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
-                                >
-                                    Get API Key <ExternalLink size={10} />
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => handleOpenAuth('https://console.anthropic.com/settings/keys')}
+                                        className="flex items-center gap-1 text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
+                                    >
+                                        API Key (developers) <ExternalLink size={10} />
+                                    </button>
+                                    <span className="text-zinc-700">|</span>
+                                    <button
+                                        onClick={() => handleOpenAuth('https://claude.ai/settings')}
+                                        className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white hover:underline uppercase tracking-wide"
+                                    >
+                                        Claude.ai account <ExternalLink size={10} />
+                                    </button>
+                                </div>
                             </div>
                             <input
                                 type="password"
                                 className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
-                                placeholder="sk-ant-..."
+                                placeholder="sk-ant-... (API key from developer console)"
                                 value={anthropicKey}
                                 onChange={(e) => setAnthropicKey(e.target.value)}
                             />
-                            <p className="text-[10px] text-zinc-600">Claude.ai monthly subscribers: get a separate API key from the console above.</p>
+                            <p className="text-[10px] text-zinc-600 leading-relaxed">
+                                API key holders: paste above.{' '}
+                                Monthly Claude.ai subscribers: your subscription does not include API access — obtain a separate API key or leave blank.
+                            </p>
                         </div>
 
                         {/* Google — full OAuth PKCE */}

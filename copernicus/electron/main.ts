@@ -386,6 +386,11 @@ function registerIpcHandlers() {
     }
     
     saveSettings(settings);
+
+    // Write first-run sentinel so isFirstRun is false on next launch
+    const preferencesPath = path.join(COPERNICUS_HOME, 'preferences.json');
+    fs.writeFileSync(preferencesPath, JSON.stringify({ ...settings, completedAt: new Date().toISOString() }, null, 2));
+
     return { ok: true };
   });
 
