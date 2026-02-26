@@ -53,6 +53,7 @@ const LISTEN_CHANNELS = new Set([
   'editor:open',
   'agent:input', 'agent:message', 'agent:error',
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight',
+  'layout:open-palette',
   'telemetry:update-touchbar',
   'security:git-push-request',
   'splash-status',

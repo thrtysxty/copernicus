@@ -13,7 +13,7 @@ interface SettingsPanelProps {
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
-  const { phosphorColor, setPhosphorColor } = useLayoutStore()
+  const { phosphorColor, setPhosphorColor, reviewEnabled, setReviewEnabled } = useLayoutStore()
   const addToast = useToastStore(s => s.addToast)
 
   const [anthropicKey, setAnthropicKey] = useState('')
@@ -81,6 +81,28 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
               ))}
             </div>
           </div>
+        </section>
+
+        {/* Workflow Gates */}
+        <section>
+          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Workflow Gates</h3>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-zinc-400">Parallel Agent Review</span>
+            <button
+              onClick={() => setReviewEnabled(!reviewEnabled)}
+              className={`w-8 h-4 rounded-full transition-colors relative ${
+                reviewEnabled ? 'bg-copernicus-phosphor' : 'bg-zinc-700'
+              }`}
+            >
+              <div
+                className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform`}
+                style={{ left: reviewEnabled ? 'calc(100% - 14px)' : '2px' }}
+              />
+            </button>
+          </div>
+          <p className="text-[9px] text-zinc-600 mt-1">
+            Require Claude & Gemini approval before applying diffs.
+          </p>
         </section>
 
         {/* API Keys */}

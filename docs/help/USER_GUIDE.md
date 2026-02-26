@@ -46,6 +46,8 @@ graph TD
 ```
 
 ### 2.2 Panel Interaction Primitives
+- **Command Palette [Cmd+P]:** Open the universal command palette to search files, stories, and agents.
+- **Command Palette (Commands Only) [Cmd+Shift+P]:** Open the palette pre-filtered for slash commands.
 - **Spotlight [Ctrl+Enter]:** Maximize the currently focused panel to full window height.
 - **Flip [⌘+Shift+F]:** Flip a panel to its "Logic Side" (e.g., Strategic Chat flips to Kanban).
 - **Context Injectors:** Use `@files` or `@ledger` in chat to ground the agent in reality.

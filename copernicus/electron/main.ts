@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell, session } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, session, globalShortcut } from 'electron'
 import path from 'node:path'
 import { spawn, execFile } from 'node:child_process'
 import fs from 'node:fs'
@@ -553,6 +553,20 @@ function registerIpcHandlers() {
     return { ok: true }
   })
 
+  ipcMain.handle('review:log', (_event, payload: unknown) => {
+    if (typeof payload !== 'object' || payload === null) {
+      throw new Error('[review:log] Invalid payload')
+    }
+    const { verdicts } = payload as { verdicts: { claude: string; gemini: string } }
+    
+    stateLedger.logIntent(
+      `REVIEW: [Claude: ${verdicts.claude}] [Gemini: ${verdicts.gemini}]`,
+      'COMPLETED',
+      'sentinel'
+    )
+    return { ok: true }
+  })
+
   // --- File System ────────────────────────────────────────────────────────────
   ipcMain.handle('fs:list-dir', (_event, dirPath: unknown) => {
     if (typeof dirPath !== 'string') throw new Error('[fs:list-dir] dirPath must be a string')
@@ -609,6 +623,10 @@ app.on('activate', () => {
   }
 })
 
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
+})
+
 app.whenReady().then(() => {
   // ── Content Security Policy ────────────────────────────────────────────────
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -634,6 +652,13 @@ app.whenReady().then(() => {
   createSplashWindow();
   createWindow(false);
   
+  globalShortcut.register('CommandOrControl+P', () => {
+    win?.webContents.send('layout:open-palette', { mode: 'all' })
+  })
+  globalShortcut.register('CommandOrControl+Shift+P', () => {
+    win?.webContents.send('layout:open-palette', { mode: 'commands' })
+  })
+
   // Simulate Initialization Sequence
   setTimeout(() => splashWin?.webContents.send('splash-status', 'LOADING KERNEL...'), 1000);
   setTimeout(() => splashWin?.webContents.send('splash-status', 'IGNITING AGENTS...'), 2500);

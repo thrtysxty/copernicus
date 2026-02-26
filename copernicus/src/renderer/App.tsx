@@ -19,6 +19,7 @@ import Wizard from './components/wizard/Wizard'
 import { Terminal, Folder, Github, Settings } from 'lucide-react'
 import { ToastContainer } from './components/layout/ToastContainer'
 import { SettingsPanel } from './components/settings/SettingsPanel'
+import { CommandPalette } from './components/layout/CommandPalette'
 
 const ipcRenderer = (window as any).ipcRenderer
 
@@ -64,6 +65,15 @@ function App() {
   const [capexType, setCapexType] = useState<'start' | 'close'>('start')
   const [activeSession, setActiveSession] = useState<any>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [paletteMode, setPaletteMode] = useState<'all' | 'commands' | null>(null)
+
+  // Command Palette Listener
+  useEffect(() => {
+    const removePalette = ipcRenderer.on('layout:open-palette', (_e: any, { mode }: any) => {
+      setPaletteMode(mode)
+    })
+    return () => removePalette()
+  }, [])
 
   // Editor and Filesystem state
   const [rootPath, setRootPath] = useState<string>('')
@@ -382,6 +392,15 @@ function App() {
 
       {/* Toast Notifications */}
       <ToastContainer />
+
+      {paletteMode && (
+        <CommandPalette 
+          mode={paletteMode} 
+          onClose={() => setPaletteMode(null)} 
+          onFileOpen={handleFileOpen}
+          rootPath={rootPath}
+        />
+      )}
 
       {/* Settings Panel */}
       {settingsOpen && (
