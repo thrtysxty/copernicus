@@ -41,15 +41,7 @@ export class StateLedger {
   public db: Database.Database;
 
   constructor(dbPath?: string) {
-    let finalPath = dbPath;
-    
-    if (!finalPath) {
-      if (app && app.isReady()) {
-        finalPath = path.join(app.getPath('userData'), 'copernicus.db');
-      } else {
-        finalPath = path.join(process.cwd(), 'copernicus.db');
-      }
-    }
+    const finalPath = dbPath ?? path.join(app.getPath('userData'), 'copernicus.db');
 
     const dir = path.dirname(finalPath);
     if (!fs.existsSync(dir)) {
