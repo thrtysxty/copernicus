@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 // Mock ipcRenderer for development if not in Electron context
-const ipcRenderer = (window as any).ipcRenderer || {
+const ipcRenderer = window.ipcRenderer || {
   on: () => {},
   off: () => {},
   send: () => {},

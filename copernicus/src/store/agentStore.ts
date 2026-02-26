@@ -77,21 +77,21 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   getClipboard: () => get().agentClipboard,
   
   sendDelegate: (target, task) => {
-    const ipcRenderer = (window as any).ipcRenderer;
+    const ipcRenderer = window.ipcRenderer;
     if (ipcRenderer) {
       ipcRenderer.send('agent:delegate', { target, task })
     }
   },
   
   sendForward: (target, content) => {
-    const ipcRenderer = (window as any).ipcRenderer;
+    const ipcRenderer = window.ipcRenderer;
     if (ipcRenderer) {
       ipcRenderer.send('agent:forward', { target, content })
     }
   },
   
   initIPCListeners: () => {
-    const ipcRenderer = (window as any).ipcRenderer;
+    const ipcRenderer = window.ipcRenderer;
     if (ipcRenderer) {
         ipcRenderer.on('agent:input', (_event: any, { target, content }: any) => {
             get().appendLog(target, content, 'stdin')

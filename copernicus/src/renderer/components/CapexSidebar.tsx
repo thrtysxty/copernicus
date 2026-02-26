@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-
-const ipcRenderer = (window as any).ipcRenderer;
+import { useIpcError } from '../hooks/useIpcError';
 
 export function CapexSidebar() {
+  const invoke = useIpcError();
   const [report, setReport] = useState<any[]>([]);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
 
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const res = await ipcRenderer.invoke('devtime:report', month);
+        const res = await invoke<any[]>('devtime:report', month);
         setReport(res);
       } catch (e) {
         console.error("Failed to fetch report", e);

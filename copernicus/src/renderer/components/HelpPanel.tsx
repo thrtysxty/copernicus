@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Book } from 'lucide-react'
-
-const ipcRenderer = (window as any).ipcRenderer
+import { useIpcError } from '../hooks/useIpcError'
 
 export const HelpPanel: React.FC = () => {
+  const invoke = useIpcError()
   const [content, setContent] = useState<string>('Loading Manual...')
 
   useEffect(() => {
     const fetchManual = async () => {
       try {
-        const text = await ipcRenderer.invoke('fs:read-file', 'docs/help/USER_GUIDE.md')
+        const text = await invoke<string>('fs:read-file', 'docs/help/USER_GUIDE.md')
         setContent(text || 'Guide not found.')
       } catch (e) {
         setContent('Error loading user guide.')

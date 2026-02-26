@@ -12,7 +12,7 @@ export interface DocMetadata {
 
 export class DocFactory {
   static async generateStoryMarkdown(meta: DocMetadata): Promise<string> {
-    const ipcRenderer = (window as any).ipcRenderer;
+    const ipcRenderer = window.ipcRenderer;
     let template = '';
     
     try {
@@ -38,7 +38,7 @@ export class DocFactory {
   }
 
   static async saveDocumentation(path: string, content: string) {
-    const ipcRenderer = (window as any).ipcRenderer;
+    const ipcRenderer = window.ipcRenderer;
     if (ipcRenderer) {
       return await ipcRenderer.invoke('fs:write-file', path, content);
     }

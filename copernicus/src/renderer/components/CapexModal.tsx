@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const ipcRenderer = (window as any).ipcRenderer;
+import { useIpcError } from '../hooks/useIpcError';
 
 interface CapexModalProps {
   type: 'start' | 'close';
@@ -11,6 +10,7 @@ interface CapexModalProps {
 }
 
 export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) {
+  const invoke = useIpcError();
   const [formData, setFormData] = useState({
     financial_category: 'CAPEX',
     component: 'platform_core',
@@ -26,7 +26,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
   useEffect(() => {
     if (isOpen) {
       if (type === 'start') {
-        ipcRenderer.invoke('devtime:defaults').then((defaults: any) => {
+        invoke('devtime:defaults').then((defaults: any) => {
           setFormData(prev => ({
             ...prev,
             financial_category: defaults.financial_category || 'CAPEX',
@@ -47,11 +47,11 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
         }));
       }
     }
-  }, [isOpen, type, session]);
+  }, [isOpen, type, session, invoke]);
 
   const handleSubmit = async () => {
     if (type === 'start') {
-      await ipcRenderer.invoke('devtime:start', {
+      await invoke('devtime:start', {
         financial_category: formData.financial_category,
         component: formData.component,
         phase: formData.phase,
@@ -59,17 +59,17 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
       });
       onClose();
     } else {
-      await ipcRenderer.invoke('devtime:close', {
+      await invoke('devtime:close', {
         description: formData.description,
         capitalizable: formData.capitalizable,
       });
-      await ipcRenderer.invoke('app:quit');
+      await invoke('app:quit');
     }
   };
 
   const handleSkip = async () => {
     if (type === 'close') {
-      await ipcRenderer.invoke('app:quit');
+      await invoke('app:quit');
     } else {
       onClose();
     }

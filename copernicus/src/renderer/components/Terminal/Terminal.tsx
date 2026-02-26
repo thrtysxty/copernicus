@@ -3,7 +3,7 @@ import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 
-const ipcRenderer = (window as any).ipcRenderer;
+const ipcRenderer = window.ipcRenderer;
 
 interface TerminalProps {
   id: string;

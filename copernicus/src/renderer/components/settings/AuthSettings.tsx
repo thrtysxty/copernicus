@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-const ipcRenderer = (window as any).ipcRenderer;
+import { useIpcError } from '../../hooks/useIpcError';
 
 interface AuthStatus {
   provider: string;
@@ -10,6 +9,7 @@ interface AuthStatus {
 }
 
 export const AuthSettings: React.FC = () => {
+  const invoke = useIpcError();
   const [status, setStatus] = useState<AuthStatus[]>([]);
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
@@ -22,7 +22,7 @@ export const AuthSettings: React.FC = () => {
 
   const fetchStatus = async () => {
     try {
-      const s = await ipcRenderer.invoke('auth:status');
+      const s = await invoke<AuthStatus[]>('auth:status');
       setStatus(s);
     } catch (e) {
       console.error('Failed to fetch auth status', e);
@@ -35,7 +35,7 @@ export const AuthSettings: React.FC = () => {
 
   const handleSave = async (provider: string) => {
     try {
-      await ipcRenderer.invoke('auth:store-api-key', provider, apiKey, baseUrl || undefined);
+      await invoke('auth:store-api-key', provider, apiKey, baseUrl || undefined);
       setEditingProvider(null);
       setApiKey('');
       setBaseUrl('');
@@ -48,7 +48,7 @@ export const AuthSettings: React.FC = () => {
   const handleAddCustom = async () => {
       if (!newProviderName || !newProviderKey) return;
       try {
-          await ipcRenderer.invoke('auth:store-api-key', newProviderName, newProviderKey, newProviderUrl || undefined);
+          await invoke('auth:store-api-key', newProviderName, newProviderKey, newProviderUrl || undefined);
           setNewProviderName('');
           setNewProviderKey('');
           setNewProviderUrl('');

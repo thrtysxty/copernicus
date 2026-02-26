@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react'
-
-const ipcRenderer = (window as any).ipcRenderer
+import { useIpcError } from '../hooks/useIpcError'
 
 export function CommandDeck() {
+  const invoke = useIpcError()
   const [targets, setTargets] = useState<string[]>([])
   const [running, setRunning] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchTargets = async () => {
       try {
-        const result = await ipcRenderer.invoke('makefile:list')
-        setTargets(result)
+        const result = await invoke('makefile:list')
+        setTargets(result as string[])
       } catch (e) {
         console.warn("Failed to fetch makefile targets, using fallback", e)
         setTargets(['test', 'test_e2e', 'backlog', 'deploy', 'clean', 'dev', 'db-migrate'])
       }
     }
     fetchTargets()
-  }, [])
+  }, [invoke])
 
   const runTarget = async (target: string) => {
     setRunning(target)
     try {
-      await ipcRenderer.invoke('makefile:run', target)
+      await invoke('makefile:run', target)
     } catch (e) {
       console.error(`Failed to run target ${target}`, e)
     } finally {

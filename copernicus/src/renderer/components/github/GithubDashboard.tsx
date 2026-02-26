@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Github, Lock, Globe, Plus, Link, GitBranch } from 'lucide-react';
+import { useIpcError } from '../../hooks/useIpcError';
 
 interface Repo {
   name: string;
@@ -14,9 +15,8 @@ interface User {
   html_url?: string;
 }
 
-const ipcRenderer = (window as any).ipcRenderer;
-
 export const GithubDashboard: React.FC = () => {
+  const invoke = useIpcError();
   const [repos, setRepos] = useState<Repo[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,9 +32,9 @@ export const GithubDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const userData = await ipcRenderer.invoke('github:user');
-      const reposData = await ipcRenderer.invoke('github:list-repos');
-      
+      const userData = await invoke<User>('github:user');
+      const reposData = await invoke<Repo[]>('github:list-repos');
+
       setUser(userData);
       setRepos(Array.isArray(reposData) ? reposData : []);
     } catch (error) {
@@ -48,7 +48,7 @@ export const GithubDashboard: React.FC = () => {
     if (!newRepoName.trim()) return;
     setCreating(true);
     try {
-      await ipcRenderer.invoke('github:create-repo', { name: newRepoName, description: '', isPrivate });
+      await invoke('github:create-repo', { name: newRepoName, description: '', isPrivate });
       setIsModalOpen(false);
       setNewRepoName('');
       fetchData(); // Refresh the list

@@ -26,8 +26,8 @@ window.onunhandledrejection = (event: PromiseRejectionEvent) => {
 }
 
 // Listen for critical errors from the main process
-if ((window as any).ipcRenderer) {
-  (window as any).ipcRenderer.on('app:critical-error', (_e: unknown, payload: any) => {
+if (window.ipcRenderer) {
+  window.ipcRenderer.on('app:critical-error', (_e: unknown, payload: any) => {
     const p = payload as { type: string; message: string };
     useToastStore.getState().addToast(`[Main] ${p.type}: ${p.message}`, 'error')
   })

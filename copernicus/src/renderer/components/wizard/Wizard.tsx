@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, Terminal, FolderOpen, DollarSign, Check, X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useIpcError } from '../../hooks/useIpcError';
 
 interface WizardProps {
   onComplete: () => void;
 }
 
 const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
+  const invoke = useIpcError();
   const [step, setStep] = useState(0);
   const [cliStatus, setCliStatus] = useState<Record<string, boolean> | null>(null);
   const [workspacePath, setWorkspacePath] = useState('');
@@ -17,14 +19,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
   // Step 0: Detect CLI Tools
   useEffect(() => {
     if (step === 0) {
-      const ipcRenderer = (window as any).ipcRenderer;
-      if (ipcRenderer) {
-        ipcRenderer.invoke('check-cli-tools').then((result: any) => {
-          setCliStatus(result);
-        });
-      }
+      invoke<Record<string, boolean>>('check-cli-tools').then((result) => {
+        setCliStatus(result);
+      });
     }
-  }, [step]);
+  }, [step, invoke]);
 
   const handleNext = () => {
     if (step < 3) {
@@ -41,19 +40,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
   };
 
   const handleSelectFolder = async () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    if (ipcRenderer) {
-      const path = await ipcRenderer.invoke('select-folder');
-      if (path) {
-        setWorkspacePath(path);
-      }
+    const path = await invoke<string>('select-folder');
+    if (path) {
+      setWorkspacePath(path);
     }
   };
 
   const handleFinish = async () => {
-    const ipcRenderer = (window as any).ipcRenderer;
-    if (!ipcRenderer) return;
-
     const preferences = {
       workspace: workspacePath,
       capex: {
@@ -68,9 +61,9 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
         theme: 'technical-phosphor'
       }
     };
-    
-    await ipcRenderer.invoke('save-preferences', preferences);
-    await ipcRenderer.invoke('restart-app');
+
+    await invoke('save-preferences', preferences);
+    await invoke('restart-app');
     onComplete();
   };
 

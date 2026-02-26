@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 
-const ipcRenderer = (window as any).ipcRenderer
+const ipcRenderer = window.ipcRenderer
 
 export type Verdict = 'APPROVE' | 'WARN' | 'REJECT'
 
@@ -92,8 +92,8 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
     ipcRenderer.on('chat:done', handleDone)
 
     return () => {
-      ipcRenderer.removeListener('chat:token', handleToken)
-      ipcRenderer.removeListener('chat:done', handleDone)
+      ipcRenderer.off('chat:token', handleToken)
+      ipcRenderer.off('chat:done', handleDone)
     }
   }, [claudeSessionId, geminiSessionId])
 

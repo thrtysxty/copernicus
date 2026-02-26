@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { useLayoutStore } from '../../store/layout'
-
-const ipcRenderer = (window as any).ipcRenderer
+import { useIpcError } from '../../hooks/useIpcError'
 
 export const StatusBar: React.FC = () => {
-  const { 
-    workingDir, 
-    gitBranch, 
-    isGitDirty, 
-    agentTelemetry, 
-    capexTotal, 
+  const invoke = useIpcError()
+  const {
+    workingDir,
+    gitBranch,
+    isGitDirty,
+    agentTelemetry,
+    capexTotal,
     capexSessionTime,
     activeStoryId,
     setTelemetry
@@ -27,8 +27,8 @@ export const StatusBar: React.FC = () => {
 
   // Listen for critical errors
   useEffect(() => {
-    if (!ipcRenderer) return
-    const removeListener = ipcRenderer.on('app:critical-error', () => {
+    if (!window.ipcRenderer) return
+    const removeListener = window.ipcRenderer.on('app:critical-error', () => {
       setHasError(true)
     })
     return () => removeListener()
@@ -85,7 +85,7 @@ export const StatusBar: React.FC = () => {
         {hasError && (
           <button
             className="text-red-400 text-[8px] font-mono px-3 animate-pulse flex items-center gap-1 hover:text-red-300 transition-colors"
-            onClick={() => ipcRenderer.invoke('app:open-log')}
+            onClick={() => invoke('app:open-log')}
             title="Critical error — click to open log"
           >
             ● ERROR

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-
-const ipcRenderer = (window as any).ipcRenderer
+import { useIpcError } from '../hooks/useIpcError'
 
 interface Story {
   id: string
@@ -20,12 +19,13 @@ const COLUMNS = [
 ]
 
 export function KanbanBoard() {
+  const invoke = useIpcError()
   const [stories, setStories] = useState<Story[]>([])
 
   useEffect(() => {
     const fetchStories = async () => {
        try {
-         const result = await ipcRenderer.invoke('stories:list')
+         const result = await invoke<Story[]>('stories:list')
          setStories(result)
        } catch (e) {
          console.warn("Failed to fetch stories", e)
@@ -37,12 +37,12 @@ export function KanbanBoard() {
        }
     }
     fetchStories()
-    
-    const removeListener = ipcRenderer.on('stories:updated', (_event: any, newStories: Story[]) => {
+
+    const removeListener = window.ipcRenderer.on('stories:updated', (_event: any, newStories: Story[]) => {
       setStories(newStories)
     })
     return () => removeListener()
-  }, [])
+  }, [invoke])
 
   const handleDragStart = (e: any, id: string) => {
     e.dataTransfer.setData('text/plain', id)
@@ -56,7 +56,7 @@ export function KanbanBoard() {
     setStories(prev => prev.map(s => s.id === id ? { ...s, status: targetStatus } : s))
     
     try {
-      await ipcRenderer.invoke('stories:update', id, targetStatus)
+      await invoke('stories:update', id, targetStatus)
     } catch (e) {
       console.error("Failed to update story status", e)
     }
@@ -87,9 +87,7 @@ export function KanbanBoard() {
                 onDragStart={(e) => handleDragStart(e, story.id as any)}
                 className="p-3 bg-zinc-900/80 border border-zinc-800 rounded cursor-grab active:cursor-grabbing hover:border-copernicus-phosphor/50 hover:shadow-[0_0_10px_rgba(74,222,128,0.1)] transition-all group"
                 onClick={() => {
-                  try {
-                    ipcRenderer.invoke('stories:hydrate', story.id)
-                  } catch (e) { console.error(e) }
+                  invoke('stories:hydrate', story.id).catch(console.error)
                 }}
               >
                 <div className="text-xs font-semibold text-zinc-300 group-hover:text-copernicus-phosphor truncate">

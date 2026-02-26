@@ -1,4 +1,4 @@
-const ipcRenderer = (window as any).ipcRenderer
+const ipcRenderer = window.ipcRenderer
 
 export interface Command {
   name: string          // e.g. '/help'

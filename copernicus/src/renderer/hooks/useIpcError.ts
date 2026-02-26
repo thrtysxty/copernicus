@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useToastStore } from '../store/toastStore'
 
-const ipcRenderer = (window as any).ipcRenderer
+const ipcRenderer = window.ipcRenderer
 
 /**
  * Wraps ipcRenderer.invoke() with automatic error toasting.

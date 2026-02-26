@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-
-const ipcRenderer = (window as any).ipcRenderer;
+import { useIpcError } from '../hooks/useIpcError';
 
 interface StatusData {
     session: {
@@ -13,12 +12,13 @@ interface StatusData {
 }
 
 export function CapexStatus() {
+  const invoke = useIpcError();
   const [status, setStatus] = useState<StatusData | null>(null);
 
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await ipcRenderer.invoke('devtime:status');
+        const res = await invoke<StatusData>('devtime:status');
         setStatus(res);
       } catch (e) {
         console.error("Failed to fetch capex status", e);
@@ -28,7 +28,7 @@ export function CapexStatus() {
     fetchStatus();
     const interval = setInterval(fetchStatus, 60000); // every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [invoke]);
 
   if (!status || !status.session) return (
     <div className="flex items-center gap-2 text-[9px] text-zinc-700 font-mono italic">

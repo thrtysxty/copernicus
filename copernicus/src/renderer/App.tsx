@@ -23,7 +23,7 @@ import { CommandPalette } from './components/layout/CommandPalette'
 import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 
-const ipcRenderer = (window as any).ipcRenderer
+const ipcRenderer = window.ipcRenderer
 
 // Panel Header Helper
 const PanelHeader = ({ title, onSpotlight, onFlip, isSpotlightActive }: any) => (

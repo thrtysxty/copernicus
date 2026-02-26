@@ -1,9 +1,8 @@
 import React, { useState } from 'react'
 import { useLayoutStore, PHOSPHOR_PRESETS, PhosphorColor } from '../../store/layout'
 import { useToastStore } from '../../store/toastStore'
+import { useIpcError } from '../../hooks/useIpcError'
 import { X } from 'lucide-react'
-
-const ipcRenderer = (window as any).ipcRenderer
 
 // Use the canonical presets from the store — keys are 'green' | 'amber' | 'white' | 'blue'
 const PRESET_ENTRIES = Object.entries(PHOSPHOR_PRESETS) as [PhosphorColor, { label: string; hex: string }][]
@@ -13,6 +12,7 @@ interface SettingsPanelProps {
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
+  const invoke = useIpcError()
   const { phosphorColor, setPhosphorColor, reviewEnabled, setReviewEnabled } = useLayoutStore()
   const addToast = useToastStore(s => s.addToast)
 
@@ -32,7 +32,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
 
       await Promise.all(
         entries.map(([provider, key]) =>
-          ipcRenderer.invoke('auth:store-api-key', { provider, key: key.trim() })
+          invoke('auth:store-api-key', { provider, key: key.trim() })
         )
       )
       addToast('API keys saved', 'success')

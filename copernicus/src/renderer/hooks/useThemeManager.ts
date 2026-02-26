@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useLayoutStore, PHOSPHOR_PRESETS } from '../store/layout'
 
-const ipcRenderer = (window as any).ipcRenderer
+const ipcRenderer = window.ipcRenderer
 
 export function useThemeManager() {
   const phosphorColor = useLayoutStore((state) => state.phosphorColor)

@@ -1,7 +1,7 @@
 import { commandRegistry, Command, CommandContext } from './registry';
 
 const sendToTerminal = (terminalId: string, text: string) => {
-  const ipcRenderer = (window as any).ipcRenderer;
+  const ipcRenderer = window.ipcRenderer;
   if (ipcRenderer) {
     ipcRenderer.send('terminal:write', { id: terminalId, data: text + '\r' });
   } else {
@@ -42,7 +42,7 @@ const commands: Command[] = [
     name: '/forward',
     description: 'Forward last response to Gemini',
     execute: (args: string, ctx: CommandContext) => {
-       const ipcRenderer = (window as any).ipcRenderer;
+       const ipcRenderer = window.ipcRenderer;
        if (ipcRenderer) {
          ipcRenderer.send('agent:forward', { target: 'gemini', args });
          ctx.appendMessage('assistant', `Forwarded to gemini: ${args}`);

@@ -6,7 +6,7 @@ import { commandRegistry, CommandContext, Command } from '../../commands/registr
 import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
 
-const ipcRenderer = (window as any).ipcRenderer
+const ipcRenderer = window.ipcRenderer
 
 interface Message {
   id: string
