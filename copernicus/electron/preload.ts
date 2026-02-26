@@ -19,11 +19,12 @@ const SEND_CHANNELS = new Set([
   // Git
   'git:branch',
   // Stories
-  'stories:list', 'stories:update', 'stories:hydrate',
+  'stories:list', 'stories:update', 'stories:hydrate', 'story:scaffold',
   // Makefile
   'makefile:list', 'makefile:run', 'system:make',
   // Terminal
   'terminal-create', 'terminal-resize', 'terminal-write', 'terminal-kill',
+  'terminal:spawn-agent',
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
   'db:add-memory', 'db:search-memory',
@@ -31,15 +32,15 @@ const SEND_CHANNELS = new Set([
   'layout:update-telemetry',
   // Agent interop
   'agent:delegate', 'agent:forward',
-  // Terminal
-  'terminal:spawn-agent',
-  // Stories
-  'story:scaffold',
   // Security
   'security:git-push-response',
+  // Settings
+  'settings:save', 'settings:load',
   // Splash / wizard
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
+  // App Control
+  'app:open-log',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -47,6 +48,7 @@ const LISTEN_CHANNELS = new Set([
   'main-process-message',
   'chat:token', 'chat:done', 'chat:error',
   'terminal-incoming', 'terminal-closed', 'terminal:data', 'terminal-blocked',
+  'terminal:activate-tab',
   'stories:updated',
   'editor:open',
   'agent:input', 'agent:message', 'agent:error',
@@ -54,6 +56,7 @@ const LISTEN_CHANNELS = new Set([
   'telemetry:update-touchbar',
   'security:git-push-request',
   'splash-status',
+  'app:critical-error',
 ])
 
 // ---------------------------------------------------------------------------

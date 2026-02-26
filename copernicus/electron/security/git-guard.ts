@@ -39,7 +39,7 @@ export class GitGuard {
    */
   public async check(agentId: string, command: string): Promise<boolean> {
     // 1. Critical Hard Block: Destructive or ID-spoofing commands
-    const blockRegex = /\bgit\s+(push\s+.*(--force|-f)|remote\s+add|config\s+.*user)\b/;
+    const blockRegex = /\bgit\s+(push\s+.*(--force(?:-with-lease)?|-f)|remote\s+add|config\s+.*user)\b/;
     if (blockRegex.test(command)) {
       console.warn(`[SECURITY] Hard block on destructive git command: ${command}`);
       return false;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, session } from 'electron'
 import path from 'node:path'
 import { spawn, execFile } from 'node:child_process'
 import fs from 'node:fs'
@@ -38,6 +38,38 @@ const COPERNICUS_HOME = path.join(os.homedir(), '.copernicus')
 const LOG_DIR = path.join(COPERNICUS_HOME, 'logs')
 log.transports.file.resolvePathFn = () => path.join(LOG_DIR, 'copernicus.log')
 Object.assign(console, log.functions)
+
+// ── Global process safety nets ────────────────────────────────────────────
+process.on('uncaughtException', (error: Error) => {
+  console.error('[Main] uncaughtException:', error.stack ?? error.message)
+  // Broadcast to renderer if window exists
+  const wins = BrowserWindow.getAllWindows()
+  wins.forEach(w => {
+    if (!w.isDestroyed()) {
+      w.webContents.send('app:critical-error', {
+        type: 'uncaughtException',
+        message: error.message,
+        stack: error.stack,
+      })
+    }
+  })
+})
+
+process.on('unhandledRejection', (reason: unknown) => {
+  const message = reason instanceof Error ? reason.message : String(reason)
+  const stack   = reason instanceof Error ? reason.stack  : undefined
+  console.error('[Main] unhandledRejection:', stack ?? message)
+  const wins = BrowserWindow.getAllWindows()
+  wins.forEach(w => {
+    if (!w.isDestroyed()) {
+      w.webContents.send('app:critical-error', {
+        type: 'unhandledRejection',
+        message,
+        stack,
+      })
+    }
+  })
+})
 
 // Determine project root (docs/ folder is in parent of copernicus/)
 const ROOT_PATH = path.resolve(__dirname, '../../')
@@ -229,6 +261,11 @@ function registerIpcHandlers() {
   
   ipcMain.handle('settings:load', () => loadSettings())
 
+  ipcMain.handle('app:open-log', () => {
+    const logFilePath = path.join(LOG_DIR, 'copernicus.log')
+    return shell.openPath(logFilePath)
+  })
+
   // Auth Handlers
   ipcMain.handle('auth:status', () => {
     return authManager.getAuthStatus();
@@ -414,11 +451,11 @@ function registerIpcHandlers() {
 
     // Look up the agent command from model registry or a static map
     const AGENT_COMMANDS: Record<string, string[]> = {
-      sentinel: ['python', ['scripts/agent_cli.py', '--persona', 'sentinel']],
-      claude:   ['node',   ['scripts/claude_ollama_cli.py']],
-      gemini:   ['python', ['scripts/agent_cli.py', '--persona', 'gemini']],
-      jules:    ['python', ['scripts/agent_cli.py', '--persona', 'jules']],
-    } as any
+      sentinel: ['python', 'scripts/agent_cli.py', '--persona', 'sentinel'],
+      claude:   ['node',   'scripts/claude_ollama_cli.py'],
+      gemini:   ['python', 'scripts/agent_cli.py', '--persona', 'gemini'],
+      jules:    ['python', 'scripts/agent_cli.py', '--persona', 'jules'],
+    }
 
     const agentCmd = AGENT_COMMANDS[agentId]
     if (!agentCmd) {
@@ -536,8 +573,7 @@ function registerIpcHandlers() {
       throw new Error('[fs:save-file] Invalid payload')
     }
     const { filePath, content } = payload as { filePath: string; content: string }
-    fsManager.writeFile(filePath, content)
-    return { ok: true }
+    return fsManager.writeFile(filePath, content)
   })
 
   ipcMain.handle('app:get-root-path', () => {
@@ -574,6 +610,25 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(() => {
+  // ── Content Security Policy ────────────────────────────────────────────────
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self'; " +
+          "script-src 'self' 'unsafe-eval'; " +    // unsafe-eval needed for Monaco editor
+          "style-src 'self' 'unsafe-inline'; " +   // unsafe-inline needed for Tailwind
+          "img-src 'self' data: blob:; " +
+          "font-src 'self' data:; " +
+          "connect-src 'self' https://api.anthropic.com https://openrouter.ai " +
+          "https://api.openai.com https://generativelanguage.googleapis.com; " +
+          "worker-src blob:;"
+        ],
+      },
+    })
+  })
+
   ensureCopernicusDirectory();
   registerIpcHandlers();
   createSplashWindow();
