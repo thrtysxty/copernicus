@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Maximize2, Terminal, FolderOpen, DollarSign, Check, X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Maximize2, Terminal, FolderOpen, DollarSign, Check, X, ArrowRight, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
+
+type OAuthState = 'idle' | 'waiting' | 'success' | 'error'
 
 interface WizardProps {
   onComplete: () => void;
@@ -15,6 +17,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
   const [hourlyRate, setHourlyRate] = useState('65');
   const [anthropicKey, setAnthropicKey] = useState('');
   const [googleKey, setGoogleKey] = useState('');
+  const [googleOAuth, setGoogleOAuth] = useState<{ state: OAuthState; email?: string; error?: string }>({ state: 'idle' });
 
   // Step 0: Detect CLI Tools
   useEffect(() => {
@@ -49,6 +52,29 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
   const handleOpenAuth = (url: string) => {
     invoke('app:open-external', url);
   };
+
+  const handleGoogleOAuth = async () => {
+    setGoogleOAuth({ state: 'waiting' });
+    const result = await invoke<{ ok: boolean; error?: string }>('oauth:start-google');
+    if (!result.ok) {
+      setGoogleOAuth({ state: 'error', error: result.error });
+    }
+    // success is handled by the oauth:callback listener below
+  };
+
+  useEffect(() => {
+    const remove = window.ipcRenderer.on('oauth:callback', (data: any) => {
+      if (data.provider === 'google') {
+        if (data.ok) {
+          setGoogleOAuth({ state: 'success', email: data.email });
+          setGoogleKey('oauth'); // sentinel — actual token stored in keychain
+        } else {
+          setGoogleOAuth({ state: 'error', error: data.error });
+        }
+      }
+    });
+    return () => remove();
+  }, []);
 
   const handleFinish = async () => {
     const preferences = {
@@ -129,43 +155,68 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                 <div className="space-y-6 max-w-2xl mx-auto w-full">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Maximize2 size={18} /> Credentials</h2>
                     <p className="text-sm text-zinc-400">Configure your AI providers (stored securely in OS Keychain).</p>
-                    
-                    <div className="space-y-4">
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="block text-xs font-mono text-zinc-500">ANTHROPIC_API_KEY</label>
+
+                    <div className="space-y-5">
+                        {/* Anthropic — API key only (no public OAuth) */}
+                        <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Anthropic</span>
                                 <button
-                                    onClick={() => handleOpenAuth('https://claude.ai/settings')}
-                                    className="text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
+                                    onClick={() => handleOpenAuth('https://console.anthropic.com/settings/keys')}
+                                    className="flex items-center gap-1 text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
                                 >
-                                    Sign in with Anthropic
+                                    Get API Key <ExternalLink size={10} />
                                 </button>
                             </div>
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
                                 placeholder="sk-ant-..."
                                 value={anthropicKey}
                                 onChange={(e) => setAnthropicKey(e.target.value)}
                             />
+                            <p className="text-[10px] text-zinc-600">Claude.ai monthly subscribers: get a separate API key from the console above.</p>
                         </div>
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="block text-xs font-mono text-zinc-500">GOOGLE_API_KEY</label>
-                                <button
-                                    onClick={() => handleOpenAuth('https://accounts.google.com/AccountChooser?continue=https://myaccount.google.com')}
-                                    className="text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
-                                >
-                                    Sign in with Google
-                                </button>
+
+                        {/* Google — full OAuth PKCE */}
+                        <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Google</span>
+                                {googleOAuth.state === 'success' ? (
+                                    <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor">
+                                        <Check size={11} /> Signed in{googleOAuth.email ? ` as ${googleOAuth.email}` : ''}
+                                    </span>
+                                ) : (
+                                    <button
+                                        onClick={handleGoogleOAuth}
+                                        disabled={googleOAuth.state === 'waiting'}
+                                        className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide disabled:opacity-50"
+                                    >
+                                        {googleOAuth.state === 'waiting'
+                                            ? <><Loader2 size={10} className="animate-spin" /> Waiting for browser...</>
+                                            : 'Sign in with Google'}
+                                    </button>
+                                )}
                             </div>
-                            <input 
-                                type="password" 
-                                className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
-                                placeholder="AIza..."
-                                value={googleKey}
-                                onChange={(e) => setGoogleKey(e.target.value)}
-                            />
+
+                            {googleOAuth.state === 'idle' || googleOAuth.state === 'error' ? (
+                                <>
+                                    <input
+                                        type="password"
+                                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
+                                        placeholder="AIza... (or use Sign in above)"
+                                        value={googleKey === 'oauth' ? '' : googleKey}
+                                        onChange={(e) => setGoogleKey(e.target.value)}
+                                    />
+                                    {googleOAuth.state === 'error' && (
+                                        <p className="text-[10px] text-red-400">{googleOAuth.error}</p>
+                                    )}
+                                </>
+                            ) : googleOAuth.state === 'waiting' ? (
+                                <p className="text-[10px] text-zinc-500 animate-pulse">Browser opened — sign in and return here automatically.</p>
+                            ) : (
+                                <p className="text-[10px] text-zinc-600">Token stored securely. You can also paste an API key to override.</p>
+                            )}
                         </div>
                     </div>
                 </div>

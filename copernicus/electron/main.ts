@@ -3,6 +3,8 @@ import path from 'node:path'
 import { spawn, execFile } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
+import { createServer } from 'node:http'
+import { randomBytes, createHash } from 'node:crypto'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
 import { AuthManager } from './auth-manager'
@@ -242,18 +244,128 @@ function registerIpcHandlers() {
     return shell.openExternal(url);
   })
 
+  // ── Google OAuth PKCE ─────────────────────────────────────────────────────
+  const GOOGLE_OAUTH_PORT = 47322
+
+  function generatePKCE() {
+    const verifier = randomBytes(32).toString('base64url')
+    const challenge = createHash('sha256').update(verifier).digest('base64url')
+    return { verifier, challenge }
+  }
+
+  async function exchangeGoogleToken(code: string, verifier: string, clientId: string) {
+    const body = new URLSearchParams({
+      code,
+      client_id: clientId,
+      code_verifier: verifier,
+      redirect_uri: `http://localhost:${GOOGLE_OAUTH_PORT}/callback`,
+      grant_type: 'authorization_code',
+    })
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    })
+    const data = await res.json() as any
+    if (!data.access_token) throw new Error(data.error_description ?? 'Token exchange failed')
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${data.access_token}` },
+    })
+    const user = await userRes.json() as any
+    return { access_token: data.access_token as string, email: (user.email ?? '') as string }
+  }
+
+  ipcMain.handle('oauth:start-google', () => {
+    const clientId = (settingsStore.get('googleOAuthClientId', '') as string).trim()
+    if (!clientId) {
+      return { ok: false, error: 'No Google OAuth Client ID configured — add it in Settings > Credentials.' }
+    }
+
+    return new Promise<{ ok: boolean; error?: string }>((resolve) => {
+      const { verifier, challenge } = generatePKCE()
+      const state = randomBytes(16).toString('hex')
+
+      const server = createServer(async (req, res) => {
+        if (!req.url?.startsWith('/callback')) { res.end(); return }
+
+        const url = new URL(req.url, `http://localhost:${GOOGLE_OAUTH_PORT}`)
+        const code = url.searchParams.get('code')
+        const returnedState = url.searchParams.get('state')
+
+        res.writeHead(200, { 'Content-Type': 'text/html' })
+        res.end('<html><body style="background:#050505;color:#4ADE80;font-family:monospace;padding:2rem"><p>Authenticated ✓ — you can close this tab.</p></body></html>')
+        server.close()
+
+        if (!code || returnedState !== state) {
+          const err = { provider: 'google', ok: false, error: 'OAuth state mismatch' }
+          win?.webContents.send('oauth:callback', err)
+          resolve({ ok: false, error: err.error })
+          return
+        }
+
+        try {
+          const { access_token, email } = await exchangeGoogleToken(code, verifier, clientId)
+          await authManager.storeApiKey('google', access_token)
+          win?.webContents.send('oauth:callback', { provider: 'google', ok: true, email })
+          resolve({ ok: true })
+        } catch (err: any) {
+          const msg = err?.message ?? 'Unknown error'
+          win?.webContents.send('oauth:callback', { provider: 'google', ok: false, error: msg })
+          resolve({ ok: false, error: msg })
+        }
+      })
+
+      server.listen(GOOGLE_OAUTH_PORT, () => {
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: `http://localhost:${GOOGLE_OAUTH_PORT}/callback`,
+          response_type: 'code',
+          scope: 'openid email https://www.googleapis.com/auth/generative-language',
+          code_challenge: challenge,
+          code_challenge_method: 'S256',
+          state,
+          access_type: 'offline',
+          prompt: 'select_account',
+        })
+        shell.openExternal(`https://accounts.google.com/o/oauth2/v2/auth?${params}`)
+      })
+
+      // 5-minute timeout
+      setTimeout(() => {
+        server.close()
+        resolve({ ok: false, error: 'OAuth timed out — please try again' })
+      }, 5 * 60 * 1000)
+    })
+  })
+
   // Wizard Handlers
   ipcMain.handle('check-cli-tools', async () => {
     const tools = ['claude', 'gemini', 'git', 'node'];
     const results: Record<string, boolean> = {};
     const cmd = process.platform === 'win32' ? 'where' : 'which';
-    
-    await Promise.all(tools.map(tool => new Promise<void>(resolve => {
-       execFile(cmd, [tool], (error) => {
-         results[tool] = !error;
-         resolve();
-       });
-    })));
+
+    // Electron GUI apps inherit a minimal PATH. Augment with common install
+    // locations so Homebrew/nvm/pipx CLIs are found on macOS/Linux.
+    const extraPaths = [
+      '/opt/homebrew/bin',
+      '/opt/homebrew/sbin',
+      '/usr/local/bin',
+      `${process.env.HOME}/.local/bin`,
+      `${process.env.HOME}/.nvm/versions/node/current/bin`,
+    ].join(':')
+    const env = { ...process.env, PATH: `${process.env.PATH ?? ''}:${extraPaths}` }
+
+    // node: Electron ships its own Node runtime — always present
+    results['node'] = true;
+
+    await Promise.all(
+      tools.filter(t => t !== 'node').map(tool => new Promise<void>(resolve => {
+        execFile(cmd, [tool], { env }, (error) => {
+          results[tool] = !error;
+          resolve();
+        });
+      }))
+    );
     return results;
   });
 

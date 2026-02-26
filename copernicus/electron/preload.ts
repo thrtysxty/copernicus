@@ -49,6 +49,8 @@ const SEND_CHANNELS = new Set([
   'save-preferences', 'restart-app', 'app:quit',
   // App Control
   'app:open-log', 'app:open-external',
+  // OAuth
+  'oauth:start-google',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -65,6 +67,7 @@ const LISTEN_CHANNELS = new Set([
   'security:git-push-request',
   'splash-status',
   'app:critical-error',
+  'oauth:callback',
 ])
 
 // ---------------------------------------------------------------------------
