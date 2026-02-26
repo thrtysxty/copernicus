@@ -134,8 +134,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                         <div>
                             <div className="flex justify-between items-center mb-1">
                                 <label className="block text-xs font-mono text-zinc-500">ANTHROPIC_API_KEY</label>
-                                <button 
-                                    onClick={() => handleOpenAuth('https://console.anthropic.com')}
+                                <button
+                                    onClick={() => handleOpenAuth('https://claude.ai/settings')}
                                     className="text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
                                 >
                                     Sign in with Anthropic
@@ -152,8 +152,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete }) => {
                         <div>
                             <div className="flex justify-between items-center mb-1">
                                 <label className="block text-xs font-mono text-zinc-500">GOOGLE_API_KEY</label>
-                                <button 
-                                    onClick={() => handleOpenAuth('https://aistudio.google.com/app/apikey')}
+                                <button
+                                    onClick={() => handleOpenAuth('https://accounts.google.com/AccountChooser?continue=https://myaccount.google.com')}
                                     className="text-[10px] text-copernicus-phosphor hover:underline uppercase tracking-wide"
                                 >
                                     Sign in with Google
