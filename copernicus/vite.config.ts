@@ -9,8 +9,15 @@ export default defineConfig({
     react(),
     electron([
       {
-        // Main process
+        // Main process — native addons must be external (never bundled by Rollup)
         entry: 'electron/main.ts',
+        vite: {
+          build: {
+            rollupOptions: {
+              external: ['better-sqlite3', 'node-pty', 'sqlite-vec'],
+            },
+          },
+        },
       },
       {
         // Preload scripts — multiple inputs require inlineDynamicImports: false
