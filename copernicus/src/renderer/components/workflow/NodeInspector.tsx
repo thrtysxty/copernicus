@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WFNode } from '../../../../electron/workflow/types';
 
 const PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'] as const;
@@ -15,6 +15,14 @@ interface NodeInspectorProps {
 
 export function NodeInspector({ node, authStatus, availableModels, onChange, onClose, onDelete, invoke }: NodeInspectorProps) {
   const [localModels, setLocalModels] = useState<{id:string;name:string}[]>([]);
+  const [stories, setStories] = useState<any[]>([]);
+
+  useEffect(() => {
+    invoke<any[]>('stories:list').then(res => {
+      const data = (res as any).data || res;
+      if (Array.isArray(data)) setStories(data);
+    }).catch(console.error);
+  }, [invoke]);
 
   const updateData = (patch: Record<string, any>) =>
     onChange({ ...node, data: { ...node.data, ...patch } } as WFNode);
@@ -25,6 +33,11 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
       const result = await invoke<{ ok: boolean; models: any[] }>('models:list-ollama');
       if (result.ok) setLocalModels(result.models);
     }
+  };
+
+  const handleStoryChange = async (storyId: string) => {
+    updateData({ storyId });
+    await invoke('workflow:update-node-data', { nodeId: node.id, field: 'boundToStoryId', value: storyId });
   };
 
   const modelsForProvider = node.data.variant === 'agent' && node.data.provider === 'ollama'
@@ -53,7 +66,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
 
         {node.type === 'agent' && <AgentFields data={node.data} modelsForProvider={modelsForProvider} authStatus={authStatus} onUpdate={updateData} onProviderChange={handleProviderChange} />}
         {node.type === 'tool' && <ToolFields data={node.data} onUpdate={updateData} />}
-        {node.type === 'trigger' && <TriggerFields data={node.data} onUpdate={updateData} />}
+        {node.type === 'trigger' && <TriggerFields data={node.data} stories={stories} onUpdate={updateData} onStoryChange={handleStoryChange} />}
         {node.type === 'decision' && <DecisionFields data={node.data} onUpdate={updateData} />}
         {node.type === 'flow' && <FlowFields data={node.data} onUpdate={updateData} />}
       </div>
@@ -192,7 +205,7 @@ function ToolFields({ data, onUpdate }: any) {
   );
 }
 
-function TriggerFields({ data, onUpdate }: any) {
+function TriggerFields({ data, stories, onUpdate, onStoryChange }: any) {
   return (
     <>
       <Field label="Variant">
@@ -202,10 +215,33 @@ function TriggerFields({ data, onUpdate }: any) {
           ))}
         </select>
       </Field>
+      {data.variant === 'story-activated' && (
+        <Field label="Bound to Story">
+          <select 
+            className="inspector-input" 
+            value={data.storyId ?? ''} 
+            onChange={e => onStoryChange(e.target.value)}
+          >
+            <option value="">— select story —</option>
+            {stories.map((s: any) => (
+              <option key={s.id} value={s.id}>{s.id}: {s.title}</option>
+            ))}
+          </select>
+        </Field>
+      )}
       {data.variant === 'story-status-change' && (
         <>
           <Field label="Story ID">
-            <input className="inspector-input" value={data.storyId ?? ''} placeholder="{{storyId}}" onChange={e => onUpdate({ storyId: e.target.value })} />
+            <select 
+              className="inspector-input" 
+              value={data.storyId ?? ''} 
+              onChange={e => onStoryChange(e.target.value)}
+            >
+              <option value="">— select story —</option>
+              {stories.map((s: any) => (
+                <option key={s.id} value={s.id}>{s.id}: {s.title}</option>
+              ))}
+            </select>
           </Field>
           <Field label="Expected Status">
             <input className="inspector-input" value={data.expectedStatus ?? ''} onChange={e => onUpdate({ expectedStatus: e.target.value })} />

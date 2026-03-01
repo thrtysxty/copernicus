@@ -61,6 +61,9 @@ interface LayoutState {
   columns: KanbanColumn[]
   activeWorkflowTemplate: string | null
   centerMode: CenterMode
+  activeFilePath: string | null
+  activeFileContent: string
+  activeFileLanguage: string
 
   // Appearance
   uiDensity: 'compact' | 'normal' | 'comfortable'
@@ -114,6 +117,9 @@ interface LayoutState {
   rotateColumn: (id: string) => void
   setActiveWorkflowTemplate: (id: string | null) => void
   setCenterMode: (mode: CenterMode) => void
+  setActiveFilePath: (path: string | null) => void
+  setActiveFileContent: (content: string) => void
+  setActiveFileLanguage: (language: string) => void
   setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean }>) => void
   toggleUIBuilder: () => void
   setUIComponents: (components: UIComponent[]) => void
@@ -150,6 +156,9 @@ export const useLayoutStore = create<LayoutState>()(
       columns: DEFAULT_COLUMNS,
       activeWorkflowTemplate: null,
       centerMode: 'code',
+      activeFilePath: null,
+      activeFileContent: '',
+      activeFileLanguage: 'typescript',
 
       uiDensity: 'normal',
       fontSize: 12,
@@ -240,6 +249,9 @@ export const useLayoutStore = create<LayoutState>()(
       }),
       setActiveWorkflowTemplate: (id) => set({ activeWorkflowTemplate: id }),
       setCenterMode: (mode) => set({ centerMode: mode }),
+      setActiveFilePath: (path) => set({ activeFilePath: path }),
+      setActiveFileContent: (content) => set({ activeFileContent: content }),
+      setActiveFileLanguage: (language) => set({ activeFileLanguage: language }),
       setAppearance: (patch) => set((state) => ({ ...state, ...patch })),
       toggleUIBuilder: () => set((state) => ({ uiBuilderOpen: !state.uiBuilderOpen })),
       setUIComponents: (components) => set({ uiComponents: components }),

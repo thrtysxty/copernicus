@@ -368,40 +368,46 @@ export default function WorkflowCanvas() {
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-white overflow-hidden relative">
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
-        <button
-            onClick={saveWorkflow}
-            className="px-4 py-2 rounded font-mono text-xs font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
-        >
-            Save
-        </button>
-        <button
-          onClick={async () => {
-            await invoke('workflow:reset');
-            setNodes([]);
-            setEdges([]);
-            setIsRunning(false);
-            setActiveWorkflowTemplate(null);
-          }}
-          className="px-4 py-2 rounded font-mono text-xs font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
-        >
-          Reset
-        </button>
-        <button
-          onClick={runWorkflow}
-          disabled={isRunning}
-          className={`px-4 py-2 rounded font-mono text-xs font-bold uppercase tracking-wider
-            ${isRunning ? 'bg-zinc-900 text-zinc-600 cursor-not-allowed' : 'bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/40 hover:bg-copernicus-phosphor/30'}
-            transition-colors`}
-        >
-          {isRunning ? 'Running...' : 'Run Workflow'}
-        </button>
-      </div>
-
-      <div className="px-4 py-1 border-b border-copernicus-steel text-[9px] font-mono uppercase tracking-widest">
-        <span className={activeStoryId ? 'text-copernicus-phosphor' : 'text-zinc-600'}>
-          {activeStoryId ? `BOUND TO: ${activeStoryId}` : 'NO STORY SELECTED'}
-        </span>
+      {/* Fixed Toolbar AC-6 */}
+      <div className="flex-none px-4 py-2 border-b border-copernicus-steel bg-zinc-950 flex items-center justify-between z-30">
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Workflow Studio</span>
+          <div className="px-2 py-0.5 border border-copernicus-steel rounded text-[9px] font-mono uppercase tracking-widest">
+            <span className={activeStoryId ? 'text-copernicus-phosphor' : 'text-zinc-600'}>
+              {activeStoryId ? `BOUND TO: ${activeStoryId}` : 'NO STORY SELECTED'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="flex gap-2">
+          <button
+              onClick={saveWorkflow}
+              className="px-3 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
+          >
+              Save
+          </button>
+          <button
+            onClick={async () => {
+              await invoke('workflow:reset');
+              setNodes([]);
+              setEdges([]);
+              setIsRunning(false);
+              setActiveWorkflowTemplate(null);
+            }}
+            className="px-3 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
+          >
+            Reset
+          </button>
+          <button
+            onClick={runWorkflow}
+            disabled={isRunning}
+            className={`px-3 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider
+              ${isRunning ? 'bg-zinc-900 text-zinc-600 cursor-not-allowed' : 'bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/40 hover:bg-copernicus-phosphor/30'}
+              transition-colors`}
+          >
+            {isRunning ? 'Running...' : 'Run Workflow'}
+          </button>
+        </div>
       </div>
 
       {nodes.length === 0 && (
@@ -464,7 +470,8 @@ export default function WorkflowCanvas() {
         {/* SVG Canvas */}
         <svg
           ref={svgRef}
-          className="flex-1 h-full cursor-crosshair"
+          tabIndex={0}
+          className="flex-1 h-full cursor-crosshair outline-none"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onClick={() => setSelectedNodeId(null)}

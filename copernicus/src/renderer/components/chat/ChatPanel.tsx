@@ -434,12 +434,31 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     )
   }
 
+  const handleFileAttach = async () => {
+    try {
+      const filePath = await invoke<string | null>('fs:select-file')
+      if (!filePath) return
+
+      const content = await invoke<string>('fs:read-file', filePath)
+      if (typeof content !== 'string') return
+
+      setContext(prev => [...prev, {
+        type: 'file',
+        label: filePath.split(/[/\\]/).pop() ?? filePath,
+        content: `\n// File: ${filePath}\n${content}\n`,
+      }])
+    } catch (err) {
+      console.error('[ChatPanel] File attach failed:', err)
+    }
+  }
+
   const triggerPicker = async (mode: PickerMode) => {
     setPickerMode(mode)
     if (mode === 'file') {
       const result = await invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '')
-      if (result.ok) {
-        setPickerResults(result.data.filter(n => !n.isDir).map(n => ({
+      const data = (result as any).data || result
+      if (Array.isArray(data)) {
+        setPickerResults(data.filter(n => !n.isDir).map(n => ({
           label: n.name,
           value: n.path,
           payload: n.path,
@@ -447,11 +466,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       }
     } else if (mode === 'story') {
       const stories = await invoke<any[]>('stories:list')
-      setPickerResults(stories.map((s: any) => ({
-        label: s.title ?? s.id,
-        value: s.id,
-        payload: s.content ?? '',
-      })))
+      const data = (stories as any).data || stories
+      if (Array.isArray(data)) {
+        setPickerResults(data.map((s: any) => ({
+          label: s.title ?? s.id,
+          value: s.id,
+          payload: s.content ?? '',
+        })))
+      }
     }
   }
 
@@ -498,7 +520,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         </div>
 
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={() => toggleFlip('right')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
+          <button onClick={() => toggleFlip('chat')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
             <RotateCcw size={10} />
           </button>
           <button
@@ -537,7 +559,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         </div>
       )}
 
-      {/* Input Area */}
+      {/* Input Area Input Area */}
       <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
         {centerMode === 'builder' && uiComponents.length > 0 && (
           <div className="flex items-center gap-1.5 px-2 pb-2 text-[8px] text-copernicus-phosphor/60 font-mono uppercase tracking-tighter">
@@ -622,8 +644,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 const query = newValue.slice(atIndex + 1)
                 setPickerMode('file')
                 invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '').then((result) => {
-                  if (result.ok) {
-                    const filtered = result.data.filter(n =>
+                  const data = (result as any).data || result
+                  if (Array.isArray(data)) {
+                    const filtered = data.filter(n =>
                       !n.isDir && n.name.toLowerCase().includes(query.toLowerCase())
                     )
                     setPickerResults(filtered.map(n => ({
@@ -637,15 +660,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 const query = newValue.slice(hashIndex + 1)
                 setPickerMode('story')
                 invoke<any[]>('stories:list').then((stories) => {
-                  const filtered = stories.filter((s: any) =>
-                    s.id?.toLowerCase().includes(query.toLowerCase()) ||
-                    s.title?.toLowerCase().includes(query.toLowerCase())
-                  )
-                  setPickerResults(filtered.map((s: any) => ({
-                    label: s.title ?? s.id,
-                    value: s.id,
-                    payload: s.content ?? '',
-                  })))
+                  const data = (stories as any).data || stories
+                  if (Array.isArray(data)) {
+                    const filtered = data.filter((s: any) =>
+                      s.id?.toLowerCase().includes(query.toLowerCase()) ||
+                      s.title?.toLowerCase().includes(query.toLowerCase())
+                    )
+                    setPickerResults(filtered.map((s: any) => ({
+                      label: s.title ?? s.id,
+                      value: s.id,
+                      payload: s.content ?? '',
+                    })))
+                  }
                 }).catch(console.error)
               } else {
                 setPickerMode('none')
@@ -660,9 +686,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
             <div className="flex gap-2 text-zinc-500">
               <button
-                onClick={() => triggerPicker('file')}
+                onClick={handleFileAttach}
                 className="hover:text-copernicus-phosphor transition-colors"
-                title="Attach File (@)"
+                title="Attach File (Dialog)"
                 disabled={isStreaming}
               >
                 <Paperclip size={12} />

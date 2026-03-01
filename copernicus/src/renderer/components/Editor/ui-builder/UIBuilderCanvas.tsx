@@ -6,7 +6,7 @@ import { UIComponentInspector } from './UIComponentInspector'
 import { Rnd } from 'react-rnd'
 import {
   Code, Download, Trash2, Layout,
-  GripVertical,
+  GripVertical, RotateCcw, Maximize2, Minimize2, X,
   MousePointer2, Square, Type, Image as ImageIcon,
   FormInput, Layers, Box
 } from 'lucide-react'
@@ -50,7 +50,11 @@ const PALETTE: Array<{ section: string; icon: any; items: Array<{ type: UICompon
 ]
 
 export const UIBuilderCanvas: React.FC = () => {
-  const { uiComponents, setUIComponents } = useLayoutStore()
+  const { 
+    uiComponents, setUIComponents, 
+    toggleUIBuilder, toggleFlip, 
+    setSpotlight, spotlightPane 
+  } = useLayoutStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(true)
   const [inspectorOpen, setInspectorOpen] = useState(true)
@@ -163,8 +167,12 @@ export const UIBuilderCanvas: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505] overflow-hidden" ref={containerRef}>
-      {/* Toolbar */}
+      {/* Toolbar AC-5 */}
       <div className="h-8 flex items-center gap-2 px-3 border-b border-zinc-800 bg-[#0A0A0A] select-none">
+        <div className="flex items-center gap-1 border-r border-zinc-800 pr-2 mr-1 font-mono text-[10px] text-copernicus-phosphor font-bold tracking-widest">
+          UI_BUILDER
+        </div>
+
         <div className="flex items-center gap-1 border-r border-zinc-800 pr-2 mr-1">
           <button 
             onClick={handleExportJSX}
@@ -193,9 +201,6 @@ export const UIBuilderCanvas: React.FC = () => {
         <div className="flex-1" />
         
         <div className="flex items-center gap-3">
-          <span className="text-[9px] text-zinc-600 font-mono uppercase tracking-widest">
-            {uiComponents.length} components
-          </span>
           <div className="flex bg-zinc-900 rounded p-0.5 border border-zinc-800">
             <button 
               onClick={() => setPaletteOpen(!paletteOpen)}
@@ -208,6 +213,32 @@ export const UIBuilderCanvas: React.FC = () => {
               className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase ${inspectorOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600'}`}
             >
               Inspector
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-zinc-800 mx-1" />
+
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => toggleFlip('editor')}
+              className="p-1.5 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+              title="Rotate Canvas"
+            >
+              <RotateCcw size={12} />
+            </button>
+            <button 
+              onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+              className="p-1.5 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+              title={spotlightPane === 'editor' ? "Shrink Canvas" : "Spotlight Canvas"}
+            >
+              {spotlightPane === 'editor' ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+            </button>
+            <button 
+              onClick={toggleUIBuilder}
+              className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors"
+              title="Remove Canvas"
+            >
+              <X size={14} />
             </button>
           </div>
         </div>
