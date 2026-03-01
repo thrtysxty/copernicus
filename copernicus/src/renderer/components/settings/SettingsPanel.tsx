@@ -1,207 +1,137 @@
-import React, { useState, useEffect } from 'react'
-import { useLayoutStore, PHOSPHOR_PRESETS, PhosphorColor } from '../../store/layout'
-import { useToastStore } from '../../store/toastStore'
-import { useIpcError } from '../../hooks/useIpcError'
-import { X, ChevronUp, ChevronDown } from 'lucide-react'
+import React, { useState } from 'react'
+import { 
+  X, Shield, Key, Layout, Cpu, 
+  Settings, GitBranch, Workflow, FileText, 
+  Terminal, Database, User
+} from 'lucide-react'
 
-type EmbeddingProvider = 'ollama' | 'google' | 'deepinfra' | 'openai' | 'openrouter'
-const DEFAULT_PROVIDER_ORDER: EmbeddingProvider[] = ['ollama', 'google', 'deepinfra', 'openai', 'openrouter']
+// Import Sections
+import { ProvidersSection } from './sections/ProvidersSection'
+import { ModelsSection } from './sections/ModelsSection'
+import { PersonasSection } from './sections/PersonasSection'
+import { AppearanceSection } from './sections/AppearanceSection'
+import { GitSection } from './sections/GitSection'
+import { WorkflowSection } from './sections/WorkflowSection'
+import { SecuritySection } from './sections/SecuritySection'
+import { TemplatesSection } from './sections/TemplatesSection'
+import { EnvironmentSection } from './sections/EnvironmentSection'
+import { DataSection } from './sections/DataSection'
+import { HardwareSection } from './sections/HardwareSection'
 
-// Use the canonical presets from the store — keys are 'green' | 'amber' | 'white' | 'blue'
-const PRESET_ENTRIES = Object.entries(PHOSPHOR_PRESETS) as [PhosphorColor, { label: string; hex: string }][]
+type TabId = 
+  | 'providers' 
+  | 'models' 
+  | 'personas' 
+  | 'appearance' 
+  | 'git' 
+  | 'workflow' 
+  | 'security' 
+  | 'templates'
+  | 'environment' 
+  | 'data'
+  | 'hardware'
 
 interface SettingsPanelProps {
   onClose: () => void
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
-  const invoke = useIpcError()
-  const { phosphorColor, setPhosphorColor, reviewEnabled, setReviewEnabled } = useLayoutStore()
-  const addToast = useToastStore(s => s.addToast)
+  const [activeTab, setActiveTab] = useState<TabId>('providers')
 
-  const [anthropicKey, setAnthropicKey] = useState('')
-  const [openRouterKey, setOpenRouterKey] = useState('')
-  const [googleKey, setGoogleKey] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [providerOrder, setProviderOrder] = useState<EmbeddingProvider[]>(DEFAULT_PROVIDER_ORDER)
-
-  useEffect(() => {
-    invoke<any>('settings:load').then(s => {
-      if (Array.isArray(s?.embeddingProviderOrder)) {
-        setProviderOrder(s.embeddingProviderOrder)
-      }
-    }).catch(() => {})
-  }, [invoke])
-
-  const moveProvider = (index: number, direction: -1 | 1) => {
-    const newOrder = [...providerOrder]
-    const swapIndex = index + direction
-    if (swapIndex < 0 || swapIndex >= newOrder.length) return
-    ;[newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]]
-    setProviderOrder(newOrder)
-    invoke('settings:save', { embeddingProviderOrder: newOrder }).catch(() => {})
-  }
-
-  const handleSaveKeys = async () => {
-    setSaving(true)
-    try {
-      const entries: [string, string][] = [
-        ['anthropic', anthropicKey],
-        ['openrouter', openRouterKey],
-        ['google', googleKey],
-      ].filter(([, k]) => k.trim()) as [string, string][]
-
-      await Promise.all(
-        entries.map(([provider, key]) =>
-          invoke('auth:store-api-key', { provider, key: key.trim() })
-        )
-      )
-      addToast('API keys saved', 'success')
-      setAnthropicKey('')
-      setOpenRouterKey('')
-      setGoogleKey('')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err)
-      addToast(`Failed to save keys: ${msg}`, 'error')
-    } finally {
-      setSaving(false)
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'providers':   return <ProvidersSection />
+      case 'models':      return <ModelsSection />
+      case 'personas':    return <PersonasSection />
+      case 'appearance':  return <AppearanceSection />
+      case 'git':         return <GitSection />
+      case 'workflow':    return <WorkflowSection />
+      case 'security':    return <SecuritySection />
+      case 'templates':   return <TemplatesSection />
+      case 'environment': return <EnvironmentSection />
+      case 'data':        return <DataSection />
+      case 'hardware':    return <HardwareSection />
+      default:            return <ProvidersSection />
     }
   }
 
   return (
-    <div className="fixed right-0 top-0 h-full w-72 bg-[#0D0D0D] border-l border-copernicus-steel z-[150] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-copernicus-steel">
-        <span className="text-xs font-mono uppercase tracking-widest text-copernicus-phosphor">
-          Settings
-        </span>
-        <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
-          <X size={14} />
-        </button>
-      </div>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-12">
+      <div className="bg-[#0A0A0A] border border-zinc-800 w-full max-w-5xl h-[700px] flex flex-col shadow-2xl rounded-xl overflow-hidden animate-in zoom-in-95 duration-200">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/20">
+          <div className="flex items-center gap-3 text-copernicus-phosphor">
+            <Settings size={18} />
+            <span className="text-xs font-bold uppercase tracking-[0.2em]">IDE Configuration</span>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="p-2 text-zinc-500 hover:text-white transition-colors rounded-full hover:bg-white/5"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Appearance */}
-        <section>
-          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Appearance</h3>
-          <div className="space-y-2">
-            <div className="text-[11px] text-zinc-400 mb-2">Phosphor Color</div>
-            <div className="flex gap-2">
-              {PRESET_ENTRIES.map(([key, preset]) => (
-                <button
-                  key={key}
-                  title={preset.label}
-                  onClick={() => setPhosphorColor(key)}  // key is 'green' | 'amber' | 'white' | 'blue'
-                  className="w-8 h-8 rounded border-2 transition-all"
-                  style={{
-                    backgroundColor: preset.hex,
-                    borderColor: phosphorColor === key ? preset.hex : 'transparent',
-                    boxShadow: phosphorColor === key ? `0 0 8px ${preset.hex}` : 'none',
-                  }}
-                />
-              ))}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar Navigation */}
+          <div className="w-56 border-r border-zinc-800 bg-black/40 py-6 flex flex-col overflow-y-auto scrollbar-none">
+            <div className="px-4 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Intelligence</div>
+            <TabButton id="providers" label="Providers" icon={<Key size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="models" label="Model Defaults" icon={<Cpu size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="personas" label="Personas" icon={<User size={14} />} active={activeTab} onClick={setActiveTab} />
+            
+            <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Workspace</div>
+            <TabButton id="appearance" label="Appearance" icon={<Layout size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="git" label="Git & GitHub" icon={<GitBranch size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="workflow" label="Workflow" icon={<Workflow size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="templates" label="Templates" icon={<FileText size={14} />} active={activeTab} onClick={setActiveTab} />
+            
+            <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
+            <TabButton id="security" label="Security" icon={<Shield size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="environment" label="Environment" icon={<Terminal size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="hardware" label="Hardware" icon={<Cpu size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="data" label="State & Data" icon={<Database size={14} />} active={activeTab} onClick={setActiveTab} />
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto bg-[#080808]">
+            <div className="max-w-3xl mx-auto p-10">
+              {renderContent()}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Workflow Gates */}
-        <section>
-          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Workflow Gates</h3>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-zinc-400">Parallel Agent Review</span>
-            <button
-              onClick={() => setReviewEnabled(!reviewEnabled)}
-              className={`w-8 h-4 rounded-full transition-colors relative ${
-                reviewEnabled ? 'bg-copernicus-phosphor' : 'bg-zinc-700'
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform`}
-                style={{ left: reviewEnabled ? 'calc(100% - 14px)' : '2px' }}
-              />
-            </button>
-          </div>
-          <p className="text-[9px] text-zinc-600 mt-1">
-            Require Claude & Gemini approval before applying diffs.
-          </p>
-        </section>
-
-        {/* Codebase Index */}
-        <section>
-          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Codebase Index</h3>
-          <p className="text-[9px] text-zinc-600 mb-3">Embedding provider priority. First available provider is used.</p>
-          <div className="space-y-1">
-            {providerOrder.map((provider, idx) => (
-              <div key={provider} className="flex items-center justify-between bg-[#111] border border-zinc-800 px-2 py-1.5 rounded">
-                <span className="text-[11px] font-mono text-zinc-300 uppercase">{provider}</span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => moveProvider(idx, -1)}
-                    disabled={idx === 0}
-                    className="text-zinc-600 hover:text-copernicus-phosphor disabled:opacity-20 transition-colors"
-                  >
-                    <ChevronUp size={12} />
-                  </button>
-                  <button
-                    onClick={() => moveProvider(idx, 1)}
-                    disabled={idx === providerOrder.length - 1}
-                    className="text-zinc-600 hover:text-copernicus-phosphor disabled:opacity-20 transition-colors"
-                  >
-                    <ChevronDown size={12} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* API Keys */}
-        <section>
-          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">API Keys</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="text-[10px] text-zinc-500 block mb-1">Anthropic API Key</label>
-              <input
-                type="password"
-                value={anthropicKey}
-                onChange={e => setAnthropicKey(e.target.value)}
-                placeholder="sk-ant-..."
-                className="w-full bg-[#111] border border-copernicus-steel rounded px-2 py-1.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 placeholder:text-zinc-600"
-              />
+        {/* Footer */}
+        <div className="h-10 px-6 border-t border-zinc-800 bg-black/40 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-[9px] text-zinc-600">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></span>
+              SYSTEM_READY
             </div>
-            <div>
-              <label className="text-[10px] text-zinc-500 block mb-1">OpenRouter API Key</label>
-              <input
-                type="password"
-                value={openRouterKey}
-                onChange={e => setOpenRouterKey(e.target.value)}
-                placeholder="sk-or-..."
-                className="w-full bg-[#111] border border-copernicus-steel rounded px-2 py-1.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 placeholder:text-zinc-600"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-zinc-500 block mb-1">Google API Key</label>
-              <input
-                type="password"
-                value={googleKey}
-                onChange={e => setGoogleKey(e.target.value)}
-                placeholder="AIza..."
-                className="w-full bg-[#111] border border-copernicus-steel rounded px-2 py-1.5 text-xs font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 placeholder:text-zinc-600"
-              />
-              <div className="text-[9px] text-zinc-600 mt-1">
-                Or place OAuth creds at ~/.gemini/oauth_creds.json
-              </div>
-            </div>
-            <button
-              onClick={handleSaveKeys}
-              disabled={saving || (!anthropicKey.trim() && !openRouterKey.trim())}
-              className="w-full py-1.5 text-xs font-mono uppercase tracking-wider rounded bg-copernicus-phosphor/10 text-copernicus-phosphor border border-copernicus-phosphor/30 hover:bg-copernicus-phosphor/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Keys'}
-            </button>
+            <div className="text-[9px] text-zinc-700 font-mono">v0.1.0-STABLE</div>
           </div>
-        </section>
+          <div className="text-[9px] text-zinc-600 italic font-mono">
+            Configuration persistent in ~/.copernicus/preferences.json
+          </div>
+        </div>
       </div>
     </div>
+  )
+}
+
+function TabButton({ id, label, icon, active, onClick }: { id: TabId, label: string, icon: any, active: TabId, onClick: any }) {
+  const isActive = active === id
+  return (
+    <button 
+      onClick={() => onClick(id)}
+      className={`flex items-center gap-3 px-4 py-2.5 text-[11px] font-mono uppercase tracking-widest transition-all
+        ${isActive 
+          ? 'text-copernicus-phosphor bg-copernicus-phosphor/5 border-r-2 border-copernicus-phosphor font-bold' 
+          : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'}`}
+    >
+      <span className={isActive ? 'text-copernicus-phosphor' : 'text-zinc-600'}>{icon}</span>
+      {label}
+    </button>
   )
 }

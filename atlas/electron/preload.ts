@@ -14,13 +14,13 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 });
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  createTerminal: (id: string, cols: number, rows: number, cwd?: string) => 
+  createTerminal: (id: string, cols: number, rows: number, cwd?: string) =>
     ipcRenderer.send('terminal-create', { id, cols, rows, cwd }),
-  resizeTerminal: (id: string, cols: number, rows: number) => 
+  resizeTerminal: (id: string, cols: number, rows: number) =>
     ipcRenderer.send('terminal-resize', { id, cols, rows }),
-  writeTerminal: (id: string, data: string) => 
+  writeTerminal: (id: string, data: string) =>
     ipcRenderer.send('terminal-write', { id, data }),
-  killTerminal: (id: string) => 
+  killTerminal: (id: string) =>
     ipcRenderer.send('terminal-kill', { id }),
   onTerminalData: (callback: (id: string, data: string) => void) => {
     const handler = (_event: any, { id, data }: { id: string, data: string }) => callback(id, data);

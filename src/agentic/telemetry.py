@@ -157,15 +157,11 @@ class Telemetry:
             return cursor.rowcount
         finally:
             conn.close()
-    
+
     # --- Shared Registry (Shared Assets) ---
 
     def register_asset(
-        self,
-        asset_type: str,
-        name: str,
-        content: str,
-        metadata: dict | None = None
+        self, asset_type: str, name: str, content: str, metadata: dict | None = None
     ) -> str:
         """Register a shared asset in the Shared Registry."""
         asset_id = str(uuid.uuid4())
@@ -175,7 +171,15 @@ class Telemetry:
             conn.execute(
                 "INSERT OR REPLACE INTO shared_assets (id, asset_type, name, content, metadata, created_at, updated_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (asset_id, asset_type, name, content, json.dumps(metadata) if metadata else None, now, now),
+                (
+                    asset_id,
+                    asset_type,
+                    name,
+                    content,
+                    json.dumps(metadata) if metadata else None,
+                    now,
+                    now,
+                ),
             )
             conn.commit()
         finally:
@@ -188,7 +192,7 @@ class Telemetry:
         try:
             cursor = conn.execute(
                 "SELECT * FROM shared_assets WHERE asset_type = ? AND name = ?",
-                (asset_type, name)
+                (asset_type, name),
             )
             row = cursor.fetchone()
             return dict(row) if row else None

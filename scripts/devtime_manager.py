@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Optional, List
 
+
 class DevTimeManager:
     DB_PATH = Path.home() / ".copernicus" / "devtime.db"
     LOCK_PATH = Path.home() / ".copernicus" / ".devtime_active"
@@ -86,11 +87,11 @@ FROM dev_sessions;
         context = self.get_context()
         if not context:
             return 0.0
-        
+
         start_time_str = context.get("start_time")
         if not start_time_str:
             return 0.0
-            
+
         try:
             start_time = datetime.datetime.fromisoformat(start_time_str)
             elapsed = (datetime.datetime.now() - start_time).total_seconds()
@@ -141,15 +142,15 @@ FROM dev_sessions;
             start_time = datetime.datetime.fromisoformat(context["start_time"])
             end_time = datetime.datetime.now()
             duration_hours = (end_time - start_time).total_seconds() / 3600.0
-            
+
             # Round to nearest 0.25h, minimum 0.25h
             duration = max(0.25, round(duration_hours * 4) / 4)
-            
+
             with sqlite3.connect(self.DB_PATH) as conn:
                 conn.execute(
                     """
                     INSERT INTO dev_sessions (
-                        date, start_time, duration, phase, financial_category, component, 
+                        date, start_time, duration, phase, financial_category, component,
                         description, commits, story_id
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
@@ -163,13 +164,13 @@ FROM dev_sessions;
                         description,
                         commits,
                         context.get("story_id"),
-                    )
+                    ),
                 )
-            
+
             # Remove lockfile only after successful DB write
             if self.LOCK_PATH.exists():
                 self.LOCK_PATH.unlink()
-            
+
         except Exception as e:
             self.logger.error(f"Failed to close session: {e}")
             raise
@@ -180,7 +181,7 @@ FROM dev_sessions;
             result = subprocess.check_output(
                 ["git", "log", f"-{n}", "--format=%h %s"],
                 stderr=subprocess.DEVNULL,
-                text=True
+                text=True,
             )
             return [line.strip() for line in result.splitlines() if line.strip()]
         except Exception:

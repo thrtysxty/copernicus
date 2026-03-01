@@ -4,12 +4,18 @@ import * as path from 'path';
 import * as os from 'os';
 import yaml from 'js-yaml';
 
-export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'deepinfra' | string;
+export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'deepinfra' | 'ollama' | string;
+export type AuthType = 'oauth' | 'apikey' | 'session' | 'file' | 'env';
 
 export interface AuthConfig {
   provider: ProviderType;
   encryptedKey?: string;
   baseUrl?: string;
+  type: AuthType;
+  metadata?: {
+    email?: string;
+    label?: string;
+  };
   isActive: boolean;
 }
 
@@ -47,7 +53,13 @@ export class AuthManager {
     }
   }
 
-  public async storeApiKey(provider: ProviderType, apiKey: string, baseUrl?: string): Promise<boolean> {
+  public async storeApiKey(
+    provider: ProviderType,
+    apiKey: string,
+    baseUrl?: string,
+    type: AuthType = 'apikey',
+    metadata?: AuthConfig['metadata']
+  ): Promise<boolean> {
     if (!safeStorage.isEncryptionAvailable()) {
       console.error('SafeStorage is not available');
       return false;
@@ -58,6 +70,8 @@ export class AuthManager {
       provider,
       encryptedKey,
       baseUrl,
+      type,
+      metadata,
       isActive: true
     };
 
@@ -66,16 +80,23 @@ export class AuthManager {
     return true;
   }
 
+  public async revokeApiKey(provider: ProviderType): Promise<boolean> {
+    const deleted = this.authState.delete(provider);
+    if (deleted) {
+      this.saveConfig();
+      // Special cleanup for file-based providers
+      if (provider === 'google' || provider === 'jules') {
+        const geminiPath = path.join(os.homedir(), '.gemini', 'oauth_creds.json');
+        if (fs.existsSync(geminiPath)) fs.unlinkSync(geminiPath);
+      }
+    }
+    return deleted;
+  }
+
   public getApiKey(provider: ProviderType): string | null {
-    // 1. Check Environment
-    const envKey = this.getEnvKey(provider);
-    if (envKey) return envKey;
+    if (provider === 'ollama') return null; // Ollama needs no key
 
-    // 2. Check File-based creds (Google/Anthropic defaults)
-    const fileKey = this.getFileKey(provider);
-    if (fileKey) return fileKey;
-
-    // 3. Check Secure Storage
+    // 1. Check Secure Storage (Highest priority as it's user-explicit)
     const config = this.authState.get(provider);
     if (config && config.encryptedKey) {
       if (safeStorage.isEncryptionAvailable()) {
@@ -88,7 +109,19 @@ export class AuthManager {
       }
     }
 
+    // 2. Check Environment
+    const envKey = this.getEnvKey(provider);
+    if (envKey) return envKey;
+
+    // 3. Check File-based creds (Google/Anthropic defaults)
+    const fileKey = this.getFileKey(provider);
+    if (fileKey) return fileKey;
+
     return null;
+  }
+
+  public getBaseUrl(provider: ProviderType): string | undefined {
+    return this.authState.get(provider)?.baseUrl;
   }
 
   private getEnvKey(provider: ProviderType): string | undefined {
@@ -104,13 +137,16 @@ export class AuthManager {
   }
 
   private getFileKey(provider: ProviderType): string | null {
-    if (provider === 'google') {
+    if (provider === 'google' || provider === 'jules') {
       const geminiPath = path.join(os.homedir(), '.gemini', 'oauth_creds.json');
       if (fs.existsSync(geminiPath)) {
-        return fs.readFileSync(geminiPath, 'utf-8');
-      }
-      if (process.env.GOOGLE_APPLICATION_CREDENTIALS && fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
-        return fs.readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'utf-8');
+        try {
+          const content = fs.readFileSync(geminiPath, 'utf-8');
+          const parsed = JSON.parse(content);
+          return parsed.access_token || parsed.token || content;
+        } catch {
+          return fs.readFileSync(geminiPath, 'utf-8');
+        }
       }
     }
     if (provider === 'anthropic') {
@@ -123,13 +159,8 @@ export class AuthManager {
         const ghConfigPath = path.join(os.homedir(), '.config', 'gh', 'hosts.yml');
         if (fs.existsSync(ghConfigPath)) {
             try {
-                // Resolves AC 4: Use js-yaml for reliable parsing
                 const content = fs.readFileSync(ghConfigPath, 'utf-8');
                 const parsed = yaml.load(content) as any;
-                // gh hosts.yml usually has a structure like:
-                // github.com:
-                //   user: name
-                //   oauth_token: token
                 const host = Object.keys(parsed)[0];
                 return parsed[host]?.oauth_token || null;
             } catch (e) {
@@ -140,41 +171,62 @@ export class AuthManager {
     return null;
   }
 
-  public getAuthStatus() {
-    const defaultProviders = ['openai', 'anthropic', 'google', 'openrouter', 'deepinfra', 'github'];
+  public async getAuthStatus() {
+    const defaultProviders = ['openai', 'anthropic', 'google', 'jules', 'openrouter', 'deepinfra', 'github', 'ollama'];
     const allProviders = new Set([...defaultProviders, ...this.authState.keys()]);
-    
-    return Array.from(allProviders).map(p => {
-      const envKey = this.getEnvKey(p);
-      if (envKey) return { provider: p, hasKey: true, source: 'env' };
-      
-      const fileKey = this.getFileKey(p);
-      if (fileKey) return { provider: p, hasKey: true, source: 'file' };
-      
+
+    const statuses = await Promise.all(Array.from(allProviders).map(async p => {
+      if (p === 'ollama') {
+        try {
+          const res = await fetch('http://localhost:11434/api/tags', {
+            signal: AbortSignal.timeout(2000),
+          });
+          return { provider: p, hasKey: true, source: 'none', type: 'env' as const, isActive: res.ok };
+        } catch {
+          return { provider: p, hasKey: false, source: 'none', type: 'none' as const, isActive: false };
+        }
+      }
+
       const config = this.authState.get(p);
-      if (config && config.encryptedKey) return { provider: p, hasKey: true, source: 'storage', baseUrl: config.baseUrl };
-      
-      return { provider: p, hasKey: false, source: 'none', baseUrl: config?.baseUrl };
-    });
+      if (config) {
+        return {
+          provider: p,
+          hasKey: true,
+          source: 'storage',
+          type: config.type,
+          metadata: config.metadata,
+          baseUrl: config.baseUrl,
+          isActive: true
+        };
+      }
+
+      const envKey = this.getEnvKey(p);
+      if (envKey) return { provider: p, hasKey: true, source: 'env', type: 'env' as const, isActive: true };
+
+      const fileKey = this.getFileKey(p);
+      if (fileKey) return { provider: p, hasKey: true, source: 'file', type: 'file' as const, isActive: true };
+
+      return { provider: p, hasKey: false, source: 'none', type: 'none' as const, isActive: false };
+    }));
+
+    return statuses;
   }
 
   // Resolution chain: OPENROUTER -> OPENAI -> DEEPINFRA
   public resolveOpenAICompatibleKey() {
-    let key = this.getApiKey('openrouter');
-    if (key) return { key, baseUrl: 'https://openrouter.ai/api/v1', provider: 'openrouter', headers: this.getProviderHeaders('openrouter') };
+    const res = this.getApiKey('openrouter');
+    if (res) return { key: res, baseUrl: 'https://openrouter.ai/api/v1', provider: 'openrouter', headers: this.getProviderHeaders('openrouter') };
 
-    key = this.getApiKey('openai');
-    if (key) return { key, provider: 'openai' };
+    const res2 = this.getApiKey('openai');
+    if (res2) return { key: res2, provider: 'openai' };
 
-    key = this.getApiKey('deepinfra');
-    if (key) return { key, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra' };
+    const res3 = this.getApiKey('deepinfra');
+    if (res3) return { key: res3, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra' };
 
-    // Lowest priority: local Ollama server (R210ii or localhost)
-    // OLLAMA_BASE_URL is set via env var — no API key required
-    const ollamaUrl = process.env.OLLAMA_BASE_URL
+    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
     if (ollamaUrl) {
       return {
-        key: 'ollama',           // Ollama ignores key value; any string works
+        key: 'ollama',
         baseUrl: ollamaUrl.replace(/\/$/, '') + '/v1',
         provider: 'ollama',
         headers: {},
@@ -202,8 +254,7 @@ export class AuthManager {
         return { key, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra', headers: {} };
       }
       case 'ollama': {
-        const url = process.env.OLLAMA_BASE_URL;
-        if (!url) return null;
+        const url = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
         return { key: 'ollama', baseUrl: url.replace(/\/$/, '') + '/v1', provider: 'ollama', headers: {} };
       }
       default:

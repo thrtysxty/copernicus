@@ -75,7 +75,7 @@ graph TD
 
 ## 4. TELEMETRY & COMPLIANCE
 ### 4.1 Deployment Strategy
-`make deploy` triggers a synchronized push to the **Dell R210ii Core** server. 
+`make deploy` triggers a synchronized push to the **Dell R210ii Core** server.
 - **Integrity Check:** Deployment is blocked if the `/audit` has not passed in the last 15 minutes.
 - **Performance Baseline:** Code that exceeds the RAM ceiling on the **Pi 3B+ Baseline** will trigger a "Performance Warning" in the Telemetry Popout.
 

@@ -128,7 +128,7 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
             )}
         </div>
       </div>
-      
+
       <div className="flex-1 flex overflow-hidden">
         {/* Claude Column */}
         <div className="flex-1 border-r border-copernicus-steel flex flex-col min-w-0">
@@ -136,7 +136,7 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
             <span className="text-[11px] font-medium text-zinc-300">Claude 3.5 Sonnet</span>
             {claudeStatus === 'done' && <VerdictBadge verdict={inferVerdict(claudeText)} />}
           </div>
-          <div 
+          <div
             ref={claudeRef}
             className="flex-1 overflow-y-auto p-3 font-mono text-[11px] text-zinc-400 whitespace-pre-wrap leading-relaxed"
           >
@@ -150,7 +150,7 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
             <span className="text-[11px] font-medium text-zinc-300">Gemini 1.5 Pro</span>
             {geminiStatus === 'done' && <VerdictBadge verdict={inferVerdict(geminiText)} />}
           </div>
-          <div 
+          <div
             ref={geminiRef}
             className="flex-1 overflow-y-auto p-3 font-mono text-[11px] text-zinc-400 whitespace-pre-wrap leading-relaxed"
           >

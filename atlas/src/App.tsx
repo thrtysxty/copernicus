@@ -14,21 +14,21 @@ const App: React.FC = () => {
       {/* Top Bar / Storyboard Switcher */}
       <div className="h-10 bg-copernicus-bg border-b border-copernicus-steel flex items-center px-4 justify-between drag-region">
         <div className="flex space-x-4 no-drag">
-          <button 
+          <button
             onClick={() => setStoryboard('Blueprint')}
             className={`flex items-center space-x-2 text-xs font-mono hover:text-copernicus-phosphor transition-colors ${activeStoryboard === 'Blueprint' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}
           >
             <LayoutDashboard size={14} />
             <span>BLUEPRINT</span>
           </button>
-          <button 
+          <button
             onClick={() => setStoryboard('Studio')}
             className={`flex items-center space-x-2 text-xs font-mono hover:text-copernicus-phosphor transition-colors ${activeStoryboard === 'Studio' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}
           >
             <PenTool size={14} />
             <span>STUDIO</span>
           </button>
-          <button 
+          <button
             onClick={() => setStoryboard('EngineRoom')}
             className={`flex items-center space-x-2 text-xs font-mono hover:text-copernicus-phosphor transition-colors ${activeStoryboard === 'EngineRoom' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}
           >
@@ -42,9 +42,9 @@ const App: React.FC = () => {
       {/* Main Layout Area */}
       <div className="flex-grow flex overflow-hidden relative">
         {/* Left Sidebar - Flippable */}
-        <Panel 
-          id="sidebar" 
-          title="Explorer" 
+        <Panel
+          id="sidebar"
+          title="Explorer"
           className="w-64 border-r border-copernicus-steel flex-shrink-0"
           back={
             <div className="h-full w-full bg-zinc-900 p-4 font-mono text-xs">
@@ -76,9 +76,9 @@ const App: React.FC = () => {
         </div>
 
         {/* Right Sidebar - Flippable */}
-        <Panel 
-          id="chat" 
-          title="Agent Chat" 
+        <Panel
+          id="chat"
+          title="Agent Chat"
           className="w-80 border-l border-copernicus-steel flex-shrink-0"
           back={
             <div className="h-full w-full bg-zinc-900 p-4 font-mono text-xs">

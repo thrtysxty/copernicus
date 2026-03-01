@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useLayoutStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
+import type { ModelCallStats } from '../../../../electron/db/state-ledger'
 
 export const StatusBar: React.FC = () => {
   const invoke = useIpcError()
@@ -17,6 +18,22 @@ export const StatusBar: React.FC = () => {
 
   const [hasError, setHasError] = useState(false)
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
+  const [ollamaOnline, setOllamaOnline] = useState(false);
+
+  // Poll Ollama status every 30s
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const result = await invoke<{ online: boolean }>('workflow:ollama-status')
+        // result is already the data if useIpcError unwraps it, or check for .data
+        const data = (result as any).data || result;
+        setOllamaOnline(data?.online ?? false);
+      } catch { setOllamaOnline(false); }
+    };
+    check();
+    const interval = setInterval(check, 30000);
+    return () => clearInterval(interval);
+  }, [invoke]);
 
   // Session Timer Effect
   useEffect(() => {
@@ -30,7 +47,10 @@ export const StatusBar: React.FC = () => {
   useEffect(() => {
     const poll = () => {
       invoke<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string }>('codebase:index-status')
-        .then(status => setIndexStatus(status))
+        .then(result => {
+          const data = (result as any).data || result
+          setIndexStatus(data)
+        })
         .catch(() => {})
     }
     poll()
@@ -38,10 +58,36 @@ export const StatusBar: React.FC = () => {
     return () => clearInterval(interval)
   }, [invoke])
 
+  // Load all-time cost on mount and listen for live ledger updates
+  useEffect(() => {
+    if (!(window as any).ipcRenderer) return
+    invoke<number>('ledger:all-time-cost').then(result => {
+      const cost = (result as any).data ?? result
+      if (typeof cost === 'number') setTelemetry({ capexTotal: cost })
+    }).catch(() => {})
+
+    const removeLedger = (window as any).ipcRenderer.on(
+      'ledger:stats-update',
+      (_e: any, stats: ModelCallStats) => {
+        const telemetry: Record<string, any> = {}
+        stats.by_model.forEach(m => {
+          telemetry[m.model_id] = {
+            tokensIn:  m.tokens_in,
+            tokensOut: m.tokens_out,
+            cost:      m.cost_usd,
+            limit:     200000,
+          }
+        })
+        setTelemetry({ agentTelemetry: telemetry, capexTotal: stats.total_cost_usd })
+      }
+    )
+    return () => removeLedger()
+  }, [invoke, setTelemetry])
+
   // Listen for critical errors
   useEffect(() => {
-    if (!window.ipcRenderer) return
-    const removeListener = window.ipcRenderer.on('app:critical-error', () => {
+    if (!(window as any).ipcRenderer) return
+    const removeListener = (window as any).ipcRenderer.on('app:critical-error', () => {
       setHasError(true)
     })
     return () => removeListener()
@@ -63,7 +109,7 @@ export const StatusBar: React.FC = () => {
   return (
     <footer className="h-5 w-full bg-copernicus-bg border-t border-hairline border-copernicus-steel flex items-center justify-between px-2 text-[10px] text-zinc-600 select-none overflow-hidden">
       <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30">
-        
+
         {/* Workspace Root */}
         <div className="flex items-center gap-1.5 cursor-pointer hover:text-zinc-400 transition-colors pr-3">
           <span className="text-copernicus-phosphor/60">📁</span>
@@ -131,6 +177,17 @@ export const StatusBar: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* Ollama Status */}
+        <div className="flex items-center gap-3 pl-3">
+          <span
+            className={`text-[9px] font-mono uppercase tracking-widest
+              ${ollamaOnline ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+            title={ollamaOnline ? 'Ollama daemon running' : 'Ollama not detected'}
+          >
+            OLLAMA: {ollamaOnline ? 'ONLINE' : 'OFFLINE'}
+          </span>
+        </div>
 
         {/* Story ID & Status */}
         <div className="flex items-center gap-3 pl-3">

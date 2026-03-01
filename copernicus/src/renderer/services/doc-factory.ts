@@ -14,7 +14,7 @@ export class DocFactory {
   static async generateStoryMarkdown(meta: DocMetadata): Promise<string> {
     const ipcRenderer = window.ipcRenderer;
     let template = '';
-    
+
     try {
       // Hydra logic: read template from file system via IPC
       template = await ipcRenderer.invoke('fs:read-file', 'copernicus/src/renderer/templates/story-doc.md');

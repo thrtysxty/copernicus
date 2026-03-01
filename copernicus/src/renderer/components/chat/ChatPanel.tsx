@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Hash, FileText, Paperclip, ChevronDown } from 'lucide-react'
+import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Layout } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
+import { UIUpdateChip } from './UIUpdateChip'
 import { commandRegistry, CommandContext, Command } from '../../commands/registry'
 import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
+import { useLayoutStore } from '../../store/layout'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -41,6 +43,21 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
   const [applied, setApplied] = useState(false)
   const [showDiff, setShowDiff] = useState(false)
   const [existingContent, setExistingContent] = useState('')
+  const { setCanvasContent, setUIComponents } = useLayoutStore()
+
+  // AC-8: Auto-apply component updates
+  useEffect(() => {
+    if (language === 'component-update') {
+      try {
+        const parsed = JSON.parse(code)
+        if (Array.isArray(parsed)) {
+          setUIComponents(parsed)
+        }
+      } catch (e) {
+        console.error('Failed to parse component-update', e)
+      }
+    }
+  }, [language, code, setUIComponents])
 
   const handleApply = async () => {
     if (!openFilePath) {
@@ -54,12 +71,13 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
         setExistingContent(result.data)
         setShowDiff(true)
       } else {
-        // File might be new or unreadable — proceed directly to apply
         confirmApply()
       }
-    } catch {
-      // Error already toasted by useIpcError
-    }
+    } catch { }
+  }
+
+  const handlePreview = () => {
+    setCanvasContent(code)
   }
 
   const confirmApply = () => {
@@ -74,23 +92,39 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
           setApplyError(result.error)
         }
       })
-      .catch(() => { /* error already toasted */ })
+      .catch(() => { })
+  }
+
+  const isWebCode = ['html', 'javascript', 'typescript', 'jsx', 'tsx', 'css'].includes(language?.toLowerCase())
+
+  if (language === 'component-update') {
+    return <UIUpdateChip />
   }
 
   return (
     <div className="relative group my-2">
       <div className="flex items-center justify-between bg-[#1a1a1a] border border-copernicus-steel/50 rounded-t px-3 py-1">
         <span className="text-[9px] text-zinc-500 uppercase">{language || 'code'}</span>
-        <button
-          onClick={handleApply}
-          className={`text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider transition-colors
-            ${applied
-              ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor'
-              : 'bg-zinc-700 text-zinc-300 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor'
-            }`}
-        >
-          {applied ? '✓ Applied' : 'Apply'}
-        </button>
+        <div className="flex gap-2">
+          {isWebCode && (
+            <button
+              onClick={handlePreview}
+              className="text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 transition-colors"
+            >
+              Preview
+            </button>
+          )}
+          <button
+            onClick={handleApply}
+            className={`text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider transition-colors
+              ${applied
+                ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor'
+                : 'bg-zinc-700 text-zinc-300 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor'
+              }`}
+          >
+            {applied ? '✓ Applied' : 'Apply'}
+          </button>
+        </div>
       </div>
       <pre className="bg-[#111] border border-t-0 border-copernicus-steel/50 rounded-b p-3 overflow-x-auto text-xs text-zinc-300 whitespace-pre-wrap">
         <code>{code}</code>
@@ -118,9 +152,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [model, setModel] = useState('claude-3-5-sonnet-20240620')
+  const [availableModels, setAvailableModels] = useState<any[]>([])
+  const [showModelPicker, setShowModelPicker] = useState(false)
   const [context, setContext] = useState<ContextItem[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
-  
+  const [isRepoActive, setIsRepoActive] = useState(false)
+  const { activeStoryId, toggleFlip, setSpotlight, spotlightPane, centerMode, uiComponents } = useLayoutStore()
+
   const [slashSuggestions, setSlashSuggestions] = useState<Command[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
 
@@ -139,11 +177,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [messages])
 
   useEffect(() => {
+    invoke<any[]>('models:list').then(setAvailableModels).catch(console.error)
+    
+    // Check if session is active (implies repo context)
+    invoke<any>('devtime:status').then(res => {
+        setIsRepoActive(!!res.session)
+    })
+  }, [invoke])
+
+  useEffect(() => {
     if (!ipcRenderer) return
 
     const removeToken = ipcRenderer.on(
       'chat:token',
-      ({ sessionId, token }: { sessionId: string; token: string }) => {
+      (_event: any, { sessionId, token }: { sessionId: string; token: string }) => {
         if (sessionId !== streamingIdRef.current) return
         setMessages(prev => {
           const updated = [...prev]
@@ -158,7 +205,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     const removeDone = ipcRenderer.on(
       'chat:done',
-      ({ sessionId, outputTokens }: { sessionId: string; outputTokens: number }) => {
+      (_event: any, { sessionId, outputTokens }: { sessionId: string; outputTokens: number }) => {
         if (sessionId !== streamingIdRef.current) return
         setIsStreaming(false)
         streamingIdRef.current = null
@@ -175,7 +222,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     const removeError = ipcRenderer.on(
       'chat:error',
-      ({ sessionId, error }: { sessionId: string; error: string }) => {
+      (_event: any, { sessionId, error }: { sessionId: string; error: string }) => {
         if (sessionId !== streamingIdRef.current) return
         setIsStreaming(false)
         streamingIdRef.current = null
@@ -249,7 +296,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     if ((!input.trim() && context.length === 0) || isStreaming) return
 
     const currentInput = input.trim();
-    
+
     // Build the CommandContext that registry commands can use
     const cmdContext: CommandContext = {
       appendMessage: (role, content) =>
@@ -276,12 +323,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     }
 
     setMessages(prev => [...prev, userMsg])
-    
+
     // Enrich with context
     let enrichedContent = currentInput
     if (context.length > 0) {
-      const contextBlocks = context.map(c => `[CONTEXT: ${c.type.toUpperCase()} - ${c.label}]\n${c.content}`).join('\n\n')
+      const contextBlocks = context.map(c => `[CONTEXT: ${String(c.type || '').toUpperCase()} - ${c.label}]\n${c.content}`).join('\n\n')
       enrichedContent = `${contextBlocks}\n\n---\n\nUSER_INPUT: ${currentInput}`
+    }
+
+    // AC-7: UI Builder Context Injection
+    if (centerMode === 'builder' && uiComponents.length > 0) {
+      const treeJson = JSON.stringify(uiComponents, null, 2)
+      enrichedContent += `\n\n<ui-canvas-context>\n${treeJson}\n</ui-canvas-context>`
     }
 
     setInput('')
@@ -324,39 +377,138 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     })
   }
 
+  const handleSaveToStory = async (content: string) => {
+    if (!activeStoryId) return;
+    try {
+      const currentContent = await invoke<string>('stories:get-content', activeStoryId);
+
+      // We want to update the "Implementation" section or append if not found
+      let updatedContent = currentContent;
+      const implMarker = '## Implementation';
+
+      if (currentContent.includes(implMarker)) {
+        const parts = currentContent.split(implMarker);
+        updatedContent = `${parts[0]}${implMarker}\n${content}\n`;
+      } else {
+        updatedContent = `${currentContent}\n\n${implMarker}\n${content}\n`;
+      }
+
+      await invoke('stories:update-content', { id: activeStoryId, content: updatedContent });
+      // Show success toast? (Assuming toast store is available)
+      window.ipcRenderer.send('db:log-intent', `Architected ${activeStoryId} via Chat`, 'COMPLETED', 'chat');
+    } catch (e) {
+      console.error("Failed to save to story", e);
+    }
+  };
+
   function renderMessageContent(
     content: string,
     openPath: string | null
   ): React.ReactNode {
     const parts = content.split(/(```[\w]*\n[\s\S]*?```)/g)
-    return parts.map((part, i) => {
-      const match = part.match(/^```([\w]*)\n([\s\S]*?)```$/)
-      if (match) {
-        return (
-          <CodeBlock
-            key={i}
-            language={match[1]}
-            code={match[2]}
-            openFilePath={openPath}
-          />
-        )
+    return (
+      <>
+        {parts.map((part, i) => {
+          const match = part.match(/^```([\w]*)\n([\s\S]*?)```$/)
+          if (match) {
+            return (
+              <CodeBlock
+                key={i}
+                language={match[1]}
+                code={match[2]}
+                openFilePath={openPath}
+              />
+            )
+          }
+          return <span key={i} className="whitespace-pre-wrap">{part}</span>
+        })}
+        {activeStoryId && (
+          <button
+            onClick={() => handleSaveToStory(content)}
+            className="mt-2 flex items-center gap-1.5 text-[9px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase font-bold tracking-wider"
+          >
+            <Save size={10} /> Save to active story
+          </button>
+        )}
+      </>
+    )
+  }
+
+  const triggerPicker = async (mode: PickerMode) => {
+    setPickerMode(mode)
+    if (mode === 'file') {
+      const result = await invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '')
+      if (result.ok) {
+        setPickerResults(result.data.filter(n => !n.isDir).map(n => ({
+          label: n.name,
+          value: n.path,
+          payload: n.path,
+        })))
       }
-      return <span key={i} className="whitespace-pre-wrap">{part}</span>
-    })
+    } else if (mode === 'story') {
+      const stories = await invoke<any[]>('stories:list')
+      setPickerResults(stories.map((s: any) => ({
+        label: s.title ?? s.id,
+        value: s.id,
+        payload: s.content ?? '',
+      })))
+    }
   }
 
   return (
     <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
-      {/* Chat Header / Model Selector */}
-      <div className="h-8 flex items-center justify-between px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-tighter">Planning_Chat</span>
-          <div className="flex items-center bg-zinc-900 border border-copernicus-steel rounded px-1.5 py-0.5 cursor-pointer hover:border-copernicus-phosphor transition-colors group" onClick={() => {}}>
-            <span className="text-[9px] text-copernicus-phosphor">{model}</span>
-            <ChevronDown size={10} className="text-zinc-600 group-hover:text-copernicus-phosphor" />
+      {/* Redesigned Header */}
+      <div className="h-6 flex items-center justify-between px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel select-none group">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest flex-none">Chat</span>
+          
+          <div className="relative min-w-0 flex-1 max-w-[180px]">
+            <div
+                className="flex items-center bg-zinc-900/50 border border-copernicus-steel/50 rounded px-1.5 py-0.5 cursor-pointer hover:border-copernicus-phosphor transition-colors group/picker"
+                onClick={() => setShowModelPicker(!showModelPicker)}
+            >
+                <span className="text-[9px] text-copernicus-phosphor truncate flex-1">{model}</span>
+                <ChevronDown size={10} className="text-zinc-600 group-hover/picker:text-copernicus-phosphor flex-none ml-1" />
+            </div>
+
+            {showModelPicker && (
+                <div className="absolute top-full left-0 mt-1 w-64 bg-[#111] border border-copernicus-steel rounded shadow-xl z-[100] max-h-64 overflow-y-auto">
+                <div className="px-3 py-1.5 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel font-bold">Select Model</div>
+                {availableModels.map(m => (
+                    <button
+                    key={m.id}
+                    className={`w-full text-left px-3 py-2 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor/5 border-l-2 border-copernicus-phosphor' : ''}`}
+                    onClick={() => {
+                        setModel(m.id)
+                        setShowModelPicker(false)
+                    }}
+                    >
+                    <span className={model === m.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}>{m.name}</span>
+                    <span className="text-[8px] text-zinc-600 uppercase">{m.provider} • {m.contextWindow.toLocaleString()} tokens</span>
+                    </button>
+                ))}
+                </div>
+            )}
+          </div>
+
+          {/* Context Indicator */}
+          <div className="flex items-center gap-1 flex-none" title={isRepoActive ? "Repo Context Active" : "No Repo Context"}>
+             <div className={`w-1.5 h-1.5 rounded-full ${isRepoActive ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500 animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.5)]'}`} />
           </div>
         </div>
-        <div className="text-[9px] text-zinc-600 uppercase">Strategic_Context_Active</div>
+
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={() => toggleFlip('right')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
+            <RotateCcw size={10} />
+          </button>
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'telemetry' ? null : 'telemetry')}
+            className="text-zinc-500 hover:text-copernicus-phosphor transition-colors font-bold text-[10px] flex items-center justify-center min-w-[24px]"
+            title={spotlightPane === 'telemetry' ? "Exit Spotlight" : "Spotlight Panel"}
+          >
+            {spotlightPane === 'telemetry' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+          </button>
+        </div>
       </div>
 
       {/* Message Stream */}
@@ -368,11 +520,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           </div>
         ) : (
           messages.map(m => (
-            <ChatMessage 
-              key={m.id} 
-              role={m.role} 
-              content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content} 
-              tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined} 
+            <ChatMessage
+              key={m.id}
+              role={m.role}
+              content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content}
+              tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
             />
           ))
         )}
@@ -387,6 +539,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
       {/* Input Area */}
       <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
+        {centerMode === 'builder' && uiComponents.length > 0 && (
+          <div className="flex items-center gap-1.5 px-2 pb-2 text-[8px] text-copernicus-phosphor/60 font-mono uppercase tracking-tighter">
+            <Layout size={10} />
+            <span>UI context active ({uiComponents.length} components)</span>
+          </div>
+        )}
+        
         <div className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5">
           {/* Slash Suggestions */}
           {showSuggestions && slashSuggestions.length > 0 && (
@@ -409,7 +568,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
           {/* Context Picker Popover */}
           {pickerMode !== 'none' && pickerResults.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded overflow-hidden z-50 max-h-48 overflow-y-auto">
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
               <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel">
                 {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
               </div>
@@ -500,10 +659,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           />
           <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
             <div className="flex gap-2 text-zinc-500">
-              <button className="hover:text-copernicus-phosphor transition-colors" title="Attach File (@)" disabled={isStreaming}><Paperclip size={12} /></button>
-              <button className="hover:text-copernicus-phosphor transition-colors" title="Attach Story (#)" disabled={isStreaming}><FileText size={12} /></button>
+              <button
+                onClick={() => triggerPicker('file')}
+                className="hover:text-copernicus-phosphor transition-colors"
+                title="Attach File (@)"
+                disabled={isStreaming}
+              >
+                <Paperclip size={12} />
+              </button>
+              <button
+                onClick={() => triggerPicker('story')}
+                className="hover:text-copernicus-phosphor transition-colors"
+                title="Attach Story (#)"
+                disabled={isStreaming}
+              >
+                <FileText size={12} />
+              </button>
             </div>
-            <button 
+            <button
               onClick={handleSendMessage}
               disabled={isStreaming}
               className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"

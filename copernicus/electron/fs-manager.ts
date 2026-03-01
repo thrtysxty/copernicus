@@ -16,7 +16,7 @@ const BLOCKED_HOME_SUBDIRS = [
 ]
 
 export class FSManager {
-  private rootPath: string = process.env.COPERNICUS_ROOT ?? process.cwd()
+  private rootPath: string = ''
 
   setRootPath(p: string): void {
     this.rootPath = path.resolve(p)
@@ -24,6 +24,9 @@ export class FSManager {
   }
 
   private assertSafe(filePath: string, mode: 'read' | 'write' = 'read'): void {
+    if (!this.rootPath) {
+      throw new Error('[fs-manager] rootPath not set — call setRootPath() before file operations')
+    }
     const resolved = path.resolve(filePath)
     const home = os.homedir()
 

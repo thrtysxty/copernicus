@@ -50,7 +50,12 @@ def main():
             stories.append(story_data)
 
     # Sort stories by priority, then by status
-    stories.sort(key=lambda s: (PRIORITY_ORDER.get(s["priority"].upper().split()[0], 99), s["status"]))
+    stories.sort(
+        key=lambda s: (
+            PRIORITY_ORDER.get(s["priority"].upper().split()[0], 99),
+            s["status"],
+        )
+    )
 
     # Generate Markdown content
     md_content = ["# Project Backlog\n\n"]

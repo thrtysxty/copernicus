@@ -34,7 +34,7 @@ export class GitGuard {
   /**
    * Checks if an injected git command should be allowed.
    * Only called for COPERNICUS-injected commands (e.g., via /delegate).
-   * 
+   *
    * @returns true if allowed, false if blocked.
    */
   public async check(agentId: string, command: string): Promise<boolean> {

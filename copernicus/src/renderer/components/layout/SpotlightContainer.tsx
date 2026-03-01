@@ -23,17 +23,17 @@ export const SpotlightContainer: React.FC<SpotlightContainerProps> = ({ sidebar,
   }, [spotlightPane, setSpotlight])
 
   return (
-    <div className="flex-1 flex flex-row overflow-hidden w-full h-full bg-[#050505]">
+    <div className="flex-1 flex flex-row overflow-hidden h-full bg-[#050505]">
       {/* Sidebar */}
       <motion.div
-        layout
         initial={false}
         animate={{
           width: spotlightPane === 'explorer' ? '100%' : (spotlightPane ? 40 : 256),
           flexGrow: spotlightPane === 'explorer' ? 1 : 0,
+          flexShrink: spotlightPane === 'explorer' ? 0 : 1,
           minWidth: spotlightPane && spotlightPane !== 'explorer' ? 40 : undefined
         }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         className="flex flex-col border-r border-copernicus-steel bg-copernicus-bg overflow-hidden relative"
       >
         {spotlightPane && spotlightPane !== 'explorer' ? (
@@ -47,14 +47,14 @@ export const SpotlightContainer: React.FC<SpotlightContainerProps> = ({ sidebar,
 
       {/* Center */}
       <motion.div
-        layout
         initial={false}
         animate={{
-          flexGrow: 1, 
+          flexGrow: !spotlightPane || spotlightPane === 'editor' ? 1 : 0,
+          flexShrink: spotlightPane === 'editor' ? 0 : 1,
           width: spotlightPane === 'editor' ? '100%' : (spotlightPane ? 40 : 'auto'),
           maxWidth: spotlightPane && spotlightPane !== 'editor' ? 40 : '100%'
         }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         className="flex flex-col bg-copernicus-bg overflow-hidden relative"
       >
         {spotlightPane && spotlightPane !== 'editor' ? (
@@ -68,14 +68,14 @@ export const SpotlightContainer: React.FC<SpotlightContainerProps> = ({ sidebar,
 
       {/* Right */}
       <motion.div
-        layout
         initial={false}
         animate={{
           width: spotlightPane === 'telemetry' ? '100%' : (spotlightPane ? 40 : 320),
           flexGrow: spotlightPane === 'telemetry' ? 1 : 0,
-           minWidth: spotlightPane && spotlightPane !== 'telemetry' ? 40 : undefined
+          flexShrink: spotlightPane === 'telemetry' ? 0 : 1,
+          minWidth: spotlightPane && spotlightPane !== 'telemetry' ? 40 : undefined
         }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         className="flex flex-col border-l border-copernicus-steel bg-copernicus-bg overflow-hidden relative"
       >
         {spotlightPane && spotlightPane !== 'telemetry' ? (
@@ -91,13 +91,13 @@ export const SpotlightContainer: React.FC<SpotlightContainerProps> = ({ sidebar,
 }
 
 const CollapsedPaneIcon = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
-  <div 
+  <div
     className="h-full w-full flex flex-col items-center pt-4 cursor-pointer hover:bg-zinc-800 transition-colors"
     onClick={onClick}
     title={`Expand ${label}`}
   >
     <div className="text-copernicus-phosphor mb-2">{icon}</div>
-    <div 
+    <div
       className="text-[10px] text-zinc-500 uppercase tracking-widest whitespace-nowrap"
       style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
     >

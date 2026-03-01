@@ -1,0 +1,593 @@
+diff --git a/copernicus/electron/devtime-manager.ts b/copernicus/electron/devtime-manager.ts
+index 476f7ce..86e7a40 100644
+--- a/copernicus/electron/devtime-manager.ts
++++ b/copernicus/electron/devtime-manager.ts
+@@ -3,6 +3,7 @@ import { ipcMain } from 'electron';
+ import path from 'path';
+ import fs from 'fs';
+ import os from 'os';
++import { win, notifyWorkspaceChanged, storiesManager } from './main';
+ 
+ export class DevtimeManager {
+   private db: Database.Database;
+@@ -80,6 +81,11 @@ export class DevtimeManager {
+       fs.writeFileSync(this.LOCK_PATH, JSON.stringify(this.activeSession));
+     }
+     
++    if (data.repo_path) {
++      storiesManager.setProjectRoot(data.repo_path);
++      notifyWorkspaceChanged(win, data.repo_path);
++    }
++
+     if (this.timerInterval) clearInterval(this.timerInterval);
+     this.timerInterval = setInterval(() => {
+       if (this.activeSession) {
+diff --git a/copernicus/electron/fs-manager.ts b/copernicus/electron/fs-manager.ts
+index acfcdc9..2037e91 100644
+--- a/copernicus/electron/fs-manager.ts
++++ b/copernicus/electron/fs-manager.ts
+@@ -16,7 +16,7 @@ const BLOCKED_HOME_SUBDIRS = [
+ ]
+ 
+ export class FSManager {
+-  private rootPath: string = process.env.COPERNICUS_ROOT ?? process.cwd()
++  private rootPath: string = ''
+ 
+   setRootPath(p: string): void {
+     this.rootPath = path.resolve(p)
+@@ -24,6 +24,9 @@ export class FSManager {
+   }
+ 
+   private assertSafe(filePath: string, mode: 'read' | 'write' = 'read'): void {
++    if (!this.rootPath) {
++      throw new Error('[fs-manager] rootPath not set — call setRootPath() before file operations')
++    }
+     const resolved = path.resolve(filePath)
+     const home = os.homedir()
+ 
+diff --git a/copernicus/electron/main.ts b/copernicus/electron/main.ts
+index 151ac00..5410bd9 100644
+--- a/copernicus/electron/main.ts
++++ b/copernicus/electron/main.ts
+@@ -80,10 +80,16 @@ const ROOT_PATH = path.resolve(__dirname, '../../')
+ // Initialize FS Manager with project root
+ fsManager.setRootPath(ROOT_PATH)
+ 
+-let win: BrowserWindow | null
++export let win: BrowserWindow | null
+ let splashWin: BrowserWindow | null
+ let isFirstRun = false;
+ 
++export function notifyWorkspaceChanged(window: BrowserWindow | null, newPath: string) {
++  if (window && !window.isDestroyed()) {
++    window.webContents.send('app:workspace-changed', { path: newPath })
++  }
++}
++
+ // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
+ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
+ 
+@@ -91,7 +97,7 @@ const authManager = new AuthManager()
+ new GithubManager(authManager)
+ const modelRegistry = new ModelRegistry()
+ const settingsStore = new SettingsStore()
+-const storiesManager = new StoriesManager(ROOT_PATH)
++export const storiesManager = new StoriesManager(ROOT_PATH)
+ new DevtimeManager()
+ 
+ // Initialize Security Manager
+@@ -377,6 +383,7 @@ function registerIpcHandlers() {
+     return canceled ? null : filePaths[0];
+   });
+ 
++
+   ipcMain.handle('save-preferences', async (_event, preferences: any) => {
+     const { keys, ...settings } = preferences;
+     
+@@ -387,6 +394,11 @@ function registerIpcHandlers() {
+     
+     saveSettings(settings);
+ 
++    if (settings.workspace) {
++        fsManager.setRootPath(settings.workspace);
++        notifyWorkspaceChanged(win, settings.workspace);
++    }
++
+     // Write first-run sentinel so isFirstRun is false on next launch
+     const preferencesPath = path.join(COPERNICUS_HOME, 'preferences.json');
+     fs.writeFileSync(preferencesPath, JSON.stringify({ ...settings, completedAt: new Date().toISOString() }, null, 2));
+@@ -512,6 +524,22 @@ function registerIpcHandlers() {
+   })
+   ipcMain.handle('app:get-root-path', () => fsManager.getRootPath())
+ 
++  ipcMain.handle('app:get-user-guide', () => {
++    const guidePath = path.join(app.getAppPath(), 'docs/help/USER_GUIDE.md')
++    try {
++      const content = fs.readFileSync(guidePath, 'utf-8')
++      return content
++    } catch {
++      // Fallback: try relative to __dirname (packaged app layout may differ)
++      try {
++        const fallback = path.join(__dirname, '../../../docs/help/USER_GUIDE.md')
++        return fs.readFileSync(fallback, 'utf-8')
++      } catch {
++        return '# User Guide\n\nGuide not found in packaged app resources.'
++      }
++    }
++  })
++
+   // Workflow
+   ipcMain.handle('workflow:run', (_event, graph) => {
+     workflowEngine.runGraph(graph).catch(err => console.error('[Workflow] Execution error:', err))
+diff --git a/copernicus/electron/preload.ts b/copernicus/electron/preload.ts
+index b965682..3c6a077 100644
+--- a/copernicus/electron/preload.ts
++++ b/copernicus/electron/preload.ts
+@@ -15,7 +15,7 @@ const SEND_CHANNELS = new Set([
+   // LLM Chat
+   'chat:send',
+   // File System
+-  'fs:list-dir', 'fs:open-file', 'fs:save-file', 'app:get-root-path',
++  'fs:list-dir', 'fs:open-file', 'fs:save-file', 'app:get-root-path', 'app:get-user-guide',
+   // Git
+   'git:branch',
+   // Stories
+@@ -68,6 +68,7 @@ const LISTEN_CHANNELS = new Set([
+   'splash-status',
+   'app:critical-error',
+   'oauth:callback',
++  'app:workspace-changed',
+ ])
+ 
+ // ---------------------------------------------------------------------------
+diff --git a/copernicus/package-lock.json b/copernicus/package-lock.json
+index 10f65fa..10f0d50 100644
+--- a/copernicus/package-lock.json
++++ b/copernicus/package-lock.json
+@@ -183,7 +183,6 @@
+       "integrity": "sha512-CGOfOJqWjg2qW/Mb6zNsDm+u5vFQ8DxXfbM09z69p5Z6+mE1ikP2jUXw+j42Pf1XTYED2Rni5f95npYeuwMDQA==",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "@babel/code-frame": "^7.29.0",
+         "@babel/generator": "^7.29.0",
+@@ -565,7 +564,6 @@
+         }
+       ],
+       "license": "MIT",
+-      "peer": true,
+       "engines": {
+         "node": ">=20.19.0"
+       },
+@@ -606,7 +604,6 @@
+         }
+       ],
+       "license": "MIT",
+-      "peer": true,
+       "engines": {
+         "node": ">=20.19.0"
+       }
+@@ -2400,7 +2397,6 @@
+       "integrity": "sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw==",
+       "devOptional": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "@types/prop-types": "*",
+         "csstype": "^3.2.2"
+@@ -2501,7 +2497,6 @@
+       "integrity": "sha512-tbsV1jPne5CkFQCgPBcDOt30ItF7aJoZL997JSF7MhGQqOeT3svWRYxiqlfA5RUdlHN6Fi+EI9bxqbdyAUZjYQ==",
+       "dev": true,
+       "license": "BSD-2-Clause",
+-      "peer": true,
+       "dependencies": {
+         "@typescript-eslint/scope-manager": "6.21.0",
+         "@typescript-eslint/types": "6.21.0",
+@@ -2812,7 +2807,6 @@
+       "integrity": "sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "bin": {
+         "acorn": "bin/acorn"
+       },
+@@ -2862,7 +2856,6 @@
+       "integrity": "sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "fast-deep-equal": "^3.1.1",
+         "fast-json-stable-stringify": "^2.0.0",
+@@ -3038,6 +3031,7 @@
+       "integrity": "sha512-+25nxyyznAXF7Nef3y0EbBeqmGZgeN/BxHX29Rs39djAfaFalmQ89SE6CWyDCHzGL0yt/ycBtNOmGTW0FyGWNw==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "archiver-utils": "^2.1.0",
+         "async": "^3.2.4",
+@@ -3057,6 +3051,7 @@
+       "integrity": "sha512-bEL/yUb/fNNiNTuUz979Z0Yg5L+LzLxGJz8x79lYmR54fmTIb6ob/hNQgkQnIUDWIFjZVQwl9Xs356I6BAMHfw==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "glob": "^7.1.4",
+         "graceful-fs": "^4.2.0",
+@@ -3078,7 +3073,8 @@
+       "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
+       "integrity": "sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/archiver-utils/node_modules/readable-stream": {
+       "version": "2.3.8",
+@@ -3086,6 +3082,7 @@
+       "integrity": "sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "core-util-is": "~1.0.0",
+         "inherits": "~2.0.3",
+@@ -3101,7 +3098,8 @@
+       "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+       "integrity": "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/archiver-utils/node_modules/string_decoder": {
+       "version": "1.1.1",
+@@ -3109,6 +3107,7 @@
+       "integrity": "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "safe-buffer": "~5.1.0"
+       }
+@@ -3569,7 +3568,6 @@
+         }
+       ],
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "baseline-browser-mapping": "^2.9.0",
+         "caniuse-lite": "^1.0.30001759",
+@@ -4079,6 +4077,7 @@
+       "integrity": "sha512-D3uMHtGc/fcO1Gt1/L7i1e33VOvD4A9hfQLP+6ewd+BvG/gQ84Yh4oftEhAdjSMgBgwGL+jsppT7JYNpo6MHHg==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "buffer-crc32": "^0.2.13",
+         "crc32-stream": "^4.0.2",
+@@ -4216,6 +4215,7 @@
+       "integrity": "sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==",
+       "dev": true,
+       "license": "Apache-2.0",
++      "peer": true,
+       "bin": {
+         "crc32": "bin/crc32.njs"
+       },
+@@ -4229,6 +4229,7 @@
+       "integrity": "sha512-NT7w2JVU7DFroFdYkeq8cywxrgjPHWkdX1wjpRQXPX5Asews3tA+Ght6lddQO5Mkumffp3X7GEqku3epj2toIw==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "crc-32": "^1.2.0",
+         "readable-stream": "^3.4.0"
+@@ -4611,7 +4612,6 @@
+       "integrity": "sha512-rcJUkMfnJpfCboZoOOPf4L29TRtEieHNOeAbYPWPxlaBw/Z1RKrRA86dOI9rwaI4tQSc/RD82zTNHprfUHXsoQ==",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "app-builder-lib": "24.13.3",
+         "builder-util": "24.13.1",
+@@ -4809,6 +4809,7 @@
+       "integrity": "sha512-oHkV0iogWfyK+ah9ZIvMDpei1m9ZRpdXcvde1wTpra2U8AFDNNpqJdnin5z+PM1GbQ5BoaKCWas2HSjtR0HwMg==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "app-builder-lib": "24.13.3",
+         "archiver": "^5.3.1",
+@@ -4822,6 +4823,7 @@
+       "integrity": "sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "graceful-fs": "^4.2.0",
+         "jsonfile": "^6.0.1",
+@@ -4837,6 +4839,7 @@
+       "integrity": "sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "universalify": "^2.0.0"
+       },
+@@ -4850,6 +4853,7 @@
+       "integrity": "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "engines": {
+         "node": ">= 10.0.0"
+       }
+@@ -5343,7 +5347,6 @@
+       "deprecated": "This version is no longer supported. Please see https://eslint.org/version-support for other options.",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "@eslint-community/eslint-utils": "^4.2.0",
+         "@eslint-community/regexpp": "^4.6.1",
+@@ -7236,7 +7239,6 @@
+       "integrity": "sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "bin": {
+         "jiti": "bin/jiti.js"
+       }
+@@ -7467,6 +7469,7 @@
+       "integrity": "sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "readable-stream": "^2.0.5"
+       },
+@@ -7479,7 +7482,8 @@
+       "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
+       "integrity": "sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/lazystream/node_modules/readable-stream": {
+       "version": "2.3.8",
+@@ -7487,6 +7491,7 @@
+       "integrity": "sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "core-util-is": "~1.0.0",
+         "inherits": "~2.0.3",
+@@ -7502,7 +7507,8 @@
+       "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+       "integrity": "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/lazystream/node_modules/string_decoder": {
+       "version": "1.1.1",
+@@ -7510,6 +7516,7 @@
+       "integrity": "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "safe-buffer": "~5.1.0"
+       }
+@@ -7593,14 +7600,16 @@
+       "resolved": "https://registry.npmjs.org/lodash.defaults/-/lodash.defaults-4.2.0.tgz",
+       "integrity": "sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/lodash.difference": {
+       "version": "4.5.0",
+       "resolved": "https://registry.npmjs.org/lodash.difference/-/lodash.difference-4.5.0.tgz",
+       "integrity": "sha512-dS2j+W26TQ7taQBGN8Lbbq04ssV3emRw4NY58WErlTO29pIqS0HmoT5aJ9+TUQ1N3G+JOZSji4eugsWwGp9yPA==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/lodash.escaperegexp": {
+       "version": "4.1.2",
+@@ -7613,7 +7622,8 @@
+       "resolved": "https://registry.npmjs.org/lodash.flatten/-/lodash.flatten-4.4.0.tgz",
+       "integrity": "sha512-C5N2Z3DgnnKr0LOpv/hKCgKdb7ZZwafIrsesve6lmzvZIRZRGaZ/l6Q8+2W7NaT+ZwO3fFlSCzCzrDCFdJfZ4g==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/lodash.isequal": {
+       "version": "4.5.0",
+@@ -7627,7 +7637,8 @@
+       "resolved": "https://registry.npmjs.org/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz",
+       "integrity": "sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/lodash.merge": {
+       "version": "4.6.2",
+@@ -7641,7 +7652,8 @@
+       "resolved": "https://registry.npmjs.org/lodash.union/-/lodash.union-4.6.0.tgz",
+       "integrity": "sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/loose-envify": {
+       "version": "1.4.0",
+@@ -7937,8 +7949,7 @@
+       "version": "0.45.0",
+       "resolved": "https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.45.0.tgz",
+       "integrity": "sha512-mjv1G1ZzfEE3k9HZN0dQ2olMdwIfaeAAjFiwNprLfYNRSz7ctv9XuCT7gPtBGrMUeV1/iZzYKj17Khu1hxoHOA==",
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/ms": {
+       "version": "2.1.3",
+@@ -8588,7 +8599,6 @@
+         }
+       ],
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "nanoid": "^3.3.11",
+         "picocolors": "^1.1.1",
+@@ -8830,7 +8840,8 @@
+       "resolved": "https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-2.0.1.tgz",
+       "integrity": "sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==",
+       "dev": true,
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/progress": {
+       "version": "2.0.3",
+@@ -8951,7 +8962,6 @@
+       "resolved": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+       "integrity": "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==",
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "loose-envify": "^1.1.0"
+       },
+@@ -8964,7 +8974,6 @@
+       "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+       "integrity": "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==",
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "loose-envify": "^1.1.0",
+         "scheduler": "^0.23.2"
+@@ -9038,6 +9047,7 @@
+       "integrity": "sha512-v05I2k7xN8zXvPD9N+z/uhXPaj0sUFCe2rcWZIpBsqxfP7xXFQ0tipAd/wjj1YxWyWtUS5IDJpOG82JKt2EAVA==",
+       "dev": true,
+       "license": "Apache-2.0",
++      "peer": true,
+       "dependencies": {
+         "minimatch": "^5.1.0"
+       }
+@@ -9048,6 +9058,7 @@
+       "integrity": "sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==",
+       "dev": true,
+       "license": "ISC",
++      "peer": true,
+       "dependencies": {
+         "brace-expansion": "^2.0.1"
+       },
+@@ -10443,7 +10454,6 @@
+       "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "engines": {
+         "node": ">=12"
+       },
+@@ -10724,7 +10734,6 @@
+       "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+       "dev": true,
+       "license": "Apache-2.0",
+-      "peer": true,
+       "bin": {
+         "tsc": "bin/tsc",
+         "tsserver": "bin/tsserver"
+@@ -10871,7 +10880,6 @@
+       "integrity": "sha512-o5a9xKjbtuhY6Bi5S3+HvbRERmouabWbyUcpXXUA1u+GNUKoROi9byOJ8M0nHbHYHkYICiMlqxkg1KkYmm25Sw==",
+       "dev": true,
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "esbuild": "^0.21.3",
+         "postcss": "^8.4.43",
+@@ -10969,8 +10977,7 @@
+       "resolved": "https://registry.npmjs.org/vite-plugin-electron-renderer/-/vite-plugin-electron-renderer-0.14.6.tgz",
+       "integrity": "sha512-oqkWFa7kQIkvHXG7+Mnl1RTroA4sP0yesKatmAy0gjZC4VwUqlvF9IvOpHd1fpLWsqYX/eZlVxlhULNtaQ78Jw==",
+       "dev": true,
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/vitest": {
+       "version": "1.6.1",
+@@ -11293,8 +11300,7 @@
+       "resolved": "https://registry.npmjs.org/xterm/-/xterm-5.3.0.tgz",
+       "integrity": "sha512-8QqjlekLUFTrU6x7xck1MsPzPA571K5zNqWm0M0oroYEWVOptZ0+ubQSkQ3uxIEhcIHRujJy6emDWX4A7qyFzg==",
+       "deprecated": "This package is now deprecated. Move to @xterm/xterm instead.",
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/xterm-addon-fit": {
+       "version": "0.8.0",
+@@ -11382,6 +11388,7 @@
+       "integrity": "sha512-9qv4rlDiopXg4E69k+vMHjNN63YFMe9sZMrdlvKnCjlCRWeCBswPPMPUfx+ipsAWq1LXHe70RcbaHdJJpS6hyQ==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "archiver-utils": "^3.0.4",
+         "compress-commons": "^4.1.2",
+@@ -11397,6 +11404,7 @@
+       "integrity": "sha512-KVgf4XQVrTjhyWmx6cte4RxonPLR9onExufI1jhvw/MQ4BB6IsZD5gT8Lq+u/+pRkWna/6JoHpiQioaqFP5Rzw==",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "glob": "^7.2.3",
+         "graceful-fs": "^4.2.0",
+diff --git a/copernicus/src/renderer/App.tsx b/copernicus/src/renderer/App.tsx
+index 6935f2b..d9e5bd7 100644
+--- a/copernicus/src/renderer/App.tsx
++++ b/copernicus/src/renderer/App.tsx
+@@ -200,12 +200,19 @@ function App() {
+     const removeActivateTab = ipcRenderer.on('terminal:activate-tab', () => {
+       setTerminalOpen(true)
+     })
++    const removeWorkspaceChanged = ipcRenderer.on(
++      'app:workspace-changed',
++      (_e: any, { path: newPath }: { path: string }) => {
++        setRootPath(newPath)
++      }
++    )
+ 
+     return () => {
+       removeViewListener()
+       removeFlipListener()
+       removeSpotListener()
+       removeActivateTab()
++      removeWorkspaceChanged()
+     }
+   }, [setView, toggleFlip, setSpotlight, spotlightPane])
+ 
+diff --git a/copernicus/src/renderer/components/HelpPanel.tsx b/copernicus/src/renderer/components/HelpPanel.tsx
+index 5c08225..26a77e9 100644
+--- a/copernicus/src/renderer/components/HelpPanel.tsx
++++ b/copernicus/src/renderer/components/HelpPanel.tsx
+@@ -9,7 +9,7 @@ export const HelpPanel: React.FC = () => {
+   useEffect(() => {
+     const fetchManual = async () => {
+       try {
+-        const text = await invoke<string>('fs:read-file', 'docs/help/USER_GUIDE.md')
++        const text = await invoke<string>('app:get-user-guide')
+         setContent(text || 'Guide not found.')
+       } catch (e) {
+         setContent('Error loading user guide.')
+

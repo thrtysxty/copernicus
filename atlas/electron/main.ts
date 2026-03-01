@@ -15,7 +15,7 @@ function createWindow() {
     width: 1400,
     height: 900,
     backgroundColor: '#050505', // --copernicus-bg
-    titleBarStyle: 'hiddenInset', 
+    titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 10, y: 10 },
     vibrancy: 'under-window',
     visualEffectState: 'active',

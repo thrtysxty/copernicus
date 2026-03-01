@@ -3,6 +3,7 @@ import { SandboxManager } from './sandbox-manager';
 import { GitGuard, ConfirmationProvider } from './git-guard';
 import { buildSafeEnv } from './env-sanitizer';
 import * as path from 'path';
+import { app } from 'electron';
 
 export class SecurityManager {
   public detector: PatternDetector;
@@ -11,7 +12,8 @@ export class SecurityManager {
   private projectRoot: string;
 
   constructor(confirmationProvider: ConfirmationProvider) {
-    this.projectRoot = path.resolve(__dirname, '../../../');
+    // Correctly resolve project root relative to application path
+    this.projectRoot = path.resolve(app.getAppPath(), '../../');
     this.detector = new PatternDetector();
     this.sandbox = new SandboxManager();
     this.gitGuard = new GitGuard(confirmationProvider);
@@ -23,7 +25,7 @@ export class SecurityManager {
   public prepareSecureExecution(agentId: string) {
     const env = buildSafeEnv(agentId);
     const sandboxPrefix = this.sandbox.generateProfile(agentId, this.projectRoot);
-    
+
     return {
       env,
       sandboxPrefix

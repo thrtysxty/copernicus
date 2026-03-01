@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { UIComponent } from '../components/Editor/ui-builder/types'
 
 export type StoryboardView = 'blueprint' | 'studio' | 'engine-room' | 'capex' | 'workflow'
 export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban'
@@ -13,6 +14,16 @@ export const PHOSPHOR_PRESETS = {
 
 export type PhosphorColor = keyof typeof PHOSPHOR_PRESETS
 
+export type CenterMode = 'code' | 'image' | 'binary' | 'preview' | 'builder'
+
+export interface KanbanColumn {
+  id: string
+  status: string
+  color: string
+  accent: string
+  minimized?: boolean
+}
+
 interface AgentTelemetry {
   tokensIn: number
   tokensOut: number
@@ -20,33 +31,66 @@ interface AgentTelemetry {
   cost: number
 }
 
+export interface TerminalSession {
+  id: string
+  label: string
+  isBusy: boolean
+  ephemeral?: boolean
+}
+
 interface LayoutState {
   activeView: StoryboardView
   isFlipped: Record<string, boolean>
   spotlightPane: PaneId | null
   activeStoryId: string | null
+  drawerStoryId: string | null
   phosphorColor: PhosphorColor
   reviewEnabled: boolean
+  columns: KanbanColumn[]
+  activeWorkflowTemplate: string | null
+  centerMode: CenterMode
+
+  // Appearance
+  uiDensity: 'compact' | 'normal' | 'comfortable'
+  fontSize: number
+  animationsEnabled: boolean
+
+  // Sidebar
+  sidebarOpen: boolean
+
+  // Terminal State
+  terminalOpen: boolean
+  activeTerminalId: string
+  terminals: TerminalSession[]
+
+  // Canvas State
+  canvasContent: string | null
+  canvasUrl: string | null
+
+  // UI Builder State
+  uiBuilderOpen: boolean
+  uiComponents: UIComponent[]
 
   // Panel Modes
   leftPanelMode: 'explorer' | 'command-deck'
   rightPanelMode: 'telemetry' | 'kanban'
-  flippedPanes: string[] // Changed Set to string[] for persist compatibility
-  
+  flippedPanes: string[]
+
   // Telemetry
   workingDir: string
   gitBranch: string
   isGitDirty: boolean
   capexTotal: number
-  capexSessionTime: number // seconds
+  capexSessionTime: number
   capexTimer: string
   agentTelemetry: Record<string, AgentTelemetry>
-  
+
   // Actions
   setView: (view: StoryboardView) => void
   toggleFlip: (paneId: string) => void
   setSpotlight: (paneId: PaneId | null) => void
   setActiveStoryId: (id: string | null) => void
+  setDrawerStory: (id: string | null) => void
   setTelemetry: (data: Partial<LayoutState>) => void
   setCapexTimer: (timer: string) => void
   updateAgentTelemetry: (agentId: string, data: Partial<AgentTelemetry>) => void
@@ -54,6 +98,27 @@ interface LayoutState {
   toggleRightPanelMode: () => void
   setPhosphorColor: (color: PhosphorColor) => void
   setReviewEnabled: (enabled: boolean) => void
+  setColumns: (columns: KanbanColumn[]) => void
+  setActiveWorkflowTemplate: (id: string | null) => void
+  setCenterMode: (mode: CenterMode) => void
+  setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean }>) => void
+  toggleUIBuilder: () => void
+  setUIComponents: (components: UIComponent[]) => void
+  setWorkingDir: (dir: string) => void
+  setGitBranch: (branch: string) => void
+  setGitDirty: (dirty: boolean) => void
+  setSidebarOpen: (open: boolean) => void
+
+  // Terminal Actions
+  setTerminalOpen: (open: boolean) => void
+  setActiveTerminal: (id: string) => void
+  addTerminal: (id: string, label: string, ephemeral?: boolean) => void
+  removeTerminal: (id: string) => void
+  setTerminalBusy: (id: string, busy: boolean) => void
+
+  // Canvas Actions
+  setCanvasContent: (content: string | null) => void
+  setCanvasUrl: (url: string | null) => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -66,8 +131,40 @@ export const useLayoutStore = create<LayoutState>()(
       },
       spotlightPane: null,
       activeStoryId: 'STORY_089',
+      drawerStoryId: null,
       phosphorColor: 'green',
       reviewEnabled: false,
+      columns: [
+        { id: 'Blueprint',   status: 'READY',       color: 'bg-blue-500/5 border-blue-500/20',   accent: 'bg-blue-500' },
+        { id: 'Engine Room', status: 'IN PROGRESS',  color: 'bg-yellow-500/5 border-yellow-500/20', accent: 'bg-yellow-500' },
+        { id: 'Test Bench',  status: 'TESTING',      color: 'bg-orange-500/5 border-orange-500/20', accent: 'bg-orange-500' },
+        { id: 'QA / Review', status: 'REVIEW',       color: 'bg-purple-500/5 border-purple-500/20', accent: 'bg-purple-500' },
+        { id: 'Documenting', status: 'DOCUMENTING',  color: 'bg-cyan-500/5 border-cyan-500/20',   accent: 'bg-cyan-500' },
+        { id: 'Done',        status: 'COMPLETE',     color: 'bg-green-500/5 border-green-500/20',  accent: 'bg-green-500' },
+      ],
+      activeWorkflowTemplate: null,
+      centerMode: 'code',
+
+      uiDensity: 'normal',
+      fontSize: 12,
+      animationsEnabled: true,
+
+      sidebarOpen: true,
+
+      terminalOpen: false,
+      activeTerminalId: 'terminal-local',
+      terminals: [
+        { id: 'terminal-local', label: 'Local', isBusy: false },
+        { id: 'terminal-claude', label: 'Claude', isBusy: false },
+        { id: 'terminal-gemini', label: 'Gemini', isBusy: false },
+        { id: 'terminal-jules', label: 'Jules', isBusy: false },
+      ],
+
+      canvasContent: null,
+      canvasUrl: null,
+
+      uiBuilderOpen: false,
+      uiComponents: [],
 
       leftPanelMode: 'explorer',
       rightPanelMode: 'telemetry',
@@ -86,7 +183,7 @@ export const useLayoutStore = create<LayoutState>()(
       },
 
       setView: (view) => set({ activeView: view }),
-      
+
       toggleFlip: (paneId) => set((state) => {
         const newFlipped = [...state.flippedPanes]
         const index = newFlipped.indexOf(paneId)
@@ -99,13 +196,15 @@ export const useLayoutStore = create<LayoutState>()(
       }),
 
       setSpotlight: (paneId) => set({ spotlightPane: paneId }),
-      
+
       setActiveStoryId: (id) => set({ activeStoryId: id }),
-      
+
+      setDrawerStory: (id) => set({ drawerStoryId: id }),
+
       setTelemetry: (data) => set((state) => ({ ...state, ...data })),
 
       setCapexTimer: (timer) => set({ capexTimer: timer }),
-      
+
       updateAgentTelemetry: (agentId, data) => set((state) => ({
         agentTelemetry: {
           ...state.agentTelemetry,
@@ -123,6 +222,38 @@ export const useLayoutStore = create<LayoutState>()(
 
       setPhosphorColor: (color) => set({ phosphorColor: color }),
       setReviewEnabled: (enabled) => set({ reviewEnabled: enabled }),
+      setColumns: (columns) => set({ columns }),
+      setActiveWorkflowTemplate: (id) => set({ activeWorkflowTemplate: id }),
+      setCenterMode: (mode) => set({ centerMode: mode }),
+      setAppearance: (patch) => set((state) => ({ ...state, ...patch })),
+      toggleUIBuilder: () => set((state) => ({ uiBuilderOpen: !state.uiBuilderOpen })),
+      setUIComponents: (components) => set({ uiComponents: components }),
+      setWorkingDir: (dir) => set({ workingDir: dir }),
+      setGitBranch: (branch) => set({ gitBranch: branch }),
+      setGitDirty: (dirty) => set({ isGitDirty: dirty }),
+      setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+      setTerminalOpen: (open) => set({ terminalOpen: open }),
+      setActiveTerminal: (id) => set({ activeTerminalId: id }),
+      addTerminal: (id, label, ephemeral = false) => set((state) => {
+        if (state.terminals.find(t => t.id === id)) return state
+        return {
+          terminals: [...state.terminals, { id, label, isBusy: false, ephemeral }],
+          activeTerminalId: id,
+          terminalOpen: true
+        }
+      }),
+      removeTerminal: (id) => set((state) => {
+        const newTerms = state.terminals.filter(t => t.id !== id)
+        const nextId = state.activeTerminalId === id ? (newTerms[0]?.id || '') : state.activeTerminalId
+        return { terminals: newTerms, activeTerminalId: nextId }
+      }),
+      setTerminalBusy: (id, busy) => set((state) => ({
+        terminals: state.terminals.map(t => t.id === id ? { ...t, isBusy: busy } : t)
+      })),
+
+      setCanvasContent: (content) => set({ canvasContent: content }),
+      setCanvasUrl: (url) => set({ canvasUrl: url }),
     }),
     {
       name: 'copernicus-layout-storage',

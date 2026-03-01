@@ -32,7 +32,7 @@ export class PTYAuditor {
     this.logDir = logDir;
     this.maxTotalSize = maxTotalSizeMb * 1024 * 1024;
     this.retentionDays = retentionDays;
-    
+
     // Ensure log directory exists
     if (!fs.existsSync(this.logDir)) {
       try {
@@ -73,7 +73,7 @@ export class PTYAuditor {
       // For now, we rely on the map key being unique per day per agent.
       // If the day changes, a new stream is created. Old stream stays open until close() or rotation.
       // This is acceptable as long as we don't leak file descriptors indefinitely (rotation handles deletion).
-      
+
       stream = fs.createWriteStream(logFile, { flags: 'a' });
       stream.on('error', (err) => console.error(`Error writing to audit log ${logFile}:`, err));
       this.activeStreams.set(streamKey, stream);
@@ -102,7 +102,7 @@ export class PTYAuditor {
 
       const files = await fs.promises.readdir(this.logDir);
       const logFiles = files.filter(f => f.startsWith('pty-') && f.endsWith('.log'));
-      
+
       const fileStats = await Promise.all(logFiles.map(async f => {
         const p = path.join(this.logDir, f);
         try {
@@ -121,7 +121,7 @@ export class PTYAuditor {
 
       // 1. Delete files older than retention period
       const retentionMs = this.retentionDays * 24 * 60 * 60 * 1000;
-      
+
       let totalSize = 0;
       const remainingFiles: typeof validFiles = [];
 

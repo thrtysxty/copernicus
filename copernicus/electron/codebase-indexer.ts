@@ -138,15 +138,15 @@ export class CodebaseIndexer {
     if (this.isIndexing) return
     this.isIndexing = true
     this.filesIndexed = 0
-    
+
     try {
-      const files = this.walk(rootPath).filter(f => 
+      const files = this.walk(rootPath).filter(f =>
         ['.ts', '.tsx', '.py', '.md', '.json', '.sql'].includes(path.extname(f)) &&
         !f.includes('node_modules') && !f.includes('.git')
       )
-      
+
       this.totalFiles = files.length
-      
+
       for (const file of files) {
         await this.indexFile(file)
         this.filesIndexed++
@@ -168,15 +168,16 @@ export class CodebaseIndexer {
       const { embedding, provider } = await this.getEmbedding(textToIndex)
       this.activeProvider = provider
 
-      const stmt = stateLedger.db.prepare(`
+      const deleteStmt = stateLedger.db.prepare('DELETE FROM codebase_vec WHERE file_path = ?')
+      const insertStmt = stateLedger.db.prepare(`
         INSERT INTO codebase_vec(file_path, content, embedding)
         VALUES (?, ?, ?)
-        ON CONFLICT(file_path) DO UPDATE SET
-          content = excluded.content,
-          embedding = excluded.embedding
       `)
-      
-      stmt.run(filePath, textToIndex, new Float32Array(embedding))
+
+      stateLedger.db.transaction(() => {
+        deleteStmt.run(filePath)
+        insertStmt.run(filePath, textToIndex, new Float32Array(embedding))
+      })()
     } catch (e) {
       console.error(`[Indexer] Failed to index ${filePath}:`, e)
     }
@@ -184,7 +185,7 @@ export class CodebaseIndexer {
 
   public async search(query: string, topK = 5): Promise<any[]> {
     const { embedding } = await this.getEmbedding(query)
-    
+
     const stmt = stateLedger.db.prepare(`
       SELECT file_path, content, distance
       FROM codebase_vec
@@ -192,7 +193,7 @@ export class CodebaseIndexer {
       ORDER BY distance
       LIMIT ?
     `)
-    
+
     const rows = stmt.all(new Float32Array(embedding), topK)
     return rows.map((r: any) => ({
       path: r.file_path,

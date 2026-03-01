@@ -4,8 +4,6 @@ This file is auto-generated. Run `make backlog` to update.
 
 | ID | Title | Status | Priority |
 |:---|:------|:-------|:---------|
-| #112 | Llm Streaming Service | APPROVED FOR IMPLEMENTATION | CRITICAL |
-| #113 | Filesystem Integration | APPROVED FOR IMPLEMENTATION | CRITICAL |
 | #000 | Agent Logging | COMPLETE | Critical (Foundation) |
 | #030 | Agentic Project Boilerplate | COMPLETE | CRITICAL |
 | #039 | Cli Migration | COMPLETE | CRITICAL |
@@ -21,10 +19,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #091 | Industrial Kanban | COMPLETE | CRITICAL — Defines the Workflow State Machine |
 | #094 | Copernicus Rebranding | COMPLETE | CRITICAL — Establishes the Formidable Identity |
 | #097 | Dell R210Ii Infrastructure Migration | COMPLETE | CRITICAL |
-| #102 | Copernicus Platform Hardening | IN PROGRESS | CRITICAL |
-| #111 | Ipc Security Hardening | APPROVED FOR IMPLEMENTATION | HIGH |
-| #114 | Slash Commands Agent Launcher | APPROVED FOR IMPLEMENTATION | HIGH |
-| #115 | Context Injection Code Apply | APPROVED FOR IMPLEMENTATION | HIGH |
+| #102 | Copernicus Platform Hardening | COMPLETE | CRITICAL |
+| #112 | Llm Streaming Service | COMPLETE | CRITICAL |
+| #113 | Filesystem Integration | COMPLETE | CRITICAL |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -33,14 +30,45 @@ This file is auto-generated. Run `make backlog` to update.
 | #093 | Spotlight Controller | COMPLETE | HIGH — UX management for a multi-pane IDE |
 | #096 | Github Dashboard Integration | COMPLETE | HIGH |
 | #098 | Industrial Manual & Operator Onboarding | COMPLETE | HIGH |
+| #111 | Ipc Security Hardening | COMPLETE | HIGH |
+| #114 | Slash Commands Agent Launcher | COMPLETE | HIGH |
+| #115 | Context Injection Code Apply | COMPLETE | HIGH |
+| #117 | Security Remediation Gaps | COMPLETE | HIGH |
+| #120 | Workflow Canvas View | COMPLETE | HIGH |
+| #124 | Command Palette | COMPLETE | HIGH |
+| #126 | Error Handling Observability | COMPLETE | HIGH |
+| #149 | Workflow Real Agent Dispatch | COMPLETE | HIGH |
+| #150 | Editor File Type Safety And Monaco Qol | COMPLETE | HIGH |
+| #152 | Visual Ui Builder Canvas | COMPLETE | HIGH |
+| #156 | Model Call Ledger | COMPLETE | HIGH |
+| #121 | Parallel Agent Review Gate | COMPLETED | HIGH |
+| #122 | Local Codebase Semantic Index | COMPLETED | HIGH |
+| #125 | R210Ii Ollama Inference Service | COMPLETED | HIGH |
+| #146 | Workflow Engine Wiring & Activity Bar Navigation | COMPLETED | HIGH |
+| #147 | Workflow Node Palette & Node Inspector | COMPLETED | HIGH |
+| #151 | Center Panel Router And Image Viewer | COMPLETED | HIGH |
+| #157 | Model Hot-Swap Context Continuity | COMPLETED | HIGH |
+| #158 | Project Memory Buffer | COMPLETED | HIGH |
+| #159 | Settings Panel Rebuild | COMPLETED | HIGH |
+| #160 | Story-Backed Sqlite Kanban Persistence | COMPLETED | HIGH |
+| #161 | Jules Agent Harness | COMPLETED | HIGH |
+| #163 | Ipc Error Handling Conformance | COMPLETED | HIGH |
+| #164 | Jules Session Panel And Webview | COMPLETED | HIGH |
+| #165 | Terminal Split And Productivity Features | COMPLETED | HIGH |
+| #166 | Touch Bar Hardening And Configuration | COMPLETED | HIGH |
 | #050 | Implement Agent Tool Use | DONE | High |
-| #116 | Phosphor System Toast Settings | APPROVED FOR IMPLEMENTATION | MEDIUM |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
 | #095 | Touch Bar Integration | COMPLETE | MEDIUM — Hardware Aesthetic Extension |
 | #099 | Visual Identity: App Icon & Industrial Loading Screen | COMPLETE | MEDIUM |
 | #100 | Dynamic Phosphor Color System | COMPLETE | MEDIUM |
+| #116 | Phosphor System Toast Settings | COMPLETE | MEDIUM |
+| #123 | Capex Intelligence Dashboard | COMPLETE | MEDIUM |
+| #148 | Ollama Dynamic Model Discovery | COMPLETED | MEDIUM |
+| #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
+| #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
+| #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -48,4 +76,23 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
+| #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
+| #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
+| #130 | Anthropic Credential Ux | COMPLETED | P1 — Wizard onboarding friction |
+| #131 | Wizard Window Management | COMPLETED | P1 |
+| #132 | Auth Return Reliability | COMPLETED | P0 — Blocks onboarding |
+| #133 | Force Oauth Consent | COMPLETED | P1 |
+| #134 | Packaged Environment Stabilization | COMPLETED | P0 |
+| #135 | Chat And Terminal Interaction Fixes | COMPLETED | P1 |
+| #136 | Action Log Export | COMPLETED | P2 |
+| #137 | Debug Build Profile | COMPLETED | P2 |
+| #138 | Github Whitelist Fix | COMPLETED | P1 |
+| #139 | Monaco Worker Csp Fix | COMPLETED | P1 |
+| #140 | Terminal Input Restoration | COMPLETED | P1 |
+| #141 | Branding Cleanup | COMPLETED | P3 |
+| #142 | Copernicus Ascii Splash | COMPLETED | P1 — User Experience |
+| #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
+| #145 | Enhanced Story Management | COMPLETED | P1 |
+| #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 

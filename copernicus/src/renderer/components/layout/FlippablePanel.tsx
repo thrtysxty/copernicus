@@ -14,7 +14,7 @@ export const FlippablePanel: React.FC<FlippablePanelProps> = ({ id, front, back,
   const isFlipped = flippedPanes.includes(id)
 
   return (
-    <div 
+    <div
       className={`relative w-full h-full ${className}`}
       style={{ perspective: 1000 }}
     >
@@ -34,9 +34,9 @@ export const FlippablePanel: React.FC<FlippablePanelProps> = ({ id, front, back,
 
         <div
           className="absolute inset-0 w-full h-full bg-copernicus-bg"
-          style={{ 
+          style={{
             backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)' 
+            transform: 'rotateY(180deg)'
           }}
         >
           {back}

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIpcError } from '../hooks/useIpcError';
+import { Search, Plus, ChevronDown, X } from 'lucide-react';
 
 interface CapexModalProps {
   type: 'start' | 'close';
@@ -13,28 +14,41 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
   const invoke = useIpcError();
   const [formData, setFormData] = useState({
     financial_category: 'CAPEX',
-    component: 'platform_core',
+    repo_path: '',
+    repo_name: '',
     phase: 'DEVELOPMENT',
     story: '',
     description: '',
     capitalizable: true,
   });
+
+  const [repos, setRepos] = useState<any[]>([]);
+  const [repoSearch, setRepoSearch] = useState('');
   const [stories, setStories] = useState<string[]>([]);
   const [durationStr, setDurationStr] = useState('');
   const [value, setValue] = useState(0);
+  const [showNewRepoInput, setShowNewRepoInput] = useState(false);
+  const [newRepoName, setNewRepoName] = useState('');
+  const [showRepoDropdown, setShowRepoDropdown] = useState(false);
 
+  // Fetch repos from workspace root
   useEffect(() => {
     if (isOpen) {
       if (type === 'start') {
+        invoke<string>('app:get-root-path').then(rootPath => {
+          invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath).then(res => {
+            if (res.ok) {
+              setRepos(res.data.filter(item => item.isDir));
+            }
+          });
+        });
+
         invoke('devtime:defaults').then((defaults: any) => {
           setFormData(prev => ({
             ...prev,
             financial_category: defaults.financial_category || 'CAPEX',
-            component: defaults.component || 'platform_core',
-            phase: defaults.phase || 'DEVELOPMENT',
-            story: defaults.stories[0] || '',
+            phase: 'DEVELOPMENT',
           }));
-          setStories(defaults.stories);
         });
       } else if (type === 'close' && session) {
         const durHours = (session.duration_seconds / 3600);
@@ -49,13 +63,32 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
     }
   }, [isOpen, type, session, invoke]);
 
+  // Fetch stories when repo changes
+  useEffect(() => {
+    if (formData.repo_path) {
+      invoke<string[]>('devtime:list-stories', formData.repo_path).then(res => {
+        setStories(res || []);
+        if (res && res.length > 0) {
+            setFormData(prev => ({ ...prev, story: res[0] }));
+        } else {
+            setFormData(prev => ({ ...prev, story: '' }));
+        }
+      });
+    }
+  }, [formData.repo_path, invoke]);
+
+  const filteredRepos = useMemo(() => {
+    return repos.filter(r => r.name.toLowerCase().includes(repoSearch.toLowerCase()));
+  }, [repos, repoSearch]);
+
   const handleSubmit = async () => {
     if (type === 'start') {
       await invoke('devtime:start', {
         financial_category: formData.financial_category,
-        component: formData.component,
+        component: formData.repo_name, // Mapping repo_name to component field in DB
         phase: formData.phase,
-        story: formData.story,
+        story_id: formData.story,
+        repo_path: formData.repo_path
       });
       onClose();
     } else {
@@ -65,6 +98,19 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
       });
       await invoke('app:quit');
     }
+  };
+
+  const handleCreateRepo = async () => {
+    if (!newRepoName.trim()) return;
+    const rootPath = await invoke<string>('app:get-root-path');
+    const fullPath = `${rootPath}/${newRepoName.trim()}`;
+    setFormData({
+        ...formData,
+        repo_name: newRepoName.trim(),
+        repo_path: fullPath
+    });
+    setShowNewRepoInput(false);
+    setNewRepoName('');
   };
 
   const handleSkip = async () => {
@@ -80,11 +126,11 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100]">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-copernicus-bg border border-copernicus-steel w-[480px] shadow-2xl relative overflow-hidden font-mono"
+          className="bg-copernicus-bg border border-copernicus-steel w-[520px] shadow-2xl relative overflow-hidden font-mono"
         >
           <div className="h-8 bg-copernicus-bg border-b border-copernicus-steel flex items-center justify-between px-3">
             <span className="text-xs uppercase tracking-widest text-copernicus-phosphor font-bold">
@@ -92,13 +138,93 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
             </span>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 overflow-y-auto max-h-[80vh]">
             {type === 'start' ? (
-              <div className="space-y-4 text-zinc-300">
+              <div className="space-y-5 text-zinc-300">
+
+                 {/* Repo Selection Dropdown */}
+                 <div className="space-y-2 relative">
+                    <div className="flex items-center justify-between">
+                        <label className="block text-[10px] uppercase text-zinc-500">Target Repository</label>
+                        <button
+                            onClick={() => {
+                                setShowNewRepoInput(!showNewRepoInput);
+                                if (showNewRepoInput) setNewRepoName('');
+                            }}
+                            className="text-[9px] text-copernicus-phosphor flex items-center gap-1 hover:underline"
+                        >
+                            {showNewRepoInput ? <><X size={10} /> Cancel</> : <><Plus size={10} /> New Repo</>}
+                        </button>
+                    </div>
+
+                    {showNewRepoInput ? (
+                        <div className="flex gap-2">
+                            <input
+                                className="flex-1 bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
+                                value={newRepoName}
+                                onChange={e => setNewRepoName(e.target.value)}
+                                placeholder="New repository name..."
+                                autoFocus
+                            />
+                            <button
+                                onClick={handleCreateRepo}
+                                className="bg-copernicus-phosphor text-black px-3 py-1 text-[10px] font-bold uppercase"
+                            >
+                                Create
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowRepoDropdown(!showRepoDropdown)}
+                                className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs flex items-center justify-between focus:border-copernicus-phosphor focus:outline-none"
+                            >
+                                <span className={formData.repo_name ? 'text-zinc-200' : 'text-zinc-600'}>
+                                    {formData.repo_name || 'Select a repository...'}
+                                </span>
+                                <ChevronDown size={14} className={`text-zinc-600 transition-transform ${showRepoDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {showRepoDropdown && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-[110] max-h-60 flex flex-col">
+                                    <div className="p-2 border-b border-zinc-800">
+                                        <div className="relative">
+                                            <Search className="absolute left-2 top-2 text-zinc-600" size={12} />
+                                            <input
+                                                className="w-full bg-black/40 border border-zinc-800 text-zinc-300 pl-8 pr-2 py-1.5 text-[10px] focus:border-copernicus-phosphor focus:outline-none"
+                                                value={repoSearch}
+                                                onChange={e => setRepoSearch(e.target.value)}
+                                                placeholder="Search repos..."
+                                                autoFocus
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-zinc-800">
+                                        {filteredRepos.length > 0 ? filteredRepos.map(r => (
+                                            <button
+                                                key={r.path}
+                                                onClick={() => {
+                                                    setFormData({...formData, repo_name: r.name, repo_path: r.path});
+                                                    setShowRepoDropdown(false);
+                                                }}
+                                                className={`w-full text-left px-3 py-2 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors truncate ${formData.repo_path === r.path ? 'bg-copernicus-phosphor/5 text-copernicus-phosphor' : 'text-zinc-400'}`}
+                                            >
+                                                {r.name}
+                                            </button>
+                                        )) : (
+                                            <div className="px-3 py-4 text-[10px] text-zinc-600 italic text-center uppercase tracking-widest">No repos found</div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                 </div>
+
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-[10px] uppercase text-zinc-500 mb-1">Financial Type</label>
-                        <select 
+                        <select
                             className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
                             value={formData.financial_category}
                             onChange={e => setFormData({...formData, financial_category: e.target.value})}
@@ -109,41 +235,31 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                         </select>
                     </div>
                     <div>
-                        <label className="block text-[10px] uppercase text-zinc-500 mb-1">Component</label>
-                         <input 
+                        <label className="block text-[10px] uppercase text-zinc-500 mb-1">Phase</label>
+                        <select
                             className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
-                            value={formData.component}
-                            onChange={e => setFormData({...formData, component: e.target.value})}
-                        />
+                            value={formData.phase}
+                            onChange={e => setFormData({...formData, phase: e.target.value})}
+                        >
+                            <option value="PLANNING">PLANNING</option>
+                            <option value="DEVELOPMENT">DEVELOPMENT</option>
+                            <option value="BUG_FIXING">BUG FIXING</option>
+                            <option value="MAINTENANCE">MAINTENANCE</option>
+                        </select>
                     </div>
-                 </div>
-                 
-                 <div>
-                    <label className="block text-[10px] uppercase text-zinc-500 mb-1">Phase</label>
-                    <select 
-                        className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
-                        value={formData.phase}
-                        onChange={e => setFormData({...formData, phase: e.target.value})}
-                    >
-                        <option value="DEVELOPMENT">DEVELOPMENT</option>
-                        <option value="PRELIMINARY">PRELIMINARY</option>
-                        <option value="POST_IMPLEMENTATION">POST_IMPLEMENTATION</option>
-                    </select>
                  </div>
 
                  <div>
-                    <label className="block text-[10px] uppercase text-zinc-500 mb-1">Story</label>
-                    <select 
+                    <label className="block text-[10px] uppercase text-zinc-500 mb-1">Story Context (Optional)</label>
+                    <select
                         className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
                         value={formData.story}
                         onChange={e => setFormData({...formData, story: e.target.value})}
                     >
-                        {stories.length > 0 ? (
-                            stories.map(s => <option key={s} value={s}>{s}</option>)
-                        ) : (
-                            <option value="">No stories found</option>
-                        )}
+                        <option value="">-- No Story Linked --</option>
+                        {stories.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
+                    <p className="text-[8px] text-zinc-600 mt-1 uppercase italic">Selection based on kanban stories in {formData.repo_name || 'repo'}</p>
                  </div>
               </div>
             ) : (
@@ -158,8 +274,8 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                  </div>
 
                  <div className="flex items-center gap-2 py-2">
-                    <input 
-                        type="checkbox" 
+                    <input
+                        type="checkbox"
                         id="cap-check"
                         className="accent-copernicus-phosphor"
                         checked={formData.capitalizable}
@@ -170,7 +286,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
 
                  <div>
                     <label className="block text-[10px] uppercase text-zinc-500 mb-1">Description</label>
-                    <textarea 
+                    <textarea
                         className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none h-20 resize-none"
                         value={formData.description}
                         onChange={e => setFormData({...formData, description: e.target.value})}
@@ -182,15 +298,16 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
             )}
 
             <div className="flex justify-end gap-3 mt-8">
-                <button 
+                <button
                     onClick={handleSkip}
                     className="px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors"
                 >
                     {type === 'start' ? 'Skip Tracking' : 'Quit Without Saving'}
                 </button>
-                <button 
+                <button
                     onClick={handleSubmit}
-                    className="px-6 py-2 text-[10px] uppercase tracking-wider font-bold bg-copernicus-phosphor text-black hover:bg-copernicus-phosphor/90 transition-colors"
+                    disabled={type === 'start' && !formData.repo_path}
+                    className="px-6 py-2 text-[10px] uppercase tracking-wider font-bold bg-copernicus-phosphor text-black hover:bg-copernicus-phosphor/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                     {type === 'start' ? 'Start Session' : 'Save & Quit'}
                 </button>

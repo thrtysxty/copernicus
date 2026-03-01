@@ -9,8 +9,6 @@ Ensures atomic operations via staging directory and os.rename.
 import os
 import sys
 import json
-import shutil
-import time
 import argparse
 import uuid
 from datetime import datetime
@@ -26,13 +24,14 @@ STAGING_DIR = os.path.join(WORKFLOW_ROOT, "staging")
 # Ensure staging exists
 os.makedirs(STAGING_DIR, exist_ok=True)
 
+
 def find_token(story_id):
     """
     Locates a task token file by story_id across all queues and active directory.
     Returns (filepath, directory_type) or (None, None).
     """
     token_filename = f"{story_id}.json"
-    
+
     # Check active first
     active_path = os.path.join(ACTIVE_DIR, token_filename)
     if os.path.exists(active_path):
@@ -46,8 +45,9 @@ def find_token(story_id):
                 token_path = os.path.join(persona_dir, token_filename)
                 if os.path.exists(token_path):
                     return token_path, "queue"
-    
+
     return None, None
+
 
 def create_token_data(story_id, initial_status="created", owner=None):
     """Creates a new token dictionary."""
@@ -59,21 +59,23 @@ def create_token_data(story_id, initial_status="created", owner=None):
             {
                 "timestamp": datetime.now().isoformat(),
                 "action": "created",
-                "by": os.getenv("USER", "unknown")
+                "by": os.getenv("USER", "unknown"),
             }
-        ]
+        ],
     }
+
 
 def save_token(filepath, token_data):
     """Saves token data to file atomically."""
     # Ensure directory exists
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    
+
     # Write to temp file then move
     temp_path = filepath + ".tmp"
     with open(temp_path, "w") as f:
         json.dump(token_data, f, indent=2)
     os.rename(temp_path, filepath)
+
 
 def push_task(story_id, target_queue):
     """
@@ -92,13 +94,13 @@ def push_task(story_id, target_queue):
     # Attempt to lock/claim the token by moving it to staging
     token_data = None
     existing_path, location_type = find_token(story_id)
-    
+
     if existing_path:
         try:
             # Atomic move to staging
             os.rename(existing_path, staging_path)
             print(f"Locked token {story_id} from {location_type} to staging.")
-            
+
             # Load data from staging
             with open(staging_path, "r") as f:
                 token_data = json.load(f)
@@ -110,19 +112,23 @@ def push_task(story_id, target_queue):
             print(f"Error moving token: {e}")
             sys.exit(1)
         except json.JSONDecodeError:
-             print(f"Warning: Corrupt token. Recreating.")
-             token_data = create_token_data(story_id)
+            print("Warning: Corrupt token. Recreating.")
+            token_data = create_token_data(story_id)
     else:
         # Create new token directly in staging
-        token_data = create_token_data(story_id, initial_status=f"pushed_to_{target_queue}")
+        token_data = create_token_data(
+            story_id, initial_status=f"pushed_to_{target_queue}"
+        )
         print(f"Creating new token for {story_id} in staging.")
 
     # Update history
-    token_data["history"].append({
-        "timestamp": datetime.now().isoformat(),
-        "action": f"pushed_to_{target_queue}",
-        "by": os.getenv("USER", "unknown")
-    })
+    token_data["history"].append(
+        {
+            "timestamp": datetime.now().isoformat(),
+            "action": f"pushed_to_{target_queue}",
+            "by": os.getenv("USER", "unknown"),
+        }
+    )
     token_data["status"] = f"pending_{target_queue}"
     token_data["owner"] = target_queue
 
@@ -159,7 +165,7 @@ def pull_task(persona):
 
     # Sort to pick oldest/first
     files.sort()
-    
+
     claimed_file = None
     staging_path = None
     token_data = None
@@ -171,7 +177,7 @@ def pull_task(persona):
         story_id = filename.replace(".json", "")
         staging_filename = f"{story_id}_{uuid.uuid4()}.json"
         staging_path = os.path.join(STAGING_DIR, staging_filename)
-        
+
         try:
             # Atomic move to staging
             os.rename(source_path, staging_path)
@@ -184,7 +190,7 @@ def pull_task(persona):
         except OSError as e:
             print(f"Error accessing queue: {e}")
             continue
-    
+
     if not claimed_file:
         print(f"Could not claim any tasks from {persona} (someone else took them?).")
         return
@@ -198,17 +204,19 @@ def pull_task(persona):
         # Move to lost+found or just leave in staging?
         return
 
-    token_data["history"].append({
-        "timestamp": datetime.now().isoformat(),
-        "action": "pulled",
-        "by": os.getenv("USER", "unknown")
-    })
+    token_data["history"].append(
+        {
+            "timestamp": datetime.now().isoformat(),
+            "action": "pulled",
+            "by": os.getenv("USER", "unknown"),
+        }
+    )
     token_data["status"] = "in_progress"
-    token_data["owner"] = persona 
+    token_data["owner"] = persona
 
     # Save updated data to staging
     save_token(staging_path, token_data)
-    
+
     # Move to active
     dest_path = os.path.join(ACTIVE_DIR, f"{story_id}.json")
     try:
@@ -218,6 +226,7 @@ def pull_task(persona):
         print(f"Error finalizing move to active: {e}")
         print(f"Token left in staging: {staging_path}")
         sys.exit(1)
+
 
 def status_task(story_id):
     path, location_type = find_token(story_id)
@@ -234,6 +243,7 @@ def status_task(story_id):
     else:
         print(f"Task {story_id} not found.")
 
+
 def list_queues():
     print("Queues:")
     for q in os.listdir(QUEUES_DIR):
@@ -241,9 +251,10 @@ def list_queues():
         if os.path.isdir(path):
             count = len([f for f in os.listdir(path) if f.endswith(".json")])
             print(f"  - {q}: {count} tasks")
-    
+
     active_count = len([f for f in os.listdir(ACTIVE_DIR) if f.endswith(".json")])
     print(f"Active: {active_count} tasks")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Workflow Manager")
@@ -273,6 +284,7 @@ def main():
         list_queues()
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()

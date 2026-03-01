@@ -14,7 +14,7 @@ describe('FSManager', () => {
     }
     fs.writeFileSync(path.join(testRoot, 'test-file.txt'), 'hello world')
     fs.mkdirSync(path.join(testRoot, 'test-dir'))
-    
+
     fsManager = new FSManager()
     fsManager.setRootPath(testRoot)
   })
@@ -50,7 +50,7 @@ describe('FSManager', () => {
 
   it('should block path traversal outside root and home', () => {
     const unsafePath = path.resolve(testRoot, '../../etc/passwd')
-    
+
     const listResult = fsManager.listDir(unsafePath)
     expect(listResult.ok).toBe(false)
     if (!listResult.ok) expect(listResult.error).toMatch(/Path traversal blocked/)

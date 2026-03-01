@@ -7,7 +7,7 @@
     <style>
         :root {
             /* Saturated Genesis Green */
-            --phosphor: #00FF66; 
+            --phosphor: #00FF66;
             --phosphor-glow: #4ADE80;
             --bg: #020205; /* Deep space blue-black */
             --steel: #3F3F46;
@@ -29,27 +29,27 @@
             perspective: 1500px;
         }
 
-        /* 
-           Sega Genesis Style Neon Ignite: click......click...click..on 
+        /*
+           Sega Genesis Style Neon Ignite: click......click...click..on
         */
         @keyframes neon-ignite {
             0% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
-            
+
             /* CLICK 1 */
             20% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
             21% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 25px var(--phosphor); opacity: 1; }
             22% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
-            
+
             /* CLICK 2 */
             45% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
             46% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 25px var(--phosphor); opacity: 1; }
             47% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
-            
+
             /* CLICK 3 */
             65% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
             66% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 25px var(--phosphor); opacity: 1; }
             67% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
-            
+
             /* ON */
             80% { filter: grayscale(1); color: #111; text-shadow: none; opacity: 0.2; }
             85% { filter: grayscale(0); color: var(--phosphor); text-shadow: 0 0 20px var(--phosphor), 0 0 40px var(--phosphor); opacity: 1; }
@@ -89,9 +89,9 @@
             font-weight: 900;
             font-size: 16px;
             z-index: 10;
-            
+
             /* Intense Core Glow */
-            box-shadow: 
+            box-shadow:
                 0 0 20px #fff,
                 0 0 40px var(--phosphor),
                 0 0 80px var(--phosphor),
@@ -126,14 +126,14 @@
             top: -16px;
             left: 50%;
             transform: translateX(-50%) rotateX(-70deg) rotateY(10deg);
-            
+
             /* Planet Glow */
-            box-shadow: 
+            box-shadow:
                 0 0 15px var(--phosphor),
                 0 0 30px var(--phosphor),
                 inset -4px -4px 10px rgba(0,0,0,0.5), /* Shadow side */
                 inset 4px 4px 10px rgba(255,255,255,0.6); /* Highlight side */
-            
+
             display: flex;
             align-items: center;
             justify-content: center;
@@ -168,12 +168,12 @@
             position: absolute;
             top: 0; left: 0;
             background: linear-gradient(
-                rgba(18, 16, 16, 0) 50%, 
+                rgba(18, 16, 16, 0) 50%,
                 rgba(0, 0, 0, 0.25) 50%
             ), linear-gradient(
-                90deg, 
-                rgba(255, 0, 0, 0.06), 
-                rgba(0, 255, 0, 0.02), 
+                90deg,
+                rgba(255, 0, 0, 0.06),
+                rgba(0, 255, 0, 0.02),
                 rgba(0, 0, 255, 0.06)
             );
             background-size: 100% 4px, 3px 100%;
@@ -199,7 +199,7 @@
     <div class="splash-container">
         <div class="system-viewport">
             <div class="bloom"></div>
-            
+
             <!-- Central Platform Core -->
             <div class="center-mass">
                 CORE

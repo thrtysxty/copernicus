@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { app } from 'electron';
 
 /**
  * Manages OS-level sandbox profiles for agents.
@@ -19,13 +20,19 @@ export class SandboxManager {
       this.templateDir = templateDir;
     } else {
       // Best-effort template location resolution
-      // In production Electron app, resources are often in process.resourcesPath
-      const electronResources = (process as any).resourcesPath;
-      if (electronResources && fs.existsSync(path.join(electronResources, 'sandbox'))) {
-        this.templateDir = path.join(electronResources, 'sandbox');
-      } else {
-        // Fallback to local dev path relative to CWD
-        this.templateDir = path.join(process.cwd(), 'resources', 'sandbox');
+      // In production Electron app, resources are in process.resourcesPath
+      const resourcesPath = app.isPackaged
+        ? process.resourcesPath
+        : path.join(app.getAppPath(), 'resources');
+
+      this.templateDir = path.join(resourcesPath, 'sandbox');
+
+      if (!fs.existsSync(this.templateDir)) {
+        // Fallback for development if app.getAppPath() doesn't include resources
+        const devPath = path.join(process.cwd(), 'resources', 'sandbox');
+        if (fs.existsSync(devPath)) {
+          this.templateDir = devPath;
+        }
       }
     }
 
@@ -66,18 +73,18 @@ export class SandboxManager {
 
     try {
       let content = fs.readFileSync(templatePath, 'utf8');
-      
+
       // Escape for Scheme string (double quotes)
       const escapedRoot = this.escapeSchemeString(workspaceRoot);
       const escapedHome = this.escapeSchemeString(os.homedir());
-      
+
       content = content.replace(/WORKSPACE_ROOT/g, escapedRoot);
       content = content.replace(/HOME_DIR/g, escapedHome);
 
       const profilePath = path.join(this.sandboxDir, `${agentId}.sb`);
       fs.writeFileSync(profilePath, content);
 
-      return ['sandbox-exec', '-f', profilePath];
+      return ['/usr/bin/sandbox-exec', '-f', profilePath];
     } catch (err) {
       console.error('Failed to generate macOS sandbox profile:', err);
       return [];
@@ -93,18 +100,18 @@ export class SandboxManager {
 
     try {
       let content = fs.readFileSync(templatePath, 'utf8');
-      
+
       // Firejail handles spaces but quotes are safer if path contains spaces
       const safeRoot = this.escapeFirejailPath(workspaceRoot);
       const safeHome = this.escapeFirejailPath(os.homedir());
-      
+
       content = content.replace(/WORKSPACE_ROOT/g, safeRoot);
       content = content.replace(/HOME_DIR/g, safeHome);
 
       const profilePath = path.join(this.sandboxDir, `${agentId}.profile`);
       fs.writeFileSync(profilePath, content);
 
-      return ['firejail', `--profile=${profilePath}`];
+      return ['/usr/bin/firejail', `--profile=${profilePath}`];
     } catch (err) {
       console.error('Failed to generate Linux sandbox profile:', err);
       return [];

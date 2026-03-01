@@ -1,5 +1,6 @@
 # OS junk
 .DS_Store
+**/.DS_Store
 Thumbs.db
 
 # Python
@@ -39,3 +40,12 @@ copernicus/out/
 # Databases
 *.db
 *.sqlite3
+*.db-shm
+*.db-wal
+
+# Electron release artifacts
+copernicus/release/
+
+# Playwright e2e output (screenshots committed separately to docs/help/screenshots/)
+copernicus/e2e/test-results/
+copernicus/e2e/report/

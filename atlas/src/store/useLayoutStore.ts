@@ -40,16 +40,16 @@ export const useLayoutStore = create<LayoutState>((set) => ({
       // Usually only one spotlight at a time.
       const newSpotlight = !panel.spotlight;
       const newPanels = { ...state.panels };
-      
+
       if (newSpotlight) {
         // Disable spotlight on all others
         Object.keys(newPanels).forEach((key) => {
           newPanels[key].spotlight = false;
         });
       }
-      
+
       newPanels[panelId] = { ...panel, spotlight: newSpotlight };
-      
+
       return { panels: newPanels };
     }),
   registerPanel: (panelId) =>

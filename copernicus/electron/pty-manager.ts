@@ -1,11 +1,25 @@
 import * as pty from 'node-pty';
 import os from 'os';
+import fs from 'fs';
 import { BrowserWindow } from 'electron';
 import { PTYAuditor, securityManager } from './security';
 
-const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+const getShell = () => {
+  if (os.platform() === 'win32') return 'powershell.exe';
 
-class PTYManager {
+  // Preferred shells in order (must be absolute paths for reliable spawning in packaged apps)
+  const shells = ['/bin/zsh', '/bin/bash', '/usr/bin/zsh', '/usr/bin/bash'];
+  for (const s of shells) {
+    try {
+      if (fs.existsSync(s)) return s;
+    } catch { /* ignore */ }
+  }
+  return '/bin/sh'; // absolute fallback
+};
+
+const shell = getShell();
+
+export class PTYManager {
   private sessions: Map<string, { id: string, ptyProcess: pty.IPty }> = new Map();
   private auditor: PTYAuditor;
 
@@ -19,6 +33,12 @@ class PTYManager {
       return;
     }
 
+    // Ensure CWD exists
+    if (!fs.existsSync(cwd)) {
+      console.warn(`Terminal CWD does not exist: ${cwd}, falling back to home.`);
+      cwd = os.homedir();
+    }
+
     // Resolves AC 2: Use SecurityManager to prepare the environment
     const { env, sandboxPrefix } = securityManager.prepareSecureExecution(id);
 
@@ -30,32 +50,73 @@ class PTYManager {
         args = [...sandboxPrefix.slice(1), shell];
     }
 
-    const ptyProcess = pty.spawn(executable, args, {
+    try {
+      const ptyProcess = pty.spawn(executable, args, {
+        name: 'xterm-256color',
+        cols: cols,
+        rows: rows,
+        cwd: cwd,
+        env: env as any
+      });
+
+      ptyProcess.onData((data) => {
+        this.auditor.log(id, 'OUT', data);
+
+        if (window && !window.isDestroyed()) {
+          window.webContents.send('terminal-incoming', { id, data });
+        }
+      });
+
+      ptyProcess.onExit(({ exitCode, signal }) => {
+        console.log(`Terminal ${id} exited with code ${exitCode} signal ${signal}`);
+        this.sessions.delete(id);
+        if (window && !window.isDestroyed()) {
+          window.webContents.send('terminal-closed', { id });
+        }
+      });
+
+      this.sessions.set(id, { id, ptyProcess });
+      console.log(`Created terminal session: ${id} with shell ${executable}`);
+    } catch (err) {
+      console.error(`Failed to spawn terminal ${id}:`, err);
+      if (window && !window.isDestroyed()) {
+        const msg = err instanceof Error ? err.message : String(err);
+        window.webContents.send('terminal-incoming', { id, data: `\r\n\x1b[31m[ERROR] Failed to spawn terminal: ${msg}\x1b[0m\r\n` });
+      }
+    }
+  }
+
+  createEphemeral(id: string, command: string, cwd: string, window: BrowserWindow) {
+    const cols = 120, rows = 30
+    // Use security manager to build environment for ephemeral runs too
+    const { env } = securityManager.prepareSecureExecution(id);
+
+    const ptyProcess = pty.spawn(shell, ['-c', command], {
       name: 'xterm-256color',
-      cols: cols,
-      rows: rows,
-      cwd: cwd,
-      env: env as any
-    });
+      cols,
+      rows,
+      cwd: cwd || os.homedir(),
+      env: env as any,
+    })
 
-    ptyProcess.onData((data) => {
+    this.sessions.set(id, { id, ptyProcess })
+
+    ptyProcess.onData(data => {
       this.auditor.log(id, 'OUT', data);
-      
       if (window && !window.isDestroyed()) {
-        window.webContents.send('terminal-incoming', { id, data });
+        window.webContents.send('terminal-incoming', { id, data })
       }
-    });
+    })
 
-    ptyProcess.onExit(({ exitCode, signal }) => {
-      console.log(`Terminal ${id} exited with code ${exitCode} signal ${signal}`);
-      this.sessions.delete(id);
+    ptyProcess.onExit(({ exitCode }) => {
+      this.sessions.delete(id)
       if (window && !window.isDestroyed()) {
-        window.webContents.send('terminal-closed', { id });
+        // Small delay so the user can read final output before tab closes
+        setTimeout(() => {
+          window.webContents.send('terminal:remove', { id, exitCode })
+        }, exitCode === 0 ? 1500 : 4000)
       }
-    });
-
-    this.sessions.set(id, { id, ptyProcess });
-    console.log(`Created terminal session: ${id}`);
+    })
   }
 
   resize(id: string, cols: number, rows: number) {

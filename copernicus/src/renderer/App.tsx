@@ -1,423 +1,364 @@
-import { useEffect, useState, useCallback } from 'react'
-import { useLayoutStore, StoryboardView } from './store/layout'
-import { useAgentStore } from '../store/agentStore'
-import { useThemeManager } from './hooks/useThemeManager'
+import React, { useState, useEffect } from 'react'
+import { 
+  Github, Settings, BarChart2, GitBranch, FolderOpen, 
+  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout
+} from 'lucide-react'
+import { useLayoutStore } from './store/layout'
 import { useIpcError } from './hooks/useIpcError'
-import { StatusBar } from './components/layout/StatusBar'
-import { SpotlightContainer } from './components/layout/SpotlightContainer'
-import { FlippablePanel } from './components/layout/FlippablePanel'
-import { ChatPanel } from './components/chat/ChatPanel'
-import { KanbanBoard } from './components/KanbanBoard'
-import { CommandDeck } from './components/CommandDeck'
-import { MonacoEditor } from './components/Editor/MonacoEditor'
 import { FileTree } from './components/FileTree/FileTree'
-import { HelpPanel } from './components/HelpPanel'
-import { GithubDashboard } from './components/github/GithubDashboard'
-import { CapexModal } from './components/CapexModal'
+import { ChatPanel } from './components/chat/ChatPanel'
+import { StatusBar } from './components/layout/StatusBar'
+import { FlippablePanel } from './components/layout/FlippablePanel'
+import { CenterPanelRouter } from './components/Editor/CenterPanelRouter'
 import { TerminalTabs } from './components/Terminal/TerminalTabs'
-import Wizard from './components/wizard/Wizard'
-import { Terminal, Folder, Github, Settings, BarChart2, GitBranch } from 'lucide-react'
-import { ToastContainer } from './components/layout/ToastContainer'
-import { SettingsPanel } from './components/settings/SettingsPanel'
-import { CommandPalette } from './components/layout/CommandPalette'
+import { KanbanBoard } from './components/KanbanBoard'
 import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
+import { SettingsPanel } from './components/settings/SettingsPanel'
+import { CommandPalette } from './components/layout/CommandPalette'
+import Wizard from './components/wizard/Wizard'
+import SplashScreen from './components/layout/SplashScreen'
 
-const ipcRenderer = window.ipcRenderer
+const TERMINAL_HEIGHT = 200
 
-// Panel Header Helper
-const PanelHeader = ({ title, onSpotlight, onFlip, isSpotlightActive }: any) => (
-  <div className="h-6 flex items-center justify-between px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel select-none group">
-     <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">{title}</span>
-     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-       {onFlip && (
-         <button onClick={onFlip} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Cycle Panel State">
-           <Terminal size={10} />
-         </button>
-       )}
-       {onSpotlight && (
-         <button onClick={onSpotlight} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Toggle Spotlight">
-           <span className="text-[9px] uppercase font-bold">[{isSpotlightActive ? 'Exit' : 'Spot'}]</span>
-         </button>
-       )}
-     </div>
+// Inline PanelHeader to replace missing file
+const PanelHeader: React.FC<{
+  title: string;
+  onSpotlight: () => void;
+  onFlip: () => void;
+  isSpotlightActive: boolean;
+  onBuilder: () => void;
+  isBuilderActive: boolean;
+}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onBuilder, isBuilderActive }) => (
+  <div className="h-10 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
+    <div className="flex items-center gap-3">
+      <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <button 
+        onClick={onBuilder}
+        className={`p-1.5 rounded transition-colors ${isBuilderActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+        title="UI Builder"
+      >
+        <Layout size={14} />
+      </button>
+      <button 
+        onClick={onFlip}
+        className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+        title="Flip Panel"
+      >
+        <RotateCcw size={14} />
+      </button>
+      <button 
+        onClick={onSpotlight}
+        className={`p-1.5 rounded transition-colors ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+        title="Spotlight"
+      >
+        {isSpotlightActive ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+      </button>
+    </div>
   </div>
 )
 
-function App() {
-  useThemeManager()
+export default function App() {
   const invoke = useIpcError()
-  
-  const { 
-    activeView, 
-    setView, 
-    toggleFlip, 
-    spotlightPane, 
-    setSpotlight, 
-    setTelemetry,
+  const {
+    activeView,
+    setView,
+    sidebarOpen,
+    terminalOpen,
+    setTerminalOpen,
+    spotlightPane,
+    setSpotlight,
+    toggleFlip,
+    workingDir,
+    setWorkingDir,
+    gitBranch,
+    setGitBranch,
     activeStoryId,
-    flippedPanes,
-    capexTimer,
-    setCapexTimer
+    capexSessionTime,
+    capexTotal,
+    terminals,
+    addTerminal,
+    removeTerminal,
+    setTerminalBusy,
+    uiBuilderOpen,
+    toggleUIBuilder
   } = useLayoutStore()
 
-  const [showWizard, setShowWizard] = useState(false)
-  const [sidebarTab, setSidebarTab] = useState<'explorer' | 'github'>('explorer')
-  const [isCapexOpen, setIsCapexOpen] = useState(false)
-  const [capexType, setCapexType] = useState<'start' | 'close'>('start')
-  const [activeSession, setActiveSession] = useState<any>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [paletteMode, setPaletteMode] = useState<'all' | 'commands' | null>(null)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [isWizard, setIsWizard] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
 
-  // Command Palette Listener
+  const anyTerminalBusy = terminals.some(t => t.isBusy)
+
+  // Initial setup and IPC listeners
   useEffect(() => {
-    const removePalette = ipcRenderer.on('layout:open-palette', (_e: any, { mode }: any) => {
-      setPaletteMode(mode)
-    })
-    return () => removePalette()
-  }, [])
-
-  // Editor and Filesystem state
-  const [rootPath, setRootPath] = useState<string>('')
-  const [editorValue, setEditorValue] = useState<string>('// Select a file to open it here.')
-  const [editorLanguage, setEditorLanguage] = useState<string>('plaintext')
-  const [openFilePath, setOpenFilePath] = useState<string | null>(null)
-
-  // Terminal state
-  const [terminalOpen, setTerminalOpen] = useState(false)
-  const TERMINAL_HEIGHT = 240
-
-  useEffect(() => {
-    // Initialise agent store IPC listeners (agent:input routing)
-    useAgentStore.getState().initIPCListeners()
-
     const params = new URLSearchParams(window.location.search)
     if (params.get('window') === 'wizard') {
-      setShowWizard(true)
+      setIsWizard(true)
+      setShowSplash(false)
     }
 
-    // Check session status on start
-    invoke<any>('devtime:status')
-        .then((res: any) => {
-            if (!res.session) {
-                setCapexType('start')
-                setIsCapexOpen(true)
-            } else {
-                setActiveSession(res.session)
-            }
-        })
-        .catch((err: any) => {
-            console.error('Failed to fetch devtime status:', err)
-        })
-
-    // Fetch project root path
-    invoke<string>('app:get-root-path')
-        .then((rp: string) => setRootPath(rp))
-        .catch((err: any) => console.error('Failed to get root path:', err))
-  }, [invoke])
-
-  // Listen for external "editor:open" commands (e.g. from stories hydration)
-  useEffect(() => {
-    const removeEditorOpen = ipcRenderer.on(
-      'editor:open',
-      ({ path: filePath, content }: { path: string; content: string }) => {
-        setEditorValue(content)
-        setOpenFilePath(filePath)
-        const ext = filePath.split('.').pop() ?? ''
-        const langMap: Record<string, string> = {
-          ts: 'typescript', tsx: 'typescript', js: 'javascript',
-          jsx: 'javascript', py: 'python', md: 'markdown',
-          json: 'json', css: 'css', html: 'html', sh: 'shell',
-        }
-        setEditorLanguage(langMap[ext] ?? 'plaintext')
-      }
-    )
-    return () => removeEditorOpen()
-  }, [])
-
-  const handleFileOpen = useCallback(
-    (filePath: string, content: string, language: string) => {
-      setEditorValue(content)
-      setEditorLanguage(language)
-      setOpenFilePath(filePath)
-    },
-    []
-  )
-
-  // Timer simulation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const [hh, mm, ss] = capexTimer.split(':').map(Number)
-      let newSS = ss + 1
-      let newMM = mm
-      let newHH = hh
-      if (newSS >= 60) {
-        newSS = 0
-        newMM++
-      }
-      if (newMM >= 60) {
-        newMM = 0
-        newHH++
-      }
-      const format = (n: number) => n.toString().padStart(2, '0')
-      setCapexTimer(`${format(newHH)}:${format(newMM)}:${format(newSS)}`)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [capexTimer, setCapexTimer])
-
-  // Sync with Touch Bar (Push to Main)
-  useEffect(() => {
-    if (ipcRenderer) {
-      ipcRenderer.send('layout:update-telemetry', { storyId: activeStoryId, timer: capexTimer })
-    }
-  }, [activeStoryId, capexTimer])
-
-  // Git Branch Polling
-  useEffect(() => {
-    const pollGit = async () => {
-      try {
-        const branch = await invoke<string>('git:branch')
-        if (branch) setTelemetry({ gitBranch: branch })
-      } catch { /* git:branch unavailable during startup */ }
-    }
-    
-    pollGit()
-    const interval = setInterval(pollGit, 30000)
-    return () => clearInterval(interval)
-  }, [setTelemetry, invoke])
-
-  // Hardware and Agent UI listeners
-  useEffect(() => {
-    const removeViewListener = ipcRenderer.on('layout:set-view', (view: StoryboardView) => {
-      setView(view)
+    const removeWorkspaceChanged = (window as any).ipcRenderer.on('app:workspace-changed', (_e: any, { path }: any) => {
+      setWorkingDir(path)
     })
-    const removeFlipListener = ipcRenderer.on('layout:toggle-flip', () => {
-      toggleFlip('sidebar')
+
+    const removeActivateTab = (window as any).ipcRenderer.on('terminal:activate-tab', (_e: any, { agentId }: any) => {
+      addTerminal(`terminal-${agentId}`, agentId.toUpperCase())
     })
-    const removeSpotListener = ipcRenderer.on('layout:toggle-spotlight', () => {
-      setSpotlight(spotlightPane ? null : 'editor')
+
+    const removeSpawnTerminal = (window as any).ipcRenderer.on('terminal:spawn', (_e: any, { id, label, ephemeral }: any) => {
+      addTerminal(id, label, ephemeral ?? false)
     })
-    const removeActivateTab = ipcRenderer.on('terminal:activate-tab', () => {
-      setTerminalOpen(true)
+
+    const removeBusyState = (window as any).ipcRenderer.on('terminal:set-busy', (_e: any, { id, busy }: any) => {
+      setTerminalBusy(id, busy)
     })
+
+    const removeTerminalClosed = (window as any).ipcRenderer.on('terminal-closed', (_e: any, { id }: { id: string }) => {
+      removeTerminal(id)
+    })
+
+    const removeTerminalRemove = (window as any).ipcRenderer.on('terminal:remove', (_e: any, { id }: { id: string }) => {
+      removeTerminal(id)
+    })
+
+    const removeFlipListener = (window as any).ipcRenderer.on('layout:toggle-flip', () => {
+      const target = useLayoutStore.getState().spotlightPane ?? 'chat'
+      toggleFlip(target as any)
+    })
+
+    const removeSpotListener = (window as any).ipcRenderer.on('layout:toggle-spotlight', () => {
+      const current = useLayoutStore.getState().spotlightPane
+      setSpotlight(current ? null : 'editor')
+    })
+
+    const removeUiBuilderListener = (window as any).ipcRenderer.on('layout:toggle-ui-builder', () => {
+      toggleUIBuilder()
+    })
+
+    // Fetch initial state
+    invoke<string>('app:get-root-path').then(setWorkingDir).catch(() => {})
+    invoke<string>('git:branch').then(setGitBranch).catch(() => {})
 
     return () => {
-      removeViewListener()
+      removeWorkspaceChanged()
+      removeActivateTab()
+      removeSpawnTerminal()
+      removeBusyState()
+      removeTerminalClosed()
+      removeTerminalRemove()
       removeFlipListener()
       removeSpotListener()
-      removeActivateTab()
+      removeUiBuilderListener()
     }
-  }, [setView, toggleFlip, setSpotlight, spotlightPane])
+  }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder])
 
-  if (showWizard) {
-    return <Wizard onComplete={() => setShowWizard(false)} />
+  // Touch Bar Telemetry Update
+  useEffect(() => {
+    if (showSplash || isWizard) return
+    
+    (window as any).ipcRenderer.send('telemetry:update-touchbar', {
+      storyId: activeStoryId,
+      timer: formatTime(capexSessionTime),
+      view: activeView,
+      gitBranch,
+      capexTotal,
+    })
+  }, [activeStoryId, capexSessionTime, activeView, gitBranch, capexTotal, showSplash, isWizard])
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />
+  }
+
+  if (isWizard) {
+    return <Wizard onComplete={() => setIsWizard(false)} />
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 overflow-hidden font-mono">
-      {/* Main Header */}
-      <header className="h-[18px] w-full flex items-center justify-between px-2 bg-copernicus-bg/50 backdrop-blur-[25px] brightness-[0.4] border-b border-hairline border-copernicus-steel select-none draggable">
-        <div className="flex items-center gap-4">
-          <div className="text-[10px] font-bold text-copernicus-phosphor phosphor-glow tracking-widest uppercase">
-            COPERNICUS // IDE
+    <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
+      {/* Activity Bar (Side) */}
+      <div className="flex h-full w-full overflow-hidden">
+        <aside className="w-10 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-4 z-50">
+          <div className="w-6 h-6 bg-copernicus-phosphor/20 rounded flex items-center justify-center mb-2 phosphor-glow-border">
+            <span className="text-copernicus-phosphor font-bold text-xs">C</span>
           </div>
-          <nav className="flex gap-2 text-[9px] uppercase tracking-tighter text-zinc-500">
-            {(['blueprint', 'studio', 'engine-room', 'capex', 'workflow'] as StoryboardView[]).map((view) => (
-              <button
-                key={view}
-                onClick={() => setView(view)}
-                className={`hover:text-copernicus-phosphor transition-colors flex items-center gap-1 ${activeView === view ? 'text-copernicus-phosphor underline underline-offset-4' : ''}`}
-              >
-                {view === 'capex' && <BarChart2 size={10} />}
-                {view === 'workflow' && <GitBranch size={10} />}
-                {view}
-              </button>
-            ))}
-          </nav>
-        </div>
-        <div className="flex items-center gap-2">
+          
+          <button 
+            onClick={() => setView('blueprint')}
+            className={`p-2 rounded transition-colors ${activeView === 'blueprint' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="Blueprint"
+          >
+            <FolderOpen size={18} />
+          </button>
+
+          <button 
+            onClick={() => setView('engine-room')}
+            className={`p-2 rounded transition-colors ${activeView === 'engine-room' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="Engine Room"
+          >
+            <Monitor size={18} />
+          </button>
+
+          <button 
+            onClick={() => setView('studio')}
+            className={`p-2 rounded transition-colors ${activeView === 'studio' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="Studio"
+          >
+            <Cpu size={18} />
+          </button>
+
           <button
-            onClick={() => setSettingsOpen(prev => !prev)}
-            className="text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+            onClick={() => setView('workflow')}
+            className={`p-2 rounded transition-colors ${activeView === 'workflow' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="Workflow"
+          >
+            <GitBranch size={18} />
+          </button>
+
+          <button
+            onClick={() => setView('capex')}
+            className={`p-2 rounded transition-colors ${activeView === 'capex' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="CAPEX"
+          >
+            <BarChart2 size={18} />
+          </button>
+
+          <div className="flex-1" />
+
+          <button 
+            onClick={() => (window as any).ipcRenderer.invoke('app:open-external', 'https://github.com')}
+            className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors"
+            title="GitHub"
+          >
+            <Github size={18} />
+          </button>
+
+          <button 
+            onClick={() => setSettingsOpen(true)}
+            className={`p-2 rounded transition-colors ${settingsOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
             title="Settings"
           >
-            <Settings size={12} />
+            <Settings size={18} />
           </button>
-          <div className="text-[9px] text-copernicus-steel">
-            v0.1.0 :: {activeView.toUpperCase()} :: PRODUCTION_READY
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 flex flex-col overflow-hidden relative">
+          <header className="h-8 flex items-center justify-between px-4 border-b border-copernicus-steel bg-[#050505] flex-shrink-0 draggable">
+            <nav className="flex gap-6 h-full items-center no-drag">
+              {(['blueprint', 'studio', 'engine-room'] as const).map(view => (
+                <button
+                  key={view}
+                  onClick={() => setView(view)}
+                  className={`text-[10px] font-mono uppercase tracking-[0.2em] h-full border-b-2 transition-all ${activeView === view ? 'border-copernicus-phosphor text-copernicus-phosphor' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+                >
+                  {view.replace('-', '_')}
+                </button>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-4 no-drag">
+               <button 
+                onClick={() => setCommandPaletteOpen(true)}
+                className="text-[10px] font-mono text-zinc-500 hover:text-copernicus-phosphor transition-colors flex items-center gap-2 px-2 py-0.5 bg-zinc-900 rounded border border-zinc-800"
+               >
+                 <span>CMD + P</span>
+               </button>
+            </div>
+          </header>
+
+          <div className="flex-1 flex overflow-hidden">
+            {activeView === 'blueprint' && <KanbanBoard />}
+            {activeView === 'capex' && <CapexDashboard />}
+            {activeView === 'workflow' && <WorkflowCanvas />}
+            
+            {(activeView === 'studio' || activeView === 'engine-room') && (
+              <>
+                {/* Sidebar */}
+                <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
+                  <FileTree rootPath={workingDir} onFileOpen={() => {}} />
+                </div>
+
+                {/* Center Panel & Chat */}
+                <div className="flex-1 flex overflow-hidden relative">
+                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : spotlightPane === 'chat' ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
+                    <FlippablePanel 
+                      id="center-panel"
+                      className="flex-1"
+                      front={
+                        <div className="flex flex-col h-full">
+                          <PanelHeader 
+                            title={activeStoryId ? `STORY // ${activeStoryId}` : 'DEVELOPMENT_CORE'} 
+                            onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+                            onFlip={() => toggleFlip('center')}
+                            isSpotlightActive={spotlightPane === 'editor'}
+                            onBuilder={toggleUIBuilder}
+                            isBuilderActive={uiBuilderOpen}
+                          />
+                          <CenterPanelRouter 
+                            filePath={null}
+                            content=""
+                            language="typescript"
+                            onChange={() => {}}
+                          />
+                        </div>
+                      }
+                      back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
+                    />
+                  </div>
+
+                  <div className={`w-80 flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : spotlightPane === 'editor' ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
+                    <ChatPanel />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-        </div>
-      </header>
 
-      {/* Main Content Area - Spotlight Container */}
-      <div className="flex-1 flex flex-row overflow-hidden">
-        {/* Activity Bar */}
-        <div className="w-[40px] border-r border-hairline border-copernicus-steel flex flex-col items-center py-2 gap-2 bg-[#0A0A0A]">
-            <button 
-                onClick={() => setSidebarTab('explorer')}
-                className={`p-2 rounded transition-colors ${sidebarTab === 'explorer' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-                title="Explorer"
-            >
-                <Folder size={18} />
-            </button>
-            <button 
-                onClick={() => setSidebarTab('github')}
-                className={`p-2 rounded transition-colors ${sidebarTab === 'github' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-                title="GitHub"
-            >
-                <Github size={18} />
-            </button>
-        </div>
+          {/* Terminal Drawer */}
+          <div 
+            className="bg-[#050505] transition-all duration-300 ease-in-out"
+            style={{ height: terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px' }}
+          >
+            <TerminalTabs />
+          </div>
 
-        {activeView === 'capex' ? (
-            <CapexDashboard />
-        ) : activeView === 'workflow' ? (
-            <WorkflowCanvas />
-        ) : (
-        <SpotlightContainer
-            sidebar={
-            <FlippablePanel 
-                id="sidebar"
-                front={
-                <div className="flex flex-col h-full bg-copernicus-bg">
-                    {sidebarTab === 'explorer' ? (
-                        <>
-                            <PanelHeader 
-                                title="EXPLORER" 
-                                onSpotlight={() => setSpotlight('explorer')} 
-                                onFlip={() => toggleFlip('sidebar')}
-                                isSpotlightActive={spotlightPane === 'explorer'}
-                            />
-                            <FileTree rootPath={rootPath} onFileOpen={handleFileOpen} />
-                        </>
-                    ) : (
-                        <GithubDashboard />
-                    )}
-                </div>
-                }
-                back={
-                <div className="flex flex-col h-full bg-copernicus-bg">
-                    <PanelHeader 
-                    title={flippedPanes.includes('sidebar') ? "HELP // USER GUIDE" : "COMMAND DECK"} 
-                    onSpotlight={() => setSpotlight('explorer')} 
-                    onFlip={() => toggleFlip('sidebar')}
-                    isSpotlightActive={spotlightPane === 'explorer'}
-                    />
-                    {flippedPanes.includes('sidebar') ? <HelpPanel /> : <CommandDeck />}
-                </div>
-                }
-            />
-            }
-            center={
-            <FlippablePanel 
-                id="center"
-                front={
-                <div className="flex flex-col h-full bg-copernicus-bg">
-                    <PanelHeader 
-                    title={openFilePath ? openFilePath.split('/').slice(-2).join('/') : 'EDITOR'}
-                    onSpotlight={() => setSpotlight('editor')} 
-                    onFlip={() => toggleFlip('center')}
-                    isSpotlightActive={spotlightPane === 'editor'}
-                    />
-                    <MonacoEditor 
-                        value={editorValue}
-                        language={editorLanguage}
-                        onChange={(v) => { if (v !== undefined) setEditorValue(v) }}
-                    />
-                </div>
-                }
-                back={
-                <div className="flex flex-col h-full bg-copernicus-bg">
-                    <PanelHeader 
-                    title="UI CANVAS" 
-                    onSpotlight={() => setSpotlight('editor')} 
-                    onFlip={() => toggleFlip('center')}
-                    isSpotlightActive={spotlightPane === 'editor'}
-                    />
-                    <div className="flex-1 flex items-center justify-center text-zinc-700 italic text-xs">
-                    UI Canvas Rendering Gate Active
-                    </div>
-                </div>
-                }
-            />
-            }
-            right={
-            <FlippablePanel 
-                id="right"
-                front={
-                <div className="flex flex-col h-full bg-copernicus-bg">
-                    <PanelHeader 
-                    title="STRATEGIC_CHAT" 
-                    onSpotlight={() => setSpotlight('telemetry')} 
-                    onFlip={() => toggleFlip('right')}
-                    isSpotlightActive={spotlightPane === 'telemetry'}
-                    />
-                    <ChatPanel openFilePath={openFilePath} rootPath={rootPath} />
-                </div>
-                }
-                back={
-                <div className="flex flex-col h-full bg-copernicus-bg">
-                    <PanelHeader 
-                    title="KANBAN_PIPELINE" 
-                    onSpotlight={() => setSpotlight('telemetry')} 
-                    onFlip={() => toggleFlip('right')}
-                    isSpotlightActive={spotlightPane === 'telemetry'}
-                    />
-                    <KanbanBoard />
-                </div>
-                }
-            />
-            }
-        />
-        )}
+          <div 
+            className="h-6 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer hover:bg-zinc-900 transition-colors"
+            onClick={() => setTerminalOpen(!terminalOpen)}
+          >
+            <div className="flex items-center gap-2 flex-1">
+              <span className={`text-[9px] uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor font-bold animate-pulse' : 'text-zinc-500'}`}>
+                {terminalOpen ? '▼' : '▲'} TERMINAL_PULSE
+              </span>
+              {anyTerminalBusy && <Loader2 size={10} className="animate-spin text-copernicus-phosphor" />}
+            </div>
+          </div>
+
+          <StatusBar />
+        </main>
       </div>
 
-      {/* Terminal Panel */}
-      <div
-        className="w-full border-t border-copernicus-steel overflow-hidden transition-all duration-200 ease-in-out"
-        style={{ height: terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px' }}
-      >
-        <TerminalTabs />
-      </div>
-
-      {/* Terminal Toggle Bar */}
-      <div
-        className="h-5 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer select-none hover:bg-copernicus-phosphor/5"
-        onClick={() => setTerminalOpen(prev => !prev)}
-      >
-        <span className="text-[9px] uppercase tracking-widest text-zinc-500">
-          {terminalOpen ? '▼ TERMINAL' : '▲ TERMINAL'}
-        </span>
-        <span className="text-[8px] text-zinc-600">claude · gemini · jules</span>
-      </div>
-
-      <StatusBar />
-
-      <CapexModal 
-        type={capexType}
-        isOpen={isCapexOpen}
-        onClose={() => setIsCapexOpen(false)}
-        session={activeSession}
-      />
-
-      {/* Toast Notifications */}
-      <ToastContainer />
-
-      {paletteMode && (
+      {/* Overlays */}
+      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {commandPaletteOpen && (
         <CommandPalette 
-          mode={paletteMode} 
-          onClose={() => setPaletteMode(null)} 
-          onFileOpen={handleFileOpen}
-          rootPath={rootPath}
+          mode="all" 
+          onClose={() => setCommandPaletteOpen(false)} 
+          onFileOpen={() => {}} 
+          rootPath={workingDir} 
         />
-      )}
-
-      {/* Settings Panel */}
-      {settingsOpen && (
-        <SettingsPanel onClose={() => setSettingsOpen(false)} />
       )}
     </div>
   )
 }
-
-export default App

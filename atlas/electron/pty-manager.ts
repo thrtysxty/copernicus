@@ -71,7 +71,7 @@ class PtyManager {
       this.sessions.delete(id);
     }
   }
-  
+
   killAll() {
       for (const id of this.sessions.keys()) {
           this.kill(id);

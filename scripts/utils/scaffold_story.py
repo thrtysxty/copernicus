@@ -2,7 +2,6 @@
 import argparse
 import re
 import sys
-import os
 from pathlib import Path
 
 # Add project root to sys.path to handle imports when run as a script
@@ -62,25 +61,36 @@ def scaffold_file(template_path: Path, target_path: Path, feature_name: str):
         return
 
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     with open(template_path, "r") as f:
         content = f.read()
-    
+
     # Simple camel case conversion for component names
     pascal_name = "".join(x.capitalize() for x in feature_name.split("_"))
-    
-    formatted_content = content.format(feature_name=pascal_name if target_path.suffix in ['.tsx', '.jsx'] else feature_name)
-    
+
+    formatted_content = content.format(
+        feature_name=pascal_name
+        if target_path.suffix in [".tsx", ".jsx"]
+        else feature_name
+    )
+
     with open(target_path, "w") as f:
         f.write(formatted_content)
-    
+
     print(f"✅ Created {target_path}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scaffold a new User Story and boilerplate")
+    parser = argparse.ArgumentParser(
+        description="Scaffold a new User Story and boilerplate"
+    )
     parser.add_argument("title", help="Title of the story (e.g., 'Profit Logic')")
-    parser.add_argument("--type", choices=["story", "api", "component"], default="story", help="Type of feature to scaffold")
+    parser.add_argument(
+        "--type",
+        choices=["story", "api", "component"],
+        default="story",
+        help="Type of feature to scaffold",
+    )
     parser.add_argument("--epic", help="Epic ID or Title to link to", default="TBD")
     args = parser.parse_args()
 
@@ -98,7 +108,7 @@ def main():
     # Create the story file
     with open(filename, "w") as f:
         f.write(STORY_TEMPLATE.format(number=number, title=args.title))
-    
+
     # Update Epic in the file if provided
     if args.epic != "TBD":
         with open(filename, "r") as f:
@@ -109,7 +119,7 @@ def main():
     print(f"✅ Created {filename}")
 
     templates_dir = project_root / "docs" / "templates"
-    
+
     # Scaffold additional files if type is 'api'
     if args.type == "api":
         feature_name = slug
@@ -117,15 +127,15 @@ def main():
         scaffold_file(
             templates_dir / "api_route_template.py",
             project_root / "backend" / "routes" / f"{feature_name}.py",
-            feature_name
+            feature_name,
         )
         # Test
         scaffold_file(
             templates_dir / "test_file_template.py",
             project_root / "tests" / "routes" / f"test_{feature_name}.py",
-            feature_name
+            feature_name,
         )
-    
+
     # Scaffold additional files if type is 'component'
     elif args.type == "component":
         feature_name = slug
@@ -133,8 +143,13 @@ def main():
         # Component
         scaffold_file(
             templates_dir / "component_template.tsx",
-            project_root / "copernicus" / "src" / "renderer" / "components" / f"{pascal_name}.tsx",
-            feature_name
+            project_root
+            / "copernicus"
+            / "src"
+            / "renderer"
+            / "components"
+            / f"{pascal_name}.tsx",
+            feature_name,
         )
 
     # Automatically regenerate the backlog

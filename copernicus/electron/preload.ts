@@ -11,15 +11,17 @@ const SEND_CHANNELS = new Set([
   'auth:status', 'auth:store-api-key', 'auth:get-api-key',
   'auth:resolve-openai-config',
   // Models
-  'models:list', 'models:active', 'models:set-active',
+  'models:list', 'models:active', 'models:set-active', 'models:list-ollama',
   // LLM Chat
   'chat:send',
   // File System
-  'fs:list-dir', 'fs:open-file', 'fs:save-file', 'app:get-root-path',
+  'fs:list-dir', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'app:get-root-path', 'app:get-user-guide',
   // Git
   'git:branch',
   // Stories
-  'stories:list', 'stories:update', 'stories:hydrate', 'story:scaffold',
+  'stories:list', 'stories:create', 'stories:get-content', 'stories:update-content',
+  'stories:update', 'stories:is-repo-targeted', 'stories:hydrate', 'story:scaffold', 'stories:set-field',
+  'stories:sync',
   // Makefile
   'makefile:list', 'makefile:run', 'system:make',
   // Terminal
@@ -27,30 +29,59 @@ const SEND_CHANNELS = new Set([
   'terminal:spawn-agent',
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
-  'db:add-memory', 'db:search-memory',
+  'db:add-memory', 'db:search-memory', 'db:vacuum',
+  // Model Call Ledger (Story 156)
+  'ledger:session-stats', 'ledger:recent-calls', 'ledger:all-time-cost',
   // Layout / telemetry
-  'layout:update-telemetry',
+  'layout:update-telemetry', 'telemetry:update-touchbar',
   // Agent interop
   'agent:delegate', 'agent:forward',
   // Security
   'security:git-push-response',
   // Settings
   'settings:save', 'settings:load',
+  // GitHub
+  'github:user', 'github:list-repos', 'github:create-repo', 'github:test-connection',
+  // Git
+  'git:init-workspace',
+  // MCP
+  'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server',
+  // Environment
+  'env:scan', 'env:install', 'env:install-complete',
   // Devtime
   'devtime:start', 'devtime:status', 'devtime:close', 'devtime:defaults', 'devtime:report',
+  'devtime:list-stories', 'devtime:run-tests', 'devtime:test-history', 'devtime:weekly-velocity',
+  // Story analytics (Story 162)
+  'stories:throughput', 'stories:status-distribution', 'stories:bugs-by-assignee',
+  // Ledger analytics (Story 162)
+  'ledger:daily-costs', 'ledger:cost-by-model', 'ledger:cost-by-story',
   // Workflow
-  'workflow:run', 'workflow:status',
+  'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
   // Review gate
   'review:log',
   // Codebase semantic index
   'codebase:search', 'codebase:index-status',
+  // Canvas
+  'canvas:iframe-bounds',
+  // Browser (Story 155)
+  'browser:launch', 'browser:navigate', 'browser:screenshot',
+  'browser:click', 'browser:fill', 'browser:evaluate', 'browser:close',
+  // Jules (Story 161)
+  'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session',
+  // Touch Bar
+  'touchbar:rebuild',
   // Splash / wizard
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
   // App Control
   'app:open-log', 'app:open-external',
   // OAuth
-  'oauth:start-google',
+  'oauth:start-google', 'oauth:start-anthropic', 'oauth:start-openrouter',
+  // Auth revoke
+  'auth:revoke',
+  // Canvas interaction (Story 153)
+  'canvas:get-iframe-bounds', 'canvas:capture-screenshot', 'canvas:screenshot-preview',
+  'canvas:execute-js', 'canvas:send-input',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -58,16 +89,21 @@ const LISTEN_CHANNELS = new Set([
   'main-process-message',
   'chat:token', 'chat:done', 'chat:error',
   'terminal-incoming', 'terminal-closed', 'terminal:data', 'terminal-blocked',
-  'terminal:activate-tab',
+  'terminal:activate-tab', 'terminal:spawn', 'terminal:set-busy', 'terminal:remove',
   'stories:updated',
   'editor:open',
   'agent:input', 'agent:message', 'agent:error',
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',
-  'telemetry:update-touchbar',
+  'layout:toggle-ui-builder',
   'security:git-push-request',
   'splash-status',
   'app:critical-error',
   'oauth:callback',
+  'app:workspace-changed',
+  'canvas:show-url', 'canvas:render',
+  'ledger:stats-update',
+  // Jules live session updates (pushed by jules/monitor.ts)
+  'jules:session-update',
 ])
 
 // ---------------------------------------------------------------------------

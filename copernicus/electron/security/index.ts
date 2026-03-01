@@ -8,7 +8,7 @@ export * from './security-manager';
 /**
  * Registers IPC handlers for security-related features.
  * This should be called from the main process (e.g., main.ts).
- * 
+ *
  * @param ipcMain The Electron ipcMain instance.
  * @param store A persistent store instance (e.g., electron-store or similar) for settings.
  */

@@ -9,7 +9,7 @@ export const HelpPanel: React.FC = () => {
   useEffect(() => {
     const fetchManual = async () => {
       try {
-        const text = await invoke<string>('fs:read-file', 'docs/help/USER_GUIDE.md')
+        const text = await invoke<string>('app:get-user-guide')
         setContent(text || 'Guide not found.')
       } catch (e) {
         setContent('Error loading user guide.')
@@ -26,7 +26,7 @@ export const HelpPanel: React.FC = () => {
           <span className="text-[10px] font-bold uppercase tracking-widest">Help // User Guide</span>
         </div>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto p-6 font-mono selection:bg-copernicus-phosphor/30">
         <div className="max-w-3xl mx-auto prose prose-invert prose-phosphor">
           {/* Simple Markdown Rendering Logic */}
@@ -41,7 +41,7 @@ export const HelpPanel: React.FC = () => {
           })}
         </div>
       </div>
-      
+
       <div className="h-6 bg-copernicus-bg border-t border-hairline border-copernicus-steel flex items-center px-2 justify-between">
         <span className="text-[9px] text-zinc-600 uppercase">Copernicus Guide v0.1.0</span>
         <span className="text-[9px] text-copernicus-phosphor/50">Industrial Agentic Standard</span>

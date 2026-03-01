@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
+import { useLayoutStore } from '../../store/layout';
 
 const ipcRenderer = window.ipcRenderer;
 
@@ -9,12 +10,15 @@ interface TerminalProps {
   id: string;
   className?: string;
   active?: boolean;
+  cwd?: string;
 }
 
-export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true }) => {
+export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true, cwd }) => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy);
+  const busyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -36,18 +40,27 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     term.open(terminalRef.current);
-    fitAddon.fit();
+
+    // Initial fit
+    setTimeout(() => fitAddon.fit(), 0);
 
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
 
     // Connect to backend
-    ipcRenderer.send('terminal-create', { id, cols: term.cols, rows: term.rows });
+    ipcRenderer.send('terminal-create', { id, cols: term.cols, rows: term.rows, cwd });
 
     // Handle data from backend
-    const removeDataListener = ipcRenderer.on('terminal-incoming', ({ id: terminalId, data }: { id: string, data: string }) => {
+    const removeDataListener = ipcRenderer.on('terminal-incoming', (_event: any, { id: terminalId, data }: { id: string, data: string }) => {
       if (terminalId === id) {
         term.write(data);
+
+        // Activity pulse logic
+        setTerminalBusy(id, true);
+        if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
+        busyTimeoutRef.current = setTimeout(() => {
+          setTerminalBusy(id, false);
+        }, 2000);
       }
     });
 
@@ -56,26 +69,29 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       ipcRenderer.send('terminal-write', { id, data });
     });
 
-    // Handle resize
-    const handleResize = () => {
-      fitAddon.fit();
-      ipcRenderer.send('terminal-resize', { id, cols: term.cols, rows: term.rows });
-    };
-
-    window.addEventListener('resize', handleResize);
-    setTimeout(handleResize, 100);
+    // Use ResizeObserver for more granular resizing during animations
+    const resizeObserver = new ResizeObserver(() => {
+      if (fitAddonRef.current) {
+        fitAddonRef.current.fit();
+        ipcRenderer.send('terminal-resize', { id, cols: term.cols, rows: term.rows });
+      }
+    });
+    resizeObserver.observe(terminalRef.current);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       removeDataListener();
+      if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
+      setTerminalBusy(id, false);
       ipcRenderer.send('terminal-kill', { id });
       term.dispose();
     };
-  }, [id]);
+  }, [id, setTerminalBusy]);
 
   useEffect(() => {
     if (xtermRef.current && fitAddonRef.current && active) {
       setTimeout(() => {
+          xtermRef.current?.focus();
           fitAddonRef.current?.fit();
           ipcRenderer.send('terminal-resize', { id, cols: xtermRef.current!.cols, rows: xtermRef.current!.rows });
       }, 50);

@@ -12,11 +12,11 @@ export function setupCommandHandlers() {
 
   ipcMain.on('command:forward', (event, { agentId, targetAgentId }) => {
     console.log(`[SYSTEM] Forwarding context from ${agentId} to ${targetAgentId}`);
-    
+
     // Resolves AC 4: Remove hardcoded mock, read from ledger
     const recentEvents = stateLedger.getRecentEvents(5);
     const lastOutput = recentEvents.find(e => e.type === 'TERMINAL_OUTPUT')?.content || 'No recent terminal output found.';
-    
+
     event.sender.send('agent:message', {
         role: 'user',
         content: `CONTEXT_FORWARD [from=${agentId}]: ${lastOutput}`
@@ -26,19 +26,19 @@ export function setupCommandHandlers() {
   ipcMain.on('command:audit', (event) => {
     const projectRoot = path.resolve(__dirname, '../../../');
     const auditScript = path.join(projectRoot, 'scripts/utils/security_audit.py');
-    
+
     console.log(`[SECURITY] Triggering manual audit: ${auditScript}`);
     const child = spawn('python3', [auditScript], { cwd: projectRoot });
-    
+
     let output = '';
     child.stdout.on('data', (data) => {
       output += data.toString();
     });
-    
+
     child.stderr.on('data', (data) => {
       output += data.toString();
     });
-    
+
     child.on('close', (code) => {
       console.log(`[SECURITY] Audit finished with code ${code}`);
       // Broadcast result to telemetry or active window

@@ -44,7 +44,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     // Or better: "Review the following code change." + modified.
     // The requirement says: "Gemini session: same prompt, same diff".
     // I'll send: "Original:\n" + original + "\n\nModified:\n" + modified
-    
+
     const content = `Please review this code change.\n\nORIGINAL:\n${original}\n\nMODIFIED:\n${modified}\n\n[REVIEW] Does this change look correct? List any concerns.`
 
     // Fire requests — results arrive via chat:token / chat:done IPC events
@@ -85,7 +85,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           >
             Cancel
           </button>
-          
+
           {reviewEnabled && reviewState === 'reviewing' && (
              <span className="text-xs px-3 py-1 text-zinc-500 animate-pulse">
                Agents Reviewing...
@@ -126,7 +126,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               Apply Changes
             </button>
           )}
-          
+
           {/* Skip link for reviewing state */}
           {reviewEnabled && reviewState === 'reviewing' && (
              <button
@@ -138,9 +138,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           )}
         </div>
       </div>
-      
+
       {/* Editor Area */}
-      <div className="flex-1 relative"> 
+      <div className="flex-1 relative">
         {/* We need to manage layout. DiffEditor takes 100%. ReviewPanel takes fixed height. */}
         <div className="absolute inset-0 flex flex-col">
             <div className="flex-1 overflow-hidden">

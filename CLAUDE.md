@@ -37,6 +37,47 @@ make dashboard       # Terminal 2: Launch Dashboard
 - `/pi_check`: Runs the Performance Baseline Audit (Raspberry Pi 3B+ constraints).
 - `/audit`: Triggers the Sentinel Persona to scan staged changes for secrets.
 
+## Performance Scope — Raspberry Pi 3B+ Rule
+
+The `/pi_check` audit and Pi 3B+ performance baseline apply **only** to:
+- `src/agentic/` — Python orchestration CLI tools
+- `backend/` — Flask API handlers
+- `scripts/` — CLI utilities
+
+**Explicitly exempt** (desktop-only Electron renderer, GPU-accelerated):
+- `copernicus/src/renderer/components/workflow/WorkflowCanvas.tsx`
+- `copernicus/src/renderer/components/Editor/UICanvas.tsx` and `ui-builder/UIBuilderCanvas.tsx`
+- `copernicus/src/renderer/components/capex/` and any reporting/charting components
+- Any component using `<canvas>`, WebGL, SVG animation, or `requestAnimationFrame`
+
+Do not apply Pi constraints (bundle size warnings, animation limits, re-render
+budgets) to exempted paths. Optimize for desktop UX, not embedded performance.
+
+## IPC Error Handling Standard
+
+Every `ipcMain.handle` registration in `copernicus/electron/main.ts` **must** use the `handleIpc()` wrapper:
+
+```typescript
+// ✅ Correct
+ipcMain.handle('foo:bar', (_e, arg) => handleIpc(() => someManager.doThing(arg)))
+
+// ❌ Wrong — raw throw arrives at renderer as unreadable Electron error string
+ipcMain.handle('foo:bar', (_e, arg) => someManager.doThing(arg))
+```
+
+Every renderer component that calls IPC **must** use the `useIpcError` hook, never bare `window.ipcRenderer.invoke`:
+
+```typescript
+// ✅ Correct
+const invoke = useIpcError()
+const result = await invoke<MyType>('foo:bar', arg)
+
+// ❌ Wrong — errors silently swallowed
+await window.ipcRenderer.invoke('foo:bar', arg)
+```
+
+These are **non-negotiable** for all new code and all stories written going forward.
+
 ## Security & Guardrails
 - **Pre-commit:** Blocks secrets and runs performance baseline audits.
 - **Sentinel:** Autonomous hardening and secret detection.

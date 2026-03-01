@@ -32,7 +32,7 @@ export class InteropDispatcher {
         console.error('[dispatcher] Error in agent:forward:', err)
       }
     })
-    
+
     // Listen for logging intents
     ipcMain.on('ledger:log-intent', (_event, logEntry) => {
       try {

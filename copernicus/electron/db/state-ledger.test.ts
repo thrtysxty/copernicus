@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Mock Electron's `app` so the module-level stateLedger singleton can initialise
+// without an actual Electron runtime (app.getPath would throw otherwise).
+vi.mock('electron', () => ({
+  app: { getPath: () => '/tmp/test-copernicus-state-ledger' },
+}));
+
 import { StateLedger } from './state-ledger';
 import fs from 'fs';
 import path from 'path';

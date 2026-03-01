@@ -19,7 +19,7 @@ export class DevtimeManager {
     this.db = new Database(this.DB_PATH);
     this.init();
     this.recoverSession();
-    this.registerHandlers();
+    // registerHandlers moved to main.ts orchestration or explicit call
   }
 
   private init() {
@@ -31,7 +31,7 @@ export class DevtimeManager {
         start_time  TEXT,
         duration    REAL    NOT NULL CHECK (duration >= 0.25),
         phase       TEXT    NOT NULL CHECK (phase IN (
-                        'PRELIMINARY', 'DEVELOPMENT', 'POST_IMPLEMENTATION')),
+                        'PLANNING', 'DEVELOPMENT', 'BUG_FIXING', 'MAINTENANCE')),
         financial_category TEXT NOT NULL CHECK (financial_category IN ('CAPEX', 'OPEX', 'NONE')),
         component   TEXT    NOT NULL,
         description TEXT    NOT NULL,
@@ -57,7 +57,7 @@ export class DevtimeManager {
     }
   }
 
-  private registerHandlers() {
+  public registerHandlers() {
     ipcMain.handle('devtime:start', (_event, data) => this.startSession(data));
     ipcMain.handle('devtime:status', () => ({
       session: this.activeSession,
@@ -66,9 +66,10 @@ export class DevtimeManager {
     ipcMain.handle('devtime:close', (_event, data) => this.closeSession(data));
     ipcMain.handle('devtime:defaults', () => this.getDefaults());
     ipcMain.handle('devtime:report', () => this.getReport());
+    ipcMain.handle('devtime:list-stories', (_event, repoPath: string) => this.listStories(repoPath));
   }
 
-  private startSession(data: any, isRecovery = false) {
+  public startSession(data: any, isRecovery = false) {
     this.activeSession = {
       ...data,
       start_time: data.start_time || new Date().toISOString(),
@@ -79,7 +80,7 @@ export class DevtimeManager {
     if (!isRecovery) {
       fs.writeFileSync(this.LOCK_PATH, JSON.stringify(this.activeSession));
     }
-    
+
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
       if (this.activeSession) {
@@ -91,7 +92,7 @@ export class DevtimeManager {
     return this.activeSession;
   }
 
-  private closeSession(data: any) {
+  public closeSession(data: any) {
     if (!this.activeSession) return;
 
     const durationHours = Math.max(0.25, Math.round((this.activeSession.duration_seconds / 3600) * 4) / 4);
@@ -99,7 +100,7 @@ export class DevtimeManager {
 
     const stmt = this.db.prepare(`
       INSERT INTO dev_sessions (
-        date, start_time, duration, phase, financial_category, component, 
+        date, start_time, duration, phase, financial_category, component,
         description, commits, story_id, value
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
@@ -113,7 +114,7 @@ export class DevtimeManager {
       this.activeSession.component,
       data.description,
       '', // commits placeholder
-      this.activeSession.story_id || '',
+      this.activeStoryId || '', // use activeStoryId if available
       value
     );
 
@@ -126,13 +127,35 @@ export class DevtimeManager {
     }
   }
 
-  private getTotalMonthValue() {
+  private get activeStoryId(): string {
+      return this.activeSession?.story_id || '';
+  }
+
+  public getActiveSession() {
+    return this.activeSession;
+  }
+
+  public getTotalMonthValue() {
     const month = new Date().toISOString().slice(0, 7);
     const row = this.db.prepare("SELECT SUM(value) as total FROM dev_sessions WHERE date LIKE ? AND capitalizable = 1").get(`${month}%`) as any;
     return row?.total || 0;
   }
 
-  private getDefaults() {
+  public listStories(repoPath: string) {
+    try {
+      const storiesDir = path.join(repoPath, 'docs', 'stories');
+      if (!fs.existsSync(storiesDir)) return [];
+
+      return fs.readdirSync(storiesDir)
+        .filter(f => f.endsWith('.md'))
+        .map(f => f.replace('.md', ''));
+    } catch (e) {
+      console.error('[DevtimeManager] listStories error:', e);
+      return [];
+    }
+  }
+
+  public getDefaults() {
     return {
       financial_category: 'CAPEX',
       component: 'platform_core',
@@ -144,15 +167,15 @@ export class DevtimeManager {
   public getReport(): { ok: boolean; data?: any[]; error?: string } {
     try {
       const sql = `
-        SELECT 
-          story_id, 
-          component, 
+        SELECT
+          story_id,
+          component,
           financial_category,
           SUM(value) as total_hours,
           COUNT(*) as session_count,
           MIN(start_time) as start_date,
           MAX(start_time) as end_date
-        FROM dev_sessions 
+        FROM dev_sessions
         GROUP BY story_id, component, financial_category
         ORDER BY end_date DESC
       `;

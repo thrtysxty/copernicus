@@ -41,7 +41,7 @@ function calculateScore(query: string, text: string): number {
   if (!query) return 1
   const lowerQuery = query.toLowerCase()
   const lowerText = text.toLowerCase()
-  
+
   let score = 0
   let queryIdx = 0
   let prevMatchIdx = -1
@@ -66,10 +66,10 @@ function calculateScore(query: string, text: string): number {
 
   // If we didn't match the full query, return -1
   if (queryIdx < lowerQuery.length) return -1
-  
+
   // Prefer shorter matches (exact matches rank higher)
   score -= (lowerText.length - lowerQuery.length) * 0.5
-  
+
   return score
 }
 
@@ -78,7 +78,7 @@ function calculateScore(query: string, text: string): number {
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, onFileOpen, rootPath }) => {
   const invoke = useIpcError()
   const inputRef = useRef<HTMLInputElement>(null)
-  
+
   const [query, setQuery] = useState('')
   const [rawFiles, setRawFiles] = useState<any[]>([])
   const [rawStories, setRawStories] = useState<any[]>([])
@@ -216,7 +216,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
         // Execute command
         const cmdContext: CommandContext = {
           appendMessage: (role, content) => {
-             useToastStore.getState().addToast(`[${role.toUpperCase()}] ${content}`, 'info')
+             useToastStore.getState().addToast(`[${(role || '').toUpperCase()}] ${content}`, 'info')
           },
           clearMessages: () => {},
           setModel: () => {
@@ -228,7 +228,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
         break
       }
     }
-    
+
     onClose()
   }
 
@@ -258,7 +258,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95, y: -20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -295,8 +295,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
               <div
                 key={item.id}
                 className={`flex items-center px-4 py-2 cursor-pointer border-l-2 transition-colors
-                  ${idx === selectedIndex 
-                    ? 'bg-copernicus-phosphor/10 border-copernicus-phosphor' 
+                  ${idx === selectedIndex
+                    ? 'bg-copernicus-phosphor/10 border-copernicus-phosphor'
                     : 'bg-transparent border-transparent hover:bg-zinc-900'
                   }`}
                 onClick={() => execute(item)}
@@ -332,7 +332,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
             ))
           )}
         </div>
-        
+
         {/* Footer */}
         <div className="bg-[#050505] px-3 py-1 border-t border-copernicus-steel/30 flex justify-between items-center text-[9px] text-zinc-600 uppercase tracking-wider">
             <div>

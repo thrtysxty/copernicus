@@ -13,27 +13,33 @@ SECRET_PATTERNS = {
     "Generic Secret": r"(?i)(password|secret|token|apikey|private_key)\s*[:=]\s*['\"][a-zA-Z0-9]{16,}['\"]",
 }
 
+
 def scan_file(filepath):
     vulnerabilities = []
     try:
-        with open(filepath, 'r', errors='ignore') as f:
+        with open(filepath, "r", errors="ignore") as f:
             content = f.read()
             for name, pattern in SECRET_PATTERNS.items():
                 matches = re.finditer(pattern, content)
                 for match in matches:
-                    line_no = content.count('\n', 0, match.start()) + 1
+                    line_no = content.count("\n", 0, match.start()) + 1
                     vulnerabilities.append(f"[!] {name} found in {filepath}:{line_no}")
     except Exception as e:
         vulnerabilities.append(f"[ERROR] Could not read {filepath}: {str(e)}")
     return vulnerabilities
 
+
 def main():
     # Only scan files changed in the last commit or currently staged
     try:
         # Check both staged and unstaged changes against HEAD
-        files = subprocess.check_output(["git", "diff", "--name-only", "HEAD"], text=True).splitlines()
+        files = subprocess.check_output(
+            ["git", "diff", "--name-only", "HEAD"], text=True
+        ).splitlines()
         # Also check untracked files
-        untracked = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], text=True).splitlines()
+        untracked = subprocess.check_output(
+            ["git", "ls-files", "--others", "--exclude-standard"], text=True
+        ).splitlines()
         files.extend(untracked)
     except:
         files = []
@@ -57,6 +63,7 @@ def main():
     else:
         print("STATUS: PASSED")
         print("VULNERABILITIES: None")
+
 
 if __name__ == "__main__":
     main()

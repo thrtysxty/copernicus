@@ -9,9 +9,9 @@ export function parseMakefile(rootPath: string): string[] {
 
   const content = fs.readFileSync(makefilePath, 'utf-8')
   const targets: string[] = []
-  
+
   const regex = /^([a-zA-Z0-9_-]+):/gm
-  
+
   let match
   while ((match = regex.exec(content)) !== null) {
     const target = match[1]
@@ -19,6 +19,6 @@ export function parseMakefile(rootPath: string): string[] {
        targets.push(target)
     }
   }
-  
+
   return targets
 }

@@ -26,8 +26,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, tokens 
       {/* Message Bubble */}
       <div className={clsx(
         'p-3 text-xs leading-relaxed border transition-all duration-300',
-        role === 'user' 
-          ? 'bg-zinc-900/50 border-copernicus-steel text-zinc-300 rounded-l-md rounded-tr-md' 
+        role === 'user'
+          ? 'bg-zinc-900/50 border-copernicus-steel text-zinc-300 rounded-l-md rounded-tr-md'
           : 'bg-[#080808] border-copernicus-phosphor/20 text-zinc-200 rounded-r-md rounded-tl-md shadow-[0_0_15px_rgba(74,222,128,0.03)]'
       )}>
         <p className="whitespace-pre-wrap">{content}</p>

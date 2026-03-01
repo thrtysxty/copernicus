@@ -11,13 +11,13 @@ index 67f1261..0927a73 100644
 +import log from 'electron-log'
 +import { autoUpdater } from 'electron-updater'
 +import { exec } from 'node:child_process'
- 
+
  // The built directory structure
  //
 @@ -18,6 +23,34 @@ let win: BrowserWindow | null
  // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
  const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
- 
+
 +// Initialize Logging
 +const ATLAS_HOME = path.join(os.homedir(), '.atlas')
 +const LOG_DIR = path.join(ATLAS_HOME, 'logs')
@@ -36,7 +36,7 @@ index 67f1261..0927a73 100644
 +    if (!fs.existsSync(LOG_DIR)) {
 +      fs.mkdirSync(LOG_DIR, { recursive: true });
 +    }
-+    
++
 +    const preferencesPath = path.join(ATLAS_HOME, 'preferences.json');
 +    if (!fs.existsSync(preferencesPath)) {
 +      isFirstRun = true;
@@ -53,17 +53,17 @@ index 67f1261..0927a73 100644
      visualEffectState: 'active',
      webPreferences: {
        preload: path.join(__dirname, 'preload.js'),
-+      nodeIntegration: true, // Needed for some logic, but usually unsafe. 
++      nodeIntegration: true, // Needed for some logic, but usually unsafe.
 +      // Assuming contextIsolation is true by default in newer electron.
 +      // We might need to expose APIs via preload.js for the wizard to work (e.g. fs access, dialog).
 +      // For now, I'll keep default security settings and rely on preload if needed.
      },
    })
- 
+
 @@ -37,15 +74,104 @@ function createWindow() {
      win?.webContents.send('main-process-message', (new Date).toLocaleString())
    })
- 
+
 -  if (VITE_DEV_SERVER_URL) {
 -    win.loadURL(VITE_DEV_SERVER_URL)
 +  if (isFirstRun) {
@@ -86,12 +86,12 @@ index 67f1261..0927a73 100644
 +    }
    }
  }
- 
+
 +// Auto-updater
 +function setupAutoUpdater() {
 +  autoUpdater.logger = log;
 +  autoUpdater.checkForUpdatesAndNotify();
-+  
++
 +  autoUpdater.on('update-available', () => {
 +      dialog.showMessageBox({
 +          type: 'info',
@@ -100,7 +100,7 @@ index 67f1261..0927a73 100644
 +          buttons: ['OK']
 +      })
 +  })
-+  
++
 +  autoUpdater.on('update-downloaded', () => {
 +      dialog.showMessageBox({
 +          type: 'info',
@@ -120,7 +120,7 @@ index 67f1261..0927a73 100644
 +    const tools = ['claude', 'gemini', 'jules'];
 +    const results: Record<string, boolean> = {};
 +    const command = process.platform === 'win32' ? 'where' : 'which';
-+    
++
 +    for (const tool of tools) {
 +        results[tool] = await new Promise<boolean>((resolve) => {
 +            exec(`${command} ${tool}`, (error) => {
@@ -151,7 +151,7 @@ index 67f1261..0927a73 100644
 +        if (!fs.existsSync(permissionsPath)) {
 +             fs.writeFileSync(permissionsPath, '# Agent Permission Allowlist\n');
 +        }
-+        
++
 +        // We do not set isFirstRun = false here because we might want to restart to apply changes.
 +        // But the wizard UI will probably call restart-app.
 +        return { success: true };
@@ -173,7 +173,7 @@ index 67f1261..0927a73 100644
 @@ -63,4 +189,8 @@ app.on('activate', () => {
    }
  })
- 
+
 -app.whenReady().then(createWindow)
 +app.whenReady().then(() => {
 +    ensureAtlasDirectory()
@@ -821,7 +821,7 @@ index 41f0636..669302d 100644
 @@ -1,5 +1,20 @@
 +import { useEffect, useState } from 'react';
 +import Wizard from './components/wizard/Wizard';
- 
+
  function App() {
 +  const [showWizard, setShowWizard] = useState(false);
 +
@@ -908,8 +908,8 @@ index 0000000..cc9f280
 +        theme: 'surgical-phosphor'
 +      }
 +    };
-+    
-+    // Ideally keys should be saved to secure storage, but prompt says "stores in OS keychain". 
++
++    // Ideally keys should be saved to secure storage, but prompt says "stores in OS keychain".
 +    // Implementing keychain access requires native module like keytar which might be complex here.
 +    // For now, we will just save preferences and assume keys are handled elsewhere or ignored for this specific story which focuses on wizard UI flow.
 +    // Wait, prompt says "Sign In — prompts for Anthropic and Google AI keys, stores in OS keychain. Defer to AuthManager (Story 085)."
@@ -954,7 +954,7 @@ index 0000000..cc9f280
 +                <div className="space-y-4">
 +                    <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Terminal size={18} /> CLI Tool Detection</h2>
 +                    <p className="text-sm text-zinc-400">Scanning your environment for required AI agents...</p>
-+                    
++
 +                    <div className="bg-black/40 rounded p-4 font-mono text-xs space-y-2 border border-benway-steel/20">
 +                    {cliStatus ? Object.entries(cliStatus).map(([tool, found]) => (
 +                        <div key={tool} className="flex items-center justify-between">
@@ -976,12 +976,12 @@ index 0000000..cc9f280
 +                <div className="space-y-4">
 +                    <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Maximize2 size={18} /> Sign In</h2>
 +                    <p className="text-sm text-zinc-400">Configure your AI providers (stored securely in Keychain).</p>
-+                    
++
 +                    <div className="space-y-3">
 +                        <div>
 +                            <label className="block text-xs font-mono text-zinc-500 mb-1">ANTHROPIC_API_KEY</label>
-+                            <input 
-+                                type="password" 
++                            <input
++                                type="password"
 +                                className="w-full bg-black/40 border border-benway-steel/30 rounded p-2 text-sm text-white focus:border-benway-phosphor outline-none transition-colors"
 +                                placeholder="sk-ant-..."
 +                                value={anthropicKey}
@@ -990,8 +990,8 @@ index 0000000..cc9f280
 +                        </div>
 +                        <div>
 +                            <label className="block text-xs font-mono text-zinc-500 mb-1">GOOGLE_API_KEY</label>
-+                            <input 
-+                                type="password" 
++                            <input
++                                type="password"
 +                                className="w-full bg-black/40 border border-benway-steel/30 rounded p-2 text-sm text-white focus:border-benway-phosphor outline-none transition-colors"
 +                                placeholder="AIza..."
 +                                value={googleKey}
@@ -1006,15 +1006,15 @@ index 0000000..cc9f280
 +                <div className="space-y-4">
 +                    <h2 className="text-lg font-semibold text-white flex items-center gap-2"><FolderOpen size={18} /> Workspace Setup</h2>
 +                    <p className="text-sm text-zinc-400">Where should ATLAS store your projects and memory?</p>
-+                    
++
 +                    <div className="flex gap-2">
-+                        <input 
-+                            type="text" 
-+                            readOnly 
++                        <input
++                            type="text"
++                            readOnly
 +                            className="flex-1 bg-black/40 border border-benway-steel/30 rounded p-2 text-sm text-zinc-400 font-mono truncate"
 +                            value={workspacePath || "No folder selected"}
 +                        />
-+                        <button 
++                        <button
 +                            onClick={handleSelectFolder}
 +                            className="bg-benway-steel/20 hover:bg-benway-steel/40 text-white px-3 py-2 rounded border border-benway-steel/30 transition-colors"
 +                        >
@@ -1028,11 +1028,11 @@ index 0000000..cc9f280
 +                <div className="space-y-4">
 +                    <h2 className="text-lg font-semibold text-white flex items-center gap-2"><DollarSign size={18} /> CapEx Setup</h2>
 +                    <p className="text-sm text-zinc-400">Set your hourly rate for development cost tracking.</p>
-+                    
++
 +                    <div className="flex items-center gap-4 bg-black/40 p-4 rounded border border-benway-steel/20">
 +                        <span className="text-2xl text-benway-phosphor">$</span>
-+                        <input 
-+                            type="number" 
++                        <input
++                            type="number"
 +                            className="bg-transparent text-4xl font-bold text-white w-32 outline-none"
 +                            value={hourlyRate}
 +                            onChange={(e) => setHourlyRate(e.target.value)}
@@ -1049,15 +1049,15 @@ index 0000000..cc9f280
 +        </div>
 +
 +        <footer className="mt-8 flex justify-between border-t border-benway-steel/20 pt-4">
-+            <button 
++            <button
 +                onClick={handleBack}
 +                disabled={step === 0}
 +                className={`flex items-center gap-2 px-4 py-2 rounded text-sm transition-colors ${step === 0 ? 'opacity-0 cursor-default' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
 +            >
 +                <ArrowLeft size={16} /> Back
 +            </button>
-+            
-+            <button 
++
++            <button
 +                onClick={handleNext}
 +                className="flex items-center gap-2 bg-benway-phosphor/10 hover:bg-benway-phosphor/20 text-benway-phosphor border border-benway-phosphor/50 px-6 py-2 rounded text-sm font-semibold transition-all shadow-[0_0_15px_rgba(74,222,128,0.1)] hover:shadow-[0_0_20px_rgba(74,222,128,0.3)]"
 +            >
@@ -1070,4 +1070,3 @@ index 0000000..cc9f280
 +};
 +
 +export default Wizard;
-

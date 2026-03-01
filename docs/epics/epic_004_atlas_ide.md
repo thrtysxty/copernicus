@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-COPERNICUS is an "Industrial-Grade" Agentic Operating System purpose-built for deterministic, multi-agent software development. It moves beyond "Chat-with-Code" to a **State-First** architecture where a persistent SQLite Ledger serves as the universal memory for all agents, subagents, and tools. 
+COPERNICUS is an "Industrial-Grade" Agentic Operating System purpose-built for deterministic, multi-agent software development. It moves beyond "Chat-with-Code" to a **State-First** architecture where a persistent SQLite Ledger serves as the universal memory for all agents, subagents, and tools.
 
 COPERNICUS utilizes an adaptive, flippable UI that manages cognitive load through "Spotlight" (Center Stage) views and an "Industrial Kanban" that enforces a rigid 6-column validation pipeline (Blueprint → Engine Room → Test Bench → QA → Documenting → Done).
 

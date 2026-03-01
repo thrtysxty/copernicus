@@ -145,7 +145,7 @@ export class PatternDetector extends EventEmitter {
   constructor() {
     super();
     this.logFile = path.join(os.homedir(), '.copernicus', 'logs', 'security-alerts.jsonl');
-    
+
     // Ensure log directory exists
     const dir = path.dirname(this.logFile);
     if (!fs.existsSync(dir)) {
@@ -170,7 +170,7 @@ export class PatternDetector extends EventEmitter {
 
         this.emit('alert', alert);
         this.logAlert(alert);
-        
+
         // Don't break; multiple patterns might match
       }
     }

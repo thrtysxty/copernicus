@@ -1,5 +1,5 @@
 import React from 'react';
-import { Maximize2, RotateCcw } from 'lucide-react';
+import { Maximize2, Minimize2, RotateCcw } from 'lucide-react';
 import { useLayoutStore } from '../../store/useLayoutStore';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -42,7 +42,7 @@ export const Panel: React.FC<PanelProps> = ({ id, className, children, back, tit
             </button>
           )}
           <button onClick={handleSpotlight} className="p-0.5 hover:text-copernicus-phosphor">
-            <Maximize2 size={10} />
+            {state.spotlight ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
           </button>
         </div>
       </div>

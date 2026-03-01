@@ -41,7 +41,7 @@ export const PASSTHROUGH_VARS = [
 
 /**
  * Constructs a clean environment for the agent process.
- * 
+ *
  * @param agentId The ID of the agent (e.g., 'claude', 'gemini')
  * @param allowList List of variable names to explicitly include (from Settings)
  * @returns A sanitized environment object
@@ -80,7 +80,7 @@ export function buildSafeEnv(_agentId: string, allowList: string[] = []): NodeJS
 export function getStrippedVars(): string[] {
   const stripped: string[] = [];
   const originalEnv = process.env;
-  
+
   for (const key in originalEnv) {
     for (const pattern of STRIP_PATTERNS) {
       if (pattern.test(key)) {

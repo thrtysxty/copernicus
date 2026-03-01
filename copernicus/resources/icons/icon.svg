@@ -1,15 +1,15 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Professional Phosphor Background (Optional for SVG, but good for preview) -->
   <rect width="512" height="512" fill="#050505"/>
-  
+
   <!-- Central Core Server Node -->
   <circle cx="256" cy="256" r="32" fill="#4ADE80" style="filter: drop-shadow(0 0 8px #4ADE80);"/>
-  
+
   <!-- Orbital Rings (Industrial Precision) -->
   <circle cx="256" cy="256" r="80" stroke="#4ADE80" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
   <circle cx="256" cy="256" r="140" stroke="#4ADE80" stroke-width="1" opacity="0.4"/>
   <circle cx="256" cy="256" r="200" stroke="#4ADE80" stroke-width="0.5" opacity="0.3"/>
-  
+
   <!-- Agent Planetes (Positioned on Orbits) -->
   <!-- Architect -->
   <circle cx="256" cy="176" r="8" fill="#4ADE80"/>

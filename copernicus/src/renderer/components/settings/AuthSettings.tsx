@@ -8,13 +8,18 @@ interface AuthStatus {
   baseUrl?: string;
 }
 
+/**
+ * @deprecated 
+ * This component is superseded by ProvidersSection.tsx (Story 159).
+ * Use the new SettingsPanel Providers section instead.
+ */
 export const AuthSettings: React.FC = () => {
   const invoke = useIpcError();
   const [status, setStatus] = useState<AuthStatus[]>([]);
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
-  
+
   const [newProviderName, setNewProviderName] = useState('');
   const [newProviderKey, setNewProviderKey] = useState('');
   const [newProviderUrl, setNewProviderUrl] = useState('');
@@ -44,7 +49,7 @@ export const AuthSettings: React.FC = () => {
       console.error('Failed to save api key', e);
     }
   };
-  
+
   const handleAddCustom = async () => {
       if (!newProviderName || !newProviderKey) return;
       try {
@@ -63,7 +68,7 @@ export const AuthSettings: React.FC = () => {
     <div className="p-4 bg-copernicus-bg text-zinc-300 border border-copernicus-steel rounded-md w-full max-w-lg shadow-2xl">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-bold text-copernicus-phosphor uppercase tracking-widest">Auth Manager</h2>
-        <button 
+        <button
             onClick={() => setShowAddCustom(!showAddCustom)}
             className="text-[10px] uppercase border border-copernicus-steel px-2 py-1 rounded hover:bg-copernicus-steel/20"
         >
@@ -74,26 +79,26 @@ export const AuthSettings: React.FC = () => {
       {showAddCustom && (
           <div className="mb-4 p-2 border border-copernicus-steel/50 bg-zinc-900/50 rounded flex flex-col gap-2">
               <span className="text-[10px] uppercase text-zinc-500">New Custom Provider</span>
-              <input 
+              <input
                   className="bg-zinc-950 border border-zinc-700 text-xs px-2 py-1 text-white focus:outline-none focus:border-copernicus-phosphor"
                   placeholder="Provider Name (e.g. local-llm)"
                   value={newProviderName}
                   onChange={e => setNewProviderName(e.target.value)}
               />
-              <input 
+              <input
                   className="bg-zinc-950 border border-zinc-700 text-xs px-2 py-1 text-white focus:outline-none focus:border-copernicus-phosphor"
                   placeholder="API Key"
                   type="password"
                   value={newProviderKey}
                   onChange={e => setNewProviderKey(e.target.value)}
               />
-              <input 
+              <input
                   className="bg-zinc-950 border border-zinc-700 text-xs px-2 py-1 text-white focus:outline-none focus:border-copernicus-phosphor"
                   placeholder="Base URL (Optional)"
                   value={newProviderUrl}
                   onChange={e => setNewProviderUrl(e.target.value)}
               />
-              <button 
+              <button
                   onClick={handleAddCustom}
                   className="bg-copernicus-phosphor text-black text-[10px] px-2 py-1 font-bold uppercase hover:bg-green-400 self-end"
               >
@@ -131,7 +136,7 @@ export const AuthSettings: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             {editingProvider === s.provider && (
               <div className="flex flex-col gap-2 mt-1 bg-zinc-900/30 p-2 rounded">
                 <div className="flex items-center gap-2">

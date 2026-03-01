@@ -41,10 +41,10 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
     const fitAddon = new FitAddon();
     const webLinksAddon = new WebLinksAddon();
-    
+
     term.loadAddon(fitAddon);
     term.loadAddon(webLinksAddon);
-    
+
     term.open(terminalRef.current);
     fitAddon.fit();
 
@@ -77,7 +77,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
     };
 
     window.addEventListener('resize', handleResize);
-    
+
     // Initial resize after a short delay to ensure layout is settled
     setTimeout(handleResize, 100);
 

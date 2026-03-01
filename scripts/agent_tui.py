@@ -493,14 +493,18 @@ class DevTimeModal(ModalScreen):
 
                 with Horizontal(id="devtime-buttons"):
                     yield Button("Continue", variant="primary", id="btn-continue")
-                    yield Button("Close & Start New", variant="error", id="btn-close-new")
+                    yield Button(
+                        "Close & Start New", variant="error", id="btn-close-new"
+                    )
 
             else:
                 yield Static("Dev Session", id="devtime-title")
 
                 with Horizontal(classes="devtime-row"):
                     yield Label("Type:", classes="devtime-label")
-                    yield Select.from_values(["CAPEX", "OPEX", "NONE"], value="CAPEX", id="sel-financial")
+                    yield Select.from_values(
+                        ["CAPEX", "OPEX", "NONE"], value="CAPEX", id="sel-financial"
+                    )
 
                 with Horizontal(classes="devtime-row"):
                     yield Label("Component:", classes="devtime-label")

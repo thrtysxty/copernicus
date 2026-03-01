@@ -25,9 +25,9 @@ export function CapexSidebar() {
         <div className="mb-4 border-b border-copernicus-steel pb-2">
             <h3 className="text-[10px] uppercase text-copernicus-phosphor tracking-widest mb-2 font-bold italic">CapEx_Analytics</h3>
             <div className="flex justify-between items-center mb-2">
-                <input 
-                    type="month" 
-                    value={month} 
+                <input
+                    type="month"
+                    value={month}
                     onChange={e => setMonth(e.target.value)}
                     className="bg-[#080808] border border-zinc-800 text-zinc-300 p-1 text-[10px] focus:border-copernicus-phosphor focus:outline-none"
                 />

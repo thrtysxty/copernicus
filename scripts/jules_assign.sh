@@ -18,7 +18,7 @@ while [[ "$#" -gt 0 ]]; do
                 *) echo "❌ Error: Unknown identity '$2'. Use bolt, palette, or sentinel." ; exit 1 ;;
             esac
             shift ;;
-        *) 
+        *)
             if [ -z "$STORY_PATH" ]; then
                 STORY_PATH="$1"
             else
