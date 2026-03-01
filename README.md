@@ -1,6 +1,21 @@
 # COPERNICUS IDE
 
-A multi-agent orchestration IDE built on Electron/React, designed for industrial software development with Claude, Gemini, and Jules as first-class collaborators.
+**A multi-agent orchestration IDE for industrial software development.**
+
+Claude, Gemini, and Jules work alongside you — and each other — inside a single Electron desktop application. You write stories. Agents implement them. The IDE tracks cost, quality, and velocity in real time.
+
+---
+
+## What It Does
+
+COPERNICUS is a local desktop IDE built around the idea that LLM agents are engineering team members. Instead of copy-pasting into chat windows, you:
+
+1. Write a story on the Kanban board
+2. Assign it to Claude, Gemini, or Jules (or a custom workflow)
+3. Watch the agent implement it, stream output to a terminal tab, and create a PR
+4. Review cost, test coverage, and velocity on the CapEx dashboard
+
+Everything runs locally except Jules (dispatches to GitHub) and whatever cloud inference providers you configure.
 
 ---
 
@@ -8,103 +23,179 @@ A multi-agent orchestration IDE built on Electron/React, designed for industrial
 
 ### Multi-Agent Orchestration
 
-- **Claude integration** — Chat panel with full conversation history, model hot-swap, and context snapshots across model switches
-- **Gemini CLI** — Spawn Gemini as a PTY agent from the terminal pane; send prompts programmatically
-- **Jules** — Dispatch stories to Jules via the Kanban board (`→ Jules` button on approved stories); session status, PR links, and retry in the Jules panel
-- **Workflow Engine** — Visual node-based workflow canvas with agent, tool, decision, trigger, and flow nodes; run against real story context
-- **Parallel Review Gate** — Multi-agent review with Claude + Gemini verdicts before merge
+| Agent | Integration | Use case |
+|-------|-------------|----------|
+| **Claude** | Anthropic API + streaming | Chat, code review, context-aware Q&A |
+| **Gemini CLI** | PTY session via `node-pty` | Local agentic coding, LSP-fed diagnostics |
+| **Jules** | REST API → GitHub branch + PR | Async story implementation at scale |
+
+- **Workflow Engine** — Visual node canvas (agent / tool / decision / trigger / flow nodes). Build multi-step pipelines and run them against live story context.
+- **Parallel Review Gate** — Claude and Gemini both review a change; majority verdict gates merge.
+- **Model hot-swap** — Switch models mid-conversation. Context snapshots carry the prior transcript to the new model automatically.
 
 ### Development Environment
 
-- **Monaco Editor** — Full-featured code editor with TypeScript LSP (via `typescript-language-server`), real-time diagnostics, go-to-definition, hover docs, and completions
-- **File Tree** — Workspace file explorer with binary/image detection and Ctrl+S save
-- **Integrated Terminal** — Split terminal with tabs for Local, Claude, Gemini, and Jules sessions; ephemeral PTY tabs for Touch Bar commands
-- **Command Palette** — `Cmd+P` file search + command runner across the full workspace
+- **Monaco Editor** — Full TypeScript LSP via `typescript-language-server`. Real-time diagnostics, go-to-definition, hover docs, signature help, completions.
+- **Integrated Terminal** — Split tab terminal. Tabs for Local, Claude, Gemini, and Jules sessions. Ephemeral PTY tabs for Touch Bar commands. `node-pty` under the hood.
+- **File Tree** — Workspace explorer with binary/image detection. `Ctrl+S` saves directly. Binary files blocked from the editor gracefully.
+- **Command Palette** — `Cmd+P` file fuzzy search + command runner across the full workspace.
+- **UI Builder Canvas** — Drag-and-resize visual component editor backed by the Monaco editor; agents can patch the component tree via structured output.
 
-### Project Management (Kanban)
+### Project Management
 
-- **9-lane swimlane board** — Planning → Storyboarding → Sprint Planning → Development → Testing → QA → Documenting → Ready to Build → Done
-- **Card spotlight** — Click a card to expand its lane and collapse the rest to slim strips; click a strip to restore the full board
-- **Story drawer** — Inline story detail panel with markdown body, model assignment, status transitions, and Jules dispatch
-- **SQLite persistence** — All story state written to SQLite with atomic file sync; stories co-exist as Markdown files in `docs/stories/`
-- **Backlog generation** — `make backlog` regenerates `BACKLOG.md` from story frontmatter
-
-### Agent Dispatch Toolchain
-
-- **`make jules STORY=<path>`** — Validates story, injects full AGENTS.md context, dispatches to Jules CLI with a structured 5-step DoD
-- **`make ipc-lint`** — 10-check IPC compliance scanner (bare handlers, envelope pattern, ghost tint CSS, stale IDs, console.logs, dead functions, etc.)
-- **`make tsc`** — TypeScript compile check shortcut
-- **`make jules-dry`** — Dry-run mode: validates story and prints prompt size without dispatching
-- **`make jules-preflight`** — Jules Initial Setup command: installs deps, runs tsc baseline, runs ipc-lint
+- **9-lane Kanban** — Planning → Storyboarding → Sprint Planning → Development → Testing → QA → Documenting → Ready to Build → Done.
+- **Card spotlight** — Click a card to expand its lane; rest collapse to slim vertical strips.
+- **Story drawer** — Inline markdown editor, model assignment, priority/type/epic selectors, Jules dispatch, Gemini dispatch.
+- **SQLite persistence** — All story state written to SQLite with atomic rename flush. Stories also live as Markdown files in `docs/stories/` — git-trackable and diff-friendly.
+- **Backlog generation** — `make backlog` rebuilds `BACKLOG.md` from frontmatter across all story files.
 
 ### CapEx Intelligence Dashboard
 
-- **Financial tab** — Hours by story with CAPEX/OPEX classification and CSV export
-- **LLM tab** — Daily cost burn, cost by model/provider, cost by story context
-- **Quality tab** — Test run history, coverage gauge, bugs-by-assignee chart
-- **Velocity tab** — Stories completed per week, status distribution
-- Developer rate configurable inline; persisted to settings
+- **Financial** — Hours by story, CAPEX/OPEX classification, CSV export. Developer rate configured inline and persisted.
+- **LLM costs** — Daily burn, cost by model/provider, cost by story. All calls logged to a `model_calls` SQLite ledger.
+- **Quality** — Test run history, coverage gauge, bugs-by-assignee.
+- **Velocity** — Stories completed per week, status distribution over time.
+
+### Agent Dispatch Toolchain
+
+```bash
+make jules STORY=docs/stories/story_NNN_title.md   # Validate + dispatch to Jules
+make jules-dry STORY=...                            # Dry run — print prompt size only
+make jules-preflight                                # Install deps + tsc + ipc-lint
+make ipc-lint                                       # 10-check IPC compliance scanner
+make tsc                                            # TypeScript type check shortcut
+```
+
+`ipc-lint` checks: bare `ipcMain.handle` without `handleIpc()` wrapper, missing envelope pattern, ghost tint CSS, stale channel IDs, stray `console.log`, dead functions, and more.
 
 ### Settings
 
-- **Auth** — Anthropic, Google, OpenRouter, DeepInfra, GitHub tokens via Electron `safeStorage`; OAuth flows for Google and Anthropic
-- **Appearance** — Phosphor color system (green/amber/white/blue), UI density, font size, animation toggle
-- **Models** — Active model selector across all providers; Ollama dynamic discovery
-- **Security** — Environment variable allowlist, per-agent sandbox toggle
+- **Auth** — Anthropic, OpenAI, Google, OpenRouter, DeepInfra, GitHub tokens via Electron `safeStorage`. OAuth flows for Google and Anthropic.
+- **Models** — Active model selector across all providers. Ollama models discovered dynamically at runtime.
+- **Appearance** — Phosphor color system (green / amber / white / blue), UI density, font size, animation toggle.
+- **Security** — Environment variable allowlist, per-agent sandbox toggle.
+- **MCP Servers** — Configuration tab for Model Context Protocol server registrations *(in progress)*.
 
 ### Visual Design
 
-- **Phosphor color system** — Single CSS `var(--phosphor)` drives all active states, glows, and accent colors; four presets switchable at runtime
-- **VT terminal selection block** — Active states use solid filled rectangles (`bg-copernicus-phosphor text-[#050505] rounded-none`), not underlines or ghost tints
-- **FlippablePanel** — Two modes: `flip` (rotateY card turn) for text back faces, `slide` (translateX) for webview back faces
-- **Touch Bar** — macOS Touch Bar with view navigation, command tray, telemetry labels, and active view highlighting
-
-### Infrastructure
-
-- **Dell R210ii Core** — Ollama inference server (Docker) for local LLM inference
-- **Flask backend** — Python 3.11 API for devtime tracking, story scaffolding, and agent orchestration
-- **SQLite state ledger** — Model call ledger, devtime sessions, jules sessions, context snapshots, project memory
-- **Playwright automation** — Browser launch/navigate/screenshot/click/fill/evaluate via IPC for agent browser tasks
+- **Phosphor color system** — One CSS variable (`--phosphor`) drives all active states, glows, borders, and accent colors. Four presets switchable at runtime with no page reload.
+- **VT selection block** — Active states use solid filled rectangles (`bg-copernicus-phosphor text-[#050505] rounded-none`). No underlines, no ghost tints.
+- **Slide panels** — Dual-view panels (`JulesPanel`, `ChatPanel`) translate on the X axis. `rotateY`/3D transforms are forbidden because they break native `<webview>` compositing.
+- **Touch Bar** — macOS Touch Bar integration: view navigation, command tray, telemetry labels, active view highlight.
 
 ---
 
-## Development
+## Current Work
 
-```bash
-make dev          # Start backend (port 5001) + Copernicus IDE (Electron)
-make test         # Run backend pytest suite
-make test-e2e     # Run Playwright E2E tests
-make backlog      # Regenerate BACKLOG.md from story files
-make ipc-lint     # Run IPC compliance check (10 rules)
-make tsc          # TypeScript type check
-make deploy       # Deploy to Dell R210ii Core
-```
+The following stories are approved and in active development (agent-assigned or in review):
+
+| # | Story | Status | Assigned |
+|---|-------|--------|----------|
+| 183 | Chat Panel — Tools Back Face (5 tabs) | In flight | Jules |
+| 184 | Command Center — Live Agent & System Dashboard | In flight | Jules |
+| 185 | Designer View — Canvas as Unified Graphic Surface | In flight | Jules |
+| 189 | LSP → Monaco & ChatPanel Context Wiring | In flight | Jules |
+| 195 | Gemini CLI PTY Agent — Spawn, Send, Receive | **Complete** | Claude Code |
+
+Recent completions this sprint: #177 Renderer Bug Sweep, #178 IPC Compliance & Dead Code, #176 LSP Integration, #175 IPC Envelope Fix, #192 electron-log Cleanup.
+
+---
+
+## Roadmap
+
+Stories are sequenced in `BACKLOG.md`. The next wave:
+
+### Near-term (sprint)
+- **#181** Quick Tour — First-launch guided walkthrough with interactive step overlay
+- **#186** Kanban card — workflow assignment and Run button (trigger a workflow from a card)
+- **#187** Jules PR Manager — workflow template for the full Jules dispatch → review → merge loop
+- **#188** Copernicus Guide persona — GUIDE tab and tour integration (onboarding chat agent)
+- **#191** Context Snapshots & Project Memory — DB tables and cross-session memory wiring
+
+### Medium-term
+- **#190** MCP Server Configuration — manage MCP server registrations from Settings
+- **#193** Accessibility pass — keyboard navigation and ARIA labels across all panels
+- **#194** Flask Backend — API scaffold and core routes for devtime, story, and agent orchestration
+
+### Longer horizon
+- Native diff viewer in Monaco for PR review
+- Multi-workspace support (open multiple project roots)
+- Agent-to-agent messaging (Claude delegates subtasks to Gemini or Jules)
+- Offline-first packaging with bundled Ollama model
+
+---
 
 ## Stack
 
 | Layer | Technology |
-|-------|-----------|
-| IDE frontend | Electron 33, React 18, TypeScript, Vite, Tailwind CSS |
-| Editor | Monaco Editor, typescript-language-server (LSP) |
-| State | Zustand + persist middleware, SQLite (better-sqlite3) |
+|-------|------------|
+| IDE shell | Electron 33, Vite 5 |
+| Renderer | React 18, TypeScript 5, Tailwind CSS |
+| Editor | Monaco Editor, `typescript-language-server` |
+| State | Zustand + persist, SQLite (`better-sqlite3`) |
 | Animations | Framer Motion |
 | Charts | Recharts |
+| Terminal | `node-pty`, `xterm.js` |
+| Automation | Playwright Core |
 | Backend | Python 3.11, Flask |
 | Inference | Anthropic, OpenAI, Google, OpenRouter, DeepInfra, Ollama |
-| Automation | Playwright Core, node-pty |
-| Logging | electron-log |
-| Infrastructure | Docker, Dell R210ii, PostgreSQL 16 |
+| Infrastructure | Docker, Dell R210ii (local inference), PostgreSQL 16 |
+
+---
+
+## Getting Started
+
+```bash
+# Prerequisites: Node 20+, Python 3.11+, npm
+
+# Install dependencies
+cd copernicus && npm install
+
+# Start backend (port 5001) + IDE
+make dev
+
+# Type check
+make tsc
+
+# Run Playwright E2E tests
+make test-e2e
+
+# Regenerate BACKLOG.md
+make backlog
+```
+
+On first launch, a setup wizard guides you through credential configuration (Anthropic, Google OAuth, GitHub token).
+
+---
 
 ## Project Structure
 
 ```
-copernicus/         Electron IDE (main process + renderer)
-  electron/         Main process: IPC handlers, managers, workflow engine
-  src/renderer/     React renderer: components, store, hooks
-backend/            Flask API
-src/agentic/        Multi-agent orchestration logic
+copernicus/
+  electron/           Main process — IPC handlers, agent managers, workflow engine
+    agents/           GeminiAgent, (future: ClaudeAgent)
+    workflow/         WorkflowEngine, node types, templates
+    managers/         Auth, Models, Stories, LSP, Jules, GitHub, Devtime…
+  src/renderer/       React renderer
+    components/       All UI: Kanban, Editor, Terminal, Chat, Workflow, CapEx…
+    store/            Zustand layout store
+    hooks/            useIpcError (enforced IPC pattern)
+backend/              Flask API — devtime, story scaffolding, orchestration
+src/agentic/          Python multi-agent orchestration logic
 docs/
-  stories/          Feature stories (APPROVED FOR IMPLEMENTATION / COMPLETE)
-  reference/        UX_BIBLE.md, TECHNICAL_BIBLE.md
-scripts/            CLI utilities, agent dispatch scripts
+  stories/            Feature stories (Markdown + frontmatter)
+  reference/          UX_BIBLE.md, TECHNICAL_BIBLE.md
+scripts/              jules_assign.sh, ipc-lint.sh, generate_backlog.py…
 ```
+
+---
+
+## Architecture Notes
+
+**IPC contract** — Every `ipcMain.handle` is wrapped in a `handleIpc()` helper that returns `{ ok: true, data }` or `{ ok: false, error }`. Every renderer call goes through the `useIpcError` hook. This is enforced by `make ipc-lint` and TypeScript types.
+
+**Agent dispatch** — Claude (streaming, in-process), Gemini (PTY session, local), Jules (REST API → GitHub async). All three surface in the terminal tab strip and report to the model call ledger.
+
+**Story format** — Stories are Markdown files with YAML-style frontmatter (`Status`, `Priority`, `Epic`, `Blocked By`, `Blocks`). The SQLite Kanban syncs from disk on focus and writes back atomically. Stories are the unit of work for both humans and agents.
+
+**Governance** — `docs/reference/UX_BIBLE.md` and `TECHNICAL_BIBLE.md` define binding constraints for all contributors (human and agent). Agents are instructed to read both before implementing any story.
