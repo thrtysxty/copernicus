@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { FileText, Plus, Trash2, Edit3 } from 'lucide-react'
+import { TEMPLATE_MANIFEST } from '../../../templates'
 
 interface StoryTemplate {
   id: string
@@ -21,7 +22,7 @@ const DEFAULT_TEMPLATE = `# {{storyTitle}}
 export const TemplatesSection: React.FC = () => {
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
-  
+
   const [templates, setTemplates] = useState<StoryTemplate[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -33,11 +34,16 @@ export const TemplatesSection: React.FC = () => {
   useEffect(() => {
     invoke<any>('settings:load').then(result => {
       // Result is { ok: true, data: { ... } } due to handleIpc
-      const s = result.data || result
-      if (s?.storyTemplates) {
+      const s = (result as any).data || result
+      if (s?.storyTemplates && s.storyTemplates.length > 0) {
         setTemplates(s.storyTemplates)
       } else {
-        const initial = [{ id: 'standard', name: 'Standard Story', body: DEFAULT_TEMPLATE }]
+        // Seed from TEMPLATE_MANIFEST so all types are present
+        const initial: StoryTemplate[] = TEMPLATE_MANIFEST.map(t => ({
+          id: t.id,
+          name: t.label,
+          body: DEFAULT_TEMPLATE,
+        }))
         setTemplates(initial)
         invoke('settings:save', { storyTemplates: initial })
       }

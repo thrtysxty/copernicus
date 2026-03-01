@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { User, Plus, Trash2, Edit3 } from 'lucide-react'
+import { User, Plus, Trash2, Edit3, Lock } from 'lucide-react'
 
 interface Persona {
   id: string
@@ -9,7 +9,17 @@ interface Persona {
   systemPrompt: string
   panelId?: string
   modelId?: string
+  system?: boolean
 }
+
+const SYSTEM_PERSONAS: Persona[] = [
+  { id: 'architect',     name: 'Architect',      systemPrompt: 'System design, planning, and schema management',    system: true },
+  { id: 'senior-dev',    name: 'Senior Dev',     systemPrompt: 'Task breakdown, code review, and agent management',  system: true },
+  { id: 'junior-dev',    name: 'Junior Dev',     systemPrompt: 'Focused task implementation using TDD',             system: true },
+  { id: 'product-owner', name: 'Product Owner',  systemPrompt: 'MVP strategy and user story management',            system: true },
+  { id: 'deployer',      name: 'Deployer',       systemPrompt: 'Pi operations, Docker, and deployment tasks',       system: true },
+  { id: 'sentinel',      name: 'Sentinel',       systemPrompt: 'Autonomous hardening and secret detection',         system: true },
+]
 
 export const PersonasSection: React.FC = () => {
   const invoke = useIpcError()
@@ -128,7 +138,32 @@ export const PersonasSection: React.FC = () => {
         </div>
       )}
 
+      {/* System Personas — read-only */}
+      <div className="space-y-2">
+        <p className="text-[9px] text-zinc-600 uppercase font-bold tracking-widest flex items-center gap-1.5">
+          <Lock size={9} /> System
+        </p>
+        {SYSTEM_PERSONAS.map(p => (
+          <div key={p.id} className="bg-[#0A0A0A] border border-zinc-800/50 rounded-lg">
+            <div className="p-3 flex items-center gap-3">
+              <div className="p-1.5 rounded bg-zinc-900 text-zinc-600">
+                <User size={13} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[10px] font-bold text-zinc-400 uppercase truncate tracking-tight">{p.name}</h3>
+                <p className="text-[9px] text-zinc-600 mt-0.5 truncate font-mono italic">
+                  {p.systemPrompt}
+                </p>
+              </div>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-600 font-bold uppercase font-mono flex-shrink-0">System</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* User Personas */}
       <div className="space-y-3">
+        <p className="text-[9px] text-zinc-600 uppercase font-bold tracking-widest">Custom</p>
         {personas.map(p => (
           <div key={p.id} className="group bg-[#0F0F0F] border border-zinc-800 rounded-lg overflow-hidden transition-all hover:border-zinc-700">
             <div className="p-4 flex items-center justify-between">
@@ -144,14 +179,14 @@ export const PersonasSection: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
-                <button 
+                <button
                   onClick={() => startEdit(p)}
                   className="p-2 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
                   title="Edit Persona"
                 >
                   <Edit3 size={14} />
                 </button>
-                <button 
+                <button
                   onClick={() => handleDelete(p.id)}
                   className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
                   title="Delete Persona"
@@ -164,8 +199,8 @@ export const PersonasSection: React.FC = () => {
         ))}
 
         {personas.length === 0 && !editingId && (
-          <div className="p-12 text-center border-2 border-dashed border-zinc-900 rounded-xl">
-            <User className="mx-auto text-zinc-800 mb-3" size={32} />
+          <div className="p-8 text-center border-2 border-dashed border-zinc-900 rounded-xl">
+            <User className="mx-auto text-zinc-800 mb-3" size={28} />
             <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-widest font-mono">No custom personas defined</p>
           </div>
         )}

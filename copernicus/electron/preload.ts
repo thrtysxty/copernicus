@@ -15,7 +15,7 @@ const SEND_CHANNELS = new Set([
   // LLM Chat
   'chat:send',
   // File System
-  'fs:list-dir', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'app:get-root-path', 'app:get-user-guide',
+  'fs:list-dir', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'app:get-root-path', 'app:get-user-guide',
   // Git
   'git:branch',
   // Stories
@@ -48,7 +48,7 @@ const SEND_CHANNELS = new Set([
   // MCP
   'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server',
   // Environment
-  'env:scan', 'env:install', 'env:install-complete',
+  'env:scan', 'env:install', 'env:install-complete', 'env:get-versions',
   // Devtime
   'devtime:start', 'devtime:status', 'devtime:close', 'devtime:defaults', 'devtime:report',
   'devtime:list-stories', 'devtime:run-tests', 'devtime:test-history', 'devtime:weekly-velocity',
@@ -58,6 +58,7 @@ const SEND_CHANNELS = new Set([
   'ledger:daily-costs', 'ledger:cost-by-model', 'ledger:cost-by-story',
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
+  'workflow:update-node-data',
   // Review gate
   'review:log',
   // Codebase semantic index

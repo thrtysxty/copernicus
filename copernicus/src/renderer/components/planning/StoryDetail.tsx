@@ -30,10 +30,6 @@ const PRIORITY_COLORS: Record<string, string> = {
   UNKNOWN: 'bg-zinc-800 text-zinc-600 border-zinc-700',
 }
 
-const MODEL_OPTIONS = [
-  '(unassigned)', 'claude-sonnet-4-6', 'claude-opus-4-6', 'gemini', 'jules', 'human'
-]
-
 export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const invoke = useIpcError()
   const { setDrawerStory, spotlightPane, setSpotlight } = useLayoutStore()
@@ -45,6 +41,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const [content, setContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -52,6 +49,15 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       .then(c => setContent(c))
       .catch(console.error)
   }, [storyId, invoke])
+
+  useEffect(() => {
+    invoke<any>('models:list').then(result => {
+      const models: Array<{ id: string }> = (result as any).data || result
+      if (Array.isArray(models)) {
+        setModelOptions(['(unassigned)', ...models.map(m => m.id), 'gemini', 'jules', 'human'])
+      }
+    }).catch(() => {})
+  }, [invoke])
 
   const handleSetField = async (field: string, value: string) => {
     try {
@@ -192,7 +198,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
             onChange={e => handleSetField('model', e.target.value)}
             className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
           >
-            {MODEL_OPTIONS.map(m => (
+            {modelOptions.map(m => (
               <option key={m} value={m}>{m}</option>
             ))}
           </select>

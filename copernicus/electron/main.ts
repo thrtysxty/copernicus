@@ -473,6 +473,27 @@ function registerIpcHandlers() {
     return canceled ? null : filePaths[0];
   }));
 
+  ipcMain.handle('fs:select-file', () => handleIpc(async () => {
+    if (!win) return null;
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, { 
+      properties: ['openFile'],
+      filters: [
+        { name: 'All Files', extensions: ['*'] },
+        { name: 'Text Files', extensions: ['txt', 'md', 'ts', 'tsx', 'js', 'jsx', 'py', 'json'] },
+        { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] }
+      ]
+    });
+    return canceled ? null : filePaths[0];
+  }));
+
+  // Workflow Handlers
+  ipcMain.handle('workflow:update-node-data', (_e, { nodeId, field, value }: any) => handleIpc(() => {
+    // This is primarily for external persistence if needed, 
+    // but the renderer currently manages the graph state.
+    console.log(`[Workflow] Update Node ${nodeId}: ${field} = ${value}`);
+    return true;
+  }));
+
   ipcMain.handle('save-preferences', (_event, preferences: any) => handleIpc(async () => {
     const { keys, workspace, ...settings } = preferences;
     if (keys) {
@@ -875,6 +896,13 @@ function registerIpcHandlers() {
     }
     return termId
   }))
+
+  ipcMain.handle('env:get-versions', () => handleIpc(() => ({
+    node: process.versions.node,
+    electron: process.versions.electron ?? '',
+    appVersion: app.getVersion(),
+    platform: process.platform,
+  })))
 
   // LLM Chat
   ipcMain.handle('chat:send', (_event, payload: any) => handleIpc(async () => {

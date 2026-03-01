@@ -1,9 +1,11 @@
+// env:scan populates toolchain (binary PATH checks) and ideDeps (npm package checks).
+// env:get-versions returns static process-level versions without shelling out.
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { 
-  Terminal, Package, RefreshCcw, CheckCircle2, 
-  XCircle, Play, Loader2, Cpu
+import {
+  Terminal, Package, RefreshCcw, CheckCircle2,
+  XCircle, Play, Loader2, Cpu, Info
 } from 'lucide-react'
 
 interface ToolStatus {
@@ -21,11 +23,19 @@ interface ScanResult {
   ideDeps: Record<string, DepStatus>
 }
 
+interface EnvVersions {
+  node: string
+  electron: string
+  appVersion: string
+  platform: string
+}
+
 export const EnvironmentSection: React.FC = () => {
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
-  
+
   const [data, setData] = useState<ScanResult | null>(null)
+  const [versions, setVersions] = useState<EnvVersions | null>(null)
   const [scanning, setScanning] = useState(true)
   const [installing, setInstalling] = useState<string | null>(null)
 
@@ -44,6 +54,10 @@ export const EnvironmentSection: React.FC = () => {
 
   useEffect(() => {
     scan()
+    invoke<EnvVersions>('env:get-versions').then(result => {
+      const v = (result as any).data || result
+      setVersions(v)
+    }).catch(() => {})
     const remove = (window as any).ipcRenderer.on('env:install-complete', () => {
       addToast('Installation complete', 'success')
       setInstalling(null)
@@ -87,6 +101,29 @@ export const EnvironmentSection: React.FC = () => {
           <RefreshCcw size={16} className={scanning ? 'animate-spin' : ''} />
         </button>
       </div>
+
+      {/* Runtime versions */}
+      {versions && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-zinc-400">
+            <Info size={14} />
+            <h3 className="text-[10px] uppercase font-bold tracking-wider">Runtime Versions</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Node.js',  value: versions.node },
+              { label: 'Electron', value: versions.electron },
+              { label: 'App',      value: versions.appVersion },
+              { label: 'Platform', value: versions.platform },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-center justify-between p-3 bg-zinc-900/30 border border-zinc-800 rounded-lg">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase font-mono">{label}</span>
+                <span className="text-[10px] font-mono text-copernicus-phosphor/80">{value || '—'}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Toolchain binaries */}
       <section className="space-y-4">
