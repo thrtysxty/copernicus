@@ -216,7 +216,7 @@ export default function App() {
             <span className="text-copernicus-phosphor font-bold text-xs">C</span>
           </div>
 
-          {/* §1.4 VT selection block — activity bar active states */}
+          {/* §1.4 VT selection block */}
           <button
             onClick={() => setView('planner')}
             className={`p-2 transition-colors ${activeView === 'planner' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
@@ -279,13 +279,13 @@ export default function App() {
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-hidden relative">
           <header className="h-8 flex items-center justify-between px-4 pl-20 border-b border-copernicus-steel bg-[#050505] flex-shrink-0 draggable">
-            {/* §1.4 VT selection block — header nav active states */}
+            {/* §1.4 VT selection block */}
             <nav className="flex h-full items-center no-drag">
               {(['planner', 'designer', 'editor'] as const).map(view => (
                 <button
                   key={view}
                   onClick={() => setView(view)}
-                  className={`text-[10px] font-mono uppercase tracking-[0.2em] h-full px-3 transition-all ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  className={`text-[10px] font-mono uppercase tracking-[0.2em] h-full px-2 transition-all ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
                   {view.replace('-', '_')}
                 </button>
