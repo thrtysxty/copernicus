@@ -8,6 +8,7 @@ import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
+import { FlippablePanel } from '../layout/FlippablePanel'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -185,6 +186,239 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   const streamingIdRef = useRef<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const [activeBackTab, setActiveBackTab] = useState('context')
+  const { flippedPanes } = useLayoutStore()
+  const isFlipped = flippedPanes.includes('chat')
+
+  useEffect(() => {
+    if (isFlipped) {
+      setActiveBackTab('context')
+    }
+  }, [isFlipped])
+
+  const handleClearContext = () => setContext([])
+
+  const [authStatus, setAuthStatus] = useState<any>(null)
+  useEffect(() => {
+    invoke<any>('auth:status').then((r: any) => setAuthStatus(r?.data ?? r)).catch(() => {})
+  }, [invoke, isFlipped])
+
+  const [savedPrompts, setSavedPrompts] = useState<{id: string, name: string, text: string}[]>([])
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('copernicus:saved-prompts')
+      if (stored) setSavedPrompts(JSON.parse(stored))
+    } catch {}
+  }, [isFlipped])
+
+  const savePrompt = () => {
+    const text = input.trim()
+    if (!text) return
+    const name = prompt('Enter a short name for this prompt:')
+    if (!name) return
+    const newPrompt = { id: Date.now().toString(), name, text }
+    const updated = [...savedPrompts, newPrompt]
+    setSavedPrompts(updated)
+    localStorage.setItem('copernicus:saved-prompts', JSON.stringify(updated))
+  }
+
+  const deletePrompt = (id: string) => {
+    const updated = savedPrompts.filter(p => p.id !== id)
+    setSavedPrompts(updated)
+    localStorage.setItem('copernicus:saved-prompts', JSON.stringify(updated))
+  }
+
+  const usePrompt = (text: string) => setInput(text)
+
+  const exportChat = () => {
+    const text = messages.map(m => `${m.role.toUpperCase()}:\n${m.content}\n`).join('\n---\n\n')
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `chat-export-${Date.now()}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const totalTokens = messages.reduce((acc, m) => acc + (m.tokens || 0), 0)
+  const contextMaxTokens = availableModels.find(m => m.id === model)?.contextWindow || 0
+
+  const renderBackFace = () => {
+    return (
+      <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
+        <div className="h-6 flex items-center px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel shrink-0 gap-2">
+          {['context', 'persona', 'prompts', 'history', 'guide'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveBackTab(tab)}
+              className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 transition-colors ${
+                activeBackTab === tab
+                  ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+          <div className="flex-1" />
+          <button onClick={() => toggleFlip('chat')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
+            <RotateCcw size={10} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-copernicus-steel">
+          {activeBackTab === 'context' && (
+            <div className="space-y-4">
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Model Context Usage</div>
+                <div className="text-xs">{model} • {availableModels.find(m => m.id === model)?.provider || '—'}</div>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-copernicus-phosphor"
+                      style={{ width: `${contextMaxTokens ? Math.min(100, (totalTokens / contextMaxTokens) * 100) : 0}%` }}
+                    />
+                  </div>
+                  <div className="text-[10px] text-zinc-500">
+                    {totalTokens} / {contextMaxTokens || '—'}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 flex justify-between items-center">
+                  <span>Attached Files ({context.length})</span>
+                  {context.length > 0 && (
+                    <button onClick={handleClearContext} className="hover:text-copernicus-phosphor transition-colors">Clear Context</button>
+                  )}
+                </div>
+                {context.length === 0 ? (
+                  <div className="text-xs text-zinc-600">—</div>
+                ) : (
+                  <div className="space-y-1 mt-2">
+                    {context.map((c, i) => (
+                      <div key={i} className="flex items-center justify-between bg-zinc-900 px-2 py-1 rounded border border-copernicus-steel/50">
+                        <span className="text-xs truncate max-w-[200px]">{c.label}</span>
+                        <button onClick={() => setContext(prev => prev.filter(x => x.label !== c.label))} className="text-zinc-500 hover:text-red-400">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">LSP Diagnostics</div>
+                <div className="text-xs text-zinc-400">LSP: connecting…</div>
+              </div>
+            </div>
+          )}
+
+          {activeBackTab === 'persona' && (
+            <div className="space-y-4">
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Active Persona</div>
+                <div className="text-xs flex items-center gap-2">
+                  <div className={`w-1.5 h-1.5 rounded-full ${authStatus?.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                  {availableModels.find(m => m.id === model)?.name || model} ({model})
+                </div>
+                <div className="text-[10px] text-zinc-500 mt-1">Provider: {availableModels.find(m => m.id === model)?.provider || '—'}</div>
+              </div>
+
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Switch Model</div>
+                <select
+                  className="w-full bg-zinc-900 border border-copernicus-steel rounded px-2 py-1 text-xs text-zinc-300 focus:border-copernicus-phosphor outline-none"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                >
+                  {availableModels.map(m => (
+                    <option key={m.id} value={m.id}>{m.name} ({m.provider})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {activeBackTab === 'prompts' && (
+            <div className="space-y-4 flex flex-col h-full">
+              <button
+                onClick={savePrompt}
+                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-xs py-1.5 rounded flex items-center justify-center gap-2"
+              >
+                + Save Current Input
+              </button>
+
+              <div className="flex-1 space-y-2">
+                {savedPrompts.length === 0 ? (
+                  <div className="text-xs text-zinc-600 text-center py-4">No saved prompts yet.</div>
+                ) : (
+                  savedPrompts.map(p => (
+                    <div key={p.id} className="bg-zinc-900 border border-copernicus-steel/50 rounded p-2">
+                      <div className="text-xs font-bold text-copernicus-phosphor mb-1">{p.name}</div>
+                      <div className="text-[10px] text-zinc-400 truncate mb-2">{p.text}</div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => usePrompt(p.text)}
+                          className="text-[10px] px-2 py-0.5 bg-zinc-800 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor transition-colors rounded"
+                        >
+                          Use
+                        </button>
+                        <button
+                          onClick={() => deletePrompt(p.id)}
+                          className="text-[10px] px-2 py-0.5 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 transition-colors rounded"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeBackTab === 'history' && (
+            <div className="space-y-4 flex flex-col h-full">
+              <button
+                onClick={exportChat}
+                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-xs py-1.5 rounded flex items-center justify-center gap-2"
+              >
+                Export Chat
+              </button>
+
+              <div className="flex-1 space-y-2">
+                {messages.length === 0 ? (
+                  <div className="text-xs text-zinc-600 text-center py-4">No history.</div>
+                ) : (
+                  messages.slice(-20).map((m, i) => (
+                    <div key={i} className="bg-zinc-900 border border-copernicus-steel/50 rounded p-2">
+                      <div className={`text-[10px] font-bold mb-1 ${m.role === 'user' ? 'text-zinc-400' : 'text-copernicus-phosphor'}`}>
+                        {m.role === 'user' ? 'You' : model}
+                      </div>
+                      <div className="text-xs text-zinc-300 whitespace-pre-wrap truncate max-h-[40px]">
+                        {m.content.substring(0, 120)}{m.content.length > 120 ? '...' : ''}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeBackTab === 'guide' && (
+            <div className="h-full flex flex-col items-center justify-center relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none opacity-50 z-10" />
+              <div className="text-xs text-copernicus-phosphor relative z-20 font-bold uppercase tracking-widest bg-zinc-900/80 px-4 py-2 rounded">
+                Copernicus will appear here.
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -511,8 +745,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }
 
   return (
-    <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
-      {/* Tabs Header */}
+    <FlippablePanel
+      id="chat"
+      front={
+        <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
+          {/* Tabs Header */}
       <div className="flex bg-[#0A0A0A] border-b border-copernicus-steel h-9">
         <button
           onClick={() => setChatPanelTab('chat')}
@@ -886,6 +1123,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           </div>
         </div>
       )}
-    </div>
+        </div>
+      }
+      back={renderBackFace()}
+    />
   )
 }
