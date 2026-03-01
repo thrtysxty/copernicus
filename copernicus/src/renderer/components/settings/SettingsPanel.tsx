@@ -12,7 +12,7 @@ import { PersonasSection } from './sections/PersonasSection'
 import { AppearanceSection } from './sections/AppearanceSection'
 import { GitSection } from './sections/GitSection'
 import { WorkflowSection } from './sections/WorkflowSection'
-import { McpSection } from './sections/McpSection'
+import { MCPSection } from './sections/MCPSection'
 import { SecuritySection } from './sections/SecuritySection'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { EnvironmentSection } from './sections/EnvironmentSection'
@@ -48,7 +48,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'appearance':  return <AppearanceSection />
       case 'git':         return <GitSection />
       case 'workflow':    return <WorkflowSection />
-      case 'mcp':         return <McpSection />
+      case 'mcp':         return <MCPSection />
       case 'security':    return <SecuritySection />
       case 'templates':   return <TemplatesSection />
       case 'environment': return <EnvironmentSection />

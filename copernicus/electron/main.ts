@@ -115,9 +115,49 @@ const SETTINGS_PATH = path.join(app.getPath('userData'), 'copernicus-settings.js
 
 function loadSettings(): Record<string, unknown> {
   try {
-    return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'))
+    const settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'))
+    
+    // Migrate existing MCP config if settings.mcp is missing
+    if (!settings.mcp || !settings.mcp.servers) {
+      const COPERNICUS_HOME = process.env.COPERNICUS_E2E_HOME ?? path.join(os.homedir(), '.copernicus')
+      const legacyMcpPath = path.join(COPERNICUS_HOME, 'mcp_config.json')
+      const userDataMcpPath = path.join(app.getPath('userData'), 'claude_mcp_config.json')
+
+      let servers: any[] = []
+
+      // Try user data claude_mcp_config.json first (AC-4)
+      if (fs.existsSync(userDataMcpPath)) {
+        try {
+          const config = JSON.parse(fs.readFileSync(userDataMcpPath, 'utf-8'))
+          if (config.mcpServers) {
+            servers = Object.entries(config.mcpServers).map(([name, conf]: [string, any]) => ({
+              name,
+              transport: conf.url ? 'sse' : 'stdio',
+              command: conf.command,
+              args: conf.args,
+              url: conf.url
+            }))
+          }
+        } catch (e) {
+          log.error('Failed to migrate from userData claude_mcp_config.json', e)
+        }
+      } else if (fs.existsSync(legacyMcpPath)) {
+        try {
+          const config = JSON.parse(fs.readFileSync(legacyMcpPath, 'utf-8'))
+          if (Array.isArray(config)) servers = config
+        } catch (e) {
+          log.error('Failed to migrate from legacy mcp_config.json', e)
+        }
+      }
+
+      settings.mcp = { servers }
+    }
+
+    return settings
   } catch {
-    return {}
+    return {
+      mcp: { servers: [] }
+    }
   }
 }
 
@@ -853,17 +893,24 @@ function registerIpcHandlers() {
     return true
   }))
 
-  // MCP Handlers
+  // MCP Handlers (Story 190)
   ipcMain.handle('mcp:list-servers', () => handleIpc(() => {
-    const configPath = path.join(COPERNICUS_HOME, 'mcp_config.json')
-    if (!fs.existsSync(configPath)) return []
-    return JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+    const settings = loadSettings()
+    return (settings.mcp as any)?.servers || []
   }))
 
   ipcMain.handle('mcp:save-servers', (_e, servers: any[]) => handleIpc(() => {
-    const configPath = path.join(COPERNICUS_HOME, 'mcp_config.json')
-    fs.writeFileSync(configPath, JSON.stringify(servers, null, 2))
+    saveSettings({ mcp: { servers } })
     return true
+  }))
+
+  ipcMain.handle('mcp:get-status', () => handleIpc(() => {
+    const settings = loadSettings()
+    const servers = (settings.mcp as any)?.servers || []
+    return servers.map((s: any) => ({
+      name: s.name,
+      status: 'disconnected' // MCP runtime not yet wired, per AC-5
+    }))
   }))
 
   ipcMain.handle('mcp:test-server', (_e, server: any) => handleIpc(async () => {

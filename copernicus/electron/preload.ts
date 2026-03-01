@@ -46,7 +46,8 @@ const SEND_CHANNELS = new Set([
   // Git
   'git:init-workspace',
   // MCP
-  'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server',
+  'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server', 'mcp:get-status',
+
   // Environment
   'env:scan', 'env:install', 'env:install-complete', 'env:get-versions',
   // Devtime
