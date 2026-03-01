@@ -9,6 +9,7 @@ import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
 import { FlippablePanel } from '../layout/FlippablePanel'
+import { matchKnowledge } from './CopernicusKnowledgeBase'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -172,7 +173,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     setTourStep,
     setHasCompletedTour,
     setView,
-    setTourHighlight
+    setTourHighlight,
+    retakeTour,
   } = useLayoutStore()
 
 
@@ -193,13 +195,84 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const { flippedPanes } = useLayoutStore()
   const isFlipped = flippedPanes.includes('chat')
 
+  // Guide tab ephemeral state (AC-6: never stored in main messages or DB)
+  interface GuideMessage {
+    id: string
+    role: 'user' | 'copernicus'
+    content: string
+    showTourButton?: boolean
+    showFallback?: boolean
+    originalQuery?: string
+  }
+  const [guideMessages, setGuideMessages] = useState<GuideMessage[]>([{
+    id: 'cp-welcome',
+    role: 'copernicus',
+    content: 'Hello. I\'m Copernicus — your guide to this IDE. Ask me anything about the workflow, settings, or features, and I\'ll point you in the right direction.',
+  }])
+  const [guideInput, setGuideInput] = useState('')
+  const guideScrollRef = useRef<HTMLDivElement>(null)
+  const guideInputRef = useRef<HTMLTextAreaElement>(null)
+
   useEffect(() => {
     if (isFlipped) {
       setActiveBackTab('context')
     }
   }, [isFlipped])
 
+  // Clear guide messages when tab changes away from 'guide' (AC-6)
+  useEffect(() => {
+    if (activeBackTab !== 'guide') {
+      setGuideMessages([{
+        id: 'cp-welcome',
+        role: 'copernicus',
+        content: 'Hello. I\'m Copernicus — your guide to this IDE. Ask me anything about the workflow, settings, or features, and I\'ll point you in the right direction.',
+      }])
+      setGuideInput('')
+    }
+  }, [activeBackTab])
+
+  // Auto-scroll guide feed
+  useEffect(() => {
+    if (guideScrollRef.current) {
+      guideScrollRef.current.scrollTop = guideScrollRef.current.scrollHeight
+    }
+  }, [guideMessages])
+
   const handleClearContext = () => setContext([])
+
+  // Guide tab submit handler (AC-3, AC-4, AC-5)
+  const handleGuideSubmit = useCallback(() => {
+    const q = guideInput.trim()
+    if (!q) return
+
+    const userMsg: GuideMessage = {
+      id: `gu-${Date.now()}`,
+      role: 'user',
+      content: q,
+    }
+    setGuideMessages(prev => [...prev, userMsg])
+    setGuideInput('')
+
+    const match = matchKnowledge(q)
+    if (match) {
+      const cpMsg: GuideMessage = {
+        id: `cp-${Date.now()}`,
+        role: 'copernicus',
+        content: match.response,
+        showTourButton: !!match.showTourButton,
+      }
+      setGuideMessages(prev => [...prev, cpMsg])
+    } else {
+      const fallbackMsg: GuideMessage = {
+        id: `cp-fb-${Date.now()}`,
+        role: 'copernicus',
+        content: "I don't have a quick answer for that — but Claude can help. Want me to send this question to your active chat session?",
+        showFallback: true,
+        originalQuery: q,
+      }
+      setGuideMessages(prev => [...prev, fallbackMsg])
+    }
+  }, [guideInput])
 
   const [authStatus, setAuthStatus] = useState<any>(null)
   useEffect(() => {
@@ -410,10 +483,112 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           )}
 
           {activeBackTab === 'guide' && (
-            <div className="h-full flex flex-col items-center justify-center relative overflow-hidden group">
-              <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none opacity-50 z-10" />
-              <div className="text-xs text-copernicus-phosphor relative z-20 font-bold uppercase tracking-widest bg-zinc-900/80 px-4 py-2 rounded">
-                Copernicus will appear here.
+            <div className="h-full flex flex-col">
+              {/* Copernicus avatar header (AC-1, AC-5) */}
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-800 shrink-0">
+                <div className="w-6 h-6 rounded-none bg-copernicus-phosphor flex items-center justify-center text-[#050505] text-[10px] font-bold font-mono select-none">
+                  CP
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-copernicus-phosphor font-mono">
+                  Copernicus
+                </span>
+                <span className="text-[9px] text-zinc-600 font-mono ml-auto">guide · no llm</span>
+              </div>
+
+              {/* Message feed (AC-1, AC-5, AC-6) */}
+              <div ref={guideScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-zinc-800">
+                {guideMessages.map(msg => (
+                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.role === 'copernicus' && (
+                      <div className="flex items-start gap-2 max-w-[90%]">
+                        <div className="w-5 h-5 rounded-none bg-copernicus-phosphor flex items-center justify-center text-[#050505] text-[9px] font-bold font-mono shrink-0 mt-0.5">
+                          CP
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="bg-zinc-900/50 border border-zinc-700 px-3 py-2 text-xs text-zinc-300 font-mono leading-relaxed">
+                            {msg.content}
+                          </div>
+                          {/* Tour button (AC-3) */}
+                          {msg.showTourButton && (
+                            <button
+                              onClick={() => {
+                                retakeTour()
+                                setActiveBackTab('context')
+                                toggleFlip('chat')
+                              }}
+                              className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-copernicus-phosphor text-[#050505] rounded-none hover:opacity-90 transition-opacity"
+                            >
+                              Start Tour
+                            </button>
+                          )}
+                          {/* Fallback to Claude (AC-4) */}
+                          {msg.showFallback && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  // Flip back to front face and pre-populate input
+                                  if (msg.originalQuery) {
+                                    setInput(msg.originalQuery)
+                                  }
+                                  toggleFlip('chat')
+                                  // Focus chat input after flip settles
+                                  setTimeout(() => {
+                                    const ta = document.querySelector<HTMLTextAreaElement>('[data-chat-input]')
+                                    ta?.focus()
+                                  }, 350)
+                                }}
+                                className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-copernicus-phosphor text-[#050505] rounded-none hover:opacity-90 transition-opacity"
+                              >
+                                Yes, ask Claude
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // Remove the fallback message
+                                  setGuideMessages(prev => prev.filter(m => m.id !== msg.id))
+                                }}
+                                className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 border border-zinc-700 text-zinc-400 rounded-none hover:border-zinc-500 hover:text-zinc-300 transition-colors"
+                              >
+                                Never mind
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {msg.role === 'user' && (
+                      <div className="max-w-[80%] bg-copernicus-phosphor/10 border border-copernicus-phosphor/20 px-3 py-2 text-xs text-zinc-300 font-mono leading-relaxed">
+                        {msg.content}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Input (AC-1) */}
+              <div className="px-3 pb-3 pt-2 border-t border-zinc-800 shrink-0">
+                <div className="flex gap-2 items-end">
+                  <textarea
+                    ref={guideInputRef}
+                    value={guideInput}
+                    onChange={e => setGuideInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        handleGuideSubmit()
+                      }
+                    }}
+                    placeholder="Ask Copernicus..."
+                    rows={2}
+                    className="flex-1 resize-none bg-zinc-900/80 border border-zinc-700 text-xs text-zinc-300 font-mono px-2 py-1.5 placeholder-zinc-600 focus:outline-none focus:border-copernicus-phosphor/50 transition-colors"
+                  />
+                  <button
+                    onClick={handleGuideSubmit}
+                    disabled={!guideInput.trim()}
+                    className="px-2 py-1.5 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold uppercase tracking-wider rounded-none hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"
+                  >
+                    Ask
+                  </button>
+                </div>
               </div>
             </div>
           )}

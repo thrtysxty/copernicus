@@ -87,6 +87,7 @@ interface LayoutState {
   hasCompletedTour: boolean
   tourHighlight: string | null
   tourStep: number
+  tourActive: boolean
 
   // UI Builder State
   uiBuilderOpen: boolean
@@ -155,6 +156,8 @@ interface LayoutState {
   setHasCompletedTour: () => void
   setTourHighlight: (id: string | null) => void
   setTourStep: (step: number) => void
+  setTourActive: (active: boolean) => void
+  retakeTour: () => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -199,6 +202,7 @@ export const useLayoutStore = create<LayoutState>()(
       hasCompletedTour: false,
       tourHighlight: null,
       tourStep: 0,
+      tourActive: false,
 
       uiBuilderOpen: false,
       uiComponents: [],
@@ -304,6 +308,8 @@ export const useLayoutStore = create<LayoutState>()(
       setHasCompletedTour: () => set({ hasCompletedTour: true }),
       setTourHighlight: (id) => set({ tourHighlight: id }),
       setTourStep: (step) => set({ tourStep: step }),
+      setTourActive: (active) => set({ tourActive: active }),
+      retakeTour: () => set({ tourActive: true, activeView: 'designer' as StoryboardView, centerMode: 'canvas' as CenterMode }),
     }),
     {
       name: 'copernicus-layout-storage',
