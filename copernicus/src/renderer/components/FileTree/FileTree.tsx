@@ -3,19 +3,7 @@ import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
          Image as ImageIcon, Database } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
-import log from '../../utils/logger'
-
-const IMAGE_EXTENSIONS = new Set([
-  'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico', 'tiff', 'avif',
-])
-
-const BINARY_EXTENSIONS = new Set([
-  'db', 'db-shm', 'db-wal', 'sqlite', 'sqlite3',
-  'dmg', 'pkg', 'exe', 'dll', 'so', 'dylib',
-  'wasm', 'zip', 'tar', 'gz', 'bz2', 'xz', '7z', 'rar',
-  'pdf', 'bin', 'a', 'o', 'class', 'pyc',
-  'mp4', 'mp3', 'wav', 'mov', 'avi', 'mkv',
-])
+import { classifyFile } from '../../utils/fileUtils'
 
 const LANGUAGE_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'typescript',
@@ -43,14 +31,6 @@ function getLanguage(filePath: string): string {
 }
 
 const MAX_EDITOR_BYTES = 512_000 // 500 KB
-
-function classifyFile(filePath: string): 'code' | 'image' | 'binary' | 'svg' {
-  const ext = filePath.split('.').pop()?.toLowerCase() ?? ''
-  if (ext === 'svg') return 'svg'
-  if (IMAGE_EXTENSIONS.has(ext)) return 'image'
-  if (BINARY_EXTENSIONS.has(ext)) return 'binary'
-  return 'code'
-}
 
 interface FileNode {
   name: string
@@ -82,8 +62,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
     }
     setActiveFilePath(node.path)
 
-    if (classification === 'image' || classification === 'svg') {
-      setCenterMode('image')
+    if (classification === 'canvas' || classification === 'svg') {
+      const { setView } = useLayoutStore.getState()
+      setView('designer')
+      setCenterMode('canvas')
       setActiveFileContent('')
       setActiveFileLanguage(classification === 'svg' ? 'xml' : 'image')
     } else if (classification === 'binary') {
@@ -98,14 +80,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
         
         if (finalContent.length > MAX_EDITOR_BYTES) {
           setActiveFileContent(finalContent.slice(0, MAX_EDITOR_BYTES))
-          log.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
+          console.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
         } else {
           setActiveFileContent(finalContent)
         }
         
         setActiveFileLanguage(getLanguage(node.path))
       } catch (err) {
-        log.error('[FileTree] Failed to read file content:', err)
+        console.error('[FileTree] Failed to read file content:', err)
       }
     }
   }
@@ -131,7 +113,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
         ) : (
           <>
             <span className="w-[10px] shrink-0" />
-            {classification === 'image' || classification === 'svg'
+        {classification === 'canvas' || classification === 'svg'
               ? <ImageIcon size={11} className="text-blue-400/70 shrink-0" />
               : classification === 'binary'
               ? <Database size={11} className="text-red-400/50 shrink-0" />
@@ -167,7 +149,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
       if (Array.isArray(data)) {
         setRootChildren(data)
       }
-    }).catch(log.error)
+    }).catch(console.error)
   }, [rootPath, invoke])
 
   if (!rootPath) {

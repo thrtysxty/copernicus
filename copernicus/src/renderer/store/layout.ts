@@ -26,7 +26,7 @@ export const PHOSPHOR_PRESETS = {
 
 export type PhosphorColor = keyof typeof PHOSPHOR_PRESETS
 
-export type CenterMode = 'code' | 'image' | 'binary' | 'preview' | 'builder'
+export type CenterMode = 'code' | 'image' | 'binary' | 'preview' | 'builder' | 'canvas'
 
 export interface KanbanColumn {
   id: string
@@ -92,6 +92,9 @@ interface LayoutState {
   uiBuilderOpen: boolean
   uiComponents: UIComponent[]
 
+  // Browser Session
+  browserSessionActive: boolean
+
   // Panel Modes
   leftPanelMode: 'explorer' | 'command-deck'
   rightPanelMode: 'telemetry' | 'kanban'
@@ -146,6 +149,7 @@ interface LayoutState {
   // Canvas Actions
   setCanvasContent: (content: string | null) => void
   setCanvasUrl: (url: string | null) => void
+  setBrowserSessionActive: (active: boolean) => void
 
   // Tour Actions
   setHasCompletedTour: () => void
@@ -198,6 +202,7 @@ export const useLayoutStore = create<LayoutState>()(
 
       uiBuilderOpen: false,
       uiComponents: [],
+      browserSessionActive: false,
 
       leftPanelMode: 'explorer',
       rightPanelMode: 'telemetry',
@@ -294,6 +299,7 @@ export const useLayoutStore = create<LayoutState>()(
 
       setCanvasContent: (content) => set({ canvasContent: content }),
       setCanvasUrl: (url) => set({ canvasUrl: url }),
+      setBrowserSessionActive: (active) => set({ browserSessionActive: active }),
 
       setHasCompletedTour: () => set({ hasCompletedTour: true }),
       setTourHighlight: (id) => set({ tourHighlight: id }),

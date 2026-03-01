@@ -296,7 +296,7 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setView('designer')}
+            onClick={() => { setView('designer'); setCenterMode('canvas') }}
             className={`p-2 transition-all ${activeView === 'designer' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'designer' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Designer"
           >

@@ -5,6 +5,7 @@ import { BinaryBlocker } from './BinaryBlocker'
 import { UICanvas } from './UICanvas'
 import { UIBuilderCanvas } from './ui-builder/UIBuilderCanvas'
 import { useLayoutStore } from '../../store/layout'
+import { classifyFile } from '../../utils/fileUtils'
 
 interface CenterPanelRouterProps {
   filePath?: string | null
@@ -23,7 +24,7 @@ export function CenterPanelRouter({
     centerMode, setCenterMode, 
     canvasContent, canvasUrl,
     activeFilePath, activeFileContent, activeFileLanguage,
-    setActiveFileContent
+    setActiveFileContent, browserSessionActive
   } = useLayoutStore()
 
   const filePath = activeFilePath ?? propFilePath ?? null
@@ -34,28 +35,40 @@ export function CenterPanelRouter({
     : (propOnChange ?? (() => {}))
 
   // When language or filePath changes, reset centerMode to a sensible default
-  // EXCEPT if we are in builder mode, keep it.
+  // EXCEPT if we are in builder or canvas mode, keep it.
   useEffect(() => {
-    if (centerMode === 'builder') return;
+    if (centerMode === 'builder' || centerMode === 'canvas') return;
     if (!filePath) return;
 
-    if (language === 'svg') setCenterMode('image')
-    else if (language === 'image') setCenterMode('image')
+    if (language === 'svg') setCenterMode('canvas')
+    else if (language === 'image') setCenterMode('canvas')
     else if (language === 'binary') setCenterMode('binary')
     else setCenterMode('code')
   }, [language, filePath, setCenterMode, centerMode])
+
+  // AC-2 Designer Canvas Surface
+  if (centerMode === 'canvas') {
+    if (browserSessionActive) {
+      return <div className="flex-1 flex items-center justify-center bg-zinc-900 font-mono text-zinc-400">Playwright: active</div>
+    }
+
+    if (filePath && (classifyFile(filePath) === 'canvas' || classifyFile(filePath) === 'svg')) {
+       return <ImageViewer filePath={filePath} isSvg={classifyFile(filePath) === 'svg'} onEditSource={classifyFile(filePath) === 'svg' ? () => setCenterMode('code') : undefined} />
+    }
+
+    if (canvasContent || canvasUrl) {
+      return <UICanvas />
+    }
+
+    return <UIBuilderCanvas />
+  }
 
   // Builder mode takes precedence if active
   if (centerMode === 'builder') {
     return <UIBuilderCanvas />
   }
 
-  // Agent preview takes precedence when content/url is pushed via IPC
-  if (canvasContent || canvasUrl) {
-    return <UICanvas />
-  }
-
-  if (!filePath && !canvasContent && !canvasUrl) {
+  if (!filePath) {
     return (
       <div className="flex-1 flex items-center justify-center bg-copernicus-bg font-mono text-[10px] text-zinc-600">
         NO_FILE_SELECTED
@@ -67,9 +80,6 @@ export function CenterPanelRouter({
   switch (language) {
     case 'binary':
       return <BinaryBlocker filePath={filePath} />
-
-    case 'image':
-      return <ImageViewer filePath={filePath} />
 
     case 'svg':
       // SVG allows switching between Image view and Code view
