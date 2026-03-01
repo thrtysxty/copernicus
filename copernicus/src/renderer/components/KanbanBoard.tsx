@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { Plus, X, Crown, Lock, RotateCcw, Minimize2, Loader2, Send } from 'lucide-react'
+import { Plus, X, Crown, Lock, Loader2, Send } from 'lucide-react'
 import { StoryDetail } from './planning/StoryDetail'
 import { EpicBadge } from './planning/EpicBadge'
 
@@ -54,7 +54,7 @@ export function KanbanBoard() {
   const [stories, setStories] = useState<Story[]>([])
   const [julesSessions, setJulesSessions] = useState<Record<string, JulesSession>>({})
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
-  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, setColumns, rotateColumn } = useLayoutStore()
+  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, spotlightLane, setSpotlightLane } = useLayoutStore()
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
   const [newTitle, setNewTitle] = useState('')
   const [newEpic, setNewEpic] = useState('')
@@ -136,20 +136,6 @@ export function KanbanBoard() {
   }
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault()
-
-  // ── Column Actions ───────────────────────────────────────────────────────
-  const toggleColumnMinimize = (columnId: string) => {
-    setColumns(columns.map(col =>
-      col.id === columnId ? { ...col, minimized: !col.minimized } : col
-    ))
-  }
-
-  // ── Migration guard — reset to 9-lane DEFAULT_COLUMNS for existing users ──
-  useEffect(() => {
-    if (!Array.isArray(columns) || columns.length < 9) {
-      import('../store/layout').then(({ DEFAULT_COLUMNS }) => setColumns(DEFAULT_COLUMNS))
-    }
-  }, [])
 
   // ── Creation ─────────────────────────────────────────────────────────────
   const handleCreate = async () => {
@@ -271,17 +257,20 @@ export function KanbanBoard() {
           const colStories = filterStories(stories.filter(s => s.status === col.status))
             .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 4) - (PRIORITY_ORDER[b.priority] ?? 4))
 
-          if (col.minimized) {
+          const isSpotlit = spotlightLane === col.id
+          const isCollapsed = spotlightLane !== null && !isSpotlit
+
+          if (isCollapsed) {
             return (
               <div
                 key={col.id}
-                className={`w-10 h-full flex flex-col rounded-lg border border-white/5 bg-black/40 transition-all duration-300 cursor-pointer hover:bg-black/60 group/column`}
-                onClick={() => toggleColumnMinimize(col.id)}
+                className="w-10 h-full flex flex-col rounded-lg border border-white/5 bg-black/40 transition-all duration-300 cursor-pointer hover:bg-black/60 group/column overflow-hidden"
+                onClick={() => setSpotlightLane(null)}
               >
                  <div className={`h-0.5 w-full ${col.accent} opacity-40`} />
                  <div className="flex-1 flex items-center justify-center">
                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                     {col.id}
+                     {col.label}
                    </span>
                  </div>
                  <div className="h-9 flex items-center justify-center border-t border-white/5">
@@ -294,7 +283,7 @@ export function KanbanBoard() {
           return (
             <div
               key={col.id}
-              className={`min-w-[240px] w-64 h-full flex flex-col rounded-lg border shadow-sm ${col.color} transition-all duration-300 relative group/column overflow-hidden`}
+              className={`h-full flex flex-col rounded-lg border shadow-sm ${col.color} transition-all duration-300 relative group/column overflow-hidden ${isSpotlit ? 'flex-1' : 'min-w-[240px] w-64 flex-shrink-0'}`}
               onDrop={e => handleDrop(e, col.status)}
               onDragOver={handleDragOver}
             >
@@ -303,41 +292,16 @@ export function KanbanBoard() {
 
               {/* Column header */}
               <div className="h-9 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 flex-shrink-0 gap-2">
-                <span className="font-bold text-[10px] text-zinc-400 uppercase tracking-widest truncate flex-1">{col.id}</span>
+                <span className="font-bold text-[10px] text-zinc-400 uppercase tracking-widest truncate flex-1">{col.label}</span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <span className="text-[9px] text-zinc-600 mr-1">{colStories.length}</span>
-                  <div className="opacity-0 group-hover/column:opacity-100 transition-opacity duration-150 flex items-center gap-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); rotateColumn(col.id) }}
-                      className="p-1 rounded hover:bg-white/10 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
-                      title="Move Column Right"
-                    >
-                      <RotateCcw size={11} />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); toggleColumnMinimize(col.id) }}
-                      className="p-1 rounded hover:bg-white/10 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
-                      title="Collapse Column"
-                    >
-                      <Minimize2 size={11} />
-                    </button>
-                  </div>
-                  {col.status === 'READY' && (
-                    <button
-                      onClick={() => setCreation({ phase: 'picking' })}
-                      className="p-1 rounded hover:bg-white/10 text-zinc-500 hover:text-copernicus-phosphor transition-all"
-                      title="New card"
-                    >
-                      <Plus size={13} />
-                    </button>
-                  )}
                 </div>
               </div>
 
               <div className="flex-1 p-2.5 space-y-2.5 overflow-y-auto scrollbar-none">
 
-                {/* Creation picker / form — only in Blueprint column */}
-                {col.status === 'READY' && creation.phase !== 'idle' && (
+                {/* Creation picker / form — only in Ready to Build column */}
+                {col.id === 'ready-to-build' && creation.phase !== 'idle' && (
                   <motion.div
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -453,6 +417,7 @@ export function KanbanBoard() {
                         : 'border-white/5'
                     }`}
                     onClick={() => {
+                      setSpotlightLane(col.id)
                       setActiveStoryId(story.id)
                       setDrawerStory(story.id)
                     }}
@@ -532,6 +497,16 @@ export function KanbanBoard() {
                     </div>
                   </motion.div>
                 )})}
+
+                {col.id === 'ready-to-build' && (
+                  <button
+                    onClick={() => setCreation({ phase: 'picking' })}
+                    className="w-full py-2 rounded border border-dashed border-white/10 text-zinc-500 hover:text-copernicus-phosphor hover:border-copernicus-phosphor/30 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">New Story</span>
+                  </button>
+                )}
               </div>
             </div>
           )

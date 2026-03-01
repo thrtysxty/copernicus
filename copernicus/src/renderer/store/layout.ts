@@ -6,15 +6,15 @@ export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'o
 export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban'
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
-  { id: 'Planning',    status: 'PLANNING',    color: 'bg-slate-500/5 border-slate-500/20',   accent: 'bg-slate-500' },
-  { id: 'UI Design',   status: 'DESIGN',      color: 'bg-purple-500/5 border-purple-500/20', accent: 'bg-purple-500' },
-  { id: 'Blueprint',   status: 'READY',       color: 'bg-blue-500/5 border-blue-500/20',     accent: 'bg-blue-500' },
-  { id: 'Development', status: 'IN PROGRESS', color: 'bg-yellow-500/5 border-yellow-500/20', accent: 'bg-yellow-500' },
-  { id: 'Testing',     status: 'TESTING',     color: 'bg-orange-500/5 border-orange-500/20', accent: 'bg-orange-500' },
-  { id: 'QA / Review', status: 'REVIEW',      color: 'bg-amber-500/5 border-amber-500/20',   accent: 'bg-amber-500' },
-  { id: 'Documenting', status: 'DOCUMENTING', color: 'bg-cyan-500/5 border-cyan-500/20',     accent: 'bg-cyan-500' },
-  { id: 'Staging',     status: 'STAGING',     color: 'bg-teal-500/5 border-teal-500/20',     accent: 'bg-teal-500' },
-  { id: 'Done',        status: 'COMPLETE',    color: 'bg-green-500/5 border-green-500/20',   accent: 'bg-green-500' },
+  { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/5 border-slate-500/20',   accent: 'bg-slate-500' },
+  { id: 'storyboarding',  status: 'STORYBOARDING',  label: 'Storyboarding',   color: 'bg-purple-500/5 border-purple-500/20', accent: 'bg-purple-500' },
+  { id: 'sprint-planning',status: 'SPRINT_PLANNING', label: 'Sprint Planning', color: 'bg-indigo-500/5 border-indigo-500/20', accent: 'bg-indigo-500' },
+  { id: 'development',    status: 'IN_PROGRESS',     label: 'Development',     color: 'bg-yellow-500/5 border-yellow-500/20', accent: 'bg-yellow-500' },
+  { id: 'testing',        status: 'TESTING',         label: 'Testing',         color: 'bg-orange-500/5 border-orange-500/20', accent: 'bg-orange-500' },
+  { id: 'qa',             status: 'QA',              label: 'QA',              color: 'bg-amber-500/5 border-amber-500/20',   accent: 'bg-amber-500' },
+  { id: 'documenting',    status: 'DOCUMENTING',     label: 'Documenting',     color: 'bg-cyan-500/5 border-cyan-500/20',     accent: 'bg-cyan-500' },
+  { id: 'ready-to-build', status: 'READY',           label: 'Ready to Build',  color: 'bg-teal-500/5 border-teal-500/20',     accent: 'bg-teal-500' },
+  { id: 'done',           status: 'COMPLETE',        label: 'Done',            color: 'bg-green-500/5 border-green-500/20',   accent: 'bg-green-500' },
 ]
 
 export const PHOSPHOR_PRESETS = {
@@ -31,9 +31,9 @@ export type CenterMode = 'code' | 'image' | 'binary' | 'preview' | 'builder'
 export interface KanbanColumn {
   id: string
   status: string
+  label: string
   color: string
   accent: string
-  minimized?: boolean
 }
 
 interface AgentTelemetry {
@@ -54,6 +54,7 @@ interface LayoutState {
   activeView: StoryboardView
   isFlipped: Record<string, boolean>
   spotlightPane: PaneId | null
+  spotlightLane: string | null
   activeStoryId: string | null
   drawerStoryId: string | null
   phosphorColor: PhosphorColor
@@ -104,6 +105,7 @@ interface LayoutState {
   setView: (view: StoryboardView) => void
   toggleFlip: (paneId: string) => void
   setSpotlight: (paneId: PaneId | null) => void
+  setSpotlightLane: (id: string | null) => void
   setActiveStoryId: (id: string | null) => void
   setDrawerStory: (id: string | null) => void
   setTelemetry: (data: Partial<LayoutState>) => void
@@ -114,7 +116,6 @@ interface LayoutState {
   setPhosphorColor: (color: PhosphorColor) => void
   setReviewEnabled: (enabled: boolean) => void
   setColumns: (columns: KanbanColumn[]) => void
-  rotateColumn: (id: string) => void
   setActiveWorkflowTemplate: (id: string | null) => void
   setCenterMode: (mode: CenterMode) => void
   setActiveFilePath: (path: string | null) => void
@@ -149,6 +150,7 @@ export const useLayoutStore = create<LayoutState>()(
         chat: false,
       },
       spotlightPane: null,
+      spotlightLane: null,
       activeStoryId: null,
       drawerStoryId: null,
       phosphorColor: 'green',
@@ -212,6 +214,8 @@ export const useLayoutStore = create<LayoutState>()(
 
       setSpotlight: (paneId) => set({ spotlightPane: paneId }),
 
+      setSpotlightLane: (id) => set({ spotlightLane: id }),
+
       setActiveStoryId: (id) => set({ activeStoryId: id }),
 
       setDrawerStory: (id) => set({ drawerStoryId: id }),
@@ -238,15 +242,6 @@ export const useLayoutStore = create<LayoutState>()(
       setPhosphorColor: (color) => set({ phosphorColor: color }),
       setReviewEnabled: (enabled) => set({ reviewEnabled: enabled }),
       setColumns: (columns) => set({ columns }),
-      rotateColumn: (id) => set((state) => {
-        const cols = [...state.columns]
-        const idx = cols.findIndex(c => c.id === id)
-        if (idx === -1) return state
-        const [col] = cols.splice(idx, 1)
-        const nextIdx = (idx + 1) % (cols.length + 1)
-        cols.splice(nextIdx, 0, col)
-        return { columns: cols }
-      }),
       setActiveWorkflowTemplate: (id) => set({ activeWorkflowTemplate: id }),
       setCenterMode: (mode) => set({ centerMode: mode }),
       setActiveFilePath: (path) => set({ activeFilePath: path }),
@@ -284,6 +279,17 @@ export const useLayoutStore = create<LayoutState>()(
     }),
     {
       name: 'copernicus-layout-storage',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        if (
+          !state.columns ||
+          state.columns.length !== 9 ||
+          state.columns.some(c => ['blueprint', 'ui-design', 'staging'].includes(c.id))
+        ) {
+          state.columns = DEFAULT_COLUMNS
+        }
+      }
     }
   )
 )
+
