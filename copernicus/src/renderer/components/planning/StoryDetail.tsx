@@ -140,9 +140,9 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
             <button
               onClick={handleOpenInEditor}
               className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-zinc-300 border border-zinc-800 transition-all uppercase"
-              title="Expand to full-pane editor"
+              title="Open Inspector"
             >
-              <ExternalLink size={9} /> Editor
+              <ExternalLink size={9} /> Inspect
             </button>
           )}
         </div>

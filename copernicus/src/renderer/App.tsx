@@ -83,7 +83,14 @@ export default function App() {
     removeTerminal,
     setTerminalBusy,
     uiBuilderOpen,
-    toggleUIBuilder
+    toggleUIBuilder,
+    activeFilePath,
+    activeFileContent,
+    activeFileLanguage,
+    setActiveFilePath,
+    setActiveFileContent,
+    setActiveFileLanguage,
+    setCenterMode,
   } = useLayoutStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -143,6 +150,10 @@ export default function App() {
       setCommandPaletteOpen(true)
     })
 
+    const removeSetViewListener = (window as any).ipcRenderer.on('layout:set-view', (_e: any, viewId: any) => {
+      setView(viewId)
+    })
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey && e.key === 'p') { e.preventDefault(); setCommandPaletteOpen(true) }
     }
@@ -163,9 +174,10 @@ export default function App() {
       removeSpotListener()
       removeUiBuilderListener()
       removePaletteListener()
+      removeSetViewListener()
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder])
+  }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView])
 
   // Touch Bar Telemetry Update
   useEffect(() => {
@@ -204,42 +216,43 @@ export default function App() {
             <span className="text-copernicus-phosphor font-bold text-xs">C</span>
           </div>
 
+          {/* §1.4 VT selection block — activity bar active states */}
           <button
-            onClick={() => setView('blueprint')}
-            className={`p-2 rounded transition-colors ${activeView === 'blueprint' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="Blueprint"
+            onClick={() => setView('planner')}
+            className={`p-2 transition-colors ${activeView === 'planner' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            title="Planner"
           >
             <FolderOpen size={18} />
           </button>
 
           <button
-            onClick={() => setView('engine-room')}
-            className={`p-2 rounded transition-colors ${activeView === 'engine-room' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="Engine Room"
+            onClick={() => setView('editor')}
+            className={`p-2 transition-colors ${activeView === 'editor' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            title="Editor"
           >
             <Monitor size={18} />
           </button>
 
           <button
-            onClick={() => setView('studio')}
-            className={`p-2 rounded transition-colors ${activeView === 'studio' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="Studio"
+            onClick={() => setView('designer')}
+            className={`p-2 transition-colors ${activeView === 'designer' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            title="Designer"
           >
             <Cpu size={18} />
           </button>
 
           <button
-            onClick={() => setView('workflow')}
-            className={`p-2 rounded transition-colors ${activeView === 'workflow' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="Workflow"
+            onClick={() => setView('orchestrator')}
+            className={`p-2 transition-colors ${activeView === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            title="Orchestrator"
           >
             <GitBranch size={18} />
           </button>
 
           <button
-            onClick={() => setView('capex')}
-            className={`p-2 rounded transition-colors ${activeView === 'capex' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="CAPEX"
+            onClick={() => setView('reporter')}
+            className={`p-2 transition-colors ${activeView === 'reporter' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            title="Reporter"
           >
             <BarChart2 size={18} />
           </button>
@@ -247,7 +260,7 @@ export default function App() {
           <div className="flex-1" />
 
           <button
-            onClick={() => (window as any).ipcRenderer.invoke('app:open-external', 'https://github.com')}
+            onClick={() => invoke('app:open-external', 'https://github.com')}
             className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors"
             title="GitHub"
           >
@@ -256,7 +269,7 @@ export default function App() {
 
           <button
             onClick={() => setSettingsOpen(true)}
-            className={`p-2 rounded transition-colors ${settingsOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`p-2 transition-colors ${settingsOpen ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
             title="Settings"
           >
             <Settings size={18} />
@@ -266,12 +279,13 @@ export default function App() {
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-hidden relative">
           <header className="h-8 flex items-center justify-between px-4 pl-20 border-b border-copernicus-steel bg-[#050505] flex-shrink-0 draggable">
-            <nav className="flex gap-6 h-full items-center no-drag">
-              {(['blueprint', 'studio', 'engine-room'] as const).map(view => (
+            {/* §1.4 VT selection block — header nav active states */}
+            <nav className="flex h-full items-center no-drag">
+              {(['planner', 'designer', 'editor'] as const).map(view => (
                 <button
                   key={view}
                   onClick={() => setView(view)}
-                  className={`text-[10px] font-mono uppercase tracking-[0.2em] h-full border-b-2 transition-all ${activeView === view ? 'border-copernicus-phosphor text-copernicus-phosphor' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+                  className={`text-[10px] font-mono uppercase tracking-[0.2em] h-full px-3 transition-all ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
                   {view.replace('-', '_')}
                 </button>
@@ -289,11 +303,11 @@ export default function App() {
           </header>
 
           <div className="flex-1 flex overflow-hidden">
-            {activeView === 'blueprint' && <KanbanBoard />}
-            {activeView === 'capex' && <CapexDashboard />}
-            {activeView === 'workflow' && <WorkflowCanvas />}
+            {activeView === 'planner' && <KanbanBoard />}
+            {activeView === 'reporter' && <CapexDashboard />}
+            {activeView === 'orchestrator' && <WorkflowCanvas />}
 
-            {(activeView === 'studio' || activeView === 'engine-room') && (
+            {(activeView === 'designer' || activeView === 'editor') && (
               <>
                 {/* Sidebar */}
                 <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
@@ -317,10 +331,10 @@ export default function App() {
                             isBuilderActive={uiBuilderOpen}
                           />
                           <CenterPanelRouter
-                            filePath={null}
-                            content=""
-                            language="typescript"
-                            onChange={() => {}}
+                            filePath={activeFilePath}
+                            content={activeFileContent}
+                            language={activeFileLanguage}
+                            onChange={(v) => setActiveFileContent(v ?? '')}
                           />
                         </div>
                       }
@@ -366,7 +380,13 @@ export default function App() {
         <CommandPalette
           mode="all"
           onClose={() => setCommandPaletteOpen(false)}
-          onFileOpen={() => {}}
+          onFileOpen={(path, content, language) => {
+            setActiveFilePath(path)
+            setActiveFileContent(content)
+            setActiveFileLanguage(language)
+            setCenterMode('code')
+            setCommandPaletteOpen(false)
+          }}
           rootPath={workingDir}
         />
       )}

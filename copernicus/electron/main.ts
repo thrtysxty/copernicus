@@ -29,7 +29,6 @@ import { browserSession } from './browser-session'
 import { dispatchJulesSession } from './jules/dispatcher'
 import { julesMonitor } from './jules/monitor'
 import { lspManager } from './lsp/lsp-manager'
-import './interop/dispatcher' // Initialize Interop Dispatcher
 
 // The built directory structure
 //
@@ -140,7 +139,7 @@ export function notifyWorkspaceChanged(window: BrowserWindow | null, newPath: st
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 const authManager = new AuthManager()
-new GithubManager(authManager)
+new GithubManager(authManager, handleIpc)
 const modelRegistry = new ModelRegistry()
 const settingsStore = new SettingsStore()
 export const storiesManager = new StoriesManager(os.homedir(), stateLedger)
@@ -573,7 +572,7 @@ function registerIpcHandlers() {
   }));
 
   // Security Handlers
-  registerSecurityHandlers(ipcMain, settingsStore);
+  registerSecurityHandlers(ipcMain, settingsStore, handleIpc);
 
   // Git Handlers
   ipcMain.handle('git:branch', () => handleIpc(async () => {
@@ -719,6 +718,25 @@ function registerIpcHandlers() {
       GROUP BY week ORDER BY week ASC
     `).all(weeks)
   ))
+
+  // Model Call Ledger — AC-3 (Story 178)
+  ipcMain.handle('ledger:session-stats', (_e, session_id: string) =>
+    handleIpc(() => stateLedger.getSessionStats(session_id))
+  )
+  ipcMain.handle('ledger:recent-calls', (_e, limit = 100, panel_id?: string) =>
+    handleIpc(() => stateLedger.getRecentCalls(limit, panel_id))
+  )
+  ipcMain.handle('ledger:all-time-cost', () =>
+    handleIpc(() => stateLedger.getAllTimeCost())
+  )
+
+  // Story scaffold — invoked from command palette
+  ipcMain.handle('story:scaffold', (_e, title: string, type = 'Feature') =>
+    handleIpc(() => storiesManager.createStory({ title: title?.trim() || 'New Story', type, epic: '', priority: 'P2' }))
+  )
+
+  // Splash ready — renderer signals splash/wizard complete
+  ipcMain.handle('splash-ready', (_e) => handleIpc(() => ({ ready: true })))
 
   // Makefile Handlers
   ipcMain.handle('makefile:list', () => handleIpc(() => parseMakefile(fsManager.getRootPath())))

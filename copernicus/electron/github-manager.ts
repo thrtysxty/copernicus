@@ -1,11 +1,15 @@
 import { ipcMain } from 'electron';
 import { AuthManager } from './auth-manager';
 
+type HandleIpc = <T>(fn: () => T | Promise<T>) => Promise<{ ok: true; data: T } | { ok: false; error: string }>
+
 export class GithubManager {
   private authManager: AuthManager;
+  private handleIpc: HandleIpc;
 
-  constructor(authManager: AuthManager) {
+  constructor(authManager: AuthManager, handleIpc: HandleIpc) {
     this.authManager = authManager;
+    this.handleIpc = handleIpc;
     this.registerHandlers();
   }
 
@@ -34,36 +38,19 @@ export class GithubManager {
   }
 
   private registerHandlers() {
-    ipcMain.handle('github:list-repos', async () => {
-      try {
-        return await this.fetchGithub('/user/repos?sort=updated&per_page=50');
-      } catch (error: any) {
-        return { error: error.message };
-      }
-    });
+    ipcMain.handle('github:list-repos', () =>
+      this.handleIpc(() => this.fetchGithub('/user/repos?sort=updated&per_page=50'))
+    );
 
-    ipcMain.handle('github:create-repo', async (_, { name, description, isPrivate }: { name: string, description: string, isPrivate: boolean }) => {
-      try {
-        return await this.fetchGithub('/user/repos', {
-          method: 'POST',
-          body: JSON.stringify({
-            name,
-            description,
-            private: isPrivate,
-            auto_init: true
-          }),
-        });
-      } catch (error: any) {
-        return { error: error.message };
-      }
-    });
+    ipcMain.handle('github:create-repo', (_: any, { name, description, isPrivate }: { name: string, description: string, isPrivate: boolean }) =>
+      this.handleIpc(() => this.fetchGithub('/user/repos', {
+        method: 'POST',
+        body: JSON.stringify({ name, description, private: isPrivate, auto_init: true }),
+      }))
+    );
 
-    ipcMain.handle('github:user', async () => {
-      try {
-        return await this.fetchGithub('/user');
-      } catch (error: any) {
-        return { error: error.message };
-      }
-    });
+    ipcMain.handle('github:user', () =>
+      this.handleIpc(() => this.fetchGithub('/user'))
+    );
   }
 }

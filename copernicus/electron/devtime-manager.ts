@@ -1,5 +1,4 @@
 import Database from 'better-sqlite3';
-import { ipcMain } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -55,18 +54,6 @@ export class DevtimeManager {
     } catch (e) {
       // Expected if file doesn't exist or is invalid
     }
-  }
-
-  public registerHandlers() {
-    ipcMain.handle('devtime:start', (_event, data) => this.startSession(data));
-    ipcMain.handle('devtime:status', () => ({
-      session: this.activeSession,
-      total: this.getTotalMonthValue()
-    }));
-    ipcMain.handle('devtime:close', (_event, data) => this.closeSession(data));
-    ipcMain.handle('devtime:defaults', () => this.getDefaults());
-    ipcMain.handle('devtime:report', () => this.getReport());
-    ipcMain.handle('devtime:list-stories', (_event, repoPath: string) => this.listStories(repoPath));
   }
 
   public startSession(data: any, isRecovery = false) {

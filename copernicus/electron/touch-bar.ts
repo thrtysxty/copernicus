@@ -1,6 +1,8 @@
 import { TouchBar, ipcMain, BrowserWindow } from 'electron'
 import log from 'electron-log'
 import { TouchBarConfig, DEFAULT_TOUCH_BAR_CONFIG } from './touch-bar-types'
+import { ptyManager } from './pty-manager'
+import { fsManager } from './fs-manager'
 
 const {
   TouchBarButton, TouchBarLabel, TouchBarSpacer
@@ -14,11 +16,11 @@ export function createTouchBar(window: BrowserWindow, config: TouchBarConfig = D
   // ── 1. Storyboard Segment ──────────────────────────────────────────────────
   // All 5 views; active view gets phosphor background
   const VIEWS = [
-    { label: 'BLUEPRINT', id: 'blueprint'  },
-    { label: 'ENGINE',    id: 'engine-room'},
-    { label: 'STUDIO',    id: 'studio'     },
-    { label: 'WORKFLOW',  id: 'workflow'   },
-    { label: 'CAPEX',     id: 'capex'      },
+    { label: 'PLANNER',  id: 'planner'  },
+    { label: 'EDITOR',   id: 'editor'   },
+    { label: 'DESIGNER', id: 'designer' },
+    { label: 'ORCHESTRATOR', id: 'orchestrator' },
+    { label: 'REPORTER',     id: 'reporter'     },
   ] as const
 
   const viewBtns = VIEWS.map(v =>
@@ -121,7 +123,5 @@ function runMakeTarget(target: string, window: BrowserWindow) {
   const tabLabel = target.toUpperCase()
   window.webContents.send('terminal:spawn', { id: tabId, label: tabLabel, ephemeral: true })
 
-  const { ptyManager } = require('./pty-manager')
-  const { fsManager }  = require('./fs-manager')
   ptyManager.createEphemeral(tabId, `make ${target}`, fsManager.getRootPath(), window)
 }

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UIComponent } from '../components/Editor/ui-builder/types'
 
-export type StoryboardView = 'blueprint' | 'studio' | 'engine-room' | 'capex' | 'workflow'
+export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator'
 export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban'
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
@@ -143,13 +143,13 @@ interface LayoutState {
 export const useLayoutStore = create<LayoutState>()(
   persist(
     (set) => ({
-      activeView: 'engine-room',
+      activeView: 'editor',
       isFlipped: {
         sidebar: false,
         chat: false,
       },
       spotlightPane: null,
-      activeStoryId: 'STORY_089',
+      activeStoryId: null,
       drawerStoryId: null,
       phosphorColor: 'green',
       reviewEnabled: false,

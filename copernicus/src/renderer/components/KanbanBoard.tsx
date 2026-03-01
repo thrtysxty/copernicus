@@ -306,7 +306,7 @@ export function KanbanBoard() {
                 <span className="font-bold text-[10px] text-zinc-400 uppercase tracking-widest truncate flex-1">{col.id}</span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <span className="text-[9px] text-zinc-600 mr-1">{colStories.length}</span>
-                  <div className="overflow-hidden max-w-0 group-hover/column:max-w-[50px] transition-[max-width] duration-150 flex items-center gap-1">
+                  <div className="opacity-0 group-hover/column:opacity-100 transition-opacity duration-150 flex items-center gap-1">
                     <button
                       onClick={(e) => { e.stopPropagation(); rotateColumn(col.id) }}
                       className="p-1 rounded hover:bg-white/10 text-zinc-500 hover:text-copernicus-phosphor transition-colors"

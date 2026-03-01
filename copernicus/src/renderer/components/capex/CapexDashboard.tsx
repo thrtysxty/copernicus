@@ -83,14 +83,7 @@ export const CapexDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DashTab>('financial')
   const [rate, setRate] = useState(65)
 
-  // Load wizard-configured rate from settings on mount
-  useEffect(() => {
-    invoke<any>('settings:load').then(result => {
-      const s = result?.data ?? result
-      const r = s?.capex?.rate
-      if (typeof r === 'number' && r > 0) setRate(r)
-    }).catch(() => {})
-  }, [invoke])
+  // (rate loaded in the main mount effect below)
 
   // Financial
   const [report, setReport]               = useState<CapexReportRow[]>([])
@@ -167,7 +160,11 @@ export const CapexDashboard: React.FC = () => {
   }
 
   useEffect(() => {
-    invoke<any>('settings:load').then(raw => { const s = (raw as any)?.data ?? raw; if (s?.developerRate) setRate(s.developerRate) })
+    invoke<any>('settings:load').then(raw => {
+      const s = (raw as any)?.data ?? raw
+      const r = s?.capex?.rate ?? s?.developerRate
+      if (typeof r === 'number' && r > 0) setRate(r)
+    }).catch(() => {})
     loadedTabs.current.add('financial')
     fetchTabData('financial')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
