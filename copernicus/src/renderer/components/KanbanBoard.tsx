@@ -16,6 +16,7 @@ interface Story {
   type: string
   epic: string | null
   model: string | null
+  workflowId?: string | null
   date: string
   blocked: boolean
 }
@@ -54,6 +55,7 @@ export function KanbanBoard() {
   const invoke = useIpcError()
   const [stories, setStories] = useState<Story[]>([])
   const [julesSessions, setJulesSessions] = useState<Record<string, JulesSession>>({})
+  const [workflowStatuses, setWorkflowStatuses] = useState<Record<string, string>>({})
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
   const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, spotlightLane, setSpotlightLane } = useLayoutStore()
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
@@ -105,9 +107,24 @@ export function KanbanBoard() {
       fetchJulesSessions()
     })
 
+    const removeWorkflowUpdate = window.ipcRenderer.on('workflow:status-update', () => {
+      invoke<any>('workflow:status').then(result => {
+        if (result?.data?.context?.storyId) {
+          setWorkflowStatuses(prev => ({ ...prev, [result.data.context.storyId]: result.data.state }))
+        }
+      }).catch(() => {})
+    })
+
+    invoke<any>('workflow:status').then(result => {
+      if (result?.data?.context?.storyId) {
+        setWorkflowStatuses(prev => ({ ...prev, [result.data.context.storyId]: result.data.state }))
+      }
+    }).catch(() => {})
+
     return () => {
       removeStoriesUpdate()
       removeJulesUpdate()
+      removeWorkflowUpdate()
     }
   }, [invoke, fetchJulesSessions])
 
@@ -457,6 +474,14 @@ export function KanbanBoard() {
                     </div>
 
                     {/* Epic label */}
+                    {workflowStatuses[story.id] === 'RUNNING' && (
+                      <div className="mt-1">
+                        <span className="text-[8px] text-amber-400 animate-pulse font-bold tracking-widest">
+                          ● RUNNING
+                        </span>
+                      </div>
+                    )}
+
                     <EpicBadge epicId={story.epic} stories={stories} />
 
                     {/* Badges row */}

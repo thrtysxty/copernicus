@@ -14,6 +14,7 @@ interface Story {
   type: string
   epic: string | null
   model: string | null
+  workflowId?: string | null
   date: string
   blocked: boolean
 }
@@ -45,6 +46,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const [isDispatchingGemini, setIsDispatchingGemini] = useState(false)
   const [geminiError, setGeminiError] = useState<string | null>(null)
   const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
+  const [workflowTemplates, setWorkflowTemplates] = useState<{ id: string, name: string }[]>([])
+  const [workflowStatus, setWorkflowStatus] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeBtnRef = useRef<HTMLButtonElement>(null)
@@ -62,7 +65,35 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
         setModelOptions(['(unassigned)', ...models.map(m => m.id), 'gemini', 'jules', 'human'])
       }
     }).catch(() => {})
+
+    invoke<any>('workflow:list-templates').then(result => {
+      if (result?.ok && Array.isArray(result.data)) {
+        setWorkflowTemplates(result.data)
+      }
+    }).catch(() => {})
   }, [invoke])
+
+  useEffect(() => {
+    invoke<any>('workflow:status').then(result => {
+      if (result?.ok && result.data?.context?.storyId === storyId) {
+        setWorkflowStatus(result.data.state)
+      }
+    }).catch(() => {})
+
+    const removeListener = window.ipcRenderer.on('workflow:status-update', () => {
+      invoke<any>('workflow:status').then(result => {
+        if (result?.ok) {
+          if (result.data?.context?.storyId === storyId) {
+            setWorkflowStatus(result.data.state)
+          } else if (workflowStatus === 'RUNNING') {
+            setWorkflowStatus(null)
+          }
+        }
+      }).catch(() => {})
+    })
+
+    return () => removeListener()
+  }, [invoke, storyId, workflowStatus])
 
   const handleSetField = async (field: string, value: string) => {
     try {
@@ -318,6 +349,45 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
               <option key={ep.id} value={ep.id}>{ep.title}</option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <div>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Workflow</p>
+            <select
+              value={story.workflowId ?? '— none —'}
+              onChange={e => handleSetField('workflowId', e.target.value)}
+              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
+            >
+              <option value="— none —">— none —</option>
+              {workflowTemplates.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-3">
+            <button
+              onClick={() => {
+                if (workflowStatus === 'RUNNING') {
+                  invoke('workflow:reset').then(() => setWorkflowStatus(null)).catch(() => {})
+                } else {
+                  invoke('workflow:run', { templateId: story.workflowId, context: { storyId, storyTitle: story.title } }).catch(() => {})
+                  setWorkflowStatus('RUNNING')
+                }
+              }}
+              disabled={!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status)}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status) ? 'opacity-50 cursor-not-allowed border-zinc-700 text-zinc-500' : 'border-copernicus-phosphor text-copernicus-phosphor hover:bg-copernicus-phosphor hover:text-[#050505]'}`}
+            >
+              {workflowStatus === 'RUNNING' ? '⏹ Stop' : '▶ Run'}
+            </button>
+          </div>
+
+          {workflowStatus && workflowStatus !== 'IDLE' && (
+            <div className={`mt-3 text-[10px] font-medium px-2 py-0.5 rounded border ${workflowStatus === 'RUNNING' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : workflowStatus === 'COMPLETE' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+              ● {workflowStatus}
+            </div>
+          )}
         </div>
 
         <div>

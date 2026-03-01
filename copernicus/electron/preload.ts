@@ -123,6 +123,8 @@ const LISTEN_CHANNELS = new Set([
   'lsp:diagnostics-update',
   // Command Center (Story 184)
   'command:telemetry-update',
+  // Workflow engine state push (Story 186)
+  'workflow:status-update',
 ])
 
 // ---------------------------------------------------------------------------

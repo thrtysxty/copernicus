@@ -49,6 +49,7 @@ export interface StoryRecord {
   assigned_to?: string
   blocked_by?: string[]   // deserialized from JSON
   blocks?: string[]       // deserialized from JSON
+  workflow_id?: string
   body_md: string
   file_path: string
   date?: string
@@ -267,6 +268,7 @@ export class StateLedger {
       'ALTER TABLE stories ADD COLUMN assigned_to TEXT',
       'ALTER TABLE stories ADD COLUMN blocked_by TEXT DEFAULT \'[]\'',
       'ALTER TABLE stories ADD COLUMN blocks TEXT DEFAULT \'[]\'',
+      'ALTER TABLE stories ADD COLUMN workflow_id TEXT',
       'ALTER TABLE stories ADD COLUMN body_md TEXT NOT NULL DEFAULT \'\'',
       'ALTER TABLE stories ADD COLUMN file_path TEXT NOT NULL DEFAULT \'\'',
       'ALTER TABLE stories ADD COLUMN date TEXT',
@@ -348,9 +350,9 @@ export class StateLedger {
     this.db.prepare(`
       INSERT INTO stories
         (id, slug, title, status, priority, type, epic, assigned_to,
-         blocked_by, blocks, body_md, file_path, date,
+         blocked_by, blocks, workflow_id, body_md, file_path, date,
          updated_at, last_synced_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         slug           = excluded.slug,
         title          = excluded.title,
@@ -361,6 +363,7 @@ export class StateLedger {
         assigned_to    = excluded.assigned_to,
         blocked_by     = excluded.blocked_by,
         blocks         = excluded.blocks,
+        workflow_id    = excluded.workflow_id,
         body_md        = excluded.body_md,
         file_path      = excluded.file_path,
         date           = excluded.date,
@@ -370,6 +373,7 @@ export class StateLedger {
       s.id, s.slug ?? null, s.title, s.status,
       s.priority ?? null, s.type ?? null, s.epic ?? null, s.assigned_to ?? null,
       JSON.stringify(s.blocked_by ?? []), JSON.stringify(s.blocks ?? []),
+      s.workflow_id ?? null,
       s.body_md, s.file_path, s.date ?? null
     )
   }
@@ -387,9 +391,9 @@ export class StateLedger {
   }
 
   updateStoryFields(id: string, fields: Partial<Pick<StoryRecord,
-    'status' | 'priority' | 'type' | 'epic' | 'assigned_to' | 'body_md' | 'file_path'
+    'status' | 'priority' | 'type' | 'epic' | 'assigned_to' | 'workflow_id' | 'body_md' | 'file_path'
   >>): void {
-    const allowed = ['status','priority','type','epic','assigned_to','body_md','file_path']
+    const allowed = ['status','priority','type','epic','assigned_to','workflow_id','body_md','file_path']
     const sets: string[] = []
     const vals: any[] = []
     for (const [k, v] of Object.entries(fields)) {

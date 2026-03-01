@@ -1198,7 +1198,15 @@ function registerIpcHandlers() {
     win: win!, // Added for Story 153
   });
 
-  ipcMain.handle('workflow:run', (_event, graph) => handleIpc(() => workflowEngine.runGraph(graph)))
+  ipcMain.handle('workflow:run', (_event, payload) => handleIpc(() => {
+    if (payload && payload.templateId) {
+      const tpl = WORKFLOW_TEMPLATES.find(t => t.id === payload.templateId)
+      if (!tpl) throw new Error('TEMPLATE_NOT_FOUND')
+      if (payload.context) workflowEngine.updateContext(payload.context)
+      return workflowEngine.runGraph(tpl.graph)
+    }
+    return workflowEngine.runGraph(payload)
+  }))
   ipcMain.handle('workflow:status', () => handleIpc(() => ({
     state: workflowEngine.getState(),
     nodeStatuses: workflowEngine.getNodeStatusDetails(),

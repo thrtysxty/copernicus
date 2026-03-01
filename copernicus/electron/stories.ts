@@ -14,6 +14,7 @@ interface Story {
   type: string
   epic: string | null
   model: string | null
+  workflowId: string | null
   date: string
   blocked: boolean
 }
@@ -102,9 +103,10 @@ export class StoriesManager {
       priority: (r.priority ?? 'UNKNOWN') as Story['priority'],
       type:     r.type ?? 'Unknown',
       epic:     r.epic ?? null,
-      model:    r.assigned_to ?? null,
-      date:     r.date ?? '',
-      blocked:  (r.blocked_by ?? []).length > 0,
+      model:      r.assigned_to ?? null,
+      workflowId: r.workflow_id ?? null,
+      date:       r.date ?? '',
+      blocked:    (r.blocked_by ?? []).length > 0,
     }))
   }
 
@@ -137,6 +139,10 @@ export class StoriesManager {
     const assigned_to = modelMatch && modelMatch[1].trim() !== '(unassigned)'
       ? modelMatch[1].trim() : undefined
 
+    const workflowMatch = content.match(/\*\*(?:Workflow):\*\*\s*(.+)$/m)
+    const workflow_id = workflowMatch && workflowMatch[1].trim() !== '(none)' && workflowMatch[1].trim() !== '— none —' && workflowMatch[1].trim() !== ''
+      ? workflowMatch[1].trim() : undefined
+
     const blockedByMatch = content.match(/##\s+Blocked By\s*\n([\s\S]*?)(?=\n##|$)/)
     const blockedByLines = (blockedByMatch?.[1] ?? '').trim().split('\n')
     const blocked_by = blockedByLines
@@ -158,6 +164,7 @@ export class StoriesManager {
       id, title, status,
       priority, type, epic: epic ?? undefined,
       assigned_to,
+      workflow_id,
       blocked_by, blocks,
       body_md: content,
       file_path: path.join(this.storiesPath, filename),
@@ -287,22 +294,32 @@ ${title}
   }
 
   setField(id: string, field: string, value: string) {
-    const ALLOWED_FIELDS = ['priority', 'type', 'model', 'epic', 'status']
+    const ALLOWED_FIELDS = ['priority', 'type', 'model', 'epic', 'status', 'workflowId']
     if (!ALLOWED_FIELDS.includes(field)) return
 
     const record = this.ledger.getStoryById(id)
     if (!record) return
 
-    const fieldLabel = field === 'model' ? 'Model'
-      : field.charAt(0).toUpperCase() + field.slice(1)
+    let fieldLabel = field.charAt(0).toUpperCase() + field.slice(1)
+    if (field === 'model') fieldLabel = 'Model'
+    if (field === 'workflowId') fieldLabel = 'Workflow'
 
-    const updatedBody = record.body_md.replace(
-      new RegExp(`(\\*\\*${fieldLabel}:\\*\\*).*$`, 'm'),
-      `$1 ${value}`
-    )
+    const finalValue = (value === '— none —' || value === '(none)') ? '(none)' : value
+    const re = new RegExp(`^\\*\\*${fieldLabel}:\\*\\*(.*?)$`, 'm')
+    let updatedBody = record.body_md
 
-    const dbField = field === 'model' ? 'assigned_to' : field as any
-    this.ledger.updateStoryFields(id, { [dbField]: value, body_md: updatedBody })
+    if (re.test(updatedBody)) {
+      updatedBody = updatedBody.replace(re, `**${fieldLabel}:** ${finalValue}`)
+    } else {
+      updatedBody = updatedBody.replace(/^(# .*?\n)/, `$1**${fieldLabel}:** ${finalValue}\n`)
+    }
+
+    let dbField: string = field
+    if (field === 'model') dbField = 'assigned_to'
+    if (field === 'workflowId') dbField = 'workflow_id'
+
+    const dbValue = finalValue === '(none)' ? null : finalValue
+    this.ledger.updateStoryFields(id, { [dbField]: dbValue, body_md: updatedBody } as any)
     writeFileAtomic(record.file_path, updatedBody)
     this.broadcastUpdate()
   }

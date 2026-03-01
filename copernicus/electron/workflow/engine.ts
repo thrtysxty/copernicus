@@ -54,6 +54,12 @@ export class WorkflowEngine {
     return Object.fromEntries(this.context);
   }
 
+  public updateContext(obj: Record<string, string>): void {
+    for (const [k, v] of Object.entries(obj)) {
+      this.context.set(k, String(v));
+    }
+  }
+
   public reset(): void {
     log.info('[WorkflowEngine] Administrative reset to IDLE.');
     this.currentState = 'IDLE';
@@ -69,6 +75,13 @@ export class WorkflowEngine {
     if (isValid) {
       log.info(`[WorkflowEngine] Transition: ${this.currentState} -> ${newState}`);
       this.currentState = newState;
+      if (this.services?.win) {
+        this.services.win.webContents.send('workflow:status-update', {
+          status: newState,
+          isGlobalState: true,
+          timestamp: Date.now()
+        });
+      }
       return true;
     }
 

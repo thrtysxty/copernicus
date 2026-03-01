@@ -11,6 +11,7 @@ export const SCHEMA = {
       assigned_to   TEXT,                   -- model/agent
       blocked_by    TEXT DEFAULT '[]',      -- JSON array e.g. '["story_157"]'
       blocks        TEXT DEFAULT '[]',      -- JSON array e.g. '["story_160"]'
+      workflow_id   TEXT,                   -- workflow template id e.g. 'jules-pr-manager'
       body_md       TEXT NOT NULL DEFAULT '',
       file_path     TEXT NOT NULL DEFAULT '',
       date          TEXT,
