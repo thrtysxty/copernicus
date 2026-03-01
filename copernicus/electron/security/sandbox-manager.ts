@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { app } from 'electron';
+import log from '../utils/logger';
 
 /**
  * Manages OS-level sandbox profiles for agents.
@@ -41,7 +42,7 @@ export class SandboxManager {
       try {
         fs.mkdirSync(this.sandboxDir, { recursive: true });
       } catch (err) {
-        console.error(`Failed to create sandbox directory ${this.sandboxDir}:`, err);
+        log.error(`Failed to create sandbox directory ${this.sandboxDir}:`, err);
       }
     }
   }
@@ -69,13 +70,13 @@ export class SandboxManager {
     // (Darwin 24+/Sequoia and later). Spawning it causes posix_spawnp failures.
     const sandboxExec = '/usr/bin/sandbox-exec';
     if (!fs.existsSync(sandboxExec)) {
-      console.warn('[SandboxManager] sandbox-exec unavailable (macOS 15+/Darwin 24+), skipping macOS sandboxing');
+      log.warn('[SandboxManager] sandbox-exec unavailable (macOS 15+/Darwin 24+), skipping macOS sandboxing');
       return [];
     }
 
     const templatePath = path.join(this.templateDir, 'macos-agent.sb.template');
     if (!fs.existsSync(templatePath)) {
-      console.warn(`Sandbox template not found: ${templatePath}`);
+      log.warn(`Sandbox template not found: ${templatePath}`);
       return [];
     }
 
@@ -94,7 +95,7 @@ export class SandboxManager {
 
       return ['/usr/bin/sandbox-exec', '-f', profilePath];
     } catch (err) {
-      console.error('Failed to generate macOS sandbox profile:', err);
+      log.error('Failed to generate macOS sandbox profile:', err);
       return [];
     }
   }
@@ -102,7 +103,7 @@ export class SandboxManager {
   private generateLinuxProfile(agentId: string, workspaceRoot: string): string[] {
     const templatePath = path.join(this.templateDir, 'linux-agent.profile.template');
     if (!fs.existsSync(templatePath)) {
-      console.warn(`Sandbox template not found: ${templatePath}`);
+      log.warn(`Sandbox template not found: ${templatePath}`);
       return [];
     }
 
@@ -121,7 +122,7 @@ export class SandboxManager {
 
       return ['/usr/bin/firejail', `--profile=${profilePath}`];
     } catch (err) {
-      console.error('Failed to generate Linux sandbox profile:', err);
+      log.error('Failed to generate Linux sandbox profile:', err);
       return [];
     }
   }

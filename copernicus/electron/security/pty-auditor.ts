@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import log from '../utils/logger';
 
 /**
  * Strips ANSI escape codes from a string.
@@ -38,12 +39,12 @@ export class PTYAuditor {
       try {
         fs.mkdirSync(this.logDir, { recursive: true });
       } catch (err) {
-        console.error(`Failed to create log directory ${this.logDir}:`, err);
+        log.error(`Failed to create log directory ${this.logDir}:`, err);
       }
     }
 
     // Clean up old logs on startup (fire and forget)
-    this.rotateLogs().catch(err => console.error('Error rotating logs:', err));
+    this.rotateLogs().catch(err => log.error('Error rotating logs:', err));
   }
 
   /**
@@ -75,7 +76,7 @@ export class PTYAuditor {
       // This is acceptable as long as we don't leak file descriptors indefinitely (rotation handles deletion).
 
       stream = fs.createWriteStream(logFile, { flags: 'a' });
-      stream.on('error', (err) => console.error(`Error writing to audit log ${logFile}:`, err));
+      stream.on('error', (err) => log.error(`Error writing to audit log ${logFile}:`, err));
       this.activeStreams.set(streamKey, stream);
     }
 
@@ -136,7 +137,7 @@ export class PTYAuditor {
           try {
             await fs.promises.unlink(file.path);
             // eslint-disable-next-line no-console
-            console.log(`Deleted old log file: ${file.path}`);
+            log.info(`Deleted old log file: ${file.path}`);
           } catch (e) {
             // Ignore if already deleted
           }
@@ -160,7 +161,7 @@ export class PTYAuditor {
         try {
           await fs.promises.unlink(file.path);
           // eslint-disable-next-line no-console
-          console.log(`Deleted log file to free space: ${file.path}`);
+          log.info(`Deleted log file to free space: ${file.path}`);
         } catch (e) {
           // Ignore
         }
@@ -168,7 +169,7 @@ export class PTYAuditor {
         idx++;
       }
     } catch (err) {
-      console.error('Error during log rotation:', err);
+      log.error('Error during log rotation:', err);
     }
   }
 

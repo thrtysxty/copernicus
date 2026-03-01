@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import log from './utils/logger';
 
 export class DevtimeManager {
   private db: Database.Database;
@@ -137,7 +138,7 @@ export class DevtimeManager {
         .filter(f => f.endsWith('.md'))
         .map(f => f.replace('.md', ''));
     } catch (e) {
-      console.error('[DevtimeManager] listStories error:', e);
+      log.error('[DevtimeManager] listStories error:', e);
       return [];
     }
   }
@@ -169,7 +170,7 @@ export class DevtimeManager {
       const rows = this.db.prepare(sql).all();
       return { ok: true, data: rows };
     } catch (err: any) {
-      console.error('[DevtimeManager] Report error:', err);
+      log.error('[DevtimeManager] Report error:', err);
       return { ok: false, error: err.message };
     }
   }

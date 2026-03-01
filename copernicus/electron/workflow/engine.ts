@@ -7,6 +7,7 @@ import type { StateLedger } from '../db/state-ledger';
 import type { FSManager } from '../fs-manager';
 import type { TriggerNodeData } from './types';
 import type { BrowserWindow } from 'electron';
+import log from '../utils/logger';
 
 export type StateCallback = (event: WorkflowExecutionEvent) => void;
 
@@ -26,7 +27,7 @@ export class WorkflowEngine {
   private services: EngineServices | null = null;
 
   constructor() {
-    console.log('[SYSTEM] WorkflowEngine Initialized in IDLE state.');
+    log.info('[SYSTEM] WorkflowEngine Initialized in IDLE state.');
   }
 
   public setServices(services: EngineServices): void {
@@ -54,7 +55,7 @@ export class WorkflowEngine {
   }
 
   public reset(): void {
-    console.log('[WorkflowEngine] Administrative reset to IDLE.');
+    log.info('[WorkflowEngine] Administrative reset to IDLE.');
     this.currentState = 'IDLE';
     this.nodeStatuses.clear();
     this.context.clear();
@@ -66,12 +67,12 @@ export class WorkflowEngine {
     );
 
     if (isValid) {
-      console.log(`[WorkflowEngine] Transition: ${this.currentState} -> ${newState}`);
+      log.info(`[WorkflowEngine] Transition: ${this.currentState} -> ${newState}`);
       this.currentState = newState;
       return true;
     }
 
-    console.warn(`[SECURITY] Invalid workflow transition attempted: ${this.currentState} -> ${newState}`);
+    log.warn(`[SECURITY] Invalid workflow transition attempted: ${this.currentState} -> ${newState}`);
     return false;
   }
 
@@ -94,7 +95,7 @@ export class WorkflowEngine {
       const sortedNodes = this.topologicalSort(graph);
       const skipped = new Set<string>();
 
-      console.log('[WorkflowEngine] Execution Order:', sortedNodes.map(n => n.id).join(' -> '));
+      log.info('[WorkflowEngine] Execution Order:', sortedNodes.map(n => n.id).join(' -> '));
 
       for (const node of sortedNodes) {
         if (skipped.has(node.id)) {
@@ -114,7 +115,7 @@ export class WorkflowEngine {
 
       this.transition('COMPLETE');
     } catch (error: any) {
-      console.error('[WorkflowEngine] Execution Failed:', error);
+      log.error('[WorkflowEngine] Execution Failed:', error);
       this.transition('FAILED');
       // Optionally push a global error if needed, but per-node errors are more granular
     }

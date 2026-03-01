@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useLayoutStore, PHOSPHOR_PRESETS } from '../store/layout'
+import log from '../utils/logger'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -15,7 +16,7 @@ export function useThemeManager() {
 
       // Persist to settings.json via main process so splash screen can read it on next launch
       if (ipcRenderer) {
-        ipcRenderer.invoke('settings:save', { phosphorColor: preset.hex }).catch(console.error)
+        ipcRenderer.invoke('settings:save', { phosphorColor: preset.hex }).catch(log.error)
       }
     }
   }, [phosphorColor])

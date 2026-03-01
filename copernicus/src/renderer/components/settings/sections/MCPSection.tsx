@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { Server, Plus, Trash2, Edit3, Globe, Terminal, Activity, Loader2 } from 'lucide-react'
+import log from '../../../utils/logger'
 
 interface MCPServer {
   id: string
@@ -33,7 +34,7 @@ export const MCPSection: React.FC = () => {
       const data = (result as any).data || result
       setServers(data || [])
     } catch (e) {
-      console.error('Failed to fetch MCP servers', e)
+      log.error('Failed to fetch MCP servers', e)
     } finally {
       setLoading(false)
     }

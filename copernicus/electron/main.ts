@@ -80,7 +80,7 @@ async function getPlaywright() {
 
 // ── Global process safety nets ────────────────────────────────────────────
 process.on('uncaughtException', (error: Error) => {
-  console.error('[Main] uncaughtException:', error.stack ?? error.message)
+  log.error('[Main] uncaughtException:', error.stack ?? error.message)
   const wins = BrowserWindow.getAllWindows()
   wins.forEach(w => {
     if (!w.isDestroyed()) {
@@ -96,7 +96,7 @@ process.on('uncaughtException', (error: Error) => {
 process.on('unhandledRejection', (reason: unknown) => {
   const message = reason instanceof Error ? reason.message : String(reason)
   const stack   = reason instanceof Error ? reason.stack  : undefined
-  console.error('[Main] unhandledRejection:', stack ?? message)
+  log.error('[Main] unhandledRejection:', stack ?? message)
   const wins = BrowserWindow.getAllWindows()
   wins.forEach(w => {
     if (!w.isDestroyed()) {
@@ -166,7 +166,7 @@ function ensureCopernicusDirectory() {
     const preferencesPath = path.join(COPERNICUS_HOME, 'preferences.json');
     if (!fs.existsSync(preferencesPath)) isFirstRun = true;
   } catch (error) {
-    console.error('Failed to initialize .copernicus directory:', error);
+    log.error('Failed to initialize .copernicus directory:', error);
   }
 }
 
@@ -491,7 +491,7 @@ function registerIpcHandlers() {
   ipcMain.handle('workflow:update-node-data', (_e, { nodeId, field, value }: any) => handleIpc(() => {
     // This is primarily for external persistence if needed, 
     // but the renderer currently manages the graph state.
-    console.log(`[Workflow] Update Node ${nodeId}: ${field} = ${value}`);
+    log.info(`[Workflow] Update Node ${nodeId}: ${field} = ${value}`);
     return true;
   }));
 
@@ -507,7 +507,7 @@ function registerIpcHandlers() {
       fsManager.setRootPath(workspace);
       storiesManager.setProjectRoot(workspace);
       // Immediately start indexing and LSP for the new workspace
-      codebaseIndexer.startIndexing(workspace).catch(console.error)
+      codebaseIndexer.startIndexing(workspace).catch(log.error)
       lspManager.stop()
       lspManager.start(workspace)
     }
@@ -816,6 +816,7 @@ function registerIpcHandlers() {
     return { ok: true }
   }))
 
+  // GitHub trust list
   ipcMain.handle('github:get-trust-list', () => handleIpc(() => {
     return {
       trusted: settingsStore.get('github:trusted-repos', []) as string[],
@@ -928,7 +929,7 @@ function registerIpcHandlers() {
 
   // LLM Chat
   ipcMain.handle('chat:send', (_event, payload: any) => handleIpc(async () => {
-    llmService.streamChat(payload).catch(err => console.error('[LLM] streamChat error:', err))
+    llmService.streamChat(payload).catch(err => log.error('[LLM] streamChat error:', err))
     return true
   }))
 
@@ -959,7 +960,7 @@ function registerIpcHandlers() {
   }))
   ipcMain.handle('fs:save-file', (_event, { filePath, content }: any) => handleIpc(() => {
     const res = fsManager.writeFile(filePath, content)
-    if (res.ok) codebaseIndexer.indexFile(filePath).catch(console.error)
+    if (res.ok) codebaseIndexer.indexFile(filePath).catch(log.error)
     return res
   }))
   ipcMain.handle('app:get-root-path', () => handleIpc(() => fsManager.getRootPath()))
@@ -1205,7 +1206,7 @@ app.whenReady().then(() => {
       try {
         fs.mkdirSync(workspaceRoot, { recursive: true });
       } catch (e) {
-        console.error('Failed to create default workspace directory:', e);
+        log.error('Failed to create default workspace directory:', e);
         workspaceRoot = os.homedir();
       }
     }
@@ -1221,7 +1222,7 @@ app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+P', () => win?.webContents.send('layout:open-palette', { mode: 'all' }))
   globalShortcut.register('CommandOrControl+Shift+P', () => win?.webContents.send('layout:open-palette', { mode: 'commands' }))
 
-  codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(console.error)
+  codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(log.error)
   lspManager.start(fsManager.getRootPath())
   if (app.isPackaged) setupAutoUpdater();
 })
@@ -1229,7 +1230,7 @@ app.whenReady().then(() => {
 app.on('browser-window-focus', () => {
   const synced = storiesManager.syncFromDisk()
   if (synced > 0) {
-    console.log(`[StoriesManager] Synced ${synced} external story edits on focus`)
+    log.info(`[StoriesManager] Synced ${synced} external story edits on focus`)
     win?.webContents.send('stories:updated', storiesManager.listStories())
   }
 })

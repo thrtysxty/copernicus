@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useIpcError } from '../hooks/useIpcError'
+import log from '../utils/logger'
 
 export function CommandDeck() {
   const invoke = useIpcError()
@@ -12,7 +13,7 @@ export function CommandDeck() {
         const _raw = await invoke<any>('makefile:list')
         setTargets((_raw as any)?.data ?? _raw ?? [])
       } catch (e) {
-        console.warn("Failed to fetch makefile targets, using fallback", e)
+        log.warn("Failed to fetch makefile targets, using fallback", e)
         setTargets(['test', 'test_e2e', 'backlog', 'deploy', 'clean', 'dev', 'db-migrate'])
       }
     }
@@ -24,7 +25,7 @@ export function CommandDeck() {
     try {
       await invoke('makefile:run', target)
     } catch (e) {
-      console.error(`Failed to run target ${target}`, e)
+      log.error(`Failed to run target ${target}`, e)
     } finally {
       setRunning(null)
     }

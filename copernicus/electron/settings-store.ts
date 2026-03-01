@@ -1,6 +1,7 @@
 import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
+import log from './utils/logger';
 
 export class SettingsStore {
   private configPath: string;
@@ -18,7 +19,7 @@ export class SettingsStore {
         this.data = JSON.parse(data);
       }
     } catch (e) {
-      console.error('Failed to load settings:', e);
+      log.error('Failed to load settings:', e);
     }
   }
 
@@ -26,7 +27,7 @@ export class SettingsStore {
     try {
       fs.writeFileSync(this.configPath, JSON.stringify(this.data, null, 2));
     } catch (e) {
-      console.error('Failed to save settings:', e);
+      log.error('Failed to save settings:', e);
     }
   }
 

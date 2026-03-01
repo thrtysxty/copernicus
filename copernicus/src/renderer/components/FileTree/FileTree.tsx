@@ -3,6 +3,7 @@ import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
          Image as ImageIcon, Database } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
+import log from '../../utils/logger'
 
 const IMAGE_EXTENSIONS = new Set([
   'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico', 'tiff', 'avif',
@@ -97,14 +98,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
         
         if (finalContent.length > MAX_EDITOR_BYTES) {
           setActiveFileContent(finalContent.slice(0, MAX_EDITOR_BYTES))
-          console.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
+          log.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
         } else {
           setActiveFileContent(finalContent)
         }
         
         setActiveFileLanguage(getLanguage(node.path))
       } catch (err) {
-        console.error('[FileTree] Failed to read file content:', err)
+        log.error('[FileTree] Failed to read file content:', err)
       }
     }
   }
@@ -166,7 +167,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
       if (Array.isArray(data)) {
         setRootChildren(data)
       }
-    }).catch(console.error)
+    }).catch(log.error)
   }, [rootPath, invoke])
 
   if (!rootPath) {

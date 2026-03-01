@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { WFNode } from '../../../../electron/workflow/types';
+import log from '../../utils/logger'
 
 const PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'] as const;
 
@@ -21,7 +22,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
     invoke<any[]>('stories:list').then(res => {
       const data = (res as any).data || res;
       if (Array.isArray(data)) setStories(data);
-    }).catch(console.error);
+    }).catch(log.error);
   }, [invoke]);
 
   const updateData = (patch: Record<string, any>) =>

@@ -1,11 +1,12 @@
 import { commandRegistry, Command, CommandContext } from './registry';
+import log from '../utils/logger'
 
 const sendToTerminal = (terminalId: string, text: string) => {
   const ipcRenderer = window.ipcRenderer;
   if (ipcRenderer) {
     ipcRenderer.send('terminal:write', { id: terminalId, data: text + '\r' });
   } else {
-    console.warn('ipcRenderer not found, cannot send to terminal:', terminalId, text);
+    log.warn('ipcRenderer not found, cannot send to terminal:', terminalId, text);
   }
 };
 
@@ -53,7 +54,7 @@ const commands: Command[] = [
     name: '/capex',
     description: 'Open CapEx sidebar panel',
     execute: (_args: string, ctx: CommandContext) => {
-      console.log('Opening CapEx panel');
+      log.info('Opening CapEx panel');
       ctx.appendMessage('assistant', `Opening CapEx panel`);
     }
   }

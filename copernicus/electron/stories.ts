@@ -3,6 +3,7 @@ import path from 'node:path'
 import { execSync } from 'node:child_process'
 import { BrowserWindow } from 'electron'
 import { StateLedger, StoryRecord } from './db/state-ledger'
+import log from './utils/logger'
 
 interface Story {
   id: string
@@ -38,7 +39,7 @@ export class StoriesManager {
   setProjectRoot(rootPath: string) {
     this.projectRoot = rootPath
     this.storiesPath = path.join(rootPath, 'docs/stories')
-    console.log(`[StoriesManager] path set: ${this.storiesPath}`)
+    log.info(`[StoriesManager] path set: ${this.storiesPath}`)
 
     if (this.watcher) {
       this.watcher.close()
@@ -49,7 +50,7 @@ export class StoriesManager {
       this.watch()
       this.syncFromDisk()
     } else {
-      console.warn(`Stories path not found: ${this.storiesPath}`)
+      log.warn(`Stories path not found: ${this.storiesPath}`)
     }
   }
 
@@ -85,7 +86,7 @@ export class StoriesManager {
           count++
         }
       } catch (e) {
-        console.warn(`[StoriesManager] syncFromDisk: failed to sync ${file}`, e)
+        log.warn(`[StoriesManager] syncFromDisk: failed to sync ${file}`, e)
       }
     }
 
@@ -172,7 +173,7 @@ export class StoriesManager {
             execSync(`python3 "${auditScript}"`, { cwd: this.projectRoot })
          }
        } catch (e) {
-         console.error('[SECURITY] Audit REJECTED.', e)
+         log.error('[SECURITY] Audit REJECTED.', e)
          if (this.window) {
            this.window.webContents.send('app:critical-error', {
              type: 'Security Audit Rejected',
@@ -348,7 +349,7 @@ ${title}
           try {
             this.window.webContents.send('stories:updated', this.listStories())
           } catch (e) {
-            console.error("Failed to broadcast update", e)
+            log.error("Failed to broadcast update", e)
           }
       }
   }

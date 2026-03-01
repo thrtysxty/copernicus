@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
+import log from '../../utils/logger'
 
 interface AuthStatus {
   provider: string;
@@ -31,7 +32,7 @@ export const AuthSettings: React.FC = () => {
       const s: AuthStatus[] = (_raw as any)?.data ?? _raw ?? [];
       setStatus(s);
     } catch (e) {
-      console.error('Failed to fetch auth status', e);
+      log.error('Failed to fetch auth status', e);
     }
   };
 
@@ -47,7 +48,7 @@ export const AuthSettings: React.FC = () => {
       setBaseUrl('');
       fetchStatus();
     } catch (e) {
-      console.error('Failed to save api key', e);
+      log.error('Failed to save api key', e);
     }
   };
 
@@ -61,7 +62,7 @@ export const AuthSettings: React.FC = () => {
           setShowAddCustom(false);
           fetchStatus();
       } catch (e) {
-          console.error('Failed to add custom provider', e);
+          log.error('Failed to add custom provider', e);
       }
   };
 

@@ -5,6 +5,7 @@ import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2, 
   ShieldCheck, Loader2, GripVertical
 } from 'lucide-react'
+import log from '../../../utils/logger'
 
 interface AuthStatus {
   provider: string
@@ -50,7 +51,7 @@ export const ProvidersSection: React.FC = () => {
         setProviders(savedOrder)
       }
     } catch (e) {
-      console.error('Failed to fetch auth status', e)
+      log.error('Failed to fetch auth status', e)
     } finally {
       setLoading(false)
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { MessageSquare, Code, Workflow, ChevronUp, ChevronDown } from 'lucide-react'
+import log from '../../../utils/logger'
 
 interface Model {
   id: string
@@ -47,7 +48,7 @@ export const ModelsSection: React.FC = () => {
           }))
         }
       } catch (e) {
-        console.error('Failed to load models/settings', e)
+        log.error('Failed to load models/settings', e)
       } finally {
         setLoading(false)
       }

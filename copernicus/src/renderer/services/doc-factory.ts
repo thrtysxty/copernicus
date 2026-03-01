@@ -1,3 +1,5 @@
+import log from '../utils/logger'
+
 export interface DocMetadata {
   id: string;
   title: string;
@@ -19,7 +21,7 @@ export class DocFactory {
       // Hydra logic: read template from file system via IPC
       template = await ipcRenderer.invoke('fs:read-file', 'copernicus/src/renderer/templates/story-doc.md');
     } catch (e) {
-      console.warn('[DOC_FACTORY] Using fallback string template');
+      log.warn('[DOC_FACTORY] Using fallback string template');
       template = `# IMPLEMENTATION REPORT: [STORY_ID]\n\n[NARRATIVE_TEXT]`;
     }
 
@@ -42,6 +44,6 @@ export class DocFactory {
     if (ipcRenderer) {
       return await ipcRenderer.invoke('fs:write-file', path, content);
     }
-    console.warn('[DOC_FACTORY] IPC not available, documentation not saved.');
+    log.warn('[DOC_FACTORY] IPC not available, documentation not saved.');
   }
 }

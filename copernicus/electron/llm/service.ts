@@ -5,6 +5,7 @@ import { BrowserWindow } from 'electron'
 import { authManager } from '../auth-manager'
 import { modelRegistry } from '../models/model-registry'
 import { stateLedger } from '../db/state-ledger'
+import log from '../utils/logger'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -255,7 +256,7 @@ export class LLMService {
       const stats = stateLedger.getSessionStats(sessionId)
       this.broadcast('ledger:stats-update', stats)
     } catch (err) {
-      console.error('[LLMService] Failed to record call:', err)
+      log.error('[LLMService] Failed to record call:', err)
     }
   }
 }

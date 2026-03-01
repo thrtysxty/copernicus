@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process'
 import path from 'path'
 import fs from 'fs'
 import { app, BrowserWindow } from 'electron'
+import log from '../utils/logger'
 
 interface PendingRequest {
   resolve: (result: any) => void
@@ -49,7 +50,7 @@ export class LspManager {
     try {
       script = getLspScriptPath()
     } catch (err) {
-      console.warn('[LSP] typescript-language-server not found — LSP features unavailable:', err)
+      log.warn('[LSP] typescript-language-server not found — LSP features unavailable:', err)
       return
     }
     this.proc = spawn(process.execPath, [script, '--stdio'], {
@@ -57,9 +58,9 @@ export class LspManager {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
     })
     this.proc.stdout!.on('data', (chunk: Buffer) => this.onData(chunk.toString()))
-    this.proc.stderr!.on('data', (d: Buffer) => console.warn('[LSP stderr]', d.toString().trim()))
+    this.proc.stderr!.on('data', (d: Buffer) => log.warn('[LSP stderr]', d.toString().trim()))
     this.proc.on('exit', (code) => {
-      console.log(`[LSP] Server exited (code ${code})`)
+      log.info(`[LSP] Server exited (code ${code})`)
       this.proc = null
       this.pending.forEach(p => p.reject(new Error('LSP process exited')))
       this.pending.clear()
@@ -80,8 +81,8 @@ export class LspManager {
       initializationOptions: {},
     }).then(() => {
       this.sendNotify('initialized', {})
-      console.log('[LSP] Server ready')
-    }).catch(console.error)
+      log.info('[LSP] Server ready')
+    }).catch(err => log.error(err))
   }
 
   stop() {

@@ -6,6 +6,7 @@ import './index.css'
 import { registerCommands } from './commands/commands'
 import { useToastStore } from './store/toastStore'
 import { ErrorBoundary } from './components/layout/ErrorBoundary'
+import log from './utils/logger'
 
 // Register Slash Commands
 registerCommands();
@@ -14,7 +15,7 @@ registerCommands();
 window.onerror = (_msg, _url, _line, _col, error) => {
   const message = error?.message ?? String(_msg)
   useToastStore.getState().addToast(`Renderer error: ${message}`, 'error')
-  console.error('[Renderer] window.onerror:', error)
+  log.error('[Renderer] window.onerror:', error)
 }
 
 window.onunhandledrejection = (event: PromiseRejectionEvent) => {
@@ -22,7 +23,7 @@ window.onunhandledrejection = (event: PromiseRejectionEvent) => {
     ? event.reason.message
     : String(event.reason)
   useToastStore.getState().addToast(`Unhandled rejection: ${message}`, 'error')
-  console.error('[Renderer] unhandledRejection:', event.reason)
+  log.error('[Renderer] unhandledRejection:', event.reason)
 }
 
 // Listen for critical errors from the main process

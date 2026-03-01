@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { Workflow, Shield, Clock, Save, Link } from 'lucide-react'
+import log from '../../../utils/logger'
 
 interface WorkflowSettings {
   reviewEnabled: boolean
@@ -45,7 +46,7 @@ export const WorkflowSection: React.FC = () => {
           })
         }
       } catch (e) {
-        console.error('Failed to load workflow data', e)
+        log.error('Failed to load workflow data', e)
       }
     }
     init()

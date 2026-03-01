@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import log from './utils/logger'
 
 export interface FileNode {
   name: string
@@ -20,7 +21,7 @@ export class FSManager {
 
   setRootPath(p: string): void {
     this.rootPath = path.resolve(p)
-    console.log(`[FSManager] Sandbox root established: ${this.rootPath}`)
+    log.info(`[FSManager] Sandbox root established: ${this.rootPath}`)
   }
 
   private assertSafe(filePath: string, mode: 'read' | 'write' = 'read'): void {
@@ -76,7 +77,7 @@ export class FSManager {
       return { ok: true, data }
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : String(err)
-      console.error('[FSManager] listDir error:', error)
+      log.error('[FSManager] listDir error:', error)
       return { ok: false, error }
     }
   }
@@ -88,7 +89,7 @@ export class FSManager {
       return { ok: true, data }
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : String(err)
-      console.error('[FSManager] readFile error:', error)
+      log.error('[FSManager] readFile error:', error)
       return { ok: false, error }
     }
   }
@@ -100,7 +101,7 @@ export class FSManager {
       return { ok: true }
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : String(err)
-      console.error('[FSManager] writeFile error:', error)
+      log.error('[FSManager] writeFile error:', error)
       return { ok: false, error }
     }
   }

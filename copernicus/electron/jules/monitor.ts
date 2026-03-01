@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron'
 import { stateLedger } from '../db/state-ledger'
 import { pollJulesSession } from './dispatcher'
+import log from '../utils/logger'
 
 const POLL_INTERVAL_MS = 30_000
 
@@ -34,7 +35,7 @@ export class JulesMonitor {
           this.stopWatching(sessionId)
         }
       } catch (err: any) {
-        console.error(`[JulesMonitor] poll error for ${sessionId}:`, err.message)
+        log.error(`[JulesMonitor] poll error for ${sessionId}:`, err.message)
       }
     }
 

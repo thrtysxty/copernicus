@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import path from 'node:path';
+import log from '../utils/logger';
 
 /**
  * Decision returned by the Git Push Guard modal.
@@ -41,7 +42,7 @@ export class GitGuard {
     // 1. Critical Hard Block: Destructive or ID-spoofing commands
     const blockRegex = /\bgit\s+(push\s+.*(--force(?:-with-lease)?|-f)|remote\s+add|config\s+.*user)\b/;
     if (blockRegex.test(command)) {
-      console.warn(`[SECURITY] Hard block on destructive git command: ${command}`);
+      log.warn(`[SECURITY] Hard block on destructive git command: ${command}`);
       return false;
     }
 

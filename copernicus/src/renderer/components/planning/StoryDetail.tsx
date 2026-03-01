@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Edit2, Save, ExternalLink } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
+import log from '../../utils/logger'
 
 interface Story {
   id: string
@@ -47,7 +48,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   useEffect(() => {
     invoke<any>('stories:get-content', storyId)
       .then((r: any) => setContent(r?.data ?? r ?? ''))
-      .catch(console.error)
+      .catch(log.error)
   }, [storyId, invoke])
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     try {
       await invoke('stories:set-field', { id: storyId, field, value })
     } catch (e) {
-      console.error('Failed to set field', e)
+      log.error('Failed to set field', e)
     }
   }
 
@@ -75,7 +76,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       setContent(textareaRef.current.value)
       setIsEditing(false)
     } catch (e) {
-      console.error('Failed to save', e)
+      log.error('Failed to save', e)
     } finally {
       setIsSaving(false)
     }

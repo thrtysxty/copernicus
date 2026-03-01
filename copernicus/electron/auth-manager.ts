@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import yaml from 'js-yaml';
+import log from './utils/logger';
 
 export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'deepinfra' | 'ollama' | string;
 export type AuthType = 'oauth' | 'apikey' | 'session' | 'file' | 'env';
@@ -40,7 +41,7 @@ export class AuthManager {
         }
       }
     } catch (error) {
-      console.error('Failed to load auth config:', error);
+      log.error('Failed to load auth config:', error);
     }
   }
 
@@ -49,7 +50,7 @@ export class AuthManager {
       const config = Array.from(this.authState.values());
       fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2));
     } catch (error) {
-      console.error('Failed to save auth config:', error);
+      log.error('Failed to save auth config:', error);
     }
   }
 
@@ -61,7 +62,7 @@ export class AuthManager {
     metadata?: AuthConfig['metadata']
   ): Promise<boolean> {
     if (!safeStorage.isEncryptionAvailable()) {
-      console.error('SafeStorage is not available');
+      log.error('SafeStorage is not available');
       return false;
     }
 
@@ -104,7 +105,7 @@ export class AuthManager {
           const buffer = Buffer.from(config.encryptedKey, 'hex');
           return safeStorage.decryptString(buffer);
         } catch (error) {
-          console.error(`Failed to decrypt key for ${provider}:`, error);
+          log.error(`Failed to decrypt key for ${provider}:`, error);
         }
       }
     }
@@ -164,7 +165,7 @@ export class AuthManager {
                 const host = Object.keys(parsed)[0];
                 return parsed[host]?.oauth_token || null;
             } catch (e) {
-                console.error('Failed to parse gh hosts.yml:', e);
+                log.error('Failed to parse gh hosts.yml:', e);
             }
         }
     }

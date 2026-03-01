@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { Database, AlertTriangle, RefreshCcw, HardDrive, Calculator } from 'lucide-react'
+import log from '../../../utils/logger'
 
 export const DataSection: React.FC = () => {
   const invoke = useIpcError()
@@ -19,7 +20,7 @@ export const DataSection: React.FC = () => {
       // We'll mock the size for now or add an IPC for it if needed later
       setDbSize('1.2 MB') 
     } catch (e) {
-      console.error('Failed to fetch data stats', e)
+      log.error('Failed to fetch data stats', e)
     }
   }
 

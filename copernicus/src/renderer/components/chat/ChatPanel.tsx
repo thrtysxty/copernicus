@@ -7,6 +7,7 @@ import { commandRegistry, CommandContext, Command } from '../../commands/registr
 import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
+import log from '../../utils/logger'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -54,7 +55,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
           setUIComponents(parsed)
         }
       } catch (e) {
-        console.error('Failed to parse component-update', e)
+        log.error('Failed to parse component-update', e)
       }
     }
   }, [language, code, setUIComponents])
@@ -177,7 +178,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [messages])
 
   useEffect(() => {
-    invoke<any>('models:list').then((r: any) => setAvailableModels(r?.data ?? r ?? [])).catch(console.error)
+    invoke<any>('models:list').then((r: any) => setAvailableModels(r?.data ?? r ?? [])).catch(log.error)
 
     // Check if session is active (implies repo context)
     invoke<any>('devtime:status').then(res => {
@@ -349,7 +350,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${result.data}\n`);
             }
         } catch (e) {
-            console.error('Failed to inject @help context:', e);
+            log.error('Failed to inject @help context:', e);
         }
     }
 
@@ -372,7 +373,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       messages: [...history, { role: 'user', content: enrichedContent }],
       model,
     }).catch((err: any) => {
-      console.error('[ChatPanel] chat:send failed:', err)
+      log.error('[ChatPanel] chat:send failed:', err)
       setIsStreaming(false)
       streamingIdRef.current = null
     })
@@ -399,7 +400,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       // Show success toast? (Assuming toast store is available)
       window.ipcRenderer.send('db:log-intent', `Architected ${activeStoryId} via Chat`, 'COMPLETED', 'chat');
     } catch (e) {
-      console.error("Failed to save to story", e);
+      log.error("Failed to save to story", e);
     }
   };
 
@@ -450,7 +451,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         content: `\n// File: ${filePath}\n${content}\n`,
       }])
     } catch (err) {
-      console.error('[ChatPanel] File attach failed:', err)
+      log.error('[ChatPanel] File attach failed:', err)
     }
   }
 
@@ -658,7 +659,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                       payload: n.path,
                     })))
                   }
-                }).catch(console.error)
+                }).catch(log.error)
               } else if (hashIndex !== -1 && hashIndex > atIndex && !newValue.slice(hashIndex).includes(' ')) {
                 const query = newValue.slice(hashIndex + 1)
                 setPickerMode('story')
@@ -675,7 +676,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                       payload: s.content ?? '',
                     })))
                   }
-                }).catch(console.error)
+                }).catch(log.error)
               } else {
                 setPickerMode('none')
               }

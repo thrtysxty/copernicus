@@ -5,6 +5,7 @@ import { stateLedger } from './db/state-ledger'
 import { authManager } from './auth-manager'
 import { SettingsStore } from './settings-store'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import log from './utils/logger'
 
 // Re-using same instance logic as main.ts
 const settingsStore = new SettingsStore()
@@ -27,7 +28,7 @@ export class CodebaseIndexer {
       this.loadVectorExtension()
       this.initSchema()
     } catch (err) {
-      console.error('[CodebaseIndexer] Failed to initialize — semantic search unavailable:', err)
+      log.error('[CodebaseIndexer] Failed to initialize — semantic search unavailable:', err)
     }
   }
 
@@ -152,7 +153,7 @@ export class CodebaseIndexer {
         this.filesIndexed++
       }
     } catch (e) {
-      console.error('[Indexer] Full index failed:', e)
+      log.error('[Indexer] Full index failed:', e)
     } finally {
       this.isIndexing = false
     }
@@ -179,7 +180,7 @@ export class CodebaseIndexer {
         insertStmt.run(filePath, textToIndex, new Float32Array(embedding))
       })()
     } catch (e) {
-      console.error(`[Indexer] Failed to index ${filePath}:`, e)
+      log.error(`[Indexer] Failed to index ${filePath}:`, e)
     }
   }
 

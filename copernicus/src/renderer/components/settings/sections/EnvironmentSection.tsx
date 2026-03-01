@@ -7,6 +7,7 @@ import {
   Terminal, Package, RefreshCcw, CheckCircle2,
   XCircle, Play, Loader2, Cpu, Info
 } from 'lucide-react'
+import log from '../../../utils/logger'
 
 interface ToolStatus {
   found: boolean
@@ -46,7 +47,7 @@ export const EnvironmentSection: React.FC = () => {
       const scanData = (result as any).data || result
       setData(scanData)
     } catch (e) {
-      console.error('Scan failed', e)
+      log.error('Scan failed', e)
     } finally {
       setScanning(false)
     }

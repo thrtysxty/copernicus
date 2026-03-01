@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { ExternalLink, RefreshCw, ChevronLeft, ChevronRight, Globe, X } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
+import log from '../../utils/logger'
 
 type Mode = 'sessions' | 'browser'
 
@@ -55,7 +56,7 @@ function JulesSessionList({ onOpenBrowser }: { onOpenBrowser: () => void }) {
         setSessions(result.data)
       }
     } catch (e) {
-      console.error('Failed to load Jules sessions', e)
+      log.error('Failed to load Jules sessions', e)
     } finally {
       setLoading(false)
     }

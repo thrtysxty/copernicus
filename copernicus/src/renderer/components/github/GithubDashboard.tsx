@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Github, Lock, Globe, Plus, Link, GitBranch, Shield, ShieldOff, Trash2, Copy, Check } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useToastStore } from '../../store/toastStore';
+import log from '../../utils/logger'
 
 type Tab = 'repos' | 'access' | 'invite';
 
@@ -57,7 +58,7 @@ export const GithubDashboard: React.FC = () => {
       setRepos(Array.isArray(reposData) ? reposData : []);
       setTrustList(trustData ?? { trusted: [], tracked: [] });
     } catch (error) {
-      console.error('Failed to fetch GitHub data:', error);
+      log.error('Failed to fetch GitHub data:', error);
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,7 @@ export const GithubDashboard: React.FC = () => {
       setNewRepoName('');
       fetchData();
     } catch (error) {
-      console.error('Failed to create repo:', error);
+      log.error('Failed to create repo:', error);
     } finally {
       setCreating(false);
     }
@@ -89,7 +90,7 @@ export const GithubDashboard: React.FC = () => {
       }));
       addToast(`${repoName} ${trusted ? 'trusted' : 'untrusted'}`, 'success');
     } catch (e) {
-      console.error('Failed to set trust', e);
+      log.error('Failed to set trust', e);
     }
   };
 
@@ -102,7 +103,7 @@ export const GithubDashboard: React.FC = () => {
       setAddRepoInput('');
       addToast(`${addRepoInput.trim()} added to tracked repos`, 'success');
     } catch (e) {
-      console.error('Failed to add repo', e);
+      log.error('Failed to add repo', e);
     }
   };
 
@@ -115,7 +116,7 @@ export const GithubDashboard: React.FC = () => {
       }));
       addToast(`${repoName} removed`, 'success');
     } catch (e) {
-      console.error('Failed to remove repo', e);
+      log.error('Failed to remove repo', e);
     }
   };
 

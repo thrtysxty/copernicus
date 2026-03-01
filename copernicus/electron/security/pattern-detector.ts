@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { EventEmitter } from 'events';
+import log from '../utils/logger';
 
 export interface RiskPattern {
   id: string;
@@ -152,7 +153,7 @@ export class PatternDetector extends EventEmitter {
       try {
         fs.mkdirSync(dir, { recursive: true });
       } catch (err) {
-        console.error(`Failed to create log directory ${dir}:`, err);
+        log.error(`Failed to create log directory ${dir}:`, err);
       }
     }
   }
@@ -178,7 +179,7 @@ export class PatternDetector extends EventEmitter {
 
   private logAlert(alert: SecurityAlert): void {
     fs.appendFile(this.logFile, JSON.stringify(alert) + '\n', (err) => {
-      if (err) console.error('Failed to log security alert:', err);
+      if (err) log.error('Failed to log security alert:', err);
     });
   }
 }

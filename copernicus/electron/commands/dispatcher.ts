@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { ptyManager } from '../pty-manager';
 import { stateLedger } from '../db/state-ledger';
+import log from '../utils/logger';
 
 export function setupCommandHandlers() {
   // Resolves AC 4: Wire terminal:write
@@ -11,7 +12,7 @@ export function setupCommandHandlers() {
   });
 
   ipcMain.on('command:forward', (event, { agentId, targetAgentId }) => {
-    console.log(`[SYSTEM] Forwarding context from ${agentId} to ${targetAgentId}`);
+    log.info(`[SYSTEM] Forwarding context from ${agentId} to ${targetAgentId}`);
 
     // Resolves AC 4: Remove hardcoded mock, read from ledger
     const recentEvents = stateLedger.getRecentEvents(5);
@@ -27,7 +28,7 @@ export function setupCommandHandlers() {
     const projectRoot = path.resolve(__dirname, '../../../');
     const auditScript = path.join(projectRoot, 'scripts/utils/security_audit.py');
 
-    console.log(`[SECURITY] Triggering manual audit: ${auditScript}`);
+    log.info(`[SECURITY] Triggering manual audit: ${auditScript}`);
     const child = spawn('python3', [auditScript], { cwd: projectRoot });
 
     let output = '';
@@ -40,7 +41,7 @@ export function setupCommandHandlers() {
     });
 
     child.on('close', (code) => {
-      console.log(`[SECURITY] Audit finished with code ${code}`);
+      log.info(`[SECURITY] Audit finished with code ${code}`);
       // Broadcast result to telemetry or active window
       event.sender.send('terminal:data', `\n--- TECHNICAL SECURITY AUDIT ---\n${output}\n-------------------------------\n`);
     });

@@ -5,6 +5,7 @@ import { useLayoutStore } from '../store/layout'
 import { Plus, X, Crown, Lock, Loader2, Send } from 'lucide-react'
 import { StoryDetail } from './planning/StoryDetail'
 import { EpicBadge } from './planning/EpicBadge'
+import log from '../utils/logger'
 
 interface Story {
   id: string
@@ -90,7 +91,7 @@ export function KanbanBoard() {
         setIsRepoTargeted((_rawTargeted as any)?.data ?? false)
         fetchJulesSessions()
       } catch (e) {
-        console.warn('Failed to fetch stories', e)
+        log.warn('Failed to fetch stories', e)
       }
     }
     fetchStories()
@@ -115,7 +116,7 @@ export function KanbanBoard() {
       await invoke('jules:dispatch-session', storyId)
       fetchJulesSessions()
     } catch (e: any) {
-      console.error('Failed to dispatch to Jules', e)
+      log.error('Failed to dispatch to Jules', e)
     }
   }
 
@@ -131,7 +132,7 @@ export function KanbanBoard() {
     try {
       await invoke('stories:update', id, targetStatus)
     } catch (e) {
-      console.error('Failed to update story status', e)
+      log.error('Failed to update story status', e)
     }
   }
 
@@ -156,7 +157,7 @@ export function KanbanBoard() {
       setCreation({ phase: 'idle' })
       setActiveStoryId(storyId)
     } catch (e) {
-      console.error('Failed to create story', e)
+      log.error('Failed to create story', e)
     }
   }
 

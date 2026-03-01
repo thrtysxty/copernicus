@@ -3,6 +3,7 @@ import os from 'os';
 import fs from 'fs';
 import { BrowserWindow } from 'electron';
 import { PTYAuditor, securityManager } from './security';
+import log from './utils/logger';
 
 const getShell = () => {
   if (os.platform() === 'win32') return 'powershell.exe';
@@ -29,13 +30,13 @@ export class PTYManager {
 
   create(id: string, cols: number, rows: number, cwd: string = os.homedir(), window: BrowserWindow) {
     if (this.sessions.has(id)) {
-      console.warn(`Terminal session ${id} already exists.`);
+      log.warn(`Terminal session ${id} already exists.`);
       return;
     }
 
     // Ensure CWD exists
     if (!fs.existsSync(cwd)) {
-      console.warn(`Terminal CWD does not exist: ${cwd}, falling back to home.`);
+      log.warn(`Terminal CWD does not exist: ${cwd}, falling back to home.`);
       cwd = os.homedir();
     }
 
@@ -68,7 +69,7 @@ export class PTYManager {
       });
 
       ptyProcess.onExit(({ exitCode, signal }) => {
-        console.log(`Terminal ${id} exited with code ${exitCode} signal ${signal}`);
+        log.info(`Terminal ${id} exited with code ${exitCode} signal ${signal}`);
         this.sessions.delete(id);
         if (window && !window.isDestroyed()) {
           window.webContents.send('terminal-closed', { id });
@@ -76,9 +77,9 @@ export class PTYManager {
       });
 
       this.sessions.set(id, { id, ptyProcess });
-      console.log(`Created terminal session: ${id} with shell ${executable}`);
+      log.info(`Created terminal session: ${id} with shell ${executable}`);
     } catch (err) {
-      console.error(`Failed to spawn terminal ${id}:`, err);
+      log.error(`Failed to spawn terminal ${id}:`, err);
       if (window && !window.isDestroyed()) {
         const msg = err instanceof Error ? err.message : String(err);
         window.webContents.send('terminal-incoming', { id, data: `\r\n\x1b[31m[ERROR] Failed to spawn terminal: ${msg}\x1b[0m\r\n` });
@@ -125,7 +126,7 @@ export class PTYManager {
       try {
         session.ptyProcess.resize(cols, rows);
       } catch (err) {
-        console.error(`Failed to resize terminal ${id}`, err);
+        log.error(`Failed to resize terminal ${id}`, err);
       }
     }
   }
@@ -134,7 +135,7 @@ export class PTYManager {
   async write(id: string, data: string): Promise<void> {
     const session = this.sessions.get(id);
     if (!session) {
-      console.warn(`Write failed: Terminal ${id} not found.`);
+      log.warn(`Write failed: Terminal ${id} not found.`);
       return;
     }
 
@@ -146,7 +147,7 @@ export class PTYManager {
     if (GIT_GATE_PATTERN.test(data)) {
       const allowed = await securityManager.checkGitCommand(id, data);
       if (!allowed) {
-        console.warn(`[PTY:${id}] GitGuard BLOCKED: ${data.trim().substring(0, 80)}`);
+        log.warn(`[PTY:${id}] GitGuard BLOCKED: ${data.trim().substring(0, 80)}`);
         // Inform the renderer that the command was blocked
         const focusedWin = (await import('electron')).BrowserWindow.getFocusedWindow();
         focusedWin?.webContents.send('terminal-blocked', {

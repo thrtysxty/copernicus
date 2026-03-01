@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useIpcError } from '../hooks/useIpcError';
+import log from '../utils/logger'
 
 export function CapexSidebar() {
   const invoke = useIpcError();
@@ -13,7 +14,7 @@ export function CapexSidebar() {
         const r: any = _raw;
         setReport(Array.isArray(r?.data) ? r.data : Array.isArray(r) ? r : []);
       } catch (e) {
-        console.error("Failed to fetch report", e);
+        log.error("Failed to fetch report", e);
       }
     };
     fetchReport();

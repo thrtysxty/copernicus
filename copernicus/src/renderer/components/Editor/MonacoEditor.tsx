@@ -2,6 +2,7 @@ import React from 'react';
 import Editor, { useMonaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useIpcError } from '../../hooks/useIpcError';
+import log from '../../utils/logger'
 
 // Import workers using Vite's ?worker syntax
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
@@ -261,12 +262,12 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
           const result = await invoke<any>('fs:save-file', { filePath, content });
           const data = result.data || result;
           if (data.ok) {
-            console.log(`[Monaco] Saved: ${filePath}`);
+            log.info(`[Monaco] Saved: ${filePath}`);
           } else {
-            console.error('[Monaco] Save failed:', data.error);
+            log.error('[Monaco] Save failed:', data.error);
           }
         } catch (err) {
-          console.error('[Monaco] Save failed:', err);
+          log.error('[Monaco] Save failed:', err);
         }
       }
     );

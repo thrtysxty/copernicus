@@ -3,6 +3,7 @@ import { useIpcError } from '../../hooks/useIpcError';
 import { useLayoutStore } from '../../store/layout';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
 import { NodeInspector } from './NodeInspector';
+import log from '../../utils/logger'
 
 const GRID_SIZE = 20;
 
@@ -125,11 +126,11 @@ export default function WorkflowCanvas() {
   useEffect(() => {
     invoke<string>('app:get-root-path')
       .then((result: any) => setRootPath(result.data || result))
-      .catch((err) => console.error('Failed to get root path:', err));
+      .catch((err) => log.error('Failed to get root path:', err));
 
     invoke<{id:string;name:string;description:string}[]>('workflow:list-templates')
       .then((result: any) => setTemplates(result.data || result))
-      .catch(console.error);
+      .catch(log.error);
 
     invoke<any[]>('auth:status').then((result: any) => {
       const data = result.data || result;
@@ -138,9 +139,9 @@ export default function WorkflowCanvas() {
         data.forEach((s: any) => { active[s.provider] = s.isActive; });
       }
       setAuthStatus(active);
-    }).catch(console.error);
+    }).catch(log.error);
 
-    invoke<any[]>('models:list').then((result: any) => setAvailableModels(result.data || result)).catch(console.error);
+    invoke<any[]>('models:list').then((result: any) => setAvailableModels(result.data || result)).catch(log.error);
   }, [invoke]);
 
   // Keyboard delete
@@ -182,7 +183,7 @@ export default function WorkflowCanvas() {
           if (data.context) setContext(data.context);
 
         } catch (e) {
-          console.error("Polling error", e);
+          log.error("Polling error", e);
         }
       }, 1000);
     }
@@ -312,7 +313,7 @@ export default function WorkflowCanvas() {
     const result = await invoke<{ ok: boolean; error?: string }>('workflow:run', graph)
     const data = (result as any).data || result;
     if (!data.ok) {
-      console.error('[WorkflowCanvas] workflow:run failed:', data.error)
+      log.error('[WorkflowCanvas] workflow:run failed:', data.error)
       setIsRunning(false)
     }
   };
@@ -337,10 +338,10 @@ export default function WorkflowCanvas() {
           })
           const data = result.data || result;
           if (!data.ok) {
-              console.error('[WorkflowCanvas] fs:save-file failed:', data.error)
+              log.error('[WorkflowCanvas] fs:save-file failed:', data.error)
           }
       } catch (err) {
-          console.error("Failed to save workflow:", err);
+          log.error("Failed to save workflow:", err);
       }
   };
 

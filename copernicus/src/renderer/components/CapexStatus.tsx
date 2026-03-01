@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useIpcError } from '../hooks/useIpcError';
+import log from '../utils/logger'
 
 interface StatusData {
     session: {
@@ -22,7 +23,7 @@ export function CapexStatus() {
         const res: StatusData = (_raw as any)?.data ?? _raw;
         setStatus(res);
       } catch (e) {
-        console.error("Failed to fetch capex status", e);
+        log.error("Failed to fetch capex status", e);
       }
     };
 

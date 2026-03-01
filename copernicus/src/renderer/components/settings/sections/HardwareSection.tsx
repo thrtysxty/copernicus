@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { TouchBarConfig, DEFAULT_TOUCH_BAR_CONFIG } from '../../../types/touch-bar'
+import log from '../../../utils/logger'
 
 const ALLOWED_TARGETS = ['dev','test','build','lint','backlog','deploy','commit','agent','dashboard']
 
@@ -14,7 +15,7 @@ export const HardwareSection: React.FC = () => {
       // Result is { ok: true, data: { ... } } due to handleIpc
       const s = result.data || result
       if (s?.touchBar) setConfig({ ...DEFAULT_TOUCH_BAR_CONFIG, ...s.touchBar })
-    }).catch(err => console.error('Failed to load settings', err))
+    }).catch(err => log.error('Failed to load settings', err))
   }, [invoke])
 
   const save = async () => {
