@@ -628,20 +628,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               const atIndex = newValue.lastIndexOf('@')
               const hashIndex = newValue.lastIndexOf('#')
 
-              // @codebase <query> — semantic search
+              // @codebase <query> — LSP workspace/symbol search (Story 176)
               const codebaseMatch = newValue.slice(atIndex).match(/^@codebase\s+(.+)$/)
               if (atIndex !== -1 && codebaseMatch) {
                 const query = codebaseMatch[1]
                 setPickerMode('codebase')
-                invoke<Array<{ path: string; content: string; similarity: number }>>('codebase:search', query)
-                  .then(results => {
-                    setPickerResults(results.map(r => ({
-                      label: r.path.split('/').pop() ?? r.path,
-                      value: r.path,
-                      payload: r.content,
+                invoke<any>('lsp:request', { method: 'workspace/symbol', params: { query } })
+                  .then((raw: any) => {
+                    const symbols: any[] = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []
+                    setPickerResults(symbols.slice(0, 20).map((s: any) => ({
+                      label: s.name ?? '',
+                      value: (s.location?.uri ?? '').replace('file://', ''),
+                      payload: `${s.containerName ? s.containerName + '.' : ''}${s.name}`,
                     })))
                   })
-                  .catch(console.error)
+                  .catch(() => setPickerResults([]))
               } else if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
                 const query = newValue.slice(atIndex + 1)
                 setPickerMode('file')

@@ -63,6 +63,8 @@ const SEND_CHANNELS = new Set([
   'review:log',
   // Codebase semantic index
   'codebase:search', 'codebase:index-status',
+  // LSP (Story 176)
+  'lsp:status', 'lsp:request', 'lsp:notify',
   // Canvas
   'canvas:iframe-bounds',
   // Browser (Story 155)
@@ -108,6 +110,8 @@ const LISTEN_CHANNELS = new Set([
   'ledger:stats-update',
   // Jules live session updates (pushed by jules/monitor.ts)
   'jules:session-update',
+  // LSP diagnostics (Story 176)
+  'lsp:diagnostics',
 ])
 
 // ---------------------------------------------------------------------------

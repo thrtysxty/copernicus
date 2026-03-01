@@ -28,6 +28,7 @@ import { WORKFLOW_TEMPLATES } from './workflow/templates'
 import { browserSession } from './browser-session'
 import { dispatchJulesSession } from './jules/dispatcher'
 import { julesMonitor } from './jules/monitor'
+import { lspManager } from './lsp/lsp-manager'
 import './interop/dispatcher' // Initialize Interop Dispatcher
 
 // The built directory structure
@@ -201,6 +202,7 @@ function createWindow() {
 
   storiesManager.setWindow(win)
   julesMonitor.setWindow(win)
+  lspManager.setWindow(win)
   julesMonitor.resumeWatching()
 
   if (process.platform === 'darwin') {
@@ -505,8 +507,10 @@ function registerIpcHandlers() {
     if (workspace) {
       fsManager.setRootPath(workspace);
       storiesManager.setProjectRoot(workspace);
-      // Immediately start indexing for the new workspace
+      // Immediately start indexing and LSP for the new workspace
       codebaseIndexer.startIndexing(workspace).catch(console.error)
+      lspManager.stop()
+      lspManager.start(workspace)
     }
     saveSettings({ ...settings, workspace });
     const preferencesPath = path.join(COPERNICUS_HOME, 'preferences.json');
@@ -923,6 +927,11 @@ function registerIpcHandlers() {
   ipcMain.handle('codebase:index-status', () => handleIpc(() => codebaseIndexer.getStatus()))
   ipcMain.handle('codebase:search', async (_event, query: string) => handleIpc(() => codebaseIndexer.search(query)))
 
+  // LSP (Story 176)
+  ipcMain.handle('lsp:status',  () => handleIpc(() => lspManager.getStatus()))
+  ipcMain.handle('lsp:request', (_e, { method, params }: { method: string; params: any }) => handleIpc(() => lspManager.sendRequest(method, params)))
+  ipcMain.handle('lsp:notify',  (_e, { method, params }: { method: string; params: any }) => handleIpc(() => { lspManager.sendNotify(method, params) }))
+
   // File System
   ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc(() => fsManager.listDir(dirPath)))
   ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc(() => fsManager.readFile(filePath)))
@@ -1143,6 +1152,7 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 app.on('will-quit', () => { globalShortcut.unregisterAll() })
 
 app.on('before-quit', async () => {
+  lspManager.stop()
   if (browserSession.browser) await browserSession.browser.close().catch(() => {})
 })
 
@@ -1194,6 +1204,7 @@ app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+Shift+P', () => win?.webContents.send('layout:open-palette', { mode: 'commands' }))
 
   codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(console.error)
+  lspManager.start(fsManager.getRootPath())
   if (app.isPackaged) setupAutoUpdater();
 })
 

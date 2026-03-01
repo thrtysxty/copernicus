@@ -40,6 +40,8 @@ interface MonacoEditorProps {
   onChange?: (value: string | undefined) => void
 }
 
+const LSP_LANGUAGES = ['typescript', 'javascript', 'typescriptreact', 'javascriptreact']
+
 export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   value,
   language,
@@ -49,6 +51,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const monacoInstance = useMonaco();
   const editorRef = React.useRef<any>(null);
   const invoke = useIpcError();
+  const changeVersionRef = React.useRef<Map<string, number>>(new Map());
 
   React.useEffect(() => {
     if (monacoInstance) {
@@ -128,6 +131,124 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     }
   }, [monacoInstance]);
 
+  // LSP providers — registered once per monaco instance
+  React.useEffect(() => {
+    if (!monacoInstance) return
+    const disposables: monaco.IDisposable[] = []
+
+    disposables.push(
+      monacoInstance.languages.registerCompletionItemProvider(LSP_LANGUAGES, {
+        triggerCharacters: ['.', '"', "'", '/', '@', '<'],
+        provideCompletionItems: async (model, position) => {
+          const raw = await invoke<any>('lsp:request', {
+            method: 'textDocument/completion',
+            params: {
+              textDocument: { uri: model.uri.toString() },
+              position: { line: position.lineNumber - 1, character: position.column - 1 },
+            },
+          }).catch(() => null)
+          const items: any[] = Array.isArray(raw?.data)
+            ? raw.data
+            : Array.isArray(raw?.data?.items) ? raw.data.items
+            : Array.isArray(raw) ? raw : []
+          return {
+            suggestions: items.map((item: any) => ({
+              label: item.label,
+              kind: item.kind ?? 1,
+              insertText: item.insertText ?? item.label,
+              documentation: typeof item.documentation === 'string'
+                ? item.documentation
+                : item.documentation?.value,
+              range: undefined as any,
+            })),
+          }
+        },
+      })
+    )
+
+    disposables.push(
+      monacoInstance.languages.registerHoverProvider(LSP_LANGUAGES, {
+        provideHover: async (model, position) => {
+          const raw = await invoke<any>('lsp:request', {
+            method: 'textDocument/hover',
+            params: {
+              textDocument: { uri: model.uri.toString() },
+              position: { line: position.lineNumber - 1, character: position.column - 1 },
+            },
+          }).catch(() => null)
+          const hover = raw?.data ?? raw
+          if (!hover?.contents) return null
+          const value = typeof hover.contents === 'string'
+            ? hover.contents
+            : hover.contents?.value ?? hover.contents?.[0]?.value ?? ''
+          return { contents: [{ value }] }
+        },
+      })
+    )
+
+    // Diagnostics push → Monaco markers
+    const removeDiag = (window as any).ipcRenderer.on(
+      'lsp:diagnostics',
+      (_e: any, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
+        const model = monacoInstance.editor.getModels().find(m => m.uri.toString() === uri)
+        if (!model) return
+        monacoInstance.editor.setModelMarkers(model, 'lsp', diagnostics.map((d: any) => ({
+          severity: d.severity === 1
+            ? monacoInstance.MarkerSeverity.Error
+            : d.severity === 2
+              ? monacoInstance.MarkerSeverity.Warning
+              : monacoInstance.MarkerSeverity.Info,
+          message: d.message,
+          startLineNumber: (d.range?.start?.line ?? 0) + 1,
+          startColumn: (d.range?.start?.character ?? 0) + 1,
+          endLineNumber: (d.range?.end?.line ?? 0) + 1,
+          endColumn: (d.range?.end?.character ?? 0) + 1,
+        })))
+      }
+    )
+
+    return () => {
+      disposables.forEach(d => d.dispose())
+      removeDiag()
+    }
+  }, [monacoInstance]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // LSP didOpen notification when file changes
+  React.useEffect(() => {
+    if (!filePath) return
+    const uri = `file://${filePath}`
+    invoke('lsp:notify', {
+      method: 'textDocument/didOpen',
+      params: {
+        textDocument: { uri, languageId: language || 'typescript', version: 1, text: value },
+      },
+    }).catch(() => {})
+    return () => {
+      invoke('lsp:notify', {
+        method: 'textDocument/didClose',
+        params: { textDocument: { uri } },
+      }).catch(() => {})
+    }
+  }, [filePath]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // LSP didChange (debounced 500ms) on value edits
+  React.useEffect(() => {
+    if (!filePath) return
+    const uri = `file://${filePath}`
+    const ver = (changeVersionRef.current.get(uri) ?? 1) + 1
+    changeVersionRef.current.set(uri, ver)
+    const timer = setTimeout(() => {
+      invoke('lsp:notify', {
+        method: 'textDocument/didChange',
+        params: {
+          textDocument: { uri, version: ver },
+          contentChanges: [{ text: value }],
+        },
+      }).catch(() => {})
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [value, filePath]) // eslint-disable-line react-hooks/exhaustive-deps
+
   React.useEffect(() => {
     const editor = editorRef.current;
     if (!editor || !filePath || !monacoInstance) return;
@@ -157,6 +278,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     <div className="h-full w-full bg-copernicus-bg">
         <Editor
         height="100%"
+        path={filePath ?? undefined}
         language={language}
         value={value}
         onChange={onChange}
