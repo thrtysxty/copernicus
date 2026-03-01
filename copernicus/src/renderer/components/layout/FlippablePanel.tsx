@@ -7,12 +7,39 @@ interface FlippablePanelProps {
   front: React.ReactNode
   back: React.ReactNode
   className?: string
+  mode?: 'flip' | 'slide'
 }
 
-export const FlippablePanel: React.FC<FlippablePanelProps> = ({ id, front, back, className = '' }) => {
+export const FlippablePanel: React.FC<FlippablePanelProps> = ({
+  id,
+  front,
+  back,
+  className = '',
+  mode = 'flip'
+}) => {
   const { flippedPanes } = useLayoutStore()
   const isFlipped = flippedPanes.includes(id)
 
+  if (mode === 'slide') {
+    return (
+      <div className={`relative w-full h-full overflow-hidden ${className}`}>
+        <motion.div
+          className="flex w-[200%] h-full"
+          animate={{ x: isFlipped ? '-50%' : '0%' }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+        >
+          <div className="w-1/2 h-full bg-copernicus-bg">
+            {front}
+          </div>
+          <div className="w-1/2 h-full bg-copernicus-bg">
+            {back}
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // mode === 'flip' (default)
   return (
     <div
       className={`relative w-full h-full ${className}`}
