@@ -101,7 +101,14 @@ function NodePaletteSection({
 
 export default function WorkflowCanvas() {
   const invoke = useIpcError();
-  const { activeStoryId, setActiveWorkflowTemplate } = useLayoutStore();
+  const {
+    activeStoryId,
+    setActiveWorkflowTemplate,
+    tourStep,
+    setTourStep,
+    setTourHighlight,
+    setHasCompletedTour,
+  } = useLayoutStore();
 
   const [nodes, setNodes] = useState<WFNode[]>([]);
   const [edges, setEdges] = useState<WFEdge[]>([]);
@@ -655,6 +662,102 @@ export default function WorkflowCanvas() {
       <div className="absolute bottom-4 left-44 text-[10px] text-zinc-600 font-mono uppercase tracking-widest">
         Shift+Drag to connect • Drag to move
       </div>
+
+      {tourStep > 0 && tourStep < 6 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="bg-[#0A0A0A] border-2 border-copernicus-phosphor rounded-lg p-6 w-[400px] shadow-[0_0_40px_rgba(74,222,128,0.1)] transition-all duration-300 transform scale-100">
+             {/* Animated Preview Placeholder */}
+             <div className="w-full h-40 bg-black rounded border border-copernicus-steel/50 mb-6 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-copernicus-phosphor/10 to-transparent animate-pulse" />
+                
+                {tourStep === 1 && (
+                  <div className="p-4 flex flex-col gap-3">
+                     <div className="h-2 w-1/3 bg-zinc-800 rounded animate-pulse" />
+                     <div className="grid grid-cols-3 gap-2">
+                       <div className="h-16 bg-zinc-900 border border-copernicus-steel/20 rounded animate-pulse" />
+                       <div className="h-16 bg-zinc-900 border border-copernicus-steel/20 rounded animate-pulse delay-75" />
+                       <div className="h-16 bg-zinc-900 border border-copernicus-steel/20 rounded animate-pulse delay-150" />
+                     </div>
+                  </div>
+                )}
+                {tourStep === 2 && (
+                   <div className="p-4 font-mono text-[9px] text-zinc-600">
+                      <div className="flex gap-2 mb-1 opacity-50"><span className="text-zinc-800">1 |</span> <span className="text-blue-400">import</span> React <span className="text-blue-400">from</span> <span className="text-green-400">'react'</span></div>
+                      <div className="flex gap-2 mb-1 animate-pulse"><span className="text-zinc-800">2 |</span> <span className="text-purple-400">export default function</span> <span className="text-yellow-400">App</span>() {'{'}</div>
+                      <div className="flex gap-2 mb-1 animate-pulse delay-75"><span className="text-zinc-800">3 |</span>   <span className="text-blue-400">return</span> &lt;<span className="text-red-400">div</span>&gt;Hello World&lt;/<span className="text-red-400">div</span>&gt;</div>
+                      <div className="flex gap-2 mb-1 animate-pulse delay-150"><span className="text-zinc-800">4 |</span> {'}'}</div>
+                   </div>
+                )}
+                {tourStep === 3 && (
+                   <div className="p-4 flex items-center justify-center h-full">
+                      <div className="w-24 h-24 border-2 border-dashed border-copernicus-phosphor/40 rounded-full animate-[spin_10s_linear_infinite] flex items-center justify-center">
+                         <div className="w-16 h-16 bg-copernicus-phosphor/20 rounded-lg animate-pulse" />
+                      </div>
+                   </div>
+                )}
+                {tourStep === 4 && (
+                   <div className="p-4 flex flex-col gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 rounded bg-zinc-800 animate-pulse" />
+                        <div className="h-0.5 w-16 bg-zinc-800 animate-pulse" />
+                        <div className="w-8 h-8 rounded bg-zinc-800 animate-pulse delay-150" />
+                      </div>
+                      <div className="flex items-center gap-4 ml-12">
+                        <div className="h-0.5 w-8 bg-zinc-800 animate-pulse delay-75" />
+                        <div className="w-8 h-8 rounded bg-zinc-800 animate-pulse delay-200" />
+                      </div>
+                   </div>
+                )}
+                {tourStep === 5 && (
+                   <div className="p-4 grid grid-cols-2 gap-2">
+                      <div className="h-10 bg-zinc-900 border border-zinc-800 rounded animate-pulse" />
+                      <div className="h-10 bg-zinc-900 border border-zinc-800 rounded animate-pulse delay-75" />
+                      <div className="h-10 bg-zinc-900 border border-zinc-800 rounded animate-pulse delay-150" />
+                      <div className="h-10 bg-zinc-900 border border-zinc-800 rounded animate-pulse delay-200" />
+                   </div>
+                )}
+             </div>
+
+             <div className="flex justify-between items-end">
+                <div className="space-y-1">
+                   <div className="text-[10px] text-zinc-600 font-mono uppercase tracking-[0.2em] font-bold">AREA {tourStep} OF 5</div>
+                   <div className="text-lg font-bold text-copernicus-phosphor uppercase tracking-widest drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]">
+                      {tourStep === 1 && "PLANNER"}
+                      {tourStep === 2 && "EDITOR"}
+                      {tourStep === 3 && "DESIGNER"}
+                      {tourStep === 4 && "ORCHESTRATOR"}
+                      {tourStep === 5 && "COMMAND"}
+                   </div>
+                </div>
+                <div className="flex gap-4 items-center h-10">
+                   <button
+                     onClick={() => {
+                        setHasCompletedTour()
+                        setTourHighlight(null)
+                     }}
+                     className="text-[9px] text-zinc-500 hover:text-zinc-300 uppercase underline decoration-zinc-700 underline-offset-4 font-bold"
+                   >
+                     Skip
+                   </button>
+                   <button
+                     onClick={() => {
+                       const nextStep = tourStep + 1
+                       setTourStep(nextStep)
+                       if (nextStep === 2) setTourHighlight('editor')
+                       else if (nextStep === 3) setTourHighlight('designer')
+                       else if (nextStep === 4) setTourHighlight('orchestrator')
+                       else if (nextStep === 5) setTourHighlight('reporter')
+                       else if (nextStep === 6) setTourHighlight(null)
+                     }}
+                     className="px-6 py-2 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold uppercase tracking-wider rounded-sm hover:bg-copernicus-phosphor/90 transition-all hover:scale-105 active:scale-95 shadow-[0_4px_10px_rgba(74,222,128,0.2)]"
+                   >
+                     Next →
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

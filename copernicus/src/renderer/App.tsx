@@ -91,6 +91,10 @@ export default function App() {
     setActiveFileContent,
     setActiveFileLanguage,
     setCenterMode,
+    hasCompletedTour,
+    tourHighlight,
+    setTourHighlight,
+    setChatPanelTab,
   } = useLayoutStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -179,6 +183,24 @@ export default function App() {
     }
   }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView])
 
+  // Tour Trigger on Mount
+  useEffect(() => {
+    if (!hasCompletedTour && !showSplash && !isWizard) {
+      setChatPanelTab('guide')
+      setView('planner')
+    }
+  }, [hasCompletedTour, showSplash, isWizard, setChatPanelTab, setView])
+
+  // Tour Highlight Auto-clear
+  useEffect(() => {
+    if (tourHighlight) {
+      const timer = setTimeout(() => {
+        setTourHighlight(null)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [tourHighlight, setTourHighlight])
+
   // Touch Bar Telemetry Update
   useEffect(() => {
     if (showSplash || isWizard) return
@@ -219,7 +241,7 @@ export default function App() {
           {/* §1.4 VT selection block */}
           <button
             onClick={() => setView('planner')}
-            className={`p-2 transition-colors ${activeView === 'planner' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            className={`p-2 transition-all ${activeView === 'planner' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'planner' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Planner"
           >
             <FolderOpen size={18} />
@@ -227,7 +249,7 @@ export default function App() {
 
           <button
             onClick={() => setView('editor')}
-            className={`p-2 transition-colors ${activeView === 'editor' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            className={`p-2 transition-all ${activeView === 'editor' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'editor' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Editor"
           >
             <Monitor size={18} />
@@ -235,7 +257,7 @@ export default function App() {
 
           <button
             onClick={() => setView('designer')}
-            className={`p-2 transition-colors ${activeView === 'designer' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            className={`p-2 transition-all ${activeView === 'designer' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'designer' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Designer"
           >
             <Cpu size={18} />
@@ -243,7 +265,7 @@ export default function App() {
 
           <button
             onClick={() => setView('orchestrator')}
-            className={`p-2 transition-colors ${activeView === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            className={`p-2 transition-all ${activeView === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'orchestrator' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Orchestrator"
           >
             <GitBranch size={18} />
@@ -251,7 +273,7 @@ export default function App() {
 
           <button
             onClick={() => setView('reporter')}
-            className={`p-2 transition-colors ${activeView === 'reporter' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            className={`p-2 transition-all ${activeView === 'reporter' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'reporter' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Reporter"
           >
             <BarChart2 size={18} />

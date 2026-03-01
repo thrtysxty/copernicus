@@ -83,6 +83,11 @@ interface LayoutState {
   canvasContent: string | null
   canvasUrl: string | null
 
+  // Tour State
+  hasCompletedTour: boolean
+  tourHighlight: string | null
+  tourStep: number
+
   // UI Builder State
   uiBuilderOpen: boolean
   uiComponents: UIComponent[]
@@ -91,6 +96,7 @@ interface LayoutState {
   leftPanelMode: 'explorer' | 'command-deck'
   rightPanelMode: 'telemetry' | 'kanban'
   flippedPanes: string[]
+  chatPanelTab: 'chat' | 'guide'
 
   // Telemetry
   workingDir: string
@@ -135,10 +141,16 @@ interface LayoutState {
   addTerminal: (id: string, label: string, ephemeral?: boolean) => void
   removeTerminal: (id: string) => void
   setTerminalBusy: (id: string, busy: boolean) => void
+  setChatPanelTab: (tab: 'chat' | 'guide') => void
 
   // Canvas Actions
   setCanvasContent: (content: string | null) => void
   setCanvasUrl: (url: string | null) => void
+
+  // Tour Actions
+  setHasCompletedTour: () => void
+  setTourHighlight: (id: string | null) => void
+  setTourStep: (step: number) => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -180,12 +192,17 @@ export const useLayoutStore = create<LayoutState>()(
       canvasContent: null,
       canvasUrl: null,
 
+      hasCompletedTour: false,
+      tourHighlight: null,
+      tourStep: 0,
+
       uiBuilderOpen: false,
       uiComponents: [],
 
       leftPanelMode: 'explorer',
       rightPanelMode: 'telemetry',
       flippedPanes: [],
+      chatPanelTab: 'chat',
 
       workingDir: '~/Projects/agentic-platform',
       gitBranch: 'main',
@@ -273,9 +290,14 @@ export const useLayoutStore = create<LayoutState>()(
       setTerminalBusy: (id, busy) => set((state) => ({
         terminals: state.terminals.map(t => t.id === id ? { ...t, isBusy: busy } : t)
       })),
+      setChatPanelTab: (tab) => set({ chatPanelTab: tab }),
 
       setCanvasContent: (content) => set({ canvasContent: content }),
       setCanvasUrl: (url) => set({ canvasUrl: url }),
+
+      setHasCompletedTour: () => set({ hasCompletedTour: true }),
+      setTourHighlight: (id) => set({ tourHighlight: id }),
+      setTourStep: (step) => set({ tourStep: step }),
     }),
     {
       name: 'copernicus-layout-storage',

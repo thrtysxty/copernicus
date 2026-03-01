@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { 
   X, Shield, Key, Layout, Cpu, 
   Settings, GitBranch, Workflow, FileText, 
-  Terminal, Database, User
+  Terminal, Database, User, Layers
 } from 'lucide-react'
 
 // Import Sections
@@ -12,6 +12,7 @@ import { PersonasSection } from './sections/PersonasSection'
 import { AppearanceSection } from './sections/AppearanceSection'
 import { GitSection } from './sections/GitSection'
 import { WorkflowSection } from './sections/WorkflowSection'
+import { McpSection } from './sections/McpSection'
 import { SecuritySection } from './sections/SecuritySection'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { EnvironmentSection } from './sections/EnvironmentSection'
@@ -25,6 +26,7 @@ type TabId =
   | 'appearance' 
   | 'git' 
   | 'workflow' 
+  | 'mcp'
   | 'security' 
   | 'templates'
   | 'environment' 
@@ -46,6 +48,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'appearance':  return <AppearanceSection />
       case 'git':         return <GitSection />
       case 'workflow':    return <WorkflowSection />
+      case 'mcp':         return <McpSection />
       case 'security':    return <SecuritySection />
       case 'templates':   return <TemplatesSection />
       case 'environment': return <EnvironmentSection />
@@ -85,6 +88,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <TabButton id="appearance" label="Appearance" icon={<Layout size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="git" label="Git & GitHub" icon={<GitBranch size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="workflow" label="Workflow" icon={<Workflow size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="mcp" label="MCP" icon={<Layers size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="templates" label="Templates" icon={<FileText size={14} />} active={activeTab} onClick={setActiveTab} />
             
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
@@ -125,12 +129,12 @@ function TabButton({ id, label, icon, active, onClick }: { id: TabId, label: str
   return (
     <button 
       onClick={() => onClick(id)}
-      className={`flex items-center gap-3 px-4 py-2.5 text-[11px] font-mono uppercase tracking-widest transition-all
+      className={`flex items-center gap-3 px-4 py-2.5 text-[11px] font-mono uppercase tracking-widest transition-all rounded-none
         ${isActive 
-          ? 'text-copernicus-phosphor bg-copernicus-phosphor/5 border-r-2 border-copernicus-phosphor font-bold' 
+          ? 'text-[#050505] bg-copernicus-phosphor font-bold' 
           : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'}`}
     >
-      <span className={isActive ? 'text-copernicus-phosphor' : 'text-zinc-600'}>{icon}</span>
+      <span className={isActive ? 'text-[#050505]' : 'text-zinc-600'}>{icon}</span>
       {label}
     </button>
   )
