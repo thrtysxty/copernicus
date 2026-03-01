@@ -61,12 +61,14 @@ const App: React.FC = () => {
     // Load initial state
     const init = async () => {
       try {
-        const settings = await ipcRenderer.invoke('settings:load')
+        const _rawSettings = await ipcRenderer.invoke('settings:load')
+        const settings = (_rawSettings as any)?.data ?? _rawSettings
         if (settings && settings.workspace) {
           setWorkingDir(settings.workspace)
         }
-        
-        const branch = await ipcRenderer.invoke('git:branch')
+
+        const _rawBranch = await ipcRenderer.invoke('git:branch')
+        const branch: string = (_rawBranch as any)?.data ?? _rawBranch ?? ''
         setGitBranch(branch)
         
         // Signal splash we are ready
