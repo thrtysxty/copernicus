@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Edit2, Save, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Edit2, Save, ExternalLink, Play } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
@@ -33,7 +33,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const invoke = useIpcError()
-  const { setDrawerStory, spotlightPane, setSpotlight } = useLayoutStore()
+  const { setDrawerStory, spotlightPane, setSpotlight, addTerminal, setActiveTerminal, setTerminalOpen, workingDir } = useLayoutStore()
   const isSpotlit = spotlightPane === 'telemetry'
 
   const story = stories.find(s => s.id === storyId)
@@ -42,6 +42,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const [content, setContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDispatchingGemini, setIsDispatchingGemini] = useState(false)
+  const [geminiError, setGeminiError] = useState<string | null>(null)
   const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -86,6 +88,46 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     setSpotlight('telemetry')
   }
 
+  const handleDispatchGemini = async () => {
+    if (!story) return
+    setIsDispatchingGemini(true)
+    setGeminiError(null)
+    try {
+      const statusResult = await invoke<any>('gemini:status')
+      const status = statusResult?.data ?? statusResult
+      if (!status?.available?.ok) {
+        setGeminiError(status?.available?.reason ?? 'Gemini not available')
+        return
+      }
+
+      const spawnResult = await invoke<any>('gemini:spawn', { cwd: workingDir || undefined })
+      const { sessionId } = (spawnResult as any)?.data ?? spawnResult
+
+      const prompt = [
+        `You are implementing Story ${story.id} for the COPERNICUS IDE.`,
+        `Read AGENTS.md in the repo root first, then implement the following story:`,
+        ``,
+        content,
+        ``,
+        `When done, run: cd copernicus && npx tsc --noEmit`,
+        `Fix all TypeScript errors before finishing.`,
+      ].join('\n')
+
+      // Open terminal tab before sending (so output streams visibly)
+      addTerminal(`gemini-${sessionId}`, 'Gemini')
+      setActiveTerminal(`gemini-${sessionId}`)
+      setTerminalOpen(true)
+
+      // Fire-and-forget — output streams via gemini:output IPC push
+      invoke('gemini:send-prompt', { sessionId, text: prompt }).catch(log.error)
+    } catch (e) {
+      log.error('[StoryDetail] Gemini dispatch failed', e)
+      setGeminiError('Spawn failed — check Gemini credentials')
+    } finally {
+      setIsDispatchingGemini(false)
+    }
+  }
+
   // Auto-activate edit mode when spotlit
   useEffect(() => {
     if (isSpotlit && storyId) setIsEditing(true)
@@ -114,6 +156,16 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           <ArrowLeft size={11} /> Board
         </button>
         <div className="flex items-center gap-2">
+          {/* ▶ Gemini dispatch button */}
+          <button
+            onClick={handleDispatchGemini}
+            disabled={isDispatchingGemini}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-copernicus-phosphor border border-zinc-800 hover:border-copernicus-phosphor/30 disabled:opacity-40 transition-all uppercase"
+            title={geminiError ?? 'Dispatch story to Gemini CLI'}
+          >
+            <Play size={9} /> {isDispatchingGemini ? 'Spawning…' : geminiError ? 'Error' : 'Gemini'}
+          </button>
+
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}

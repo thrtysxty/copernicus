@@ -18,6 +18,7 @@ import { parseMakefile } from './utils/makefile-parser'
 import { ptyManager } from './pty-manager'
 import { stateLedger } from './db/state-ledger'
 import { setupCommandHandlers as setupDispatcherHandlers } from './commands/dispatcher'
+import { GeminiAgent } from './agents/gemini-agent'
 import { DevtimeManager } from './devtime-manager'
 import { GithubManager } from './github-manager'
 import { llmService } from './llm/service'
@@ -1157,6 +1158,48 @@ function registerIpcHandlers() {
     workflowEngine.reset()
     return true
   }))
+
+  // ── Gemini PTY Agent (Story 195) ──────────────────────────────────────────
+  const geminiAgents = new Map<string, GeminiAgent>()
+
+  ipcMain.handle('gemini:spawn', (_e, opts: { cwd: string }) =>
+    handleIpc(async () => {
+      const agent = new GeminiAgent({
+        cwd: opts.cwd || fsManager.getRootPath(),
+        onOutput: (chunk) => {
+          win?.webContents.send('gemini:output', { sessionId: agent.sessionId, chunk })
+        },
+      })
+      await agent.spawn()
+      geminiAgents.set(agent.sessionId, agent)
+      agent.on('exit', () => geminiAgents.delete(agent.sessionId))
+      return { sessionId: agent.sessionId }
+    })
+  )
+
+  ipcMain.handle('gemini:send-prompt', (_e, { sessionId, text }: { sessionId: string; text: string }) =>
+    handleIpc(async () => {
+      const agent = geminiAgents.get(sessionId)
+      if (!agent) throw new Error(`No Gemini session: ${sessionId}`)
+      const response = await agent.sendPrompt(text)
+      return { response }
+    })
+  )
+
+  ipcMain.handle('gemini:close', (_e, sessionId: string) =>
+    handleIpc(() => {
+      geminiAgents.get(sessionId)?.close()
+      geminiAgents.delete(sessionId)
+      return null
+    })
+  )
+
+  ipcMain.handle('gemini:status', () =>
+    handleIpc(async () => ({
+      available: await GeminiAgent.isAvailable(),
+      activeSessions: Array.from(geminiAgents.keys()),
+    }))
+  )
 
   ipcMain.handle('app:quit', () => handleIpc(() => { app.quit(); }));
 }

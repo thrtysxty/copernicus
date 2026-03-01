@@ -72,6 +72,8 @@ const SEND_CHANNELS = new Set([
   'browser:click', 'browser:fill', 'browser:evaluate', 'browser:close',
   // Jules (Story 161)
   'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session',
+  // Gemini PTY agent (Story 195)
+  'gemini:spawn', 'gemini:send-prompt', 'gemini:close', 'gemini:status',
   // Touch Bar
   'touchbar:rebuild',
   // Splash / wizard
@@ -110,6 +112,8 @@ const LISTEN_CHANNELS = new Set([
   'ledger:stats-update',
   // Jules live session updates (pushed by jules/monitor.ts)
   'jules:session-update',
+  // Gemini PTY output (pushed by GeminiAgent)
+  'gemini:output',
   // LSP diagnostics (Story 176)
   'lsp:diagnostics',
 ])

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Terminal } from './Terminal';
 import { JulesPanel } from '../jules/JulesPanel';
+import { GeminiPanel } from './GeminiPanel';
 import { useLayoutStore } from '../../store/layout';
 import { X, Loader2 } from 'lucide-react';
 
@@ -60,6 +61,8 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
           >
             {tab.id === 'terminal-jules' ? (
               <JulesPanel />
+            ) : tab.id.startsWith('gemini-') ? (
+              <GeminiPanel sessionId={tab.id.slice('gemini-'.length)} />
             ) : (
               <Terminal id={tab.id} active={activeTerminalId === tab.id} cwd={cwd} />
             )}
