@@ -50,6 +50,26 @@ export const SCHEMA = {
       agent_id TEXT DEFAULT 'default'
     );
   `,
+  context_snapshots: `
+    CREATE TABLE IF NOT EXISTS context_snapshots (
+      id TEXT PRIMARY KEY,
+      panel_id TEXT NOT NULL,      -- 'chat' | 'workflow:node:<id>' | 'agent:<name>'
+      model_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      messages TEXT NOT NULL,      -- JSON serialised message array
+      created_at INTEGER NOT NULL
+    );
+  `,
+  project_memory: `
+    CREATE TABLE IF NOT EXISTS project_memory (
+      id TEXT PRIMARY KEY,
+      content TEXT NOT NULL,
+      importance INTEGER NOT NULL DEFAULT 3,    -- 1–10
+      source TEXT NOT NULL,                     -- 'manual' | 'auto'
+      created_at INTEGER NOT NULL,
+      last_accessed INTEGER
+    );
+  `,
   shared_assets: `
     CREATE TABLE IF NOT EXISTS shared_assets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

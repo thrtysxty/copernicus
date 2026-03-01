@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Github, Settings, BarChart2, GitBranch, FolderOpen,
-  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout, Activity
+  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout, Activity, Brain
 } from 'lucide-react'
 import { useLayoutStore } from './store/layout'
 import { CommandCenter } from './components/command/CommandCenter'
@@ -328,6 +328,14 @@ export default function App() {
             <Activity size={18} />
           </button>
 
+          <button
+            onClick={() => setView('memory')}
+            className={`p-2 transition-all ${activeView === 'memory' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            title="Memory"
+          >
+            <Brain size={18} />
+          </button>
+
           <div className="flex-1" />
 
           <button
@@ -378,6 +386,11 @@ export default function App() {
             {activeView === 'planner' && <KanbanBoard />}
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && <WorkflowCanvas />}
+            {activeView === 'memory' && (
+              <div className="h-full w-full flex items-center justify-center bg-[#050505] text-copernicus-phosphor/50 font-mono text-sm uppercase tracking-widest">
+                Memory Browser — coming in a future release.
+              </div>
+            )}
 
             {(activeView === 'designer' || activeView === 'editor') && (
               <>

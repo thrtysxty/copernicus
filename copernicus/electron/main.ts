@@ -818,8 +818,14 @@ function registerIpcHandlers() {
   ipcMain.handle('db:get-intents', (_, limit) => handleIpc(() => stateLedger.getRecentIntents(limit)));
   ipcMain.handle('db:log-event', (_, type, content, metadata, agentId) => handleIpc(() => stateLedger.logEvent(type, content, metadata, agentId)));
   ipcMain.handle('db:get-events', (_, limit) => handleIpc(() => stateLedger.getRecentEvents(limit)));
-  ipcMain.handle('db:add-memory', (_, content, tags, agentId) => handleIpc(() => stateLedger.addMemory(content, tags, agentId)));
-  ipcMain.handle('db:search-memory', (_, query) => handleIpc(() => stateLedger.searchMemory(query)));
+  ipcMain.handle('db:add-memory', (_, payload) => handleIpc(() => {
+    if (typeof payload === 'string') {
+      stateLedger.addProjectMemory({ content: payload, source: 'manual' });
+    } else {
+      stateLedger.addProjectMemory(payload);
+    }
+  }));
+  ipcMain.handle('db:search-memory', (_, limit) => handleIpc(() => stateLedger.searchProjectMemory(limit)));
   ipcMain.handle('db:vacuum', () => handleIpc(() => {
     stateLedger.vacuum();
     return true;
@@ -1252,6 +1258,14 @@ function registerIpcHandlers() {
       activeSessions: Array.from(geminiAgents.keys()),
     }))
   )
+
+  // Context Snapshots & Project Memory (Stories 157 & 158)
+  ipcMain.handle('snapshot:save', (_e, payload) => handleIpc(() => {
+    stateLedger.saveSnapshot(payload);
+  }));
+  ipcMain.handle('snapshot:restore', (_e, panelId: string) => handleIpc(() =>
+    stateLedger.getLatestSnapshot(panelId)
+  ));
 
   ipcMain.handle('app:quit', () => handleIpc(() => { app.quit(); }));
 

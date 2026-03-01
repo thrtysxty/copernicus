@@ -30,6 +30,7 @@ const SEND_CHANNELS = new Set([
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
   'db:add-memory', 'db:search-memory', 'db:vacuum',
+  'snapshot:save', 'snapshot:restore', // Context Snapshots (Story 157)
   // Model Call Ledger (Story 156)
   'ledger:session-stats', 'ledger:recent-calls', 'ledger:all-time-cost',
   // Layout / telemetry

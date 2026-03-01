@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
@@ -125,7 +126,9 @@ export class StateLedger {
     this.db.exec(SCHEMA.events);
     this.db.exec(SCHEMA.memory);
     this.db.exec(SCHEMA.shared_assets);
-    
+    this.db.exec(SCHEMA.context_snapshots);
+    this.db.exec(SCHEMA.project_memory);
+
     // Story Persistence (Story 160)
     this.db.exec(SCHEMA.stories);
     this.migrateStories();
@@ -412,6 +415,52 @@ export class StateLedger {
       blocked_by: row.blocked_by ? JSON.parse(row.blocked_by) : [],
       blocks:     row.blocks     ? JSON.parse(row.blocks)     : [],
     }
+  }
+
+  saveSnapshot(payload: any): void {
+    this.db.prepare(`
+      INSERT OR REPLACE INTO context_snapshots (id, panel_id, model_id, provider, messages, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      payload.id || crypto.randomUUID(),
+      payload.panel_id,
+      payload.model_id,
+      payload.provider,
+      typeof payload.messages === 'string' ? payload.messages : JSON.stringify(payload.messages),
+      Date.now()
+    );
+  }
+
+  getLatestSnapshot(panelId: string): any | null {
+    const row = this.db.prepare(`
+      SELECT * FROM context_snapshots WHERE panel_id = ? ORDER BY created_at DESC LIMIT 1
+    `).get(panelId) as any;
+    if (!row) return null;
+    try {
+      return { ...row, messages: JSON.parse(row.messages) };
+    } catch {
+      return row;
+    }
+  }
+
+  addProjectMemory(payload: { content: string, importance?: number, source: string }): void {
+    this.db.prepare(`
+      INSERT INTO project_memory (id, content, importance, source, created_at, last_accessed)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      crypto.randomUUID(),
+      payload.content,
+      payload.importance ?? 3,
+      payload.source,
+      Date.now(),
+      Date.now()
+    );
+  }
+
+  searchProjectMemory(limit: number = 5): any[] {
+    return this.db.prepare(`
+      SELECT * FROM project_memory ORDER BY (importance * 1.0 / (1.0 + (strftime('%s', 'now') * 1000 - created_at) / 86400000.0)) DESC LIMIT ?
+    `).all(limit) as any[];
   }
 
   close() {

@@ -185,6 +185,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const [pickerResults, setPickerResults] = useState<Array<{ label: string; value: string; payload: string }>>([])
 
   const streamingIdRef = useRef<string | null>(null)
+  const isFirstCallAfterSwitch = useRef(false)
+  const memoryInjectedRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const [activeBackTab, setActiveBackTab] = useState('context')
@@ -437,6 +439,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [invoke])
 
   useEffect(() => {
+    if (memoryInjectedRef.current) return
+    memoryInjectedRef.current = true
+    invoke<any>('db:search-memory', 5).then((res: any) => {
+      if (res?.ok && res.data && res.data.length > 0) {
+        const memories = res.data.map((m: any) => m.content).join('\n')
+        setMessages([{ id: `msg-${Date.now()}`, role: 'assistant', content: `[Project Memory]\n${memories}\n\n---\n\nMemory injected silently.` }])
+      }
+    }).catch(() => {})
+  }, [invoke])
+
+  useEffect(() => {
     if (!ipcRenderer) return
 
     const removeToken = ipcRenderer.on(
@@ -580,6 +593,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     if (context.length > 0) {
       const contextBlocks = context.map(c => `[CONTEXT: ${String(c.type || '').toUpperCase()} - ${c.label}]\n${c.content}`).join('\n\n')
       enrichedContent = `${contextBlocks}\n\n---\n\nUSER_INPUT: ${currentInput}`
+    }
+
+    if (isFirstCallAfterSwitch.current) {
+      isFirstCallAfterSwitch.current = false
+      const snapRes = await invoke<any>('snapshot:restore', 'chat')
+      if (snapRes?.ok && snapRes.data) {
+        try {
+          const m = typeof snapRes.data.messages === 'string' ? JSON.parse(snapRes.data.messages) : snapRes.data.messages
+          const prevContext = m.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')
+          enrichedContent = `[CONTEXT HANDOFF]\nPrevious session context:\n${prevContext}\n\n${enrichedContent}`
+        } catch { /* snapshot parse failed — skip */ }
+      }
     }
 
     // AC-7: UI Builder Context Injection
@@ -791,6 +816,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                         key={m.id}
                         className={`w-full text-left px-3 py-2 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor/5 border-l-2 border-copernicus-phosphor' : ''}`}
                         onClick={() => {
+                            if (model !== m.id) {
+                              invoke('snapshot:save', { panel_id: 'chat', model_id: model, provider: availableModels.find((x: any) => x.id === model)?.provider || 'unknown', messages }).catch(() => {})
+                              isFirstCallAfterSwitch.current = true
+                              setMessages(prev => [...prev, { id: `msg-divider-${Date.now()}`, role: 'assistant', content: `↔ Switched to ${m.name}` }])
+                            }
                             setModel(m.id)
                             setShowModelPicker(false)
                         }}
