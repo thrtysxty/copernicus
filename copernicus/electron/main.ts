@@ -998,6 +998,11 @@ function registerIpcHandlers() {
   ipcMain.handle('lsp:status',  () => handleIpc(() => lspManager.getStatus()))
   ipcMain.handle('lsp:request', (_e, { method, params }: { method: string; params: any }) => handleIpc(() => lspManager.sendRequest(method, params)))
   ipcMain.handle('lsp:notify',  (_e, { method, params }: { method: string; params: any }) => handleIpc(() => { lspManager.sendNotify(method, params) }))
+  // LSP file lifecycle + diagnostics (Story 189)
+  ipcMain.handle('lsp:open-file',       (_e, { filePath, content }: { filePath: string; content: string }) => handleIpc(() => lspManager.openFile(filePath, content)))
+  ipcMain.handle('lsp:close-file',      (_e, filePath: string) => handleIpc(() => lspManager.closeFile(filePath)))
+  ipcMain.handle('lsp:get-diagnostics', (_e, filePath: string) => handleIpc(() => lspManager.getDiagnostics(filePath)))
+  ipcMain.handle('lsp:check-file',      (_e, filePath: string) => handleIpc(() => lspManager.getDiagnostics(filePath)))
 
   // File System
   ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc(() => fsManager.listDir(dirPath)))

@@ -52,8 +52,6 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const monacoInstance = useMonaco();
   const editorRef = React.useRef<any>(null);
   const invoke = useIpcError();
-  const changeVersionRef = React.useRef<Map<string, number>>(new Map());
-
   React.useEffect(() => {
     if (monacoInstance) {
       monacoInstance.editor.defineTheme('copernicus-phosphor', {
@@ -189,21 +187,21 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
     // Diagnostics push → Monaco markers
     const removeDiag = (window as any).ipcRenderer.on(
-      'lsp:diagnostics',
+      'lsp:diagnostics-update',
       (_e: any, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
         const model = monacoInstance.editor.getModels().find(m => m.uri.toString() === uri)
         if (!model) return
         monacoInstance.editor.setModelMarkers(model, 'lsp', diagnostics.map((d: any) => ({
+          startLineNumber: (d.range?.start?.line ?? 0) + 1,
+          startColumn: (d.range?.start?.character ?? 0) + 1,
+          endLineNumber: (d.range?.end?.line ?? 0) + 1,
+          endColumn: (d.range?.end?.character ?? 0) + 1,
+          message: d.message,
           severity: d.severity === 1
             ? monacoInstance.MarkerSeverity.Error
             : d.severity === 2
               ? monacoInstance.MarkerSeverity.Warning
               : monacoInstance.MarkerSeverity.Info,
-          message: d.message,
-          startLineNumber: (d.range?.start?.line ?? 0) + 1,
-          startColumn: (d.range?.start?.character ?? 0) + 1,
-          endLineNumber: (d.range?.end?.line ?? 0) + 1,
-          endColumn: (d.range?.end?.character ?? 0) + 1,
         })))
       }
     )
@@ -214,38 +212,25 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     }
   }, [monacoInstance]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // LSP didOpen notification when file changes
+  // LSP open/close via lsp-manager file lifecycle (Story 189)
   React.useEffect(() => {
     if (!filePath) return
-    const uri = `file://${filePath}`
-    invoke('lsp:notify', {
-      method: 'textDocument/didOpen',
-      params: {
-        textDocument: { uri, languageId: language || 'typescript', version: 1, text: value },
-      },
-    }).catch(() => {})
+    invoke('lsp:open-file', { filePath, content: value }).catch(() => {})
     return () => {
-      invoke('lsp:notify', {
-        method: 'textDocument/didClose',
-        params: { textDocument: { uri } },
-      }).catch(() => {})
+      if (monacoInstance) {
+        const uri = `file://${filePath}`
+        const model = monacoInstance.editor.getModels().find(m => m.uri.toString() === uri)
+        if (model) monacoInstance.editor.setModelMarkers(model, 'lsp', [])
+      }
+      invoke('lsp:close-file', filePath).catch(() => {})
     }
   }, [filePath]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // LSP didChange (debounced 500ms) on value edits
   React.useEffect(() => {
     if (!filePath) return
-    const uri = `file://${filePath}`
-    const ver = (changeVersionRef.current.get(uri) ?? 1) + 1
-    changeVersionRef.current.set(uri, ver)
     const timer = setTimeout(() => {
-      invoke('lsp:notify', {
-        method: 'textDocument/didChange',
-        params: {
-          textDocument: { uri, version: ver },
-          contentChanges: [{ text: value }],
-        },
-      }).catch(() => {})
+      invoke('lsp:open-file', { filePath, content: value }).catch(() => {})
     }, 500)
     return () => clearTimeout(timer)
   }, [value, filePath]) // eslint-disable-line react-hooks/exhaustive-deps

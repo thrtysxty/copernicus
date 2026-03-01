@@ -39,6 +39,8 @@ export class LspManager {
   private pending = new Map<number, PendingRequest>()
   private buf = ''
   private win: BrowserWindow | null = null
+  private fileVersions = new Map<string, number>()
+  private diagnosticsCache = new Map<string, any[]>()
 
   setWindow(win: BrowserWindow) {
     this.win = win
@@ -83,6 +85,36 @@ export class LspManager {
       this.sendNotify('initialized', {})
       log.info('[LSP] Server ready')
     }).catch(err => log.error(err))
+  }
+
+  openFile(filePath: string, content: string) {
+    if (!this.proc) return
+    const uri = `file://${filePath}`
+    const ver = (this.fileVersions.get(uri) ?? 0) + 1
+    this.fileVersions.set(uri, ver)
+    if (ver === 1) {
+      this.sendNotify('textDocument/didOpen', {
+        textDocument: { uri, languageId: 'typescript', version: ver, text: content },
+      })
+    } else {
+      this.sendNotify('textDocument/didChange', {
+        textDocument: { uri, version: ver },
+        contentChanges: [{ text: content }],
+      })
+    }
+  }
+
+  closeFile(filePath: string) {
+    if (!this.proc) return
+    const uri = `file://${filePath}`
+    this.fileVersions.delete(uri)
+    this.diagnosticsCache.delete(uri)
+    this.sendNotify('textDocument/didClose', { textDocument: { uri } })
+  }
+
+  getDiagnostics(filePath: string): any[] {
+    const uri = `file://${filePath}`
+    return this.diagnosticsCache.get(uri) ?? []
   }
 
   stop() {
@@ -149,7 +181,10 @@ export class LspManager {
     }
     // Server-initiated notification
     if (msg.method === 'textDocument/publishDiagnostics' && this.win && !this.win.isDestroyed()) {
-      this.win.webContents.send('lsp:diagnostics', msg.params)
+      const uri = msg.params.uri
+      const diagnostics = msg.params.diagnostics
+      this.diagnosticsCache.set(uri, diagnostics)
+      this.win.webContents.send('lsp:diagnostics-update', { uri, diagnostics })
     }
   }
 }

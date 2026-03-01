@@ -30,36 +30,75 @@ const PanelHeader: React.FC<{
   isSpotlightActive: boolean;
   onBuilder: () => void;
   isBuilderActive: boolean;
-}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onBuilder, isBuilderActive }) => (
-  <div className="h-10 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
-    <div className="flex items-center gap-3">
-      <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
+  onCommandPalette?: () => void;
+  showLspStatus?: boolean;
+}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onBuilder, isBuilderActive, onCommandPalette, showLspStatus }) => {
+  const [lspRunning, setLspRunning] = useState(false)
+  const [errorCount, setErrorCount] = useState(0)
+  const [warnCount, setWarnCount] = useState(0)
+  const invoke = useIpcError()
+  const { activeFilePath } = useLayoutStore()
+
+  useEffect(() => {
+    invoke<any>('lsp:status').then((res: any) => {
+      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
+    }).catch(() => {})
+
+    const removeDiag = window.ipcRenderer.on(
+      'lsp:diagnostics-update',
+      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
+        if (!activeFilePath || `file://${activeFilePath}` !== uri) return
+        let errors = 0, warnings = 0
+        diagnostics.forEach((d: any) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
+        setErrorCount(errors)
+        setWarnCount(warnings)
+      }
+    )
+    return () => removeDiag()
+  }, [invoke, activeFilePath])
+
+  return (
+    <div className="h-10 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
+      <div className="flex items-center gap-3">
+        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
+        {showLspStatus && (
+          <div
+            className="flex items-center gap-2 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors"
+            onClick={onCommandPalette}
+          >
+            <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
+            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+              LSP {errorCount}E {warnCount}W
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onBuilder}
+          className={`p-1.5 rounded transition-colors ${isBuilderActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+          title="UI Builder"
+        >
+          <Layout size={14} />
+        </button>
+        <button
+          onClick={onFlip}
+          className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+          title="Flip Panel"
+        >
+          <RotateCcw size={14} />
+        </button>
+        <button
+          onClick={onSpotlight}
+          className={`p-1.5 rounded transition-colors ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+          title="Spotlight"
+        >
+          {isSpotlightActive ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+        </button>
+      </div>
     </div>
-    <div className="flex items-center gap-2">
-      <button
-        onClick={onBuilder}
-        className={`p-1.5 rounded transition-colors ${isBuilderActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-        title="UI Builder"
-      >
-        <Layout size={14} />
-      </button>
-      <button
-        onClick={onFlip}
-        className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
-        title="Flip Panel"
-      >
-        <RotateCcw size={14} />
-      </button>
-      <button
-        onClick={onSpotlight}
-        className={`p-1.5 rounded transition-colors ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-        title="Spotlight"
-      >
-        {isSpotlightActive ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-      </button>
-    </div>
-  </div>
-)
+  )
+}
 
 export default function App() {
   const invoke = useIpcError()
@@ -362,6 +401,8 @@ export default function App() {
                             isSpotlightActive={spotlightPane === 'editor'}
                             onBuilder={toggleUIBuilder}
                             isBuilderActive={uiBuilderOpen}
+                            onCommandPalette={() => setCommandPaletteOpen(true)}
+                            showLspStatus={activeView === 'designer' || activeView === 'editor'}
                           />
                           <CenterPanelRouter
                             filePath={activeFilePath}

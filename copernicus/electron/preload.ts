@@ -64,8 +64,9 @@ const SEND_CHANNELS = new Set([
   'review:log',
   // Codebase semantic index
   'codebase:search', 'codebase:index-status',
-  // LSP (Story 176)
+  // LSP (Story 176 + 189)
   'lsp:status', 'lsp:request', 'lsp:notify',
+  'lsp:open-file', 'lsp:close-file', 'lsp:get-diagnostics', 'lsp:check-file', 'lsp:workspace-check',
   // Canvas
   'canvas:iframe-bounds',
   // Browser (Story 155)
@@ -117,8 +118,8 @@ const LISTEN_CHANNELS = new Set([
   'jules:session-update',
   // Gemini PTY output (pushed by GeminiAgent)
   'gemini:output',
-  // LSP diagnostics (Story 176)
-  'lsp:diagnostics',
+  // LSP diagnostics (Story 176 + 189)
+  'lsp:diagnostics-update',
   // Command Center (Story 184)
   'command:telemetry-update',
 ])

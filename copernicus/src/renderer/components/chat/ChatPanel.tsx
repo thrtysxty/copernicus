@@ -373,6 +373,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     streamingIdRef.current = sessionId
     setIsStreaming(true)
 
+    // Inject LSP diagnostics for open file if available (Story 189)
+    if (openFilePath) {
+      try {
+        const diagRes = await invoke<any>('lsp:get-diagnostics', openFilePath)
+        const diags: any[] = diagRes?.data ?? diagRes ?? []
+        if (Array.isArray(diags) && diags.length > 0) {
+          const filename = openFilePath.split(/[/\\]/).pop() ?? openFilePath
+          const summary = diags.slice(0, 10)
+            .map((d: any) => `[${d.severity === 1 ? 'ERROR' : 'WARN'}] L${(d.range?.start?.line ?? 0) + 1}: ${d.message}`)
+            .join('\n')
+          enrichedContent = `[LSP diagnostics for ${filename}]\n${summary}\n\n---\n\n${enrichedContent}`
+        }
+      } catch { /* LSP not running — skip */ }
+    }
+
     // Add placeholder assistant message
     setMessages(prev => [...prev, {
       id: `msg-${Date.now()}`,
