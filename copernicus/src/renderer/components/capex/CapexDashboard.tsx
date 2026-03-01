@@ -122,8 +122,8 @@ export const CapexDashboard: React.FC = () => {
           invoke<any>('devtime:report'),
           invoke<any>('devtime:weekly-velocity'),
         ])
-        setReport(Array.isArray(rep) ? rep : rep?.data ?? [])
-        setWeeklyVelocity(Array.isArray(vel) ? vel : vel?.data ?? [])
+        setReport(Array.isArray(rep) ? rep : Array.isArray(rep?.data) ? rep.data : [])
+        setWeeklyVelocity(Array.isArray(vel) ? vel : Array.isArray(vel?.data) ? vel.data : [])
       } finally { setFinLoading(false) }
     }
     if (tab === 'quality') {
@@ -131,8 +131,8 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('devtime:test-history'),
         invoke<any>('stories:bugs-by-assignee'),
       ])
-      setTestRuns(Array.isArray(hist) ? hist : hist?.data ?? [])
-      setBugs(Array.isArray(b) ? b : b?.data ?? [])
+      setTestRuns(Array.isArray(hist) ? hist : Array.isArray(hist?.data) ? hist.data : [])
+      setBugs(Array.isArray(b) ? b : Array.isArray(b?.data) ? b.data : [])
     }
     if (tab === 'llm') {
       const [daily, byModel, byStory] = await Promise.all([
@@ -140,9 +140,9 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('ledger:cost-by-model'),
         invoke<any>('ledger:cost-by-story'),
       ])
-      const dc = Array.isArray(daily) ? daily : daily?.data ?? []
-      const bm = Array.isArray(byModel) ? byModel : byModel?.data ?? []
-      const bs = Array.isArray(byStory) ? byStory : byStory?.data ?? []
+      const dc = Array.isArray(daily) ? daily : Array.isArray(daily?.data) ? daily.data : []
+      const bm = Array.isArray(byModel) ? byModel : Array.isArray(byModel?.data) ? byModel.data : []
+      const bs = Array.isArray(byStory) ? byStory : Array.isArray(byStory?.data) ? byStory.data : []
       setDailyCosts(dc)
       setCostByModel(bm)
       setCostByStory(bs)
@@ -153,8 +153,8 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('stories:throughput'),
         invoke<any>('stories:status-distribution'),
       ])
-      setThroughput(Array.isArray(tp) ? tp : tp?.data ?? [])
-      setStatusDist(Array.isArray(sd) ? sd : sd?.data ?? [])
+      setThroughput(Array.isArray(tp) ? tp : Array.isArray(tp?.data) ? tp.data : [])
+      setStatusDist(Array.isArray(sd) ? sd : Array.isArray(sd?.data) ? sd.data : [])
     }
   }
 

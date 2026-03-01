@@ -10,7 +10,8 @@ export function CapexSidebar() {
     const fetchReport = async () => {
       try {
         const _raw = await invoke<any>('devtime:report', month);
-        setReport((_raw as any)?.data ?? _raw ?? []);
+        const r: any = _raw;
+        setReport(Array.isArray(r?.data) ? r.data : Array.isArray(r) ? r : []);
       } catch (e) {
         console.error("Failed to fetch report", e);
       }

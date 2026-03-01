@@ -146,7 +146,7 @@ export function KanbanBoard() {
 
   // ── Migration guard — reset to 9-lane DEFAULT_COLUMNS for existing users ──
   useEffect(() => {
-    if (columns.length < 9) {
+    if (!Array.isArray(columns) || columns.length < 9) {
       import('../store/layout').then(({ DEFAULT_COLUMNS }) => setColumns(DEFAULT_COLUMNS))
     }
   }, [])
