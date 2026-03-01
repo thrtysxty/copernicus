@@ -54,7 +54,7 @@ export function KanbanBoard() {
   const [stories, setStories] = useState<Story[]>([])
   const [julesSessions, setJulesSessions] = useState<Record<string, JulesSession>>({})
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
-  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, setColumns } = useLayoutStore()
+  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, setColumns, rotateColumn } = useLayoutStore()
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
   const [newTitle, setNewTitle] = useState('')
   const [newEpic, setNewEpic] = useState('')
@@ -143,14 +143,12 @@ export function KanbanBoard() {
     ))
   }
 
-  const rotateColumn = (columnId: string) => {
-    const index = columns.findIndex(col => col.id === columnId)
-    if (index === -1) return
-    const newColumns = [...columns]
-    const [removed] = newColumns.splice(index, 1)
-    newColumns.push(removed)
-    setColumns(newColumns)
-  }
+  // ── Migration guard — reset to 9-lane DEFAULT_COLUMNS for existing users ──
+  useEffect(() => {
+    if (columns.length < 9) {
+      import('../store/layout').then(({ DEFAULT_COLUMNS }) => setColumns(DEFAULT_COLUMNS))
+    }
+  }, [])
 
   // ── Creation ─────────────────────────────────────────────────────────────
   const handleCreate = async () => {

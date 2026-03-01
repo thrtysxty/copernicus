@@ -5,6 +5,18 @@ import { UIComponent } from '../components/Editor/ui-builder/types'
 export type StoryboardView = 'blueprint' | 'studio' | 'engine-room' | 'capex' | 'workflow'
 export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban'
 
+export const DEFAULT_COLUMNS: KanbanColumn[] = [
+  { id: 'Planning',    status: 'PLANNING',    color: 'bg-slate-500/5 border-slate-500/20',   accent: 'bg-slate-500' },
+  { id: 'UI Design',   status: 'DESIGN',      color: 'bg-purple-500/5 border-purple-500/20', accent: 'bg-purple-500' },
+  { id: 'Blueprint',   status: 'READY',       color: 'bg-blue-500/5 border-blue-500/20',     accent: 'bg-blue-500' },
+  { id: 'Development', status: 'IN PROGRESS', color: 'bg-yellow-500/5 border-yellow-500/20', accent: 'bg-yellow-500' },
+  { id: 'Testing',     status: 'TESTING',     color: 'bg-orange-500/5 border-orange-500/20', accent: 'bg-orange-500' },
+  { id: 'QA / Review', status: 'REVIEW',      color: 'bg-amber-500/5 border-amber-500/20',   accent: 'bg-amber-500' },
+  { id: 'Documenting', status: 'DOCUMENTING', color: 'bg-cyan-500/5 border-cyan-500/20',     accent: 'bg-cyan-500' },
+  { id: 'Staging',     status: 'STAGING',     color: 'bg-teal-500/5 border-teal-500/20',     accent: 'bg-teal-500' },
+  { id: 'Done',        status: 'COMPLETE',    color: 'bg-green-500/5 border-green-500/20',   accent: 'bg-green-500' },
+]
+
 export const PHOSPHOR_PRESETS = {
   green: { label: 'Green', hex: '#4ADE80', rgb: '74 222 128' },
   amber: { label: 'Amber', hex: '#FBBF24', rgb: '251 191 36' },
@@ -99,6 +111,7 @@ interface LayoutState {
   setPhosphorColor: (color: PhosphorColor) => void
   setReviewEnabled: (enabled: boolean) => void
   setColumns: (columns: KanbanColumn[]) => void
+  rotateColumn: (id: string) => void
   setActiveWorkflowTemplate: (id: string | null) => void
   setCenterMode: (mode: CenterMode) => void
   setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean }>) => void
@@ -134,14 +147,7 @@ export const useLayoutStore = create<LayoutState>()(
       drawerStoryId: null,
       phosphorColor: 'green',
       reviewEnabled: false,
-      columns: [
-        { id: 'Blueprint',   status: 'READY',       color: 'bg-blue-500/5 border-blue-500/20',   accent: 'bg-blue-500' },
-        { id: 'Engine Room', status: 'IN PROGRESS',  color: 'bg-yellow-500/5 border-yellow-500/20', accent: 'bg-yellow-500' },
-        { id: 'Test Bench',  status: 'TESTING',      color: 'bg-orange-500/5 border-orange-500/20', accent: 'bg-orange-500' },
-        { id: 'QA / Review', status: 'REVIEW',       color: 'bg-purple-500/5 border-purple-500/20', accent: 'bg-purple-500' },
-        { id: 'Documenting', status: 'DOCUMENTING',  color: 'bg-cyan-500/5 border-cyan-500/20',   accent: 'bg-cyan-500' },
-        { id: 'Done',        status: 'COMPLETE',     color: 'bg-green-500/5 border-green-500/20',  accent: 'bg-green-500' },
-      ],
+      columns: DEFAULT_COLUMNS,
       activeWorkflowTemplate: null,
       centerMode: 'code',
 
@@ -223,6 +229,15 @@ export const useLayoutStore = create<LayoutState>()(
       setPhosphorColor: (color) => set({ phosphorColor: color }),
       setReviewEnabled: (enabled) => set({ reviewEnabled: enabled }),
       setColumns: (columns) => set({ columns }),
+      rotateColumn: (id) => set((state) => {
+        const cols = [...state.columns]
+        const idx = cols.findIndex(c => c.id === id)
+        if (idx === -1) return state
+        const [col] = cols.splice(idx, 1)
+        const nextIdx = (idx + 1) % (cols.length + 1)
+        cols.splice(nextIdx, 0, col)
+        return { columns: cols }
+      }),
       setActiveWorkflowTemplate: (id) => set({ activeWorkflowTemplate: id }),
       setCenterMode: (mode) => set({ centerMode: mode }),
       setAppearance: (patch) => set((state) => ({ ...state, ...patch })),

@@ -36,7 +36,7 @@ const MODEL_OPTIONS = [
 
 export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const invoke = useIpcError()
-  const { setDrawerStory, spotlightPane } = useLayoutStore()
+  const { setDrawerStory, spotlightPane, setSpotlight } = useLayoutStore()
   const isSpotlit = spotlightPane === 'telemetry'
 
   const story = stories.find(s => s.id === storyId)
@@ -75,14 +75,14 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     }
   }
 
-  const handleOpenInEditor = async () => {
-    try {
-      await invoke('stories:hydrate', storyId)
-      setDrawerStory(null)
-    } catch (e) {
-      console.error('Failed to open in editor', e)
-    }
+  const handleOpenInEditor = () => {
+    setSpotlight('telemetry')
   }
+
+  // Auto-activate edit mode when spotlit
+  useEffect(() => {
+    if (isSpotlit && storyId) setIsEditing(true)
+  }, [isSpotlit, storyId])
 
   if (!story) {
     return (
@@ -123,13 +123,22 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
               <Save size={9} /> {isSaving ? 'Saving…' : 'Save'}
             </button>
           )}
-          <button
-            onClick={handleOpenInEditor}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-zinc-300 border border-zinc-800 transition-all uppercase"
-            title="Open raw Markdown in Monaco editor"
-          >
-            <ExternalLink size={9} /> Editor
-          </button>
+          {isSpotlit ? (
+            <button
+              onClick={() => { setSpotlight(null); setIsEditing(false) }}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-amber-400/70 hover:text-amber-400 border border-amber-500/20 hover:border-amber-500/40 transition-all uppercase"
+            >
+              <ExternalLink size={9} /> Exit Editor
+            </button>
+          ) : (
+            <button
+              onClick={handleOpenInEditor}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-zinc-300 border border-zinc-800 transition-all uppercase"
+              title="Expand to full-pane editor"
+            >
+              <ExternalLink size={9} /> Editor
+            </button>
+          )}
         </div>
       </div>
 
