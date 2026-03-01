@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
-         Image, Database } from 'lucide-react'
+         Image as ImageIcon, Database } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
+import { useLayoutStore } from '../../store/layout'
 
 const IMAGE_EXTENSIONS = new Set([
   'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico', 'tiff', 'avif',
@@ -14,28 +15,6 @@ const BINARY_EXTENSIONS = new Set([
   'pdf', 'bin', 'a', 'o', 'class', 'pyc',
   'mp4', 'mp3', 'wav', 'mov', 'avi', 'mkv',
 ])
-
-const MAX_EDITOR_BYTES = 512_000 // 500 KB
-
-function classifyFile(filePath: string): 'code' | 'image' | 'binary' | 'svg' {
-  const ext = filePath.split('.').pop()?.toLowerCase() ?? ''
-  if (ext === 'svg') return 'svg'
-  if (IMAGE_EXTENSIONS.has(ext)) return 'image'
-  if (BINARY_EXTENSIONS.has(ext)) return 'binary'
-  return 'code'
-}
-
-interface FileNode {
-  name: string
-  path: string
-  isDir: boolean
-}
-
-interface FileTreeNodeProps {
-  node: FileNode
-  depth: number
-  onFileOpen: (path: string, content: string, language: string) => void
-}
 
 const LANGUAGE_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'typescript',
@@ -62,46 +41,73 @@ function getLanguage(filePath: string): string {
   return LANGUAGE_MAP[ext] ?? 'plaintext'
 }
 
-const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onFileOpen }) => {
+const MAX_EDITOR_BYTES = 512_000 // 500 KB
+
+function classifyFile(filePath: string): 'code' | 'image' | 'binary' | 'svg' {
+  const ext = filePath.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'svg') return 'svg'
+  if (IMAGE_EXTENSIONS.has(ext)) return 'image'
+  if (BINARY_EXTENSIONS.has(ext)) return 'binary'
+  return 'code'
+}
+
+interface FileNode {
+  name: string
+  path: string
+  isDir: boolean
+}
+
+interface FileTreeNodeProps {
+  node: FileNode
+  depth: number
+}
+
+const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
   const invoke = useIpcError()
+  const { setCenterMode, setActiveFilePath, setActiveFileContent, setActiveFileLanguage } = useLayoutStore()
   const [expanded, setExpanded] = useState(false)
   const [children, setChildren] = useState<FileNode[]>([])
+  const classification = node.isDir ? 'code' : classifyFile(node.path)
 
   const handleClick = async () => {
     if (node.isDir) {
       if (!expanded) {
         const result = await invoke<{ ok: boolean; data?: FileNode[]; error?: string }>('fs:list-dir', node.path)
-        if (result.ok && result.data) setChildren(result.data)
+        const data = (result as any).data || result
+        if (Array.isArray(data)) setChildren(data)
       }
       setExpanded(prev => !prev)
       return
     }
+    setActiveFilePath(node.path)
 
-    const classification = classifyFile(node.path)
-
-    if (classification === 'binary') {
-      onFileOpen(node.path, '', 'binary')
-      return
-    }
-
-    try {
-      const result = await invoke<{ ok: boolean; data?: string; error?: string }>('fs:open-file', node.path)
-      if (!result.ok || result.data === undefined) return
-
-      if (result.data.length > MAX_EDITOR_BYTES) {
-        onFileOpen(node.path, result.data.slice(0, MAX_EDITOR_BYTES), 'plaintext')
-        console.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
-        return
+    if (classification === 'image' || classification === 'svg') {
+      setCenterMode('image')
+      setActiveFileContent('')
+      setActiveFileLanguage(classification === 'svg' ? 'xml' : 'image')
+    } else if (classification === 'binary') {
+      setCenterMode('binary')
+      setActiveFileContent('')
+      setActiveFileLanguage('binary')
+    } else {
+      setCenterMode('code')
+      try {
+        const content = await invoke<string>('fs:read-file', node.path)
+        const finalContent = typeof content === 'string' ? content : ''
+        
+        if (finalContent.length > MAX_EDITOR_BYTES) {
+          setActiveFileContent(finalContent.slice(0, MAX_EDITOR_BYTES))
+          console.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
+        } else {
+          setActiveFileContent(finalContent)
+        }
+        
+        setActiveFileLanguage(getLanguage(node.path))
+      } catch (err) {
+        console.error('[FileTree] Failed to read file content:', err)
       }
-
-      const language = getLanguage(node.path)
-      onFileOpen(node.path, result.data, classification === 'svg' ? 'svg' : language)
-    } catch (err) {
-      console.error('[FileTree] Failed to open file:', err)
     }
   }
-
-  const classification = classifyFile(node.path)
 
   return (
     <div>
@@ -125,7 +131,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onFileOpen }) 
           <>
             <span className="w-[10px] shrink-0" />
             {classification === 'image' || classification === 'svg'
-              ? <Image size={11} className="text-blue-400/70 shrink-0" />
+              ? <ImageIcon size={11} className="text-blue-400/70 shrink-0" />
               : classification === 'binary'
               ? <Database size={11} className="text-red-400/50 shrink-0" />
               : <FileText size={11} className="text-zinc-500 shrink-0" />
@@ -139,7 +145,6 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onFileOpen }) 
           key={child.path}
           node={child}
           depth={depth + 1}
-          onFileOpen={onFileOpen}
         />
       ))}
     </div>
@@ -148,18 +153,18 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onFileOpen }) 
 
 interface FileTreeProps {
   rootPath: string
-  onFileOpen: (path: string, content: string, language: string) => void
 }
 
-export const FileTree: React.FC<FileTreeProps> = ({ rootPath, onFileOpen }) => {
+export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   const invoke = useIpcError()
   const [rootChildren, setRootChildren] = useState<FileNode[]>([])
 
   useEffect(() => {
     if (!rootPath) return
-    invoke<{ ok: boolean; data: FileNode[] }>('fs:list-dir', rootPath).then((result) => {
-      if (result.ok) {
-        setRootChildren(result.data)
+    invoke<FileNode[]>('fs:list-dir', rootPath).then((result) => {
+      const data = (result as any).data || result
+      if (Array.isArray(data)) {
+        setRootChildren(data)
       }
     }).catch(console.error)
   }, [rootPath, invoke])
@@ -175,7 +180,6 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath, onFileOpen }) => {
           key={node.path}
           node={node}
           depth={0}
-          onFileOpen={onFileOpen}
         />
       ))}
     </div>

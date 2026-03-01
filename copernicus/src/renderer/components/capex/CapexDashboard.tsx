@@ -81,7 +81,16 @@ export const CapexDashboard: React.FC = () => {
   const loadedTabs = useRef<Set<DashTab>>(new Set())
 
   const [activeTab, setActiveTab] = useState<DashTab>('financial')
-  const [rate, setRate] = useState(150)
+  const [rate, setRate] = useState(65)
+
+  // Load wizard-configured rate from settings on mount
+  useEffect(() => {
+    invoke<any>('settings:load').then(result => {
+      const s = result?.data ?? result
+      const r = s?.capex?.rate
+      if (typeof r === 'number' && r > 0) setRate(r)
+    }).catch(() => {})
+  }, [invoke])
 
   // Financial
   const [report, setReport]               = useState<CapexReportRow[]>([])

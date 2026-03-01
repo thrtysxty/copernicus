@@ -139,6 +139,15 @@ export default function App() {
       toggleUIBuilder()
     })
 
+    const removePaletteListener = (window as any).ipcRenderer.on('layout:open-palette', () => {
+      setCommandPaletteOpen(true)
+    })
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === 'p') { e.preventDefault(); setCommandPaletteOpen(true) }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+
     // Fetch initial state
     invoke<string>('app:get-root-path').then(setWorkingDir).catch(() => {})
     invoke<string>('git:branch').then(setGitBranch).catch(() => {})
@@ -153,6 +162,8 @@ export default function App() {
       removeFlipListener()
       removeSpotListener()
       removeUiBuilderListener()
+      removePaletteListener()
+      window.removeEventListener('keydown', handleKeyDown)
     }
   }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder])
 
@@ -254,7 +265,7 @@ export default function App() {
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-hidden relative">
-          <header className="h-8 flex items-center justify-between px-4 border-b border-copernicus-steel bg-[#050505] flex-shrink-0 draggable">
+          <header className="h-8 flex items-center justify-between px-4 pl-20 border-b border-copernicus-steel bg-[#050505] flex-shrink-0 draggable">
             <nav className="flex gap-6 h-full items-center no-drag">
               {(['blueprint', 'studio', 'engine-room'] as const).map(view => (
                 <button
@@ -286,7 +297,7 @@ export default function App() {
               <>
                 {/* Sidebar */}
                 <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
-                  <FileTree rootPath={workingDir} onFileOpen={() => {}} />
+                  <FileTree rootPath={workingDir} />
                 </div>
 
                 {/* Center Panel & Chat */}
