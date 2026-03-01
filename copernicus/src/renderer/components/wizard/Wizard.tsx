@@ -23,6 +23,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [googleOAuth, setGoogleOAuth] = useState<{ state: OAuthState; email?: string; error?: string }>({ state: 'idle' });
   const [anthropicOAuth, setAnthropicOAuth] = useState<{ state: OAuthState; error?: string }>({ state: 'idle' });
   const [openRouterOAuth, setOpenRouterOAuth] = useState<{ state: OAuthState; error?: string }>({ state: 'idle' });
+  const [showAnthropicWebview, setShowAnthropicWebview] = useState(false);
 
   // Step 0: Detect CLI Tools
   useEffect(() => {
@@ -71,14 +72,19 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   };
 
   const handleOpenAuth = (url: string) => {
-    invoke('app:open-external', url);
+    if (url.includes('claude.ai')) {
+      setShowAnthropicWebview(true);
+    } else {
+      invoke('app:open-external', url);
+    }
   };
 
   const handleGoogleOAuth = async () => {
     setGoogleOAuth({ state: 'waiting' });
-    const result = await invoke<{ ok: boolean; error?: string }>('oauth:start-google', googleOAuthClientId.trim());
-    if (!result.ok) {
-      setGoogleOAuth({ state: 'error', error: result.error });
+    try {
+      await invoke<{ ok: boolean }>('app:start-oauth-listener');
+    } catch (e: any) {
+      setGoogleOAuth({ state: 'error', error: e.message });
     }
   };
 
@@ -99,7 +105,16 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   };
 
   useEffect(() => {
-    const remove = window.ipcRenderer.on('oauth:callback', (_event: any, data: any) => {
+    const removeGoogle = window.ipcRenderer.on('oauth:google-complete', (_event: any, data: any) => {
+      if (data.ok) {
+        setGoogleOAuth({ state: 'success', email: data.email });
+        setGoogleKey('oauth');
+      } else {
+        setGoogleOAuth({ state: 'error', error: data.error });
+      }
+    });
+
+    const removeLegacy = window.ipcRenderer.on('oauth:callback', (_event: any, data: any) => {
       if (data.provider === 'google') {
         if (data.ok) {
           setGoogleOAuth({ state: 'success', email: data.email });
@@ -123,7 +138,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         }
       }
     });
-    return () => remove();
+    return () => {
+      removeGoogle();
+      removeLegacy();
+    };
   }, []);
 
   const handleFinish = async () => {

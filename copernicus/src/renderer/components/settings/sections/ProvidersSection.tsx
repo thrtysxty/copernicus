@@ -3,7 +3,7 @@ import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { 
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2, 
-  ShieldCheck, Loader2
+  ShieldCheck, Loader2, GripVertical
 } from 'lucide-react'
 
 interface AuthStatus {
@@ -19,6 +19,8 @@ export const ProvidersSection: React.FC = () => {
   const [status, setStatus] = useState<AuthStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
+  const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'jules', 'openrouter', 'deepinfra', 'ollama'])
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
 
   // Custom provider state
   const [showAddCustom, setShowAddCustom] = useState(false)
@@ -31,6 +33,13 @@ export const ProvidersSection: React.FC = () => {
       const result = await invoke<AuthStatus[]>('auth:status')
       const data = (result as any).data || result
       if (Array.isArray(data)) setStatus(data)
+
+      // Load saved provider order
+      const settings = await invoke<any>('settings:load')
+      const savedOrder = (settings as any).data?.providerOrder || settings?.providerOrder
+      if (savedOrder && Array.isArray(savedOrder)) {
+        setProviders(savedOrder)
+      }
     } catch (e) {
       console.error('Failed to fetch auth status', e)
     } finally {
@@ -79,6 +88,31 @@ export const ProvidersSection: React.FC = () => {
     }
   }
 
+  const handleDragStart = (idx: number) => {
+    setDraggedIdx(idx)
+  }
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault()
+    if (draggedIdx === null || draggedIdx === idx) return
+    
+    const newProviders = [...providers]
+    const item = newProviders.splice(draggedIdx, 1)[0]
+    newProviders.splice(idx, 0, item)
+    setProviders(newProviders)
+    setDraggedIdx(idx)
+  }
+
+  const handleDragEnd = async () => {
+    setDraggedIdx(null)
+    try {
+      await invoke('settings:save', { providerOrder: providers })
+      addToast('Provider priority updated', 'success')
+    } catch (e: any) {
+      addToast('Failed to save provider order', 'error')
+    }
+  }
+
   const handleAddCustom = async () => {
     if (!customName || !customKey) return
     try {
@@ -98,8 +132,6 @@ export const ProvidersSection: React.FC = () => {
       LOADING_AUTH_REGISTRY...
     </div>
   )
-
-  const providers = ['anthropic', 'openai', 'google', 'jules', 'openrouter', 'deepinfra', 'ollama']
 
   return (
     <div className="space-y-6">
@@ -159,14 +191,24 @@ export const ProvidersSection: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 gap-3">
-        {providers.map(id => {
+        {providers.map((id, idx) => {
           const s = status.find(st => st.provider === id)
           const isOAuth = ['anthropic', 'google', 'openrouter'].includes(id)
           const isOllama = id === 'ollama'
           
           return (
-            <div key={id} className="bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors">
+            <div 
+              key={id} 
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+              className={`bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors cursor-default ${draggedIdx === idx ? 'opacity-50 border-copernicus-phosphor' : ''}`}
+            >
               <div className="flex items-center gap-4">
+                <div className="text-zinc-700 group-hover:text-zinc-500 cursor-grab active:cursor-grabbing">
+                  <GripVertical size={14} />
+                </div>
                 <div className={`p-2 rounded ${s?.hasKey ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600'}`}>
                   {isOllama ? <Globe size={16} /> : <Key size={16} />}
                 </div>
