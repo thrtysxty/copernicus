@@ -21,6 +21,9 @@ export const ProvidersSection: React.FC = () => {
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
   const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'jules', 'openrouter', 'deepinfra', 'ollama'])
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
+  const [keyDraft, setKeyDraft] = useState<Record<string, string>>({})
+  const [baseUrlDraft, setBaseUrlDraft] = useState<Record<string, string>>({})
+  const [authFailed, setAuthFailed] = useState<Set<string>>(new Set())
 
   // Custom provider state
   const [showAddCustom, setShowAddCustom] = useState(false)
@@ -32,7 +35,13 @@ export const ProvidersSection: React.FC = () => {
     try {
       const result = await invoke<AuthStatus[]>('auth:status')
       const data = (result as any).data || result
-      if (Array.isArray(data)) setStatus(data)
+      if (Array.isArray(data)) {
+        setStatus(data)
+        // Pre-populate base URL drafts from current status
+        const urls: Record<string, string> = {}
+        data.forEach((s: AuthStatus) => { if (s.baseUrl) urls[s.provider] = s.baseUrl })
+        setBaseUrlDraft(prev => ({ ...urls, ...prev }))
+      }
 
       // Load saved provider order
       const settings = await invoke<any>('settings:load')
@@ -47,15 +56,42 @@ export const ProvidersSection: React.FC = () => {
     }
   }
 
+  const saveKey = async (id: string) => {
+    const key = keyDraft[id]?.trim()
+    if (!key) return
+    try {
+      await invoke('auth:store-api-key', id, key, baseUrlDraft[id] || undefined)
+      setKeyDraft(prev => ({ ...prev, [id]: '' }))
+      addToast(`${id} API key saved`, 'success')
+      fetchStatus()
+    } catch (e: any) {
+      addToast(e.message, 'error')
+    }
+  }
+
+  const saveBaseUrl = async (id: string) => {
+    const url = baseUrlDraft[id]?.trim()
+    if (!url) return
+    try {
+      await invoke('auth:store-api-key', id, keyDraft[id] || '', url)
+      addToast(`${id} base URL updated`, 'success')
+      fetchStatus()
+    } catch (e: any) {
+      addToast(e.message, 'error')
+    }
+  }
+
   useEffect(() => {
     fetchStatus()
     
     const remove = (window as any).ipcRenderer.on('oauth:callback', (_e: any, data: any) => {
       setAuthInProgress(null)
       if (data.ok) {
+        setAuthFailed(prev => { const n = new Set(prev); n.delete(data.provider); return n })
         addToast(`${data.provider} authenticated successfully`, 'success')
         fetchStatus()
       } else {
+        setAuthFailed(prev => new Set([...prev, data.provider]))
         addToast(`${data.provider} auth failed: ${data.error}`, 'error')
       }
     })
@@ -81,7 +117,9 @@ export const ProvidersSection: React.FC = () => {
   const handleRevoke = async (provider: string) => {
     try {
       await invoke('auth:revoke', provider)
-      addToast(`${provider} credentials revoked`, 'success')
+      setKeyDraft(prev => ({ ...prev, [provider]: '' }))
+      setAuthFailed(prev => { const n = new Set(prev); n.delete(provider); return n })
+      addToast('Provider access revoked', 'success')
       fetchStatus()
     } catch (e: any) {
       addToast(e.message, 'error')
@@ -197,65 +235,93 @@ export const ProvidersSection: React.FC = () => {
           const isOllama = id === 'ollama'
           
           return (
-            <div 
-              key={id} 
+            <div
+              key={id}
               draggable
               onDragStart={() => handleDragStart(idx)}
               onDragOver={(e) => handleDragOver(e, idx)}
               onDragEnd={handleDragEnd}
-              className={`bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors cursor-default ${draggedIdx === idx ? 'opacity-50 border-copernicus-phosphor' : ''}`}
+              className={`bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 group hover:border-zinc-700 transition-colors cursor-default ${draggedIdx === idx ? 'opacity-50 border-copernicus-phosphor' : ''}`}
             >
-              <div className="flex items-center gap-4">
-                <div className="text-zinc-700 group-hover:text-zinc-500 cursor-grab active:cursor-grabbing">
-                  <GripVertical size={14} />
-                </div>
-                <div className={`p-2 rounded ${s?.hasKey ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600'}`}>
-                  {isOllama ? <Globe size={16} /> : <Key size={16} />}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">{id}</h3>
-                    {s?.hasKey && (
-                      <span className="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded flex items-center gap-1">
-                        <ShieldCheck size={8} className="text-copernicus-phosphor" />
-                        {s.source.toUpperCase()}
-                      </span>
-                    )}
+              {/* Top row: grip + status + name + buttons */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="text-zinc-700 group-hover:text-zinc-500 cursor-grab active:cursor-grabbing">
+                    <GripVertical size={14} />
                   </div>
-                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5 truncate max-w-[300px]">
-                    {s?.baseUrl || (isOllama ? 'http://localhost:11434' : 'Managed by system')}
-                  </p>
+                  {/* 3-state status dot */}
+                  <div className={`w-2 h-2 rounded-full flex-none ${
+                    authFailed.has(id) ? 'bg-red-400' :
+                    s?.hasKey ? 'bg-green-400' :
+                    'bg-amber-400'
+                  }`} title={authFailed.has(id) ? 'Auth failed' : s?.hasKey ? 'Authenticated' : 'No key'} />
+                  <div className={`p-2 rounded ${s?.hasKey ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600'}`}>
+                    {isOllama ? <Globe size={16} /> : <Key size={16} />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">{id}</h3>
+                      {s?.hasKey && (
+                        <span className="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <ShieldCheck size={8} className="text-copernicus-phosphor" />
+                          {s.source.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {isOAuth && !s?.hasKey && (
+                    <button
+                      onClick={() => handleOAuth(id)}
+                      disabled={authInProgress === id}
+                      className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2"
+                    >
+                      {authInProgress === id ? <Loader2 size={10} className="animate-spin" /> : <RefreshCcw size={10} />}
+                      Login with Browser
+                    </button>
+                  )}
+
+                  {s?.hasKey && (
+                    <button
+                      onClick={() => handleRevoke(id)}
+                      className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase text-red-400/60 hover:text-red-400 hover:border-red-900/30 transition-all flex items-center gap-2"
+                    >
+                      <LogOut size={10} />
+                      Revoke
+                    </button>
+                  )}
+
+                  {isOllama && (
+                    <div className={`px-2 py-0.5 rounded text-[9px] font-bold ${s?.hasKey ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>
+                      {s?.hasKey ? 'DETECTED' : 'NOT_FOUND'}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {isOAuth && !s?.hasKey && (
-                  <button
-                    onClick={() => handleOAuth(id)}
-                    disabled={authInProgress === id}
-                    className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2"
-                  >
-                    {authInProgress === id ? <Loader2 size={10} className="animate-spin" /> : <RefreshCcw size={10} />}
-                    Login with Browser
-                  </button>
+              {/* Input row: API key + base URL */}
+              <div className="mt-3 pt-3 border-t border-zinc-800/50 grid gap-2" style={{ gridTemplateColumns: isOllama ? '1fr' : (id === 'openrouter' || isOllama ? '1fr 1fr' : '1fr') }}>
+                {!isOllama && (
+                  <input
+                    type="password"
+                    value={keyDraft[id] ?? ''}
+                    onChange={e => setKeyDraft(prev => ({ ...prev, [id]: e.target.value }))}
+                    onBlur={() => saveKey(id)}
+                    placeholder={s?.hasKey ? 'API key stored — paste to replace' : 'Paste API key…'}
+                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[10px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
+                  />
                 )}
-                
-                {s?.hasKey ? (
-                  <button
-                    onClick={() => handleRevoke(id)}
-                    className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase text-red-400/60 hover:text-red-400 hover:border-red-900/30 transition-all flex items-center gap-2"
-                  >
-                    <LogOut size={10} />
-                    Revoke
-                  </button>
-                ) : !isOAuth && !isOllama && (
-                  <div className="text-[9px] text-zinc-600 font-mono italic">Awaiting API Key</div>
-                )}
-
-                {isOllama && (
-                  <div className={`px-2 py-0.5 rounded text-[9px] font-bold ${s?.hasKey ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>
-                    {s?.hasKey ? 'DETECTED' : 'NOT_FOUND'}
-                  </div>
+                {(isOllama || id === 'openrouter') && (
+                  <input
+                    type="text"
+                    value={baseUrlDraft[id] ?? ''}
+                    onChange={e => setBaseUrlDraft(prev => ({ ...prev, [id]: e.target.value }))}
+                    onBlur={() => saveBaseUrl(id)}
+                    placeholder={isOllama ? 'http://localhost:11434' : 'https://openrouter.ai/api/v1'}
+                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[10px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
+                  />
                 )}
               </div>
             </div>

@@ -179,6 +179,27 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       {/* Draggable Title Region */}
       <div className="h-8 w-full flex-none pl-20" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}></div>
 
+      {/* Anthropic claude.ai webview overlay */}
+      {showAnthropicWebview && (
+        <div className="absolute inset-0 z-50 flex flex-col bg-[#050505]">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-[#0A0A0A]">
+            <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">claude.ai — Session Auth</span>
+            <button
+              onClick={() => setShowAnthropicWebview(false)}
+              className="text-zinc-500 hover:text-zinc-200 transition-colors text-[10px] font-mono uppercase"
+            >
+              ✕ Close
+            </button>
+          </div>
+          {/* @ts-ignore — webview is a native Electron element */}
+          <webview
+            src="https://claude.ai"
+            partition="persist:claude"
+            style={{ flex: 1, width: '100%' }}
+          />
+        </div>
+      )}
+
       {/* Main Content */}
       <motion.div
         initial={{ opacity: 0 }}
