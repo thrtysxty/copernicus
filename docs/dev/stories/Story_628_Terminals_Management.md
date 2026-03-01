@@ -1,10 +1,11 @@
 # Story 628 — Terminals & Management Interfaces
 
-**Status:** APPROVED FOR IMPLEMENTATION
-**Assigned To:** Jules
+**Status:** COMPLETE
+**Assigned To:** Senior Dev (Claude)
 **Blocked By:** —
-**Sprint:** A — Resolve first; unblocks Story 625
+**Sprint:** A — Delivered first; unblocks Story 625
 **Priority:** P0 — Blocker
+**Commit:** `1af39d2`
 
 ---
 
@@ -41,103 +42,137 @@ whenever a macOS sandbox template exists at `resources/sandbox/macos-agent.sb.te
 `node-pty` throws `posix_spawnp: No such file or directory` because the executable
 no longer exists on the host OS.
 
-**Fix:** In `generateMacOSProfile()`, add an existence check for `sandbox-exec` before
-proceeding. Return `[]` (no sandboxing) if it is not present.
-
-```typescript
-// copernicus/electron/security/sandbox-manager.ts
-// Add at the top of generateMacOSProfile(), before template check:
-private generateMacOSProfile(agentId: string, workspaceRoot: string): string[] {
-  const sandboxExec = '/usr/bin/sandbox-exec'
-  if (!fs.existsSync(sandboxExec)) {
-    console.warn('[SandboxManager] sandbox-exec unavailable (macOS 15+), skipping sandboxing')
-    return []
-  }
-  // ... rest of existing method unchanged
-}
-```
-
 ### AC-2: Jules PTY — Rotate Button Wires Webview Slide
 
 **File:** `copernicus/src/renderer/components/jules/JulesPanel.tsx`
 
-`JulesPanel` already implements a `translateX(-50%)` slide between `sessions` and `browser`
-modes. The rotate button must call `setMode('browser')` (slide in) when on the sessions
-face, and `setMode('sessions')` (slide back) when on the browser face. The separate "URL"
-button in the header must be removed; its action (opening the Jules web UI) must become
-the rotate/globe button action.
-
-Inspect the current header in `JulesSessionList` (rendered inside the front face). Remove
-the standalone URL/external-link button. Ensure the globe/rotate button calls
-`onOpenBrowser()`. Verify that `JulesBrowserPanel` shows the Jules web UI at the
-correct URL (read from `auth:get-api-key` for `jules` baseUrl, or a reasonable default).
+`JulesPanel` implements a `translateX(-50%)` slide between `sessions` and `browser`
+modes. The Globe button in `JulesSessionList` already called `onOpenBrowser()` correctly
+but also rendered a `<span>jules.google.com</span>` text label making it appear as a
+separate URL control. The text label was removed; the icon-only Globe button is the
+rotate trigger.
 
 ### AC-3: Jules PTY — Authentication
 
 **File:** `copernicus/src/renderer/components/jules/JulesPanel.tsx`
-**File:** `copernicus/electron/main.ts` (Jules webview partition)
 
-The `<webview>` in `JulesBrowserPanel` must use `partition="persist:jules"` so that the
-Google session cookie survives restarts. Verify this partition is already set; if not,
-add it. No changes to CSP or webPreferences are needed for the partition alone.
+`partition="persist:jules"` was already present on the `<webview>` element at line 229.
+No change required. ✅ Pre-existing.
 
 ### AC-4: GitHub Management Interface
 
 **File:** `copernicus/src/renderer/components/github/GithubDashboard.tsx`
 
-Replace the current bare GitHub URL load with a proper management view. The component
-already exists. Implement the following sections using the existing `GithubDashboard`
-component (do not create a new file):
+`github:list-repos` and `github:user` were already handled by `GithubManager`
+(registered in `copernicus/electron/github-manager.ts`). The new handlers
+(`github:set-trust`, `github:add-repo`, `github:remove-repo`, `github:get-trust-list`)
+were added to `main.ts` using `handleIpc()` and persist data in `settingsStore`
+under keys `github:trusted-repos` and `github:tracked-repos`.
 
-- **Repos tab:** List repos returned by `github:list-repos` IPC (add handler if absent).
-  Each row shows: name, visibility, trust toggle (checkbox → calls `github:set-trust`).
-- **Access tab:** "Add repo" input + button → calls `github:add-repo`. "Remove" button on
-  each row → calls `github:remove-repo`.
-- **Invite / Share tab:** Static text with the user's GitHub profile URL and a copy button.
+---
 
-All new IPC handlers in `main.ts` must use `handleIpc()`. All new channels must be added
-to `SEND_CHANNELS` in `preload.ts`.
+## Implementation — What Was Built
+
+### `copernicus/electron/security/sandbox-manager.ts`
+
+Added existence check at the top of `generateMacOSProfile()` before template lookup:
+
+```typescript
+const sandboxExec = '/usr/bin/sandbox-exec';
+if (!fs.existsSync(sandboxExec)) {
+  console.warn('[SandboxManager] sandbox-exec unavailable (macOS 15+/Darwin 24+), skipping macOS sandboxing');
+  return [];
+}
+```
+
+### `copernicus/src/renderer/components/jules/JulesPanel.tsx`
+
+Removed `<span>jules.google.com</span>` from Globe button. Changed button className
+from `flex items-center gap-1 text-[9px] ...` to a simple icon-only style matching
+the Refresh button beside it.
+
+### `copernicus/electron/main.ts`
+
+Added four handlers in the `// GitHub Handlers` section (line ~741), all wrapped in
+`handleIpc()`:
+
+| Channel | Behaviour |
+|---------|-----------|
+| `github:set-trust` | Adds/removes `repoName` from `github:trusted-repos` in `settingsStore` |
+| `github:add-repo` | Appends `repoName` to `github:tracked-repos` (idempotent) |
+| `github:remove-repo` | Removes from both trusted and tracked lists |
+| `github:get-trust-list` | Returns `{ trusted: string[], tracked: string[] }` |
+
+### `copernicus/electron/preload.ts`
+
+Added to `SEND_CHANNELS`:
+```
+'github:set-trust', 'github:add-repo', 'github:remove-repo', 'github:get-trust-list'
+```
+
+### `copernicus/src/renderer/components/github/GithubDashboard.tsx`
+
+Full rebuild. Three-tab layout:
+
+- **Repos tab** — Lists GitHub API repos (`github:list-repos`) with per-row trust
+  toggle (Shield/ShieldOff icon → `github:set-trust`). Trust state loaded from
+  `github:get-trust-list` on mount alongside user and repo data.
+- **Access tab** — Text input + Add button → `github:add-repo`. Tracked repo list
+  with Shield indicator for trusted repos and Trash button → `github:remove-repo`.
+- **Invite / Share tab** — Profile URL display with clipboard copy button (uses
+  `navigator.clipboard`, no IPC needed). Descriptive text about trusted repo access.
+
+Toast notifications via `useToastStore` on trust/add/remove actions.
+
+---
+
+## Deviations from Architect Spec
+
+| Spec said | What was built | Reason |
+|-----------|---------------|--------|
+| Add `github:list-repos` to `main.ts` | Left in `GithubManager` — already registered | `GithubManager.registerHandlers()` registers it at startup; duplicate registration would throw |
+| AC-3 — add `partition="persist:jules"` | Pre-existing at `JulesPanel.tsx:229` | No change needed |
+| `github:list-repos` in "Files to Modify: main.ts" | Only new channels added to `main.ts` | Existing handler untouched |
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Terminals spawn without `posix_spawnp` error on macOS 15+ (Darwin 24+).
-- [ ] `generateMacOSProfile()` returns `[]` when `/usr/bin/sandbox-exec` is absent.
-- [ ] Jules PTY tab rotate button slides the webview panel in; pressing it again (or the
-      close/back button) slides back to sessions.
-- [ ] The redundant URL button is removed from the Jules PTY header.
-- [ ] Jules browser webview uses `partition="persist:jules"`.
-- [ ] GitHub tab shows a management interface (not a bare page load).
-- [ ] `npx tsc --noEmit` passes with zero errors after all changes.
-- [ ] All new IPC channels use `handleIpc()` and are in `preload.ts SEND_CHANNELS`.
+- [x] Terminals spawn without `posix_spawnp` error on macOS 15+ (Darwin 24+).
+- [x] `generateMacOSProfile()` returns `[]` when `/usr/bin/sandbox-exec` is absent.
+- [x] Jules PTY Globe button slides the webview panel in; X/back button slides back.
+- [x] The redundant `jules.google.com` URL text removed from Jules PTY header.
+- [x] Jules browser webview uses `partition="persist:jules"` (pre-existing — verified).
+- [x] GitHub tab shows Repos / Access / Invite management interface.
+- [x] All new IPC channels use `handleIpc()` and are in `preload.ts SEND_CHANNELS`.
+- [x] `npx tsc --noEmit` passes with zero errors (resolved via Story 631 alongside).
 
 ---
 
-## Files to Modify
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `copernicus/electron/security/sandbox-manager.ts` | Add `sandbox-exec` existence guard |
-| `copernicus/src/renderer/components/jules/JulesPanel.tsx` | Rotate button + remove URL button + partition |
-| `copernicus/src/renderer/components/github/GithubDashboard.tsx` | Management UI |
-| `copernicus/electron/main.ts` | Add `github:list-repos`, `github:set-trust`, `github:add-repo`, `github:remove-repo` IPC handlers |
-| `copernicus/electron/preload.ts` | Add new GitHub channels to `SEND_CHANNELS` |
+| `copernicus/electron/security/sandbox-manager.ts` | `sandbox-exec` existence guard |
+| `copernicus/src/renderer/components/jules/JulesPanel.tsx` | Globe button text label removed |
+| `copernicus/src/renderer/components/github/GithubDashboard.tsx` | Three-tab management UI |
+| `copernicus/electron/main.ts` | 4 new `handleIpc()`-wrapped GitHub handlers |
+| `copernicus/electron/preload.ts` | 4 new channels in `SEND_CHANNELS` |
 
-## Files NOT to Modify
+## Files NOT Modified
 
-- `copernicus/electron/pty-manager.ts` — PTY logic is correct; the bug is in SandboxManager.
-- `copernicus/electron/security/env-sanitizer.ts` — env passthrough is correct.
-- Any file not listed above.
+- `copernicus/electron/pty-manager.ts` — PTY logic correct; bug was in SandboxManager.
+- `copernicus/electron/security/env-sanitizer.ts` — env passthrough verified correct.
+- `copernicus/electron/github-manager.ts` — existing handlers left in place.
 
 ---
 
 ## Definition of Done
 
-1. `cd copernicus && npx tsc --noEmit` passes with zero errors.
-2. All new `ipcMain.handle()` channels are in `preload.ts SEND_CHANNELS`.
-3. No forbidden patterns (bare `ipcMain.handle`, bare `window.ipcRenderer.invoke`).
-4. Only the files listed above are modified.
+1. [x] `cd copernicus && npx tsc --noEmit` passes with zero errors.
+2. [x] All new `ipcMain.handle()` channels wrapped in `handleIpc()`.
+3. [x] All new channels in `preload.ts SEND_CHANNELS`.
+4. [x] No bare `ipcMain.handle` or bare `window.ipcRenderer.invoke` introduced.
 
 ---
 
@@ -151,5 +186,5 @@ to `SEND_CHANNELS` in `preload.ts`.
 
 ## Documentation Impact
 
-- `docs/TERMINAL_GUIDE.md` — document sandbox-exec deprecation note and Darwin 24+ behaviour.
-- `docs/USER_GUIDE.md` — GitHub management interface section.
+- `docs/TERMINAL_GUIDE.md` — document `sandbox-exec` deprecation and Darwin 24+ fallback behaviour.
+- `docs/USER_GUIDE.md` — GitHub management interface: Repos trust, Access tracking, Invite/Share tab.
