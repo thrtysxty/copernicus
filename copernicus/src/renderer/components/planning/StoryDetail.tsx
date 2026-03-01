@@ -45,8 +45,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    invoke<string>('stories:get-content', storyId)
-      .then(c => setContent(c))
+    invoke<any>('stories:get-content', storyId)
+      .then((r: any) => setContent(r?.data ?? r ?? ''))
       .catch(console.error)
   }, [storyId, invoke])
 

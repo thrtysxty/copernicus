@@ -167,7 +167,7 @@ export const CapexDashboard: React.FC = () => {
   }
 
   useEffect(() => {
-    invoke<any>('settings:load').then(s => { if (s?.developerRate) setRate(s.developerRate) })
+    invoke<any>('settings:load').then(raw => { const s = (raw as any)?.data ?? raw; if (s?.developerRate) setRate(s.developerRate) })
     loadedTabs.current.add('financial')
     fetchTabData('financial')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

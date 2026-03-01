@@ -35,15 +35,17 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
   useEffect(() => {
     if (isOpen) {
       if (type === 'start') {
-        invoke<string>('app:get-root-path').then(rootPath => {
+        invoke<any>('app:get-root-path').then((r: any) => {
+          const rootPath: string = r?.data ?? r;
           invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath).then(res => {
             if (res.ok) {
-              setRepos(res.data.filter(item => item.isDir));
+              setRepos(res.data.filter((item: any) => item.isDir));
             }
           });
         });
 
-        invoke('devtime:defaults').then((defaults: any) => {
+        invoke<any>('devtime:defaults').then((raw: any) => {
+          const defaults = raw?.data ?? raw ?? {};
           setFormData(prev => ({
             ...prev,
             financial_category: defaults.financial_category || 'CAPEX',
@@ -66,9 +68,10 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
   // Fetch stories when repo changes
   useEffect(() => {
     if (formData.repo_path) {
-      invoke<string[]>('devtime:list-stories', formData.repo_path).then(res => {
-        setStories(res || []);
-        if (res && res.length > 0) {
+      invoke<any>('devtime:list-stories', formData.repo_path).then((raw: any) => {
+        const res: string[] = raw?.data ?? raw ?? [];
+        setStories(res);
+        if (res.length > 0) {
             setFormData(prev => ({ ...prev, story: res[0] }));
         } else {
             setFormData(prev => ({ ...prev, story: '' }));
@@ -102,7 +105,8 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
 
   const handleCreateRepo = async () => {
     if (!newRepoName.trim()) return;
-    const rootPath = await invoke<string>('app:get-root-path');
+    const _rawRoot = await invoke<any>('app:get-root-path');
+    const rootPath: string = (_rawRoot as any)?.data ?? _rawRoot;
     const fullPath = `${rootPath}/${newRepoName.trim()}`;
     setFormData({
         ...formData,

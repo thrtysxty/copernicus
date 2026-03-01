@@ -18,7 +18,8 @@ export function CapexStatus() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await invoke<StatusData>('devtime:status');
+        const _raw = await invoke<any>('devtime:status');
+        const res: StatusData = (_raw as any)?.data ?? _raw;
         setStatus(res);
       } catch (e) {
         console.error("Failed to fetch capex status", e);

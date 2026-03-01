@@ -69,6 +69,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
+| #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | DRAFT | Medium |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -76,6 +77,14 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #167 | Terminals Management | COMPLETE | P0 — Blocker |
+| #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
+| #169 | Auth Provider Management | COMPLETE | P0 |
+| #170 | Header Layout Integrity | COMPLETE | P1 |
+| #171 | Blueprint Kanban Logic | COMPLETE | P1 |
+| #172 | Ui Canvas File System | COMPLETE | P1 |
+| #173 | Model Dynamic Env | COMPLETE | P1 |
+| #174 | Hardware Touchbar | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |

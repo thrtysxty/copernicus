@@ -45,11 +45,14 @@ export const GithubDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [userData, reposData, trustData] = await Promise.all([
-        invoke<User>('github:user'),
-        invoke<Repo[]>('github:list-repos'),
-        invoke<TrustList>('github:get-trust-list'),
+      const [_rawUser, _rawRepos, _rawTrust] = await Promise.all([
+        invoke<any>('github:user'),
+        invoke<any>('github:list-repos'),
+        invoke<any>('github:get-trust-list'),
       ]);
+      const userData: User = (_rawUser as any)?.data ?? _rawUser;
+      const reposData: Repo[] = (_rawRepos as any)?.data ?? _rawRepos;
+      const trustData: TrustList = (_rawTrust as any)?.data ?? _rawTrust;
       setUser(userData);
       setRepos(Array.isArray(reposData) ? reposData : []);
       setTrustList(trustData ?? { trusted: [], tracked: [] });
@@ -93,7 +96,8 @@ export const GithubDashboard: React.FC = () => {
   const handleAddRepo = async () => {
     if (!addRepoInput.trim()) return;
     try {
-      const result = await invoke<{ tracked: string[] }>('github:add-repo', addRepoInput.trim());
+      const _rawAdd = await invoke<any>('github:add-repo', addRepoInput.trim());
+      const result: { tracked: string[] } = (_rawAdd as any)?.data ?? _rawAdd;
       setTrustList(prev => ({ ...prev, tracked: result?.tracked ?? [...prev.tracked, addRepoInput.trim()] }));
       setAddRepoInput('');
       addToast(`${addRepoInput.trim()} added to tracked repos`, 'success');

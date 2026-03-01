@@ -177,11 +177,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [messages])
 
   useEffect(() => {
-    invoke<any[]>('models:list').then(setAvailableModels).catch(console.error)
-    
+    invoke<any>('models:list').then((r: any) => setAvailableModels(r?.data ?? r ?? [])).catch(console.error)
+
     // Check if session is active (implies repo context)
     invoke<any>('devtime:status').then(res => {
-        setIsRepoActive(!!res.session)
+        const d = (res as any)?.data ?? res
+        setIsRepoActive(!!(d && d.session))
     })
   }, [invoke])
 
@@ -380,7 +381,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const handleSaveToStory = async (content: string) => {
     if (!activeStoryId) return;
     try {
-      const currentContent = await invoke<string>('stories:get-content', activeStoryId);
+      const _rawContent = await invoke<any>('stories:get-content', activeStoryId);
+      const currentContent: string = (_rawContent as any)?.data ?? _rawContent ?? '';
 
       // We want to update the "Implementation" section or append if not found
       let updatedContent = currentContent;

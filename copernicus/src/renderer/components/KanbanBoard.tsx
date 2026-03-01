@@ -71,7 +71,8 @@ export function KanbanBoard() {
 
   const fetchJulesSessions = useCallback(async () => {
     try {
-      const sessions = await invoke<JulesSession[]>('jules:list-sessions')
+      const _raw = await invoke<any>('jules:list-sessions')
+      const sessions: JulesSession[] = (_raw as any)?.data ?? _raw ?? []
       const mapped = sessions.reduce((acc, s) => {
         acc[s.story_id] = s
         return acc
@@ -83,10 +84,10 @@ export function KanbanBoard() {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const result = await invoke<Story[]>('stories:list')
-        setStories(result)
-        const targeted = await invoke<boolean>('stories:is-repo-targeted')
-        setIsRepoTargeted(targeted)
+        const _rawStories = await invoke<any>('stories:list')
+        setStories((_rawStories as any)?.data ?? _rawStories ?? [])
+        const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
+        setIsRepoTargeted((_rawTargeted as any)?.data ?? false)
         fetchJulesSessions()
       } catch (e) {
         console.warn('Failed to fetch stories', e)
@@ -96,7 +97,7 @@ export function KanbanBoard() {
 
     const removeStoriesUpdate = window.ipcRenderer.on('stories:updated', (_event: any, newStories: Story[]) => {
       setStories(newStories)
-      invoke<boolean>('stories:is-repo-targeted').then(setIsRepoTargeted)
+      invoke<any>('stories:is-repo-targeted').then((r: any) => setIsRepoTargeted(r?.data ?? false))
     })
 
     const removeJulesUpdate = window.ipcRenderer.on('jules:session-update', (_event: any, _update: any) => {
@@ -156,12 +157,13 @@ export function KanbanBoard() {
     const type = creation.type === 'Epic' ? 'Epic' : 'Feature'
     const epic = creation.type === 'Story' && newEpic ? newEpic : '(none)'
     try {
-      const storyId = await invoke<string>('stories:create', {
+      const _rawCreate = await invoke<any>('stories:create', {
         title: newTitle.trim(),
         type,
         epic,
         priority: newPriority,
       })
+      const storyId: string = (_rawCreate as any)?.data ?? _rawCreate
       setNewTitle('')
       setNewEpic('')
       setNewPriority('P2')

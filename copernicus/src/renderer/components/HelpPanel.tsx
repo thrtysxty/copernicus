@@ -9,7 +9,8 @@ export const HelpPanel: React.FC = () => {
   useEffect(() => {
     const fetchManual = async () => {
       try {
-        const text = await invoke<string>('app:get-user-guide')
+        const _raw = await invoke<any>('app:get-user-guide')
+        const text: string = (_raw as any)?.data ?? _raw ?? ''
         setContent(text || 'Guide not found.')
       } catch (e) {
         setContent('Error loading user guide.')

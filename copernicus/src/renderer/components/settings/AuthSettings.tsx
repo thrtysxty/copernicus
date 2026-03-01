@@ -27,7 +27,8 @@ export const AuthSettings: React.FC = () => {
 
   const fetchStatus = async () => {
     try {
-      const s = await invoke<AuthStatus[]>('auth:status');
+      const _raw = await invoke<any>('auth:status');
+      const s: AuthStatus[] = (_raw as any)?.data ?? _raw ?? [];
       setStatus(s);
     } catch (e) {
       console.error('Failed to fetch auth status', e);

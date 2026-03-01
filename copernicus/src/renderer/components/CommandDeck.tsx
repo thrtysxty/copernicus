@@ -9,8 +9,8 @@ export function CommandDeck() {
   useEffect(() => {
     const fetchTargets = async () => {
       try {
-        const result = await invoke('makefile:list')
-        setTargets(result as string[])
+        const _raw = await invoke<any>('makefile:list')
+        setTargets((_raw as any)?.data ?? _raw ?? [])
       } catch (e) {
         console.warn("Failed to fetch makefile targets, using fallback", e)
         setTargets(['test', 'test_e2e', 'backlog', 'deploy', 'clean', 'dev', 'db-migrate'])

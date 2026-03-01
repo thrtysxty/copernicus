@@ -97,8 +97,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
         .catch(() => {}) // Error handled by useIpcError
 
       // Load Stories
-      invoke<any[]>('stories:list')
-        .then(res => setRawStories(res || []))
+      invoke<any>('stories:list')
+        .then((res: any) => setRawStories(res?.data ?? res ?? []))
         .catch(() => {})
     }
   }, [mode, invoke, rootPath])

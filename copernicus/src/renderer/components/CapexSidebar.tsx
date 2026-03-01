@@ -9,8 +9,8 @@ export function CapexSidebar() {
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const res = await invoke<any[]>('devtime:report', month);
-        setReport(res);
+        const _raw = await invoke<any>('devtime:report', month);
+        setReport((_raw as any)?.data ?? _raw ?? []);
       } catch (e) {
         console.error("Failed to fetch report", e);
       }

@@ -28,8 +28,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   // Step 0: Detect CLI Tools
   useEffect(() => {
     if (step === 0) {
-      invoke<Record<string, boolean>>('check-cli-tools').then((result) => {
-        setCliStatus(result);
+      invoke<any>('check-cli-tools').then((result) => {
+        setCliStatus((result as any)?.data ?? result);
       });
     }
   }, [step, invoke]);
@@ -37,7 +37,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   // Check for existing credentials when entering Step 1
   useEffect(() => {
     if (step === 1) {
-      invoke<any[]>('auth:status').then((status) => {
+      invoke<any>('auth:status').then((raw) => {
+        const status: any[] = (raw as any)?.data ?? raw ?? []
         status.forEach(p => {
           if (p.hasKey) {
             if (p.provider === 'anthropic') setAnthropicKey('saved');
@@ -65,7 +66,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   };
 
   const handleSelectFolder = async () => {
-    const path = await invoke<string>('select-folder');
+    const _rawPath = await invoke<any>('select-folder');
+    const path: string | null = (_rawPath as any)?.data ?? _rawPath;
     if (path) {
       setWorkspacePath(path);
     }
