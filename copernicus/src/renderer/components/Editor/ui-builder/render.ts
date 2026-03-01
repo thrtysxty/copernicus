@@ -1,4 +1,4 @@
-import { UIComponent, UIComponentType } from './types'
+import { UIComponent } from './types'
 
 export function renderComponentTree(components: UIComponent[]): string {
   const content = components.map(c => renderComponent(c, true)).join('\n')

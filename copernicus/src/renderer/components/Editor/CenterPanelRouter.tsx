@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { MonacoEditor } from './MonacoEditor'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'

@@ -42,6 +42,7 @@ const SEND_CHANNELS = new Set([
   'settings:save', 'settings:load',
   // GitHub
   'github:user', 'github:list-repos', 'github:create-repo', 'github:test-connection',
+  'github:set-trust', 'github:add-repo', 'github:remove-repo', 'github:get-trust-list',
   // Git
   'git:init-workspace',
   // MCP
@@ -77,6 +78,7 @@ const SEND_CHANNELS = new Set([
   'app:open-log', 'app:open-external',
   // OAuth
   'oauth:start-google', 'oauth:start-anthropic', 'oauth:start-openrouter',
+  'app:start-oauth-listener',
   // Auth revoke
   'auth:revoke',
   // Canvas interaction (Story 153)
@@ -99,6 +101,7 @@ const LISTEN_CHANNELS = new Set([
   'splash-status',
   'app:critical-error',
   'oauth:callback',
+  'oauth:google-complete',
   'app:workspace-changed',
   'canvas:show-url', 'canvas:render',
   'ledger:stats-update',

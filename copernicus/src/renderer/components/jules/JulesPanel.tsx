@@ -86,11 +86,10 @@ function JulesSessionList({ onOpenBrowser }: { onOpenBrowser: () => void }) {
           </button>
           <button
             onClick={onOpenBrowser}
-            className="flex items-center gap-1 text-[9px] font-mono text-zinc-400 hover:text-copernicus-phosphor transition-colors uppercase"
+            className="text-zinc-500 hover:text-copernicus-phosphor transition-colors"
             title="Open jules.google.com"
           >
             <Globe size={11} />
-            <span>jules.google.com</span>
           </button>
         </div>
       </div>

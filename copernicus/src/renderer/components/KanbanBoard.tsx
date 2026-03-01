@@ -99,7 +99,7 @@ export function KanbanBoard() {
       invoke<boolean>('stories:is-repo-targeted').then(setIsRepoTargeted)
     })
 
-    const removeJulesUpdate = window.ipcRenderer.on('jules:session-update', (_event: any, update: any) => {
+    const removeJulesUpdate = window.ipcRenderer.on('jules:session-update', (_event: any, _update: any) => {
       fetchJulesSessions()
     })
 

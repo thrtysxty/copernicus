@@ -1,4 +1,3 @@
-import React from 'react'
 import { ShieldOff } from 'lucide-react'
 
 export function BinaryBlocker({ filePath }: { filePath: string | null }) {

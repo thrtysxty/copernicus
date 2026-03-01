@@ -9,6 +9,7 @@ import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
 import { AuthManager } from './auth-manager'
 import { ModelRegistry } from './models/model-registry'
+import { handleIpc } from './utils/ipc-handler'
 import { registerSecurityHandlers, initializeSecurityManager, GitGuardDecision, GitPushRequest } from './security'
 import { SettingsStore } from './settings-store'
 import { createTouchBar } from './touch-bar'
@@ -373,10 +374,10 @@ function registerIpcHandlers() {
     return { access_token: data.access_token as string, email: (user.email ?? '') as string }
   }
 
-  ipcMain.handle('oauth:start-google', (_event, manualClientId?: string) => handleIpc(() => {
-    const clientId = (manualClientId || settingsStore.get('googleOAuthClientId', '') as string).trim() || 'copernicus-ide-default.apps.googleusercontent.com';
+  ipcMain.handle('app:start-oauth-listener', () => handleIpc(() => {
+    const clientId = (settingsStore.get('googleOAuthClientId', '') as string).trim() || 'copernicus-ide-default.apps.googleusercontent.com';
 
-    return new Promise<{ ok: boolean; error?: string }>((resolve) => {
+    return new Promise<{ ok: boolean }>((resolve, reject) => {
       const { verifier, challenge } = generatePKCE()
       const state = randomBytes(16).toString('hex')
 
@@ -392,9 +393,8 @@ function registerIpcHandlers() {
         server.close()
 
         if (!code || returnedState !== state) {
-          const err = { provider: 'google', ok: false, error: 'OAuth state mismatch' }
-          win?.webContents.send('oauth:callback', err)
-          resolve({ ok: false, error: err.error })
+          win?.webContents.send('oauth:google-complete', { ok: false, error: 'OAuth state mismatch' })
+          resolve({ ok: false })
           return
         }
 
@@ -413,15 +413,13 @@ function registerIpcHandlers() {
           }
           fs.writeFileSync(path.join(geminiDir, 'oauth_creds.json'), JSON.stringify(geminiCreds, null, 2))
 
-          win?.webContents.send('oauth:callback', { provider: 'google', ok: true, email, type: 'oauth' })
-          win?.webContents.send('oauth:callback', { provider: 'jules', ok: true })
-
+          win?.webContents.send('oauth:google-complete', { ok: true, email })
           if (win) { win.show(); win.focus(); }
           resolve({ ok: true })
         } catch (err: any) {
           const msg = err?.message ?? 'Unknown error'
-          win?.webContents.send('oauth:callback', { provider: 'google', ok: false, error: msg })
-          resolve({ ok: false, error: msg })
+          win?.webContents.send('oauth:google-complete', { ok: false, error: msg })
+          resolve({ ok: false })
         }
       })
 
@@ -440,8 +438,15 @@ function registerIpcHandlers() {
         shell.openExternal(`https://accounts.google.com/o/oauth2/v2/auth?${params}`)
       })
 
-      setTimeout(() => { server.close(); resolve({ ok: false, error: 'OAuth timed out' }) }, 5 * 60 * 1000)
+      setTimeout(() => {
+        server.close()
+        reject(new Error('OAuth timed out — please try again'))
+      }, 5 * 60 * 1000)
     })
+  }))
+
+  ipcMain.handle('oauth:start-google', () => handleIpc(() => {
+    throw new Error('Use app:start-oauth-listener instead')
   }))
 
   // Wizard Handlers
@@ -738,6 +743,44 @@ function registerIpcHandlers() {
   }));
 
   // GitHub Handlers
+  ipcMain.handle('github:set-trust', (_e, repoName: string, trusted: boolean) => handleIpc(() => {
+    const trusted_repos: string[] = settingsStore.get('github:trusted-repos', []) as string[]
+    if (trusted) {
+      if (!trusted_repos.includes(repoName)) trusted_repos.push(repoName)
+    } else {
+      const idx = trusted_repos.indexOf(repoName)
+      if (idx > -1) trusted_repos.splice(idx, 1)
+    }
+    settingsStore.set('github:trusted-repos', trusted_repos)
+    return { ok: true }
+  }))
+
+  ipcMain.handle('github:add-repo', (_e, repoName: string) => handleIpc(() => {
+    const tracked: string[] = settingsStore.get('github:tracked-repos', []) as string[]
+    if (!tracked.includes(repoName)) {
+      tracked.push(repoName)
+      settingsStore.set('github:tracked-repos', tracked)
+    }
+    return { ok: true, tracked }
+  }))
+
+  ipcMain.handle('github:remove-repo', (_e, repoName: string) => handleIpc(() => {
+    const tracked: string[] = settingsStore.get('github:tracked-repos', []) as string[]
+    const trusted: string[] = settingsStore.get('github:trusted-repos', []) as string[]
+    const filteredTracked = tracked.filter(r => r !== repoName)
+    const filteredTrusted = trusted.filter(r => r !== repoName)
+    settingsStore.set('github:tracked-repos', filteredTracked)
+    settingsStore.set('github:trusted-repos', filteredTrusted)
+    return { ok: true }
+  }))
+
+  ipcMain.handle('github:get-trust-list', () => handleIpc(() => {
+    return {
+      trusted: settingsStore.get('github:trusted-repos', []) as string[],
+      tracked: settingsStore.get('github:tracked-repos', []) as string[],
+    }
+  }))
+
   ipcMain.handle('github:test-connection', () => handleIpc(async () => {
     const token = authManager.getApiKey('github')
     if (!token) throw new Error('NO_TOKEN')

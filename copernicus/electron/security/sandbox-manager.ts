@@ -65,6 +65,14 @@ export class SandboxManager {
   }
 
   private generateMacOSProfile(agentId: string, workspaceRoot: string): string[] {
+    // sandbox-exec was deprecated in macOS 14 (Sonoma) and removed in macOS 15+
+    // (Darwin 24+/Sequoia and later). Spawning it causes posix_spawnp failures.
+    const sandboxExec = '/usr/bin/sandbox-exec';
+    if (!fs.existsSync(sandboxExec)) {
+      console.warn('[SandboxManager] sandbox-exec unavailable (macOS 15+/Darwin 24+), skipping macOS sandboxing');
+      return [];
+    }
+
     const templatePath = path.join(this.templateDir, 'macos-agent.sb.template');
     if (!fs.existsSync(templatePath)) {
       console.warn(`Sandbox template not found: ${templatePath}`);

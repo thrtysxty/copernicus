@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { FileText, Plus, Trash2, Edit3, Save, X, Code } from 'lucide-react'
+import { FileText, Plus, Trash2, Edit3 } from 'lucide-react'
 
 interface StoryTemplate {
   id: string
