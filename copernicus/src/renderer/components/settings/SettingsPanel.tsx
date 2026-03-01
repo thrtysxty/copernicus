@@ -68,8 +68,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <Settings size={18} />
             <span className="text-xs font-bold uppercase tracking-[0.2em]">IDE Configuration</span>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
+            aria-label="Close settings"
             className="p-2 text-zinc-500 hover:text-white transition-colors rounded-full hover:bg-white/5"
           >
             <X size={20} />
@@ -78,19 +79,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
 
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Navigation */}
-          <div className="w-56 border-r border-zinc-800 bg-black/40 py-6 flex flex-col overflow-y-auto scrollbar-none">
+          <div role="tablist" aria-label="Settings categories" className="w-56 border-r border-zinc-800 bg-black/40 py-6 flex flex-col overflow-y-auto scrollbar-none">
             <div className="px-4 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Intelligence</div>
             <TabButton id="providers" label="Providers" icon={<Key size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="models" label="Model Defaults" icon={<Cpu size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="personas" label="Personas" icon={<User size={14} />} active={activeTab} onClick={setActiveTab} />
-            
+
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Workspace</div>
             <TabButton id="appearance" label="Appearance" icon={<Layout size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="git" label="Git & GitHub" icon={<GitBranch size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="workflow" label="Workflow" icon={<Workflow size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="mcp" label="MCP" icon={<Layers size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="templates" label="Templates" icon={<FileText size={14} />} active={activeTab} onClick={setActiveTab} />
-            
+
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
             <TabButton id="security" label="Security" icon={<Shield size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="environment" label="Environment" icon={<Terminal size={14} />} active={activeTab} onClick={setActiveTab} />
@@ -99,7 +100,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto bg-[#080808]">
+          <div
+            role="tabpanel"
+            id={`settings-panel-${activeTab}`}
+            aria-labelledby={`settings-tab-${activeTab}`}
+            className="flex-1 overflow-y-auto bg-[#080808]"
+          >
             <div className="max-w-3xl mx-auto p-10">
               {renderContent()}
             </div>
@@ -127,11 +133,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
 function TabButton({ id, label, icon, active, onClick }: { id: TabId, label: string, icon: any, active: TabId, onClick: any }) {
   const isActive = active === id
   return (
-    <button 
+    <button
+      role="tab"
+      id={`settings-tab-${id}`}
+      aria-selected={isActive}
+      aria-controls={`settings-panel-${id}`}
       onClick={() => onClick(id)}
       className={`flex items-center gap-3 px-4 py-2.5 text-[11px] font-mono uppercase tracking-widest transition-all rounded-none
-        ${isActive 
-          ? 'text-[#050505] bg-copernicus-phosphor font-bold' 
+        ${isActive
+          ? 'text-[#050505] bg-copernicus-phosphor font-bold'
           : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'}`}
     >
       <span className={isActive ? 'text-[#050505]' : 'text-zinc-600'}>{icon}</span>

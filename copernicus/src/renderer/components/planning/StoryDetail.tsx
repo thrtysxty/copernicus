@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Edit2, Save, ExternalLink, Play } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -46,6 +46,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const [geminiError, setGeminiError] = useState<string | null>(null)
   const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     invoke<any>('stories:get-content', storyId)
@@ -128,6 +130,49 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     }
   }
 
+  // AC-3: Focus first interactive element on drawer open
+  useEffect(() => {
+    if (closeBtnRef.current) {
+      closeBtnRef.current.focus()
+    }
+  }, [storyId])
+
+  // AC-3: Focus trap + Escape key handler
+  const handleDrawerKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setDrawerStory(null)
+      // Return focus to the triggering card if available
+      const activeCard = document.querySelector<HTMLElement>('[aria-current="true"]') ??
+        document.querySelector<HTMLElement>('[data-card-index="0"]')
+      activeCard?.focus()
+      return
+    }
+
+    if (e.key !== 'Tab' || !drawerRef.current) return
+
+    const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    const focusableArr = Array.from(focusable).filter(el => !el.hasAttribute('disabled'))
+    if (focusableArr.length === 0) return
+
+    const first = focusableArr[0]
+    const last = focusableArr[focusableArr.length - 1]
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+  }, [setDrawerStory])
+
   // Auto-activate edit mode when spotlit
   useEffect(() => {
     if (isSpotlit && storyId) setIsEditing(true)
@@ -143,14 +188,18 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
 
   return (
     <motion.div
+      ref={drawerRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      onKeyDown={handleDrawerKeyDown}
       className={`flex h-full overflow-hidden bg-copernicus-bg ${isSpotlit ? 'flex-row' : 'flex-col'}`}
     >
       {/* Header bar */}
       <div className={`flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/20 flex-shrink-0 ${isSpotlit ? 'hidden' : ''}`}>
         <button
+          ref={closeBtnRef}
           onClick={() => setDrawerStory(null)}
+          aria-label="Close story drawer"
           className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
         >
           <ArrowLeft size={11} /> Board

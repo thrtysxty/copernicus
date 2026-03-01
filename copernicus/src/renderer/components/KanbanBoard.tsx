@@ -404,24 +404,47 @@ export function KanbanBoard() {
                 )}
 
                 {/* Story cards */}
-                {colStories.map(story => {
+                {colStories.map((story, storyIndex) => {
                   const jSession = julesSessions[story.id]
+                  const handleCardActivate = () => {
+                    setSpotlightLane(col.id)
+                    setActiveStoryId(story.id)
+                    setDrawerStory(story.id)
+                  }
                   return (
                   <motion.div
                     layoutId={story.id}
                     key={story.id}
                     draggable
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${story.title} — ${story.status}`}
+                    data-card-index={storyIndex}
                     onDragStart={(e: any) => handleDragStart(e, story.id)}
-                    className={`p-3 bg-zinc-900/90 border rounded shadow-md cursor-pointer hover:border-copernicus-phosphor/40 hover:translate-y-[-1px] hover:shadow-xl transition-all group/card ${
+                    onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleCardActivate()
+                      } else if (e.key === 'ArrowDown') {
+                        e.preventDefault()
+                        const next = e.currentTarget.parentElement?.querySelector<HTMLElement>(
+                          `[data-card-index="${storyIndex + 1}"]`
+                        )
+                        next?.focus()
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault()
+                        const prev = e.currentTarget.parentElement?.querySelector<HTMLElement>(
+                          `[data-card-index="${storyIndex - 1}"]`
+                        )
+                        prev?.focus()
+                      }
+                    }}
+                    className={`p-3 bg-zinc-900/90 border rounded shadow-md cursor-pointer hover:border-copernicus-phosphor/40 hover:translate-y-[-1px] hover:shadow-xl transition-all group/card focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${
                       activeStoryId === story.id
                         ? 'border-copernicus-phosphor ring-1 ring-copernicus-phosphor/30'
                         : 'border-white/5'
                     }`}
-                    onClick={() => {
-                      setSpotlightLane(col.id)
-                      setActiveStoryId(story.id)
-                      setDrawerStory(story.id)
-                    }}
+                    onClick={handleCardActivate}
                   >
                     {/* Title row */}
                     <div className="flex items-start gap-1.5">

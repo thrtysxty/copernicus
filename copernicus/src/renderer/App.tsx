@@ -271,6 +271,14 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
+      {/* AC-6: Skip to main content link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-copernicus-phosphor focus:text-[#050505] focus:px-4 focus:py-2 focus:rounded"
+      >
+        Skip to main content
+      </a>
+
       {/* Activity Bar (Side) */}
       <div className="flex h-full w-full overflow-hidden">
         <aside className="w-10 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-4 z-50">
@@ -281,7 +289,9 @@ export default function App() {
           {/* §1.4 VT selection block */}
           <button
             onClick={() => setView('planner')}
-            className={`p-2 transition-all ${activeView === 'planner' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'planner' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
+            aria-label="Planner"
+            aria-current={activeView === 'planner' ? 'page' : undefined}
+            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'planner' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'planner' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Planner"
           >
             <FolderOpen size={18} />
@@ -289,7 +299,9 @@ export default function App() {
 
           <button
             onClick={() => setView('editor')}
-            className={`p-2 transition-all ${activeView === 'editor' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'editor' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
+            aria-label="Editor"
+            aria-current={activeView === 'editor' ? 'page' : undefined}
+            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'editor' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'editor' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Editor"
           >
             <Monitor size={18} />
@@ -297,7 +309,9 @@ export default function App() {
 
           <button
             onClick={() => { setView('designer'); setCenterMode('canvas') }}
-            className={`p-2 transition-all ${activeView === 'designer' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'designer' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
+            aria-label="Designer"
+            aria-current={activeView === 'designer' ? 'page' : undefined}
+            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'designer' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'designer' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Designer"
           >
             <Cpu size={18} />
@@ -305,7 +319,9 @@ export default function App() {
 
           <button
             onClick={() => setView('orchestrator')}
-            className={`p-2 transition-all ${activeView === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'orchestrator' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
+            aria-label="Orchestrator"
+            aria-current={activeView === 'orchestrator' ? 'page' : undefined}
+            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'orchestrator' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Orchestrator"
           >
             <GitBranch size={18} />
@@ -313,7 +329,9 @@ export default function App() {
 
           <button
             onClick={() => setView('reporter')}
-            className={`p-2 transition-all ${activeView === 'reporter' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'reporter' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
+            aria-label="Reporter"
+            aria-current={activeView === 'reporter' ? 'page' : undefined}
+            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'reporter' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'reporter' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}
             title="Reporter"
           >
             <BarChart2 size={18} />
@@ -322,7 +340,9 @@ export default function App() {
           {/* §1.4 VT selection block */}
           <button
             onClick={() => setView('command-center')}
-            className={`p-2 transition-all ${activeView === 'command-center' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            aria-label="Command Center"
+            aria-current={activeView === 'command-center' ? 'page' : undefined}
+            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'command-center' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
             title="Command Center"
           >
             <Activity size={18} />
@@ -330,7 +350,9 @@ export default function App() {
 
           <button
             onClick={() => setView('memory')}
-            className={`p-2 transition-all ${activeView === 'memory' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            aria-label="Memory"
+            aria-current={activeView === 'memory' ? 'page' : undefined}
+            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'memory' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
             title="Memory"
           >
             <Brain size={18} />
@@ -340,7 +362,8 @@ export default function App() {
 
           <button
             onClick={() => invoke('app:open-external', 'https://github.com')}
-            className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors"
+            aria-label="Open GitHub"
+            className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
             title="GitHub"
           >
             <Github size={18} />
@@ -348,7 +371,8 @@ export default function App() {
 
           <button
             onClick={() => setSettingsOpen(true)}
-            className={`p-2 transition-colors ${settingsOpen ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            aria-label="Settings"
+            className={`p-2 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${settingsOpen ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
             title="Settings"
           >
             <Settings size={18} />
@@ -356,7 +380,7 @@ export default function App() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col overflow-hidden relative">
+        <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
           <header className="h-8 flex items-center justify-between px-4 pl-20 border-b border-copernicus-steel bg-[#050505] flex-shrink-0 draggable">
             {/* §1.4 VT selection block */}
             <nav className="flex h-full items-center no-drag">

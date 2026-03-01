@@ -338,7 +338,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </button>
           ))}
           <div className="flex-1" />
-          <button onClick={() => toggleFlip('chat')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
+          <button onClick={() => toggleFlip('chat')} aria-label="Close chat tools" className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
             <RotateCcw size={10} />
           </button>
         </div>
@@ -1015,7 +1015,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </div>
 
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => toggleFlip('chat')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
+              <button onClick={() => toggleFlip('chat')} aria-label="Open chat tools" className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
                 <RotateCcw size={10} />
               </button>
               <button
@@ -1029,7 +1029,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           </div>
 
           {/* Message Stream */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel">
+          <div
+            ref={scrollRef}
+            role="log"
+            aria-live="polite"
+            aria-label="Chat messages"
+            className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel"
+          >
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale grayscale-100">
                 <Hash size={48} className="text-copernicus-phosphor mb-4" />
@@ -1037,12 +1043,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               </div>
             ) : (
               messages.map(m => (
-                <ChatMessage
-                  key={m.id}
-                  role={m.role}
-                  content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content}
-                  tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
-                />
+                <div key={m.id} role="article" aria-label={`${m.role}: ${m.content.slice(0, 80)}`}>
+                  <ChatMessage
+                    role={m.role}
+                    content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content}
+                    tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
+                  />
+                </div>
               ))
             )}
           </div>
@@ -1104,6 +1111,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
               <textarea
                 value={input}
+                aria-label="Chat with Claude"
+                data-chat-input
                 onChange={(e) => {
                   const newValue = e.target.value
                   setInput(newValue)
@@ -1201,6 +1210,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 <button
                   onClick={handleSendMessage}
                   disabled={isStreaming}
+                  aria-label="Send message"
                   className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send size={14} />
