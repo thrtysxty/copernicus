@@ -1,0 +1,82 @@
+Here's the full setup. It takes about 2 minutes, and you only do it once.
+Prerequisites
+
+Claude Code version 2.0.74 or later (run claude !$version to check)
+The language server binary for your language(s) installed and in $PATH
+
+Step 1: Enable the LSP Tool
+This is the part that trips people up. You need to add a flag to your Claude
+Code settings:
+Add this to your ~/.claude/settings.json :
+"ENABLE_LSP_TOOL": "1"
+Heads up
+
+I also recommend adding export
+ENABLE_LSP_TOOL=1 to your shell profile ( ~/.zshrc on macOS, ~/.bashrc
+on Linux) as a fallback.
+
+
+Step 2: Install the Language Server
+Install the binary for each language you work with. These are the same
+language servers your IDE uses. LSP is universal.
+Language Plugin Install Command
+Python pyright-lsp npm i -g pyright
+TypeScript/JS typescript-
+lsp
+npm i -g typescript-language-server
+typescript
+Go gopls-lsp
+go install
+golang.org/x/tools/gopls@latest
+Rust
+rust-analyzer-
+lsp
+rustup component add rust-analyzer
+Java jdtls-lsp brew install jdtls
+C/C++ clangd-lsp brew install llvm
+C# csharp-lsp dotnet tool install -g csharp-ls
+PHP php-lsp npm i -g intelephense
+Kotlin kotlin-lsp GitHub releases
+Swift swift-lsp Included with Xcode
+Lua lua-lsp GitHub releases
+
+Step 3: Install and Enable the Plugin
+First, update the marketplace catalog:
+claude plugin marketplace update claude-plugins-official
+Then install the plugin for your language:
+claude plugin install pyright-lsp Python
+claude plugin install typescript-lsp TypeScript/JS
+claude plugin install gopls-lsp Go
+claude plugin install rust-analyzer-lsp Rust
+claude plugin install jdtls-lsp Java
+claude plugin install clangd-lsp C/C++
+claude plugin install csharp-lsp C#
+claude plugin install php-lsp PHP
+claude plugin install kotlin-lsp Kotlin
+claude plugin install swift-lsp Swift
+claude plugin install lua-lsp Lua
+
+Verify it's installed and enabled:
+claude plugin list
+
+The #1 gotcha
+A plugin can be installed but disabled. A disabled plugin won't register its LSP
+server at startup. If claude plugin list shows Status: disabled , run
+claude plugin enable <name> and restart Claude Code.
+
+To be safe, I also explicitly set them to true in ~/.claude/settings.json :
+{
+"ENABLE_LSP_TOOL": "1",
+"enabledPlugins": {
+"pyright-lsp@claude-plugins-official": true,
+"typescript-lsp@claude-plugins-official": true,
+"gopls-lsp@claude-plugins-official": true
+}
+}
+This single issue — plugins installed but not enabled — accounts for most "LSP
+isn't working" problems.
+
+Step 4: Restart Claude Code
+LSP servers initialize at startup. After installing plugins, you need a full
+restart. Then verify by asking Claude: "What type is [some variable]?" — if it
+uses the LSP hover operation instead of reading the file, you're good.

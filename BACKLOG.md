@@ -69,7 +69,26 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | DRAFT | Medium |
+| #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | DRAFT | Medium |
+| #177 | Renderer Bug Sweep | APPROVED FOR IMPLEMENTATION | P1 |
+| #178 | IPC Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P1 |
+| #179 | VT Selection Highlight | APPROVED FOR IMPLEMENTATION | P1 |
+| #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
+| #181 | Quick Tour — First-Launch Guided Walkthrough | APPROVED FOR IMPLEMENTATION | P1 |
+| #182 | FlippablePanel — Conditional Flip/Slide Mode Prop | APPROVED FOR IMPLEMENTATION | P1 |
+| #183 | Chat Panel — Tools Back Face (5 Tabs) | APPROVED FOR IMPLEMENTATION | P1 |
+| #184 | Command Center — Live Agent & System Dashboard | APPROVED FOR IMPLEMENTATION | P1 |
+| #185 | Designer View — Canvas As Unified Graphic Surface | APPROVED FOR IMPLEMENTATION | P1 |
+| #186 | Kanban Card — Workflow Assignment & Run Button | APPROVED FOR IMPLEMENTATION | P1 |
+| #187 | Jules PR Manager — Workflow Template | APPROVED FOR IMPLEMENTATION | P1 |
+| #188 | Copernicus Guide Persona — GUIDE Tab & Tour Integration | APPROVED FOR IMPLEMENTATION | P1 |
+| #189 | LSP → Monaco & ChatPanel Context Wiring | APPROVED FOR IMPLEMENTATION | P1 |
+| #190 | Settings — MCP Server Configuration Tab | APPROVED FOR IMPLEMENTATION | P2 |
+| #191 | Context Snapshots & Project Memory — DB Tables & Wiring | APPROVED FOR IMPLEMENTATION | P1 |
+| #192 | Console.log Cleanup — electron-log Wrapper | APPROVED FOR IMPLEMENTATION | P2 |
+| #193 | Accessibility Pass — Keyboard Navigation & ARIA Labels | APPROVED FOR IMPLEMENTATION | P2 |
+| #194 | Flask Backend — API Scaffold & Core Routes | APPROVED FOR IMPLEMENTATION | P1 |
+| #195 | Gemini CLI PTY Agent — Spawn, Send, Receive | APPROVED FOR IMPLEMENTATION | P1 |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -85,6 +104,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #172 | Ui Canvas File System | COMPLETE | P1 |
 | #173 | Model Dynamic Env | COMPLETE | P1 |
 | #174 | Hardware Touchbar | COMPLETE | P1 |
+| #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | COMPLETE | P0 — Critical |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |

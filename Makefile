@@ -40,6 +40,31 @@ test-e2e:
 backlog:
 	source .venv/bin/activate && python scripts/utils/generate_backlog.py
 
+## ── Jules / Agent Dispatch ────────────────────────────────────────────────────
+# Dispatch a story to Jules CLI:  make jules STORY=docs/stories/story_182_*.md
+jules:
+	@bash scripts/jules_assign.sh $(STORY)
+
+# Dry-run (validates story, shows prompt size, does not dispatch):
+jules-dry:
+	@bash scripts/jules_assign.sh --dry-run $(STORY)
+
+# IPC compliance check across codebase:
+ipc-lint:
+	@bash scripts/ipc-lint.sh
+
+# IPC lint with fix hints:
+ipc-lint-fix:
+	@bash scripts/ipc-lint.sh --fix-hints
+
+# Jules env setup (run in Jules Initial Setup configuration):
+jules-preflight:
+	@bash scripts/jules-preflight.sh
+
+# TypeScript type-check only:
+tsc:
+	@cd copernicus && npx tsc --noEmit
+
 import-data:
 	source .venv/bin/activate && python scripts/utils/import_data.py --type $(TYPE)
 
