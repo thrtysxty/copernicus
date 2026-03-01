@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import {
   Github, Settings, BarChart2, GitBranch, FolderOpen,
-  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout
+  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout, Activity
 } from 'lucide-react'
 import { useLayoutStore } from './store/layout'
+import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
 import { FileTree } from './components/FileTree/FileTree'
 import { ChatPanel } from './components/chat/ChatPanel'
@@ -279,6 +280,15 @@ export default function App() {
             <BarChart2 size={18} />
           </button>
 
+          {/* §1.4 VT selection block */}
+          <button
+            onClick={() => setView('command-center')}
+            className={`p-2 transition-all ${activeView === 'command-center' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
+            title="Command Center"
+          >
+            <Activity size={18} />
+          </button>
+
           <div className="flex-1" />
 
           <button
@@ -325,6 +335,7 @@ export default function App() {
           </header>
 
           <div className="flex-1 flex overflow-hidden">
+            {activeView === 'command-center' && <CommandCenter />}
             {activeView === 'planner' && <KanbanBoard />}
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && <WorkflowCanvas />}

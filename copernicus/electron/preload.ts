@@ -77,6 +77,8 @@ const SEND_CHANNELS = new Set([
   'gemini:spawn', 'gemini:send-prompt', 'gemini:close', 'gemini:status',
   // Touch Bar
   'touchbar:rebuild',
+  // Command Center (Story 184)
+  'command:request-telemetry',
   // Splash / wizard
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
@@ -117,6 +119,8 @@ const LISTEN_CHANNELS = new Set([
   'gemini:output',
   // LSP diagnostics (Story 176)
   'lsp:diagnostics',
+  // Command Center (Story 184)
+  'command:telemetry-update',
 ])
 
 // ---------------------------------------------------------------------------

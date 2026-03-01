@@ -1249,6 +1249,14 @@ function registerIpcHandlers() {
   )
 
   ipcMain.handle('app:quit', () => handleIpc(() => { app.quit(); }));
+
+  // Command Center (Story 184)
+  ipcMain.handle('command:request-telemetry', () => handleIpc(() => {
+    const swarms = (workflowEngine as any).getActiveSessions?.() ?? []
+    const tasks = (workflowEngine as any).getRunningGraphs?.() ?? []
+    win?.webContents.send('command:telemetry-update', { agentSwarms: swarms, activeTasks: tasks, mcpUsage: [] })
+    return true
+  }))
 }
 
 app.on('window-all-closed', () => {
