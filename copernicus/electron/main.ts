@@ -291,52 +291,9 @@ function registerIpcHandlers() {
 
   ipcMain.handle('app:open-external', (_event, url: string) => handleIpc(() => shell.openExternal(url)))
 
-  // ── Anthropic OAuth (Claude.ai Session) ──────────────────────────────────
-  const ANTHROPIC_OAUTH_PORT = 47323
-
+  // ── Anthropic: API key only — no OAuth (Anthropic has no OAuth flow) ────────
   ipcMain.handle('oauth:start-anthropic', () => handleIpc(() => {
-    return new Promise<{ ok: boolean; error?: string }>((resolve) => {
-      const state = randomBytes(16).toString('hex')
-      const server = createServer(async (req, res) => {
-        if (!req.url?.startsWith('/callback')) { res.end(); return }
-
-        const url = new URL(req.url, `http://localhost:${ANTHROPIC_OAUTH_PORT}`)
-        const token = url.searchParams.get('token') || url.searchParams.get('sessionKey')
-        const returnedState = url.searchParams.get('state')
-
-        res.writeHead(200, { 'Content-Type': 'text/html' })
-        res.end('<html><body style="background:#050505;color:#4ADE80;font-family:monospace;padding:2rem"><p>Anthropic Session Authenticated ✓ — you can close this tab.</p></body></html>')
-        server.close()
-
-        if (!token || returnedState !== state) {
-          const err = { provider: 'anthropic', ok: false, error: 'Auth session capture failed' }
-          win?.webContents.send('oauth:callback', err)
-          resolve({ ok: false, error: err.error })
-          return
-        }
-
-        try {
-          await authManager.storeApiKey('anthropic', token, undefined, 'session', { label: 'Web Session' })
-          win?.webContents.send('oauth:callback', { provider: 'anthropic', ok: true, type: 'session' })
-          if (win) { win.show(); win.focus(); }
-          resolve({ ok: true })
-        } catch (err: any) {
-          const msg = err?.message ?? 'Unknown error'
-          win?.webContents.send('oauth:callback', { provider: 'anthropic', ok: false, error: msg })
-          resolve({ ok: false, error: msg })
-        }
-      })
-
-      server.listen(ANTHROPIC_OAUTH_PORT, () => {
-        const loginUrl = `https://claude.ai/login?prompt=login&state=${state}&returnTo=${encodeURIComponent(`http://localhost:${ANTHROPIC_OAUTH_PORT}/callback?state=${state}`)}`
-        shell.openExternal(loginUrl)
-      })
-
-      setTimeout(() => {
-        server.close()
-        resolve({ ok: false, error: 'Anthropic login timed out' })
-      }, 5 * 60 * 1000)
-    })
+    throw new Error('Anthropic does not support OAuth. Paste your API key from console.anthropic.com/settings/keys into the Providers settings panel.')
   }))
 
   // ── OpenRouter OAuth ──────────────────────────────────────────────────────

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { 
-  Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2, 
-  ShieldCheck, Loader2, GripVertical
+import {
+  Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
+  ShieldCheck, Loader2, GripVertical, Zap, Check
 } from 'lucide-react'
 import log from '../../../utils/logger'
 
@@ -25,6 +25,8 @@ export const ProvidersSection: React.FC = () => {
   const [keyDraft, setKeyDraft] = useState<Record<string, string>>({})
   const [baseUrlDraft, setBaseUrlDraft] = useState<Record<string, string>>({})
   const [authFailed, setAuthFailed] = useState<Set<string>>(new Set())
+  const [claudeCliAvailable, setClaudeCliAvailable] = useState(false)
+  const [anthropicMethod, setAnthropicMethod] = useState<'cli' | 'apikey' | null>(null)
 
   // Custom provider state
   const [showAddCustom, setShowAddCustom] = useState(false)
@@ -38,23 +40,37 @@ export const ProvidersSection: React.FC = () => {
       const data = (result as any).data || result
       if (Array.isArray(data)) {
         setStatus(data)
-        // Pre-populate base URL drafts from current status
         const urls: Record<string, string> = {}
-        data.forEach((s: AuthStatus) => { if (s.baseUrl) urls[s.provider] = s.baseUrl })
+        data.forEach((s: any) => {
+          if (s.baseUrl) urls[s.provider] = s.baseUrl
+          if (s.provider === 'anthropic' && s.type === 'cli') setAnthropicMethod('cli')
+          else if (s.provider === 'anthropic' && s.hasKey) setAnthropicMethod('apikey')
+        })
         setBaseUrlDraft(prev => ({ ...urls, ...prev }))
       }
 
-      // Load saved provider order
+      // Check Claude CLI availability
+      const cliResult = await invoke<any>('check-cli-tools')
+      const cliData = (cliResult as any)?.data ?? cliResult
+      setClaudeCliAvailable(!!cliData?.claude)
+
       const settings = await invoke<any>('settings:load')
       const savedOrder = (settings as any).data?.providerOrder || settings?.providerOrder
-      if (savedOrder && Array.isArray(savedOrder)) {
-        setProviders(savedOrder)
-      }
+      if (savedOrder && Array.isArray(savedOrder)) setProviders(savedOrder)
     } catch (e) {
       log.error('Failed to fetch auth status', e)
     } finally {
       setLoading(false)
     }
+  }
+
+  const setAnthropicCli = async () => {
+    try {
+      await invoke('auth:store-api-key', 'anthropic', '__cli__', undefined, 'cli')
+      setAnthropicMethod('cli')
+      addToast('Anthropic: using Claude Code CLI', 'success')
+      fetchStatus()
+    } catch (e: any) { addToast(e.message, 'error') }
   }
 
   const saveKey = async (id: string) => {
@@ -232,7 +248,7 @@ export const ProvidersSection: React.FC = () => {
       <div className="grid grid-cols-1 gap-3">
         {providers.map((id, idx) => {
           const s = status.find(st => st.provider === id)
-          const isOAuth = ['anthropic', 'google', 'openrouter'].includes(id)
+          const isOAuth = ['google', 'openrouter'].includes(id)
           const isOllama = id === 'ollama'
           
           return (
@@ -302,6 +318,52 @@ export const ProvidersSection: React.FC = () => {
                 </div>
               </div>
 
+              {/* Anthropic: CLI toggle */}
+              {id === 'anthropic' && (
+                <div className="mt-3 pt-3 border-t border-zinc-800/50 space-y-2">
+                  <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Connection Method</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={setAnthropicCli}
+                      disabled={!claudeCliAvailable}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-[9px] font-bold uppercase border transition-all ${
+                        anthropicMethod === 'cli'
+                          ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-copernicus-phosphor'
+                          : claudeCliAvailable
+                            ? 'border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                            : 'border-zinc-800 text-zinc-700 cursor-not-allowed'
+                      }`}
+                      title={claudeCliAvailable ? 'Use Claude Code CLI session' : 'Claude CLI not found'}
+                    >
+                      <Zap size={9} />
+                      Claude Code CLI
+                      {anthropicMethod === 'cli' && <Check size={9} />}
+                      {!claudeCliAvailable && <span className="ml-1">(not found)</span>}
+                    </button>
+                    <button
+                      onClick={() => setAnthropicMethod('apikey')}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-[9px] font-bold uppercase border transition-all ${
+                        anthropicMethod === 'apikey'
+                          ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-copernicus-phosphor'
+                          : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                      }`}
+                    >
+                      <Key size={9} />
+                      API Key
+                      {anthropicMethod === 'apikey' && <Check size={9} />}
+                    </button>
+                  </div>
+                  {!claudeCliAvailable && (
+                    <p className="text-[9px] text-zinc-600">
+                      Install{' '}
+                      <button onClick={() => (window as any).ipcRenderer.invoke('app:open-external', 'https://claude.ai/download')} className="text-copernicus-phosphor hover:underline">
+                        Claude Code
+                      </button>
+                      {' '}then run <code className="text-zinc-400">claude login</code> to enable CLI mode.
+                    </p>
+                  )}
+                </div>
+              )}
               {/* Input row: API key + base URL */}
               <div className="mt-3 pt-3 border-t border-zinc-800/50 grid gap-2" style={{ gridTemplateColumns: isOllama ? '1fr' : (id === 'openrouter' || isOllama ? '1fr 1fr' : '1fr') }}>
                 {!isOllama && (

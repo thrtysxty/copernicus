@@ -6,7 +6,7 @@ import yaml from 'js-yaml';
 import log from './utils/logger';
 
 export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'deepinfra' | 'ollama' | string;
-export type AuthType = 'oauth' | 'apikey' | 'session' | 'file' | 'env';
+export type AuthType = 'oauth' | 'apikey' | 'session' | 'file' | 'env' | 'cli';
 
 export interface AuthConfig {
   provider: ProviderType;
@@ -79,6 +79,27 @@ export class AuthManager {
     this.authState.set(provider, config);
     this.saveConfig();
     return true;
+  }
+
+  public findClaudeCli(): string | null {
+    const { execFileSync } = require('child_process')
+    const candidates = ['/usr/local/bin/claude', '/opt/homebrew/bin/claude', '/usr/bin/claude']
+    for (const p of candidates) {
+      try { execFileSync(p, ['--version'], { timeout: 3000, stdio: 'ignore' }); return p } catch { /* skip */ }
+    }
+    try {
+      const result = execFileSync('which', ['claude'], { timeout: 3000 }).toString().trim()
+      if (result) return result
+    } catch { /* not in PATH */ }
+    return null
+  }
+
+  public getAnthropicMethod(): 'cli' | 'apikey' | null {
+    const config = this.authState.get('anthropic')
+    if (!config) return null
+    if (config.type === 'cli') return 'cli'
+    if (config.encryptedKey) return 'apikey'
+    return null
   }
 
   public async revokeApiKey(provider: ProviderType): Promise<boolean> {

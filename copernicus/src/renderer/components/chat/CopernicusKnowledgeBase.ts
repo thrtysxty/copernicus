@@ -25,12 +25,12 @@ export const COPERNICUS_KB: KnowledgeEntry[] = [
   {
     trigger: ['onboarding', 'wizard', 'first launch', 'getting started', 'set up for the first time'],
     response:
-      'First launch shows the Wizard — it walks you through signing in with Claude (Anthropic) and your Google account (Gemini + Jules), then selecting your workspace folder. No API keys to paste. Two sign-ins, total. After that you land on the Planner.',
+      'First launch shows the Setup Wizard. For Claude (Anthropic) you choose one of two options: (1) Claude Code CLI — uses your existing `claude login` session, works with any Claude.ai subscription, no separate billing; or (2) API Key — paste a key from console.anthropic.com, billed per token. Google OAuth, workspace selection, and CapEx rate are also set in the Wizard. You can change any of these later in Settings → Providers.',
   },
   {
-    trigger: ['sign in', 'anthropic login', 'claude login', 'google login', 'authentication', 'oauth'],
+    trigger: ['sign in', 'anthropic login', 'claude login', 'how do i connect claude', 'authentication', 'oauth', 'api key', 'connect anthropic'],
     response:
-      'COPERNICUS uses OAuth — no API keys. Click your provider in Settings → Providers. A browser window opens, you sign in, and the window closes. Your session is stored securely on-device. Anthropic (Claude) and Google (Gemini + Jules) are the two main providers.',
+      'For Claude/Anthropic you have two options — pick in Settings → Providers or the Setup Wizard:\n\n**Claude Code CLI (recommended for Claude.ai subscribers):** Install Claude Code from claude.ai/download, run `claude login` in a terminal once, then select "Claude Code CLI" in COPERNICUS. No separate API key. Uses your Pro or Max subscription.\n\n**API Key:** Get a key from console.anthropic.com/settings/keys, paste it into the Anthropic row in Settings → Providers. Billed per token separately from your Claude.ai subscription.\n\nFor Google (Gemini + Jules): click "Sign in with Google" — standard OAuth, browser opens and closes.',
   },
 
   // ─── VIEWS / NAVIGATION ─────────────────────────────────────────────────────
@@ -166,9 +166,9 @@ export const COPERNICUS_KB: KnowledgeEntry[] = [
 
   // ─── PROVIDERS & MODELS ──────────────────────────────────────────────────────
   {
-    trigger: ['settings', 'api key', 'provider', 'configure provider', 'set up provider'],
+    trigger: ['settings', 'provider', 'configure provider', 'set up provider', 'change provider'],
     response:
-      'Open Settings via the gear icon at the bottom of the activity bar. Go to Providers to sign in or add credentials for Anthropic, Google, OpenAI, OpenRouter, DeepInfra, or Ollama. Changes take effect immediately — no restart needed.',
+      'Open Settings via the gear icon at the bottom of the activity bar. Go to Providers. For Anthropic, toggle between "Claude Code CLI" (uses your `claude login` session) and "API Key" (paste from console.anthropic.com). For all other providers, paste the relevant API key or use the Sign In button. Changes take effect immediately — no restart needed.',
   },
   {
     trigger: ['claude limits', 'claude session limit', 'claude out of tokens', 'claude pro limits'],

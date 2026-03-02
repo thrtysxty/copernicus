@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { BrowserWindow } from 'electron'
+import { spawn } from 'child_process'
 import { authManager } from '../auth-manager'
 import { modelRegistry } from '../models/model-registry'
 import { stateLedger } from '../db/state-ledger'
@@ -50,6 +51,63 @@ export class LLMService {
     }
   }
 
+  private async streamClaudeCli(
+    sessionId: string,
+    messages: ChatMessage[],
+    system: string,
+    callStart: number
+  ): Promise<void> {
+    const cli = authManager.findClaudeCli()
+    if (!cli) throw new Error('Claude CLI not found. Install Claude Code from claude.ai/download, then run `claude login`.')
+
+    const history = messages.slice(0, -1)
+      .map(m => `${m.role === 'user' ? 'Human' : 'Assistant'}: ${m.content}`)
+      .join('\n\n')
+    const lastMsg = messages[messages.length - 1].content
+    const prompt = history ? `${history}\n\nHuman: ${lastMsg}` : lastMsg
+
+    const args = ['--print', '--output-format', 'stream-json', '--system-prompt', system]
+
+    return new Promise<void>((resolve, reject) => {
+      const proc = spawn(cli, args, { env: { ...process.env }, stdio: ['pipe', 'pipe', 'pipe'] })
+
+      proc.stdin.write(prompt)
+      proc.stdin.end()
+
+      let buf = ''
+      proc.stdout.on('data', (data: Buffer) => {
+        buf += data.toString()
+        const lines = buf.split('\n')
+        buf = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.trim()) continue
+          try {
+            const ev = JSON.parse(line)
+            if (ev.type === 'assistant' && Array.isArray(ev.message?.content)) {
+              for (const block of ev.message.content) {
+                if (block.type === 'text') this.broadcast('chat:token', { sessionId, token: block.text })
+              }
+            }
+          } catch { /* partial line */ }
+        }
+      })
+
+      proc.stderr.on('data', (d: Buffer) => log.warn('[claude-cli]', d.toString().trim()))
+
+      proc.on('close', (code: number | null) => {
+        if (code !== 0 && code !== null) {
+          reject(new Error(`Claude CLI exited ${code} — run \`claude login\` in a terminal to re-authenticate.`))
+        } else {
+          this.broadcast('chat:done', { sessionId, inputTokens: 0, outputTokens: 0 })
+          this.recordCall(sessionId, 'claude-cli', 0, 0, callStart)
+          resolve()
+        }
+      })
+
+      proc.on('error', (err: Error) => reject(new Error(`Failed to start Claude CLI: ${err.message}`)))
+    })
+  }
+
   private async streamAnthropic(
     sessionId: string,
     messages: ChatMessage[],
@@ -57,8 +115,13 @@ export class LLMService {
     system: string,
     callStart: number
   ): Promise<void> {
+    // Route through Claude Code CLI if the user chose that method
+    if (authManager.getAnthropicMethod() === 'cli') {
+      return this.streamClaudeCli(sessionId, messages, system, callStart)
+    }
+
     const keyOrSession = authManager.getApiKey('anthropic')
-    if (!keyOrSession) throw new Error('No Anthropic credentials configured')
+    if (!keyOrSession) throw new Error('No Anthropic credentials configured. Open Settings → Providers to choose Claude Code CLI or paste an API key.')
 
     // Detect if this is an API Key or a captured Session Token
     const isApiKey = keyOrSession.startsWith('sk-ant-')

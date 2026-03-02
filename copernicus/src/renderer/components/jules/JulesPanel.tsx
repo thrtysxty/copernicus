@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { ExternalLink, RefreshCw, ChevronLeft, ChevronRight, Globe, X } from 'lucide-react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { ExternalLink, RefreshCw } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
 
 interface JulesSession {
@@ -18,7 +17,6 @@ interface JulesSession {
 // ─── Sessions list (rendered in terminal drawer) ──────────────────────────────
 export const JulesPanel: React.FC = () => {
   const invoke = useIpcError()
-  const { setJulesDialogOpen } = useLayoutStore()
   const [sessions, setSessions] = useState<JulesSession[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -48,25 +46,16 @@ export const JulesPanel: React.FC = () => {
   return (
     <div className="w-full h-full flex flex-col bg-copernicus-bg">
       <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel bg-copernicus-bg flex-shrink-0">
-        <span className="text-sm vt-label tracking-widest text-copernicus-phosphor uppercase">
+        <span className="text-[10px] font-mono tracking-widest text-copernicus-phosphor uppercase">
           Jules_Sessions
         </span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={load}
-            className="text-zinc-500 hover:text-zinc-200 transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw size={11} />
-          </button>
-          <button
-            onClick={() => setJulesDialogOpen(true)}
-            className="text-zinc-500 hover:text-copernicus-phosphor transition-colors"
-            title="Open jules.google.com in canvas"
-          >
-            <Globe size={11} />
-          </button>
-        </div>
+        <button
+          onClick={load}
+          className="text-zinc-500 hover:text-zinc-200 transition-colors"
+          title="Refresh"
+        >
+          <RefreshCw size={11} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-auto">
@@ -122,98 +111,3 @@ export const JulesPanel: React.FC = () => {
   )
 }
 
-// ─── Full-canvas Jules browser (rendered in main canvas overlay) ──────────────
-export const JulesCanvasDialog: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const webviewRef = useRef<any>(null)
-  const [url, setUrl] = useState('https://jules.google.com')
-  const [loading, setLoading] = useState(false)
-  const [canGoBack, setCanGoBack] = useState(false)
-  const [canGoForward, setCanGoForward] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => { setMounted(true) }, [])
-
-  useEffect(() => {
-    const wv = webviewRef.current
-    if (!wv || !mounted) return
-
-    const onNavigate = (e: any) => {
-      setUrl(e.url)
-      setCanGoBack(wv.canGoBack())
-      setCanGoForward(wv.canGoForward())
-    }
-    const onStart = () => setLoading(true)
-    const onStop  = () => setLoading(false)
-
-    wv.addEventListener('did-navigate', onNavigate)
-    wv.addEventListener('did-navigate-in-page', onNavigate)
-    wv.addEventListener('did-start-loading', onStart)
-    wv.addEventListener('did-stop-loading', onStop)
-
-    return () => {
-      wv.removeEventListener('did-navigate', onNavigate)
-      wv.removeEventListener('did-navigate-in-page', onNavigate)
-      wv.removeEventListener('did-start-loading', onStart)
-      wv.removeEventListener('did-stop-loading', onStop)
-    }
-  }, [mounted])
-
-  return (
-    <div className="absolute inset-0 z-40 flex flex-col bg-copernicus-bg border-t border-copernicus-phosphor/20">
-      {/* Browser chrome */}
-      <div className="h-9 flex items-center gap-1 px-2 border-b border-copernicus-steel bg-[#080808] flex-shrink-0">
-        <button
-          onClick={onClose}
-          className="text-zinc-500 hover:text-copernicus-phosphor transition-colors p-1"
-          title="Close Jules"
-        >
-          <X size={12} />
-        </button>
-        <div className="w-px h-4 bg-zinc-800 mx-1" />
-        <button
-          onClick={() => webviewRef.current?.goBack()}
-          disabled={!canGoBack}
-          className="p-1 text-zinc-500 hover:text-zinc-200 disabled:opacity-30 transition-colors"
-        >
-          <ChevronLeft size={13} />
-        </button>
-        <button
-          onClick={() => webviewRef.current?.goForward()}
-          disabled={!canGoForward}
-          className="p-1 text-zinc-500 hover:text-zinc-200 disabled:opacity-30 transition-colors"
-        >
-          <ChevronRight size={13} />
-        </button>
-        <button
-          onClick={() => webviewRef.current?.reload()}
-          className={`p-1 text-zinc-500 hover:text-zinc-200 transition-colors ${loading ? 'animate-spin text-copernicus-phosphor' : ''}`}
-          title="Reload"
-        >
-          <RefreshCw size={11} />
-        </button>
-        <div className="flex-1 mx-2 px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-[9px] font-mono text-zinc-500 truncate">
-          {url}
-        </div>
-        <span className="text-sm vt-label tracking-widest text-copernicus-phosphor/60 mr-1">JULES_BROWSER</span>
-      </div>
-
-      {/* Webview */}
-      <div className="flex-1 relative bg-[#050505]">
-        {!mounted ? (
-          <div className="absolute inset-0 flex items-center justify-center text-zinc-700 text-[10px] font-mono animate-pulse">
-            INIT_SESSION...
-          </div>
-        ) : (
-          <webview
-            ref={webviewRef}
-            src="https://jules.google.com"
-            partition="persist:jules"
-            allowpopups="true"
-            className="w-full h-full"
-            style={{ display: 'flex' }}
-          />
-        )}
-      </div>
-    </div>
-  )
-}

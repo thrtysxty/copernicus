@@ -10,18 +10,6 @@
   --copernicus-steel: #3F3F46;
 }
 
-/* ─── CRT Screen Flicker ─────────────────────────────────────────────────── */
-@keyframes crt-flicker {
-  0%, 100%  { opacity: 1; }
-  39%        { opacity: 1; }
-  39.5%      { opacity: 0.84; }
-  40%        { opacity: 1; }
-  40.8%      { opacity: 0.91; }
-  41%        { opacity: 1; }
-  74.9%      { opacity: 1; }
-  75%        { opacity: 0.96; }
-  75.3%      { opacity: 1; }
-}
 
 body {
   margin: 0;
@@ -30,34 +18,8 @@ body {
   color: #e4e4e7; /* zinc-200 */
   font-family: 'JetBrains Mono', monospace; /* Assuming font is available or fallback */
   overflow: hidden; /* Zero-gap tiling usually implies no scrolling on body */
-  animation: crt-flicker 11s linear infinite;
 }
 
-/* ─── CRT Scanlines Overlay ──────────────────────────────────────────────── */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.10) 2px,
-    rgba(0, 0, 0, 0.10) 4px
-  );
-  pointer-events: none;
-  z-index: 9998;
-}
-
-/* ─── CRT Vignette ───────────────────────────────────────────────────────── */
-body::after {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
-  pointer-events: none;
-  z-index: 9997;
-}
 
 /* ─── Phosphor Glow ──────────────────────────────────────────────────────── */
 .phosphor-glow {
@@ -75,12 +37,6 @@ body::after {
     inset 0 0 6px rgba(var(--copernicus-phosphor-rgb), 0.1);
 }
 
-/* ─── VT Display Font ────────────────────────────────────────────────────── */
-/* Applied to static labels, nav items, panel headers — NOT code/data */
-.vt-label {
-  font-family: 'VT323', monospace;
-  letter-spacing: 0.04em;
-}
 
 @keyframes phosphor-pulse {
   0% { opacity: 0.6; }

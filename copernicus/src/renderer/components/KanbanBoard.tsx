@@ -57,7 +57,7 @@ export function KanbanBoard() {
   const [julesSessions, setJulesSessions] = useState<Record<string, JulesSession>>({})
   const [workflowStatuses, setWorkflowStatuses] = useState<Record<string, string>>({})
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
-  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, spotlightLane, setSpotlightLane, setJulesDialogOpen, setView } = useLayoutStore()
+  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, spotlightLane, setSpotlightLane } = useLayoutStore()
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
   const [newTitle, setNewTitle] = useState('')
   const [newEpic, setNewEpic] = useState('')
@@ -132,8 +132,6 @@ export function KanbanBoard() {
     try {
       await invoke('jules:dispatch-session', storyId)
       fetchJulesSessions()
-      setView('editor')
-      setJulesDialogOpen(true)
     } catch (e: any) {
       log.error('Failed to dispatch to Jules', e)
     }

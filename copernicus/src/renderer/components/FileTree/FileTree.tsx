@@ -75,16 +75,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
     } else {
       setCenterMode('code')
       try {
-        const content = await invoke<string>('fs:read-file', node.path)
-        const finalContent = typeof content === 'string' ? content : ''
-        
+        const raw = await invoke<any>('fs:read-file', node.path)
+        const finalContent: string = typeof raw === 'string' ? raw : (raw?.data ?? '')
+
         if (finalContent.length > MAX_EDITOR_BYTES) {
           setActiveFileContent(finalContent.slice(0, MAX_EDITOR_BYTES))
           console.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
         } else {
           setActiveFileContent(finalContent)
         }
-        
         setActiveFileLanguage(getLanguage(node.path))
       } catch (err) {
         console.error('[FileTree] Failed to read file content:', err)

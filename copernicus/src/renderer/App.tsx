@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import {
   Github, Settings, BarChart2, GitBranch, FolderOpen,
-  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout, Activity, Brain, Globe
+  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout, Activity, Brain
 } from 'lucide-react'
 import { useLayoutStore } from './store/layout'
-import { JulesCanvasDialog } from './components/jules/JulesPanel'
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
 import { FileTree } from './components/FileTree/FileTree'
@@ -136,8 +135,6 @@ export default function App() {
     tourHighlight,
     setTourHighlight,
     setChatPanelTab,
-    julesDialogOpen,
-    setJulesDialogOpen,
   } = useLayoutStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -364,15 +361,6 @@ export default function App() {
           <div className="flex-1" />
 
           <button
-            onClick={() => setJulesDialogOpen(true)}
-            aria-label="Jules"
-            className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${julesDialogOpen ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
-            title="Jules"
-          >
-            <Globe size={18} />
-          </button>
-
-          <button
             onClick={() => invoke('app:open-external', 'https://github.com')}
             aria-label="Open GitHub"
             className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
@@ -400,7 +388,7 @@ export default function App() {
                 <button
                   key={view}
                   onClick={() => setView(view)}
-                  className={`vt-label text-[14px] uppercase tracking-[0.15em] h-full px-2 transition-all ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  className={`text-[10px] font-mono uppercase tracking-[0.2em] h-full px-2 transition-all ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
                   {view.replace('-', '_')}
                 </button>
@@ -486,7 +474,7 @@ export default function App() {
             onClick={() => setTerminalOpen(!terminalOpen)}
           >
             <div className="flex items-center gap-2 flex-1">
-              <span className={`vt-label text-[13px] uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor phosphor-glow animate-pulse' : 'text-zinc-500'}`}>
+              <span className={`text-[10px] font-mono uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor phosphor-glow animate-pulse' : 'text-zinc-500'}`}>
                 {terminalOpen ? '▼' : '▲'} TERMINAL_PULSE
               </span>
               {anyTerminalBusy && <Loader2 size={10} className="animate-spin text-copernicus-phosphor" />}
@@ -495,10 +483,6 @@ export default function App() {
 
           <StatusBar />
 
-          {/* Jules canvas overlay — full main area, above terminal */}
-          {julesDialogOpen && (
-            <JulesCanvasDialog onClose={() => setJulesDialogOpen(false)} />
-          )}
         </main>
       </div>
 
