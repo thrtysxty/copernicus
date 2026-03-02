@@ -816,6 +816,8 @@ function registerIpcHandlers() {
     if (payload?.id && payload?.data) ptyManager.write(payload.id, payload.data);
   });
   ipcMain.on('terminal-kill', (_event, { id }) => ptyManager.kill(id));
+  ipcMain.handle('terminal:stop-agent', (_event, { id }) => handleIpc(() => ptyManager.kill(id)));
+
   ipcMain.on('terminal:spawn-agent', (_event, { agentId }: any) => {
     if (!/^[a-z0-9_-]+$/.test(agentId)) return;
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('terminal:activate-tab', { agentId }));

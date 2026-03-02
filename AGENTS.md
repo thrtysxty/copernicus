@@ -188,9 +188,9 @@ models:list-ollama  fs:read-file        fs:save-file
 fs:list-dir         fs:open-file        chat:send
 db:log-event        db:get-events       db:add-memory
 db:search-memory    makefile:list       makefile:run
-terminal:spawn-agent settings:load      settings:save
-git:branch          git:status          workflow:run
-workflow:status     workflow:reset      workflow:list-templates
+terminal:spawn-agent terminal:stop-agent settings:load
+settings:save       git:branch          git:status
+workflow:run        workflow:status     workflow:reset      workflow:list-templates
 workflow:get-template workflow:ollama-status
 lsp:open-file       lsp:close-file      lsp:get-diagnostics
 lsp:check-file      lsp:workspace-check

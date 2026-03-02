@@ -3,14 +3,34 @@ import { Terminal } from './Terminal';
 import { GeminiPanel } from './GeminiPanel';
 import { JulesPanel } from '../jules/JulesPanel';
 import { useLayoutStore } from '../../store/layout';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Square } from 'lucide-react';
+import { useIpcError } from '../../hooks/useIpcError';
+import { IpcResult } from '../../types/ipc';
 
 interface TerminalTabsProps {
   cwd?: string;
 }
 
 export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
-  const { terminals, activeTerminalId, setActiveTerminal, removeTerminal } = useLayoutStore();
+  const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy } = useLayoutStore();
+  const invoke = useIpcError();
+
+  const getAgentBadge = (id: string) => {
+    switch (id) {
+      case 'terminal-claude': return { letter: 'C', color: 'text-[#4ADE80]' };
+      case 'terminal-gemini': return { letter: 'G', color: 'text-[#60A5FA]' };
+      case 'terminal-jules': return { letter: 'J', color: 'text-[#FBBF24]' };
+      default: return null;
+    }
+  };
+
+  const handleStopAgent = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const result = await invoke<IpcResult<void>>('terminal:stop-agent', { id });
+    if (result?.ok) {
+      setTerminalBusy(id, false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-copernicus-bg">
@@ -24,9 +44,21 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             `}
             onClick={() => setActiveTerminal(tab.id)}
           >
-            {tab.isBusy && (
-              <Loader2 size={8} className="animate-spin mr-1.5 text-copernicus-phosphor" />
-            )}
+            {(() => {
+              const badge = getAgentBadge(tab.id);
+              if (badge) {
+                return (
+                  <span className={`mr-1.5 font-bold ${badge.color} ${tab.isBusy ? 'animate-pulse' : ''}`}>
+                    {badge.letter}
+                  </span>
+                );
+              }
+              if (tab.isBusy) {
+                return <Loader2 size={8} className="animate-spin mr-1.5 text-copernicus-phosphor" />;
+              }
+              return null;
+            })()}
+
             <span className={tab.isBusy ? 'phosphor-glow' : ''}>
               {tab.label}
               {tab.ephemeral && (
@@ -35,15 +67,26 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             </span>
 
             {tab.id !== 'terminal-local' && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeTerminal(tab.id);
-                }}
-                className="ml-2 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity"
-              >
-                <X size={10} />
-              </button>
+              <div className="flex items-center ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {getAgentBadge(tab.id) && tab.isBusy ? (
+                  <button
+                    onClick={(e) => handleStopAgent(e, tab.id)}
+                    className="hover:text-red-400 transition-colors mr-1"
+                    title="Stop Agent"
+                  >
+                    <Square size={10} fill="currentColor" />
+                  </button>
+                ) : null}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeTerminal(tab.id);
+                  }}
+                  className="hover:text-red-400 transition-colors"
+                >
+                  <X size={10} />
+                </button>
+              </div>
             )}
 
             {/* Busy Pulse Indicator (under-bar) */}

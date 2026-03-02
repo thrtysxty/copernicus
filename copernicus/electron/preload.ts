@@ -27,6 +27,7 @@ const SEND_CHANNELS = new Set([
   // Terminal
   'terminal-create', 'terminal:resize', 'terminal-write', 'terminal-kill',
   'terminal:spawn-agent',
+  'terminal:stop-agent',
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
   'db:add-memory', 'db:search-memory', 'db:vacuum',

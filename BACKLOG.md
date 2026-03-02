@@ -69,7 +69,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #196 | Agent Terminal Rework | DRAFT | Medium |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -105,6 +104,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #172 | Ui Canvas File System | COMPLETE | P1 |
 | #173 | Model Dynamic Env | COMPLETE | P1 |
 | #174 | Hardware Touchbar | COMPLETE | P1 |
+| #201 | Agent Terminal Rework | COMPLETE | P2 |
 | #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | COMPLETE | P0 — Critical |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
