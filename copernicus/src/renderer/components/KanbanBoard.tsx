@@ -70,7 +70,7 @@ export function KanbanBoard() {
   const [filterEpic, setFilterEpic] = useState<string>('')
   const [filterSearch, setFilterSearch] = useState('')
 
-  const epics = stories.filter(s => s.type === 'Epic')
+  const epics = Array.from(new Set(stories.map(s => s.epic).filter(Boolean) as string[])).sort()
 
   const fetchJulesSessions = useCallback(async () => {
     try {
@@ -238,7 +238,7 @@ export function KanbanBoard() {
         >
           <option value="">All Epics</option>
           {epics.map(ep => (
-            <option key={ep.id} value={ep.id}>{ep.title}</option>
+            <option key={ep} value={ep}>{ep}</option>
           ))}
         </select>
         {(['P0','P1','P2','P3'] as const).map(p => (
@@ -385,7 +385,7 @@ export function KanbanBoard() {
                           >
                             <option value="">(No Epic)</option>
                             {epics.map(ep => (
-                              <option key={ep.id} value={ep.id}>{ep.title}</option>
+                              <option key={ep} value={ep}>{ep}</option>
                             ))}
                           </select>
                         )}
@@ -482,7 +482,7 @@ export function KanbanBoard() {
                       </div>
                     )}
 
-                    <EpicBadge epicId={story.epic} stories={stories} />
+                    <EpicBadge epicId={story.epic || ''} />
 
                     {/* Badges row */}
                     <div className="mt-2 flex items-center gap-1.5 flex-wrap">

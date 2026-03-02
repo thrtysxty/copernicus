@@ -91,6 +91,7 @@ interface LayoutState {
 
   // UI Builder State
   uiBuilderOpen: boolean
+  uiTestingDrawerOpen: boolean
   uiComponents: UIComponent[]
 
   // Browser Session
@@ -133,6 +134,7 @@ interface LayoutState {
   setActiveFileLanguage: (language: string) => void
   setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean }>) => void
   toggleUIBuilder: () => void
+  toggleUITestingDrawer: () => void
   setUIComponents: (components: UIComponent[]) => void
   setWorkingDir: (dir: string) => void
   setGitBranch: (branch: string) => void
@@ -158,6 +160,14 @@ interface LayoutState {
   setTourStep: (step: number) => void
   setTourActive: (active: boolean) => void
   retakeTour: () => void
+
+  // Activity Bar
+  activityBarCollapsed: boolean
+  setActivityBarCollapsed: (collapsed: boolean) => void
+
+  // Story stats
+  inProgressCount: number
+  setInProgressCount: (count: number) => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -205,6 +215,7 @@ export const useLayoutStore = create<LayoutState>()(
       tourActive: false,
 
       uiBuilderOpen: false,
+      uiTestingDrawerOpen: false,
       uiComponents: [],
       browserSessionActive: false,
 
@@ -275,6 +286,7 @@ export const useLayoutStore = create<LayoutState>()(
       setActiveFileLanguage: (language) => set({ activeFileLanguage: language }),
       setAppearance: (patch) => set((state) => ({ ...state, ...patch })),
       toggleUIBuilder: () => set((state) => ({ uiBuilderOpen: !state.uiBuilderOpen })),
+      toggleUITestingDrawer: () => set((state) => ({ uiTestingDrawerOpen: !state.uiTestingDrawerOpen })),
       setUIComponents: (components) => set({ uiComponents: components }),
       setWorkingDir: (dir) => set({ workingDir: dir }),
       setGitBranch: (branch) => set({ gitBranch: branch }),
@@ -310,6 +322,12 @@ export const useLayoutStore = create<LayoutState>()(
       setTourStep: (step) => set({ tourStep: step }),
       setTourActive: (active) => set({ tourActive: active }),
       retakeTour: () => set({ tourActive: true, activeView: 'designer' as StoryboardView, centerMode: 'canvas' as CenterMode }),
+
+      activityBarCollapsed: false,
+      setActivityBarCollapsed: (collapsed) => set({ activityBarCollapsed: collapsed }),
+
+      inProgressCount: 0,
+      setInProgressCount: (count) => set({ inProgressCount: count }),
     }),
     {
       name: 'copernicus-layout-storage',

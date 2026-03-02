@@ -132,8 +132,9 @@ export class StoriesManager {
     const typeMatch = content.match(/\*\*Type:\*\*\s*(.+)$/m)
     const type = typeMatch ? typeMatch[1].trim() : 'Unknown'
 
-    const epicMatch = content.match(/\*\*Epic:\*\*\s*(story_\d+|\(none\))/m)
-    const epic = epicMatch && epicMatch[1] !== '(none)' ? epicMatch[1] : null
+    const epicMatch = content.match(/\*\*Epic:\*\*\s*(.+)$/m)
+    const epic = epicMatch && epicMatch[1].trim() !== '(none)' && epicMatch[1].trim() !== ''
+      ? epicMatch[1].trim() : null
 
     const modelMatch = content.match(/\*\*(?:Model|Assigned To):\*\*\s*(.+)$/m)
     const assigned_to = modelMatch && modelMatch[1].trim() !== '(unassigned)'

@@ -69,26 +69,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | DRAFT | Medium |
-| #177 | Renderer Bug Sweep | APPROVED FOR IMPLEMENTATION | P1 |
-| #178 | IPC Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P1 |
-| #179 | VT Selection Highlight | APPROVED FOR IMPLEMENTATION | P1 |
-| #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
-| #181 | Quick Tour — First-Launch Guided Walkthrough | APPROVED FOR IMPLEMENTATION | P1 |
-| #182 | FlippablePanel — Conditional Flip/Slide Mode Prop | APPROVED FOR IMPLEMENTATION | P1 |
-| #183 | Chat Panel — Tools Back Face (5 Tabs) | APPROVED FOR IMPLEMENTATION | P1 |
-| #184 | Command Center — Live Agent & System Dashboard | APPROVED FOR IMPLEMENTATION | P1 |
-| #185 | Designer View — Canvas As Unified Graphic Surface | APPROVED FOR IMPLEMENTATION | P1 |
-| #186 | Kanban Card — Workflow Assignment & Run Button | APPROVED FOR IMPLEMENTATION | P1 |
-| #187 | Jules PR Manager — Workflow Template | APPROVED FOR IMPLEMENTATION | P1 |
-| #188 | Copernicus Guide Persona — GUIDE Tab & Tour Integration | APPROVED FOR IMPLEMENTATION | P1 |
-| #189 | LSP → Monaco & ChatPanel Context Wiring | APPROVED FOR IMPLEMENTATION | P1 |
-| #190 | Settings — MCP Server Configuration Tab | APPROVED FOR IMPLEMENTATION | P2 |
-| #191 | Context Snapshots & Project Memory — DB Tables & Wiring | APPROVED FOR IMPLEMENTATION | P1 |
-| #192 | Console.log Cleanup — electron-log Wrapper | APPROVED FOR IMPLEMENTATION | P2 |
-| #193 | Accessibility Pass — Keyboard Navigation & ARIA Labels | APPROVED FOR IMPLEMENTATION | P2 |
-| #194 | Flask Backend — API Scaffold & Core Routes | APPROVED FOR IMPLEMENTATION | P1 |
-| #195 | Gemini CLI PTY Agent — Spawn, Send, Receive | APPROVED FOR IMPLEMENTATION | P1 |
+| #196 | Agent Terminal Rework | DRAFT | Medium |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -96,6 +77,26 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | APPROVED FOR IMPLEMENTATION | P1 — High |
+| #177 | Renderer Bug Sweep | APPROVED FOR IMPLEMENTATION | P0 |
+| #178 | Ipc Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P0 |
+| #179 | Vt Selection Highlight | APPROVED FOR IMPLEMENTATION | P1 |
+| #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
+| #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
+| #182 | Flippablepanel Mode Prop | APPROVED FOR IMPLEMENTATION | P1 |
+| #183 | Chat Tools Back Face | APPROVED FOR IMPLEMENTATION | P1 |
+| #184 | Command Center View | APPROVED FOR IMPLEMENTATION | P1 |
+| #185 | Designer Canvas Unification | APPROVED FOR IMPLEMENTATION | P1 |
+| #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
+| #187 | Jules Pr Manager Workflow | APPROVED FOR IMPLEMENTATION | P1 |
+| #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
+| #189 | Lsp Monaco Chatpanel Wiring | APPROVED FOR IMPLEMENTATION | P1 |
+| #190 | Mcp Settings Tab | APPROVED FOR IMPLEMENTATION | P2 |
+| #191 | Context Snapshots Project Memory | APPROVED FOR IMPLEMENTATION | P1 |
+| #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
+| #193 | Accessibility Pass | APPROVED FOR IMPLEMENTATION | P2 |
+| #194 | Flask Backend Scaffold | APPROVED FOR IMPLEMENTATION | P1 |
+| #195 | Gemini Cli Pty Agent | APPROVED FOR IMPLEMENTATION | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
 | #169 | Auth Provider Management | COMPLETE | P0 |

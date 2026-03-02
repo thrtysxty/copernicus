@@ -648,6 +648,57 @@ function registerIpcHandlers() {
     return record
   }))
 
+  ipcMain.handle('devtime:run-playwright', (_e, { file } = {}) => handleIpc(async () => {
+    return new Promise((resolve, reject) => {
+      const args = ['playwright', 'test', '--reporter=json']
+      if (file) args.push(file)
+      
+      const child = spawn('npx', args, {
+        cwd: fsManager.getRootPath(),
+        shell: true,
+        env: { ...process.env, CI: 'true' }
+      })
+
+      let stdout = ''
+      let stderr = ''
+      child.stdout.on('data', d => stdout += d.toString())
+      child.stderr.on('data', d => stderr += d.toString())
+      
+      child.on('close', () => {
+        try {
+          const data = JSON.parse(stdout)
+          const results: any[] = []
+          
+          const flatten = (items: any[]) => {
+            items.forEach(suite => {
+              if (suite.specs) {
+                suite.specs.forEach((spec: any) => {
+                  spec.tests.forEach((test: any) => {
+                    test.results.forEach((res: any) => {
+                      results.push({
+                        title: spec.title,
+                        status: res.status === 'passed' ? 'PASS' : 'FAIL',
+                        duration: res.duration
+                      })
+                    })
+                  })
+                })
+              }
+              if (suite.suites) flatten(suite.suites)
+            })
+          }
+          if (data.suites) flatten(data.suites)
+          resolve({ results })
+        } catch (err) {
+          log.error('[playwright] Failed to parse output:', stdout, stderr)
+          resolve({ results: [] })
+        }
+      })
+      
+      child.on('error', err => reject(err))
+    })
+  }))
+
   ipcMain.handle('devtime:test-history', (_e, limit: number = 20) =>
     handleIpc(() => stateLedger.getTestRunHistory(limit)))
 
@@ -760,7 +811,7 @@ function registerIpcHandlers() {
     const isSafe = resolvedCwd.startsWith(fsManager.getRootPath() + path.sep) || resolvedCwd === fsManager.getRootPath() || resolvedCwd.startsWith(os.homedir());
     if (win && isSafe) ptyManager.create(id, cols, rows, resolvedCwd, win);
   });
-  ipcMain.on('terminal-resize', (_event, { id, cols, rows }) => ptyManager.resize(id, cols, rows));
+  ipcMain.handle('terminal:resize', (_e, { id, cols, rows }) => handleIpc(() => ptyManager.resize(id, cols, rows)));
   ipcMain.on('terminal-write', (_event, payload: any) => {
     if (payload?.id && payload?.data) ptyManager.write(payload.id, payload.data);
   });
@@ -827,6 +878,42 @@ function registerIpcHandlers() {
       tracked: settingsStore.get('github:tracked-repos', []) as string[],
     }
   }))
+
+  ipcMain.handle('github:set-target-repo', (_e, repoName: string) => handleIpc(() => {
+    settingsStore.set('github:target-repo', repoName)
+    authManager.setBaseUrl('jules', repoName)
+    return { ok: true }
+  }))
+
+  ipcMain.handle('github:get-target-repo', () => handleIpc(() => {
+    return settingsStore.get('github:target-repo', null)
+  }))
+
+  ipcMain.handle('github:search', (_e, query: string) => handleIpc(async () => {
+    const token = authManager.getApiKey('github')
+    if (!token) throw new Error('NO_TOKEN')
+    const res = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(query)}`, {
+      headers: { 
+        Authorization: `Bearer ${token}`, 
+        'User-Agent': 'COPERNICUS-IDE',
+        'Accept': 'application/vnd.github+json'
+      }
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json() as any
+    return data.items
+  }))
+
+  ipcMain.handle('github:clone-repo', (_e, { repoUrl, repoName }: { repoUrl: string, repoName: string }) => handleIpc(async () => {
+    if (!win) throw new Error('NO_WINDOW')
+    const termId = `git-clone-${Date.now()}`
+    const rootPath = fsManager.getRootPath()
+    const targetPath = path.join(rootPath, repoName)
+    win.webContents.send('terminal:spawn', { id: termId, label: `Clone ${repoName}`, ephemeral: true })
+    ptyManager.createEphemeral(termId, `git clone ${repoUrl} ${targetPath}`, rootPath, win)
+    return { ok: true, termId }
+  }))
+
 
   ipcMain.handle('github:test-connection', () => handleIpc(async () => {
     const token = authManager.getApiKey('github')

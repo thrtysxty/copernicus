@@ -146,6 +146,24 @@ export class AuthManager {
     return this.authState.get(provider)?.baseUrl;
   }
 
+  public setBaseUrl(provider: ProviderType, baseUrl: string): void {
+    const config = this.authState.get(provider);
+    if (config) {
+      config.baseUrl = baseUrl;
+      this.authState.set(provider, config);
+      this.saveConfig();
+    } else {
+      // Create a dummy config if none exists, though usually we expect one
+      this.authState.set(provider, {
+        provider,
+        baseUrl,
+        type: 'apikey',
+        isActive: true
+      });
+      this.saveConfig();
+    }
+  }
+
   private getEnvKey(provider: ProviderType): string | undefined {
     switch (provider) {
       case 'openai': return process.env.OPENAI_API_KEY;

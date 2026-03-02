@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Github, Lock, Globe, Plus, Link, GitBranch, Shield, ShieldOff, Trash2, Copy, Check } from 'lucide-react';
+import { Github, Lock, Globe, Plus, Link, Shield, ShieldOff, Trash2, Copy, Check, Search, Target, Download } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useToastStore } from '../../store/toastStore';
 import log from '../../utils/logger'
@@ -8,9 +8,12 @@ type Tab = 'repos' | 'access' | 'invite';
 
 interface Repo {
   name: string;
+  full_name: string;
   private: boolean;
   updated_at: string;
   html_url?: string;
+  description: string | null;
+  stargazers_count: number;
 }
 
 interface User {
@@ -38,6 +41,8 @@ export const GithubDashboard: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [addRepoInput, setAddRepoInput] = useState('');
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [targetRepo, setTargetRepo] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -46,10 +51,11 @@ export const GithubDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [_rawUser, _rawRepos, _rawTrust] = await Promise.all([
+      const [_rawUser, _rawRepos, _rawTrust, _rawTarget] = await Promise.all([
         invoke<any>('github:user'),
         invoke<any>('github:list-repos'),
         invoke<any>('github:get-trust-list'),
+        invoke<any>('github:get-target-repo'),
       ]);
       const userData: User = (_rawUser as any)?.data ?? _rawUser;
       const reposData: Repo[] = (_rawRepos as any)?.data ?? _rawRepos;
@@ -57,6 +63,7 @@ export const GithubDashboard: React.FC = () => {
       setUser(userData);
       setRepos(Array.isArray(reposData) ? reposData : []);
       setTrustList(trustData ?? { trusted: [], tracked: [] });
+      setTargetRepo((_rawTarget as any)?.data ?? _rawTarget);
     } catch (error) {
       log.error('Failed to fetch GitHub data:', error);
     } finally {
@@ -119,6 +126,33 @@ export const GithubDashboard: React.FC = () => {
       log.error('Failed to remove repo', e);
     }
   };
+
+  
+  const handleSetTarget = async (repoFullName: string) => {
+    try {
+      const result = await invoke<any>('github:set-target-repo', repoFullName);
+      if (result && (result as any).ok) {
+        setTargetRepo(repoFullName);
+        addToast(`Target set to ${repoFullName}`, 'success');
+      }
+    } catch (e) {
+      log.error('Failed to set target repo', e);
+    }
+  };
+
+  const handleCloneRepo = async (repoUrl: string, repoName: string) => {
+    try {
+      await invoke('github:clone-repo', { repoUrl, repoName });
+      addToast(`Cloning ${repoName}...`, 'info');
+    } catch (e) {
+      log.error('Failed to clone repo', e);
+    }
+  };
+
+  const filteredRepos = repos.filter(repo => 
+    repo.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (repo.description && repo.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const handleCopyProfileUrl = () => {
     if (!user) return;
@@ -197,49 +231,106 @@ export const GithubDashboard: React.FC = () => {
 
         {/* ── Repos Tab ── */}
         {activeTab === 'repos' && (
-          <div className="p-2 space-y-1">
-            <div className="px-2 py-1 text-[9px] uppercase text-zinc-600 font-bold tracking-widest">
-              Repositories ({repos.length})
+          <div className="p-2 space-y-2">
+            <div className="px-2 py-1 flex items-center justify-between">
+              <span className="text-[9px] uppercase text-zinc-600 font-bold tracking-widest">
+                Repositories ({filteredRepos.length})
+              </span>
+              <div className="relative">
+                <Search className="w-3 h-3 absolute left-1.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="bg-black border border-zinc-800 text-[10px] pl-6 pr-2 py-0.5 text-white focus:border-copernicus-phosphor focus:outline-none placeholder:text-zinc-700 font-mono rounded w-32 transition-all focus:w-48"
+                />
+              </div>
             </div>
-            {repos.map((repo) => {
-              const isTrusted = trustList.trusted.includes(repo.name);
-              return (
-                <div
-                  key={repo.name}
-                  className="group flex items-center gap-2 p-2 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all"
-                >
-                  {repo.private ? (
-                    <Lock className="w-3 h-3 text-yellow-500/80 flex-shrink-0" />
-                  ) : (
-                    <Globe className="w-3 h-3 text-blue-400/80 flex-shrink-0" />
-                  )}
-                  <span className="text-xs font-mono text-zinc-300 flex-1 truncate">{repo.name}</span>
-                  <span className="text-[9px] text-zinc-600 font-mono mr-2">
-                    {new Date(repo.updated_at).toLocaleDateString()}
-                  </span>
-                  <button
-                    onClick={() => handleSetTrust(repo.name, !isTrusted)}
-                    className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
-                      ${isTrusted
-                        ? 'text-copernicus-phosphor bg-copernicus-phosphor/10 hover:bg-copernicus-phosphor/20'
-                        : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800'}`}
-                    title={isTrusted ? 'Revoke trust' : 'Trust this repo'}
+            
+            <div className="space-y-1">
+              {filteredRepos.map((repo) => {
+                const isTrusted = trustList.trusted.includes(repo.name);
+                const isTarget = targetRepo === repo.full_name;
+                return (
+                  <div
+                    key={repo.full_name}
+                    className={`group flex items-center gap-2 p-2 rounded border transition-all
+                      ${isTarget 
+                        ? 'bg-copernicus-phosphor/5 border-copernicus-phosphor/30' 
+                        : 'bg-transparent border-transparent hover:bg-zinc-900 hover:border-zinc-800'}`}
                   >
-                    {isTrusted ? <Shield className="w-3 h-3" /> : <ShieldOff className="w-3 h-3" />}
-                    {isTrusted ? 'Trusted' : 'Trust'}
-                  </button>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="text-zinc-600 hover:text-copernicus-phosphor p-0.5 rounded hover:bg-zinc-800 transition-colors" title="Clone">
-                      <GitBranch className="w-3 h-3" />
-                    </button>
-                    <button className="text-zinc-600 hover:text-zinc-300 p-0.5 rounded hover:bg-zinc-800 transition-colors" title="Open">
-                      <Link className="w-3 h-3" />
-                    </button>
+                    {repo.private ? (
+                      <Lock className="w-3 h-3 text-yellow-500/80 flex-shrink-0" />
+                    ) : (
+                      <Globe className="w-3 h-3 text-blue-400/80 flex-shrink-0" />
+                    )}
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-zinc-300 truncate">{repo.name}</span>
+                        {isTarget && (
+                          <span className="text-[8px] font-bold uppercase tracking-wider bg-copernicus-phosphor text-black px-1 rounded-sm">
+                            ACTIVE
+                          </span>
+                        )}
+                        <span className="ml-auto text-[9px] text-zinc-600 flex items-center gap-1">
+                          <span className="text-yellow-500/80">★</span> {repo.stargazers_count || 0}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 truncate mb-1">
+                        {repo.description || 'No description provided.'}
+                      </div>
+                      <span className="text-[9px] text-zinc-600 font-mono">
+                        {new Date(repo.updated_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleSetTarget(repo.full_name)}
+                        className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
+                          ${isTarget
+                            ? 'text-copernicus-phosphor bg-copernicus-phosphor/10'
+                            : 'text-zinc-600 hover:text-copernicus-phosphor hover:bg-copernicus-phosphor/10'}`}
+                        title="Set Target"
+                      >
+                        <Target className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => handleSetTrust(repo.name, !isTrusted)}
+                        className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
+                          ${isTrusted
+                            ? 'text-copernicus-phosphor bg-copernicus-phosphor/10 hover:bg-copernicus-phosphor/20'
+                            : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800'}`}
+                        title={isTrusted ? 'Revoke trust' : 'Trust this repo'}
+                      >
+                        {isTrusted ? <Shield className="w-3 h-3" /> : <ShieldOff className="w-3 h-3" />}
+                      </button>
+                      <button 
+                        onClick={() => repo.html_url && handleCloneRepo(repo.html_url, repo.name)}
+                        className="text-zinc-600 hover:text-copernicus-phosphor p-0.5 rounded hover:bg-zinc-800 transition-colors" 
+                        title="Clone"
+                      >
+                        <Download className="w-3 h-3" />
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          if (repo.html_url) {
+                            const res = await invoke<any>('app:open-external', repo.html_url);
+                            if (!res || !res.ok) return;
+                          }
+                        }}
+                        className="text-zinc-600 hover:text-zinc-300 p-0.5 rounded hover:bg-zinc-800 transition-colors" 
+                        title="Open"
+                      >
+                        <Link className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-            {repos.length === 0 && !loading && (
+                );
+              })}
+            </div>
+            {filteredRepos.length === 0 && !loading && (
               <div className="text-center py-8 text-xs text-zinc-600">No repositories found.</div>
             )}
           </div>

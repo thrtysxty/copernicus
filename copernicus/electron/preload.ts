@@ -25,7 +25,7 @@ const SEND_CHANNELS = new Set([
   // Makefile
   'makefile:list', 'makefile:run', 'system:make',
   // Terminal
-  'terminal-create', 'terminal-resize', 'terminal-write', 'terminal-kill',
+  'terminal-create', 'terminal:resize', 'terminal-write', 'terminal-kill',
   'terminal:spawn-agent',
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
@@ -42,8 +42,8 @@ const SEND_CHANNELS = new Set([
   // Settings
   'settings:save', 'settings:load',
   // GitHub
-  'github:user', 'github:list-repos', 'github:create-repo', 'github:test-connection',
-  'github:set-trust', 'github:add-repo', 'github:remove-repo', 'github:get-trust-list',
+  'github:user', 'github:list-repos', 'github:create-repo', 'github:test-connection', 'github:search',
+  'github:set-trust', 'github:add-repo', 'github:remove-repo', 'github:get-trust-list', 'github:set-target-repo', 'github:get-target-repo', 'github:clone-repo',
   // Git
   'git:init-workspace',
   // MCP
@@ -54,6 +54,7 @@ const SEND_CHANNELS = new Set([
   // Devtime
   'devtime:start', 'devtime:status', 'devtime:close', 'devtime:defaults', 'devtime:report',
   'devtime:list-stories', 'devtime:run-tests', 'devtime:test-history', 'devtime:weekly-velocity',
+  'devtime:run-playwright',
   // Story analytics (Story 162)
   'stories:throughput', 'stories:status-distribution', 'stories:bugs-by-assignee',
   // Ledger analytics (Story 162)

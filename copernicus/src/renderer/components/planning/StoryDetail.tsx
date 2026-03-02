@@ -38,7 +38,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const isSpotlit = spotlightPane === 'telemetry'
 
   const story = stories.find(s => s.id === storyId)
-  const epics = stories.filter(s => s.type === 'Epic' && s.id !== storyId)
+  const epics = Array.from(new Set(stories.map(s => s.epic).filter(Boolean) as string[])).sort()
 
   const [content, setContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -346,7 +346,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           >
             <option value="">(No Epic)</option>
             {epics.map(ep => (
-              <option key={ep.id} value={ep.id}>{ep.title}</option>
+              <option key={ep} value={ep}>{ep}</option>
             ))}
           </select>
         </div>

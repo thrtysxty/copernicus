@@ -1,21 +1,12 @@
-interface Story {
-  id: string
-  title: string
-  type: string
-}
-
 interface EpicBadgeProps {
-  epicId: string | null
-  stories: Story[]
+  epicId: string
 }
 
-export function EpicBadge({ epicId, stories }: EpicBadgeProps) {
-  if (!epicId) return null
-  const epic = stories.find(s => s.id === epicId)
-  if (!epic) return null
+export function EpicBadge({ epicId }: EpicBadgeProps) {
+  if (!epicId || epicId === '(none)') return null
   return (
-    <p className="mt-1 text-[9px] text-amber-400/70 italic truncate">
-      ⬡ {epic.title}
-    </p>
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 text-[9px] font-bold text-copernicus-phosphor uppercase tracking-wider">
+      {epicId}
+    </span>
   )
 }

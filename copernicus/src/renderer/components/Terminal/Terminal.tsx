@@ -3,6 +3,7 @@ import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 import { useLayoutStore } from '../../store/layout';
+import { useIpcError } from '../../hooks/useIpcError';
 
 const ipcRenderer = window.ipcRenderer;
 
@@ -19,6 +20,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
   const fitAddonRef = useRef<FitAddon | null>(null);
   const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy);
   const busyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const invoke = useIpcError();
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -73,7 +75,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
     const resizeObserver = new ResizeObserver(() => {
       if (fitAddonRef.current) {
         fitAddonRef.current.fit();
-        ipcRenderer.send('terminal-resize', { id, cols: term.cols, rows: term.rows });
+        invoke('terminal:resize', { id, cols: term.cols, rows: term.rows });
       }
     });
     resizeObserver.observe(terminalRef.current);
@@ -86,17 +88,17 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       ipcRenderer.send('terminal-kill', { id });
       term.dispose();
     };
-  }, [id, setTerminalBusy]);
+  }, [id, setTerminalBusy, invoke]);
 
   useEffect(() => {
     if (xtermRef.current && fitAddonRef.current && active) {
       setTimeout(() => {
           xtermRef.current?.focus();
           fitAddonRef.current?.fit();
-          ipcRenderer.send('terminal-resize', { id, cols: xtermRef.current!.cols, rows: xtermRef.current!.rows });
+          invoke('terminal:resize', { id, cols: xtermRef.current!.cols, rows: xtermRef.current!.rows });
       }, 50);
     }
-  }, [active, id]);
+  }, [active, id, invoke]);
 
   return <div ref={terminalRef} className={`h-full w-full ${className}`} />;
 };
