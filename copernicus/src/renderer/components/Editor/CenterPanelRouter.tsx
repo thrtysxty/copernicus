@@ -49,7 +49,7 @@ export function CenterPanelRouter({
   // AC-2 Designer Canvas Surface
   if (centerMode === 'canvas') {
     if (browserSessionActive) {
-      return <div className="flex-1 flex items-center justify-center bg-zinc-900 font-mono text-zinc-400">Playwright: active</div>
+      return <div className="h-full w-full flex items-center justify-center bg-zinc-900 font-mono text-zinc-400">Playwright: active</div>
     }
 
     if (filePath && (classifyFile(filePath) === 'canvas' || classifyFile(filePath) === 'svg')) {
@@ -70,7 +70,7 @@ export function CenterPanelRouter({
 
   if (!filePath) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-copernicus-bg font-mono text-[10px] text-zinc-600">
+      <div className="h-full w-full flex items-center justify-center bg-copernicus-bg font-mono text-[10px] text-zinc-600">
         NO_FILE_SELECTED
       </div>
     )

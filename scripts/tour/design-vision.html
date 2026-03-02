@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>COPERNICUS — THE GRID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   COPERNICUS — THE GRID
+   Claude Code meets Tron. Street fight aesthetic.
+   Orbitron + JetBrains Mono. Cyan neon on the grid.
+   Corner brackets. Light-wall panel borders. No scanlines, no CRT.
+   This is the future. Not the past.
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── the grid ─────────────────────────────────────────── */
+  --bg:        #01060F;   /* deep space black */
+  --bg-p:      #020C1A;   /* panel surface */
+  --bg-c:      #031120;   /* card / input */
+  --bg-sel:    #041929;   /* active / selected */
+  --bg-hov:    #031629;   /* hover */
+  --grid-ln:   rgba(0, 90, 220, 0.07);
+
+  /* ── neon cyan — identity disc colour ────────────────── */
+  --c:         #00D4FF;   /* primary: Tron programme blue */
+  --c-bright:  #80EEFF;   /* text highlights */
+  --c-mid:     #2B7A99;   /* secondary text */
+  --c-dim:     #0D3044;   /* borders, muted */
+  --c-tint:    rgba(0, 212, 255, 0.07);
+  --c-glow-sm: 0 0 6px rgba(0,212,255,0.55), 0 0 15px rgba(0,212,255,0.2);
+  --c-glow-md: 0 0 8px rgba(0,212,255,0.7), 0 0 24px rgba(0,212,255,0.3), 0 0 50px rgba(0,212,255,0.12);
+  --c-glow-lg: 0 0 10px rgba(0,212,255,0.8), 0 0 30px rgba(0,212,255,0.4), 0 0 80px rgba(0,212,255,0.15);
+
+  /* ── orange / enemy ──────────────────────────────────── */
+  --o:         #FF6200;   /* Sark's colour — alerts, errors */
+  --o-glow:    0 0 6px rgba(255,98,0,0.7), 0 0 18px rgba(255,98,0,0.3);
+  --o-tint:    rgba(255,98,0,0.08);
+
+  /* ── amber — running processes ───────────────────────── */
+  --a:         #FFB300;
+  --a-glow:    0 0 5px rgba(255,179,0,0.6);
+
+  /* ── text ─────────────────────────────────────────────── */
+  --tx:        #C8EEFF;   /* primary — blue-white */
+  --tx-mid:    #3D7A99;   /* secondary */
+  --tx-dim:    #12293D;   /* very dim */
+
+  /* ── typography ───────────────────────────────────────── */
+  --ff-orb:    'Orbitron', sans-serif;
+  --ff-mono:   'JetBrains Mono', monospace;
+
+  /* ── layout ───────────────────────────────────────────── */
+  --hdr-h:     42px;
+  --act-w:     44px;
+  --chat-w:    310px;
+  --stat-h:    26px;
+  --term-h:    22px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--tx);
+  font-family: var(--ff-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── THE GRID ─────────────────────────────────────────────── */
+body {
+  background-image:
+    linear-gradient(var(--grid-ln) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-ln) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: center center;
+}
+
+/* ── CORNER BRACKET MIXIN ────────────────────────────────── */
+/* applied via class — 4 corner L-marks in cyan */
+.bracket {
+  background-image:
+    /* top-left H */  linear-gradient(var(--c), var(--c)),
+    /* top-left V */  linear-gradient(var(--c), var(--c)),
+    /* top-right H */ linear-gradient(var(--c), var(--c)),
+    /* top-right V */ linear-gradient(var(--c), var(--c)),
+    /* bot-left H */  linear-gradient(var(--c), var(--c)),
+    /* bot-left V */  linear-gradient(var(--c), var(--c)),
+    /* bot-right H */ linear-gradient(var(--c), var(--c)),
+    /* bot-right V */ linear-gradient(var(--c), var(--c));
+  background-size:
+    10px 1px, 1px 10px,
+    10px 1px, 1px 10px,
+    10px 1px, 1px 10px,
+    10px 1px, 1px 10px;
+  background-position:
+    top 0 left 0,    top 0 left 0,
+    top 0 right 0,   top 0 right 0,
+    bottom 0 left 0, bottom 0 left 0,
+    bottom 0 right 0,bottom 0 right 0;
+  background-repeat: no-repeat;
+}
+
+/* ── NEON BORDER UTILITY ─────────────────────────────────── */
+.neon-border {
+  border: 1px solid rgba(0,212,255,0.2);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.neon-border:hover {
+  border-color: rgba(0,212,255,0.45);
+  box-shadow: var(--c-glow-sm);
+}
+.neon-border.lit {
+  border-color: rgba(0,212,255,0.6);
+  box-shadow: var(--c-glow-md);
+}
+
+/* ── CURSOR ───────────────────────────────────────────────── */
+@keyframes vcur { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+.cur::after {
+  content: '▌';
+  color: var(--c);
+  text-shadow: var(--c-glow-sm);
+  animation: vcur 1s step-end infinite;
+}
+
+/* ── SCROLLBARS ───────────────────────────────────────────── */
+* { scrollbar-width: thin; scrollbar-color: var(--c-dim) transparent; }
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-thumb { background: var(--c-dim); }
+
+/* ── PULSE ────────────────────────────────────────────────── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes gridPulse {
+  0%,100%{ box-shadow: var(--c-glow-sm); }
+  50%    { box-shadow: var(--c-glow-md); }
+}
+@keyframes colIn {
+  from { opacity:0; transform:translateY(5px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SHELL
+══════════════════════════════════════════════════════════════ */
+.shell { display:flex; flex-direction:column; width:100vw; height:100vh; }
+.body  { display:flex; flex:1; overflow:hidden; }
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════ */
+.hdr {
+  height: var(--hdr-h);
+  background: var(--bg-p);
+  border-bottom: 1px solid var(--c-dim);
+  display: flex; align-items: stretch;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  -webkit-app-region: drag;
+}
+
+.hdr-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px 0 10px;
+  border-right: 1px solid var(--c-dim);
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+.brand-mark {
+  width: 24px; height: 24px;
+  border: 1.5px solid var(--c);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ff-orb); font-size: 11px; font-weight: 700;
+  color: var(--c);
+  box-shadow: var(--c-glow-sm);
+  flex-shrink: 0;
+}
+.brand-name {
+  font-family: var(--ff-orb);
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--c);
+  text-shadow: var(--c-glow-sm);
+}
+.brand-sub {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--c-mid);
+  font-family: var(--ff-mono);
+  align-self: flex-end;
+  padding-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.hdr-nav {
+  display: flex; align-items: stretch;
+  flex: 1;
+  -webkit-app-region: no-drag;
+}
+.nav-t {
+  display: flex; align-items: center;
+  padding: 0 14px;
+  font-family: var(--ff-orb); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--tx-dim);
+  cursor: pointer; border: none; background: none;
+  position: relative;
+  border-right: 1px solid rgba(0,212,255,0.05);
+  transition: color 0.12s, background 0.12s;
+}
+.nav-t:hover { color: var(--c-mid); background: var(--bg-hov); }
+.nav-t.on {
+  color: var(--c-bright);
+  background: var(--c-tint);
+}
+.nav-t.on::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--c);
+  box-shadow: 0 0 8px var(--c), 0 0 18px rgba(0,212,255,0.4);
+}
+.nav-dirty {
+  color: var(--a);
+  text-shadow: var(--a-glow);
+  font-size: 10px;
+  margin-left: 3px;
+}
+
+.hdr-r {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  border-left: 1px solid var(--c-dim);
+  -webkit-app-region: no-drag;
+}
+.cmd-search {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--c-dim);
+  background: var(--bg-c);
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--tx-dim); cursor: text;
+  min-width: 190px;
+  transition: border-color 0.12s;
+  letter-spacing: 0.04em;
+}
+.cmd-search:hover { border-color: rgba(0,212,255,0.3); color: var(--c-mid); }
+.cmd-search-icon { color: var(--c-dim); font-size: 11px; }
+.cmd-kbd {
+  margin-left: auto; font-size: 9px; color: var(--tx-dim);
+  background: var(--bg); border: 1px solid var(--c-dim);
+  padding: 0 4px; letter-spacing: 0.04em;
+}
+.hdr-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--c-dim);
+  background: none; color: var(--tx-dim);
+  cursor: pointer; font-size: 14px;
+  transition: all 0.12s;
+}
+.hdr-btn:hover { border-color: rgba(0,212,255,0.4); color: var(--c); box-shadow: var(--c-glow-sm); }
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIVITY BAR
+══════════════════════════════════════════════════════════════ */
+.act {
+  width: var(--act-w);
+  background: var(--bg-p);
+  border-right: 1px solid var(--c-dim);
+  display: flex; flex-direction: column;
+  align-items: stretch; flex-shrink: 0;
+  padding: 6px 0;
+}
+.act-btn {
+  display: flex; align-items: center; justify-content: center;
+  height: 36px;
+  font-size: 15px;
+  color: var(--tx-dim); cursor: pointer;
+  border: none; background: none;
+  position: relative;
+  transition: color 0.12s, background 0.12s;
+}
+.act-btn:hover { color: var(--c-mid); background: var(--bg-hov); }
+.act-btn.on {
+  color: var(--c);
+  background: var(--c-tint);
+  text-shadow: var(--c-glow-sm);
+}
+.act-btn.on::before {
+  content: '';
+  position: absolute; left: 0; top: 25%; bottom: 25%;
+  width: 2px; background: var(--c);
+  box-shadow: 0 0 6px var(--c), 0 0 14px rgba(0,212,255,0.5);
+}
+.act-sep { height: 1px; background: var(--c-dim); margin: 4px 8px; flex-shrink: 0; opacity: 0.4; }
+.act-space { flex: 1; }
+.act-badge {
+  position: absolute; top: 5px; right: 5px;
+  min-width: 13px; height: 13px; padding: 0 2px;
+  background: var(--a); color: #000;
+  font-size: 8px; font-weight: 700; font-family: var(--ff-orb);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN
+══════════════════════════════════════════════════════════════ */
+.main { flex: 1; display: flex; overflow: hidden; }
+
+/* ══════════════════════════════════════════════════════════════
+   KANBAN
+══════════════════════════════════════════════════════════════ */
+.kb { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.kb-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg-p);
+  border-bottom: 1px solid var(--c-dim);
+  flex-shrink: 0;
+}
+.kb-title {
+  font-family: var(--ff-orb);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--c); text-shadow: var(--c-glow-sm);
+}
+.kb-count {
+  font-family: var(--ff-mono); font-size: 9px;
+  color: var(--c-mid);
+  border: 1px solid var(--c-dim);
+  padding: 1px 6px; letter-spacing: 0.06em;
+}
+.tb-sep { width: 1px; height: 14px; background: var(--c-dim); flex-shrink: 0; margin: 0 2px; opacity: 0.5; }
+.tb-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid var(--c-dim);
+  background: transparent;
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--tx-mid); cursor: pointer;
+  transition: all 0.12s; letter-spacing: 0.04em;
+}
+.tb-chip:hover { border-color: rgba(0,212,255,0.35); color: var(--c-mid); }
+.repo-led {
+  width: 6px; height: 6px;
+  background: var(--c); box-shadow: var(--c-glow-sm);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.tb-search {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid rgba(0,212,255,0.1);
+  background: var(--bg-c);
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--tx-dim); cursor: text; flex: 1; max-width: 160px;
+  letter-spacing: 0.04em; transition: border-color 0.12s;
+}
+.tb-search:hover { border-color: var(--c-dim); }
+.f-btn {
+  padding: 3px 9px; border: 1px solid rgba(0,212,255,0.1);
+  background: transparent;
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--tx-dim); cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  transition: all 0.12s;
+}
+.f-btn:hover { border-color: var(--c-dim); color: var(--tx-mid); }
+.f-btn.on {
+  border-color: rgba(0,212,255,0.4); color: var(--c);
+  background: var(--c-tint); box-shadow: inset 0 0 8px rgba(0,212,255,0.05);
+}
+.f-btn.p0 { border-color: rgba(255,98,0,0.4); color: var(--o); background: var(--o-tint); text-shadow: var(--o-glow); }
+.f-btn.p1 { border-color: rgba(255,179,0,0.3); color: var(--a); }
+.tb-space { flex: 1; }
+.tb-add {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--c-dim); background: transparent;
+  color: var(--c-mid); font-size: 16px; cursor: pointer;
+  transition: all 0.12s;
+}
+.tb-add:hover {
+  border-color: rgba(0,212,255,0.5); color: var(--c);
+  box-shadow: var(--c-glow-sm);
+}
+
+/* ── BOARD ────────────────────────────────────────────────── */
+.kb-board {
+  flex: 1; display: flex; gap: 8px;
+  padding: 10px; overflow-x: auto; align-items: flex-start;
+}
+
+.k-col {
+  width: 224px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--c-dim);
+  background: var(--bg-p);
+  opacity: 0;
+  animation: colIn 0.25s ease forwards;
+}
+.k-col:nth-child(1) { animation-delay: 0.04s; }
+.k-col:nth-child(2) { animation-delay: 0.09s; }
+.k-col:nth-child(3) { animation-delay: 0.14s; }
+.k-col:nth-child(4) { animation-delay: 0.19s; }
+.k-col:nth-child(5) { animation-delay: 0.24s; }
+
+/* column header — Orbitron, thin neon rule */
+.col-hdr {
+  padding: 7px 9px 6px;
+  background: var(--bg-c);
+  border-bottom: 1px solid var(--c-dim);
+}
+.col-top { display: flex; align-items: center; gap: 6px; }
+.col-led { width: 6px; height: 6px; flex-shrink: 0; }
+.col-name {
+  font-family: var(--ff-orb);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.col-n {
+  font-family: var(--ff-mono); font-size: 9px;
+  color: var(--tx-dim); border: 1px solid var(--c-dim);
+  padding: 0 5px; flex-shrink: 0;
+}
+.col-rule {
+  height: 1px; margin-top: 5px;
+  background: linear-gradient(90deg, currentColor 0%, transparent 100%);
+  opacity: 0.4;
+}
+
+.col-cards { display: flex; flex-direction: column; }
+
+/* ── CARD ────────────────────────────────────────────────── */
+.card {
+  padding: 8px 9px 7px;
+  border-bottom: 1px solid rgba(0,212,255,0.05);
+  cursor: pointer;
+  background: var(--bg-p);
+  transition: background 0.1s, border-left-color 0.1s;
+  position: relative;
+}
+.card:last-child { border-bottom: none; }
+.card:hover { background: var(--bg-hov); }
+.card.active {
+  background: var(--bg-sel);
+  border-left: 2px solid var(--c);
+  padding-left: 7px;
+  box-shadow: inset 2px 0 12px rgba(0,212,255,0.06);
+}
+.card.active .card-title { color: var(--c-bright); }
+.card.done { opacity: 0.3; }
+
+.card-top { display: flex; align-items: flex-start; gap: 5px; margin-bottom: 4px; }
+.card-badge {
+  font-family: var(--ff-orb);
+  font-size: 7px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 5px; border: 1px solid;
+  flex-shrink: 0; margin-top: 1px; line-height: 1.4;
+}
+.cb-story { border-color: rgba(0,212,255,0.25); color: var(--c-mid); }
+.cb-epic  { border-color: rgba(255,179,0,0.25); color: var(--a); }
+.cb-bug   { border-color: rgba(255,98,0,0.3);   color: var(--o); }
+
+.card-title {
+  font-size: 11px; font-weight: 400;
+  color: var(--tx); line-height: 1.4;
+  flex: 1;
+}
+.card-foot { display: flex; align-items: center; gap: 5px; }
+.card-id { font-size: 9px; color: var(--tx-dim); font-family: var(--ff-mono); }
+.card-pri {
+  font-family: var(--ff-orb);
+  font-size: 7px; font-weight: 600; letter-spacing: 0.1em;
+  padding: 1px 5px; border: 1px solid; line-height: 1.5;
+}
+.p0 { border-color: rgba(255,98,0,0.4);   color: var(--o); text-shadow: var(--o-glow); }
+.p1 { border-color: rgba(255,179,0,0.35); color: var(--a); }
+.p2 { border-color: var(--c-dim);          color: var(--tx-dim); }
+.p3 { border-color: var(--tx-dim);         color: var(--tx-dim); opacity: 0.5; }
+.c-space { flex: 1; }
+.card-status {
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--ff-orb); font-size: 7px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.st-led { width: 5px; height: 5px; flex-shrink: 0; animation: pulse 1.5s ease-in-out infinite; }
+
+/* ══════════════════════════════════════════════════════════════
+   CHAT — Claude Code CLI aesthetic
+══════════════════════════════════════════════════════════════ */
+.chat {
+  width: var(--chat-w); flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border-left: 1px solid var(--c-dim);
+  background: var(--bg-p);
+  overflow: hidden;
+}
+
+.chat-hdr {
+  height: var(--hdr-h);
+  background: var(--bg-c);
+  border-bottom: 1px solid var(--c-dim);
+  display: flex; align-items: stretch;
+  flex-shrink: 0;
+}
+.chat-tab {
+  display: flex; align-items: center;
+  padding: 0 12px;
+  font-family: var(--ff-mono); font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--tx-dim); cursor: pointer;
+  border: none; background: none;
+  border-right: 1px solid rgba(0,212,255,0.07);
+  transition: all 0.1s;
+}
+.chat-tab:hover { color: var(--c-mid); background: var(--bg-hov); }
+.chat-tab.on {
+  color: var(--c-bright);
+  background: var(--c-tint);
+  border-bottom: 2px solid var(--c);
+  box-shadow: 0 2px 10px rgba(0,212,255,0.2);
+}
+.chat-model {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 10px;
+  font-family: var(--ff-orb); font-size: 8px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--c-mid);
+  border-right: 1px solid rgba(0,212,255,0.07);
+}
+.model-led {
+  width: 5px; height: 5px;
+  background: var(--c); box-shadow: var(--c-glow-sm);
+  animation: pulse 2s ease-in-out infinite; flex-shrink: 0;
+}
+.chat-acts { display: flex; align-items: center; margin-left: auto; padding: 0 6px; gap: 3px; }
+.ca-btn {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; background: none;
+  color: var(--tx-dim); cursor: pointer; font-size: 13px;
+  transition: all 0.1s;
+}
+.ca-btn:hover { border-color: var(--c-dim); color: var(--c-mid); }
+
+/* ── MESSAGES ─────────────────────────────────────────────── */
+.chat-msgs {
+  flex: 1; overflow-y: auto;
+  padding: 10px 10px;
+  display: flex; flex-direction: column; gap: 1px;
+}
+
+/* Claude Code style: no bubbles. Just terminal output. */
+.msg-block { margin-bottom: 10px; }
+
+/* user input — the prompt line */
+.msg-prompt {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg-c);
+  border: 1px solid rgba(0,212,255,0.12);
+  border-left: 2px solid var(--c-dim);
+}
+.prompt-arrow {
+  color: var(--c); font-size: 12px; margin-top: 1px;
+  text-shadow: var(--c-glow-sm); flex-shrink: 0;
+}
+.prompt-text { font-size: 11px; color: var(--tx); line-height: 1.5; }
+
+/* context files — chip row */
+.ctx-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; }
+.ctx-chip {
+  display: flex; align-items: center; gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid var(--c-dim);
+  background: var(--bg-c);
+  font-family: var(--ff-mono); font-size: 9px;
+  color: var(--c-mid); letter-spacing: 0.04em;
+}
+.ctx-chip::before { content: '◈'; color: var(--c); font-size: 8px; }
+
+/* claude output block */
+.msg-output { padding: 4px 0; }
+.output-line {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 2px 8px;
+  font-size: 11px; color: var(--tx); line-height: 1.55;
+}
+.output-line.dim { color: var(--tx-mid); }
+
+/* tool use — the Claude Code signature block */
+.tool-block {
+  margin: 5px 0;
+  border: 1px solid var(--c-dim);
+  border-left: 2px solid rgba(0,212,255,0.4);
+  background: var(--bg-c);
+}
+.tool-hdr {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 8px;
+  border-bottom: 1px solid rgba(0,212,255,0.07);
+  font-size: 9px; letter-spacing: 0.05em;
+}
+.tool-dot { color: var(--c); font-size: 9px; text-shadow: var(--c-glow-sm); }
+.tool-name { color: var(--c-mid); font-family: var(--ff-mono); }
+.tool-arg  { color: var(--tx-dim); }
+.tool-result {
+  padding: 3px 8px;
+  font-size: 9px; color: var(--tx-dim);
+}
+.tool-ok { color: var(--c-mid); margin-right: 4px; }
+
+/* code snippet inside message */
+.msg-code {
+  margin: 6px 0;
+  border: 1px solid var(--c-dim);
+  background: var(--bg);
+}
+.code-hdr {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 9px;
+  border-bottom: 1px solid var(--c-dim);
+  font-family: var(--ff-orb); font-size: 8px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tx-dim);
+}
+.code-apply {
+  margin-left: auto; padding: 1px 8px;
+  border: 1px solid rgba(0,212,255,0.3);
+  background: var(--c-tint); color: var(--c);
+  font-family: var(--ff-orb); font-size: 7px;
+  letter-spacing: 0.1em; cursor: pointer;
+  transition: all 0.12s; text-transform: uppercase;
+}
+.code-apply:hover { box-shadow: var(--c-glow-sm); border-color: rgba(0,212,255,0.6); }
+.code-pre {
+  padding: 7px 10px;
+  font-family: var(--ff-mono); font-size: 10px;
+  line-height: 1.6; color: var(--tx); overflow-x: auto; white-space: pre;
+}
+.sk  { color: var(--c-mid); }           /* keyword */
+.ss  { color: var(--c-bright); }        /* string */
+.sc  { color: var(--tx-dim); font-style: italic; } /* comment */
+.sp  { color: #7FDDFF; }                /* property */
+
+/* ── INPUT ────────────────────────────────────────────────── */
+.chat-in {
+  border-top: 1px solid var(--c-dim);
+  padding: 8px 10px;
+  flex-shrink: 0;
+  background: var(--bg-c);
+}
+.chat-prefix {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: var(--c-mid);
+  margin-bottom: 4px; letter-spacing: 0.04em;
+}
+.pfx-arrow { color: var(--c); text-shadow: var(--c-glow-sm); }
+.chat-ta {
+  width: 100%; min-height: 52px;
+  background: var(--bg);
+  border: 1px solid var(--c-dim);
+  padding: 6px 8px;
+  font-family: var(--ff-mono); font-size: 11px;
+  color: var(--tx); resize: none; outline: none;
+  line-height: 1.5; transition: border-color 0.12s, box-shadow 0.12s;
+}
+.chat-ta::placeholder { color: var(--tx-dim); }
+.chat-ta:focus { border-color: rgba(0,212,255,0.4); box-shadow: 0 0 0 1px rgba(0,212,255,0.1); }
+.chat-foot { display: flex; align-items: center; margin-top: 5px; }
+.chat-hint { font-size: 9px; color: var(--tx-dim); letter-spacing: 0.04em; }
+.send-btn {
+  margin-left: auto; padding: 4px 14px;
+  border: 1px solid rgba(0,212,255,0.4);
+  background: var(--c-tint); color: var(--c);
+  font-family: var(--ff-orb); font-size: 9px;
+  font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.12s;
+}
+.send-btn:hover { box-shadow: var(--c-glow-sm); border-color: rgba(0,212,255,0.7); }
+
+/* ══════════════════════════════════════════════════════════════
+   TERMINAL BAR
+══════════════════════════════════════════════════════════════ */
+.term-bar {
+  height: var(--term-h);
+  background: var(--bg-p);
+  border-top: 1px solid var(--c-dim);
+  display: flex; align-items: center;
+  padding: 0 10px; gap: 8px; flex-shrink: 0;
+}
+.term-lbl {
+  font-family: var(--ff-orb);
+  font-size: 7px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--tx-dim);
+}
+.term-tabs { display: flex; gap: 2px; }
+.t-pill {
+  padding: 0 8px;
+  border: 1px solid var(--c-dim);
+  font-family: var(--ff-mono); font-size: 9px;
+  letter-spacing: 0.05em; color: var(--tx-dim);
+  text-transform: uppercase;
+}
+.t-pill.on  { border-color: rgba(0,212,255,0.35); color: var(--c-mid); }
+.t-pill.hot {
+  border-color: rgba(255,179,0,0.4); color: var(--a);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.term-r { margin-left: auto; font-size: 9px; color: var(--tx-dim); letter-spacing: 0.05em; font-family: var(--ff-mono); }
+
+/* ══════════════════════════════════════════════════════════════
+   STATUS BAR — Claude Code ⏺ format
+══════════════════════════════════════════════════════════════ */
+.statusbar {
+  height: var(--stat-h);
+  background: var(--bg-c);
+  border-top: 1px solid var(--c-dim);
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.sb-mode {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 12px; height: 100%;
+  border-right: 1px solid var(--c-dim);
+  font-family: var(--ff-orb); font-size: 8px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--c); flex-shrink: 0;
+  text-shadow: var(--c-glow-sm);
+}
+.sb-led-big {
+  width: 7px; height: 7px;
+  background: var(--c); box-shadow: var(--c-glow-md);
+  animation: pulse 2s ease-in-out infinite; flex-shrink: 0;
+}
+.sb {
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 10px; height: 100%;
+  border-right: 1px solid rgba(0,212,255,0.07);
+  font-family: var(--ff-mono); font-size: 9px;
+  cursor: pointer; transition: background 0.1s;
+  white-space: nowrap; letter-spacing: 0.03em;
+}
+.sb:hover { background: var(--bg-hov); }
+.sb-lbl { color: var(--tx-dim); font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+.sb-val { color: var(--tx-mid); }
+.sb-dot { width: 5px; height: 5px; flex-shrink: 0; }
+.sb-space { flex: 1; }
+.sb-cost { color: var(--a); }
+.sb-online {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 10px; height: 100%;
+  font-family: var(--ff-orb); font-size: 8px;
+  font-weight: 700; letter-spacing: 0.12em;
+  color: var(--c); text-shadow: var(--c-glow-sm);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHANGELOG — bracket panel
+══════════════════════════════════════════════════════════════ */
+.changelog {
+  position: fixed;
+  bottom: 40px; left: 54px;
+  z-index: 5000;
+  background: var(--bg-p);
+  border: 1px solid rgba(0,212,255,0.3);
+  max-width: 400px;
+  box-shadow: var(--c-glow-sm), 0 8px 40px rgba(0,0,0,0.7);
+  animation: colIn 0.3s ease forwards;
+}
+/* corner brackets via gradient */
+.changelog {
+  background-image:
+    linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),
+    linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),
+    linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),
+    linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),
+    var(--bg-p);
+  background-size: 12px 1px,1px 12px, 12px 1px,1px 12px,
+                   12px 1px,1px 12px, 12px 1px,1px 12px;
+  background-position:
+    top -1px left -1px,  top -1px left -1px,
+    top -1px right -1px, top -1px right -1px,
+    bottom -1px left -1px,  bottom -1px left -1px,
+    bottom -1px right -1px, bottom -1px right -1px;
+  background-repeat: no-repeat;
+}
+
+.cl-hdr {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-c);
+  border-bottom: 1px solid rgba(0,212,255,0.1);
+}
+.cl-title {
+  font-family: var(--ff-orb); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--c); text-shadow: var(--c-glow-sm);
+}
+.cl-badge {
+  font-family: var(--ff-orb); font-size: 7px; font-weight: 700;
+  padding: 1px 6px; border: 1px solid rgba(0,212,255,0.3);
+  color: var(--c-mid); letter-spacing: 0.1em;
+}
+.cl-close {
+  margin-left: auto; width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; background: none;
+  color: var(--tx-dim); cursor: pointer; font-size: 14px;
+  transition: all 0.1s;
+}
+.cl-close:hover { border-color: var(--c-dim); color: var(--c-mid); }
+.cl-item {
+  display: flex; align-items: flex-start; gap: 7px;
+  padding: 4px 10px; border-bottom: 1px solid rgba(0,212,255,0.05);
+  font-size: 10px;
+}
+.cl-item:last-child { border-bottom: none; }
+.cl-tag {
+  font-family: var(--ff-orb); font-size: 7px; font-weight: 700;
+  letter-spacing: 0.08em; padding: 2px 5px; border: 1px solid;
+  min-width: 40px; text-align: center; flex-shrink: 0; line-height: 1.5;
+  text-transform: uppercase; margin-top: 1px;
+}
+.ct-a { border-color: rgba(0,212,255,0.3); color: var(--c); }
+.ct-c { border-color: rgba(255,179,0,0.3); color: var(--a); }
+.ct-r { border-color: rgba(255,98,0,0.3);  color: var(--o); }
+.cl-text { font-family: var(--ff-mono); color: var(--tx-mid); line-height: 1.45; }
+
+/* ── TOGGLE ───────────────────────────────────────────────── */
+.d-toggle {
+  position: fixed; top: 52px; right: 10px; z-index: 6000;
+  display: flex; border: 1px solid var(--c-dim);
+  background: var(--bg-p);
+  box-shadow: var(--c-glow-sm);
+}
+.dt-btn {
+  padding: 4px 13px; font-family: var(--ff-orb);
+  font-size: 8px; font-weight: 700; letter-spacing: 0.12em;
+  border: none; cursor: pointer; text-transform: uppercase;
+  transition: all 0.12s;
+}
+.dt-b { color: var(--tx-dim); background: transparent; }
+.dt-b.on { color: var(--tx-mid); background: var(--bg-hov); }
+.dt-a { color: var(--bg); background: var(--c); border-left: 1px solid var(--c-dim); text-shadow: none; }
+.dt-a:not(.on) { color: var(--tx-dim); background: transparent; }
+
+/* ── BEFORE ───────────────────────────────────────────────── */
+.bef {
+  position: fixed; inset: 0; z-index: 4000;
+  background: #050505; display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+}
+.bef.show { display: flex; }
+.bef-title {
+  font-family: var(--ff-orb); font-size: 16px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: #4ADE80; text-shadow: 0 0 10px #4ADE80, 0 0 30px rgba(74,222,128,0.4);
+}
+.bef-text {
+  font-family: var(--ff-mono); font-size: 10px; color: #3F3F46;
+  text-align: center; line-height: 2; letter-spacing: 0.04em;
+}
+.bef-btn {
+  padding: 6px 20px; border: 1px solid rgba(0,212,255,0.5);
+  background: transparent; color: var(--c);
+  font-family: var(--ff-orb); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.12s;
+  box-shadow: var(--c-glow-sm);
+}
+.bef-btn:hover { background: var(--c-tint); box-shadow: var(--c-glow-md); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <header class="hdr">
+    <div class="hdr-brand">
+      <div class="brand-mark">C</div>
+      <span class="brand-name">COPERNICUS</span>
+      <span class="brand-sub">the grid</span>
+    </div>
+
+    <nav class="hdr-nav">
+      <button class="nav-t on" onclick="sw('planner')">Planner</button>
+      <button class="nav-t" onclick="sw('editor')">
+        Editor<span class="nav-dirty">*</span>
+      </button>
+      <button class="nav-t" onclick="sw('designer')">Designer</button>
+      <button class="nav-t" onclick="sw('orch')">Orchestrator</button>
+      <button class="nav-t" onclick="sw('report')">Reporter</button>
+    </nav>
+
+    <div class="hdr-r">
+      <div class="cmd-search">
+        <span class="cmd-search-icon">⌕</span>
+        <span style="color:var(--tx-dim);font-size:10px">search files &amp; commands</span>
+        <span class="cmd-kbd">⌘P</span>
+      </div>
+      <button class="hdr-btn">⊕</button>
+      <button class="hdr-btn">⚙</button>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- ACTIVITY BAR -->
+    <nav class="act">
+      <button class="act-btn on" onclick="sw('planner')" title="Planner">◫</button>
+      <button class="act-btn" onclick="sw('editor')" title="Editor">⌨</button>
+      <button class="act-btn" onclick="sw('designer')" title="Designer">◈</button>
+      <div class="act-sep"></div>
+      <button class="act-btn" onclick="sw('orch')" title="Orchestrator">⬡</button>
+      <button class="act-btn" onclick="sw('report')" title="Reporter">▦</button>
+      <button class="act-btn" onclick="sw('cmd')" title="Command Center">⚡</button>
+      <div class="act-sep"></div>
+      <button class="act-btn" onclick="sw('mem')" title="Memory">
+        ◉
+        <span class="act-badge">3</span>
+      </button>
+      <div class="act-space"></div>
+      <div class="act-sep"></div>
+      <button class="act-btn" title="GitHub">⊕</button>
+      <button class="act-btn" title="Settings">⚙</button>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <!-- KANBAN -->
+      <div class="kb">
+        <div class="kb-bar">
+          <span class="kb-title">Sprint Board</span>
+          <span class="kb-count">24</span>
+          <div class="tb-sep"></div>
+          <div class="tb-chip">
+            <span class="repo-led"></span>agentic-platform
+          </div>
+          <div class="tb-search">
+            <span style="color:var(--c-dim)">⌕</span> filter stories
+          </div>
+          <div class="tb-sep"></div>
+          <button class="f-btn p0 on">P0</button>
+          <button class="f-btn">P1</button>
+          <button class="f-btn">P2</button>
+          <button class="f-btn">Epics ▾</button>
+          <div class="tb-space"></div>
+          <button class="tb-add">+</button>
+        </div>
+
+        <div class="kb-board">
+
+          <!-- DEVELOPMENT -->
+          <div class="k-col">
+            <div class="col-hdr">
+              <div class="col-top">
+                <div class="col-led"
+                  style="background:var(--a);box-shadow:var(--a-glow);animation:pulse 1.5s infinite"></div>
+                <span class="col-name" style="color:var(--a)">Development</span>
+                <span class="col-n">5</span>
+              </div>
+              <div class="col-rule" style="color:var(--a)"></div>
+            </div>
+            <div class="col-cards">
+
+              <div class="card active">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">LSP → Monaco + ChatPanel wiring</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#189</span>
+                  <span class="card-pri p1">P1</span>
+                  <span class="c-space"></span>
+                  <span class="card-status" style="color:var(--c);text-shadow:var(--c-glow-sm)">
+                    <span class="st-led" style="background:var(--c);box-shadow:var(--c-glow-sm)"></span>
+                    Active
+                  </span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">Flask backend scaffold</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#194</span>
+                  <span class="card-pri p1">P1</span>
+                  <span class="c-space"></span>
+                  <span class="card-status" style="color:#22DDD4;text-shadow:0 0 6px #22DDD4">
+                    <span class="st-led" style="background:#22DDD4"></span>
+                    Jules
+                  </span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-epic">Epic</span>
+                  <span class="card-title">Context Snapshots &amp; Project Memory</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#191</span>
+                  <span class="card-pri p2">P2</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- READY -->
+          <div class="k-col">
+            <div class="col-hdr">
+              <div class="col-top">
+                <div class="col-led" style="background:var(--c);box-shadow:var(--c-glow-sm)"></div>
+                <span class="col-name" style="color:var(--c-bright)">Ready to Build</span>
+                <span class="col-n">7</span>
+              </div>
+              <div class="col-rule" style="color:var(--c)"></div>
+            </div>
+            <div class="col-cards">
+
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">MCP settings tab</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#190</span>
+                  <span class="card-pri p2">P2</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">console.log → electron-log</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#192</span>
+                  <span class="card-pri p2">P2</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">Command Center + useCommandStore</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#184</span>
+                  <span class="card-pri p1">P1</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- REVIEW -->
+          <div class="k-col">
+            <div class="col-hdr">
+              <div class="col-top">
+                <div class="col-led" style="background:var(--a);box-shadow:var(--a-glow);animation:pulse 2s infinite"></div>
+                <span class="col-name" style="color:var(--a)">Review</span>
+                <span class="col-n">3</span>
+              </div>
+              <div class="col-rule" style="color:var(--a)"></div>
+            </div>
+            <div class="col-cards">
+
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">Workflow card persistence + Run/Stop</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#186</span>
+                  <span class="card-pri p1">P1</span>
+                  <span class="c-space"></span>
+                  <span class="card-status" style="color:var(--a)">
+                    <span class="st-led" style="background:var(--a);box-shadow:var(--a-glow)"></span>
+                    Review
+                  </span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">Accessibility pass (ARIA, keyboard nav)</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#193</span>
+                  <span class="card-pri p2">P2</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- PLANNING -->
+          <div class="k-col">
+            <div class="col-hdr">
+              <div class="col-top">
+                <div class="col-led" style="background:var(--tx-dim)"></div>
+                <span class="col-name" style="color:var(--tx-mid)">Planning</span>
+                <span class="col-n">2</span>
+              </div>
+              <div class="col-rule" style="color:var(--tx-dim)"></div>
+            </div>
+            <div class="col-cards">
+              <div class="card">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">jules-pr-manager workflow template</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#187</span>
+                  <span class="card-pri p1">P1</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DONE -->
+          <div class="k-col">
+            <div class="col-hdr">
+              <div class="col-top">
+                <div class="col-led" style="background:var(--c);box-shadow:var(--c-glow-sm)"></div>
+                <span class="col-name" style="color:var(--c)">Done</span>
+                <span class="col-n">9</span>
+              </div>
+              <div class="col-rule" style="color:var(--c)"></div>
+            </div>
+            <div class="col-cards">
+              <div class="card done">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">Copernicus Guide Persona GUIDE tab</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#188</span>
+                  <span class="card-pri p1">P1</span>
+                  <span class="c-space"></span>
+                  <span style="font-size:9px;color:var(--c-dim);font-family:var(--ff-orb);letter-spacing:0.1em">✓ DONE</span>
+                </div>
+              </div>
+              <div class="card done">
+                <div class="card-top">
+                  <span class="card-badge cb-story">Story</span>
+                  <span class="card-title">Expand CopernicusKnowledgeBase</span>
+                </div>
+                <div class="card-foot">
+                  <span class="card-id">#185</span>
+                  <span class="card-pri p2">P2</span>
+                  <span class="c-space"></span>
+                  <span style="font-size:9px;color:var(--c-dim);font-family:var(--ff-orb);letter-spacing:0.1em">✓ DONE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /kb-board -->
+      </div><!-- /kb -->
+
+      <!-- CHAT — Claude Code terminal format -->
+      <div class="chat">
+        <div class="chat-hdr">
+          <button class="chat-tab on">Chat</button>
+          <button class="chat-tab">Guide</button>
+          <div class="chat-model">
+            <span class="model-led"></span>sonnet-4.6
+          </div>
+          <div class="chat-acts">
+            <button class="ca-btn" title="Spotlight">⤢</button>
+            <button class="ca-btn" title="Slide">↔</button>
+          </div>
+        </div>
+
+        <div class="chat-msgs">
+
+          <!-- user turn -->
+          <div class="msg-block">
+            <div class="ctx-row">
+              <span class="ctx-chip">App.tsx</span>
+              <span class="ctx-chip">layout.ts</span>
+            </div>
+            <div class="msg-prompt">
+              <span class="prompt-arrow">❯</span>
+              <span class="prompt-text">
+                analyze this ui — it is about to be your permanent home.
+                what would you change?
+              </span>
+            </div>
+          </div>
+
+          <!-- claude turn — Claude Code style output -->
+          <div class="msg-block">
+
+            <!-- tool use block -->
+            <div class="tool-block">
+              <div class="tool-hdr">
+                <span class="tool-dot">●</span>
+                <span class="tool-name">Read</span>
+                <span class="tool-arg">(App.tsx, layout.ts)</span>
+              </div>
+              <div class="tool-result">
+                <span class="tool-ok">✓</span>App.tsx 66KB · layout.ts 12KB
+              </div>
+            </div>
+
+            <div class="msg-output">
+              <div class="output-line">Three things. Right now.</div>
+              <div class="output-line dim" style="margin-top:4px">
+                First — the background. <code style="background:var(--bg-c);border:1px solid var(--c-dim);padding:0 3px;font-size:10px">#050505</code> is
+                a flat plane. All z-layers collapse into it. You can't tell the shell from the panel from the card. Add a blue-tinted depth scale.
+              </div>
+
+              <div class="msg-code" style="margin-top:8px">
+                <div class="code-hdr">
+                  tokens.css
+                  <button class="code-apply">Apply</button>
+                </div>
+                <div class="code-pre"><span class="sc">/* depth scale */</span>
+<span class="sp">--bg</span>:    <span class="ss">#01060F</span>;  <span class="sc">/* root */</span>
+<span class="sp">--bg-p</span>:  <span class="ss">#020C1A</span>;  <span class="sc">/* panels */</span>
+<span class="sp">--bg-c</span>:  <span class="ss">#031120</span>;  <span class="sc">/* cards */</span></div>
+              </div>
+
+              <div class="output-line dim" style="margin-top:8px">
+                Second — every status indicator is the same phosphor green. Git status, cost, story ID, Ollama, LSP — identical. You should know system health in 500ms without reading a single label.
+              </div>
+              <div class="output-line" style="margin-top:4px">
+                Semantic encoding: <span style="color:var(--c)">cyan</span> = live systems · <span style="color:var(--a)">amber</span> = cost / running · <span style="color:var(--o)">orange</span> = errors.
+              </div>
+
+              <div class="output-line dim" style="margin-top:8px">
+                Third — the 3D rotateY panel flip. Webviews don't respect CSS stacking context. They punch through. Use translateX slide. This is already in CLAUDE.md. Ship it.<span class="cur"></span>
+              </div>
+            </div>
+
+          </div>
+
+        </div><!-- /chat-msgs -->
+
+        <div class="chat-in">
+          <div class="chat-prefix">
+            <span class="pfx-arrow">❯</span>
+            <span style="color:var(--tx-dim);font-size:9px;letter-spacing:0.04em">ask about this story or codebase</span>
+          </div>
+          <textarea class="chat-ta"
+            placeholder="@ to mention a file · # to reference a story · / for commands"></textarea>
+          <div class="chat-foot">
+            <span class="chat-hint">↵ send · ⇧↵ newline · esc cancel</span>
+            <button class="send-btn">Send ↑</button>
+          </div>
+        </div>
+
+      </div><!-- /chat -->
+    </div><!-- /main -->
+  </div><!-- /body -->
+
+  <!-- TERMINAL BAR -->
+  <div class="term-bar">
+    <span class="term-lbl">Subsystems</span>
+    <div class="term-tabs">
+      <span class="t-pill on">Local</span>
+      <span class="t-pill hot">Claude ●</span>
+      <span class="t-pill">Gemini</span>
+      <span class="t-pill">Jules</span>
+    </div>
+    <span class="term-r">▾ expand</span>
+  </div>
+
+  <!-- STATUS BAR — Claude Code format -->
+  <div class="statusbar">
+    <div class="sb-mode">
+      <span class="sb-led-big"></span>
+      ⏺ Online
+    </div>
+    <div class="sb">
+      <span class="sb-dot" style="background:var(--c);box-shadow:var(--c-glow-sm)"></span>
+      <span class="sb-val">agentic-platform</span>
+    </div>
+    <div class="sb">
+      <span class="sb-lbl">⎇</span>
+      <span class="sb-val">main*</span>
+    </div>
+    <div class="sb">
+      <span class="sb-lbl">story</span>
+      <span class="sb-val">#189</span>
+    </div>
+    <div class="sb">
+      <span class="sb-lbl">idx</span>
+      <span class="sb-val">92%</span>
+    </div>
+    <div class="sb-space"></div>
+    <div class="sb">
+      <span class="sb-lbl">session</span>
+      <span class="sb-cost">$4.28</span>
+    </div>
+    <div class="sb">
+      <span class="sb-lbl">model</span>
+      <span class="sb-val" style="color:var(--c-mid)">sonnet-4.6</span>
+    </div>
+    <div class="sb">
+      <span class="sb-lbl">ollama</span>
+      <span class="sb-dot" style="background:var(--c);box-shadow:var(--c-glow-sm);animation:pulse 2s infinite"></span>
+    </div>
+    <div class="sb">
+      <span class="sb-lbl">lsp</span>
+      <span class="sb-dot" style="background:var(--c);box-shadow:var(--c-glow-sm)"></span>
+    </div>
+    <div class="sb-online">✓ nominal</div>
+  </div>
+
+</div><!-- /shell -->
+
+<!-- CHANGELOG -->
+<div class="changelog" id="changelog">
+  <div class="cl-hdr">
+    <span class="cl-title">Design Delta</span>
+    <span class="cl-badge">v4 · the grid</span>
+    <button class="cl-close" onclick="document.getElementById('changelog').style.display='none'">×</button>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-c">CHG</span>
+    <span class="cl-text">Color: green phosphor → <strong style="color:var(--c)">#00D4FF</strong> Tron identity-disc cyan — completely different character</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-a">ADD</span>
+    <span class="cl-text">The grid — 28px CSS background-image lines. The literal Tron game board, visible everywhere</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-a">ADD</span>
+    <span class="cl-text">Corner brackets — 4-point L-marks via background-image gradients on key panels</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-c">CHG</span>
+    <span class="cl-text">Typography: Orbitron (geometric sci-fi) + JetBrains Mono (code) — dual-personality pairing</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-c">CHG</span>
+    <span class="cl-text">Chat panel: actual Claude Code CLI format — tool use blocks, ❯ prompt, streaming output style</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-c">CHG</span>
+    <span class="cl-text">Status bar: ⏺ Online · ✓ nominal — Claude Code register, not NORAD military</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-a">ADD</span>
+    <span class="cl-text">Neon border glow on hover/active — panels feel like light cycle walls</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-c">CHG</span>
+    <span class="cl-text">Column headers: Orbitron title + color-coded LED + gradient rule — clean geometry, not ASCII</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-r">REM</span>
+    <span class="cl-text">Scanlines, vignette, screen flicker, VT323 — that's the past. No CRT effects here.</span>
+  </div>
+  <div class="cl-item">
+    <span class="cl-tag ct-r">REM</span>
+    <span class="cl-text">All border-radius — 0px. Every surface is a hard geometric plane on the grid.</span>
+  </div>
+</div>
+
+<!-- BEFORE -->
+<div class="bef" id="bef">
+  <span class="bef-title">Current UI (before)</span>
+  <p class="bef-text">
+    phosphor: #4ADE80 — soft, no direction<br>
+    no grid background — floating in void<br>
+    JetBrains Mono only — no display font<br>
+    status bar: no semantic encoding<br>
+    chat: generic message bubbles<br>
+    border-radius: rounded throughout
+  </p>
+  <button class="bef-btn" onclick="setMode('after')">Enter the Grid →</button>
+</div>
+
+<!-- TOGGLE -->
+<div class="d-toggle">
+  <button class="dt-btn dt-b" id="dt-b" onclick="setMode('before')">Before</button>
+  <button class="dt-btn dt-a on" id="dt-a" onclick="setMode('after')">The Grid ◈</button>
+</div>
+
+<script>
+function sw(v) {
+  document.querySelectorAll('.nav-t').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.act-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.nav-t').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(v)) b.classList.add('on');
+  });
+  document.querySelectorAll('.act-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(v)) b.classList.add('on');
+  });
+}
+function setMode(m) {
+  const ov = document.getElementById('bef');
+  const b = document.getElementById('dt-b');
+  const a = document.getElementById('dt-a');
+  if (m === 'before') {
+    ov.classList.add('show'); b.classList.add('on'); a.classList.remove('on');
+  } else {
+    ov.classList.remove('show'); b.classList.remove('on'); a.classList.add('on');
+  }
+}
+</script>
+</body>
+</html>

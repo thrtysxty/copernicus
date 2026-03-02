@@ -1,33 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { ExternalLink, RefreshCw, ChevronLeft, ChevronRight, Globe, X } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
+import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
-
-type Mode = 'sessions' | 'browser'
-
-export const JulesPanel: React.FC = () => {
-  const [mode, setMode] = useState<Mode>('sessions')
-
-  return (
-    <div className="relative w-full h-full overflow-hidden bg-copernicus-bg">
-      {/* Sliding container — both panels exist in DOM simultaneously */}
-      <div
-        className="flex w-[200%] h-full transition-transform duration-300 ease-in-out"
-        style={{ transform: mode === 'browser' ? 'translateX(-50%)' : 'translateX(0)' }}
-      >
-        {/* Front face — session list */}
-        <div className="w-1/2 h-full flex flex-col">
-          <JulesSessionList onOpenBrowser={() => setMode('browser')} />
-        </div>
-
-        {/* Back face — webview */}
-        <div className="w-1/2 h-full flex flex-col">
-          <JulesBrowserPanel onClose={() => setMode('sessions')} active={mode === 'browser'} />
-        </div>
-      </div>
-    </div>
-  )
-}
 
 interface JulesSession {
   id: string
@@ -40,29 +15,28 @@ interface JulesSession {
   started_at: string
 }
 
-function JulesSessionList({ onOpenBrowser }: { onOpenBrowser: () => void }) {
+// ─── Sessions list (rendered in terminal drawer) ──────────────────────────────
+export const JulesPanel: React.FC = () => {
   const invoke = useIpcError()
+  const { setJulesDialogOpen } = useLayoutStore()
   const [sessions, setSessions] = useState<JulesSession[]>([])
   const [loading, setLoading] = useState(true)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const result = await invoke<any>('jules:list-sessions')
       const data = result.data || result
-      if (Array.isArray(data)) {
-        setSessions(data)
-      } else if (result.ok && Array.isArray(result.data)) {
-        setSessions(result.data)
-      }
+      if (Array.isArray(data)) setSessions(data)
+      else if (result.ok && Array.isArray(result.data)) setSessions(result.data)
     } catch (e) {
       log.error('Failed to load Jules sessions', e)
     } finally {
       setLoading(false)
     }
-  }
+  }, [invoke])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   const STATUS_COLORS: Record<JulesSession['status'], string> = {
     pending:   'bg-zinc-700 text-zinc-300',
@@ -72,9 +46,9 @@ function JulesSessionList({ onOpenBrowser }: { onOpenBrowser: () => void }) {
   }
 
   return (
-    <>
+    <div className="w-full h-full flex flex-col bg-copernicus-bg">
       <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel bg-copernicus-bg flex-shrink-0">
-        <span className="text-[10px] font-bold tracking-widest text-copernicus-phosphor uppercase font-mono">
+        <span className="text-sm vt-label tracking-widest text-copernicus-phosphor uppercase">
           Jules_Sessions
         </span>
         <div className="flex items-center gap-2">
@@ -86,9 +60,9 @@ function JulesSessionList({ onOpenBrowser }: { onOpenBrowser: () => void }) {
             <RefreshCw size={11} />
           </button>
           <button
-            onClick={onOpenBrowser}
+            onClick={() => setJulesDialogOpen(true)}
             className="text-zinc-500 hover:text-copernicus-phosphor transition-colors"
-            title="Open jules.google.com"
+            title="Open jules.google.com in canvas"
           >
             <Globe size={11} />
           </button>
@@ -116,7 +90,7 @@ function JulesSessionList({ onOpenBrowser }: { onOpenBrowser: () => void }) {
             </thead>
             <tbody className="text-[10px] font-mono">
               {sessions.map(s => (
-                <tr key={s.id} className="border-b border-zinc-800/40 hover:bg-white/5 transition-colors group">
+                <tr key={s.id} className="border-b border-zinc-800/40 hover:bg-white/5 transition-colors">
                   <td className="p-2 pl-3 text-copernicus-phosphor">{s.story_id || '—'}</td>
                   <td className="p-2">
                     <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${STATUS_COLORS[s.status]}`}>
@@ -144,11 +118,12 @@ function JulesSessionList({ onOpenBrowser }: { onOpenBrowser: () => void }) {
           </table>
         )}
       </div>
-    </>
+    </div>
   )
 }
 
-function JulesBrowserPanel({ onClose, active }: { onClose: () => void, active: boolean }) {
+// ─── Full-canvas Jules browser (rendered in main canvas overlay) ──────────────
+export const JulesCanvasDialog: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const webviewRef = useRef<any>(null)
   const [url, setUrl] = useState('https://jules.google.com')
   const [loading, setLoading] = useState(false)
@@ -156,7 +131,7 @@ function JulesBrowserPanel({ onClose, active }: { onClose: () => void, active: b
   const [canGoForward, setCanGoForward] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => { if (active) setMounted(true) }, [active])
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     const wv = webviewRef.current
@@ -184,9 +159,14 @@ function JulesBrowserPanel({ onClose, active }: { onClose: () => void, active: b
   }, [mounted])
 
   return (
-    <>
-      <div className="h-8 flex items-center gap-1 px-2 border-b border-copernicus-steel bg-copernicus-bg flex-shrink-0">
-        <button onClick={onClose} className="text-zinc-500 hover:text-zinc-200 transition-colors" title="Back to sessions">
+    <div className="absolute inset-0 z-40 flex flex-col bg-copernicus-bg border-t border-copernicus-phosphor/20">
+      {/* Browser chrome */}
+      <div className="h-9 flex items-center gap-1 px-2 border-b border-copernicus-steel bg-[#080808] flex-shrink-0">
+        <button
+          onClick={onClose}
+          className="text-zinc-500 hover:text-copernicus-phosphor transition-colors p-1"
+          title="Close Jules"
+        >
           <X size={12} />
         </button>
         <div className="w-px h-4 bg-zinc-800 mx-1" />
@@ -211,16 +191,17 @@ function JulesBrowserPanel({ onClose, active }: { onClose: () => void, active: b
         >
           <RefreshCw size={11} />
         </button>
-        <div className="flex-1 mx-2 px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-[9px] font-mono text-zinc-500 truncate rounded">
+        <div className="flex-1 mx-2 px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-[9px] font-mono text-zinc-500 truncate">
           {url}
         </div>
-        <Globe size={10} className="text-zinc-700 flex-shrink-0 mr-1" />
+        <span className="text-sm vt-label tracking-widest text-copernicus-phosphor/60 mr-1">JULES_BROWSER</span>
       </div>
 
+      {/* Webview */}
       <div className="flex-1 relative bg-[#050505]">
         {!mounted ? (
-          <div className="absolute inset-0 flex items-center justify-center text-zinc-700 text-[10px] font-mono">
-            INIT_BROWSER_SESSION...
+          <div className="absolute inset-0 flex items-center justify-center text-zinc-700 text-[10px] font-mono animate-pulse">
+            INIT_SESSION...
           </div>
         ) : (
           <webview
@@ -233,6 +214,6 @@ function JulesBrowserPanel({ onClose, active }: { onClose: () => void, active: b
           />
         )}
       </div>
-    </>
+    </div>
   )
 }

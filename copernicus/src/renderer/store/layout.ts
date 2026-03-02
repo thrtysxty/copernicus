@@ -147,6 +147,10 @@ interface LayoutState {
   setTerminalBusy: (id: string, busy: boolean) => void
   setChatPanelTab: (tab: 'chat' | 'guide') => void
 
+  // Jules Dialog
+  julesDialogOpen: boolean
+  setJulesDialogOpen: (open: boolean) => void
+
   // Canvas Actions
   setCanvasContent: (content: string | null) => void
   setCanvasUrl: (url: string | null) => void
@@ -193,8 +197,9 @@ export const useLayoutStore = create<LayoutState>()(
         { id: 'terminal-local', label: 'Local', isBusy: false },
         { id: 'terminal-claude', label: 'Claude', isBusy: false },
         { id: 'terminal-gemini', label: 'Gemini', isBusy: false },
-        { id: 'terminal-jules', label: 'Jules', isBusy: false },
       ],
+
+      julesDialogOpen: false,
 
       canvasContent: null,
       canvasUrl: null,
@@ -300,6 +305,8 @@ export const useLayoutStore = create<LayoutState>()(
         terminals: state.terminals.map(t => t.id === id ? { ...t, isBusy: busy } : t)
       })),
       setChatPanelTab: (tab) => set({ chatPanelTab: tab }),
+
+      setJulesDialogOpen: (open) => set({ julesDialogOpen: open }),
 
       setCanvasContent: (content) => set({ canvasContent: content }),
       setCanvasUrl: (url) => set({ canvasUrl: url }),

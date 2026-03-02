@@ -210,7 +210,7 @@ export const CapexDashboard: React.FC = () => {
     <div className="flex flex-col h-full bg-copernicus-bg font-mono text-zinc-300 overflow-hidden">
 
       {/* Header + tab bar */}
-      <div className="px-6 pt-5 pb-0 border-b border-zinc-800">
+      <div className="px-6 pt-5 pb-0 border-b border-zinc-800 shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <BarChart2 className="text-copernicus-phosphor" size={18} />

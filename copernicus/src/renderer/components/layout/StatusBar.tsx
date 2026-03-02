@@ -108,7 +108,7 @@ export const StatusBar: React.FC = () => {
 
   return (
     <footer className="h-5 w-full bg-copernicus-bg border-t border-hairline border-copernicus-steel flex items-center justify-between px-2 text-[10px] text-zinc-600 select-none overflow-hidden">
-      <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30">
+      <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30 min-w-0 overflow-hidden">
 
         {/* Workspace Root */}
         <div className="flex items-center gap-1.5 cursor-pointer hover:text-zinc-400 transition-colors pr-3">
@@ -139,7 +139,7 @@ export const StatusBar: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30">
+      <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30 flex-shrink-0">
         {/* Error Indicator */}
         {hasError && (
           <button
