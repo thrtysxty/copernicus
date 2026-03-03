@@ -75,6 +75,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
+| #209 | Designer Explorer Collapse By Default | DRAFT | Medium |
+| #210 | Restore Control Buttons To Canvas Preview | DRAFT | Medium |
+| #211 | Resolve Explorer Folder Listing Failure | DRAFT | Medium |
+| #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
+| #213 | Optimize Reports View Justification | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
