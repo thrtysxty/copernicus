@@ -25,7 +25,7 @@ import urllib.error
 # CROSS-REFERENCE: Story 196 (Project Work)
 # This shim demonstrates how we will implement native tool-calling in the Electron app.
 
-OLLAMA_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_URL = os.environ.get("OLLAMA_BASE_URL", "http://192.168.1.185:11434")
 
 TOOL_DEFINITION_PROMPT = """
 You have access to the following tools. To use a tool, output a JSON block in this format:

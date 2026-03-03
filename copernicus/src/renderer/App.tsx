@@ -404,12 +404,6 @@ export default function App() {
             </nav>
 
             <div className="flex items-center gap-4 no-drag">
-               <button
-                onClick={() => setCommandPaletteOpen(true)}
-                className="text-[10px] font-mono text-zinc-500 hover:text-copernicus-phosphor transition-colors flex items-center gap-2 px-2 py-0.5 bg-zinc-900 rounded border border-zinc-800"
-               >
-                 <span>CMD + P</span>
-               </button>
             </div>
           </header>
 
