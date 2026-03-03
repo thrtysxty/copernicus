@@ -15,8 +15,8 @@ import re
 from ollama import Client
 
 # Config
-OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY", "c7f0dfc2d85b43a487f4b18118d4198e.L3q2mEa2Dw7D7lR2a3KfNOoC")
-OLLAMA_CLOUD_HOST = "https://ollama.com"
+OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
+OLLAMA_CLOUD_HOST = os.environ.get("OLLAMA_CLOUD_HOST", "https://ollama.com")
 OLLAMA_LOCAL_URL = os.environ.get("OLLAMA_LOCAL_URL", "http://192.168.1.185:11434")
 
 TOOL_DEFINITION_PROMPT = """

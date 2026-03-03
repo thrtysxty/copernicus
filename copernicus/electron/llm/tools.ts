@@ -90,8 +90,7 @@ export class ToolExecutor {
       `--- File: ${r.path} (Similarity: ${Math.round(r.similarity * 100)}%) ---
 ${r.content}
 `
-    ).join('
-')
+    ).join('\n')
   }
 
   private async readFile(filePath: string): Promise<string> {

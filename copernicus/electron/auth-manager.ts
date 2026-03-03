@@ -116,8 +116,6 @@ export class AuthManager {
   }
 
   public getApiKey(provider: ProviderType): string | null {
-    if (provider === 'ollama') return null; // Ollama needs no key
-
     // 1. Check Secure Storage (Highest priority as it's user-explicit)
     const config = this.authState.get(provider);
     if (config && config.encryptedKey) {
@@ -172,6 +170,7 @@ export class AuthManager {
       case 'openrouter': return process.env.OPENROUTER_API_KEY;
       case 'deepinfra': return process.env.DEEPINFRA_API_KEY;
       case 'github': return process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+      case 'ollama': return process.env.OLLAMA_API_KEY || process.env.OLLAMA_CLOUD_TOKEN;
       default: return undefined;
     }
   }
