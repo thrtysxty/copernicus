@@ -59,6 +59,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #165 | Terminal Split And Productivity Features | COMPLETED | HIGH |
 | #166 | Touch Bar Hardening And Configuration | COMPLETED | HIGH |
 | #050 | Implement Agent Tool Use | DONE | High |
+| #211 | Resolve Explorer Folder Listing Failure | DRAFT | High |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -77,10 +78,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #209 | Designer Explorer Collapse By Default | DRAFT | Medium |
 | #210 | Restore Control Buttons To Canvas Preview | DRAFT | Medium |
-| #211 | Resolve Explorer Folder Listing Failure | DRAFT | Medium |
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
-| #213 | Optimize Reports View Justification | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
+| #213 | Optimize Reports View Justification | DRAFT | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
