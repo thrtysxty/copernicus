@@ -8,6 +8,10 @@ ollama pull qwen2.5-coder:7b
 ollama pull qwen2.5-coder:1.5b
 ollama pull deepseek-r1:8b
 ollama pull llama3.1:8b
+ollama pull mistral:7b-instruct-v0.2  # Devstral-2 (Mistral v0.2)
+ollama pull glm4:9b                   # GLM 4.7 (9B)
+ollama pull gemma3:4b                 # Gemma 3 (4B for local speed)
+ollama pull gemma3:12b                # Gemma 3 (12B for high-intel reasoning)
 
 echo "--- Creating Persona-Specific Models ---"
 ollama create product-owner -f <(echo "FROM llama3.1:8b

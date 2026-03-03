@@ -15,7 +15,52 @@ Usage:
 import sys
 import subprocess
 import re
+import sqlite3
+import os
+import json
 
+# CROSS-REFERENCE: Story 197 (Local Bridge) -> Story 196 (Project Work)
+# This script implements the local repository-specific RAG bridge for Story 197.
+# Lessons learned here will be productized in Story 196 within the Electron app.
+
+DB_PATH = "copernicus/copernicus.db"
+
+def get_semantic_context(query, top_k=5):
+    """Retrieves semantic context from the local codebase index if available."""
+    if not os.path.exists(DB_PATH):
+        return ""
+    
+    # Path to the sqlite-vec extension (Darwin ARM64)
+    extension_path = os.path.join(os.getcwd(), "copernicus/node_modules/sqlite-vec-darwin-arm64/vec0.dylib")
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        
+        # Load the vector extension if it exists
+        if os.path.exists(extension_path):
+            conn.enable_load_extension(True)
+            conn.load_extension(extension_path)
+        
+        cursor = conn.cursor()
+        
+        # Simple keyword fallback on the content column of the vec table for now
+        # until we have a way to generate embeddings in this script.
+        # NOTE: Real semantic search would use: 
+        # SELECT file_path, content FROM codebase_vec WHERE embedding MATCH ?
+        cursor.execute("SELECT file_path, content FROM codebase_vec WHERE content LIKE ? LIMIT ?", (f'%{query}%', top_k))
+        rows = cursor.fetchall()
+        
+        if not rows:
+            return ""
+            
+        context = "Relevant Code Snippets (Local Index):\n"
+        for r in rows:
+            context += f"--- FILE: {r[0]} ---\n{r[1]}\n\n"
+        return context
+    except Exception as e:
+        return f"Index search error: {e}"
+    finally:
+        if 'conn' in locals(): conn.close()
 
 def get_git_context():
     """Retrieves basic git context (status and file list)."""
@@ -75,7 +120,8 @@ def main():
         print(f"Warning: No prompt provided for persona '{persona}'.")
 
     context = get_git_context()
-    full_prompt = f"Context:\n{context}\n\nTask:\n{user_prompt}"
+    semantic = get_semantic_context(user_prompt)
+    full_prompt = f"Context:\n{context}\n\n{semantic}\n\nTask:\n{user_prompt}"
 
     print(f"--- Routing to Persona: {persona} ---")
 

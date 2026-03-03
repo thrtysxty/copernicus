@@ -6,7 +6,13 @@
 **Knowledge Source:** Local Repo (Primary).
 
 ## Subagent Policy
-**Always launch Sonnet subagents unless specified otherwise.**
+**Always launch Sonnet subagents unless specified otherwise. Use the local Ollama RAG bridge for repository research to preserve tokens.**
+- Use `scripts/ollama_tool_shim.py` with the following personas for specialized sub-tasks:
+  - `/architect` (Gemma 3 12B): High-intel local architectural decisions.
+  - `/senior-dev` (GLM 4.7 9B): Strong local coding and logic.
+  - `/scribe` (Kimi Cloud): Documentation/Summarization.
+  - `/researcher` (DeepSeek-R1 Local): Reasoning/Bug tracing.
+  - `/sentinel` (Mistral-v0.2): Fast local security audits.
 
 ## Tool Use Protocol
 You have access to tools. To use them, output strict XML tags in your response.
@@ -15,6 +21,9 @@ You have access to tools. To use them, output strict XML tags in your response.
    `<write_file path="src/file.py">code here</write_file>`
 2. **Execute Shell Command:**
    `<exec_command>python scripts/test.py</exec_command>`
+3. **Local RAG & Research (Subagent):**
+   - Direct RAG: `<exec_command>python3 scripts/claude_ollama_cli.py "/persona <prompt>"</exec_command>`
+   - Tool-Enabled Research: `<exec_command>python3 scripts/ollama_tool_shim.py "<prompt>"</exec_command>` (Allows Ollama to call read_file, search_codebase, etc.)
 
 ## Common Commands
 ```bash
@@ -34,6 +43,8 @@ make dashboard       # Terminal 2: Launch Dashboard
 
 ## Agent Interaction Commands
 - `/story "Title" [--type story|api|component]`: Scaffolds a new user story and optional boilerplate.
+- `/research "<query>"`: Directs the agent to call `python3 scripts/claude_ollama_cli.py "/senior-dev <query>"` for local RAG.
+- `/rag "<query>"`: Shorthand for semantic search and context injection via the local index.
 - `/pi_check`: Runs the Performance Baseline Audit (Raspberry Pi 3B+ constraints).
 - `/audit`: Triggers the Sentinel Persona to scan staged changes for secrets.
 

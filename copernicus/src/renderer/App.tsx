@@ -18,6 +18,7 @@ import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
+import { GithubDashboard } from './components/github/GithubDashboard'
 import Wizard from './components/wizard/Wizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { UITestDrawer } from './components/testing/UITestDrawer'
@@ -35,48 +36,11 @@ const PanelHeader: React.FC<{
   isBuilderActive: boolean;
   onTesting?: () => void;
   isTestingActive?: boolean;
-  onCommandPalette?: () => void;
-  showLspStatus?: boolean;
-}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onBuilder, isBuilderActive, onTesting, isTestingActive, onCommandPalette, showLspStatus }) => {
-  const [lspRunning, setLspRunning] = useState(false)
-  const [errorCount, setErrorCount] = useState(0)
-  const [warnCount, setWarnCount] = useState(0)
-  const invoke = useIpcError()
-  const { activeFilePath } = useLayoutStore()
-
-  useEffect(() => {
-    invoke<any>('lsp:status').then((res: any) => {
-      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
-    }).catch(() => {})
-
-    const removeDiag = window.ipcRenderer.on(
-      'lsp:diagnostics-update',
-      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
-        if (!activeFilePath || `file://${activeFilePath}` !== uri) return
-        let errors = 0, warnings = 0
-        diagnostics.forEach((d: any) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
-        setErrorCount(errors)
-        setWarnCount(warnings)
-      }
-    )
-    return () => removeDiag()
-  }, [invoke, activeFilePath])
-
+}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onBuilder, isBuilderActive, onTesting, isTestingActive }) => {
   return (
     <div className="h-10 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-3">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
-        {showLspStatus && (
-          <div
-            className="flex items-center gap-2 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors"
-            onClick={onCommandPalette}
-          >
-            <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
-            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-              LSP {errorCount}E {warnCount}W
-            </span>
-          </div>
-        )}
       </div>
       <div className="flex items-center gap-2">
         {onTesting && (
@@ -391,11 +355,11 @@ export default function App() {
           <div className="flex-1" />
 
           <div className="group relative">
-            <button onClick={() => invoke('app:open-external', 'https://github.com')} aria-label="Open GitHub"
-              className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none">
+            <button onClick={() => setView('github')} aria-label="GitHub Manager" aria-current={activeView === 'github' ? 'page' : undefined}
+              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'github' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}>
               <Github size={18} />
             </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">GitHub</div>
+            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">GitHub Manager <span className="text-zinc-500 ml-1">⌘G</span></div>
           </div>
 
           <div className="group relative">
@@ -445,6 +409,7 @@ export default function App() {
             {activeView === 'planner' && <KanbanBoard />}
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && <WorkflowCanvas />}
+            {activeView === 'github' && <GithubDashboard />}
             {activeView === 'memory' && (
               <div className="h-full w-full flex items-center justify-center bg-[#050505] text-copernicus-phosphor/50 font-mono text-sm uppercase tracking-widest">
                 Memory Browser — coming in a future release.
@@ -475,8 +440,6 @@ export default function App() {
                             isBuilderActive={uiBuilderOpen}
                             onTesting={activeView === 'designer' ? toggleUITestingDrawer : undefined}
                             isTestingActive={uiTestingDrawerOpen}
-                            onCommandPalette={() => setCommandPaletteOpen(true)}
-                            showLspStatus={activeView === 'designer' || activeView === 'editor'}
                           />
                           <CenterPanelRouter
                             filePath={activeFilePath}
@@ -519,7 +482,7 @@ export default function App() {
             </div>
           </div>
 
-          <StatusBar />
+          <StatusBar onCommandPalette={() => setCommandPaletteOpen(true)} />
 
         </main>
       </div>

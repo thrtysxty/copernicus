@@ -65,10 +65,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #100 | Dynamic Phosphor Color System | COMPLETE | MEDIUM |
 | #116 | Phosphor System Toast Settings | COMPLETE | MEDIUM |
 | #123 | Capex Intelligence Dashboard | COMPLETE | MEDIUM |
+| #202 | Fix Github Action Bar Link | COMPLETE | Medium |
 | #148 | Ollama Dynamic Model Discovery | COMPLETED | MEDIUM |
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
+| #203 | Move Lsp Indicator To Statusbar | DRAFT | Medium |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -95,6 +97,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #193 | Accessibility Pass | APPROVED FOR IMPLEMENTATION | P2 |
 | #194 | Flask Backend Scaffold | APPROVED FOR IMPLEMENTATION | P1 |
 | #195 | Gemini Cli Pty Agent | APPROVED FOR IMPLEMENTATION | P1 |
+| #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
 | #169 | Auth Provider Management | COMPLETE | P0 |

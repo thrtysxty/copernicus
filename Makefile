@@ -1,7 +1,7 @@
 .PHONY: help dev test test-e2e backlog deploy db-deploy db-migrate clean
 
 # Infrastructure Config
-CORE_SERVER_IP ?= 192.168.1.18  # Dell R210ii
+CORE_SERVER_IP ?= 192.168.1.185  # Dell R210ii
 PI_BASELINE_IP ?= 192.168.1.19  # Performance Baseline (Pi 3B+)
 
 help:
@@ -90,8 +90,8 @@ ollama-deploy:
 
 ollama-status:
 	@echo "=== Ollama on Core ==="
-	@curl -sf http://core:11434/api/tags | python3 -m json.tool 2>/dev/null \
-	  || echo "[!] Ollama unreachable at http://core:11434"
+	@curl -sf http://$(CORE_SERVER_IP):11434/api/tags | python3 -m json.tool 2>/dev/null \
+	  || echo "[!] Ollama unreachable at http://$(CORE_SERVER_IP):11434"
 
 ollama-stop:
 	ssh core "docker stop copernicus-ollama || true"

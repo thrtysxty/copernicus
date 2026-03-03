@@ -4,7 +4,7 @@ import { useIpcError } from '../../hooks/useIpcError'
 import type { ModelCallStats } from '../../../../electron/db/state-ledger'
 import { unwrapIpc } from '../../types/ipc'
 
-export const StatusBar: React.FC = () => {
+export const StatusBar: React.FC<{ onCommandPalette?: () => void }> = ({ onCommandPalette }) => {
   const invoke = useIpcError()
   const {
     workingDir,
@@ -14,12 +14,35 @@ export const StatusBar: React.FC = () => {
     capexTotal,
     capexSessionTime,
     activeStoryId,
+    activeFilePath,
     setTelemetry
   } = useLayoutStore()
 
   const [hasError, setHasError] = useState(false)
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
   const [ollamaOnline, setOllamaOnline] = useState(false);
+  const [lspRunning, setLspRunning] = useState(false)
+  const [lspErrors, setLspErrors] = useState(0)
+  const [lspWarnings, setLspWarnings] = useState(0)
+
+  // Poll LSP status and listen for diagnostics
+  useEffect(() => {
+    invoke<any>('lsp:status').then((res: any) => {
+      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
+    }).catch(() => {})
+
+    const removeDiag = (window as any).ipcRenderer.on(
+      'lsp:diagnostics-update',
+      (_e: any, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
+        if (!activeFilePath || `file://${activeFilePath}` !== uri) return
+        let errors = 0, warnings = 0
+        diagnostics.forEach((d: any) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
+        setLspErrors(errors)
+        setLspWarnings(warnings)
+      }
+    )
+    return () => removeDiag()
+  }, [invoke, activeFilePath])
 
   // Poll Ollama status every 30s
   useEffect(() => {
@@ -178,6 +201,17 @@ export const StatusBar: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* LSP Status */}
+        <div 
+          className="flex items-center gap-2 px-3 border-l border-copernicus-steel/30 cursor-pointer hover:bg-zinc-900 transition-colors"
+          onClick={onCommandPalette}
+        >
+          <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+            LSP {lspErrors}E {lspWarnings}W
+          </span>
+        </div>
 
         {/* Ollama Status */}
         <div className="flex items-center gap-3 pl-3">
