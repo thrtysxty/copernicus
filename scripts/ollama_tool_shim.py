@@ -39,6 +39,14 @@ Available Tools:
 
 Example:
 [TOOL: read_file arguments: {"path": "copernicus/package.json"}]
+
+STRICT EXECUTION PROTOCOL:
+1. You are an industrial sub-agent within the COPERNICUS IDE.
+2. NEVER provide general advice, tutorials, or unrelated platform examples.
+3. ONLY act on the provided source code and repository context.
+4. If information is missing, you MUST use a tool to find it.
+5. NEVER use placeholders (e.g., // ...). Provide complete code implementation.
+6. Your goal is a surgical fix or a precise technical audit.
 """
 
 def call_ollama(model, prompt, system_prompt):
@@ -89,8 +97,6 @@ def execute_tool(tool_name, arguments):
     elif tool_name == "mcp_call":
         mcp_tool = arguments.get("tool_name")
         mcp_args = arguments.get("arguments", {})
-        # This is a mock/proxy for the actual MCP stdio server
-        # In a real implementation, we'd use an MCP client here
         return f"MCP tool '{mcp_tool}' called successfully (Mock Output)."
         
     return f"Unknown tool: {tool_name}"
@@ -100,7 +106,7 @@ PERSONA_MODELS = {
     "architect": "architect:latest",   
     "senior-dev": "senior-dev:latest", 
     "scribe": "scribe:latest",         
-    "researcher": "deepseek-r1:8b",    
+    "researcher": "deepseek-v3.1:671b-cloud",    
     "sentinel": "mistral:latest"       
 }
 
@@ -120,7 +126,7 @@ def main():
             break
 
     model = os.environ.get("OLLAMA_MODEL", PERSONA_MODELS.get(persona))
-    system_prompt = f"You are acting as the {persona} sub-agent in the COPERNICUS IDE."
+    system_prompt = f"OPERATIONAL MODE: {persona.upper()} SUB-AGENT. PROJECT: COPERNICUS IDE."
 
     print(f"--- Routing to Ollama ({model}) via Persona: {persona} ---")
     
@@ -136,7 +142,7 @@ def main():
             
             # Re-prompt with tool result
             print(f"✅ Tool result received. Re-prompting {model}...")
-            follow_up = f"Tool '{name}' result:\n\n{result}\n\nPlease proceed with the task."
+            follow_up = f"Tool '{name}' result:\n\n{result}\n\nApply the strict execution protocol to this result."
             final_content = call_ollama(model, follow_up, system_prompt)
             print(final_content)
         except Exception as e:

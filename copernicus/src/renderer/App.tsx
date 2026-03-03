@@ -194,7 +194,16 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown)
 
     // Fetch initial state — unwrap {ok, data} envelope from handleIpc()
-    invoke<any>('app:get-root-path').then((r: any) => setWorkingDir(unwrapIpc<any>(r) ?? '')).catch(() => {})
+    invoke<any>('app:get-root-path').then((r: any) => {
+      const root = unwrapIpc<any>(r)
+      if (root) {
+        setWorkingDir(root)
+      } else {
+        setIsWizard(true)
+      }
+    }).catch(() => {
+      setIsWizard(true)
+    })
     invoke<any>('git:branch').then((r: any) => setGitBranch(unwrapIpc<any>(r) ?? '')).catch(() => {})
 
     // Populate in-progress story count
