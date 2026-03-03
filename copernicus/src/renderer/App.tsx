@@ -184,6 +184,13 @@ export default function App() {
     }
   }, [hasCompletedTour, showSplash, isWizard, setChatPanelTab, setView])
 
+  // FIX Story 209: Auto-collapse sidebar when entering Designer view
+  useEffect(() => {
+    if (activeView === 'designer') {
+      setSidebarOpen(false)
+    }
+  }, [activeView, setSidebarOpen])
+
   // Tour Highlight Auto-clear
   useEffect(() => {
     if (tourHighlight) {
