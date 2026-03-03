@@ -432,11 +432,12 @@ export default function WorkflowCanvas() {
         </div>
       </div>
 
+      {/* FIXED: Modal Centering using flex-col and absolute inset-0 */}
       {nodes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-          <div className="bg-zinc-900 border border-copernicus-steel rounded p-6 w-96">
-            <p className="text-xs uppercase tracking-widest text-zinc-500 mb-4">
-              Choose a template
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[100]">
+          <div className="bg-zinc-900 border border-copernicus-steel rounded p-6 w-96 shadow-2xl">
+            <p className="text-xs uppercase tracking-widest text-zinc-500 mb-4 font-bold border-b border-copernicus-steel pb-2">
+              Select Workflow Template
             </p>
             <div className="flex flex-col gap-2">
               {templates.map(t => (
@@ -458,9 +459,9 @@ export default function WorkflowCanvas() {
                       }
                     }
                   }}
-                  className="text-left p-3 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors"
+                  className="text-left p-3 rounded bg-zinc-800 border border-transparent hover:border-copernicus-phosphor/50 hover:bg-zinc-700 transition-all group"
                 >
-                  <p className="text-xs font-bold text-zinc-200">{t.name}</p>
+                  <p className="text-xs font-bold text-zinc-200 group-hover:text-copernicus-phosphor transition-colors">{t.name}</p>
                   <p className="text-[10px] text-zinc-500 mt-0.5">{t.description}</p>
                 </button>
               ))}
@@ -469,19 +470,20 @@ export default function WorkflowCanvas() {
                   setNodes([{ id: 'start', type: 'trigger', label: 'Start', x: 50, y: 150, data: { variant: 'manual' } }]);
                   setEdges([]);
                 }}
-                className="text-left p-3 rounded border border-dashed border-zinc-700 text-zinc-600 hover:text-zinc-400 text-xs"
+                className="text-center p-3 mt-2 rounded border border-dashed border-zinc-700 text-zinc-600 hover:text-copernicus-phosphor hover:border-copernicus-phosphor transition-all text-xs font-mono uppercase tracking-widest"
               >
-                Empty Canvas
+                + Empty Canvas
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex flex-row flex-1 overflow-hidden">
+      {/* FIXED: Edge-to-edge layout by ensuring w-full on flex container */}
+      <div className="flex flex-row flex-1 overflow-hidden w-full relative">
         {/* Palette */}
         <div className="w-40 bg-[#080808] border-r border-copernicus-steel
-                        flex flex-col overflow-y-auto shrink-0 p-2 gap-3">
+                        flex flex-col overflow-y-auto shrink-0 p-2 gap-3 z-20">
           <NodePaletteSection title="TRIGGERS"  nodes={PALETTE_TRIGGERS}  onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="AGENT"     nodes={PALETTE_AGENTS}    onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="TOOLS"     nodes={PALETTE_TOOLS}     onDragStart={handlePaletteDragStart} />
@@ -489,163 +491,165 @@ export default function WorkflowCanvas() {
           <NodePaletteSection title="FLOW"      nodes={PALETTE_FLOW}      onDragStart={handlePaletteDragStart} />
         </div>
 
-        {/* SVG Canvas */}
-        <svg
-          ref={svgRef}
-          tabIndex={0}
-          className="flex-1 h-full cursor-crosshair outline-none"
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onClick={() => setSelectedNodeId(null)}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleCanvasDrop}
-        >
-          <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#3F3F46" />
-            </marker>
-          </defs>
+        {/* SVG Canvas - Full width expansion */}
+        <div className="flex-1 relative bg-black">
+          <svg
+            ref={svgRef}
+            tabIndex={0}
+            className="w-full h-full cursor-crosshair outline-none"
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onClick={() => setSelectedNodeId(null)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleCanvasDrop}
+          >
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#3F3F46" />
+              </marker>
+            </defs>
 
-          {/* Grid */}
-          <pattern id="grid" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse">
-            <path d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`} fill="none" stroke="#111" strokeWidth="0.5" />
-          </pattern>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+            {/* Grid */}
+            <pattern id="grid" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse">
+              <path d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`} fill="none" stroke="#111" strokeWidth="0.5" />
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#grid)" />
 
-          {/* Edges */}
-          {edges.map(edge => {
-            const source = nodes.find(n => n.id === edge.source);
-            const target = nodes.find(n => n.id === edge.target);
-            if (!source || !target) return null;
+            {/* Edges */}
+            {edges.map(edge => {
+              const source = nodes.find(n => n.id === edge.source);
+              const target = nodes.find(n => n.id === edge.target);
+              if (!source || !target) return null;
 
-            return (
-              <g key={edge.id}>
-                  <line
-                  x1={source.x + 60} y1={source.y + 20}
-                  x2={target.x + 60} y2={target.y + 20}
-                  stroke="#3F3F46"
-                  strokeWidth="2"
-                  markerEnd="url(#arrowhead)"
-                  />
-                  {edge.label && (
-                      <text
-                          x={(source.x + target.x + 120) / 2}
-                          y={(source.y + target.y + 40) / 2 - 5}
-                          fill="#52525b"
-                          fontSize="10"
-                          textAnchor="middle"
-                          fontFamily="monospace"
-                      >
-                          {edge.label}
-                      </text>
-                  )}
-              </g>
-            );
-          })}
-
-          {/* Connection Line */}
-          {connectingNodeId && mousePos && (
-              <line
-                  x1={nodes.find(n => n.id === connectingNodeId)!.x + 60}
-                  y1={nodes.find(n => n.id === connectingNodeId)!.y + 20}
-                  x2={mousePos.x}
-                  y2={mousePos.y}
-                  stroke="#3F3F46"
-                  strokeWidth="1"
-                  strokeDasharray="5,5"
-              />
-          )}
-
-          {/* Nodes */}
-          {nodes.map(node => {
-            const isError = node.status === 'error' || node.status === 'failed';
-            const errorMsg = (node as any).error || context[node.id];
-
-            return (
-              <g
-                key={node.id}
-                transform={`translate(${node.x}, ${node.y})`}
-                onMouseDown={(e) => handleMouseDown(e, node.id)}
-                onMouseUp={(e) => handleNodeMouseUp(e, node.id)}
-                className="cursor-pointer select-none"
-              >
-                {isError && (
-                  <title>{errorMsg ?? 'Execution failed'}</title>
-                )}
-                {/* Selected State */}
-                {node.id === selectedNodeId && (
-                  <rect
-                    x="-6" y="-6" width="132" height="52"
-                    rx="6" ry="6"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth={1}
-                    strokeDasharray="4,3"
-                    opacity={0.4}
-                  />
-                )}
-
-                {/* Status Halo */}
-                {node.status && node.status !== 'idle' && (
-                    <rect
-                        x="-4" y="-4" width="128" height="48"
-                        rx="6" ry="6"
-                        fill="none"
-                        stroke={getStatusColor(node.status)}
-                        strokeWidth={2}
-                        className={node.status === 'running' ? "animate-pulse" : ""}
+              return (
+                <g key={edge.id}>
+                    <line
+                    x1={source.x + 60} y1={source.y + 20}
+                    x2={target.x + 60} y2={target.y + 20}
+                    stroke="#3F3F46"
+                    strokeWidth="2"
+                    markerEnd="url(#arrowhead)"
                     />
-                )}
+                    {edge.label && (
+                        <text
+                            x={(source.x + target.x + 120) / 2}
+                            y={(source.y + target.y + 40) / 2 - 5}
+                            fill="#52525b"
+                            fontSize="10"
+                            textAnchor="middle"
+                            fontFamily="monospace"
+                        >
+                            {edge.label}
+                        </text>
+                    )}
+                </g>
+              );
+            })}
 
-                {/* Node Body */}
-                <rect
-                  width="120" height="40"
-                  rx="4" ry="4"
-                  fill="#0A0A0A"
-                  stroke={isError ? '#EF4444' : getNodeColor(node.type)}
-                  strokeWidth={node.type === 'agent' ? 2 : 1}
+            {/* Connection Line */}
+            {connectingNodeId && mousePos && (
+                <line
+                    x1={nodes.find(n => n.id === connectingNodeId)!.x + 60}
+                    y1={nodes.find(n => n.id === connectingNodeId)!.y + 20}
+                    x2={mousePos.x}
+                    y2={mousePos.y}
+                    stroke="#3F3F46"
+                    strokeWidth="1"
+                    strokeDasharray="5,5"
                 />
+            )}
 
-                {/* Label */}
-                <text
-                  x="60" y={isError ? 20 : 24}
-                  textAnchor="middle"
-                  fill="#d4d4d8"
-                  fontSize="11"
-                  fontFamily="monospace"
-                  fontWeight="bold"
+            {/* Nodes */}
+            {nodes.map(node => {
+              const isError = node.status === 'error' || node.status === 'failed';
+              const errorMsg = (node as any).error || context[node.id];
+
+              return (
+                <g
+                  key={node.id}
+                  transform={`translate(${node.x}, ${node.y})`}
+                  onMouseDown={(e) => handleMouseDown(e, node.id)}
+                  onMouseUp={(e) => handleNodeMouseUp(e, node.id)}
+                  className="cursor-pointer select-none"
                 >
-                  {node.label}
-                </text>
+                  {isError && (
+                    <title>{errorMsg ?? 'Execution failed'}</title>
+                  )}
+                  {/* Selected State */}
+                  {node.id === selectedNodeId && (
+                    <rect
+                      x="-6" y="-6" width="132" height="52"
+                      rx="6" ry="6"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth={1}
+                      strokeDasharray="4,3"
+                      opacity={0.4}
+                    />
+                  )}
 
-                {/* Error Label */}
-                {isError && errorMsg && (
+                  {/* Status Halo */}
+                  {node.status && node.status !== 'idle' && (
+                      <rect
+                          x="-4" y="-4" width="128" height="48"
+                          rx="6" ry="6"
+                          fill="none"
+                          stroke={getStatusColor(node.status)}
+                          strokeWidth={2}
+                          className={node.status === 'running' ? "animate-pulse" : ""}
+                      />
+                  )}
+
+                  {/* Node Body */}
+                  <rect
+                    width="120" height="40"
+                    rx="4" ry="4"
+                    fill="#0A0A0A"
+                    stroke={isError ? '#EF4444' : getNodeColor(node.type)}
+                    strokeWidth={node.type === 'agent' ? 2 : 1}
+                  />
+
+                  {/* Label */}
                   <text
-                    x="60" y="32"
+                    x="60" y={isError ? 20 : 24}
                     textAnchor="middle"
-                    fill="#F87171"
-                    fontSize="7"
+                    fill="#d4d4d8"
+                    fontSize="11"
                     fontFamily="monospace"
+                    fontWeight="bold"
                   >
-                    ⚠ {errorMsg.slice(0, 20)}...
+                    {node.label}
                   </text>
-                )}
 
-                {/* Type Indicator */}
-                <text
-                    x="60" y="-8"
-                    textAnchor="middle"
-                    fill="#52525b"
-                    fontSize="8"
-                    fontFamily="monospace"
-                    className="uppercase font-bold tracking-widest"
-                >
-                    {node.type}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+                  {/* Error Label */}
+                  {isError && errorMsg && (
+                    <text
+                      x="60" y="32"
+                      textAnchor="middle"
+                      fill="#F87171"
+                      fontSize="7"
+                      fontFamily="monospace"
+                    >
+                      ⚠ {errorMsg.slice(0, 20)}...
+                    </text>
+                  )}
+
+                  {/* Type Indicator */}
+                  <text
+                      x="60" y="-8"
+                      textAnchor="middle"
+                      fill="#52525b"
+                      fontSize="8"
+                      fontFamily="monospace"
+                      className="uppercase font-bold tracking-widest"
+                  >
+                      {node.type}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
 
         {/* Inspector */}
         {selectedNodeId && (() => {
