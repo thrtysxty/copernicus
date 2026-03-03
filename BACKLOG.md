@@ -70,7 +70,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #203 | Move Lsp Indicator To Statusbar | DRAFT | Medium |
+| #204 | Add Spotlight To Command Center Panes | DRAFT | Medium |
+| #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
