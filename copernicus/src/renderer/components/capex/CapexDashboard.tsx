@@ -208,7 +208,7 @@ export const CapexDashboard: React.FC = () => {
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col h-full bg-copernicus-bg font-mono text-zinc-300 overflow-hidden">
+    <div className="flex flex-col min-h-0 flex-1 w-full bg-copernicus-bg font-mono text-zinc-300 overflow-hidden">
 
       {/* Tab bar (Unified with global header initiative) */}
       <div className="px-6 pt-2 pb-0 border-b border-zinc-800 shrink-0 flex items-center justify-between">
@@ -236,303 +236,300 @@ export const CapexDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      {/* Tab content - Optimized Scroll & Width */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-6">
+        <div className="space-y-6 w-full">
 
-        {/* ── FINANCIAL ─────────────────────────────────────────────────── */}
-        {activeTab === 'financial' && (
-          <>
-            {finLoading
-              ? <div className="text-copernicus-phosphor animate-pulse text-xs">LOADING...</div>
-              : <>
-                  <div className="grid grid-cols-4 gap-4">
-                    <SummaryCard title="CAPEX Hours"     value={stats.capexHours.toFixed(1)} accent />
-                    <SummaryCard title="OPEX Hours"      value={stats.opexHours.toFixed(1)} />
-                    <SummaryCard title="Capitalizable %" value={`${capPct.toFixed(1)}%`} />
-                    <SummaryCard title="Total Sessions"  value={stats.totalSessions.toString()} />
-                  </div>
-
-                  <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider">Weekly Hours Velocity</h3>
+          {/* ── FINANCIAL ─────────────────────────────────────────────────── */}
+          {activeTab === 'financial' && (
+            <>
+              {finLoading
+                ? <div className="text-copernicus-phosphor animate-pulse text-xs uppercase tracking-widest">Loading_Financial_Pulse...</div>
+                : <>
+                    <div className="grid grid-cols-4 gap-4">
+                      <SummaryCard title="CAPEX Hours"     value={stats.capexHours.toFixed(1)} accent />
+                      <SummaryCard title="OPEX Hours"      value={stats.opexHours.toFixed(1)} />
+                      <SummaryCard title="Capitalizable %" value={`${capPct.toFixed(1)}%`} />
+                      <SummaryCard title="Total Sessions"  value={stats.totalSessions.toString()} />
                     </div>
-                    {weeklyVelocity.length === 0
-                      ? <EmptyState msg="No session data recorded yet" />
-                      : <ResponsiveContainer width="100%" height={160}>
-                          <AreaChart data={weeklyVelocity} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="velGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%"  stopColor={CHART_THEME.phosphor} stopOpacity={0.3} />
-                                <stop offset="95%" stopColor={CHART_THEME.phosphor} stopOpacity={0.02} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" />
-                            <XAxis dataKey="week" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                            <YAxis tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                            <Tooltip {...tooltipStyle} />
-                            <Area type="monotone" dataKey="hours" name="Hours"
-                              stroke={CHART_THEME.phosphor} fill="url(#velGrad)" strokeWidth={2} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                    }
-                  </div>
 
-                  <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider">Story Detail</h3>
-                      <button onClick={() => exportToCsv(
-                        `capex_${Date.now()}.csv`,
-                        ['Story ID','Component','Hours','Cost','Category','Sessions','Last Active'],
-                        report.map(r => [r.story_id, r.component, r.total_hours.toFixed(2), (r.total_hours * rate).toFixed(2), r.financial_category, String(r.session_count), r.end_date])
-                      )} className="flex items-center gap-1.5 px-2 py-1 text-[9px] uppercase border border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-500 transition-colors">
-                        <Download size={10} /> Export
-                      </button>
+                    <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                      <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Weekly Hours Velocity</h3>
+                      {weeklyVelocity.length === 0
+                        ? <EmptyState msg="No session data recorded yet" />
+                        : <ResponsiveContainer width="100%" height={160}>
+                            <AreaChart data={weeklyVelocity} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="velGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%"  stopColor={CHART_THEME.phosphor} stopOpacity={0.3} />
+                                  <stop offset="95%" stopColor={CHART_THEME.phosphor} stopOpacity={0.02} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" />
+                              <XAxis dataKey="week" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                              <YAxis tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                              <Tooltip {...tooltipStyle} />
+                              <Area type="monotone" dataKey="hours" name="Hours"
+                                stroke={CHART_THEME.phosphor} fill="url(#velGrad)" strokeWidth={2} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                      }
                     </div>
-                    <div className="overflow-auto max-h-64">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead className="text-[9px] uppercase text-zinc-500 sticky top-0 bg-zinc-900">
-                          <tr>
-                            {['Story','Component','Hours','Est. Cost','Category','Sessions','Last Active'].map(h => (
-                              <th key={h} className="p-2">{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {report.length === 0
-                            ? <tr><td colSpan={7} className="p-6 text-center text-zinc-600 italic">No session data</td></tr>
-                            : report.map((r, i) => (
-                              <tr key={i} className="border-b border-zinc-800/40 hover:bg-white/5">
-                                <td className="p-2 text-copernicus-phosphor">{r.story_id || '—'}</td>
-                                <td className="p-2">{r.component}</td>
-                                <td className="p-2 text-right">{r.total_hours.toFixed(2)}</td>
-                                <td className="p-2 text-right text-zinc-400">${(r.total_hours * rate).toFixed(2)}</td>
-                                <td className="p-2">
-                                  <span className={`px-1.5 py-0.5 text-[9px] rounded ${r.financial_category === 'CAPEX' ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor' : 'bg-zinc-800 text-zinc-400'}`}>
-                                    {r.financial_category}
-                                  </span>
-                                </td>
-                                <td className="p-2 text-right text-zinc-500">{r.session_count}</td>
-                                <td className="p-2 text-right text-zinc-500">{r.end_date}</td>
-                              </tr>
-                            ))
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </>
-            }
-          </>
-        )}
 
-        {/* ── QUALITY ───────────────────────────────────────────────────── */}
-        {activeTab === 'quality' && (
-          <>
-            <div className="flex items-center gap-4">
-              <button onClick={runTests} disabled={testRunning}
-                className="flex items-center gap-2 px-4 py-2 text-[10px] uppercase font-bold border border-copernicus-phosphor/30 text-copernicus-phosphor hover:bg-copernicus-phosphor/10 transition-colors disabled:opacity-50">
-                {testRunning ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
-                {testRunning ? 'Running...' : 'Run Tests'}
-              </button>
-              {latestRun && <span className="text-[10px] text-zinc-500">Last run: {new Date(latestRun.run_at).toLocaleString()}</span>}
-            </div>
-
-            {/* Coverage gauge + stats */}
-            <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-              <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-4">Coverage</h3>
-              {latestRun
-                ? <div className="flex items-center gap-8">
-                    <div className="relative w-32 h-32 flex-shrink-0">
-                      <RadialBarChart width={128} height={128} cx={64} cy={64}
-                        innerRadius={44} outerRadius={60}
-                        data={[{ value: coveragePct, fill: gaugeColor }]}
-                        startAngle={90} endAngle={-270}>
-                        <RadialBar background={{ fill: CHART_THEME.muted }} dataKey="value" />
-                      </RadialBarChart>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-xl font-bold" style={{ color: gaugeColor }}>{coveragePct.toFixed(1)}%</span>
-                        <span className="text-[9px] text-zinc-600 uppercase">Coverage</span>
+                    <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider">Story Detail</h3>
+                        <button onClick={() => exportToCsv(
+                          `capex_${Date.now()}.csv`,
+                          ['Story ID','Component','Hours','Cost','Category','Sessions','Last Active'],
+                          report.map(r => [r.story_id, r.component, r.total_hours.toFixed(2), (r.total_hours * rate).toFixed(2), r.financial_category, String(r.session_count), r.end_date])
+                        )} className="flex items-center gap-1.5 px-2 py-1 text-[9px] uppercase border border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-500 transition-colors">
+                          <Download size={10} /> Export
+                        </button>
+                      </div>
+                      <div className="overflow-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead className="text-[9px] uppercase text-zinc-500 sticky top-0 bg-zinc-900">
+                            <tr>
+                              {['Story','Component','Hours','Est. Cost','Category','Sessions','Last Active'].map(h => (
+                                <th key={h} className="p-2 font-bold tracking-tight">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {report.length === 0
+                              ? <tr><td colSpan={7} className="p-6 text-center text-zinc-600 italic">No session data</td></tr>
+                              : report.map((r, i) => (
+                                <tr key={i} className="border-b border-zinc-800/40 hover:bg-white/5 transition-colors">
+                                  <td className="p-2 text-copernicus-phosphor font-bold">{r.story_id || '—'}</td>
+                                  <td className="p-2">{r.component}</td>
+                                  <td className="p-2 text-right font-mono">{r.total_hours.toFixed(2)}</td>
+                                  <td className="p-2 text-right text-zinc-400 font-mono">${(r.total_hours * rate).toFixed(2)}</td>
+                                  <td className="p-2">
+                                    <span className={`px-1.5 py-0.5 text-[9px] rounded font-bold ${r.financial_category === 'CAPEX' ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor' : 'bg-zinc-800 text-zinc-400'}`}>
+                                      {r.financial_category}
+                                    </span>
+                                  </td>
+                                  <td className="p-2 text-right text-zinc-500 font-mono">{r.session_count}</td>
+                                  <td className="p-2 text-right text-zinc-500 font-mono">{r.end_date}</td>
+                                </tr>
+                              ))
+                            }
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-6">
-                      <MiniStat label="Total Tests" value={latestRun.total_tests} />
-                      <MiniStat label="Passed" value={latestRun.passed} color={CHART_THEME.phosphor} />
-                      <MiniStat label="Failed" value={latestRun.failed} color={latestRun.failed > 0 ? CHART_THEME.danger : CHART_THEME.text} />
-                    </div>
-                  </div>
-                : <EmptyState msg="No test runs recorded — click Run Tests to start" />
+                  </>
               }
-            </div>
+            </>
+          )}
 
-            {/* Coverage trend */}
-            {testRuns.length > 1 && (
+          {/* ── QUALITY ───────────────────────────────────────────────────── */}
+          {activeTab === 'quality' && (
+            <>
+              <div className="flex items-center gap-4">
+                <button onClick={runTests} disabled={testRunning}
+                  className="flex items-center gap-2 px-4 py-2 text-[10px] uppercase font-bold border border-copernicus-phosphor/30 text-copernicus-phosphor hover:bg-copernicus-phosphor/10 transition-colors disabled:opacity-50">
+                  {testRunning ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
+                  {testRunning ? 'Running...' : 'Run Tests'}
+                </button>
+                {latestRun && <span className="text-[10px] text-zinc-500 font-mono tracking-tighter">Last run: {new Date(latestRun.run_at).toLocaleString()}</span>}
+              </div>
+
               <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Coverage Trend</h3>
-                <ResponsiveContainer width="100%" height={120}>
-                  <LineChart data={[...testRuns].reverse()} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                    <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" />
-                    <XAxis dataKey="run_at" tickFormatter={v => new Date(v).toLocaleDateString()} tick={{ fill: CHART_THEME.text, fontSize: 8 }} />
-                    <YAxis domain={[0, 100]} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                    <Tooltip {...tooltipStyle} formatter={(v: number | undefined) => [`${(v ?? 0).toFixed(1)}%`, 'Coverage']} />
-                    <Line type="monotone" dataKey="coverage_pct" name="Coverage"
-                      stroke={CHART_THEME.phosphor} strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-4">Coverage Intelligence</h3>
+                {latestRun
+                  ? <div className="flex items-center gap-12 justify-between max-w-4xl mx-auto">
+                      <div className="relative w-32 h-32 flex-shrink-0">
+                        <RadialBarChart width={128} height={128} cx={64} cy={64}
+                          innerRadius={44} outerRadius={60}
+                          data={[{ value: coveragePct, fill: gaugeColor }]}
+                          startAngle={90} endAngle={-270}>
+                          <RadialBar background={{ fill: CHART_THEME.muted }} dataKey="value" />
+                        </RadialBarChart>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-xl font-bold" style={{ color: gaugeColor }}>{coveragePct.toFixed(1)}%</span>
+                          <span className="text-[9px] text-zinc-600 uppercase">Coverage</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-12 flex-1">
+                        <MiniStat label="Total Tests" value={latestRun.total_tests} />
+                        <MiniStat label="Passed" value={latestRun.passed} color={CHART_THEME.phosphor} />
+                        <MiniStat label="Failed" value={latestRun.failed} color={latestRun.failed > 0 ? CHART_THEME.danger : CHART_THEME.text} />
+                      </div>
+                    </div>
+                  : <EmptyState msg="No test runs recorded — click Run Tests to start" />
+                }
               </div>
-            )}
 
-            {/* Bugs by assignee */}
-            <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-              <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Bugs by Assignee</h3>
-              {bugs.length === 0
-                ? <EmptyState msg="No defect-tagged stories found" />
-                : <ResponsiveContainer width="100%" height={Math.max(120, bugs.length * 36)}>
-                    <BarChart data={bugs} layout="vertical" margin={{ left: 16, right: 24 }}>
-                      <CartesianGrid stroke={CHART_THEME.grid} horizontal={false} />
-                      <XAxis type="number" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <YAxis type="category" dataKey="assignee" width={100} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <Tooltip {...tooltipStyle} />
-                      <Bar dataKey="bug_count" name="Bugs" fill={CHART_THEME.danger} radius={[0, 2, 2, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-              }
-            </div>
-          </>
-        )}
-
-        {/* ── LLM ───────────────────────────────────────────────────────── */}
-        {activeTab === 'llm' && (
-          <>
-            <div className="grid grid-cols-3 gap-4">
-              <SummaryCard title="Total LLM Cost" value={`$${totalCost.toFixed(6)}`} accent />
-              <SummaryCard title="Models Used"    value={String(costByModel.length)} />
-              <SummaryCard title="Total Calls"    value={String(costByModel.reduce((s, r) => s + r.call_count, 0))} />
-            </div>
-
-            <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-              <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Daily Cost Burn (30d)</h3>
-              {dailyCosts.length === 0
-                ? <EmptyState msg="No LLM calls recorded yet" />
-                : <ResponsiveContainer width="100%" height={160}>
-                    <AreaChart data={dailyCosts} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%"  stopColor={CHART_THEME.phosphor} stopOpacity={0.3} />
-                          <stop offset="95%" stopColor={CHART_THEME.phosphor} stopOpacity={0.02} />
-                        </linearGradient>
-                      </defs>
+              {testRuns.length > 1 && (
+                <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                  <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Coverage Trend</h3>
+                  <ResponsiveContainer width="100%" height={120}>
+                    <LineChart data={[...testRuns].reverse()} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                       <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" />
-                      <XAxis dataKey="day" tickFormatter={v => v.slice(5)} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <YAxis tick={{ fill: CHART_THEME.text, fontSize: 9 }} tickFormatter={v => `$${v.toFixed(4)}`} />
-                      <Tooltip {...tooltipStyle} formatter={(v: number | undefined) => [`$${(v ?? 0).toFixed(6)}`, 'Cost']} />
-                      <Area type="monotone" dataKey="total_cost" name="Cost"
-                        stroke={CHART_THEME.phosphor} fill="url(#costGrad)" strokeWidth={2} />
-                    </AreaChart>
+                      <XAxis dataKey="run_at" tickFormatter={v => new Date(v).toLocaleDateString()} tick={{ fill: CHART_THEME.text, fontSize: 8 }} />
+                      <YAxis domain={[0, 100]} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                      <Tooltip {...tooltipStyle} formatter={(v: number | undefined) => [`${(v ?? 0).toFixed(1)}%`, 'Coverage']} />
+                      <Line type="monotone" dataKey="coverage_pct" name="Coverage"
+                        stroke={CHART_THEME.phosphor} strokeWidth={2} dot={false} />
+                    </LineChart>
                   </ResponsiveContainer>
-              }
-            </div>
+                </div>
+              )}
 
-            <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-              <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Cost by Model</h3>
-              {costByModel.length === 0
-                ? <EmptyState msg="No model calls recorded" />
-                : <ResponsiveContainer width="100%" height={Math.max(200, costByModel.length * 36)}>
-                    <BarChart data={costByModel} layout="vertical" margin={{ left: 16, right: 48 }}>
-                      <CartesianGrid stroke={CHART_THEME.grid} horizontal={false} />
-                      <XAxis type="number" tick={{ fill: CHART_THEME.text, fontSize: 9 }} tickFormatter={v => `$${v.toFixed(4)}`} />
-                      <YAxis type="category" dataKey="model_id" width={150} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <Tooltip {...tooltipStyle} formatter={(v: number | undefined) => [`$${(v ?? 0).toFixed(6)}`, 'Cost']} />
-                      <Bar dataKey="total_cost" name="Cost" radius={[0, 2, 2, 0]}>
-                        {costByModel.map((row, i) => (
-                          <Cell key={i}
-                            fill={CHART_THEME.providers[row.provider as keyof typeof CHART_THEME.providers] ?? CHART_THEME.phosphor}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-              }
-            </div>
-
-            <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider">Cost by Context</h3>
-                <button onClick={() => exportToCsv('llm_cost.csv',
-                  ['Context','Calls','Tokens','Cost'],
-                  costByStory.map(r => [r.story_id, String(r.call_count), String(r.total_tokens), r.total_cost.toFixed(6)])
-                )} className="flex items-center gap-1.5 px-2 py-1 text-[9px] uppercase border border-zinc-700 text-zinc-500 hover:text-zinc-300 transition-colors">
-                  <Download size={10} /> Export
-                </button>
+              <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Defect Distribution by Assignee</h3>
+                {bugs.length === 0
+                  ? <EmptyState msg="No defect-tagged stories found" />
+                  : <ResponsiveContainer width="100%" height={Math.min(200, Math.max(80, bugs.length * 24))}>
+                      <BarChart data={bugs} layout="vertical" margin={{ left: 16, right: 24 }}>
+                        <CartesianGrid stroke={CHART_THEME.grid} horizontal={false} />
+                        <XAxis type="number" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <YAxis type="category" dataKey="assignee" width={100} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <Tooltip {...tooltipStyle} />
+                        <Bar dataKey="bug_count" name="Bugs" fill={CHART_THEME.danger} radius={[0, 2, 2, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                }
               </div>
-              <div className="overflow-auto max-h-48">
-                <table className="w-full text-xs border-collapse">
-                  <thead className="text-[9px] uppercase text-zinc-500 sticky top-0 bg-zinc-900">
-                    <tr>{['Context','Calls','Tokens','Cost'].map(h => <th key={h} className="p-2 text-left">{h}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {costByStory.length === 0
-                      ? <tr><td colSpan={4} className="p-4 text-center text-zinc-600 italic">No story-context calls yet</td></tr>
-                      : costByStory.map((r, i) => (
-                        <tr key={i} className="border-b border-zinc-800/40 hover:bg-white/5">
-                          <td className="p-2 text-copernicus-phosphor">{r.story_id}</td>
-                          <td className="p-2 text-right">{r.call_count}</td>
-                          <td className="p-2 text-right">{(r.total_tokens / 1000).toFixed(1)}k</td>
-                          <td className="p-2 text-right text-zinc-400">${r.total_cost.toFixed(6)}</td>
-                        </tr>
-                      ))
-                    }
-                  </tbody>
-                </table>
+            </>
+          )}
+
+          {/* ── LLM ───────────────────────────────────────────────────────── */}
+          {activeTab === 'llm' && (
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                <SummaryCard title="Total LLM Burn" value={`$${totalCost.toFixed(6)}`} accent />
+                <SummaryCard title="Active Models"    value={String(costByModel.length)} />
+                <SummaryCard title="Total Calls"    value={String(costByModel.reduce((s, r) => s + r.call_count, 0))} />
               </div>
-            </div>
-          </>
-        )}
 
-        {/* ── VELOCITY ──────────────────────────────────────────────────── */}
-        {activeTab === 'velocity' && (
-          <>
-            <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider">Stories Completed per Week</h3>
-                <button onClick={() => exportToCsv('throughput.csv',
-                  ['Week','Completed'],
-                  throughput.map(r => [r.week, String(r.completed)])
-                )} className="flex items-center gap-1.5 px-2 py-1 text-[9px] uppercase border border-zinc-700 text-zinc-500 hover:text-zinc-300 transition-colors">
-                  <Download size={10} /> Export
-                </button>
+              <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Daily Burn Rate (30d)</h3>
+                {dailyCosts.length === 0
+                  ? <EmptyState msg="No LLM telemetry recorded yet" />
+                  : <ResponsiveContainer width="100%" height={160}>
+                      <AreaChart data={dailyCosts} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%"  stopColor={CHART_THEME.phosphor} stopOpacity={0.3} />
+                            <stop offset="95%" stopColor={CHART_THEME.phosphor} stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" />
+                        <XAxis dataKey="day" tickFormatter={v => v.slice(5)} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <YAxis tick={{ fill: CHART_THEME.text, fontSize: 9 }} tickFormatter={v => `$${v.toFixed(4)}`} />
+                        <Tooltip {...tooltipStyle} formatter={(v: number | undefined) => [`$${(v ?? 0).toFixed(6)}`, 'Cost']} />
+                        <Area type="monotone" dataKey="total_cost" name="Cost"
+                          stroke={CHART_THEME.phosphor} fill="url(#costGrad)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                }
               </div>
-              {throughput.length === 0
-                ? <EmptyState msg="No completed stories yet" />
-                : <ResponsiveContainer width="100%" height={160}>
-                    <BarChart data={throughput} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                      <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" />
-                      <XAxis dataKey="week" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <YAxis tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <Tooltip {...tooltipStyle} />
-                      <Bar dataKey="completed" name="Stories" fill={CHART_THEME.phosphor} radius={[2, 2, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-              }
-            </div>
 
-            <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
-              <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Status Distribution</h3>
-              {statusDist.length === 0
-                ? <EmptyState msg="No story data" />
-                : <ResponsiveContainer width="100%" height={Math.max(120, statusDist.length * 36)}>
-                    <BarChart data={statusDist} layout="vertical" margin={{ left: 16, right: 24 }}>
-                      <CartesianGrid stroke={CHART_THEME.grid} horizontal={false} />
-                      <XAxis type="number" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <YAxis type="category" dataKey="status" width={120} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
-                      <Tooltip {...tooltipStyle} />
-                      <Bar dataKey="count" name="Stories" fill={CHART_THEME.axis} radius={[0, 2, 2, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-              }
-            </div>
-          </>
-        )}
+              <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Cost per Intelligence Provider</h3>
+                {costByModel.length === 0
+                  ? <EmptyState msg="No model calls recorded" />
+                  : <ResponsiveContainer width="100%" height={Math.min(240, Math.max(120, costByModel.length * 24))}>
+                      <BarChart data={costByModel} layout="vertical" margin={{ left: 16, right: 48 }}>
+                        <CartesianGrid stroke={CHART_THEME.grid} horizontal={false} />
+                        <XAxis type="number" tick={{ fill: CHART_THEME.text, fontSize: 9 }} tickFormatter={v => `$${v.toFixed(4)}`} />
+                        <YAxis type="category" dataKey="model_id" width={150} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <Tooltip {...tooltipStyle} formatter={(v: number | undefined) => [`$${(v ?? 0).toFixed(6)}`, 'Cost']} />
+                        <Bar dataKey="total_cost" name="Cost" radius={[0, 2, 2, 0]}>
+                          {costByModel.map((row, i) => (
+                            <Cell key={i}
+                              fill={CHART_THEME.providers[row.provider as keyof typeof CHART_THEME.providers] ?? CHART_THEME.phosphor}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                }
+              </div>
 
+              <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider">Contextual Resource Attribution</h3>
+                  <button onClick={() => exportToCsv('llm_cost.csv',
+                    ['Context','Calls','Tokens','Cost'],
+                    costByStory.map(r => [r.story_id, String(r.call_count), String(r.total_tokens), r.total_cost.toFixed(6)])
+                  )} className="flex items-center gap-1.5 px-2 py-1 text-[9px] uppercase border border-zinc-700 text-zinc-500 hover:text-zinc-300 transition-colors">
+                    <Download size={10} /> Export
+                  </button>
+                </div>
+                <div className="overflow-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="text-[9px] uppercase text-zinc-500 sticky top-0 bg-zinc-900">
+                      <tr>{['Context','Calls','Tokens','Cost'].map(h => <th key={h} className="p-2 text-left font-bold">{h}</th>)}</tr>
+                    </thead>
+                    <tbody>
+                      {costByStory.length === 0
+                        ? <tr><td colSpan={4} className="p-4 text-center text-zinc-600 italic">No story-context calls yet</td></tr>
+                        : costByStory.map((r, i) => (
+                          <tr key={i} className="border-b border-zinc-800/40 hover:bg-white/5 transition-colors">
+                            <td className="p-2 text-copernicus-phosphor font-bold">{r.story_id}</td>
+                            <td className="p-2 text-right font-mono">{r.call_count}</td>
+                            <td className="p-2 text-right font-mono">{(r.total_tokens / 1000).toFixed(1)}k</td>
+                            <td className="p-2 text-right text-zinc-400 font-mono">${r.total_cost.toFixed(6)}</td>
+                          </tr>
+                        ))
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── VELOCITY ──────────────────────────────────────────────────── */}
+          {activeTab === 'velocity' && (
+            <>
+              <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider">Sprint Throughput (Stories/Week)</h3>
+                  <button onClick={() => exportToCsv('throughput.csv',
+                    ['Week','Completed'],
+                    throughput.map(r => [r.week, String(r.completed)])
+                  )} className="flex items-center gap-1.5 px-2 py-1 text-[9px] uppercase border border-zinc-700 text-zinc-500 hover:text-zinc-300 transition-colors">
+                    <Download size={10} /> Export
+                  </button>
+                </div>
+                {throughput.length === 0
+                  ? <EmptyState msg="No completed stories yet" />
+                  : <ResponsiveContainer width="100%" height={160}>
+                      <BarChart data={throughput} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                        <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" />
+                        <XAxis dataKey="week" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <YAxis tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <Tooltip {...tooltipStyle} />
+                        <Bar dataKey="completed" name="Stories" fill={CHART_THEME.phosphor} radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                }
+              </div>
+
+              <div className="bg-[#0A0A0A] border border-zinc-800 p-4">
+                <h3 className="text-[10px] uppercase text-zinc-500 tracking-wider mb-3">Pipeline Status Distribution</h3>
+                {statusDist.length === 0
+                  ? <EmptyState msg="No pipeline data available" />
+                  : <ResponsiveContainer width="100%" height={Math.min(180, Math.max(100, statusDist.length * 24))}>
+                      <BarChart data={statusDist} layout="vertical" margin={{ left: 16, right: 24 }}>
+                        <CartesianGrid stroke={CHART_THEME.grid} horizontal={false} />
+                        <XAxis type="number" tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <YAxis type="category" dataKey="status" width={120} tick={{ fill: CHART_THEME.text, fontSize: 9 }} />
+                        <Tooltip {...tooltipStyle} />
+                        <Bar dataKey="count" name="Stories" fill={CHART_THEME.axis} radius={[0, 2, 2, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                }
+              </div>
+            </>
+          )}
+
+        </div>
       </div>
     </div>
   )

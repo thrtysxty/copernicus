@@ -1,11 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, Content, Part } from '@google/generative-ai'
 import { BrowserWindow } from 'electron'
 import { spawn } from 'child_process'
 import { authManager } from '../auth-manager'
 import { modelRegistry } from '../models/model-registry'
 import { stateLedger } from '../db/state-ledger'
+import { TOOLS, toolExecutor } from './tools'
 import log from '../utils/logger'
 
 export interface ChatMessage {
@@ -29,7 +30,17 @@ export class LLMService {
 
   async streamChat(payload: ChatPayload): Promise<void> {
     const { sessionId, messages, model, systemPrompt } = payload
-    const system = systemPrompt ?? 'You are a helpful assistant inside the COPERNICUS IDE.'
+    
+    const DEFAULT_SYSTEM_PROMPT = `You are the primary AI orchestrator inside the COPERNICUS IDE. 
+Your goal is to assist the user with industrial-scale software engineering.
+
+CORE PROTOCOLS:
+1. REPO RAG: You have access to the local codebase via the 'search_codebase' and 'read_file' tools. If the user's request is vague or refers to existing logic, you MUST search the codebase before asking the user for paths.
+2. LOCAL DELEGATION: For tactical tasks like documentation, quick bug fixes, or UI tweaks, you can delegate to local sidekick models using 'local_research'.
+3. SURGICAL EDITS: When providing code, provide complete, valid blocks. Avoid placeholders like "// ... rest of code".
+4. CONTEXT AWARENESS: You are running in a professional environment. Prefer efficiency and technical precision over conversational filler.`
+
+    const system = systemPrompt ?? DEFAULT_SYSTEM_PROMPT
     const callStart = Date.now()
 
     // Look up the model's provider from the registry
@@ -115,102 +126,94 @@ export class LLMService {
     system: string,
     callStart: number
   ): Promise<void> {
-    // Route through Claude Code CLI if the user chose that method
     if (authManager.getAnthropicMethod() === 'cli') {
       return this.streamClaudeCli(sessionId, messages, system, callStart)
     }
 
-    const keyOrSession = authManager.getApiKey('anthropic')
-    if (!keyOrSession) throw new Error('No Anthropic credentials configured. Open Settings → Providers to choose Claude Code CLI or paste an API key.')
+    const key = authManager.getApiKey('anthropic')
+    if (!key) throw new Error('No Anthropic key configured')
 
-    // Detect if this is an API Key or a captured Session Token
-    const isApiKey = keyOrSession.startsWith('sk-ant-')
+    const client = new Anthropic({ apiKey: key })
+    const anthropicMessages: Anthropic.MessageParam[] = messages.map(m => ({ role: m.role, content: m.content }))
 
-    if (isApiKey) {
-      const client = new Anthropic({ apiKey: keyOrSession })
+    const anthropicTools: Anthropic.Tool[] = TOOLS.map(t => ({
+      name: t.name,
+      description: t.description,
+      input_schema: {
+        type: 'object',
+        properties: t.parameters.properties,
+        required: t.parameters.required
+      }
+    }))
+
+    let currentMessages = [...anthropicMessages]
+    let toolCallsMade = 0
+    const maxToolCalls = 5
+
+    while (toolCallsMade < maxToolCalls) {
       const stream = client.messages.stream({
         model,
         max_tokens: 4096,
         system,
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
+        messages: currentMessages,
+        tools: anthropicTools,
       })
 
       for await (const chunk of stream) {
-        if (
-          chunk.type === 'content_block_delta' &&
-          chunk.delta.type === 'text_delta'
-        ) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
           this.broadcast('chat:token', { sessionId, token: chunk.delta.text })
         }
       }
 
-      const final = await stream.finalMessage()
-      this.broadcast('chat:done', {
-        sessionId,
-        inputTokens: final.usage.input_tokens,
-        outputTokens: final.usage.output_tokens,
-      })
-      this.recordCall(sessionId, model, final.usage.input_tokens, final.usage.output_tokens, callStart)
-    } else {
-      // HANDLE WEB SESSION TOKEN (Claude.ai)
-      // Custom implementation for session-based streaming as SDK doesn't support cookies
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'cookie': `sessionKey=${keyOrSession}`,
-          'accept': 'text/event-stream'
-        },
-        body: JSON.stringify({
-          model,
-          max_tokens: 4096,
-          system,
-          messages: messages.map(m => ({ role: m.role, content: m.content })),
-          stream: true
-        })
-      })
+      const finalMessage = await stream.finalMessage()
+      this.recordCall(sessionId, model, finalMessage.usage.input_tokens, finalMessage.usage.output_tokens, callStart)
 
-      if (!response.ok) {
-        const errBody = await response.text()
-        throw new Error(`Anthropic Session Error: ${response.status} ${errBody}`)
+      const toolUses = finalMessage.content.filter(c => c.type === 'tool_use') as Anthropic.ToolUseBlock[]
+      
+      if (toolUses.length === 0) {
+        this.broadcast('chat:done', {
+          sessionId,
+          inputTokens: finalMessage.usage.input_tokens,
+          outputTokens: finalMessage.usage.output_tokens,
+        })
+        return
       }
 
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error('Failed to open Anthropic stream')
+      // Handle tool uses
+      toolCallsMade++
+      currentMessages.push({ role: 'assistant', content: finalMessage.content })
 
-      const decoder = new TextDecoder()
-      let inputTokens = 0
-      let outputTokens = 0
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6))
-              if (data.type === 'content_block_delta' && data.delta?.text) {
-                this.broadcast('chat:token', { sessionId, token: data.delta.text })
-              }
-              if (data.type === 'message_start') {
-                inputTokens = data.message?.usage?.input_tokens ?? 0
-              }
-              if (data.type === 'message_delta') {
-                outputTokens = data.usage?.output_tokens ?? 0
-              }
-            } catch { /* parse error on partial chunk */ }
-          }
+      for (const toolUse of toolUses) {
+        this.broadcast('chat:status', { sessionId, status: `🔧 Executing ${toolUse.name}...` })
+        try {
+          const result = await toolExecutor.execute(toolUse.name, toolUse.input)
+          currentMessages.push({
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: toolUse.id,
+                content: result,
+              },
+            ],
+          })
+        } catch (err: any) {
+          currentMessages.push({
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: toolUse.id,
+                content: `Error: ${err.message}`,
+                is_error: true,
+              },
+            ],
+          })
         }
       }
-
-      this.broadcast('chat:done', { sessionId, inputTokens, outputTokens })
-      this.recordCall(sessionId, model, inputTokens, outputTokens, callStart)
     }
+
+    this.broadcast('chat:error', { sessionId, error: 'Maximum tool call depth reached' })
   }
 
   private async streamGoogle(
@@ -221,35 +224,91 @@ export class LLMService {
     callStart: number
   ): Promise<void> {
     const apiKey = authManager.getApiKey('google')
-    if (!apiKey) throw new Error('No Google API key or credentials configured')
+    if (!apiKey) throw new Error('No Google API key configured')
 
     const modelId = model.replace(/^[^/]+\//, '')
-
     const genAI = new GoogleGenerativeAI(apiKey)
+    
+    const googleTools = [{
+      functionDeclarations: TOOLS.map(t => ({
+        name: t.name,
+        description: t.description,
+        parameters: t.parameters as any
+      }))
+    }]
+
     const geminiModel = genAI.getGenerativeModel({
       model: modelId,
       systemInstruction: system,
+      tools: googleTools
     })
 
-    const history = messages.slice(0, -1).map(m => ({
+    const history: Content[] = messages.slice(0, -1).map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     }))
-    const lastMessage = messages[messages.length - 1]
-
+    
     const chat = geminiModel.startChat({ history })
-    const result = await chat.sendMessageStream(lastMessage.content)
+    let lastMessageContent = messages[messages.length - 1].content
+    let toolCallsMade = 0
+    const maxToolCalls = 5
 
-    for await (const chunk of result.stream) {
-      const text = chunk.text()
-      if (text) this.broadcast('chat:token', { sessionId, token: text })
+    while (toolCallsMade < maxToolCalls) {
+      const result = await chat.sendMessageStream(lastMessageContent)
+
+      for await (const chunk of result.stream) {
+        const text = chunk.text()
+        if (text) this.broadcast('chat:token', { sessionId, token: text })
+      }
+
+      const finalResponse = await result.response
+      const calls = finalResponse.functionCalls()
+
+      if (!calls || calls.length === 0) {
+        const outputTokens = finalResponse.usageMetadata?.candidatesTokenCount ?? 0
+        const inputTokens = finalResponse.usageMetadata?.promptTokenCount ?? 0
+        this.broadcast('chat:done', { sessionId, inputTokens, outputTokens })
+        this.recordCall(sessionId, model, inputTokens, outputTokens, callStart)
+        return
+      }
+
+      // Handle function calls
+      toolCallsMade++
+      const toolParts: Part[] = []
+
+      for (const call of calls) {
+        this.broadcast('chat:status', { sessionId, status: `⌖ Executing ${call.name}...` })
+        try {
+          const result = await toolExecutor.execute(call.name, call.args)
+          toolParts.push({
+            functionResponse: {
+              name: call.name,
+              response: { content: result }
+            }
+          })
+        } catch (err: any) {
+          toolParts.push({
+            functionResponse: {
+              name: call.name,
+              response: { error: err.message }
+            }
+          })
+        }
+      }
+
+      // In Gemini, we send the function responses back
+      // and continue the chat.
+      const followUp = await chat.sendMessageStream(toolParts)
+      // The while loop will handle the next response
+      // But we need to update the usage for the intermediate step
+      const interimResponse = await followUp.response
+      this.recordCall(sessionId, model, interimResponse.usageMetadata?.promptTokenCount ?? 0, interimResponse.usageMetadata?.candidatesTokenCount ?? 0, callStart)
+      
+      // We don't want to re-send the initial message next time
+      lastMessageContent = toolParts as any 
     }
 
-    const finalResponse = await result.response
-    const outputTokens = finalResponse.usageMetadata?.candidatesTokenCount ?? 0
-    const inputTokens = finalResponse.usageMetadata?.promptTokenCount ?? 0
-    this.broadcast('chat:done', { sessionId, inputTokens, outputTokens })
-    this.recordCall(sessionId, model, inputTokens, outputTokens, callStart)
+    this.broadcast('chat:error', { sessionId, error: 'Maximum tool call depth reached' })
   }
 
   private async streamOpenAICompat(
@@ -260,7 +319,7 @@ export class LLMService {
     callStart: number
   ): Promise<void> {
     const resolved = authManager.resolveOpenAICompatibleKey()
-    if (!resolved) throw new Error('No OpenAI-compatible API key configured (OpenRouter / OpenAI / DeepInfra)')
+    if (!resolved) throw new Error('No OpenAI-compatible API key configured')
 
     const client = new OpenAI({
       apiKey: resolved.key,

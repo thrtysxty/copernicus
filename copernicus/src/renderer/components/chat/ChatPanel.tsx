@@ -680,10 +680,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       }
     )
 
+    const removeStatus = ipcRenderer.on(
+      'chat:status',
+      (_event: any, { sessionId, status }: { sessionId: string; status: string }) => {
+        if (sessionId !== streamingIdRef.current) return
+        setMessages(prev => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          if (last?.role === 'assistant') {
+            // Prepend status to the content as a temporary placeholder or small bubble
+            updated[updated.length - 1] = { 
+              ...last, 
+              content: last.content ? last.content : `[${status}] ` 
+            }
+          }
+          return updated
+        })
+      }
+    )
+
     return () => {
       removeToken()
       removeDone()
       removeError()
+      removeStatus()
     }
   }, [])
 
