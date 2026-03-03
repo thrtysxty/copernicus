@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
-  Github, Settings, BarChart2, GitBranch, FolderOpen,
-  Loader2, Monitor, Cpu, Maximize2, Minimize2, RotateCcw, Layout, Activity, Brain,
-  ChevronLeft, ChevronRight, Beaker
+  Github, Settings, BarChart2,
+  Loader2, Maximize2, Minimize2, RotateCcw, Layout, Activity, Brain,
+  ChevronLeft, ChevronRight, Beaker, Menu, MessageSquare
 } from 'lucide-react'
 import { useLayoutStore } from './store/layout'
 import { CommandCenter } from './components/command/CommandCenter'
@@ -26,64 +26,13 @@ import { unwrapIpc } from './types/ipc'
 
 const TERMINAL_HEIGHT = 200
 
-// Inline PanelHeader to replace missing file
-const PanelHeader: React.FC<{
-  title: string;
-  onSpotlight: () => void;
-  onFlip: () => void;
-  isSpotlightActive: boolean;
-  onBuilder: () => void;
-  isBuilderActive: boolean;
-  onTesting?: () => void;
-  isTestingActive?: boolean;
-}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onBuilder, isBuilderActive, onTesting, isTestingActive }) => {
-  return (
-    <div className="h-10 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
-      <div className="flex items-center gap-3">
-        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        {onTesting && (
-          <button
-            onClick={onTesting}
-            className={`p-1.5 rounded transition-colors ${isTestingActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="UI Testing"
-          >
-            <Beaker size={14} />
-          </button>
-        )}
-        <button
-          onClick={onBuilder}
-          className={`p-1.5 rounded transition-colors ${isBuilderActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-          title="UI Builder"
-        >
-          <Layout size={14} />
-        </button>
-        <button
-          onClick={onFlip}
-          className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
-          title="Flip Panel"
-        >
-          <RotateCcw size={14} />
-        </button>
-        <button
-          onClick={onSpotlight}
-          className={`p-1.5 rounded transition-colors ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-          title="Spotlight"
-        >
-          {isSpotlightActive ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-        </button>
-      </div>
-    </div>
-  )
-}
-
 export default function App() {
   const invoke = useIpcError()
   const {
     activeView,
     setView,
     sidebarOpen,
+    setSidebarOpen,
     terminalOpen,
     setTerminalOpen,
     spotlightPane,
@@ -105,11 +54,7 @@ export default function App() {
     toggleUIBuilder,
     toggleUITestingDrawer,
     activeFilePath,
-    activeFileContent,
-    activeFileLanguage,
     setActiveFilePath,
-    setActiveFileContent,
-    setActiveFileLanguage,
     setCenterMode,
     hasCompletedTour,
     tourHighlight,
@@ -117,7 +62,6 @@ export default function App() {
     setChatPanelTab,
     activityBarCollapsed,
     setActivityBarCollapsed,
-    inProgressCount,
     setInProgressCount,
   } = useLayoutStore()
 
@@ -161,13 +105,11 @@ export default function App() {
     })
 
     const removeFlipListener = (window as any).ipcRenderer.on('layout:toggle-flip', () => {
-      const target = useLayoutStore.getState().spotlightPane ?? 'chat'
-      toggleFlip(target as any)
+      toggleFlip('center-panel')
     })
 
     const removeSpotListener = (window as any).ipcRenderer.on('layout:toggle-spotlight', () => {
-      const current = useLayoutStore.getState().spotlightPane
-      setSpotlight(current ? null : 'editor')
+      setSpotlight(spotlightPane ? null : 'editor')
     })
 
     const removeUiBuilderListener = (window as any).ipcRenderer.on('layout:toggle-ui-builder', () => {
@@ -193,7 +135,7 @@ export default function App() {
     }
     window.addEventListener('keydown', handleKeyDown)
 
-    // Fetch initial state — unwrap {ok, data} envelope from handleIpc()
+    // Fetch initial state
     invoke<any>('app:get-root-path').then((r: any) => {
       const root = unwrapIpc<any>(r)
       if (root) {
@@ -282,7 +224,6 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
-      {/* AC-6: Skip to main content link */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-copernicus-phosphor focus:text-[#050505] focus:px-4 focus:py-2 focus:rounded"
@@ -290,138 +231,136 @@ export default function App() {
         Skip to main content
       </a>
 
-      {/* Activity Bar (Side) */}
+      {/* Global Application Header Row */}
+      <header className="h-10 flex items-center justify-between px-2 border-b border-copernicus-steel bg-[#050505] shrink-0 draggable z-[100]">
+        {/* Left: View Selection & Sidebar Toggle */}
+        <div className="flex items-center gap-1 no-drag">
+          <button 
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`p-1.5 rounded hover:bg-zinc-900 transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}
+            title="Toggle Sidebar"
+          >
+            <Menu size={16} />
+          </button>
+          <nav className="flex items-center h-full ml-2">
+            {(['planner', 'designer', 'editor', 'orchestrator', 'reporter', 'command-center'] as const).map(view => (
+              <button
+                key={view}
+                onClick={() => { setView(view); if (view === 'editor') setCenterMode('code') }}
+                className={`text-[9px] font-mono uppercase tracking-[0.15em] h-8 px-3 transition-all flex items-center ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                {view.replace('-', '_')}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Center: Active Metadata (Story & File) */}
+        <div className="flex-1 flex justify-center min-w-0 px-4 pointer-events-none">
+          <div className="flex items-center gap-3 bg-zinc-900/50 border border-copernicus-steel/30 px-4 py-1 rounded-full overflow-hidden max-w-md">
+            <span className="text-[10px] font-mono text-zinc-500 shrink-0">STORY //</span>
+            <span className="text-[10px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
+              {activeStoryId || 'UNASSIGNED_CORE'}
+            </span>
+            {activeFilePath && (
+              <>
+                <span className="text-zinc-700">|</span>
+                <span className="text-[10px] font-mono text-zinc-400 truncate tracking-tight">
+                  {activeFilePath.split('/').pop()}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Global Panel Controls */}
+        <div className="flex items-center gap-1 no-drag">
+          {activeView === 'designer' && (
+            <button
+              onClick={toggleUITestingDrawer}
+              className={`p-1.5 rounded transition-colors ${uiTestingDrawerOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+              title="UI Testing"
+            >
+              <Beaker size={16} />
+            </button>
+          )}
+          <button
+            onClick={toggleUIBuilder}
+            className={`p-1.5 rounded transition-colors ${uiBuilderOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="UI Builder"
+          >
+            <Layout size={16} />
+          </button>
+          <button
+            onClick={() => toggleFlip('center-panel')}
+            className="p-1.5 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+            title="Flip Center Panel"
+          >
+            <RotateCcw size={16} />
+          </button>
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+            className={`p-1.5 rounded transition-colors ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="Spotlight Center"
+          >
+            {spotlightPane === 'editor' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+          <div className="w-[1px] h-4 bg-copernicus-steel/30 mx-1" />
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
+            className={`p-1.5 rounded transition-colors ${spotlightPane === 'chat' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+            title="Spotlight Chat"
+          >
+            <MessageSquare size={16} />
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors ml-1"
+            title="Global Settings"
+          >
+            <Settings size={16} />
+          </button>
+        </div>
+      </header>
+
       <div className="flex h-full w-full overflow-hidden">
-        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-4 z-50 transition-all duration-200 ease-in-out overflow-hidden ${activityBarCollapsed ? 'w-4 px-0' : 'w-10'}`}>
+        {/* Activity Bar (Slimmed down) */}
+        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-4 z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed ? 'w-4 px-0' : 'w-10'}`}>
           {!activityBarCollapsed && (
             <div className="w-6 h-6 bg-copernicus-phosphor/20 rounded flex items-center justify-center mb-2 phosphor-glow-border">
               <span className="text-copernicus-phosphor font-bold text-xs">C</span>
             </div>
           )}
 
-          {!activityBarCollapsed && (<>
-          <div className="group relative">
-            <button onClick={() => setView('planner')} aria-label="Planner" aria-current={activeView === 'planner' ? 'page' : undefined}
-              className={`p-2 relative transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'planner' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'planner' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}>
-              <FolderOpen size={18} />
-              {inProgressCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-copernicus-phosphor text-[#050505] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                  {inProgressCount > 9 ? '9+' : inProgressCount}
-                </span>
-              )}
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Planner <span className="text-zinc-500 ml-1">⌘1</span></div>
-          </div>
-
-          <div className="group relative">
-            <button onClick={() => { setView('editor'); setCenterMode('code') }} aria-label="Editor" aria-current={activeView === 'editor' ? 'page' : undefined}
-              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'editor' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'editor' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}>
-              <Monitor size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Editor <span className="text-zinc-500 ml-1">⌘2</span></div>
-          </div>
-
-          <div className="group relative">
-            <button onClick={() => { setView('designer'); setCenterMode('canvas') }} aria-label="Designer" aria-current={activeView === 'designer' ? 'page' : undefined}
-              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'designer' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'designer' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}>
-              <Cpu size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Designer <span className="text-zinc-500 ml-1">⌘3</span></div>
-          </div>
-
-          <div className="group relative">
-            <button onClick={() => setView('orchestrator')} aria-label="Orchestrator" aria-current={activeView === 'orchestrator' ? 'page' : undefined}
-              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'orchestrator' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}>
-              <GitBranch size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Orchestrator <span className="text-zinc-500 ml-1">⌘4</span></div>
-          </div>
-
-          <div className="group relative">
-            <button onClick={() => setView('reporter')} aria-label="Reporter" aria-current={activeView === 'reporter' ? 'page' : undefined}
-              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'reporter' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'} ${tourHighlight === 'reporter' ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : ''}`}>
-              <BarChart2 size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Reporter <span className="text-zinc-500 ml-1">⌘5</span></div>
-          </div>
-
-          <div className="group relative">
-            <button onClick={() => setView('command-center')} aria-label="Command Center" aria-current={activeView === 'command-center' ? 'page' : undefined}
-              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'command-center' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}>
-              <Activity size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Command Center <span className="text-zinc-500 ml-1">⌘6</span></div>
-          </div>
-
-          <div className="group relative">
-            <button onClick={() => setView('memory')} aria-label="Memory" aria-current={activeView === 'memory' ? 'page' : undefined}
-              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'memory' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}>
-              <Brain size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Memory <span className="text-zinc-500 ml-1">⌘7</span></div>
-          </div>
+          {!activityBarCollapsed && (
+            <nav className="flex flex-col items-center gap-4">
+              <button onClick={() => setView('reporter')} title="Reporter" className={`p-2 rounded ${activeView === 'reporter' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><BarChart2 size={18} /></button>
+              <button onClick={() => setView('command-center')} title="Command Center" className={`p-2 rounded ${activeView === 'command-center' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><Activity size={18} /></button>
+              <button onClick={() => setView('memory')} title="Memory" className={`p-2 rounded ${activeView === 'memory' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><Brain size={18} /></button>
+              <div className="w-full border-t border-zinc-800" />
+              <button onClick={() => setView('github')} title="GitHub" className={`p-2 rounded ${activeView === 'github' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><Github size={18} /></button>
+            </nav>
+          )}
 
           <div className="flex-1" />
-
-          <div className="group relative">
-            <button onClick={() => setView('github')} aria-label="GitHub Manager" aria-current={activeView === 'github' ? 'page' : undefined}
-              className={`p-2 transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${activeView === 'github' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}>
-              <Github size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">GitHub Manager <span className="text-zinc-500 ml-1">⌘G</span></div>
-          </div>
-
-          <div className="group relative">
-            <button onClick={() => setSettingsOpen(true)} aria-label="Settings"
-              className={`p-2 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${settingsOpen ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}>
-              <Settings size={18} />
-            </button>
-            <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">Settings</div>
-          </div>
-          </>)}
-
-          <button onClick={() => setActivityBarCollapsed(!activityBarCollapsed)}
-            aria-label={activityBarCollapsed ? 'Expand activity bar' : 'Collapse activity bar'}
-            className="p-1 text-zinc-600 hover:text-zinc-400 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none">
+          <button onClick={() => setActivityBarCollapsed(!activityBarCollapsed)} className="p-1 text-zinc-600 hover:text-zinc-400">
             {activityBarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={16} />}
           </button>
         </aside>
 
         {/* Main Content Area */}
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
-          <header className="h-8 flex items-center justify-between px-4 pl-20 border-b border-copernicus-steel bg-[#050505] flex-shrink-0 draggable">
-            {/* §1.4 VT selection block */}
-            <nav className="flex h-full items-center no-drag">
-              {(['planner', 'designer', 'editor'] as const).map(view => (
-                <button
-                  key={view}
-                  onClick={() => { setView(view); if (view === 'editor') setCenterMode('code') }}
-                  className={`text-[10px] font-mono uppercase tracking-[0.2em] h-full px-2 transition-all ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
-                >
-                  {view.replace('-', '_')}
-                </button>
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-4 no-drag">
-            </div>
-          </header>
-
           <div className="flex-1 flex overflow-hidden">
             {activeView === 'command-center' && <CommandCenter />}
             {activeView === 'planner' && <KanbanBoard />}
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && <WorkflowCanvas />}
             {activeView === 'github' && <GithubDashboard />}
-            {activeView === 'memory' && (
-              <div className="h-full w-full flex items-center justify-center bg-[#050505] text-copernicus-phosphor/50 font-mono text-sm uppercase tracking-widest">
-                Memory Browser — coming in a future release.
-              </div>
-            )}
+            {activeView === 'memory' && <div className="h-full w-full flex items-center justify-center font-mono text-zinc-600">MEMORY_BROWSER_COMING_SOON</div>}
 
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
-                {/* Sidebar */}
+                {/* Sidebar (File Tree) - Controlled by global sidebarOpen state */}
                 <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
                   <FileTree rootPath={workingDir} />
                 </div>
@@ -434,29 +373,18 @@ export default function App() {
                       className="flex-1"
                       front={
                         <div className="flex flex-col h-full relative">
-                          <PanelHeader
-                            title={activeStoryId ? `STORY // ${activeStoryId}` : 'DEVELOPMENT_CORE'}
-                            onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-                            onFlip={() => toggleFlip('center-panel')}
-                            isSpotlightActive={spotlightPane === 'editor'}
-                            onBuilder={toggleUIBuilder}
-                            isBuilderActive={uiBuilderOpen}
-                            onTesting={activeView === 'designer' ? toggleUITestingDrawer : undefined}
-                            isTestingActive={uiTestingDrawerOpen}
-                          />
                           <CenterPanelRouter
                             filePath={activeFilePath}
-                            content={activeFileContent}
-                            language={activeFileLanguage}
-                            onChange={(v) => setActiveFileContent(v ?? '')}
+                            onChange={(v) => setActiveFilePath(v ?? null)}
                           />
                           {uiTestingDrawerOpen && <UITestDrawer />}
                         </div>
                       }
-                      back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
+                      back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500 tracking-tighter uppercase">Canvas_Preview_Active</div>}
                     />
                   </div>
 
+                  {/* Chat Panel - Now Global Sidebar in Editor/Designer */}
                   <div className={`w-80 flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : spotlightPane === 'editor' ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
                     <ChatPanel />
                   </div>
@@ -466,17 +394,11 @@ export default function App() {
           </div>
 
           {/* Terminal Drawer */}
-          <div
-            className="bg-[#050505] transition-all duration-300 ease-in-out"
-            style={{ height: terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px' }}
-          >
+          <div className="bg-[#050505] transition-all duration-300 ease-in-out" style={{ height: terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px' }}>
             <TerminalTabs />
           </div>
 
-          <div
-            className="h-6 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer hover:bg-zinc-900 transition-colors"
-            onClick={() => setTerminalOpen(!terminalOpen)}
-          >
+          <div className="h-6 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => setTerminalOpen(!terminalOpen)}>
             <div className="flex items-center gap-2 flex-1">
               <span className={`text-[10px] font-mono uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor phosphor-glow animate-pulse' : 'text-zinc-500'}`}>
                 {terminalOpen ? '▼' : '▲'} TERMINAL_PULSE
@@ -486,7 +408,6 @@ export default function App() {
           </div>
 
           <StatusBar onCommandPalette={() => setCommandPaletteOpen(true)} />
-
         </main>
       </div>
 
@@ -496,10 +417,8 @@ export default function App() {
         <CommandPalette
           mode="all"
           onClose={() => setCommandPaletteOpen(false)}
-          onFileOpen={(path, content, language) => {
+          onFileOpen={(path) => {
             setActiveFilePath(path)
-            setActiveFileContent(content)
-            setActiveFileLanguage(language)
             setCenterMode('code')
             setCommandPaletteOpen(false)
           }}

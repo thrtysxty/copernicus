@@ -74,6 +74,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #204 | Add Spotlight To Command Center Panes | DRAFT | Medium |
 | #206 | Remove Redundant Cmd+P Button | DRAFT | Medium |
 | #207 | Fix Editor Canvas Logic Regression | DRAFT | Medium |
+| #208 | Implement Single Header Row Initiative | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |

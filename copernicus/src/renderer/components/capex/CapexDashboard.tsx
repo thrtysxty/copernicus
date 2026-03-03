@@ -4,7 +4,7 @@ import {
   RadialBarChart, RadialBar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
-import { BarChart2, Download, Play, RefreshCw } from 'lucide-react'
+import { Download, Play, RefreshCw } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useToastStore } from '../../store/toastStore'
 import { CHART_THEME } from './chart-theme'
@@ -210,25 +210,8 @@ export const CapexDashboard: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-copernicus-bg font-mono text-zinc-300 overflow-hidden">
 
-      {/* Header + tab bar */}
-      <div className="px-6 pt-5 pb-0 border-b border-zinc-800 shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <BarChart2 className="text-copernicus-phosphor" size={18} />
-            <h2 className="text-sm font-bold tracking-tighter uppercase">Capex_Intelligence</h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-[10px] uppercase text-zinc-500">Rate ($/hr)</label>
-              <input
-                type="number" value={rate}
-                onChange={e => saveRate(Number(e.target.value))}
-                className="bg-[#0A0A0A] border border-zinc-800 text-right w-16 px-2 py-1 text-xs focus:border-copernicus-phosphor focus:outline-none text-zinc-300"
-              />
-            </div>
-          </div>
-        </div>
-
+      {/* Tab bar (Unified with global header initiative) */}
+      <div className="px-6 pt-2 pb-0 border-b border-zinc-800 shrink-0 flex items-center justify-between">
         <div className="flex">
           {TABS.map(t => (
             <button key={t.id} onClick={() => activateTab(t.id)}
@@ -239,6 +222,17 @@ export const CapexDashboard: React.FC = () => {
               }`}
             >{t.label}</button>
           ))}
+        </div>
+
+        <div className="flex items-center gap-4 pr-2">
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] uppercase text-zinc-500">Rate ($/hr)</label>
+            <input
+              type="number" value={rate}
+              onChange={e => saveRate(Number(e.target.value))}
+              className="bg-[#0A0A0A] border border-zinc-800 text-right w-16 px-2 py-1 text-xs focus:border-copernicus-phosphor focus:outline-none text-zinc-300"
+            />
+          </div>
         </div>
       </div>
 
