@@ -42,6 +42,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #152 | Visual Ui Builder Canvas | COMPLETE | HIGH |
 | #156 | Model Call Ledger | COMPLETE | HIGH |
 | #205 | Auto-Trigger Onboarding Wizard | COMPLETE | High |
+| #207 | Fix Editor Canvas Logic Regression | COMPLETE | High |
 | #121 | Parallel Agent Review Gate | COMPLETED | HIGH |
 | #122 | Local Codebase Semantic Index | COMPLETED | HIGH |
 | #125 | R210Ii Ollama Inference Service | COMPLETED | HIGH |
@@ -67,14 +68,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #116 | Phosphor System Toast Settings | COMPLETE | MEDIUM |
 | #123 | Capex Intelligence Dashboard | COMPLETE | MEDIUM |
 | #202 | Fix Github Action Bar Link | COMPLETE | Medium |
+| #204 | Add Spotlight To Command Center Panes | COMPLETE | Medium |
+| #206 | Remove Redundant Cmd+P Button | COMPLETE | Medium |
+| #208 | Implement Single Header Row Initiative | COMPLETE | Medium |
 | #148 | Ollama Dynamic Model Discovery | COMPLETED | MEDIUM |
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #204 | Add Spotlight To Command Center Panes | DRAFT | Medium |
-| #206 | Remove Redundant Cmd+P Button | DRAFT | Medium |
-| #207 | Fix Editor Canvas Logic Regression | DRAFT | Medium |
-| #208 | Implement Single Header Row Initiative | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
