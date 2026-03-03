@@ -16,7 +16,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 16G                 # headroom for 7B model + OS + other containers
+          memory: 4G                 # Optimized for 1.5B-3B models on 8GB host
 
 volumes:
   ollama_models:

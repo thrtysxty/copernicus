@@ -101,13 +101,13 @@ def execute_tool(tool_name, arguments):
         
     return f"Unknown tool: {tool_name}"
 
-# Model Mapping for Hybrid Cloud/Local Orchestration (Optimized for Dell R210ii)
+# Model Mapping for Dell R210ii (Optimized for 1.5B - 3B local models)
+# Heavy lifting (Architecture, Security, Research) should be routed to Claude/Gemini directly.
 PERSONA_MODELS = {
-    "architect": "architect:latest",   
-    "senior-dev": "senior-dev:latest", 
-    "scribe": "scribe:latest",         
-    "researcher": "deepseek-v3.1:671b-cloud",    
-    "sentinel": "mistral:latest"       
+    "scribe": "qwen2.5-coder:1.5b",       # Documentation & comments
+    "junior-dev": "qwen2.5-coder:1.5b",   # Quick bug fixes & isolated functions
+    "ui-dev": "qwen2.5:3b",               # UI component adjustments
+    "code-reviewer": "phi3:mini"          # Fast, lightweight syntax checking
 }
 
 def main():
