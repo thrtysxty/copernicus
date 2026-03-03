@@ -76,9 +76,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | APPROVED FOR IMPLEMENTATION | P1 — High |
-| #177 | Renderer Bug Sweep | APPROVED FOR IMPLEMENTATION | P0 |
 | #178 | Ipc Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P0 |
+| #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | APPROVED FOR IMPLEMENTATION | P1 — High |
 | #179 | Vt Selection Highlight | APPROVED FOR IMPLEMENTATION | P1 |
 | #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
 | #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
@@ -104,6 +103,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #172 | Ui Canvas File System | COMPLETE | P1 |
 | #173 | Model Dynamic Env | COMPLETE | P1 |
 | #174 | Hardware Touchbar | COMPLETE | P1 |
+| #177 | Renderer Bug Sweep | COMPLETE | P0 |
 | #201 | Agent Terminal Rework | COMPLETE | P2 |
 | #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | COMPLETE | P0 — Critical |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, FolderOpen, DollarSign, Check, X, ArrowRight, ArrowLeft,
          Loader2, ExternalLink, ShieldCheck, Cpu, Key, Zap } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
+import { unwrapIpc } from '../../types/ipc'
 
 type OAuthState = 'idle' | 'waiting' | 'success' | 'error'
 
@@ -33,7 +34,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   useEffect(() => {
     if (step === 0) {
       invoke<any>('check-cli-tools').then((result) => {
-        setCliStatus((result as any)?.data ?? result);
+        setCliStatus(unwrapIpc<any>(result));
       });
     }
   }, [step, invoke]);
@@ -42,7 +43,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   useEffect(() => {
     if (step === 1) {
       invoke<any>('auth:status').then((raw) => {
-        const status: any[] = (raw as any)?.data ?? raw ?? []
+        const status: any[] = unwrapIpc<any>(raw) ?? []
         status.forEach(p => {
           if (p.hasKey) {
             if (p.provider === 'anthropic') {
@@ -69,7 +70,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   const handleSelectFolder = async () => {
     const _rawPath = await invoke<any>('select-folder');
-    const path: string | null = (_rawPath as any)?.data ?? _rawPath;
+    const path: string | null = unwrapIpc<any>(_rawPath);
     if (path) setWorkspacePath(path);
   };
 

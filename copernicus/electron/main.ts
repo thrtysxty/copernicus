@@ -8,6 +8,7 @@ import { randomBytes, createHash } from 'node:crypto'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
 import { AuthManager } from './auth-manager'
+import { handleIpc } from './utils/handle-ipc'
 import { ModelRegistry } from './models/model-registry'
 import { registerSecurityHandlers, initializeSecurityManager, GitGuardDecision, GitPushRequest } from './security'
 import { SettingsStore } from './settings-store'
@@ -49,20 +50,6 @@ const COPERNICUS_HOME = process.env.COPERNICUS_E2E_HOME ?? path.join(os.homedir(
 const LOG_DIR = path.join(COPERNICUS_HOME, 'logs')
 log.transports.file.resolvePathFn = () => path.join(LOG_DIR, 'copernicus.log')
 Object.assign(console, log.functions)
-
-// ── IPC Error Handling Helper (Story 163) ──────────────────────────────────
-async function handleIpc<T>(
-  fn: () => T | Promise<T>
-): Promise<{ ok: true; data: T } | { ok: false; error: string }> {
-  try {
-    const data = await fn()
-    return { ok: true, data }
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err)
-    log.error('[ipc]', message)
-    return { ok: false, error: message }
-  }
-}
 
 function computeCoveragePct(coverageMap: Record<string, any>): number {
   const files = Object.values(coverageMap)
@@ -180,7 +167,7 @@ export function notifyWorkspaceChanged(window: BrowserWindow | null, newPath: st
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 const authManager = new AuthManager()
-new GithubManager(authManager, handleIpc)
+new GithubManager(authManager)
 const modelRegistry = new ModelRegistry()
 const settingsStore = new SettingsStore()
 export const storiesManager = new StoriesManager(os.homedir(), stateLedger)
@@ -570,7 +557,7 @@ function registerIpcHandlers() {
   }));
 
   // Security Handlers
-  registerSecurityHandlers(ipcMain, settingsStore, handleIpc);
+  registerSecurityHandlers(ipcMain, settingsStore);
 
   // Git Handlers
   ipcMain.handle('git:branch', () => handleIpc(async () => {

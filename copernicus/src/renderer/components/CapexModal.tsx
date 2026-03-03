@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIpcError } from '../hooks/useIpcError';
 import { Search, Plus, ChevronDown, X } from 'lucide-react';
+import { unwrapIpc } from '../types/ipc'
 
 interface CapexModalProps {
   type: 'start' | 'close';
@@ -36,7 +37,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
     if (isOpen) {
       if (type === 'start') {
         invoke<any>('app:get-root-path').then((r: any) => {
-          const rootPath: string = r?.data ?? r;
+          const rootPath: string = unwrapIpc<any>(r);
           invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath).then(res => {
             if (res.ok) {
               setRepos(res.data.filter((item: any) => item.isDir));
@@ -45,7 +46,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
         });
 
         invoke<any>('devtime:defaults').then((raw: any) => {
-          const defaults = raw?.data ?? raw ?? {};
+          const defaults = unwrapIpc<any>(raw) ?? {};
           setFormData(prev => ({
             ...prev,
             financial_category: defaults.financial_category || 'CAPEX',
@@ -69,7 +70,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
   useEffect(() => {
     if (formData.repo_path) {
       invoke<any>('devtime:list-stories', formData.repo_path).then((raw: any) => {
-        const res: string[] = raw?.data ?? raw ?? [];
+        const res: string[] = unwrapIpc<any>(raw) ?? [];
         setStories(res);
         if (res.length > 0) {
             setFormData(prev => ({ ...prev, story: res[0] }));
@@ -106,7 +107,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
   const handleCreateRepo = async () => {
     if (!newRepoName.trim()) return;
     const _rawRoot = await invoke<any>('app:get-root-path');
-    const rootPath: string = (_rawRoot as any)?.data ?? _rawRoot;
+    const rootPath: string = unwrapIpc<any>(_rawRoot);
     const fullPath = `${rootPath}/${newRepoName.trim()}`;
     setFormData({
         ...formData,

@@ -1,15 +1,12 @@
 import { ipcMain } from 'electron';
 import { AuthManager } from './auth-manager';
-
-type HandleIpc = <T>(fn: () => T | Promise<T>) => Promise<{ ok: true; data: T } | { ok: false; error: string }>
+import { handleIpc } from './utils/handle-ipc';
 
 export class GithubManager {
   private authManager: AuthManager;
-  private handleIpc: HandleIpc;
 
-  constructor(authManager: AuthManager, handleIpc: HandleIpc) {
+  constructor(authManager: AuthManager) {
     this.authManager = authManager;
-    this.handleIpc = handleIpc;
     this.registerHandlers();
   }
 
@@ -38,19 +35,19 @@ export class GithubManager {
   }
 
   private registerHandlers() {
-    ipcMain.handle('github:list-repos', () =>
-      this.handleIpc(() => this.fetchGithub('/user/repos?sort=updated&per_page=50'))
+    ipcMain.handle('github:list-repos', (_e) =>
+      handleIpc(() => this.fetchGithub('/user/repos?sort=updated&per_page=50'))
     );
 
-    ipcMain.handle('github:create-repo', (_: any, { name, description, isPrivate }: { name: string, description: string, isPrivate: boolean }) =>
-      this.handleIpc(() => this.fetchGithub('/user/repos', {
+    ipcMain.handle('github:create-repo', (_e, { name, description, isPrivate }: { name: string, description: string, isPrivate: boolean }) =>
+      handleIpc(() => this.fetchGithub('/user/repos', {
         method: 'POST',
         body: JSON.stringify({ name, description, private: isPrivate, auto_init: true }),
       }))
     );
 
-    ipcMain.handle('github:user', () =>
-      this.handleIpc(() => this.fetchGithub('/user'))
+    ipcMain.handle('github:user', (_e) =>
+      handleIpc(() => this.fetchGithub('/user'))
     );
   }
 }

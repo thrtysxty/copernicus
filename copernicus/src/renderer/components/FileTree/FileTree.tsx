@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
-         Image as ImageIcon, Database } from 'lucide-react'
+         Image as ImageIcon, Database, Maximize2, Minimize2 } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
+import { unwrapIpc } from '../../types/ipc'
 
 const LANGUAGE_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'typescript',
@@ -76,7 +77,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
       setCenterMode('code')
       try {
         const raw = await invoke<any>('fs:read-file', node.path)
-        const finalContent: string = typeof raw === 'string' ? raw : (raw?.data ?? '')
+        const finalContent: string = typeof raw === 'string' ? raw : (unwrapIpc<string>(raw) || '')
 
         if (finalContent.length > MAX_EDITOR_BYTES) {
           setActiveFileContent(finalContent.slice(0, MAX_EDITOR_BYTES))
@@ -139,6 +140,7 @@ interface FileTreeProps {
 
 export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   const invoke = useIpcError()
+  const { spotlightPane, setSpotlight } = useLayoutStore()
   const [rootChildren, setRootChildren] = useState<FileNode[]>([])
 
   useEffect(() => {
@@ -156,14 +158,26 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-copernicus-steel">
-      {rootChildren.map(node => (
-        <FileTreeNode
-          key={node.path}
-          node={node}
-          depth={0}
-        />
-      ))}
+    <div className="flex flex-col h-full bg-copernicus-bg">
+      <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/tree">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>
+        <button
+          onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
+          className={`opacity-0 group-hover/tree:opacity-100 transition-all p-1 rounded hover:bg-white/5 ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
+          title={spotlightPane === 'explorer' ? "Shrink Explorer" : "Spotlight Explorer"}
+        >
+          {spotlightPane === 'explorer' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-copernicus-steel">
+        {rootChildren.map(node => (
+          <FileTreeNode
+            key={node.path}
+            node={node}
+            depth={0}
+          />
+        ))}
+      </div>
     </div>
   )
 }

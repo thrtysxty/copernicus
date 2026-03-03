@@ -3,6 +3,7 @@ import { Github, Lock, Globe, Plus, Link, Shield, ShieldOff, Trash2, Copy, Check
 import { useIpcError } from '../../hooks/useIpcError';
 import { useToastStore } from '../../store/toastStore';
 import log from '../../utils/logger'
+import { unwrapIpc } from '../../types/ipc'
 
 type Tab = 'repos' | 'access' | 'invite';
 
@@ -57,13 +58,13 @@ export const GithubDashboard: React.FC = () => {
         invoke<any>('github:get-trust-list'),
         invoke<any>('github:get-target-repo'),
       ]);
-      const userData: User = (_rawUser as any)?.data ?? _rawUser;
-      const reposData: Repo[] = (_rawRepos as any)?.data ?? _rawRepos;
-      const trustData: TrustList = (_rawTrust as any)?.data ?? _rawTrust;
+      const userData: User = unwrapIpc<any>(_rawUser);
+      const reposData: Repo[] = unwrapIpc<any>(_rawRepos);
+      const trustData: TrustList = unwrapIpc<any>(_rawTrust);
       setUser(userData);
       setRepos(Array.isArray(reposData) ? reposData : []);
       setTrustList(trustData ?? { trusted: [], tracked: [] });
-      setTargetRepo((_rawTarget as any)?.data ?? _rawTarget);
+      setTargetRepo(unwrapIpc<any>(_rawTarget));
     } catch (error) {
       log.error('Failed to fetch GitHub data:', error);
     } finally {
@@ -105,7 +106,7 @@ export const GithubDashboard: React.FC = () => {
     if (!addRepoInput.trim()) return;
     try {
       const _rawAdd = await invoke<any>('github:add-repo', addRepoInput.trim());
-      const result: { tracked: string[] } = (_rawAdd as any)?.data ?? _rawAdd;
+      const result: { tracked: string[] } = unwrapIpc<any>(_rawAdd);
       setTrustList(prev => ({ ...prev, tracked: result?.tracked ?? [...prev.tracked, addRepoInput.trim()] }));
       setAddRepoInput('');
       addToast(`${addRepoInput.trim()} added to tracked repos`, 'success');

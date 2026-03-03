@@ -4,6 +4,7 @@ import { useIpcError } from '../../hooks/useIpcError'
 import { commandRegistry, CommandContext } from '../../commands/registry'
 import { useToastStore } from '../../store/toastStore'
 import { File, Hash, Terminal, Command as CmdIcon, ArrowRight } from 'lucide-react'
+import { unwrapIpc } from '../../types/ipc'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -98,7 +99,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
 
       // Load Stories
       invoke<any>('stories:list')
-        .then((res: any) => setRawStories(res?.data ?? res ?? []))
+        .then((res: any) => setRawStories(unwrapIpc<any>(res) ?? []))
         .catch(() => {})
     }
   }, [mode, invoke, rootPath])

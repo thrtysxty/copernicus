@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { useLayoutStore } from '../../store/layout';
 import { Globe, Code, ExternalLink, RefreshCcw } from 'lucide-react';
+import { useIpcError } from '../../hooks/useIpcError';
 
 export const UICanvas: React.FC = () => {
   const { canvasContent, canvasUrl, setCanvasUrl, setCanvasContent } = useLayoutStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const invoke = useIpcError();
 
   useEffect(() => {
     if (canvasContent && iframeRef.current) {
@@ -71,7 +73,7 @@ export const UICanvas: React.FC = () => {
           </button>
           {canvasUrl && (
             <button
-              onClick={() => window.ipcRenderer.invoke('app:open-external', canvasUrl)}
+              onClick={() => invoke('app:open-external', canvasUrl)}
               className="text-zinc-500 hover:text-copernicus-phosphor transition-colors"
               title="Open in Browser"
             >

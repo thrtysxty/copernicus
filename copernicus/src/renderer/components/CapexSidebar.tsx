@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useIpcError } from '../hooks/useIpcError';
 import log from '../utils/logger'
+import { unwrapIpc } from '../types/ipc'
 
 export function CapexSidebar() {
   const invoke = useIpcError();
@@ -12,7 +13,7 @@ export function CapexSidebar() {
       try {
         const _raw = await invoke<any>('devtime:report', month);
         const r: any = _raw;
-        setReport(Array.isArray(r?.data) ? r.data : Array.isArray(r) ? r : []);
+        setReport(Array.isArray(unwrapIpc<any>(r)) ? r.data : Array.isArray(r) ? r : []);
       } catch (e) {
         log.error("Failed to fetch report", e);
       }

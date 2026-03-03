@@ -11,10 +11,8 @@ test.describe('App launch', () => {
     await expect(window.locator('#root')).toBeAttached()
   })
 
-  test('window title contains COPERNICUS', async ({ app }) => {
-    const title = await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows()[0]?.getTitle() ?? ''
-    )
+  test('window title contains COPERNICUS', async ({ window }) => {
+    const title = await window.title()
     expect(title).toContain('COPERNICUS')
   })
 

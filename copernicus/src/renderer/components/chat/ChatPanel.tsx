@@ -10,6 +10,7 @@ import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
 import { FlippablePanel } from '../layout/FlippablePanel'
 import { matchKnowledge } from './CopernicusKnowledgeBase'
+import { unwrapIpc } from '../../types/ipc'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -276,7 +277,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   const [authStatus, setAuthStatus] = useState<any>(null)
   useEffect(() => {
-    invoke<any>('auth:status').then((r: any) => setAuthStatus(r?.data ?? r)).catch(() => {})
+    invoke<any>('auth:status').then((r: any) => setAuthStatus(unwrapIpc<any>(r))).catch(() => {})
   }, [invoke, isFlipped])
 
   const [savedPrompts, setSavedPrompts] = useState<{id: string, name: string, text: string}[]>([])
@@ -604,11 +605,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [messages])
 
   useEffect(() => {
-    invoke<any>('models:list').then((r: any) => setAvailableModels(r?.data ?? r ?? [])).catch(log.error)
+    invoke<any>('models:list').then((r: any) => setAvailableModels(unwrapIpc<any>(r) ?? [])).catch(log.error)
 
     // Check if session is active (implies repo context)
     invoke<any>('devtime:status').then(res => {
-        const d = (res as any)?.data ?? res
+        const d = unwrapIpc<any>(res)
         setIsRepoActive(!!(d && d.session))
     })
   }, [invoke])
@@ -811,7 +812,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     if (openFilePath) {
       try {
         const diagRes = await invoke<any>('lsp:get-diagnostics', openFilePath)
-        const diags: any[] = diagRes?.data ?? diagRes ?? []
+        const diags: any[] = unwrapIpc<any>(diagRes) ?? []
         if (Array.isArray(diags) && diags.length > 0) {
           const filename = openFilePath.split(/[/\\]/).pop() ?? openFilePath
           const summary = diags.slice(0, 10)
@@ -847,7 +848,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     if (!activeStoryId) return;
     try {
       const _rawContent = await invoke<any>('stories:get-content', activeStoryId);
-      const currentContent: string = (_rawContent as any)?.data ?? _rawContent ?? '';
+      const currentContent: string = unwrapIpc<any>(_rawContent) ?? '';
 
       // We want to update the "Implementation" section or append if not found
       let updatedContent = currentContent;

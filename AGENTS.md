@@ -158,12 +158,14 @@ const result = await window.ipcRenderer.invoke('foo:bar', arg)
 
 `handleIpc()` returns `{ ok: boolean, data?: T, error?: string }`.
 The renderer **must** unwrap this — do not treat the envelope as the data.
+Use the `unwrapIpc<T>()` utility from `src/renderer/types/ipc.ts` for standardized unwrapping.
 
 ```typescript
 // ✅ Correct
 const result = await invoke<Story[]>('stories:list')
 if (!result.ok) { toast(result.error); return }
-const stories = result.data  // ← actual data
+const stories = unwrapIpc<Story[]>(result) // ← actual data
+```
 
 // ❌ Wrong — result IS the envelope, not the data
 const stories = await invoke<Story[]>('stories:list')
@@ -391,6 +393,7 @@ These patterns cause immediate PR rejection:
 
 | Pattern | Why Forbidden | Correct Alternative |
 |---------|---------------|---------------------|
+| Multiple `handleIpc` implementations | Only one canonical version is allowed | Import from `main.ts` or shared util |
 | `ipcMain.handle('x', () => manager.doThing())` | No handleIpc wrapper | `handleIpc(() => manager.doThing())` |
 | `window.ipcRenderer.invoke('x', arg)` | Bypasses useIpcError | `const invoke = useIpcError(); invoke('x', arg)` |
 | `result.data` without checking `result.ok` | Crashes on error | Check `if (!result.ok)` first |
@@ -404,6 +407,7 @@ These patterns cause immediate PR rejection:
 | Hard-coded column ids (blueprint, ui-design, staging) | Stale columns | Use `columns` from layout store |
 | `toggleColumnMinimize` or `rotateColumn` | Removed in Story 180 | Use `setSpotlightLane` |
 | New story button on any column except `ready-to-build` | UX violation | Check `col.id === 'ready-to-build'` |
+| `(res as any)?.data ?? res` | Fragile, non-standard | Use `unwrapIpc<T>(res)` |
 | `window.ipcRenderer.send(...)` | Not in allowlist | Use `invoke()` |
 | Tour messages stored in chat history | Spec violation | Ephemeral GUIDE tab only |
 | `useLayoutStore` for Command Center data | Wrong store | Use `useCommandStore` |

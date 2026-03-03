@@ -1,7 +1,9 @@
 import React from 'react';
 import Editor, { useMonaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
+import { useLayoutStore } from '../../store/layout';
 import log from '../../utils/logger'
 
 // Import workers using Vite's ?worker syntax
@@ -10,6 +12,7 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { unwrapIpc } from '../../types/ipc'
 
 // Handle Environment workers
 // @ts-ignore
@@ -52,6 +55,8 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const monacoInstance = useMonaco();
   const editorRef = React.useRef<any>(null);
   const invoke = useIpcError();
+  const { spotlightPane, setSpotlight } = useLayoutStore();
+
   React.useEffect(() => {
     if (monacoInstance) {
       monacoInstance.editor.defineTheme('copernicus-phosphor', {
@@ -175,7 +180,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
               position: { line: position.lineNumber - 1, character: position.column - 1 },
             },
           }).catch(() => null)
-          const hover = raw?.data ?? raw
+          const hover = unwrapIpc<any>(raw)
           if (!hover?.contents) return null
           const value = typeof hover.contents === 'string'
             ? hover.contents
@@ -261,7 +266,18 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   }, [filePath, monacoInstance, invoke]);
 
   return (
-    <div className="h-full w-full bg-copernicus-bg">
+    <div className="h-full w-full bg-copernicus-bg relative group/editor">
+        {/* Spotlight Toggle AC-7 */}
+        <div className="absolute top-2 right-6 z-20 opacity-0 group-hover/editor:opacity-100 transition-opacity">
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+            className={`p-1.5 rounded bg-black/40 border border-zinc-800 backdrop-blur-sm transition-colors ${spotlightPane === 'editor' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-white'}`}
+            title={spotlightPane === 'editor' ? "Shrink Editor" : "Spotlight Editor"}
+          >
+            {spotlightPane === 'editor' ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+          </button>
+        </div>
+
         <Editor
         height="100%"
         path={filePath ?? undefined}

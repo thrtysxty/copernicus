@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useLayoutStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import type { ModelCallStats } from '../../../../electron/db/state-ledger'
+import { unwrapIpc } from '../../types/ipc'
 
 export const StatusBar: React.FC = () => {
   const invoke = useIpcError()
@@ -62,7 +63,7 @@ export const StatusBar: React.FC = () => {
   useEffect(() => {
     if (!(window as any).ipcRenderer) return
     invoke<number>('ledger:all-time-cost').then(result => {
-      const cost = (result as any).data ?? result
+      const cost = unwrapIpc<any>(result)
       if (typeof cost === 'number') setTelemetry({ capexTotal: cost })
     }).catch(() => {})
 

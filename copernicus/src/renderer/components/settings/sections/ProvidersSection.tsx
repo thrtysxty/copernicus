@@ -6,6 +6,7 @@ import {
   ShieldCheck, Loader2, GripVertical, Zap, Check
 } from 'lucide-react'
 import log from '../../../utils/logger'
+import { unwrapIpc } from '../../../types/ipc'
 
 interface AuthStatus {
   provider: string
@@ -51,7 +52,7 @@ export const ProvidersSection: React.FC = () => {
 
       // Check Claude CLI availability
       const cliResult = await invoke<any>('check-cli-tools')
-      const cliData = (cliResult as any)?.data ?? cliResult
+      const cliData = unwrapIpc<any>(cliResult)
       setClaudeCliAvailable(!!cliData?.claude)
 
       const settings = await invoke<any>('settings:load')

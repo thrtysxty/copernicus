@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { UIComponent } from '../components/Editor/ui-builder/types'
 
 export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory'
-export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban'
+export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban' | 'orchestrator'
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/5 border-slate-500/20',   accent: 'bg-slate-500' },

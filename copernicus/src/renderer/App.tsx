@@ -21,6 +21,7 @@ import { CommandPalette } from './components/layout/CommandPalette'
 import Wizard from './components/wizard/Wizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { UITestDrawer } from './components/testing/UITestDrawer'
+import { unwrapIpc } from './types/ipc'
 
 const TERMINAL_HEIGHT = 200
 
@@ -229,12 +230,12 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown)
 
     // Fetch initial state — unwrap {ok, data} envelope from handleIpc()
-    invoke<any>('app:get-root-path').then((r: any) => setWorkingDir(r?.data ?? r ?? '')).catch(() => {})
-    invoke<any>('git:branch').then((r: any) => setGitBranch(r?.data ?? r ?? '')).catch(() => {})
+    invoke<any>('app:get-root-path').then((r: any) => setWorkingDir(unwrapIpc<any>(r) ?? '')).catch(() => {})
+    invoke<any>('git:branch').then((r: any) => setGitBranch(unwrapIpc<any>(r) ?? '')).catch(() => {})
 
     // Populate in-progress story count
     invoke<any>('stories:list').then((r: any) => {
-      const list: any[] = Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : []
+      const list: any[] = Array.isArray(r) ? r : Array.isArray(unwrapIpc<any>(r)) ? r.data : []
       setInProgressCount(list.filter((s: any) => s.status === 'IN PROGRESS').length)
     }).catch(() => {})
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useIpcError } from '../hooks/useIpcError'
 import log from '../utils/logger'
+import { unwrapIpc } from '../types/ipc'
 
 export function CommandDeck() {
   const invoke = useIpcError()
@@ -11,7 +12,7 @@ export function CommandDeck() {
     const fetchTargets = async () => {
       try {
         const _raw = await invoke<any>('makefile:list')
-        setTargets((_raw as any)?.data ?? _raw ?? [])
+        setTargets(unwrapIpc<any>(_raw) ?? [])
       } catch (e) {
         log.warn("Failed to fetch makefile targets, using fallback", e)
         setTargets(['test', 'test_e2e', 'backlog', 'deploy', 'clean', 'dev', 'db-migrate'])

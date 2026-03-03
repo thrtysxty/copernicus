@@ -6,6 +6,7 @@ import { Plus, X, Crown, Lock, Loader2, Send } from 'lucide-react'
 import { StoryDetail } from './planning/StoryDetail'
 import { EpicBadge } from './planning/EpicBadge'
 import log from '../utils/logger'
+import { unwrapIpc } from '../types/ipc'
 
 interface Story {
   id: string
@@ -75,7 +76,7 @@ export function KanbanBoard() {
   const fetchJulesSessions = useCallback(async () => {
     try {
       const _raw = await invoke<any>('jules:list-sessions')
-      const sessions: JulesSession[] = (_raw as any)?.data ?? _raw ?? []
+      const sessions: JulesSession[] = unwrapIpc<any>(_raw) ?? []
       const mapped = sessions.reduce((acc, s) => {
         acc[s.story_id] = s
         return acc
@@ -88,9 +89,9 @@ export function KanbanBoard() {
     const fetchStories = async () => {
       try {
         const _rawStories = await invoke<any>('stories:list')
-        setStories((_rawStories as any)?.data ?? _rawStories ?? [])
+        setStories(unwrapIpc<any>(_rawStories) ?? [])
         const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
-        setIsRepoTargeted((_rawTargeted as any)?.data ?? false)
+        setIsRepoTargeted(unwrapIpc<any>(_rawTargeted) ?? false)
         fetchJulesSessions()
       } catch (e) {
         log.warn('Failed to fetch stories', e)
@@ -100,7 +101,7 @@ export function KanbanBoard() {
 
     const removeStoriesUpdate = window.ipcRenderer.on('stories:updated', (_event: any, newStories: Story[]) => {
       setStories(newStories)
-      invoke<any>('stories:is-repo-targeted').then((r: any) => setIsRepoTargeted(r?.data ?? false))
+      invoke<any>('stories:is-repo-targeted').then((r: any) => setIsRepoTargeted(unwrapIpc<any>(r) ?? false))
     })
 
     const removeJulesUpdate = window.ipcRenderer.on('jules:session-update', (_event: any, _update: any) => {
@@ -167,7 +168,7 @@ export function KanbanBoard() {
         epic,
         priority: newPriority,
       })
-      const storyId: string = (_rawCreate as any)?.data ?? _rawCreate
+      const storyId: string = unwrapIpc<any>(_rawCreate)
       setNewTitle('')
       setNewEpic('')
       setNewPriority('P2')

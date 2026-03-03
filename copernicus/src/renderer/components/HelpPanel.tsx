@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Book } from 'lucide-react'
 import { useIpcError } from '../hooks/useIpcError'
+import { unwrapIpc } from '../types/ipc'
 
 export const HelpPanel: React.FC = () => {
   const invoke = useIpcError()
@@ -10,7 +11,7 @@ export const HelpPanel: React.FC = () => {
     const fetchManual = async () => {
       try {
         const _raw = await invoke<any>('app:get-user-guide')
-        const text: string = (_raw as any)?.data ?? _raw ?? ''
+        const text: string = unwrapIpc<any>(_raw) ?? ''
         setContent(text || 'Guide not found.')
       } catch (e) {
         setContent('Error loading user guide.')

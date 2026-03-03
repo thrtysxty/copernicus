@@ -8,6 +8,7 @@ import { BarChart2, Download, Play, RefreshCw } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useToastStore } from '../../store/toastStore'
 import { CHART_THEME } from './chart-theme'
+import { unwrapIpc } from '../../types/ipc'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -115,8 +116,8 @@ export const CapexDashboard: React.FC = () => {
           invoke<any>('devtime:report'),
           invoke<any>('devtime:weekly-velocity'),
         ])
-        setReport(Array.isArray(rep) ? rep : Array.isArray(rep?.data) ? rep.data : [])
-        setWeeklyVelocity(Array.isArray(vel) ? vel : Array.isArray(vel?.data) ? vel.data : [])
+        setReport(unwrapIpc<CapexReportRow[]>(rep))
+        setWeeklyVelocity(unwrapIpc<WeeklyVelocity[]>(vel))
       } finally { setFinLoading(false) }
     }
     if (tab === 'quality') {
@@ -124,8 +125,8 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('devtime:test-history'),
         invoke<any>('stories:bugs-by-assignee'),
       ])
-      setTestRuns(Array.isArray(hist) ? hist : Array.isArray(hist?.data) ? hist.data : [])
-      setBugs(Array.isArray(b) ? b : Array.isArray(b?.data) ? b.data : [])
+      setTestRuns(unwrapIpc<TestRunRecord[]>(hist))
+      setBugs(unwrapIpc<BugsByAssignee[]>(b))
     }
     if (tab === 'llm') {
       const [daily, byModel, byStory] = await Promise.all([
@@ -133,9 +134,9 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('ledger:cost-by-model'),
         invoke<any>('ledger:cost-by-story'),
       ])
-      const dc = Array.isArray(daily) ? daily : Array.isArray(daily?.data) ? daily.data : []
-      const bm = Array.isArray(byModel) ? byModel : Array.isArray(byModel?.data) ? byModel.data : []
-      const bs = Array.isArray(byStory) ? byStory : Array.isArray(byStory?.data) ? byStory.data : []
+      const dc = unwrapIpc<DailyCost[]>(daily)
+      const bm = unwrapIpc<CostByModel[]>(byModel)
+      const bs = unwrapIpc<CostByStory[]>(byStory)
       setDailyCosts(dc)
       setCostByModel(bm)
       setCostByStory(bs)
@@ -146,8 +147,8 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('stories:throughput'),
         invoke<any>('stories:status-distribution'),
       ])
-      setThroughput(Array.isArray(tp) ? tp : Array.isArray(tp?.data) ? tp.data : [])
-      setStatusDist(Array.isArray(sd) ? sd : Array.isArray(sd?.data) ? sd.data : [])
+      setThroughput(unwrapIpc<Throughput[]>(tp))
+      setStatusDist(unwrapIpc<StatusDist[]>(sd))
     }
   }
 
@@ -161,7 +162,7 @@ export const CapexDashboard: React.FC = () => {
 
   useEffect(() => {
     invoke<any>('settings:load').then(raw => {
-      const s = (raw as any)?.data ?? raw
+      const s = unwrapIpc<any>(raw)
       const r = s?.capex?.rate ?? s?.developerRate
       if (typeof r === 'number' && r > 0) setRate(r)
     }).catch(() => {})
@@ -196,7 +197,7 @@ export const CapexDashboard: React.FC = () => {
     setTestRunning(true)
     try {
       const res = await invoke<any>('devtime:run-tests')
-      const record = res?.data ?? res
+      const record = unwrapIpc<any>(res)
       setTestRuns(prev => [record, ...prev])
       addToast(`Tests complete: ${record.passed}/${record.total_tests} passed`, record.failed > 0 ? 'error' : 'success')
     } catch (e: any) {

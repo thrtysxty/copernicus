@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useLayoutStore } from '../../store/layout';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
@@ -104,6 +105,8 @@ export default function WorkflowCanvas() {
   const {
     activeStoryId,
     setActiveWorkflowTemplate,
+    spotlightPane,
+    setSpotlight,
     tourStep,
     setTourStep,
     setTourHighlight,
@@ -387,7 +390,18 @@ export default function WorkflowCanvas() {
           </div>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {/* Spotlight Toggle AC-7 */}
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'orchestrator' ? null : 'orchestrator')}
+            className={`p-1.5 rounded transition-colors ${spotlightPane === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505]' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'}`}
+            title={spotlightPane === 'orchestrator' ? "Shrink Canvas" : "Spotlight Canvas"}
+          >
+            {spotlightPane === 'orchestrator' ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+          </button>
+
+          <div className="w-px h-4 bg-copernicus-steel mx-1 self-center" />
+
           <button
               onClick={saveWorkflow}
               className="px-3 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"

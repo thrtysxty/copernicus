@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import log from '../../utils/logger'
+import { unwrapIpc } from '../../types/ipc'
 
 interface AuthStatus {
   provider: string;
@@ -29,7 +30,7 @@ export const AuthSettings: React.FC = () => {
   const fetchStatus = async () => {
     try {
       const _raw = await invoke<any>('auth:status');
-      const s: AuthStatus[] = (_raw as any)?.data ?? _raw ?? [];
+      const s: AuthStatus[] = unwrapIpc<any>(_raw) ?? [];
       setStatus(s);
     } catch (e) {
       log.error('Failed to fetch auth status', e);

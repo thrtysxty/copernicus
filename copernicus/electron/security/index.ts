@@ -4,6 +4,7 @@ export * from './pattern-detector';
 export * from './git-guard';
 export * from './sandbox-manager';
 export * from './security-manager';
+import { handleIpc } from '../utils/handle-ipc';
 
 /**
  * Registers IPC handlers for security-related features.
@@ -12,11 +13,9 @@ export * from './security-manager';
  * @param ipcMain The Electron ipcMain instance.
  * @param store A persistent store instance (e.g., electron-store or similar) for settings.
  */
-type HandleIpc = <T>(fn: () => T | Promise<T>) => Promise<{ ok: true; data: T } | { ok: false; error: string }>
-
-export function registerSecurityHandlers(ipcMain: any, store: any, handleIpc: HandleIpc) {
+export function registerSecurityHandlers(ipcMain: any, store: any) {
   // Environment Allowlist Management
-  ipcMain.handle('security:get-env-allowlist', () =>
+  ipcMain.handle('security:get-env-allowlist', (_: any) =>
     handleIpc(() => store.get('security.envAllowlist', []))
   );
 

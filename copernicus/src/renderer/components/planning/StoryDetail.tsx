@@ -4,6 +4,7 @@ import { ArrowLeft, Edit2, Save, ExternalLink, Play } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
+import { unwrapIpc } from '../../types/ipc'
 
 interface Story {
   id: string
@@ -54,21 +55,22 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
 
   useEffect(() => {
     invoke<any>('stories:get-content', storyId)
-      .then((r: any) => setContent(r?.data ?? r ?? ''))
+      .then((r: any) => setContent(unwrapIpc<string>(r) ?? ''))
       .catch(log.error)
   }, [storyId, invoke])
 
   useEffect(() => {
     invoke<any>('models:list').then(result => {
-      const models: Array<{ id: string }> = (result as any).data || result
+      const models = unwrapIpc<Array<{ id: string }>>(result)
       if (Array.isArray(models)) {
         setModelOptions(['(unassigned)', ...models.map(m => m.id), 'gemini', 'jules', 'human'])
       }
     }).catch(() => {})
 
     invoke<any>('workflow:list-templates').then(result => {
-      if (result?.ok && Array.isArray(result.data)) {
-        setWorkflowTemplates(result.data)
+      const data = unwrapIpc<any[]>(result)
+      if (Array.isArray(data)) {
+        setWorkflowTemplates(data)
       }
     }).catch(() => {})
   }, [invoke])
@@ -127,14 +129,14 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     setGeminiError(null)
     try {
       const statusResult = await invoke<any>('gemini:status')
-      const status = statusResult?.data ?? statusResult
+      const status = unwrapIpc<any>(statusResult)
       if (!status?.available?.ok) {
         setGeminiError(status?.available?.reason ?? 'Gemini not available')
         return
       }
 
       const spawnResult = await invoke<any>('gemini:spawn', { cwd: workingDir || undefined })
-      const { sessionId } = (spawnResult as any)?.data ?? spawnResult
+      const { sessionId } = unwrapIpc<any>(spawnResult)
 
       const prompt = [
         `You are implementing Story ${story.id} for the COPERNICUS IDE.`,

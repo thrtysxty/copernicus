@@ -3,6 +3,7 @@ import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { Database, AlertTriangle, RefreshCcw, HardDrive, Calculator } from 'lucide-react'
 import log from '../../../utils/logger'
+import { unwrapIpc } from '../../../types/ipc'
 
 export const DataSection: React.FC = () => {
   const invoke = useIpcError()
@@ -15,7 +16,7 @@ export const DataSection: React.FC = () => {
   const fetchData = async () => {
     try {
       const result = await invoke<number>('db:get-total-cost')
-      const cost = (result as any).data ?? result ?? 0
+      const cost = unwrapIpc<any>(result) ?? 0
       setAllTimeCost(cost)
       // We'll mock the size for now or add an IPC for it if needed later
       setDbSize('1.2 MB') 

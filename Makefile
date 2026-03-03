@@ -95,3 +95,11 @@ ollama-status:
 
 ollama-stop:
 	ssh core "docker stop copernicus-ollama || true"
+
+## ── Local Ollama CLI Helpers ────────────────────────────────────────────────
+# Ask a local Ollama model a question about a file. Requires `ollama` CLI to be installed.
+# Usage: make ollama-ask FILE=<path> PROMPT=<prompt> [MODEL=scribe]
+ollama-ask:
+	@if [ -z "$(FILE)" ]; then echo "[!] Usage: make ollama-ask FILE=<path> PROMPT=<prompt>"; exit 1; fi
+	@if [ -z "$(PROMPT)" ]; then echo "[!] Usage: make ollama-ask FILE=<path> PROMPT=<prompt>"; exit 1; fi
+	@bash scripts/ollama_ask.sh "$(PROMPT)" "$(FILE)" "$(MODEL)"
