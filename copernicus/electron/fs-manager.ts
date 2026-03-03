@@ -19,8 +19,15 @@ const BLOCKED_HOME_SUBDIRS = [
 export class FSManager {
   private rootPath: string = ''
 
+  private expandHome(p: string): string {
+    if (p.startsWith('~')) {
+      return path.join(os.homedir(), p.slice(1))
+    }
+    return p
+  }
+
   setRootPath(p: string): void {
-    this.rootPath = path.resolve(p)
+    this.rootPath = path.resolve(this.expandHome(p))
     log.info(`[FSManager] Sandbox root established: ${this.rootPath}`)
   }
 
@@ -28,7 +35,7 @@ export class FSManager {
     if (!this.rootPath) {
       throw new Error('[fs-manager] rootPath not set — call setRootPath() before file operations')
     }
-    const resolved = path.resolve(filePath)
+    const resolved = path.resolve(this.expandHome(filePath))
     const home = os.homedir()
 
     // Writes are restricted to project root only
@@ -59,13 +66,14 @@ export class FSManager {
 
   listDir(dirPath: string): { ok: true; data: FileNode[] } | { ok: false; error: string } {
     try {
-      this.assertSafe(dirPath, 'read')
-      const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+      const expandedPath = this.expandHome(dirPath)
+      this.assertSafe(expandedPath, 'read')
+      const entries = fs.readdirSync(expandedPath, { withFileTypes: true })
       const data = entries
         .filter(e => !e.name.startsWith('.') && e.name !== 'node_modules')
         .map(e => ({
           name: e.name,
-          path: path.join(dirPath, e.name),
+          path: path.join(expandedPath, e.name),
           isDir: e.isDirectory(),
         }))
         .sort((a, b) => {
@@ -84,8 +92,9 @@ export class FSManager {
 
   readFile(filePath: string): { ok: true; data: string } | { ok: false; error: string } {
     try {
-      this.assertSafe(filePath, 'read')
-      const data = fs.readFileSync(filePath, 'utf-8')
+      const expandedPath = this.expandHome(filePath)
+      this.assertSafe(expandedPath, 'read')
+      const data = fs.readFileSync(expandedPath, 'utf-8')
       return { ok: true, data }
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : String(err)
@@ -96,8 +105,9 @@ export class FSManager {
 
   writeFile(filePath: string, content: string): { ok: true } | { ok: false; error: string } {
     try {
-      this.assertSafe(filePath, 'write')
-      fs.writeFileSync(filePath, content, 'utf-8')
+      const expandedPath = this.expandHome(filePath)
+      this.assertSafe(expandedPath, 'write')
+      fs.writeFileSync(expandedPath, content, 'utf-8')
       return { ok: true }
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : String(err)
