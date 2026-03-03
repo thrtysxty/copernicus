@@ -89,7 +89,7 @@ export class CodebaseIndexer {
         if (!url) return null
         const res = await fetch(`${url.replace(/\/$/, '')}/api/embeddings`, {
           method: 'POST',
-          body: JSON.stringify({ model: 'nomic-embed-text', prompt: text }),
+          body: JSON.stringify({ model: 'qwen3-embedding:0.6b', prompt: text }),
         })
         const { embedding } = await res.json() as any
         return embedding

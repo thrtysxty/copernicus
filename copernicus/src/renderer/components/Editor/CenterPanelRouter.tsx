@@ -22,6 +22,7 @@ export function CenterPanelRouter({
 }: CenterPanelRouterProps) {
   const { 
     centerMode, setCenterMode, 
+    activeView, // Logic from Researcher: Add activeView dependency
     canvasContent, canvasUrl,
     activeFilePath, activeFileContent, activeFileLanguage,
     setActiveFileContent, browserSessionActive
@@ -33,6 +34,19 @@ export function CenterPanelRouter({
   const onChange = activeFilePath 
     ? (val: string | undefined) => setActiveFileContent(val ?? '')
     : (propOnChange ?? (() => {}))
+
+  // FIX: When switching from Designer/other to Editor view, ensure centerMode is reset correctly
+  useEffect(() => {
+    if (activeView === 'editor' && (centerMode === 'canvas' || centerMode === 'builder')) {
+      if (!filePath) return;
+      
+      const fileType = classifyFile(filePath)
+      if (fileType === 'canvas') setCenterMode('canvas')
+      else if (fileType === 'svg') setCenterMode('canvas')
+      else if (fileType === 'binary') setCenterMode('binary')
+      else setCenterMode('code')
+    }
+  }, [activeView, filePath, language, setCenterMode, centerMode])
 
   // When language or filePath changes, reset centerMode to a sensible default
   // EXCEPT if we are in builder or canvas mode, keep it.
