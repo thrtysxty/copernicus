@@ -252,7 +252,7 @@ export default function App() {
         Skip to main content
       </a>
 
-      {/* Row 1: Application Title Bar (h-8, bg-[#050505]) */}
+      {/* Row 1: Application Title Bar */}
       <header className="h-8 flex items-center justify-between px-2 bg-[#050505] shrink-0 draggable z-[110] border-b border-copernicus-steel/30">
         <div className="w-[200px] flex items-center gap-2 no-drag ml-[72px]">
            <div className="w-4 h-4 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
@@ -283,9 +283,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* Row 2: Panel Header (h-10, bg-[#0A0A0A]) */}
+      {/* Row 2: Panel Header */}
       <div className="h-10 flex items-center justify-between px-2 border-b border-copernicus-steel bg-[#0A0A0A] shrink-0 z-[100]">
-        {/* Left Panel (File Explorer) Controls */}
+        {/* Left Panel (Explorer) Controls */}
         <div className="flex items-center gap-1 w-64">
           <button
             onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
@@ -370,8 +370,8 @@ export default function App() {
       </div>
 
       <div className="flex h-full w-full overflow-hidden">
-        {/* Activity Side Bar (Navigation) */}
-        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-2 z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed ? 'w-4 px-0' : 'w-12'}`}>
+        {/* Activity Side Bar */}
+        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-2 z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed || (!!spotlightPane && spotlightPane !== 'explorer') ? 'w-0 border-none px-0 opacity-0' : 'w-12'}`}>
           {!activityBarCollapsed && (
             <>
               <nav className="flex flex-col items-center gap-3">
@@ -419,7 +419,7 @@ export default function App() {
 
         {/* Main Content Area */}
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
-          <div className="flex-1 flex overflow-hidden">
+          <div className={`flex-1 flex overflow-hidden ${spotlightPane === 'terminal' ? 'flex-[0] h-0 opacity-0 pointer-events-none' : ''}`}>
             {activeView === 'command-center' && <CommandCenter />}
             {activeView === 'planner' && <KanbanBoard />}
             {activeView === 'reporter' && <CapexDashboard />}
@@ -429,8 +429,8 @@ export default function App() {
 
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
-                {/* Sidebar (Flippable Explorer/CommandDeck) */}
-                <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
+                {/* Sidebar */}
+                <div className={`${sidebarOpen && (!spotlightPane || spotlightPane === 'explorer') ? (spotlightPane === 'explorer' ? 'flex-1' : 'w-64') : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
                   <FlippablePanel
                     id="sidebar"
                     className="h-full w-full"
@@ -440,8 +440,8 @@ export default function App() {
                 </div>
 
                 {/* Center Panel & Chat */}
-                <div className="flex-1 flex overflow-hidden relative">
-                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : spotlightPane === 'chat' ? 'flex-0 w-0 opacity-0 pointer-events-none' : spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : spotlightPane === 'terminal' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
+                <div className={`${spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'} flex overflow-hidden relative transition-all duration-500`}>
+                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : (spotlightPane === 'chat' || spotlightPane === 'terminal') ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
                     <FlippablePanel
                       id="center-panel"
                       className="flex-1"
@@ -459,7 +459,7 @@ export default function App() {
                   </div>
 
                   {/* Chat Panel */}
-                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'explorer' || spotlightPane === 'terminal' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
+                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${(spotlightPane === 'chat') ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'terminal' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
                     <ChatPanel />
                   </div>
                 </div>
@@ -467,7 +467,7 @@ export default function App() {
             )}
           </div>
 
-          {/* Terminal Drawer (Flippable & Spotlightable) */}
+          {/* Terminal Drawer */}
           <div 
             className={`bg-[#050505] transition-all duration-300 ease-in-out border-t border-copernicus-steel ${spotlightPane === 'terminal' ? 'flex-1' : ''}`} 
             style={{ height: spotlightPane === 'terminal' ? 'auto' : (terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px') }}
@@ -480,7 +480,8 @@ export default function App() {
             />
           </div>
 
-          <div className="h-6 w-full flex items-center px-2 gap-2 bg-[#0A0A0A] border-t border-copernicus-steel select-none group">
+          {/* Terminal Control Bar */}
+          <div className={`h-6 w-full flex items-center px-2 gap-2 bg-[#0A0A0A] border-t border-copernicus-steel select-none group transition-all ${spotlightPane && spotlightPane !== 'terminal' ? 'h-0 opacity-0 pointer-events-none' : ''}`}>
             <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => setTerminalOpen(!terminalOpen)}>
               <span className={`text-[10px] font-mono uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor phosphor-glow animate-pulse' : 'text-zinc-500'}`}>
                 {terminalOpen ? '▼' : '▲'} TERMINAL_PULSE
