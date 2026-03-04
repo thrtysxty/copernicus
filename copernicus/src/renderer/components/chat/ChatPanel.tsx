@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Layout } from 'lucide-react'
+import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Layout, Book, User, Terminal, History, Info } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
 import { UIUpdateChip } from './UIUpdateChip'
@@ -193,6 +193,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const [activeBackTab, setActiveBackTab] = useState('context')
+  const [showBackTabPicker, setShowBackTabPicker] = useState(false)
   const { flippedPanes } = useLayoutStore()
   const isFlipped = flippedPanes.includes('chat')
 
@@ -322,26 +323,65 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const contextMaxTokens = availableModels.find(m => m.id === model)?.contextWindow || 0
 
   const renderBackFace = () => {
+    const tabs = [
+      { id: 'context', label: 'Context', icon: Layers },
+      { id: 'persona', label: 'Persona', icon: User },
+      { id: 'prompts', label: 'Library', icon: Book },
+      { id: 'history', label: 'History', icon: History },
+      { id: 'guide', label: 'Guide', icon: Info }
+    ]
+
     return (
       <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
-        <div className="h-6 flex items-center px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel shrink-0 gap-2">
-          {['context', 'persona', 'prompts', 'history', 'guide'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveBackTab(tab)}
-              className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 transition-colors ${
-                activeBackTab === tab
-                  ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
-                  : 'text-zinc-500 hover:text-zinc-300'
-              }`}
+        <div className="h-8 flex items-center px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel shrink-0 gap-2 relative">
+          {/* Expert Breadcrumb Selector */}
+          <div className="flex items-center gap-1 min-w-0 flex-1">
+            <span className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Utility</span>
+            <span className="text-[9px] text-zinc-700">/</span>
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer hover:text-copernicus-phosphor transition-colors group/crumb min-w-0"
+              onClick={() => setShowBackTabPicker(!showBackTabPicker)}
             >
-              {tab}
+              {(() => {
+                const active = tabs.find(t => t.id === activeBackTab)
+                const Icon = active?.icon || Info
+                return (
+                  <>
+                    <Icon size={10} className="text-zinc-500 group-hover/crumb:text-copernicus-phosphor" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest truncate">{active?.label}</span>
+                    <ChevronDown size={10} className="text-zinc-700 group-hover/crumb:text-copernicus-phosphor" />
+                  </>
+                )
+              })()}
+            </div>
+
+            {showBackTabPicker && (
+              <div className="absolute top-full left-2 mt-1 w-40 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-[120] overflow-hidden">
+                {tabs.map(tab => {
+                  const TabIcon = tab.icon
+                  return (
+                    <button
+                      key={tab.id}
+                      className={`w-full flex items-center gap-3 px-3 py-2 text-[10px] uppercase font-bold tracking-widest transition-colors ${activeBackTab === tab.id ? 'bg-copernicus-phosphor text-[#050505]' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'}`}
+                      onClick={() => {
+                        setActiveBackTab(tab.id)
+                        setShowBackTabPicker(false)
+                      }}
+                    >
+                      <TabIcon size={12} />
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button onClick={() => toggleFlip('chat')} aria-label="Close chat tools" className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
+              <RotateCcw size={12} />
             </button>
-          ))}
-          <div className="flex-1" />
-          <button onClick={() => toggleFlip('chat')} aria-label="Close chat tools" className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
-            <RotateCcw size={10} />
-          </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-copernicus-steel">
@@ -1040,11 +1080,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 <RotateCcw size={10} />
               </button>
               <button
-                onClick={() => setSpotlight(spotlightPane === 'telemetry' ? null : 'telemetry')}
+                onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
                 className="text-zinc-500 hover:text-copernicus-phosphor transition-colors font-bold text-[10px] flex items-center justify-center min-w-[24px]"
-                title={spotlightPane === 'telemetry' ? "Exit Spotlight" : "Spotlight Panel"}
+                title={spotlightPane === 'chat' ? "Exit Spotlight" : "Spotlight Panel"}
               >
-                {spotlightPane === 'telemetry' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+                {spotlightPane === 'chat' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
               </button>
             </div>
           </div>

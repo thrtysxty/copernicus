@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { UIComponent } from '../components/Editor/ui-builder/types'
 
 export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github'
-export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban' | 'orchestrator'
+export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/5 border-slate-500/20',   accent: 'bg-slate-500' },
@@ -102,6 +102,7 @@ interface LayoutState {
   rightPanelMode: 'telemetry' | 'kanban'
   flippedPanes: string[]
   chatPanelTab: 'chat' | 'guide'
+  chatPanelOpen: boolean
 
   // Telemetry
   workingDir: string
@@ -140,6 +141,7 @@ interface LayoutState {
   setGitBranch: (branch: string) => void
   setGitDirty: (dirty: boolean) => void
   setSidebarOpen: (open: boolean) => void
+  setChatPanelOpen: (open: boolean) => void
 
   // Terminal Actions
   setTerminalOpen: (open: boolean) => void
@@ -177,6 +179,7 @@ export const useLayoutStore = create<LayoutState>()(
       isFlipped: {
         sidebar: false,
         chat: false,
+        terminal: false,
       },
       spotlightPane: null,
       spotlightLane: null,
@@ -200,10 +203,7 @@ export const useLayoutStore = create<LayoutState>()(
       terminalOpen: false,
       activeTerminalId: 'terminal-local',
       terminals: [
-        { id: 'terminal-local', label: 'Local', isBusy: false },
-        { id: 'terminal-claude', label: 'Claude', isBusy: false },
-        { id: 'terminal-gemini', label: 'Gemini', isBusy: false },
-        { id: 'terminal-jules', label: 'Jules', isBusy: false },
+        { id: 'terminal-local', label: 'Terminal', isBusy: false },
       ],
 
       canvasContent: null,
@@ -223,6 +223,7 @@ export const useLayoutStore = create<LayoutState>()(
       rightPanelMode: 'telemetry',
       flippedPanes: [],
       chatPanelTab: 'chat',
+      chatPanelOpen: true,
 
       workingDir: '~/Projects/agentic-platform',
       gitBranch: 'main',
@@ -292,11 +293,12 @@ export const useLayoutStore = create<LayoutState>()(
       setGitBranch: (branch) => set({ gitBranch: branch }),
       setGitDirty: (dirty) => set({ isGitDirty: dirty }),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
+      setChatPanelOpen: (open) => set({ chatPanelOpen: open }),
 
       setTerminalOpen: (open) => set({ terminalOpen: open }),
       setActiveTerminal: (id) => set({ activeTerminalId: id }),
       addTerminal: (id, label, ephemeral = false) => set((state) => {
-        if (state.terminals.find(t => t.id === id)) return state
+        if (state.terminals.find(t => t.id === id)) return { ...state, activeTerminalId: id, terminalOpen: true }
         return {
           terminals: [...state.terminals, { id, label, isBusy: false, ephemeral }],
           activeTerminalId: id,
@@ -344,4 +346,3 @@ export const useLayoutStore = create<LayoutState>()(
     }
   )
 )
-

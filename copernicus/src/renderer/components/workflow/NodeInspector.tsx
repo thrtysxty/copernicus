@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WFNode } from '../../../../electron/workflow/types';
 import log from '../../utils/logger'
 
@@ -58,18 +58,18 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
       <div className="flex flex-col gap-3 p-3">
         {/* Label — all types */}
         <Field label="Label">
-          <input
+          <DebouncedInput
             className="inspector-input"
-            value={node.label}
-            onChange={e => onChange({ ...node, label: e.target.value })}
+            initialValue={node.label}
+            onCommit={val => onChange({ ...node, label: val })}
           />
         </Field>
 
-        {node.type === 'agent' && <AgentFields data={node.data} modelsForProvider={modelsForProvider} authStatus={authStatus} onUpdate={updateData} onProviderChange={handleProviderChange} />}
-        {node.type === 'tool' && <ToolFields data={node.data} onUpdate={updateData} />}
-        {node.type === 'trigger' && <TriggerFields data={node.data} stories={stories} onUpdate={updateData} onStoryChange={handleStoryChange} />}
-        {node.type === 'decision' && <DecisionFields data={node.data} onUpdate={updateData} />}
-        {node.type === 'flow' && <FlowFields data={node.data} onUpdate={updateData} />}
+        {node.type === 'agent' && <AgentFields node={node} modelsForProvider={modelsForProvider} authStatus={authStatus} onUpdate={updateData} onProviderChange={handleProviderChange} />}
+        {node.type === 'tool' && <ToolFields node={node} onUpdate={updateData} />}
+        {node.type === 'trigger' && <TriggerFields node={node} stories={stories} onUpdate={updateData} onStoryChange={handleStoryChange} />}
+        {node.type === 'decision' && <DecisionFields node={node} onUpdate={updateData} />}
+        {node.type === 'flow' && <FlowFields node={node} onUpdate={updateData} />}
       </div>
 
       {/* Delete */}
@@ -87,6 +87,8 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
   );
 }
 
+// ── Components ─────────────────────────────────────────────────────────────
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -98,11 +100,54 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function AgentFields({ data, modelsForProvider, authStatus, onUpdate, onProviderChange }: any) {
+function DebouncedInput({ initialValue, onCommit, className, placeholder, type = 'text', min, max, step }: any) {
+  const [val, setVal] = useState(initialValue);
+  
+  useEffect(() => {
+    setVal(initialValue);
+  }, [initialValue]);
+
+  return (
+    <input
+      type={type}
+      min={min}
+      max={max}
+      step={step}
+      className={className}
+      placeholder={placeholder}
+      value={val ?? ''}
+      onChange={e => setVal(e.target.value)}
+      onBlur={() => { if (val !== initialValue) onCommit(type === 'number' ? parseFloat(val) : val); }}
+      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+    />
+  );
+}
+
+function DebouncedTextarea({ initialValue, onCommit, className, placeholder, rows = 3 }: any) {
+  const [val, setVal] = useState(initialValue);
+  
+  useEffect(() => {
+    setVal(initialValue);
+  }, [initialValue]);
+
+  return (
+    <textarea
+      rows={rows}
+      className={className}
+      placeholder={placeholder}
+      value={val ?? ''}
+      onChange={e => setVal(e.target.value)}
+      onBlur={() => { if (val !== initialValue) onCommit(val); }}
+    />
+  );
+}
+
+function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onProviderChange }: any) {
+  const data = node.data;
   return (
     <>
       <Field label="Persona Label">
-        <input className="inspector-input" value={data.persona ?? ''} onChange={e => onUpdate({ persona: e.target.value })} />
+        <DebouncedInput className="inspector-input" initialValue={data.persona} onCommit={(v: string) => onUpdate({ persona: v })} />
       </Field>
       <Field label="Provider">
         <select className="inspector-input" value={data.provider ?? ''} onChange={e => onProviderChange(e.target.value)}>
@@ -125,18 +170,18 @@ function AgentFields({ data, modelsForProvider, authStatus, onUpdate, onProvider
         ) : data.provider === 'ollama' ? (
           <p className="text-[9px] text-red-400">Ollama not running — start with: ollama serve</p>
         ) : null}
-        <input
+        <DebouncedInput
           className="inspector-input mt-1"
           placeholder="Custom model ID"
-          value={data.modelId ?? ''}
-          onChange={e => onUpdate({ modelId: e.target.value })}
+          initialValue={data.modelId}
+          onCommit={(v: string) => onUpdate({ modelId: v })}
         />
       </Field>
       <Field label="System Prompt">
-        <textarea className="inspector-input h-20 resize-none" value={data.systemPrompt ?? ''} onChange={e => onUpdate({ systemPrompt: e.target.value })} />
+        <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.systemPrompt} onCommit={(v: string) => onUpdate({ systemPrompt: v })} />
       </Field>
       <Field label="Task">
-        <textarea className="inspector-input h-20 resize-none" value={data.task ?? ''} onChange={e => onUpdate({ task: e.target.value })} />
+        <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.task} onCommit={(v: string) => onUpdate({ task: v })} />
         <p className="text-[8px] text-zinc-600 mt-0.5">Use {'{{storyId}}'}, {'{{storyTitle}}'}, {'{{prevOutput}}'}</p>
       </Field>
       <Field label="Output Channel">
@@ -146,20 +191,21 @@ function AgentFields({ data, modelsForProvider, authStatus, onUpdate, onProvider
       </Field>
       {data.outputChannel === 'file' && (
         <Field label="Output File">
-          <input className="inspector-input" value={data.outputFile ?? ''} onChange={e => onUpdate({ outputFile: e.target.value })} />
+          <DebouncedInput className="inspector-input" initialValue={data.outputFile} onCommit={(v: string) => onUpdate({ outputFile: v })} />
         </Field>
       )}
       <Field label="Temperature">
-        <input type="number" className="inspector-input" min={0} max={1} step={0.1} value={data.temperature ?? 0.7} onChange={e => onUpdate({ temperature: parseFloat(e.target.value) })} />
+        <DebouncedInput type="number" className="inspector-input" min={0} max={1} step={0.1} initialValue={data.temperature ?? 0.7} onCommit={(v: number) => onUpdate({ temperature: v })} />
       </Field>
       <Field label="Max Tokens">
-        <input type="number" className="inspector-input" value={data.maxTokens ?? 2048} onChange={e => onUpdate({ maxTokens: parseInt(e.target.value) })} />
+        <DebouncedInput type="number" className="inspector-input" initialValue={data.maxTokens ?? 2048} onCommit={(v: number) => onUpdate({ maxTokens: v })} />
       </Field>
     </>
   );
 }
 
-function ToolFields({ data, onUpdate }: any) {
+function ToolFields({ node, onUpdate }: any) {
+  const data = node.data;
   return (
     <>
       <Field label="Variant">
@@ -171,42 +217,43 @@ function ToolFields({ data, onUpdate }: any) {
       </Field>
       {(data.variant === 'shell-command' || data.variant === 'makefile-run') && (
         <Field label="Command">
-          <input className="inspector-input" value={data.command ?? ''} onChange={e => onUpdate({ command: e.target.value })} />
+          <DebouncedInput className="inspector-input" initialValue={data.command} onCommit={(v: string) => onUpdate({ command: v })} />
         </Field>
       )}
       {(data.variant === 'file-read' || data.variant === 'file-write') && (
         <Field label="File Path">
-          <input className="inspector-input" value={data.filePath ?? ''} onChange={e => onUpdate({ filePath: e.target.value })} />
+          <DebouncedInput className="inspector-input" initialValue={data.filePath} onCommit={(v: string) => onUpdate({ filePath: v })} />
         </Field>
       )}
       {data.variant === 'file-write' && (
         <Field label="Content">
-          <textarea className="inspector-input h-20 resize-none" value={data.content ?? ''} onChange={e => onUpdate({ content: e.target.value })} />
+          <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.content} onCommit={(v: string) => onUpdate({ content: v })} />
         </Field>
       )}
       {data.variant === 'story-update' && (
         <>
           <Field label="Story ID">
-            <input className="inspector-input" value={data.storyId ?? ''} placeholder="{{storyId}}" onChange={e => onUpdate({ storyId: e.target.value })} />
+            <DebouncedInput className="inspector-input" initialValue={data.storyId} placeholder="{{storyId}}" onCommit={(v: string) => onUpdate({ storyId: v })} />
           </Field>
           <Field label="Field">
-            <input className="inspector-input" value={data.field ?? ''} onChange={e => onUpdate({ field: e.target.value })} />
+            <DebouncedInput className="inspector-input" initialValue={data.field} onCommit={(v: string) => onUpdate({ field: v })} />
           </Field>
           <Field label="Value">
-            <input className="inspector-input" value={data.value ?? ''} onChange={e => onUpdate({ value: e.target.value })} />
+            <DebouncedInput className="inspector-input" initialValue={data.value} onCommit={(v: string) => onUpdate({ value: v })} />
           </Field>
         </>
       )}
       {(data.variant === 'log-event' || data.variant === 'send-chat' || data.variant === 'notify') && (
         <Field label="Message">
-          <textarea className="inspector-input h-20 resize-none" value={data.message ?? ''} onChange={e => onUpdate({ message: e.target.value })} />
+          <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.message} onCommit={(v: string) => onUpdate({ message: v })} />
         </Field>
       )}
     </>
   );
 }
 
-function TriggerFields({ data, stories, onUpdate, onStoryChange }: any) {
+function TriggerFields({ node, stories, onUpdate, onStoryChange }: any) {
+  const data = node.data;
   return (
     <>
       <Field label="Variant">
@@ -245,20 +292,21 @@ function TriggerFields({ data, stories, onUpdate, onStoryChange }: any) {
             </select>
           </Field>
           <Field label="Expected Status">
-            <input className="inspector-input" value={data.expectedStatus ?? ''} onChange={e => onUpdate({ expectedStatus: e.target.value })} />
+            <DebouncedInput className="inspector-input" initialValue={data.expectedStatus} onCommit={(v: string) => onUpdate({ expectedStatus: v })} />
           </Field>
         </>
       )}
       {data.variant === 'terminal-exit' && (
         <Field label="Terminal ID">
-          <input className="inspector-input" value={data.terminalId ?? ''} onChange={e => onUpdate({ terminalId: e.target.value })} />
+          <DebouncedInput className="inspector-input" initialValue={data.terminalId} onCommit={(v: string) => onUpdate({ terminalId: v })} />
         </Field>
       )}
     </>
   );
 }
 
-function DecisionFields({ data, onUpdate }: any) {
+function DecisionFields({ node, onUpdate }: any) {
+  const data = node.data;
   return (
     <>
       <Field label="Variant">
@@ -270,16 +318,16 @@ function DecisionFields({ data, onUpdate }: any) {
       </Field>
       {data.variant === 'output-match' && (
         <Field label="Regex Pattern">
-          <input className="inspector-input" value={data.pattern ?? ''} onChange={e => onUpdate({ pattern: e.target.value })} />
+          <DebouncedInput className="inspector-input" initialValue={data.pattern} onCommit={(v: string) => onUpdate({ pattern: v })} />
         </Field>
       )}
       {data.variant === 'story-status-check' && (
         <>
           <Field label="Story ID">
-            <input className="inspector-input" value={data.storyId ?? ''} placeholder="{{storyId}}" onChange={e => onUpdate({ storyId: e.target.value })} />
+            <DebouncedInput className="inspector-input" initialValue={data.storyId} placeholder="{{storyId}}" onCommit={(v: string) => onUpdate({ storyId: v })} />
           </Field>
           <Field label="Expected Status">
-            <input className="inspector-input" value={data.expectedStatus ?? ''} onChange={e => onUpdate({ expectedStatus: e.target.value })} />
+            <DebouncedInput className="inspector-input" initialValue={data.expectedStatus} onCommit={(v: string) => onUpdate({ expectedStatus: v })} />
           </Field>
         </>
       )}
@@ -287,11 +335,12 @@ function DecisionFields({ data, onUpdate }: any) {
   );
 }
 
-function FlowFields({ data, onUpdate }: any) {
+function FlowFields({ node, onUpdate }: any) {
+  const data = node.data;
   return (
     <>
       <Field label="Delay (ms)">
-        <input type="number" className="inspector-input" value={data.durationMs ?? 2000} onChange={e => onUpdate({ durationMs: parseInt(e.target.value) })} />
+        <DebouncedInput type="number" className="inspector-input" initialValue={data.durationMs ?? 2000} onCommit={(v: number) => onUpdate({ durationMs: v })} />
       </Field>
     </>
   );

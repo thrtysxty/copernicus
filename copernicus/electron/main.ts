@@ -1055,7 +1055,10 @@ function registerIpcHandlers() {
     if (res.ok) codebaseIndexer.indexFile(filePath).catch(log.error)
     return res
   }))
-  ipcMain.handle('app:get-root-path', () => handleIpc(() => fsManager.getRootPath()))
+  ipcMain.handle('app:get-root-path', () => handleIpc(() => {
+    if (isFirstRun) return null;
+    return fsManager.getRootPath();
+  }))
 
   ipcMain.handle('app:get-user-guide', () => handleIpc(() => {
     const guidePath = path.join(app.getAppPath(), 'docs/help/USER_GUIDE.md')

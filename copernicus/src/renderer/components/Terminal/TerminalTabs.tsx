@@ -3,7 +3,7 @@ import { Terminal } from './Terminal';
 import { GeminiPanel } from './GeminiPanel';
 import { JulesPanel } from '../jules/JulesPanel';
 import { useLayoutStore } from '../../store/layout';
-import { X, Loader2, Square } from 'lucide-react';
+import { X, Loader2, Square, Plus } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { IpcResult } from '../../types/ipc';
 
@@ -12,16 +12,16 @@ interface TerminalTabsProps {
 }
 
 export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
-  const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy } = useLayoutStore();
+  const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy, addTerminal } = useLayoutStore();
   const invoke = useIpcError();
 
-  const getAgentBadge = (id: string) => {
-    switch (id) {
-      case 'terminal-claude': return { letter: 'C', color: 'text-[#4ADE80]' };
-      case 'terminal-gemini': return { letter: 'G', color: 'text-[#60A5FA]' };
-      case 'terminal-jules': return { letter: 'J', color: 'text-[#FBBF24]' };
-      default: return null;
-    }
+  const getAgentBadge = (label: string) => {
+    const l = label.toLowerCase();
+    if (l.includes('claude')) return { letter: 'C', color: 'text-[#4ADE80]' };
+    if (l.includes('gemini')) return { letter: 'G', color: 'text-[#60A5FA]' };
+    if (l.includes('jules')) return { letter: 'J', color: 'text-[#FBBF24]' };
+    if (l.includes('ollama')) return { letter: 'O', color: 'text-orange-400' };
+    return null;
   };
 
   const handleStopAgent = async (e: React.MouseEvent, id: string) => {
@@ -32,20 +32,25 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
     }
   };
 
+  const handleNewTerminal = () => {
+    const id = `terminal-${Date.now()}`;
+    addTerminal(id, 'Bash');
+  };
+
   return (
     <div className="flex flex-col h-full bg-copernicus-bg">
-      <div className="flex border-b border-copernicus-steel h-6 overflow-x-auto no-scrollbar">
+      <div className="flex border-b border-copernicus-steel h-6 overflow-x-auto no-scrollbar bg-[#050505]">
         {terminals.map((tab) => (
           <div
             key={tab.id}
             className={`
-              flex items-center group px-3 text-[10px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative
+              flex items-center group px-3 text-[10px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative min-w-[80px]
               ${activeTerminalId === tab.id ? 'text-copernicus-phosphor bg-copernicus-steel/10' : 'text-zinc-500'}
             `}
             onClick={() => setActiveTerminal(tab.id)}
           >
             {(() => {
-              const badge = getAgentBadge(tab.id);
+              const badge = getAgentBadge(tab.label);
               if (badge) {
                 return (
                   <span className={`mr-1.5 font-bold ${badge.color} ${tab.isBusy ? 'animate-pulse' : ''}`}>
@@ -66,9 +71,9 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
               )}
             </span>
 
-            {tab.id !== 'terminal-local' && (
+            {terminals.length > 1 && (
               <div className="flex items-center ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                {getAgentBadge(tab.id) && tab.isBusy ? (
+                {getAgentBadge(tab.label) && tab.isBusy ? (
                   <button
                     onClick={(e) => handleStopAgent(e, tab.id)}
                     className="hover:text-red-400 transition-colors mr-1"
@@ -95,6 +100,14 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             )}
           </div>
         ))}
+        
+        <button 
+          onClick={handleNewTerminal}
+          className="px-2 flex items-center justify-center text-zinc-600 hover:text-copernicus-phosphor transition-colors border-r border-copernicus-steel bg-[#080808]"
+          title="New Terminal Session"
+        >
+          <Plus size={12} />
+        </button>
       </div>
       <div className="flex-grow relative overflow-hidden">
         {terminals.map((tab) => (

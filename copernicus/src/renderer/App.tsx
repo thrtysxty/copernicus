@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import {
   Github, Settings, BarChart2,
   Loader2, Maximize2, Minimize2, RotateCcw, Layout, Activity, Brain,
-  ChevronLeft, ChevronRight, Beaker, Menu, MessageSquare
+  ChevronLeft, ChevronRight, Beaker, Menu, MessageSquare,
+  Palette, Code, Cpu, Workflow, Layers, Kanban, Monitor, Plus
 } from 'lucide-react'
-import { useLayoutStore } from './store/layout'
+import { useLayoutStore, StoryboardView } from './store/layout'
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
 import { FileTree } from './components/FileTree/FileTree'
@@ -19,6 +20,7 @@ import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
 import { GithubDashboard } from './components/github/GithubDashboard'
+import { CommandDeck } from './components/CommandDeck'
 import Wizard from './components/wizard/Wizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { UITestDrawer } from './components/testing/UITestDrawer'
@@ -63,6 +65,8 @@ export default function App() {
     activityBarCollapsed,
     setActivityBarCollapsed,
     setInProgressCount,
+    chatPanelOpen,
+    setChatPanelOpen,
   } = useLayoutStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -77,7 +81,6 @@ export default function App() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('window') === 'wizard') {
       setIsWizard(true)
-      setShowSplash(false)
     }
 
     const removeWorkspaceChanged = (window as any).ipcRenderer.on('app:workspace-changed', (_e: any, { path }: any) => {
@@ -229,6 +232,17 @@ export default function App() {
     return <Wizard onComplete={() => setIsWizard(false)} />
   }
 
+  const NavButton = ({ id, icon: Icon, label }: { id: StoryboardView, icon: any, label: string }) => (
+    <button
+      onClick={() => { setView(id); if (id === 'editor') setCenterMode('code'); else if (id === 'designer') setCenterMode('canvas') }}
+      className={`p-2 rounded transition-all duration-200 group relative ${activeView === id ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'}`}
+      title={label}
+    >
+      <Icon size={18} />
+      {activeView === id && <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-copernicus-phosphor rounded-full" />}
+    </button>
+  )
+
   return (
     <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
       <a
@@ -238,119 +252,167 @@ export default function App() {
         Skip to main content
       </a>
 
-      {/* Global Application Header Row */}
-      <header className="h-10 flex items-center justify-between px-2 border-b border-copernicus-steel bg-[#050505] shrink-0 draggable z-[100]">
-        {/* Left: View Selection & Sidebar Toggle */}
-        <div className="flex items-center gap-1 no-drag">
-          <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`p-1.5 rounded hover:bg-zinc-900 transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}
-            title="Toggle Sidebar"
-          >
-            <Menu size={16} />
-          </button>
-          <nav className="flex items-center h-full ml-2">
-            {(['planner', 'designer', 'editor', 'orchestrator', 'reporter', 'command-center'] as const).map(view => (
-              <button
-                key={view}
-                onClick={() => { setView(view); if (view === 'editor') setCenterMode('code') }}
-                className={`text-[9px] font-mono uppercase tracking-[0.15em] h-8 px-3 transition-all flex items-center ${activeView === view ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
-              >
-                {view.replace('-', '_')}
-              </button>
-            ))}
-          </nav>
+      {/* Row 1: Application Title Bar (h-8, bg-[#050505]) */}
+      <header className="h-8 flex items-center justify-between px-2 bg-[#050505] shrink-0 draggable z-[110] border-b border-copernicus-steel/30">
+        <div className="w-[200px] flex items-center gap-2 no-drag ml-[72px]">
+           <div className="w-4 h-4 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
+              <span className="text-copernicus-phosphor font-bold text-[8px]">C</span>
+           </div>
+           <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-zinc-500 uppercase">Copernicus</span>
         </div>
 
-        {/* Center: Active Metadata (Story & File) */}
-        <div className="flex-1 flex justify-center min-w-0 px-4 pointer-events-none">
-          <div className="flex items-center gap-3 bg-zinc-900/50 border border-copernicus-steel/30 px-4 py-1 rounded-full overflow-hidden max-w-md">
-            <span className="text-[10px] font-mono text-zinc-500 shrink-0">STORY //</span>
-            <span className="text-[10px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
-              {activeStoryId || 'UNASSIGNED_CORE'}
+        <div className="flex-1 flex justify-center no-drag pointer-events-none">
+           <div className="text-[10px] font-mono font-bold tracking-widest text-zinc-600 uppercase">Strategic_Orchestration_Interface</div>
+        </div>
+        
+        <div className="w-[300px] flex justify-end no-drag">
+          <div className="flex items-center gap-3 bg-zinc-950 border border-copernicus-steel/30 px-3 py-0.5 rounded-full overflow-hidden">
+            <span className="text-[9px] font-mono text-zinc-600 shrink-0">STORY //</span>
+            <span className="text-[9px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
+              {activeStoryId || 'UNASSIGNED'}
             </span>
             {activeFilePath && (
               <>
-                <span className="text-zinc-700">|</span>
-                <span className="text-[10px] font-mono text-zinc-400 truncate tracking-tight">
+                <span className="text-zinc-800">|</span>
+                <span className="text-[9px] font-mono text-zinc-500 truncate tracking-tight">
                   {activeFilePath.split('/').pop()}
                 </span>
               </>
             )}
           </div>
         </div>
+      </header>
 
-        {/* Right: Global Panel Controls */}
-        <div className="flex items-center gap-1 no-drag">
+      {/* Row 2: Panel Header (h-10, bg-[#0A0A0A]) */}
+      <div className="h-10 flex items-center justify-between px-2 border-b border-copernicus-steel bg-[#0A0A0A] shrink-0 z-[100]">
+        {/* Left Panel (File Explorer) Controls */}
+        <div className="flex items-center gap-1 w-64">
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
+            className={`p-1.5 rounded transition-colors ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+            title="Spotlight Explorer"
+          >
+            {spotlightPane === 'explorer' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
+          <button
+            onClick={() => toggleFlip('sidebar')}
+            className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+            title="Rotate Explorer Content"
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
+
+        {/* Center Panel (Canvas) Controls */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-zinc-950/50 p-1 rounded border border-zinc-800/50">
+            <button
+              onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+              className={`p-1.5 rounded transition-colors ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+              title="Spotlight Canvas"
+            >
+              {spotlightPane === 'editor' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            </button>
+            <button
+              onClick={() => toggleFlip('center-panel')}
+              className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+              title="Rotate Canvas Panel"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+          
+          <div className="w-[1px] h-4 bg-copernicus-steel/30 mx-1" />
+          
+          <button
+            onClick={toggleUIBuilder}
+            className={`p-1.5 rounded transition-colors ${uiBuilderOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+            title="UI Builder"
+          >
+            <Layout size={16} />
+          </button>
           {activeView === 'designer' && (
             <button
               onClick={toggleUITestingDrawer}
-              className={`p-1.5 rounded transition-colors ${uiTestingDrawerOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+              className={`p-1.5 rounded transition-colors ${uiTestingDrawerOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
               title="UI Testing"
             >
               <Beaker size={16} />
             </button>
           )}
+        </div>
+
+        {/* Right Panel (Chat) Controls */}
+        <div className="flex items-center justify-end gap-1 w-80">
           <button
-            onClick={toggleUIBuilder}
-            className={`p-1.5 rounded transition-colors ${uiBuilderOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="UI Builder"
+            onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
+            className={`p-1.5 rounded transition-colors ${spotlightPane === 'chat' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+            title="Spotlight Chat"
           >
-            <Layout size={16} />
+            {spotlightPane === 'chat' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>
           <button
-            onClick={() => toggleFlip('center-panel')}
-            className="p-1.5 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
-            title="Flip Center Panel"
+            onClick={() => toggleFlip('chat')}
+            className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+            title="Rotate Chat Tools"
           >
-            <RotateCcw size={16} />
-          </button>
-          <button
-            onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-            className={`p-1.5 rounded transition-colors ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="Spotlight Center"
-          >
-            {spotlightPane === 'editor' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            <RotateCcw size={14} />
           </button>
           <div className="w-[1px] h-4 bg-copernicus-steel/30 mx-1" />
           <button
-            onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
-            className={`p-1.5 rounded transition-colors ${spotlightPane === 'chat' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-            title="Spotlight Chat"
+            onClick={() => setChatPanelOpen(!chatPanelOpen)}
+            className={`p-1.5 rounded transition-colors ${chatPanelOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+            title="Toggle Chat Visibility"
           >
             <MessageSquare size={16} />
           </button>
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors ml-1"
-            title="Global Settings"
-          >
-            <Settings size={16} />
-          </button>
         </div>
-      </header>
+      </div>
 
       <div className="flex h-full w-full overflow-hidden">
-        {/* Activity Bar (Slimmed down) */}
-        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-4 z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed ? 'w-4 px-0' : 'w-10'}`}>
+        {/* Activity Side Bar (Navigation) */}
+        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-2 z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed ? 'w-4 px-0' : 'w-12'}`}>
           {!activityBarCollapsed && (
-            <div className="w-6 h-6 bg-copernicus-phosphor/20 rounded flex items-center justify-center mb-2 phosphor-glow-border">
-              <span className="text-copernicus-phosphor font-bold text-xs">C</span>
-            </div>
+            <>
+              <nav className="flex flex-col items-center gap-3">
+                <NavButton id="planner" icon={Kanban} label="Planner" />
+                <NavButton id="designer" icon={Palette} label="Designer" />
+                <NavButton id="editor" icon={Code} label="Editor" />
+                <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
+                <NavButton id="reporter" icon={BarChart2} label="Reports" />
+                <NavButton id="command-center" icon={Monitor} label="Command Center" />
+                <NavButton id="memory" icon={Brain} label="Memory Browser" />
+              </nav>
+
+              <div className="flex-1" />
+
+              <div className="flex flex-col items-center gap-3 pb-2">
+                <button 
+                  onClick={() => setView('github')} 
+                  title="GitHub Manager" 
+                  className={`p-2 rounded transition-colors ${activeView === 'github' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
+                >
+                  <Github size={18} />
+                </button>
+                <button
+                  onClick={() => setSettingsOpen(true)}
+                  className="p-2 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
+                  title="Global Settings"
+                >
+                  <Settings size={18} />
+                </button>
+                <button 
+                  onClick={() => setSidebarOpen(!sidebarOpen)} 
+                  className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+                  title="Toggle Explorer"
+                >
+                  <Menu size={18} />
+                </button>
+              </div>
+            </>
           )}
 
-          {!activityBarCollapsed && (
-            <nav className="flex flex-col items-center gap-4">
-              <button onClick={() => setView('reporter')} title="Reporter" className={`p-2 rounded ${activeView === 'reporter' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><BarChart2 size={18} /></button>
-              <button onClick={() => setView('command-center')} title="Command Center" className={`p-2 rounded ${activeView === 'command-center' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><Activity size={18} /></button>
-              <button onClick={() => setView('memory')} title="Memory" className={`p-2 rounded ${activeView === 'memory' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><Brain size={18} /></button>
-              <div className="w-full border-t border-zinc-800" />
-              <button onClick={() => setView('github')} title="GitHub" className={`p-2 rounded ${activeView === 'github' ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}><Github size={18} /></button>
-            </nav>
-          )}
-
-          <div className="flex-1" />
-          <button onClick={() => setActivityBarCollapsed(!activityBarCollapsed)} className="p-1 text-zinc-600 hover:text-zinc-400">
+          <button onClick={() => setActivityBarCollapsed(!activityBarCollapsed)} className="mt-auto p-1 text-zinc-700 hover:text-zinc-400">
             {activityBarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={16} />}
           </button>
         </aside>
@@ -367,14 +429,19 @@ export default function App() {
 
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
-                {/* Sidebar (File Tree) - Controlled by global sidebarOpen state */}
+                {/* Sidebar (Flippable Explorer/CommandDeck) */}
                 <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
-                  <FileTree rootPath={workingDir} />
+                  <FlippablePanel
+                    id="sidebar"
+                    className="h-full w-full"
+                    front={<FileTree rootPath={workingDir} />}
+                    back={<CommandDeck />}
+                  />
                 </div>
 
                 {/* Center Panel & Chat */}
                 <div className="flex-1 flex overflow-hidden relative">
-                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : spotlightPane === 'chat' ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
+                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : spotlightPane === 'chat' ? 'flex-0 w-0 opacity-0 pointer-events-none' : spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : spotlightPane === 'terminal' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
                     <FlippablePanel
                       id="center-panel"
                       className="flex-1"
@@ -391,8 +458,8 @@ export default function App() {
                     />
                   </div>
 
-                  {/* Chat Panel - Now Global Sidebar in Editor/Designer */}
-                  <div className={`w-80 flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : spotlightPane === 'editor' ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
+                  {/* Chat Panel */}
+                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'explorer' || spotlightPane === 'terminal' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
                     <ChatPanel />
                   </div>
                 </div>
@@ -400,17 +467,42 @@ export default function App() {
             )}
           </div>
 
-          {/* Terminal Drawer */}
-          <div className="bg-[#050505] transition-all duration-300 ease-in-out" style={{ height: terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px' }}>
-            <TerminalTabs />
+          {/* Terminal Drawer (Flippable & Spotlightable) */}
+          <div 
+            className={`bg-[#050505] transition-all duration-300 ease-in-out border-t border-copernicus-steel ${spotlightPane === 'terminal' ? 'flex-1' : ''}`} 
+            style={{ height: spotlightPane === 'terminal' ? 'auto' : (terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px') }}
+          >
+            <FlippablePanel
+              id="terminal"
+              className="h-full w-full"
+              front={<TerminalTabs />}
+              back={<div className="h-full w-full bg-[#050505] flex items-center justify-center font-mono text-[10px] text-zinc-600 uppercase">Terminal_System_Log_Coming_Soon</div>}
+            />
           </div>
 
-          <div className="h-6 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => setTerminalOpen(!terminalOpen)}>
-            <div className="flex items-center gap-2 flex-1">
+          <div className="h-6 w-full flex items-center px-2 gap-2 bg-[#0A0A0A] border-t border-copernicus-steel select-none group">
+            <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => setTerminalOpen(!terminalOpen)}>
               <span className={`text-[10px] font-mono uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor phosphor-glow animate-pulse' : 'text-zinc-500'}`}>
                 {terminalOpen ? '▼' : '▲'} TERMINAL_PULSE
               </span>
               {anyTerminalBusy && <Loader2 size={10} className="animate-spin text-copernicus-phosphor" />}
+            </div>
+
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => setSpotlight(spotlightPane === 'terminal' ? null : 'terminal')}
+                className={`p-1 rounded transition-colors ${spotlightPane === 'terminal' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+                title="Spotlight Terminal"
+              >
+                {spotlightPane === 'terminal' ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+              </button>
+              <button
+                onClick={() => toggleFlip('terminal')}
+                className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+                title="Rotate Terminal Content"
+              >
+                <RotateCcw size={12} />
+              </button>
             </div>
           </div>
 
