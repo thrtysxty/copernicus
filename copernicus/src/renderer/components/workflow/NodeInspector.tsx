@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { WFNode } from '../../../../electron/workflow/types';
 import log from '../../utils/logger'
 
@@ -61,7 +61,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
           <DebouncedInput
             className="inspector-input"
             initialValue={node.label}
-            onCommit={val => onChange({ ...node, label: val })}
+            onCommit={(val: string) => onChange({ ...node, label: val })}
           />
         </Field>
 

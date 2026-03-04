@@ -1,5 +1,5 @@
 # Copernicus Persona & Model Matrix (Hybrid Cloud/Local)
-**Last Updated:** Tuesday, March 3, 2026
+**Last Updated:** Wednesday, March 4, 2026
 **Architecture:** Cloud-First with Local Tactical Fallback (Dell R210ii)
 
 This document outlines the available sub-agent personas and their underlying model mappings for testing and development.
@@ -12,8 +12,15 @@ This document outlines the available sub-agent personas and their underlying mod
 | Persona | Command | Model Tag | Primary Use Case |
 | :--- | :--- | :--- | :--- |
 | **Researcher** | `/researcher` | `deepseek-v3.2:cloud` | Deep logical reasoning, "thinking-in-tool-use," and technical exploration. |
-| **Architect** | `/architect` | `devstral-2:123b-cloud` | System design, schema planning, and multi-file architectural blueprints (123B). |
-| **Sentinel** | `/sentinel` | `devstral-small-2:24b-cloud` | Security auditing, dependency analysis, and agentic bug hunting. |
+| **Architect** | `/architect` | `glm-5:cloud` | Massive system design (744B), schema planning, and long-horizon planning. |
+| **Engineer** | `/engineer` | `devstral-2:123b:cloud` | Purpose-built for software agents. Exploring large repos and multi-file editing. |
+| **Thinker** | `/thinker` | `kimi-k2.5:cloud` | Native multimodal reasoning and complex problem-solving with "thinking modes." |
+| **Coder** | `/coder` | `qwen3-coder-next:cloud` | Optimized agentic coding workflows and high-precision refactoring. |
+| **Polymath** | `/polymath` | `qwen3.5:cloud` | Versatile generalist family delivering exceptional utility across all technical tasks. |
+| **Logistician** | `/logistician` | `minimax-m2.5:cloud` | Optimized for real-world productivity and elevating high-efficiency coding. |
+| **Speedster** | `/speedster` | `gemini-3-flash:cloud` | Frontier intelligence built for speed. Rapid iteration in high-intel environments. |
+| **Expert** | `/expert` | `cogito-2.1:cloud` | High-level architectural documentation and complex generative tasks (671B). |
+| **Sentinel** | `/sentinel` | `devstral-small-2:24b:cloud` | Security auditing, dependency analysis, and agentic bug hunting. |
 
 ---
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, FolderOpen, DollarSign, Check, X, ArrowRight, ArrowLeft,
-         Loader2, ExternalLink, ShieldCheck, Cpu, Key, Zap } from 'lucide-react';
+         Loader2, ExternalLink, ShieldCheck, Cpu, Key, Zap, Github } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc'
 
@@ -13,7 +13,7 @@ interface WizardProps {
 
 const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const invoke = useIpcError();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [cliStatus, setCliStatus] = useState<Record<string, boolean> | null>(null);
   const [workspacePath, setWorkspacePath] = useState('');
   const [hourlyRate, setHourlyRate] = useState('65');
@@ -26,18 +26,20 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [googleKey, setGoogleKey] = useState('');
   const [openRouterKey, setOpenRouterKey] = useState('');
   const [deepInfraKey, setDeepInfraKey] = useState('');
+  const [ollamaKey, setOllamaKey] = useState('');
   const [googleOAuthClientId, setGoogleOAuthClientId] = useState('');
   const [googleOAuth, setGoogleOAuth] = useState<{ state: OAuthState; email?: string; error?: string }>({ state: 'idle' });
   const [openRouterOAuth, setOpenRouterOAuth] = useState<{ state: OAuthState; error?: string }>({ state: 'idle' });
+  
+  // GitHub
+  const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string } | null>(null);
 
-  // Step 0: Detect CLI Tools
+  // Fetch CLI status in background
   useEffect(() => {
-    if (step === 0) {
-      invoke<any>('check-cli-tools').then((result) => {
-        setCliStatus(unwrapIpc<any>(result));
-      });
-    }
-  }, [step, invoke]);
+    invoke<any>('check-cli-tools').then((result) => {
+      setCliStatus(unwrapIpc<any>(result));
+    });
+  }, [invoke]);
 
   // Step 1: Check for existing credentials
   useEffect(() => {
@@ -53,8 +55,16 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
             if (p.provider === 'google') setGoogleKey('saved');
             if (p.provider === 'openrouter') setOpenRouterKey('saved');
             if (p.provider === 'deepinfra') setDeepInfraKey('saved');
+            if (p.provider === 'github') {
+               invoke<any>('github:test-connection').then(res => setGithubUser(unwrapIpc<any>(res)));
+            }
           }
         });
+      });
+      
+      // Check for Ollama Cloud Key
+      invoke<any>('auth:get-api-key', 'ollama').then((res: any) => {
+        if (unwrapIpc<any>(res)) setOllamaKey('saved');
       });
     }
   }, [step, invoke]);
@@ -65,13 +75,21 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   };
 
   const handleBack = () => {
-    if (step > 0) setStep(step - 1);
+    if (step > 1) setStep(step - 1);
   };
 
   const handleSelectFolder = async () => {
-    const _rawPath = await invoke<any>('select-folder');
-    const path: string | null = unwrapIpc<any>(_rawPath);
-    if (path) setWorkspacePath(path);
+    try {
+      const _rawPath = await invoke<any>('select-folder');
+      const path: string | null = unwrapIpc<any>(_rawPath);
+      if (path) {
+        setWorkspacePath(path);
+        // Save the directory immediately to ensure persistence
+        await invoke('app:set-root-path', path);
+      }
+    } catch (error: any) {
+      console.error('Failed to select folder:', error);
+    }
   };
 
   const handleGoogleOAuth = async () => {
@@ -88,6 +106,20 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     const result = await invoke<{ ok: boolean; error?: string }>('oauth:start-openrouter');
     if (!(result as any).ok) {
       setOpenRouterOAuth({ state: 'error', error: (result as any).error });
+    }
+  };
+
+  const handleGithubAuth = async () => {
+    // For now, prompt for PAT if not already handled by a dedicated flow
+    const pat = prompt('Please enter your GitHub Personal Access Token (PAT):');
+    if (pat) {
+      try {
+        await invoke('auth:store-api-key', 'github', pat);
+        const res = await invoke<any>('github:test-connection');
+        setGithubUser(unwrapIpc<any>(res));
+      } catch (e) {
+        alert('Failed to connect to GitHub. Check your token.');
+      }
     }
   };
 
@@ -115,6 +147,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     } else if (anthropicMethod === 'apikey' && anthropicKey && anthropicKey !== 'saved') {
       await invoke('auth:store-api-key', 'anthropic', anthropicKey).catch(() => {})
     }
+    
+    // Save Ollama Cloud key if provided
+    if (ollamaKey && ollamaKey !== 'saved') {
+      await invoke('auth:store-api-key', 'ollama', ollamaKey).catch(() => {})
+    }
 
     const preferences = {
       workspace: workspacePath,
@@ -123,8 +160,21 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       keys: { google: googleKey, openrouter: openRouterKey, deepinfra: deepInfraKey },
       ui: { theme: 'technical-phosphor' }
     };
-    await invoke('save-preferences', preferences);
-    onWizardComplete();
+    
+    // Validate workspace path before saving
+    if (!workspacePath) {
+      alert('Please select a workspace directory before completing setup.');
+      setStep(2); // Navigate back to workspace step
+      return;
+    }
+    
+    try {
+      await invoke('save-preferences', preferences);
+      onWizardComplete();
+    } catch (error: any) {
+      console.error('Failed to save preferences:', error);
+      alert(`Failed to save preferences: ${error.message}`);
+    }
   };
 
   const claudeDetected = cliStatus?.claude === true;
@@ -139,16 +189,16 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans select-none">
       <div className="h-8 w-full flex-none pl-20" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col p-8">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col p-8 overflow-hidden">
         <header className="mb-8 flex items-center justify-between border-b border-copernicus-steel/20 pb-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-copernicus-phosphor rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
             <h1 className="text-xl font-bold tracking-widest text-copernicus-phosphor uppercase">COPERNICUS SETUP</h1>
           </div>
-          <div className="text-xs text-zinc-500 font-mono">Step {step + 1}/4</div>
+          <div className="text-xs text-zinc-500 font-mono">Step {step}/3</div>
         </header>
 
-        <div className="flex-1 relative">
+        <div className="flex-1 relative overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -160,48 +210,15 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
               className="absolute w-full h-full flex flex-col overflow-y-auto pr-4"
             >
 
-              {/* ── Step 0: CLI Detection ───────────────────────────────────── */}
-              {step === 0 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full py-8">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <Terminal size={18} /> CLI Tool Detection
-                  </h2>
-                  <p className="text-sm text-zinc-400">Scanning your environment for AI agents...</p>
-                  <div className="bg-black/40 rounded p-4 font-mono text-xs space-y-2 border border-copernicus-steel/20">
-                    {cliStatus ? Object.entries(cliStatus).map(([tool, found]) => (
-                      <div key={tool} className="flex items-center justify-between">
-                        <span className="uppercase">{tool}</span>
-                        {found
-                          ? <span className="text-copernicus-phosphor flex items-center gap-1"><Check size={12} /> FOUND</span>
-                          : <span className="text-zinc-600 flex items-center gap-1"><X size={12} /> NOT FOUND</span>
-                        }
-                      </div>
-                    )) : (
-                      <div className="text-zinc-500 animate-pulse">Scanning...</div>
-                    )}
-                  </div>
-                  {cliStatus && !cliStatus.claude && (
-                    <div className="bg-amber-900/10 border border-amber-700/30 rounded p-3 text-[11px] text-amber-400 leading-relaxed">
-                      Claude Code CLI not found. You can still use COPERNICUS with an Anthropic API key, or{' '}
-                      <button
-                        onClick={() => invoke('app:open-external', 'https://claude.ai/download')}
-                        className="underline hover:text-amber-200"
-                      >
-                        install Claude Code
-                      </button>
-                      {' '}and re-run setup to use your Claude.ai subscription instead.
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* ── Step 1: Credentials ─────────────────────────────────────── */}
               {step === 1 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full py-8">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <Key size={18} /> Credentials
-                  </h2>
-                  <p className="text-sm text-zinc-400">Configure your AI providers. Stored securely in the OS Keychain.</p>
+                <div className="space-y-6 max-w-2xl mx-auto w-full py-4">
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Key size={18} /> Credentials & Accounts
+                    </h2>
+                    <p className="text-sm text-zinc-400 font-mono tracking-tighter uppercase opacity-60">Identity Management // V0.1</p>
+                  </div>
 
                   <div className="space-y-5">
                     {/* ── Anthropic ──────────────────────────────────────────── */}
@@ -246,7 +263,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           </div>
                         </div>
                         <p className="text-[10px] text-zinc-500 mt-1.5 ml-6">
-                          Uses your existing <code className="text-zinc-400">claude login</code> session — no separate API key needed. Works with Claude.ai Pro &amp; Max subscriptions.
+                          Uses your existing <code className="text-zinc-400">claude login</code> session — no separate API key needed.
                         </p>
                       </button>
 
@@ -291,10 +308,64 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                             </div>
                           )}
                         </div>
-                        <p className="text-[10px] text-zinc-600 mt-1.5">
-                          Requires a separate API key from console.anthropic.com — billed per token independently of your Claude.ai subscription.
-                        </p>
                       </div>
+                    </div>
+
+                    {/* ── GitHub ──────────────────────────────────────────────── */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <div className="flex items-center gap-2">
+                          <Github size={14} className="text-zinc-400" />
+                          <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">GitHub Connection</span>
+                        </div>
+                        {githubUser ? (
+                          <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor">
+                            <Check size={11} /> Connected as {githubUser.login}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={handleGithubAuth}
+                            className="text-[10px] text-copernicus-phosphor hover:bg-copernicus-phosphor/10 px-2 py-1 rounded border border-copernicus-phosphor/30 uppercase tracking-wide transition-all"
+                          >
+                            Connect GitHub
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-zinc-500 leading-relaxed italic">
+                        Required for repository management, Jules session synchronization, and PR automation.
+                      </p>
+                    </div>
+
+                    {/* ── Ollama Cloud ────────────────────────────────────────── */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <div className="flex items-center gap-2">
+                          <Zap size={14} className="text-copernicus-phosphor" />
+                          <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Ollama Cloud (High-Intel)</span>
+                        </div>
+                        {ollamaKey === 'saved' && (
+                          <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor">
+                            <Check size={11} /> Token active
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="password"
+                          className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
+                          placeholder={ollamaKey === 'saved' ? 'Token already saved' : 'Ollama Bearer Token'}
+                          value={ollamaKey === 'saved' ? '' : ollamaKey}
+                          onChange={(e) => setOllamaKey(e.target.value)}
+                        />
+                        {(ollamaKey === 'saved' || ollamaKey) && (
+                          <div className="absolute right-2 top-2 text-copernicus-phosphor">
+                            <ShieldCheck size={16} />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-zinc-600 font-mono tracking-tighter">
+                        Enables the Architect, Researcher, and Thinker personas via high-tier cloud infrastructure.
+                      </p>
                     </div>
 
                     {/* ── Google / Gemini / Jules ─────────────────────────────── */}
@@ -329,24 +400,6 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           onChange={(e) => setGoogleOAuthClientId(e.target.value)}
                         />
                       </div>
-                      {googleOAuth.state === 'error' && (
-                        <p className="text-[10px] text-red-400 bg-red-900/10 border border-red-900/20 p-2 rounded">{googleOAuth.error}</p>
-                      )}
-                      <div className="pt-2 border-t border-zinc-800">
-                        <label className="text-[10px] text-zinc-500 uppercase tracking-tight block mb-1">Direct API Key (Optional Override)</label>
-                        <div className="relative">
-                          <input
-                            type="password"
-                            className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none"
-                            placeholder={googleKey === 'saved' ? 'Detected from environment' : 'AIza… (from Google AI Studio)'}
-                            value={googleKey === 'oauth' || googleKey === 'saved' ? '' : googleKey}
-                            onChange={(e) => setGoogleKey(e.target.value)}
-                          />
-                          {(googleKey === 'oauth' || googleKey === 'saved') && (
-                            <div className="absolute right-2 top-2 text-copernicus-phosphor"><ShieldCheck size={16} /></div>
-                          )}
-                        </div>
-                      </div>
                     </div>
 
                     {/* ── Pro Providers ───────────────────────────────────────── */}
@@ -369,7 +422,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           <div className="relative">
                             <input
                               type="password"
-                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none"
+                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
                               placeholder={openRouterKey === 'saved' ? 'Detected' : 'sk-or-…'}
                               value={openRouterKey === 'oauth' || openRouterKey === 'saved' ? '' : openRouterKey}
                               onChange={(e) => setOpenRouterKey(e.target.value)}
@@ -387,7 +440,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           <div className="relative">
                             <input
                               type="password"
-                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none"
+                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
                               placeholder={deepInfraKey === 'saved' ? 'Detected' : 'API Key'}
                               value={deepInfraKey === 'saved' ? '' : deepInfraKey}
                               onChange={(e) => setDeepInfraKey(e.target.value)}
@@ -403,7 +456,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
               {/* ── Step 2: Workspace ───────────────────────────────────────── */}
               {step === 2 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full">
+                <div className="space-y-6 max-w-2xl mx-auto w-full py-8">
                   <h2 className="text-lg font-semibold text-white flex items-center gap-2"><FolderOpen size={18} /> Workspace Setup</h2>
                   <p className="text-sm text-zinc-400">Where should COPERNICUS store your projects and memory?</p>
                   <div className="flex gap-2">
@@ -417,12 +470,17 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       Browse
                     </button>
                   </div>
+                  {workspacePath && (
+                    <div className="bg-green-900/10 border border-green-700/30 rounded p-3 text-[11px] text-green-400 leading-relaxed">
+                      Workspace directory selected: <code className="text-green-300 font-mono">{workspacePath}</code>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* ── Step 3: CapEx ───────────────────────────────────────────── */}
               {step === 3 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full">
+                <div className="space-y-6 max-w-2xl mx-auto w-full py-8">
                   <h2 className="text-lg font-semibold text-white flex items-center gap-2"><DollarSign size={18} /> CapEx Setup</h2>
                   <p className="text-sm text-zinc-400">Set your hourly rate for development cost tracking.</p>
                   <div className="flex items-center gap-4 bg-black/40 p-4 rounded border border-copernicus-steel/20">
@@ -445,8 +503,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         <footer className="mt-8 flex justify-between border-t border-copernicus-steel/20 pt-4 flex-none">
           <button
             onClick={handleBack}
-            disabled={step === 0}
-            className={`flex items-center gap-2 px-4 py-2 rounded text-sm transition-colors ${step === 0 ? 'opacity-0 cursor-default' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+            disabled={step === 1}
+            className={`flex items-center gap-2 px-4 py-2 rounded text-sm transition-colors ${step === 1 ? 'opacity-0 cursor-default' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
           >
             <ArrowLeft size={16} /> Back
           </button>

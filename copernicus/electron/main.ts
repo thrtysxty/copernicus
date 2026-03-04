@@ -98,60 +98,7 @@ process.on('unhandledRejection', (reason: unknown) => {
 })
 
 // ── Settings Persistence ───────────────────────────────────────────────────
-const SETTINGS_PATH = path.join(app.getPath('userData'), 'copernicus-settings.json')
-
-function loadSettings(): Record<string, unknown> {
-  try {
-    const settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'))
-    
-    // Migrate existing MCP config if settings.mcp is missing
-    if (!settings.mcp || !settings.mcp.servers) {
-      const COPERNICUS_HOME = process.env.COPERNICUS_E2E_HOME ?? path.join(os.homedir(), '.copernicus')
-      const legacyMcpPath = path.join(COPERNICUS_HOME, 'mcp_config.json')
-      const userDataMcpPath = path.join(app.getPath('userData'), 'claude_mcp_config.json')
-
-      let servers: any[] = []
-
-      // Try user data claude_mcp_config.json first (AC-4)
-      if (fs.existsSync(userDataMcpPath)) {
-        try {
-          const config = JSON.parse(fs.readFileSync(userDataMcpPath, 'utf-8'))
-          if (config.mcpServers) {
-            servers = Object.entries(config.mcpServers).map(([name, conf]: [string, any]) => ({
-              name,
-              transport: conf.url ? 'sse' : 'stdio',
-              command: conf.command,
-              args: conf.args,
-              url: conf.url
-            }))
-          }
-        } catch (e) {
-          log.error('Failed to migrate from userData claude_mcp_config.json', e)
-        }
-      } else if (fs.existsSync(legacyMcpPath)) {
-        try {
-          const config = JSON.parse(fs.readFileSync(legacyMcpPath, 'utf-8'))
-          if (Array.isArray(config)) servers = config
-        } catch (e) {
-          log.error('Failed to migrate from legacy mcp_config.json', e)
-        }
-      }
-
-      settings.mcp = { servers }
-    }
-
-    return settings
-  } catch {
-    return {
-      mcp: { servers: [] }
-    }
-  }
-}
-
-function saveSettings(patch: Record<string, unknown>): void {
-  const current = loadSettings()
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify({ ...current, ...patch }, null, 2))
-}
+// DEPRECATED: Standard functions replaced by SettingsStore class
 
 export let win: BrowserWindow | null
 let isFirstRun = false;
@@ -191,8 +138,8 @@ function ensureCopernicusDirectory() {
   try {
     if (!fs.existsSync(COPERNICUS_HOME)) fs.mkdirSync(COPERNICUS_HOME, { recursive: true });
     if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
-    const preferencesPath = path.join(COPERNICUS_HOME, 'preferences.json');
-    if (!fs.existsSync(preferencesPath)) isFirstRun = true;
+    const settingsPath = path.join(app.getPath('userData'), 'copernicus-settings.json');
+    if (!fs.existsSync(settingsPath)) isFirstRun = true;
   } catch (error) {
     log.error('Failed to initialize .copernicus directory:', error);
   }
@@ -233,7 +180,7 @@ function createWindow() {
   julesMonitor.resumeWatching()
 
   if (process.platform === 'darwin') {
-    const settings = loadSettings()
+    const settings = settingsStore.getAll()
     const tbConfig = { ...DEFAULT_TOUCH_BAR_CONFIG, ...(settings?.touchBar as any ?? {}) }
     touchBarCleanup = createTouchBar(win, tbConfig)
   }
@@ -265,11 +212,11 @@ function setupAutoUpdater() {
 
 function registerIpcHandlers() {
   ipcMain.handle('settings:save', (_event, patch: unknown) => handleIpc(async () => {
-    if (typeof patch === 'object' && patch !== null) saveSettings(patch as Record<string, unknown>)
+    if (typeof patch === 'object' && patch !== null) settingsStore.setAll(patch as Record<string, any>)
     return true
   }))
 
-  ipcMain.handle('settings:load', () => handleIpc(() => loadSettings()))
+  ipcMain.handle('settings:load', () => handleIpc(() => settingsStore.getAll()))
 
   ipcMain.handle('app:open-log', () => handleIpc(() => {
     const logFilePath = path.join(LOG_DIR, 'copernicus.log')
@@ -488,6 +435,9 @@ function registerIpcHandlers() {
         if (keys.openrouter && keys.openrouter !== 'saved' && keys.openrouter !== 'oauth') await authManager.storeApiKey('openrouter', keys.openrouter, undefined, 'apikey');
         if (keys.deepinfra && keys.deepinfra !== 'saved') await authManager.storeApiKey('deepinfra', keys.deepinfra, undefined, 'apikey');
     }
+    
+    settingsStore.setAll({ ...settings, workspace });
+
     if (workspace) {
       fsManager.setRootPath(workspace);
       storiesManager.setProjectRoot(workspace);
@@ -496,9 +446,17 @@ function registerIpcHandlers() {
       lspManager.stop()
       lspManager.start(workspace)
     }
-    saveSettings({ ...settings, workspace });
-    const preferencesPath = path.join(COPERNICUS_HOME, 'preferences.json');
-    fs.writeFileSync(preferencesPath, JSON.stringify({ ...settings, workspace, completedAt: new Date().toISOString() }, null, 2));
+    return true;
+  }));
+
+  ipcMain.handle('app:set-root-path', (_e, path: string) => handleIpc(() => {
+    settingsStore.set('workspace', path);
+    fsManager.setRootPath(path);
+    storiesManager.setProjectRoot(path);
+    // Immediately start indexing and LSP for the new workspace
+    codebaseIndexer.startIndexing(path).catch(log.error)
+    lspManager.stop()
+    lspManager.start(path)
     return true;
   }));
 
@@ -934,17 +892,17 @@ function registerIpcHandlers() {
 
   // MCP Handlers (Story 190)
   ipcMain.handle('mcp:list-servers', () => handleIpc(() => {
-    const settings = loadSettings()
+    const settings = settingsStore.getAll()
     return (settings.mcp as any)?.servers || []
   }))
 
   ipcMain.handle('mcp:save-servers', (_e, servers: any[]) => handleIpc(() => {
-    saveSettings({ mcp: { servers } })
+    settingsStore.setAll({ mcp: { servers } })
     return true
   }))
 
   ipcMain.handle('mcp:get-status', () => handleIpc(() => {
-    const settings = loadSettings()
+    const settings = settingsStore.getAll()
     const servers = (settings.mcp as any)?.servers || []
     return servers.map((s: any) => ({
       name: s.name,
@@ -1057,7 +1015,7 @@ function registerIpcHandlers() {
   }))
   ipcMain.handle('app:get-root-path', () => handleIpc(() => {
     if (isFirstRun) return null;
-    return fsManager.getRootPath();
+    return settingsStore.get('workspace', null) || fsManager.getRootPath();
   }))
 
   ipcMain.handle('app:get-user-guide', () => handleIpc(() => {
@@ -1358,7 +1316,7 @@ app.whenReady().then(() => {
   })
 
   // Determine actual project root
-  const settings = loadSettings();
+  const settings = settingsStore.getAll();
   let workspaceRoot = settings.workspace as string;
 
   if (!workspaceRoot) {

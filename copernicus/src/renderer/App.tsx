@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import {
   Github, Settings, BarChart2,
-  Loader2, Maximize2, Minimize2, RotateCcw, Layout, Activity, Brain,
+  Loader2, Maximize2, Minimize2, RotateCcw, Layout, Brain,
   ChevronLeft, ChevronRight, Beaker, Menu, MessageSquare,
-  Palette, Code, Cpu, Workflow, Layers, Kanban, Monitor, Plus
+  Palette, Code, Workflow, Kanban, Monitor
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { CommandCenter } from './components/command/CommandCenter'
@@ -244,7 +244,7 @@ export default function App() {
   )
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
+    <div className="flex h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-copernicus-phosphor focus:text-[#050505] focus:px-4 focus:py-2 focus:rounded"
@@ -252,170 +252,171 @@ export default function App() {
         Skip to main content
       </a>
 
-      {/* Row 1: Application Title Bar */}
-      <header className="h-8 flex items-center justify-between px-2 bg-[#050505] shrink-0 draggable z-[110] border-b border-copernicus-steel/30">
-        <div className="w-[200px] flex items-center gap-2 no-drag ml-[72px]">
-           <div className="w-4 h-4 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
-              <span className="text-copernicus-phosphor font-bold text-[8px]">C</span>
-           </div>
-           <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-zinc-500 uppercase">Copernicus</span>
-        </div>
+      {/* Activity Side Bar - FIXED: Now at top level to span full height */}
+      <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center h-full z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed || (!!spotlightPane && spotlightPane !== 'explorer') ? 'w-0 border-none px-0 opacity-0' : 'w-12'}`}>
+        {!activityBarCollapsed && (
+          <>
+            <div className="pt-4">
+              <div className="w-8 h-8 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
+                <span className="text-copernicus-phosphor font-bold text-[10px]">C</span>
+              </div>
+            </div>
+            
+            <nav className="flex flex-col items-center gap-3 pt-4">
+              <NavButton id="planner" icon={Kanban} label="Planner" />
+              <NavButton id="designer" icon={Palette} label="Designer" />
+              <NavButton id="editor" icon={Code} label="Editor" />
+              <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
+              <NavButton id="reporter" icon={BarChart2} label="Reports" />
+              <NavButton id="command-center" icon={Monitor} label="Command Center" />
+              <NavButton id="memory" icon={Brain} label="Memory Browser" />
+            </nav>
 
-        <div className="flex-1 flex justify-center no-drag pointer-events-none">
-           <div className="text-[10px] font-mono font-bold tracking-widest text-zinc-600 uppercase">Strategic_Orchestration_Interface</div>
-        </div>
-        
-        <div className="w-[300px] flex justify-end no-drag">
-          <div className="flex items-center gap-3 bg-zinc-950 border border-copernicus-steel/30 px-3 py-0.5 rounded-full overflow-hidden">
-            <span className="text-[9px] font-mono text-zinc-600 shrink-0">STORY //</span>
-            <span className="text-[9px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
-              {activeStoryId || 'UNASSIGNED'}
-            </span>
-            {activeFilePath && (
-              <>
-                <span className="text-zinc-800">|</span>
-                <span className="text-[9px] font-mono text-zinc-500 truncate tracking-tight">
-                  {activeFilePath.split('/').pop()}
-                </span>
-              </>
-            )}
+            <div className="flex-1" />
+
+            <div className="flex flex-col items-center gap-3 pb-4">
+              <button 
+                onClick={() => setView('github')} 
+                title="GitHub Manager" 
+                className={`p-2 rounded transition-colors ${activeView === 'github' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
+              >
+                <Github size={18} />
+              </button>
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="p-2 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
+                title="Global Settings"
+              >
+                <Settings size={18} />
+              </button>
+              <button 
+                onClick={() => setSidebarOpen(!sidebarOpen)} 
+                className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+                title="Toggle Explorer"
+              >
+                <Menu size={18} />
+              </button>
+            </div>
+          </>
+        )}
+
+        <button onClick={() => setActivityBarCollapsed(!activityBarCollapsed)} className="mt-auto p-1 text-zinc-700 hover:text-zinc-400 mb-2">
+          {activityBarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={16} />}
+        </button>
+      </aside>
+
+      {/* Main Container: Header + Content */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Row 1: Application Title Bar */}
+        <header className="h-8 flex items-center justify-between px-2 bg-[#050505] shrink-0 draggable z-[110] border-b border-copernicus-steel/30">
+          <div className="flex-1"></div>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-zinc-500 uppercase">Copernicus</span>
           </div>
-        </div>
-      </header>
+          
+          <div className="flex-1 flex justify-end">
+            <div className="flex items-center gap-3 bg-zinc-950 border border-copernicus-steel/30 px-3 py-0.5 rounded-full overflow-hidden">
+              <span className="text-[9px] font-mono text-zinc-600 shrink-0">STORY //</span>
+              <span className="text-[9px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
+                {activeStoryId || 'UNASSIGNED'}
+              </span>
+              {activeFilePath && (
+                <>
+                  <span className="text-zinc-800">|</span>
+                  <span className="text-[9px] font-mono text-zinc-500 truncate tracking-tight">
+                    {activeFilePath.split('/').pop()}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </header>
 
-      {/* Row 2: Panel Header */}
-      <div className="h-10 flex items-center justify-between px-2 border-b border-copernicus-steel bg-[#0A0A0A] shrink-0 z-[100]">
-        {/* Left Panel (Explorer) Controls */}
-        <div className="flex items-center gap-1 w-64">
-          <button
-            onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
-            className={`p-1.5 rounded transition-colors ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
-            title="Spotlight Explorer"
-          >
-            {spotlightPane === 'explorer' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
-          <button
-            onClick={() => toggleFlip('sidebar')}
-            className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-            title="Rotate Explorer Content"
-          >
-            <RotateCcw size={14} />
-          </button>
-        </div>
-
-        {/* Center Panel (Canvas) Controls */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-zinc-950/50 p-1 rounded border border-zinc-800/50">
+        {/* Row 2: Panel Header */}
+        <div className="h-10 flex items-center px-2 border-b border-copernicus-steel bg-[#0A0A0A] shrink-0 z-[100]">
+          {/* Left Panel (Explorer) Controls */}
+          <div className="flex-1 flex items-center gap-1">
             <button
-              onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-              className={`p-1.5 rounded transition-colors ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
-              title="Spotlight Canvas"
+              onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
+              className={`p-1.5 rounded transition-colors ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+              title="Spotlight Explorer"
             >
-              {spotlightPane === 'editor' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              {spotlightPane === 'explorer' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
             <button
-              onClick={() => toggleFlip('center-panel')}
+              onClick={() => toggleFlip('sidebar')}
               className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-              title="Rotate Canvas Panel"
+              title="Rotate Explorer Content"
             >
               <RotateCcw size={14} />
             </button>
           </div>
-          
-          <div className="w-[1px] h-4 bg-copernicus-steel/30 mx-1" />
-          
-          <button
-            onClick={toggleUIBuilder}
-            className={`p-1.5 rounded transition-colors ${uiBuilderOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
-            title="UI Builder"
-          >
-            <Layout size={16} />
-          </button>
-          {activeView === 'designer' && (
+
+          {/* Center Panel (Canvas) Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center gap-1 bg-zinc-950/50 p-1 rounded border border-zinc-800/50">
+              <button
+                onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+                className={`p-1.5 rounded transition-colors ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+                title="Spotlight Canvas"
+              >
+                {spotlightPane === 'editor' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              </button>
+              <button
+                onClick={() => toggleFlip('center-panel')}
+                className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+                title="Rotate Canvas Panel"
+              >
+                <RotateCcw size={14} />
+              </button>
+            </div>
+            
+            <div className="w-[1px] h-4 bg-copernicus-steel/30 mx-1" />
+            
             <button
-              onClick={toggleUITestingDrawer}
-              className={`p-1.5 rounded transition-colors ${uiTestingDrawerOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
-              title="UI Testing"
+              onClick={toggleUIBuilder}
+              className={`p-1.5 rounded transition-colors ${uiBuilderOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+              title="UI Builder"
             >
-              <Beaker size={16} />
+              <Layout size={16} />
             </button>
-          )}
+            {activeView === 'designer' && (
+              <button
+                onClick={toggleUITestingDrawer}
+                className={`p-1.5 rounded transition-colors ${uiTestingDrawerOpen ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+                title="UI Testing"
+              >
+                <Beaker size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Right Panel (Chat) Controls */}
+          <div className="flex-1 flex items-center justify-end gap-1">
+            <button
+              onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
+              className={`p-1.5 rounded transition-colors ${spotlightPane === 'chat' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+              title="Spotlight Chat"
+            >
+              {spotlightPane === 'chat' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            </button>
+            <button
+              onClick={() => toggleFlip('chat')}
+              className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+              title="Rotate Chat Tools"
+            >
+              <RotateCcw size={14} />
+            </button>
+            <div className="w-[1px] h-4 bg-copernicus-steel/30 mx-1" />
+            <button
+              onClick={() => setChatPanelOpen(!chatPanelOpen)}
+              className={`p-1.5 rounded transition-colors ${chatPanelOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+              title="Toggle Chat Visibility"
+            >
+              <MessageSquare size={16} />
+            </button>
+          </div>
         </div>
-
-        {/* Right Panel (Chat) Controls */}
-        <div className="flex items-center justify-end gap-1 w-80">
-          <button
-            onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
-            className={`p-1.5 rounded transition-colors ${spotlightPane === 'chat' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
-            title="Spotlight Chat"
-          >
-            {spotlightPane === 'chat' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
-          <button
-            onClick={() => toggleFlip('chat')}
-            className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-            title="Rotate Chat Tools"
-          >
-            <RotateCcw size={14} />
-          </button>
-          <div className="w-[1px] h-4 bg-copernicus-steel/30 mx-1" />
-          <button
-            onClick={() => setChatPanelOpen(!chatPanelOpen)}
-            className={`p-1.5 rounded transition-colors ${chatPanelOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
-            title="Toggle Chat Visibility"
-          >
-            <MessageSquare size={16} />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex h-full w-full overflow-hidden">
-        {/* Activity Side Bar */}
-        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 gap-2 z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed || (!!spotlightPane && spotlightPane !== 'explorer') ? 'w-0 border-none px-0 opacity-0' : 'w-12'}`}>
-          {!activityBarCollapsed && (
-            <>
-              <nav className="flex flex-col items-center gap-3">
-                <NavButton id="planner" icon={Kanban} label="Planner" />
-                <NavButton id="designer" icon={Palette} label="Designer" />
-                <NavButton id="editor" icon={Code} label="Editor" />
-                <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
-                <NavButton id="reporter" icon={BarChart2} label="Reports" />
-                <NavButton id="command-center" icon={Monitor} label="Command Center" />
-                <NavButton id="memory" icon={Brain} label="Memory Browser" />
-              </nav>
-
-              <div className="flex-1" />
-
-              <div className="flex flex-col items-center gap-3 pb-2">
-                <button 
-                  onClick={() => setView('github')} 
-                  title="GitHub Manager" 
-                  className={`p-2 rounded transition-colors ${activeView === 'github' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
-                >
-                  <Github size={18} />
-                </button>
-                <button
-                  onClick={() => setSettingsOpen(true)}
-                  className="p-2 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
-                  title="Global Settings"
-                >
-                  <Settings size={18} />
-                </button>
-                <button 
-                  onClick={() => setSidebarOpen(!sidebarOpen)} 
-                  className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
-                  title="Toggle Explorer"
-                >
-                  <Menu size={18} />
-                </button>
-              </div>
-            </>
-          )}
-
-          <button onClick={() => setActivityBarCollapsed(!activityBarCollapsed)} className="mt-auto p-1 text-zinc-700 hover:text-zinc-400">
-            {activityBarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={16} />}
-          </button>
-        </aside>
 
         {/* Main Content Area */}
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
