@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, FolderOpen, DollarSign, Check, X, ArrowRight, ArrowLeft,
+import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
          Loader2, ExternalLink, ShieldCheck, Cpu, Key, Zap, Github } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc'
