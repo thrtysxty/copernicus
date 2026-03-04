@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   Github, Settings, BarChart2,
-  Maximize2, RotateCcw, Layout, Brain,
+  Maximize2, RotateCcw, Brain,
   ChevronLeft, ChevronRight, Menu,
   Palette, Code, Workflow, Kanban, Monitor
 } from 'lucide-react'
@@ -50,7 +50,6 @@ export default function App() {
     addTerminal,
     removeTerminal,
     setTerminalBusy,
-    uiBuilderOpen,
     uiTestingDrawerOpen,
     toggleUIBuilder,
     activeFilePath,

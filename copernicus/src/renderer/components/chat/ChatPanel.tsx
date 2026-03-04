@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Book, User, History, Info, Layers, MessageSquare, Terminal, FileCode, ChevronRight } from 'lucide-react'
+import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Book, User, History, Info, Layers, FileCode, ChevronRight } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
 import { UIUpdateChip } from './UIUpdateChip'
