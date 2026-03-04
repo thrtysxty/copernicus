@@ -22,6 +22,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #102 | Copernicus Platform Hardening | COMPLETE | CRITICAL |
 | #112 | Llm Streaming Service | COMPLETE | CRITICAL |
 | #113 | Filesystem Integration | COMPLETE | CRITICAL |
+| #223 | Python Shim To Service | PENDING | CRITICAL |
+| #214 | Ollama Cloud Authentication And Dynamic Routing | APPROVED FOR IMPLEMENTATION | High |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -43,6 +45,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #156 | Model Call Ledger | COMPLETE | HIGH |
 | #205 | Auto-Trigger Onboarding Wizard | COMPLETE | High |
 | #207 | Fix Editor Canvas Logic Regression | COMPLETE | High |
+| #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
+| #217 | Nodeinspector Focus And Stability | COMPLETE | High |
+| #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
 | #121 | Parallel Agent Review Gate | COMPLETED | HIGH |
 | #122 | Local Codebase Semantic Index | COMPLETED | HIGH |
 | #125 | R210Ii Ollama Inference Service | COMPLETED | HIGH |
@@ -60,6 +65,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #166 | Touch Bar Hardening And Configuration | COMPLETED | HIGH |
 | #050 | Implement Agent Tool Use | DONE | High |
 | #211 | Resolve Explorer Folder Listing Failure | DRAFT | High |
+| #224 | Claude Gemini Python Migration | PENDING | HIGH |
+| #225 | Websocket Streaming Bus | PENDING | HIGH |
+| #227 | Automated Documentation Lifecycle | PENDING | HIGH |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -72,6 +80,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #204 | Add Spotlight To Command Center Panes | COMPLETE | Medium |
 | #206 | Remove Redundant Cmd+P Button | COMPLETE | Medium |
 | #208 | Implement Single Header Row Initiative | COMPLETE | Medium |
+| #216 | Chat Utility Breadcrumb Navigation | COMPLETE | Medium |
 | #148 | Ollama Dynamic Model Discovery | COMPLETED | MEDIUM |
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
@@ -79,7 +88,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #209 | Designer Explorer Collapse By Default | DRAFT | Medium |
 | #210 | Restore Control Buttons To Canvas Preview | DRAFT | Medium |
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
-| #214 | Ollama Cloud Authentication And Dynamic Routing | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | DRAFT | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
@@ -139,4 +147,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
+| #219 | Enhanced Rag System | PENDING | P0 |
+| #220 | Atomic Multi File Edits | PENDING | P0 |
+| #221 | Intelligent Context Management | PENDING | P0 |
+| #222 | Native Diff Visualization | PENDING | P1 |
 
