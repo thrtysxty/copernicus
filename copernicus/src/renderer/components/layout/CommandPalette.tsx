@@ -223,7 +223,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
           setModel: () => {
              useToastStore.getState().addToast('Model switching not supported in palette', 'warn')
           },
-          getCurrentModel: () => 'unknown'
+          getCurrentModel: () => 'unknown',
+          setBackTab: () => {
+             useToastStore.getState().addToast('Utility face navigation not supported in palette', 'warn')
+          },
+          flip: () => {
+             useToastStore.getState().addToast('Panel rotation not supported in palette', 'warn')
+          }
         }
         commandRegistry.execute(item.label, cmdContext)
         break

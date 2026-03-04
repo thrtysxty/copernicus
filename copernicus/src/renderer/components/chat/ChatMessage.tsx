@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 import { useIpcError } from '../../hooks/useIpcError'
 
 interface ChatMessageProps {
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'copernicus'
   content: React.ReactNode
   tokens?: { in: number; out: number; cost: number }
 }
@@ -19,9 +19,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, tokens 
       <div className="flex items-center gap-2 mb-1 px-1">
         <span className={clsx(
           'text-[8px] uppercase tracking-widest font-bold',
-          role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'
+          role === 'user' ? 'text-zinc-500' : 
+          role === 'copernicus' ? 'text-copernicus-phosphor' : 'text-blue-400'
         )}>
-          {role === 'user' ? 'DEVELOPER' : 'STRATEGIC_CORE'}
+          {role === 'user' ? 'DEVELOPER' : 
+           role === 'copernicus' ? 'COPERNICUS' : 'STRATEGIC_CORE'}
         </span>
       </div>
 
@@ -30,9 +32,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, tokens 
         'p-3 text-xs leading-relaxed border transition-all duration-300',
         role === 'user'
           ? 'bg-zinc-900/50 border-copernicus-steel text-zinc-300 rounded-l-md rounded-tr-md'
-          : 'bg-[#080808] border-copernicus-phosphor/20 text-zinc-200 rounded-r-md rounded-tl-md shadow-[0_0_15px_rgba(74,222,128,0.03)]'
+          : role === 'copernicus'
+          ? 'bg-copernicus-phosphor/5 border-copernicus-phosphor/20 text-zinc-200 rounded-r-md rounded-tl-md shadow-[0_0_15px_rgba(74,222,128,0.03)]'
+          : 'bg-[#080808] border-blue-400/20 text-zinc-200 rounded-r-md rounded-tl-md'
       )}>
-        <p className="whitespace-pre-wrap">{content}</p>
+        <div className="whitespace-pre-wrap">{content}</div>
       </div>
 
       {/* Token Telemetry & Actions (Assistant Only) */}

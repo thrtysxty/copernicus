@@ -220,6 +220,8 @@ export const useLayoutStore = create<LayoutState>()(
 
       uiBuilderOpen: false,
       uiTestingDrawerOpen: false,
+      paletteOpen: true,
+      inspectorOpen: true,
       uiComponents: [],
       browserSessionActive: false,
 
@@ -291,6 +293,8 @@ export const useLayoutStore = create<LayoutState>()(
       setActiveFileLanguage: (language) => set({ activeFileLanguage: language }),
       setAppearance: (patch) => set((state) => ({ ...state, ...patch })),
       toggleUIBuilder: () => set((state) => ({ uiBuilderOpen: !state.uiBuilderOpen })),
+      setPaletteOpen: (open) => set({ paletteOpen: open }),
+      setInspectorOpen: (open) => set({ inspectorOpen: open }),
       toggleUITestingDrawer: () => set((state) => ({ uiTestingDrawerOpen: !state.uiTestingDrawerOpen })),
       setUIComponents: (components) => set({ uiComponents: components }),
       setWorkingDir: (dir) => set({ workingDir: dir }),

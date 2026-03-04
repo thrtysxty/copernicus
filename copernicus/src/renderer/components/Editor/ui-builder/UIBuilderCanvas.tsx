@@ -5,8 +5,7 @@ import { renderComponentTree } from './render'
 import { UIComponentInspector } from './UIComponentInspector'
 import { Rnd } from 'react-rnd'
 import {
-  Code, Download, Trash2, Layout,
-  GripVertical, RotateCcw, Maximize2, Minimize2, X,
+  Layout, GripVertical, 
   MousePointer2, Square, Type, Image as ImageIcon,
   FormInput, Layers, Box
 } from 'lucide-react'
@@ -52,12 +51,9 @@ const PALETTE: Array<{ section: string; icon: any; items: Array<{ type: UICompon
 export const UIBuilderCanvas: React.FC = () => {
   const { 
     uiComponents, setUIComponents, 
-    toggleUIBuilder, toggleFlip, 
-    setSpotlight, spotlightPane 
+    paletteOpen, inspectorOpen
   } = useLayoutStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [paletteOpen, setPaletteOpen] = useState(true)
-  const [inspectorOpen, setInspectorOpen] = useState(true)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const invoke = useIpcError()
@@ -144,7 +140,6 @@ export const UIBuilderCanvas: React.FC = () => {
       const rootPath = await invoke<string>('app:get-root-path')
       const srcDir = `${rootPath}/src`
       
-      // Basic check if src exists, if not use root
       const filePath = `${srcDir}/GeneratedUI.tsx`
       await invoke('fs:save-file', { filePath, content: jsx })
       addToast(`Exported to ${filePath}`, 'success')
@@ -164,6 +159,10 @@ export const UIBuilderCanvas: React.FC = () => {
       addToast(`Export failed: ${e.message}`, 'error')
     }
   }
+
+  // Expose these to satisfy React warnings if needed, though they were handled in headers
+  ;(window as any)._ui_export_jsx = handleExportJSX
+  ;(window as any)._ui_export_html = handleExportHTML
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505] overflow-hidden" ref={containerRef}>
