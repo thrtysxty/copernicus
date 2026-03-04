@@ -39,12 +39,13 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
 
   return (
     <div className="flex flex-col h-full bg-copernicus-bg">
-      <div className="flex border-b border-copernicus-steel h-6 overflow-x-auto no-scrollbar bg-[#050505]">
+      {/* Standard h-8 Header */}
+      <div className="flex border-b border-copernicus-steel h-8 overflow-x-auto no-scrollbar bg-[#050505]">
         {terminals.map((tab) => (
           <div
             key={tab.id}
             className={`
-              flex items-center group px-3 text-[10px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative min-w-[80px]
+              flex items-center group px-3 text-[10px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative min-w-[100px]
               ${activeTerminalId === tab.id ? 'text-copernicus-phosphor bg-copernicus-steel/10' : 'text-zinc-500'}
             `}
             onClick={() => setActiveTerminal(tab.id)}
@@ -64,7 +65,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
               return null;
             })()}
 
-            <span className={tab.isBusy ? 'phosphor-glow' : ''}>
+            <span className={`truncate ${tab.isBusy ? 'phosphor-glow font-bold' : ''}`}>
               {tab.label}
               {tab.ephemeral && (
                 <span className="ml-1 text-[8px] text-zinc-600" title="Auto-closes on completion">◌</span>
@@ -72,7 +73,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             </span>
 
             {terminals.length > 1 && (
-              <div className="flex items-center ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity pl-2">
                 {getAgentBadge(tab.label) && tab.isBusy ? (
                   <button
                     onClick={(e) => handleStopAgent(e, tab.id)}
@@ -103,10 +104,10 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
         
         <button 
           onClick={handleNewTerminal}
-          className="px-2 flex items-center justify-center text-zinc-600 hover:text-copernicus-phosphor transition-colors border-r border-copernicus-steel bg-[#080808]"
+          className="px-3 flex items-center justify-center text-zinc-600 hover:text-copernicus-phosphor transition-colors border-r border-copernicus-steel bg-[#080808]"
           title="New Terminal Session"
         >
-          <Plus size={12} />
+          <Plus size={14} />
         </button>
       </div>
       <div className="flex-grow relative overflow-hidden">

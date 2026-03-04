@@ -1,0 +1,57 @@
+from flask import Blueprint, jsonify, request
+import time
+import threading
+
+orchestration_bp = Blueprint('orchestration', __name__)
+
+# Simple in-memory request store for human-in-the-loop confirmations
+pending_confirmations = {}
+confirmation_results = {}
+
+@orchestration_bp.route('/confirm-model-switch', methods=['POST'])
+def request_confirmation():
+    data = request.json
+    request_id = str(int(time.time() * 1000))
+    model_name = data.get('model')
+    reason = data.get('reason')
+    
+    # Store the request
+    pending_confirmations[request_id] = {
+        "model": model_name,
+        "reason": reason,
+        "status": "pending"
+    }
+    
+    # In a real Electron app, this would trigger a push event to the renderer
+    # For now, we simulate the wait. 
+    # The shim will poll or wait for the result.
+    
+    # BLOCKING WAIT (with timeout)
+    timeout = 60 # seconds
+    start_time = time.time()
+    
+    while request_id not in confirmation_results:
+        if time.time() - start_time > timeout:
+            return jsonify({"approved": False, "error": "User confirmation timed out"}), 408
+        time.sleep(0.5)
+        
+    result = confirmation_results.pop(request_id)
+    pending_confirmations.pop(request_id, None)
+    
+    return jsonify({"approved": result}), 200
+
+@orchestration_bp.route('/pending-confirmations', methods=['GET'])
+def get_pending():
+    return jsonify(pending_confirmations), 200
+
+@orchestration_bp.route('/resolve-confirmation', methods=['POST'])
+def resolve_confirmation():
+    data = request.json
+    request_id = data.get('request_id')
+    approved = data.get('approved', False)
+    
+    if request_id in pending_confirmations:
+        confirmation_results[request_id] = approved
+        return jsonify({"status": "resolved"}), 200
+    
+    return jsonify({"error": "Request ID not found"}), 404

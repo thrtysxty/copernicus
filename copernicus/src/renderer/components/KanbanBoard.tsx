@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { Plus, X, Crown, Lock, Loader2, Send } from 'lucide-react'
+import { Plus, X, Crown, Lock, Loader2, Send, Kanban, RotateCcw } from 'lucide-react'
 import { StoryDetail } from './planning/StoryDetail'
 import { EpicBadge } from './planning/EpicBadge'
 import log from '../utils/logger'
@@ -58,7 +58,7 @@ export function KanbanBoard() {
   const [julesSessions, setJulesSessions] = useState<Record<string, JulesSession>>({})
   const [workflowStatuses, setWorkflowStatuses] = useState<Record<string, string>>({})
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
-  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, spotlightLane, setSpotlightLane } = useLayoutStore()
+  const { activeStoryId, setActiveStoryId, drawerStoryId, setDrawerStory, columns, spotlightLane, setSpotlightLane, setView } = useLayoutStore()
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
   const [newTitle, setNewTitle] = useState('')
   const [newEpic, setNewEpic] = useState('')
@@ -85,19 +85,20 @@ export function KanbanBoard() {
     } catch { /* session list unavailable */ }
   }, [invoke])
 
-  useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        const _rawStories = await invoke<any>('stories:list')
-        setStories(unwrapIpc<any>(_rawStories) ?? [])
-        const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
-        setIsRepoTargeted(unwrapIpc<any>(_rawTargeted) ?? false)
-        fetchJulesSessions()
-      } catch (e) {
-        log.warn('Failed to fetch stories', e)
-      }
+  const refreshData = useCallback(async () => {
+    try {
+      const _rawStories = await invoke<any>('stories:list')
+      setStories(unwrapIpc<any>(_rawStories) ?? [])
+      const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
+      setIsRepoTargeted(unwrapIpc<any>(_rawTargeted) ?? false)
+      fetchJulesSessions()
+    } catch (e) {
+      log.warn('Failed to fetch stories', e)
     }
-    fetchStories()
+  }, [invoke, fetchJulesSessions])
+
+  useEffect(() => {
+    refreshData()
 
     const removeStoriesUpdate = window.ipcRenderer.on('stories:updated', (_event: any, newStories: Story[]) => {
       setStories(newStories)
@@ -127,7 +128,7 @@ export function KanbanBoard() {
       removeJulesUpdate()
       removeWorkflowUpdate()
     }
-  }, [invoke, fetchJulesSessions])
+  }, [invoke, fetchJulesSessions, refreshData])
 
   const dispatchToJules = async (storyId: string) => {
     try {
@@ -205,7 +206,8 @@ export function KanbanBoard() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative">
+    <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
+      
       {/* Target Repo Warning Overlay */}
       {!isRepoTargeted && !drawerStoryId && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-8">
@@ -219,12 +221,39 @@ export function KanbanBoard() {
         </div>
       )}
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 bg-black/20 flex-shrink-0 overflow-x-auto scrollbar-none">
-        <div className="flex items-center gap-1.5 mr-2 px-2 py-0.5 rounded border border-white/5 bg-black/40 flex-none">
-           <div className={`w-1.5 h-1.5 rounded-full ${isRepoTargeted ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]'}`} />
-           <span className="text-[8px] text-zinc-500 uppercase font-black tracking-tighter">{isRepoTargeted ? 'Repo_Live' : 'No_Target'}</span>
+      {/* Standard h-8 Header */}
+      <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
+        <div className="flex items-center gap-2">
+          <Kanban size={14} className="text-copernicus-phosphor" />
+          <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Project Planner</h2>
         </div>
+        
+        <div className="flex items-center gap-3">
+          {isRepoTargeted && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-900/20 border border-green-900/30 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[9px] font-mono text-green-400 font-bold uppercase tracking-tighter">Live Repo Context</span>
+            </div>
+          )}
+          <div className="w-px h-3 bg-zinc-800" />
+          <button
+            onClick={refreshData}
+            className="p-1 hover:text-copernicus-phosphor transition-colors"
+            title="Refresh Board"
+          >
+            <RotateCcw size={12} />
+          </button>
+          <button
+            onClick={() => setView('command-center')}
+            className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+          >
+            System Log
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 bg-black/10 flex-shrink-0 overflow-x-auto scrollbar-none">
         <input
           type="text"
           placeholder="Search…"
@@ -283,7 +312,7 @@ export function KanbanBoard() {
             return (
               <div
                 key={col.id}
-                className="w-10 h-full flex flex-col rounded-lg border border-white/5 bg-black/40 transition-all duration-300 cursor-pointer hover:bg-black/60 group/column overflow-hidden"
+                className="w-10 h-full flex flex-col rounded border border-white/5 bg-black/40 transition-all duration-300 cursor-pointer hover:bg-black/60 group/column overflow-hidden"
                 onClick={() => setSpotlightLane(null)}
               >
                  <div className={`h-0.5 w-full ${col.accent} opacity-40`} />
@@ -302,7 +331,7 @@ export function KanbanBoard() {
           return (
             <div
               key={col.id}
-              className={`h-full flex flex-col rounded-lg border shadow-sm ${col.color} transition-all duration-300 relative group/column overflow-hidden ${isSpotlit ? 'flex-1' : 'min-w-[240px] w-64 flex-shrink-0'}`}
+              className={`h-full flex flex-col rounded border shadow-sm ${col.color} transition-all duration-300 relative group/column overflow-hidden ${isSpotlit ? 'flex-1' : 'min-w-[240px] w-64 flex-shrink-0'}`}
               onDrop={e => handleDrop(e, col.status)}
               onDragOver={handleDragOver}
             >
@@ -368,7 +397,7 @@ export function KanbanBoard() {
 
                         <input
                           autoFocus
-                          className="w-full bg-black/60 border border-zinc-800 rounded p-1.5 text-[11px] text-white focus:outline-none focus:border-copernicus-phosphor transition-all"
+                          className="w-full bg-black/60 border border-zinc-800 rounded p-1.5 text-[11px] text-white focus:outline-none focus:border-copernicus-phosphor transition-all font-mono"
                           placeholder={`${creation.type} title…`}
                           value={newTitle}
                           onChange={e => setNewTitle(e.target.value)}
@@ -467,7 +496,7 @@ export function KanbanBoard() {
                     {/* Title row */}
                     <div className="flex items-start gap-1.5">
                       {story.type === 'Epic' && (
-                        <Crown size={11} className="text-amber-400 mt-0.5 flex-shrink-0" />
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Crown size={11} className="text-amber-400 mt-0.5 flex-shrink-0" /></motion.div>
                       )}
                       <span className="text-[11px] font-semibold text-zinc-200 group-hover/card:text-copernicus-phosphor transition-colors leading-snug">
                         {story.title}

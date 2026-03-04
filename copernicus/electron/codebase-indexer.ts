@@ -6,8 +6,8 @@ import { authManager } from './auth-manager'
 import { SettingsStore } from './settings-store'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import log from './utils/logger'
+import { lspManager } from './lsp/lsp-manager'
 
-// Re-using same instance logic as main.ts
 const settingsStore = new SettingsStore()
 
 export interface IndexStatus {
@@ -28,34 +28,45 @@ export class CodebaseIndexer {
       this.loadVectorExtension()
       this.initSchema()
     } catch (err) {
-      log.error('[CodebaseIndexer] Failed to initialize — semantic search unavailable:', err)
+      log.error('[CodebaseIndexer] Failed to initialize:', err)
     }
   }
 
   private loadVectorExtension() {
-    const os = process.platform === 'darwin' ? 'darwin'
-      : process.platform === 'win32' ? 'windows' : 'linux'
+    const os = process.platform === 'darwin' ? 'darwin' : process.platform === 'win32' ? 'windows' : 'linux'
     const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64'
     const pkgName = `sqlite-vec-${os}-${arch}`
-
-    // In packaged app: use real filesystem path from unpacked ASAR directory.
-    // In dev: resolve via node_modules.
-    // Pass WITHOUT extension — SQLite appends .dylib/.so/.dll automatically.
     const dir = app.isPackaged
       ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', pkgName)
       : path.dirname(require.resolve(`${pkgName}/package.json`))
-
     stateLedger.db.loadExtension(path.join(dir, 'vec0'))
   }
 
   private initSchema() {
     stateLedger.db.exec(`
-      CREATE VIRTUAL TABLE IF NOT EXISTS codebase_vec USING vec0(
-        file_path TEXT PRIMARY KEY,
+      DROP TABLE IF EXISTS codebase_vec;
+      CREATE VIRTUAL TABLE codebase_vec USING vec0(
+        chunk_id TEXT PRIMARY KEY,
+        file_path TEXT,
+        line_start INTEGER,
+        line_end INTEGER,
+        symbols TEXT,
+        chunk_index INTEGER,
         content TEXT,
         embedding FLOAT[768]
       );
     `)
+  }
+
+  private async getSymbols(filePath: string): Promise<any[]> {
+    try {
+      const symbols = await lspManager.sendRequest('textDocument/documentSymbol', {
+        textDocument: { uri: `file://${filePath}` }
+      })
+      return Array.isArray(symbols) ? symbols : []
+    } catch {
+      return []
+    }
   }
 
   public getStatus(): IndexStatus {
@@ -68,70 +79,115 @@ export class CodebaseIndexer {
   }
 
   private async getEmbedding(text: string): Promise<{ embedding: number[]; provider: string }> {
-    const order = settingsStore.get('embeddingProviderOrder', ['ollama', 'google', 'deepinfra', 'openai', 'openrouter'])
-
+    const order = settingsStore.get('embeddingProviderOrder', ['ollama', 'google', 'openai'])
     for (const provider of order) {
       try {
         const embedding = await this.tryProvider(provider, text)
         if (embedding) return { embedding, provider }
-      } catch (e) {
-        continue
-      }
+      } catch { continue }
     }
-
     throw new Error('No embedding provider available.')
   }
 
   private async tryProvider(provider: string, text: string): Promise<number[] | null> {
-    switch (provider) {
-      case 'ollama': {
-        const url = process.env.OLLAMA_BASE_URL
-        if (!url) return null
-        const res = await fetch(`${url.replace(/\/$/, '')}/api/embeddings`, {
-          method: 'POST',
-          body: JSON.stringify({ model: 'qwen3-embedding:0.6b', prompt: text }),
+    if (provider === 'ollama') {
+      const url = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
+      const res = await fetch(`${url}/api/embeddings`, {
+        method: 'POST',
+        body: JSON.stringify({ model: 'qwen3-embedding:0.6b', prompt: text }),
+      })
+      const { embedding } = await res.json() as any
+      return embedding
+    }
+    if (provider === 'google') {
+      const apiKey = authManager.getApiKey('google')
+      if (!apiKey) return null
+      const genAI = new GoogleGenerativeAI(apiKey)
+      const model = genAI.getGenerativeModel({ model: 'text-embedding-004' })
+      const result = await model.embedContent(text)
+      return Array.from(result.embedding.values)
+    }
+    if (provider === 'openai') {
+      const apiKey = authManager.getApiKey('openai')
+      if (!apiKey) return null
+      const res = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          input: text,
+          model: 'text-embedding-3-small'
         })
-        const { embedding } = await res.json() as any
-        return embedding
-      }
-      case 'google': {
-        const key = authManager.getApiKey('google')
-        if (!key) return null
-        const genAI = new GoogleGenerativeAI(key)
-        const model = genAI.getGenerativeModel({ model: 'text-embedding-004' })
-        const result = await model.embedContent(text)
-        return Array.from(result.embedding.values)
-      }
-      case 'openai':
-      case 'openrouter':
-      case 'deepinfra': {
-        const resolved = authManager.resolveForProvider(provider)
-        if (!resolved) return null
-        const modelMap: Record<string, string> = {
-          openai: 'text-embedding-3-small',
-          openrouter: 'openai/text-embedding-3-small',
-          deepinfra: 'BAAI/bge-base-en-v1.5'
-        }
-        const body: any = {
-          model: modelMap[provider],
-          input: text
-        }
-        if (provider !== 'deepinfra') body.dimensions = 768
+      })
+      const { data } = await res.json() as any
+      return (data as any)[0]?.embedding || null
+    }
+    return null
+  }
 
-        const res = await fetch(`${resolved.baseUrl}/embeddings`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${resolved.key}`,
-            ...(resolved.headers || {})
-          },
-          body: JSON.stringify(body)
-        })
-        const json = await res.json() as any
-        return json.data[0].embedding
+  public async indexFile(filePath: string) {
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8')
+      const lines = content.split('\n')
+      const symbols = await this.getSymbols(filePath)
+      
+      let chunks: any[] = []
+      if (symbols.length > 0) {
+        chunks = symbols.map((s, i) => ({
+          chunk_id: `${filePath}#${i}`,
+          line_start: s.range.start.line,
+          line_end: s.range.end.line,
+          symbols: s.name,
+          chunk_index: i,
+          content: lines.slice(s.range.start.line, s.range.end.line + 1).join('\n')
+        }))
+      } else {
+        for (let i = 0; i < content.length; i += 800) {
+          const chunkContent = content.slice(i, i + 1000)
+          chunks.push({
+            chunk_id: `${filePath}#c${i}`,
+            line_start: 0,
+            line_end: 0,
+            symbols: '',
+            chunk_index: chunks.length,
+            content: chunkContent
+          })
+        }
       }
-      default:
-        return null
+
+      const insertStmt = stateLedger.db.prepare(`
+        INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, chunk_index, content, embedding)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+
+      stateLedger.db.transaction(() => {
+        stateLedger.db.prepare('DELETE FROM codebase_vec WHERE file_path = ?').run(filePath)
+      })()
+
+      for (const chunk of chunks) {
+        try {
+          const { embedding, provider } = await this.getEmbedding(chunk.content)
+          this.activeProvider = provider
+          stateLedger.db.transaction(() => {
+            insertStmt.run(
+              chunk.chunk_id,
+              filePath,
+              chunk.line_start,
+              chunk.line_end,
+              chunk.symbols,
+              chunk.chunk_index,
+              chunk.content,
+              new Float32Array(embedding)
+            )
+          })()
+        } catch (e) {
+          log.error(`Failed to generate embedding for chunk ${chunk.chunk_id}:`, e)
+        }
+      }
+    } catch (e) {
+      log.error(`Failed to index ${filePath}:`, e)
     }
   }
 
@@ -159,47 +215,19 @@ export class CodebaseIndexer {
     }
   }
 
-  public async indexFile(filePath: string) {
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8')
-      if (!content.trim()) return
-
-      // For MVP, we index the whole file if small, or first 2000 chars
-      const textToIndex = content.slice(0, 2000)
-      const { embedding, provider } = await this.getEmbedding(textToIndex)
-      this.activeProvider = provider
-
-      const deleteStmt = stateLedger.db.prepare('DELETE FROM codebase_vec WHERE file_path = ?')
-      const insertStmt = stateLedger.db.prepare(`
-        INSERT INTO codebase_vec(file_path, content, embedding)
-        VALUES (?, ?, ?)
-      `)
-
-      stateLedger.db.transaction(() => {
-        deleteStmt.run(filePath)
-        insertStmt.run(filePath, textToIndex, new Float32Array(embedding))
-      })()
-    } catch (e) {
-      log.error(`[Indexer] Failed to index ${filePath}:`, e)
-    }
-  }
-
   public async search(query: string, topK = 5): Promise<any[]> {
     const { embedding } = await this.getEmbedding(query)
-
     const stmt = stateLedger.db.prepare(`
-      SELECT file_path, content, distance
+      SELECT chunk_id, file_path, line_start, line_end, symbols, content, distance
       FROM codebase_vec
       WHERE embedding MATCH ?
       ORDER BY distance
       LIMIT ?
     `)
-
     const rows = stmt.all(new Float32Array(embedding), topK)
     return rows.map((r: any) => ({
-      path: r.file_path,
-      content: r.content,
-      similarity: 1 - r.distance // dist 0 = similarity 1
+      chunkId: r.chunk_id, path: r.file_path, lineStart: r.line_start, lineEnd: r.line_end,
+      symbols: r.symbols, content: r.content, similarity: 1 - r.distance
     }))
   }
 
@@ -209,11 +237,8 @@ export class CodebaseIndexer {
     list.forEach(file => {
       file = path.join(dir, file)
       const stat = fs.statSync(file)
-      if (stat && stat.isDirectory()) {
-        results = results.concat(this.walk(file))
-      } else {
-        results.push(file)
-      }
+      if (stat && stat.isDirectory()) results = results.concat(this.walk(file))
+      else results.push(file)
     })
     return results
   }

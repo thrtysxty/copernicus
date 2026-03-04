@@ -171,6 +171,8 @@ system-wide spec.
 
 **Layout:** Canvas (full center) + Chat Panel (right, `w-80`).
 
+**Sidebar Auto-Collapse (Story 209):** When entering the Designer view, the FileTree sidebar MUST automatically collapse to its bookmark strip. This maximizes the visual workspace for the Canvas. The sidebar can be manually restored by clicking its bookmark strip.
+
 The Designer view hosts **the Canvas** — the unified graphic surface for all
 visual work. The Canvas is not a single component; it is a rendering context
 that hosts whatever graphic content is active:
@@ -213,9 +215,9 @@ introduced. Tabs must NOT wrap or scroll horizontally before the viewport is
 **Layout:** Workflow canvas fills center. Inspector panel overlays right edge
 as a floating panel (not a separate column) when a node is selected.
 
-Toolbar (Save / Reset / Run) lives in a `sticky top-0` strip **inside the
-Workflow view**, NOT in the main header. It must never overflow the canvas or
-float outside its bounding box.
+**Sidebar Auto-Collapse:** Like the Designer view, the FileTree sidebar MUST automatically collapse when entering the Orchestrator.
+
+**Toolbar (Story 212):** The Save / Reset / Run toolbar lives in a `sticky top-0` strip **inside the Workflow view**, NOT in the main header. It MUST be horizontally centered and have a background blur (`backdrop-blur-md bg-black/40`) to remain legible over complex graphs. It must never overflow the canvas or float outside its bounding box.
 
 ---
 

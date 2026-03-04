@@ -54,8 +54,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
   const handleClick = async () => {
     if (node.isDir) {
       if (!expanded) {
-        const result = await invoke<{ ok: boolean; data?: FileNode[]; error?: string }>('fs:list-dir', node.path)
-        const data = (result as any).data || result
+        const result = await invoke<any>('fs:list-dir', node.path)
+        const data = unwrapIpc<FileNode[]>(result)
         if (Array.isArray(data)) setChildren(data)
       }
       setExpanded(prev => !prev)
@@ -76,8 +76,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
     } else {
       setCenterMode('code')
       try {
-        const raw = await invoke<any>('fs:read-file', node.path)
-        const finalContent: string = typeof raw === 'string' ? raw : (unwrapIpc<string>(raw) || '')
+        const result = await invoke<any>('fs:read-file', node.path)
+        const finalContent = unwrapIpc<string>(result) || ''
 
         if (finalContent.length > MAX_EDITOR_BYTES) {
           setActiveFileContent(finalContent.slice(0, MAX_EDITOR_BYTES))

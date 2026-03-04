@@ -700,7 +700,7 @@ export default function WorkflowCanvas() {
                 )}
                 {tourStep === 2 && (
                    <div className="p-4 font-mono text-[9px] text-zinc-600">
-                      <div className="flex gap-2 mb-1 opacity-50"><span className="text-zinc-800">1 |</span> <span className="text-blue-400">import</span> React <span className="text-blue-400">from</span> <span className="text-green-400">'react'</span></div>
+                      <div className="flex gap-2 mb-1 opacity-50"><span className="text-zinc-800">1 |</span> <span className="text-blue-400">import</span> React <span className="text-blue-400">from</span> <span className="text-green-400">&apos;react&apos;</span></div>
                       <div className="flex gap-2 mb-1 animate-pulse"><span className="text-zinc-800">2 |</span> <span className="text-purple-400">export default function</span> <span className="text-yellow-400">App</span>() {'{'}</div>
                       <div className="flex gap-2 mb-1 animate-pulse delay-75"><span className="text-zinc-800">3 |</span>   <span className="text-blue-400">return</span> &lt;<span className="text-red-400">div</span>&gt;Hello World&lt;/<span className="text-red-400">div</span>&gt;</div>
                       <div className="flex gap-2 mb-1 animate-pulse delay-150"><span className="text-zinc-800">4 |</span> {'}'}</div>

@@ -146,7 +146,7 @@ CORE PROTOCOLS:
       }
     }))
 
-    let currentMessages = [...anthropicMessages]
+    const currentMessages = [...anthropicMessages]
     let toolCallsMade = 0
     const maxToolCalls = 5
 

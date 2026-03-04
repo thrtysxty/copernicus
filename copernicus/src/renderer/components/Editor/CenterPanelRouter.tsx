@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { MonacoEditor } from './MonacoEditor'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
@@ -22,15 +22,18 @@ export function CenterPanelRouter({
 }: CenterPanelRouterProps) {
   const { 
     centerMode, setCenterMode, 
-    activeView, // Logic from Researcher: Add activeView dependency
+    activeView,
     canvasContent, canvasUrl,
     activeFilePath, activeFileContent, activeFileLanguage,
     setActiveFileContent, browserSessionActive
   } = useLayoutStore()
 
   const filePath = activeFilePath ?? propFilePath ?? null
-  const content = activeFilePath ? activeFileContent : (propContent ?? '')
-  const language = activeFilePath ? activeFileLanguage : (propLanguage ?? 'typescript')
+  
+  // Memoize these to avoid redundant re-renders of Monaco
+  const content = useMemo(() => activeFilePath ? activeFileContent : (propContent ?? ''), [activeFilePath, activeFileContent, propContent])
+  const language = useMemo(() => activeFilePath ? activeFileLanguage : (propLanguage ?? 'typescript'), [activeFilePath, activeFileLanguage, propLanguage])
+  
   const onChange = activeFilePath 
     ? (val: string | undefined) => setActiveFileContent(val ?? '')
     : (propOnChange ?? (() => {}))
@@ -49,7 +52,6 @@ export function CenterPanelRouter({
   }, [activeView, filePath, language, setCenterMode, centerMode])
 
   // When language or filePath changes, reset centerMode to a sensible default
-  // EXCEPT if we are in builder or canvas mode, keep it.
   useEffect(() => {
     if (centerMode === 'builder' || centerMode === 'canvas') return;
     if (!filePath) return;
@@ -98,11 +100,11 @@ export function CenterPanelRouter({
     case 'svg':
       // SVG allows switching between Image view and Code view
       return centerMode === 'code'
-        ? <MonacoEditor value={content} language="xml" filePath={filePath} onChange={onChange} />
+        ? <MonacoEditor key={filePath} value={content} language="xml" filePath={filePath} onChange={onChange} />
         : <ImageViewer filePath={filePath} isSvg onEditSource={() => setCenterMode('code')} />
 
     default:
       // Default fallback is Monaco for all other code/text files
-      return <MonacoEditor value={content} language={language} filePath={filePath} onChange={onChange} />
+      return <MonacoEditor key={filePath} value={content} language={language} filePath={filePath} onChange={onChange} />
   }
 }

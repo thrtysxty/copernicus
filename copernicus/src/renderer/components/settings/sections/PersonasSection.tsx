@@ -174,7 +174,7 @@ export const PersonasSection: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-xs font-bold text-zinc-200 uppercase truncate tracking-tight">{p.name}</h3>
                   <p className="text-[10px] text-zinc-500 mt-0.5 truncate font-mono italic opacity-60">
-                    "{p.systemPrompt.substring(0, 80)}..."
+                    &quot;{p.systemPrompt.substring(0, 80)}...&quot;
                   </p>
                 </div>
               </div>

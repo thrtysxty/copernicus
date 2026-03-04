@@ -31,6 +31,7 @@ import { browserSession } from './browser-session'
 import { dispatchJulesSession } from './jules/dispatcher'
 import { julesMonitor } from './jules/monitor'
 import { lspManager } from './lsp/lsp-manager'
+import { backendManager } from './backend-manager'
 
 // The built directory structure
 //
@@ -211,6 +212,12 @@ function setupAutoUpdater() {
 }
 
 function registerIpcHandlers() {
+  // Transactional File Ops (Story 220)
+  ipcMain.handle('fs:tx-begin', () => handleIpc(() => fsManager.tx?.createTransaction()))
+  ipcMain.handle('fs:tx-commit', () => handleIpc(() => fsManager.tx?.commit()))
+  ipcMain.handle('fs:tx-rollback', () => handleIpc(() => fsManager.tx?.rollback()))
+  ipcMain.handle('fs:tx-status', () => handleIpc(() => fsManager.tx?.getActiveTransactionId()))
+
   ipcMain.handle('settings:save', (_event, patch: unknown) => handleIpc(async () => {
     if (typeof patch === 'object' && patch !== null) settingsStore.setAll(patch as Record<string, any>)
     return true
@@ -1291,11 +1298,13 @@ app.on('will-quit', () => { globalShortcut.unregisterAll() })
 
 app.on('before-quit', async () => {
   lspManager.stop()
+  backendManager.stop()
   if (browserSession.browser) await browserSession.browser.close().catch(() => {})
 })
 
 app.whenReady().then(() => {
   registerIpcHandlers();
+  backendManager.start()
 
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({

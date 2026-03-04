@@ -243,17 +243,27 @@ export class FooManager {
 export const fooManager = new FooManager()
 ```
 
-**Rules:**
-- Singletons are imported at the top of `main.ts` (ES import, not `require()`)
-- Never use `require()` at call time inside functions (see §10 Forbidden Patterns)
-- Each manager owns its own IPC handler registration or registers handlers
-  through `main.ts` — never both
-- If a manager has a `registerHandlers()` method, it MUST be called from
-  `main.ts`. If it is not called, delete the method (dead code).
+### 4.1 FSManager — Tilde Expansion (Story 211)
+All file paths passed to `fsManager` methods MUST support tilde expansion (`~`) for the user's home directory. This is handled internally by `fsManager.resolvePath(path)`.
+
+**Rule:** Never manually expand tildes in the renderer. Pass the raw string from inputs; the manager will resolve it.
 
 ---
 
-## 5. LSP Guardrail — Mandatory for All Agents
+## 5. Agent Tool Execution — The Ollama Shim (Mandatory)
+
+As of March 2026, all agentic tool execution (file operations, RAG search, MCP calls) MUST be routed through the **Ollama Tool Shim** (`scripts/ollama_tool_shim.py`).
+
+### 5.1 Protocol
+1.  **Gateway:** Agents do not call `fs:read-file` or `codebase:search` directly if they are executing a task. They call the shim.
+2.  **Hybrid Orchestration:**
+    *   **High-Intel:** Cloud-hosted models (via `OLLAMA_CLOUD_HOST`) are used for planning and complex logic.
+    *   **Tactical:** Local sidekick (Ollama on 192.168.1.185) is used for quick completions and formatting.
+3.  **Strict Execution:** The shim enforces the "Industrial Sub-agent" persona, preventing conversational filler and ensuring JSON-only tool outputs.
+
+---
+
+## 6. LSP Guardrail — Mandatory for All Agents
 
 As of Story 176, the workspace runs `typescript-language-server`. Every agent
 that writes or edits TypeScript files MUST follow this protocol:

@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import log from './utils/logger'
+import { TransactionManager } from './utils/transaction-manager'
 
 export interface FileNode {
   name: string
@@ -18,6 +19,7 @@ const BLOCKED_HOME_SUBDIRS = [
 
 export class FSManager {
   private rootPath: string = ''
+  public tx: TransactionManager | null = null
 
   private expandHome(p: string): string {
     if (p.startsWith('~')) {
@@ -29,6 +31,14 @@ export class FSManager {
   setRootPath(p: string): void {
     this.rootPath = path.resolve(this.expandHome(p))
     log.info(`[FSManager] Sandbox root established: ${this.rootPath}`)
+    
+    // Initialize Transaction Manager in .copernicus inside workspace if possible, 
+    // or fallback to ~/.copernicus
+    const copernicusDir = path.join(os.homedir(), '.copernicus')
+    if (!fs.existsSync(copernicusDir)) {
+      fs.mkdirSync(copernicusDir, { recursive: true })
+    }
+    this.tx = new TransactionManager(copernicusDir)
   }
 
   private assertSafe(filePath: string, mode: 'read' | 'write' = 'read'): void {
@@ -103,10 +113,21 @@ export class FSManager {
     }
   }
 
-  writeFile(filePath: string, content: string): { ok: true } | { ok: false; error: string } {
+  writeFile(filePath: string, content: string, opts?: { dryRun?: boolean }): { ok: true } | { ok: false; error: string } {
     try {
       const expandedPath = this.expandHome(filePath)
       this.assertSafe(expandedPath, 'write')
+      
+      // If we have an active transaction and NOT dryRun, stage it instead of writing
+      if (this.tx?.getActiveTransactionId() && !opts?.dryRun) {
+        this.tx.stageEdit(expandedPath, content)
+        return { ok: true }
+      }
+
+      if (opts?.dryRun) {
+        return { ok: true }
+      }
+
       fs.writeFileSync(expandedPath, content, 'utf-8')
       return { ok: true }
     } catch (err: unknown) {
