@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useCommandStore, LspState, AgentSwarmEntry, ActiveTaskEntry } from '../../store/commandStore'
 import { useIpcError } from '../../hooks/useIpcError'
-import { Maximize2, Minimize2 } from 'lucide-react'
+import { Maximize2, Minimize2, RotateCcw } from 'lucide-react'
 
 export function CommandCenter() {
   const store = useCommandStore()
   const invoke = useIpcError()
   const [spotlightedSection, setSpotlightedSection] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const refreshData = async () => {
+    setLoading(true)
     try {
       const result = await invoke<any>('lsp:status')
       if (result && result.ok && result.data) {
@@ -19,6 +21,7 @@ export function CommandCenter() {
     try {
       await invoke<any>('command:request-telemetry')
     } catch (err) { /* ignore */ }
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -83,15 +86,17 @@ export function CommandCenter() {
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
-      <header className="h-10 flex items-center justify-between px-4 border-b border-copernicus-steel shrink-0 bg-[#080808]">
-        <h2 className="text-xs uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2">
+      <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 shrink-0 bg-black/20">
+        <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
           Command Center
         </h2>
         <button
           onClick={refreshData}
-          className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded border border-zinc-700 hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-colors"
+          disabled={loading}
+          className="p-1 hover:text-copernicus-phosphor transition-colors disabled:opacity-50"
+          title="Refresh Data"
         >
-          &#8635; Refresh
+          <RotateCcw size={12} className={loading ? 'animate-spin' : ''} />
         </button>
       </header>
 

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
-         Loader2, ExternalLink, ShieldCheck, Cpu, Key, Zap, Github } from 'lucide-react';
+         ShieldCheck, Key, Zap, Github } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc'
-
-type OAuthState = 'idle' | 'waiting' | 'success' | 'error'
 
 interface WizardProps {
   onComplete: () => void;
@@ -18,18 +16,14 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [workspacePath, setWorkspacePath] = useState('');
   const [hourlyRate, setHourlyRate] = useState('65');
 
-  // Anthropic: user explicitly picks CLI or API key
+  // Anthropic
   const [anthropicMethod, setAnthropicMethod] = useState<'cli' | 'apikey' | null>(null);
   const [anthropicKey, setAnthropicKey] = useState('');
 
   // Other providers
   const [googleKey, setGoogleKey] = useState('');
-  const [openRouterKey, setOpenRouterKey] = useState('');
-  const [deepInfraKey, setDeepInfraKey] = useState('');
   const [ollamaKey, setOllamaKey] = useState('');
-  const [googleOAuthClientId, setGoogleOAuthClientId] = useState('');
-  const [googleOAuth, setGoogleOAuth] = useState<{ state: OAuthState; email?: string; error?: string }>({ state: 'idle' });
-  const [openRouterOAuth, setOpenRouterOAuth] = useState<{ state: OAuthState; error?: string }>({ state: 'idle' });
+  const googleOAuthClientId = ''; // Static for now
   
   // GitHub
   const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string } | null>(null);
@@ -41,33 +35,41 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     });
   }, [invoke]);
 
-  // Step 1: Check for existing credentials
+  // Initial Load: Check for existing credentials and workspace
   useEffect(() => {
-    if (step === 1) {
-      invoke<any>('auth:status').then((raw) => {
-        const status: any[] = unwrapIpc<any>(raw) ?? []
-        status.forEach(p => {
-          if (p.hasKey) {
-            if (p.provider === 'anthropic') {
-              if (p.type === 'cli') setAnthropicMethod('cli')
-              else { setAnthropicMethod('apikey'); setAnthropicKey('saved') }
-            }
-            if (p.provider === 'google') setGoogleKey('saved');
-            if (p.provider === 'openrouter') setOpenRouterKey('saved');
-            if (p.provider === 'deepinfra') setDeepInfraKey('saved');
-            if (p.provider === 'github') {
-               invoke<any>('github:test-connection').then(res => setGithubUser(unwrapIpc<any>(res)));
-            }
+    // 1. Check Preferences (Workspace)
+    invoke<any>('get-preferences').then((prefs) => {
+      const p = unwrapIpc<any>(prefs);
+      if (p?.workspace) setWorkspacePath(p.workspace);
+      if (p?.capex?.rate) setHourlyRate(String(p.capex.rate));
+    });
+
+    // 2. Check Auth Status (API Keys)
+    invoke<any>('auth:status').then((raw) => {
+      const status: any[] = unwrapIpc<any>(raw) ?? []
+      status.forEach(p => {
+        if (p.hasKey) {
+          if (p.provider === 'anthropic') {
+            if (p.type === 'cli') setAnthropicMethod('cli')
+            else { setAnthropicMethod('apikey'); setAnthropicKey('saved') }
           }
-        });
+          if (p.provider === 'google') setGoogleKey('saved');
+          if (p.provider === 'github') {
+             invoke<any>('github:test-connection').then(res => {
+               const user = unwrapIpc<any>(res);
+               if (user) setGithubUser(user);
+             }).catch(() => {});
+          }
+        }
       });
-      
-      // Check for Ollama Cloud Key
-      invoke<any>('auth:get-api-key', 'ollama').then((res: any) => {
-        if (unwrapIpc<any>(res)) setOllamaKey('saved');
-      });
-    }
-  }, [step, invoke]);
+    });
+    
+    // 3. Check Ollama separately
+    invoke<any>('auth:get-api-key', 'ollama').then((res: any) => {
+      const key = unwrapIpc<any>(res);
+      if (key) setOllamaKey('saved');
+    }).catch(() => {});
+  }, [invoke]);
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
@@ -80,91 +82,77 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   const handleSelectFolder = async () => {
     try {
-      const _rawPath = await invoke<any>('select-folder');
-      const path: string | null = unwrapIpc<any>(_rawPath);
+      const result = await invoke<any>('select-folder');
+      const path = unwrapIpc<string | null>(result);
       if (path) {
         setWorkspacePath(path);
-        // Save the directory immediately to ensure persistence
         await invoke('app:set-root-path', path);
       }
     } catch (error: any) {
-      console.error('Failed to select folder:', error);
+      console.error('Folder selection failed:', error);
     }
   };
 
   const handleGoogleOAuth = async () => {
-    setGoogleOAuth({ state: 'waiting' });
     try {
       await invoke<{ ok: boolean }>('app:start-oauth-listener');
     } catch (e: any) {
-      setGoogleOAuth({ state: 'error', error: e.message });
-    }
-  };
-
-  const handleOpenRouterOAuth = async () => {
-    setOpenRouterOAuth({ state: 'waiting' });
-    const result = await invoke<{ ok: boolean; error?: string }>('oauth:start-openrouter');
-    if (!(result as any).ok) {
-      setOpenRouterOAuth({ state: 'error', error: (result as any).error });
+      console.error('OAuth start failed:', e.message);
     }
   };
 
   const handleGithubAuth = async () => {
-    // For now, prompt for PAT if not already handled by a dedicated flow
-    const pat = prompt('Please enter your GitHub Personal Access Token (PAT):');
+    const pat = prompt('Enter your GitHub Personal Access Token (PAT):');
     if (pat) {
       try {
         await invoke('auth:store-api-key', 'github', pat);
         const res = await invoke<any>('github:test-connection');
-        setGithubUser(unwrapIpc<any>(res));
-      } catch (e) {
-        alert('Failed to connect to GitHub. Check your token.');
+        const user = unwrapIpc<any>(res);
+        if (user) {
+          setGithubUser(user);
+        } else {
+          alert('GitHub PAT saved, but profile fetch failed.');
+        }
+      } catch (e: any) {
+        alert('GitHub Connection Error: ' + e.message);
       }
     }
   };
 
   useEffect(() => {
     const removeGoogle = window.ipcRenderer.on('oauth:google-complete', (_event: any, data: any) => {
-      if (data.ok) { setGoogleOAuth({ state: 'success', email: data.email }); setGoogleKey('oauth'); }
-      else setGoogleOAuth({ state: 'error', error: data.error });
+      if (data.ok) { setGoogleKey('oauth'); }
     });
-    const removeLegacy = window.ipcRenderer.on('oauth:callback', (_event: any, data: any) => {
-      if (data.provider === 'google') {
-        if (data.ok) { setGoogleOAuth({ state: 'success', email: data.email }); setGoogleKey('oauth'); }
-        else setGoogleOAuth({ state: 'error', error: data.error });
-      } else if (data.provider === 'openrouter') {
-        if (data.ok) { setOpenRouterOAuth({ state: 'success' }); setOpenRouterKey('oauth'); }
-        else setOpenRouterOAuth({ state: 'error', error: data.error });
-      }
-    });
-    return () => { removeGoogle(); removeLegacy(); };
+    return () => { removeGoogle(); };
   }, []);
 
   const handleFinish = async () => {
-    // Save Anthropic method
+    // 1. Final Key Commit
     if (anthropicMethod === 'cli') {
       await invoke('auth:store-api-key', 'anthropic', '__cli__', undefined, 'cli').catch(() => {})
     } else if (anthropicMethod === 'apikey' && anthropicKey && anthropicKey !== 'saved') {
       await invoke('auth:store-api-key', 'anthropic', anthropicKey).catch(() => {})
     }
     
-    // Save Ollama Cloud key if provided
     if (ollamaKey && ollamaKey !== 'saved') {
       await invoke('auth:store-api-key', 'ollama', ollamaKey).catch(() => {})
     }
 
+    if (googleKey && googleKey !== 'saved' && googleKey !== 'oauth') {
+      await invoke('auth:store-api-key', 'google', googleKey).catch(() => {})
+    }
+
+    // 2. Final Preferences Commit
     const preferences = {
       workspace: workspacePath,
       googleOAuthClientId: googleOAuthClientId.trim(),
       capex: { rate: parseFloat(hourlyRate), currency: 'USD' },
-      keys: { google: googleKey, openrouter: openRouterKey, deepinfra: deepInfraKey },
       ui: { theme: 'technical-phosphor' }
     };
     
-    // Validate workspace path before saving
     if (!workspacePath) {
-      alert('Please select a workspace directory before completing setup.');
-      setStep(2); // Navigate back to workspace step
+      alert('A workspace directory is required to initialize COPERNICUS.');
+      setStep(2);
       return;
     }
     
@@ -172,21 +160,14 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke('save-preferences', preferences);
       onWizardComplete();
     } catch (error: any) {
-      console.error('Failed to save preferences:', error);
-      alert(`Failed to save preferences: ${error.message}`);
+      alert(`Initialization failed: ${error.message}`);
     }
   };
 
   const claudeDetected = cliStatus?.claude === true;
 
-  const variants = {
-    enter: { opacity: 0, x: 20 },
-    center: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 },
-  };
-
   return (
-    <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans select-none">
+    <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans select-none overflow-hidden">
       <div className="h-8 w-full flex-none pl-20" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col p-8 overflow-hidden">
@@ -195,303 +176,190 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
             <div className="w-3 h-3 bg-copernicus-phosphor rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
             <h1 className="text-xl font-bold tracking-widest text-copernicus-phosphor uppercase">COPERNICUS SETUP</h1>
           </div>
-          <div className="text-xs text-zinc-500 font-mono">Step {step}/3</div>
+          <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-[0.2em]">Step {step} of 3</div>
         </header>
 
         <div className="flex-1 relative overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.2 }}
-              className="absolute w-full h-full flex flex-col overflow-y-auto pr-4"
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -15 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="absolute w-full h-full flex flex-col overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-zinc-800"
             >
 
-              {/* ── Step 1: Credentials ─────────────────────────────────────── */}
+              {/* ── Phase 1: Authentication ─────────────────────────────────── */}
               {step === 1 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full py-4">
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Key size={18} /> Credentials & Accounts
+                <div className="space-y-6 max-w-2xl mx-auto w-full py-2">
+                  <div className="flex flex-col gap-1 mb-4 border-l-2 border-copernicus-phosphor pl-4">
+                    <h2 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                      <Key size={18} className="text-copernicus-phosphor" /> Intelligence Bus Connectivity
                     </h2>
-                    <p className="text-sm text-zinc-400 font-mono tracking-tighter uppercase opacity-60">Identity Management // V0.1</p>
+                    <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Provisioning secure access to primary model orchestrators</p>
                   </div>
 
-                  <div className="space-y-5">
-                    {/* ── Anthropic ──────────────────────────────────────────── */}
-                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-4">
+                  <div className="space-y-4">
+                    {/* Anthropic / Claude */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Anthropic / Claude</span>
-                        {anthropicMethod && (
-                          <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor">
-                            <Check size={11} />
-                            {anthropicMethod === 'cli' ? 'Claude Code CLI selected' : 'API key saved'}
-                          </span>
-                        )}
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Provider: Anthropic</span>
+                        {anthropicMethod && <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> Ready</span>}
                       </div>
+                      
+                      <div className="grid grid-cols-1 gap-3">
+                        <button
+                          onClick={() => setAnthropicMethod('cli')}
+                          disabled={!claudeDetected}
+                          className={`w-full text-left p-3 rounded border transition-all ${anthropicMethod === 'cli' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 hover:border-zinc-700 opacity-60'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Zap size={12} /> Use Claude Code (CLI)</span>
+                            {claudeDetected ? <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">DETECTED</span> : <span className="text-[9px] text-zinc-600">NOT FOUND</span>}
+                          </div>
+                          <p className="text-[10px] text-zinc-500 leading-tight">Leverages existing <code className="text-zinc-400">claude login</code> credentials.</p>
+                        </button>
 
-                      <p className="text-[11px] text-zinc-500 leading-relaxed">
-                        Choose how COPERNICUS connects to Claude. You can change this later in Settings → Providers.
-                      </p>
-
-                      {/* Option A: Claude Code CLI */}
-                      <button
-                        onClick={() => setAnthropicMethod('cli')}
-                        disabled={!claudeDetected}
-                        className={`w-full text-left p-3 rounded border transition-all ${
-                          anthropicMethod === 'cli'
-                            ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white'
-                            : claudeDetected
-                              ? 'border-zinc-700 hover:border-zinc-500 text-zinc-300'
-                              : 'border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Zap size={14} className={anthropicMethod === 'cli' ? 'text-copernicus-phosphor' : 'text-zinc-500'} />
-                            <span className="text-[11px] font-bold uppercase tracking-wide">Use Claude Code (recommended)</span>
+                        <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 opacity-60'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Key size={12} /> Direct API Access</span>
+                            <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[9px] text-zinc-500 hover:text-white underline">Manage Keys</button>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {claudeDetected
-                              ? <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 py-0.5 rounded">DETECTED</span>
-                              : <span className="text-[9px] bg-zinc-800 text-zinc-600 px-1.5 py-0.5 rounded">NOT FOUND</span>
-                            }
-                            {anthropicMethod === 'cli' && <Check size={13} className="text-copernicus-phosphor" />}
-                          </div>
-                        </div>
-                        <p className="text-[10px] text-zinc-500 mt-1.5 ml-6">
-                          Uses your existing <code className="text-zinc-400">claude login</code> session — no separate API key needed.
-                        </p>
-                      </button>
-
-                      {/* Option B: API Key */}
-                      <div
-                        className={`p-3 rounded border transition-all ${
-                          anthropicMethod === 'apikey'
-                            ? 'border-copernicus-phosphor bg-copernicus-phosphor/10'
-                            : 'border-zinc-700 hover:border-zinc-600'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Key size={14} className={anthropicMethod === 'apikey' ? 'text-copernicus-phosphor' : 'text-zinc-500'} />
-                            <span className="text-[11px] font-bold uppercase tracking-wide text-zinc-300">Use API Key</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => invoke('app:open-external', 'https://console.anthropic.com/settings/keys')}
-                              className="text-[9px] text-zinc-500 hover:text-white flex items-center gap-1"
-                            >
-                              Get key <ExternalLink size={8} />
-                            </button>
-                            {anthropicMethod === 'apikey' && <Check size={13} className="text-copernicus-phosphor" />}
-                          </div>
-                        </div>
-                        <div className="relative">
                           <input
                             type="password"
-                            className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
-                            placeholder={anthropicKey === 'saved' ? 'API key already saved' : 'sk-ant-api03-…'}
+                            className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                            placeholder={anthropicKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'sk-ant-api03-...'}
                             value={anthropicKey === 'saved' ? '' : anthropicKey}
-                            onChange={(e) => {
-                              setAnthropicKey(e.target.value);
-                              if (e.target.value) setAnthropicMethod('apikey');
-                            }}
+                            onChange={(e) => { setAnthropicKey(e.target.value); setAnthropicMethod('apikey'); }}
                             onFocus={() => { if (anthropicMethod !== 'apikey') setAnthropicMethod('apikey') }}
                           />
-                          {(anthropicKey === 'saved' || (anthropicMethod === 'apikey' && anthropicKey)) && (
-                            <div className="absolute right-2 top-2 text-copernicus-phosphor">
-                              <ShieldCheck size={16} />
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* ── GitHub ──────────────────────────────────────────────── */}
+                    {/* GitHub Connection */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <div className="flex items-center gap-2">
-                          <Github size={14} className="text-zinc-400" />
-                          <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">GitHub Connection</span>
-                        </div>
-                        {githubUser ? (
-                          <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor">
-                            <Check size={11} /> Connected as {githubUser.login}
-                          </span>
-                        ) : (
-                          <button
-                            onClick={handleGithubAuth}
-                            className="text-[10px] text-copernicus-phosphor hover:bg-copernicus-phosphor/10 px-2 py-1 rounded border border-copernicus-phosphor/30 uppercase tracking-wide transition-all"
-                          >
-                            Connect GitHub
-                          </button>
-                        )}
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Github size={12}/> Repository Access (GitHub)</span>
+                        {githubUser && <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> {githubUser.login}</span>}
                       </div>
-                      <p className="text-[10px] text-zinc-500 leading-relaxed italic">
-                        Required for repository management, Jules session synchronization, and PR automation.
-                      </p>
+                      <button
+                        onClick={handleGithubAuth}
+                        className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all"
+                      >
+                        {githubUser ? 'Swap GitHub Identity' : 'Connect via PAT'}
+                      </button>
                     </div>
 
-                    {/* ── Ollama Cloud ────────────────────────────────────────── */}
-                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
-                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <div className="flex items-center gap-2">
-                          <Zap size={14} className="text-copernicus-phosphor" />
-                          <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Ollama Cloud (High-Intel)</span>
-                        </div>
-                        {ollamaKey === 'saved' && (
-                          <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor">
-                            <Check size={11} /> Token active
-                          </span>
-                        )}
+                    {/* Ollama Cloud */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2 mb-3">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Zap size={12} className="text-copernicus-phosphor" /> High-Intelligence Tier (Ollama Cloud)</span>
+                        {ollamaKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">AUTHENTICATED</span>}
                       </div>
-                      <div className="relative">
-                        <input
-                          type="password"
-                          className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
-                          placeholder={ollamaKey === 'saved' ? 'Token already saved' : 'Ollama Bearer Token'}
-                          value={ollamaKey === 'saved' ? '' : ollamaKey}
-                          onChange={(e) => setOllamaKey(e.target.value)}
-                        />
-                        {(ollamaKey === 'saved' || ollamaKey) && (
-                          <div className="absolute right-2 top-2 text-copernicus-phosphor">
-                            <ShieldCheck size={16} />
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-zinc-600 font-mono tracking-tighter">
-                        Enables the Architect, Researcher, and Thinker personas via high-tier cloud infrastructure.
-                      </p>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={ollamaKey === 'saved' ? 'CLOUD TOKEN SECURED' : 'Ollama Bearer Token'}
+                        value={ollamaKey === 'saved' ? '' : ollamaKey}
+                        onChange={(e) => setOllamaKey(e.target.value)}
+                      />
                     </div>
 
-                    {/* ── Google / Gemini / Jules ─────────────────────────────── */}
+                    {/* Google / Gemini */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Google / Gemini / Jules</span>
-                        {googleOAuth.state === 'success'
-                          ? <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor"><Check size={11} /> Authenticated{googleOAuth.email ? ` as ${googleOAuth.email}` : ''}</span>
-                          : (
-                            <button
-                              onClick={handleGoogleOAuth}
-                              disabled={googleOAuth.state === 'waiting'}
-                              className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor hover:bg-copernicus-phosphor/10 px-2 py-1 rounded border border-copernicus-phosphor/30 uppercase tracking-wide transition-all disabled:opacity-50"
-                            >
-                              {googleOAuth.state === 'waiting' ? <><Loader2 size={10} className="animate-spin" /> Waiting...</> : 'Sign in with Google'}
-                            </button>
-                          )
-                        }
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google / Gemini / Jules</span>
+                        {googleKey === 'saved' || googleKey === 'oauth' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SESSION ACTIVE</span> : <button onClick={handleGoogleOAuth} className="text-[10px] text-copernicus-phosphor font-bold uppercase hover:underline">Start OAuth Flow</button>}
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[10px] text-zinc-500 uppercase tracking-tight">OAuth Client ID (Optional)</label>
-                          <button onClick={() => invoke('app:open-external', 'https://console.cloud.google.com/apis/credentials')} className="text-[9px] text-zinc-500 hover:text-white flex items-center gap-1 underline">
-                            Create your own <ExternalLink size={8} />
-                          </button>
-                        </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={googleKey === 'saved' || googleKey === 'oauth' ? 'OAUTH CREDENTIALS ACTIVE' : 'API Key Override (Optional)'}
+                        value={googleKey === 'saved' || googleKey === 'oauth' ? '' : googleKey}
+                        onChange={(e) => setGoogleKey(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Phase 2: File System ────────────────────────────────────── */}
+              {step === 2 && (
+                <div className="space-y-6 max-w-2xl mx-auto w-full py-12">
+                  <div className="flex flex-col gap-1 mb-6 text-center">
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
+                      <FolderOpen size={32} className="text-copernicus-phosphor" /> Project Anchor
+                    </h2>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Mounting local development root</p>
+                  </div>
+                  
+                  <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-10 space-y-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-copernicus-phosphor/20 to-transparent" />
+                    
+                    <div className="flex flex-col gap-3">
+                      <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest ml-1">Current Mount Point</label>
+                      <div className="flex gap-3">
                         <input
                           type="text"
-                          className="w-full bg-black/60 border border-copernicus-steel/40 rounded p-2 text-xs text-white focus:border-copernicus-phosphor outline-none font-mono"
-                          placeholder="Leave blank to use default Copernicus Client"
-                          value={googleOAuthClientId}
-                          onChange={(e) => setGoogleOAuthClientId(e.target.value)}
+                          readOnly
+                          className="flex-1 bg-black/60 border border-copernicus-steel/40 rounded-xl p-4 text-xs text-zinc-300 font-mono truncate shadow-inner"
+                          value={workspacePath || 'Selection required...'}
                         />
+                        <button 
+                          onClick={handleSelectFolder} 
+                          className="bg-copernicus-phosphor text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-copernicus-phosphor/20"
+                        >
+                          Mount
+                        </button>
                       </div>
                     </div>
-
-                    {/* ── Pro Providers ───────────────────────────────────────── */}
-                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-4">
-                      <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
-                        <Cpu size={14} className="text-zinc-500" />
-                        <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Pro Providers (API Keys)</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-[10px] text-zinc-500 uppercase tracking-tight">OpenRouter</label>
-                            {openRouterOAuth.state === 'success'
-                              ? <Check size={10} className="text-copernicus-phosphor" />
-                              : <button onClick={handleOpenRouterOAuth} disabled={openRouterOAuth.state === 'waiting'} className="text-[8px] text-copernicus-phosphor hover:underline uppercase disabled:opacity-50">
-                                  {openRouterOAuth.state === 'waiting' ? '...' : 'Sign in'}
-                                </button>
-                            }
-                          </div>
-                          <div className="relative">
-                            <input
-                              type="password"
-                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
-                              placeholder={openRouterKey === 'saved' ? 'Detected' : 'sk-or-…'}
-                              value={openRouterKey === 'oauth' || openRouterKey === 'saved' ? '' : openRouterKey}
-                              onChange={(e) => setOpenRouterKey(e.target.value)}
-                            />
-                            {(openRouterKey === 'oauth' || openRouterKey === 'saved') && (
-                              <div className="absolute right-2 top-2 text-copernicus-phosphor"><ShieldCheck size={12} /></div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[10px] text-zinc-500 uppercase tracking-tight">DeepInfra</label>
-                            <button onClick={() => invoke('app:open-external', 'https://deepinfra.com/dash/api_keys')} className="text-[8px] text-zinc-600 hover:text-white underline">Get Key</button>
-                          </div>
-                          <div className="relative">
-                            <input
-                              type="password"
-                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white focus:border-copernicus-phosphor outline-none transition-colors"
-                              placeholder={deepInfraKey === 'saved' ? 'Detected' : 'API Key'}
-                              value={deepInfraKey === 'saved' ? '' : deepInfraKey}
-                              onChange={(e) => setDeepInfraKey(e.target.value)}
-                            />
-                            {deepInfraKey === 'saved' && <div className="absolute right-2 top-2 text-copernicus-phosphor"><ShieldCheck size={12} /></div>}
-                          </div>
+                    
+                    {workspacePath ? (
+                      <div className="flex items-start gap-4 p-5 bg-green-900/10 border border-green-900/20 rounded-xl text-green-400/80">
+                        <ShieldCheck size={24} className="flex-none text-green-400" />
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-green-400 uppercase tracking-wide">Path Synchronized</p>
+                          <p className="text-[10px] font-mono opacity-70 leading-relaxed">Directory is now registered as the system root for stories and indexing.</p>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="p-6 border border-dashed border-zinc-800 rounded-xl text-center">
+                        <p className="text-[11px] text-zinc-500 italic leading-relaxed">
+                          Select the directory where COPERNICUS will orchestrate your projects. <br/> This path is used for implementation stories and local memory buffers.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* ── Step 2: Workspace ───────────────────────────────────────── */}
-              {step === 2 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full py-8">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2"><FolderOpen size={18} /> Workspace Setup</h2>
-                  <p className="text-sm text-zinc-400">Where should COPERNICUS store your projects and memory?</p>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      className="flex-1 bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-zinc-400 font-mono truncate"
-                      value={workspacePath || 'No folder selected'}
-                    />
-                    <button onClick={handleSelectFolder} className="bg-copernicus-steel/20 hover:bg-copernicus-steel/40 text-white px-3 py-2 rounded border border-copernicus-steel/30 transition-colors">
-                      Browse
-                    </button>
-                  </div>
-                  {workspacePath && (
-                    <div className="bg-green-900/10 border border-green-700/30 rounded p-3 text-[11px] text-green-400 leading-relaxed">
-                      Workspace directory selected: <code className="text-green-300 font-mono">{workspacePath}</code>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ── Step 3: CapEx ───────────────────────────────────────────── */}
+              {/* ── Phase 3: Economics ──────────────────────────────────────── */}
               {step === 3 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full py-8">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2"><DollarSign size={18} /> CapEx Setup</h2>
-                  <p className="text-sm text-zinc-400">Set your hourly rate for development cost tracking.</p>
-                  <div className="flex items-center gap-4 bg-black/40 p-4 rounded border border-copernicus-steel/20">
-                    <span className="text-2xl text-copernicus-phosphor">$</span>
-                    <input
-                      type="number"
-                      className="bg-transparent text-4xl font-bold text-white w-32 outline-none"
-                      value={hourlyRate}
-                      onChange={(e) => setHourlyRate(e.target.value)}
-                    />
-                    <span className="text-zinc-500 text-xl">/ hour</span>
+                <div className="space-y-6 max-w-2xl mx-auto w-full py-12">
+                  <div className="flex flex-col gap-1 mb-6 text-center">
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
+                      <DollarSign size={32} className="text-copernicus-phosphor" /> CapEx Dynamics
+                    </h2>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configuring implementer billing metrics</p>
+                  </div>
+
+                  <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-12 flex flex-col items-center gap-8 shadow-2xl relative">
+                    <div className="flex items-center gap-6">
+                      <span className="text-5xl text-zinc-700 font-extralight select-none">$</span>
+                      <input
+                        type="number"
+                        className="bg-transparent text-7xl font-black text-white w-48 outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:text-copernicus-phosphor transition-colors"
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(e.target.value)}
+                      />
+                      <span className="text-zinc-700 text-3xl font-mono tracking-tighter select-none">/HR</span>
+                    </div>
+                    <div className="h-px w-24 bg-zinc-800" />
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] text-center leading-relaxed max-w-xs">
+                      Default hourly implementation rate used for <br/> system-wide CapEx tracking.
+                    </p>
                   </div>
                 </div>
               )}
@@ -500,19 +368,19 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           </AnimatePresence>
         </div>
 
-        <footer className="mt-8 flex justify-between border-t border-copernicus-steel/20 pt-4 flex-none">
+        <footer className="mt-8 flex justify-between border-t border-copernicus-steel/20 pt-8 flex-none">
           <button
             onClick={handleBack}
             disabled={step === 1}
-            className={`flex items-center gap-2 px-4 py-2 rounded text-sm transition-colors ${step === 1 ? 'opacity-0 cursor-default' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+            className={`flex items-center gap-3 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${step === 1 ? 'opacity-0 pointer-events-none' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
           >
-            <ArrowLeft size={16} /> Back
+            <ArrowLeft size={14} /> Back
           </button>
           <button
             onClick={handleNext}
-            className="flex items-center gap-2 bg-copernicus-phosphor/10 hover:bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/50 px-6 py-2 rounded text-sm font-semibold transition-all"
+            className="group flex items-center gap-4 bg-copernicus-phosphor text-black px-12 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-xl shadow-copernicus-phosphor/20"
           >
-            {step === 3 ? 'Finish' : 'Next'} <ArrowRight size={16} />
+            {step === 3 ? 'Initialize Core' : 'Advance'} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </footer>
       </motion.div>

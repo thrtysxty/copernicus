@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Layout, Book, User, History, Info, Layers } from 'lucide-react'
+import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Book, User, History, Info, Layers, MessageSquare } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
 import { UIUpdateChip } from './UIUpdateChip'
@@ -18,7 +18,7 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
-  tokens?: number // Representing total output tokens
+  tokens?: number
 }
 
 interface ContextItem {
@@ -49,7 +49,6 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
   const [existingContent, setExistingContent] = useState('')
   const { setCanvasContent, setUIComponents } = useLayoutStore()
 
-  // AC-8: Auto-apply component updates
   useEffect(() => {
     if (language === 'component-update') {
       try {
@@ -130,7 +129,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
           </button>
         </div>
       </div>
-      <pre className="bg-[#111] border border-t-0 border-copernicus-steel/50 rounded-b p-3 overflow-x-auto text-xs text-zinc-300 whitespace-pre-wrap">
+      <pre className="bg-[#111] border border-t-0 border-copernicus-steel/50 rounded-b p-3 overflow-x-auto text-xs text-zinc-300 whitespace-pre-wrap font-mono">
         <code>{code}</code>
       </pre>
       {applyError && (
@@ -170,12 +169,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     uiComponents,
     chatPanelTab,
     setChatPanelTab,
-    tourStep,
-    setTourStep,
-    setHasCompletedTour,
-    setView,
-    setTourHighlight,
     retakeTour,
+    setChatPanelOpen,
   } = useLayoutStore()
 
 
@@ -197,7 +192,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const { flippedPanes } = useLayoutStore()
   const isFlipped = flippedPanes.includes('chat')
 
-  // Guide tab ephemeral state (AC-6: never stored in main messages or DB)
+  // Guide tab ephemeral state
   interface GuideMessage {
     id: string
     role: 'user' | 'copernicus'
@@ -221,7 +216,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     }
   }, [isFlipped])
 
-  // Clear guide messages when tab changes away from 'guide' (AC-6)
   useEffect(() => {
     if (activeBackTab !== 'guide') {
       setGuideMessages([{
@@ -233,7 +227,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     }
   }, [activeBackTab])
 
-  // Auto-scroll guide feed
   useEffect(() => {
     if (guideScrollRef.current) {
       guideScrollRef.current.scrollTop = guideScrollRef.current.scrollHeight
@@ -242,7 +235,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   const handleClearContext = () => setContext([])
 
-  // Guide tab submit handler (AC-3, AC-4, AC-5)
   const handleGuideSubmit = useCallback(() => {
     const q = guideInput.trim()
     if (!q) return
@@ -333,8 +325,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     return (
       <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
-        <div className="h-8 flex items-center px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel shrink-0 gap-2 relative">
-          {/* Expert Breadcrumb Selector */}
+        <div className="h-8 flex items-center px-2 bg-copernicus-bg border-b border-white/5 bg-black/20 shrink-0 gap-2 relative">
           <div className="flex items-center gap-1 min-w-0 flex-1">
             <span className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Utility</span>
             <span className="text-[9px] text-zinc-700">/</span>
@@ -422,11 +413,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                     ))}
                   </div>
                 )}
-              </div>
-
-              <div>
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">LSP Diagnostics</div>
-                <div className="text-xs text-zinc-400">LSP: connecting…</div>
               </div>
             </div>
           )}
@@ -525,7 +511,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
           {activeBackTab === 'guide' && (
             <div className="h-full flex flex-col">
-              {/* Copernicus avatar header (AC-1, AC-5) */}
               <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-800 shrink-0">
                 <div className="w-6 h-6 rounded-none bg-copernicus-phosphor flex items-center justify-center text-[#050505] text-[10px] font-bold font-mono select-none">
                   CP
@@ -536,7 +521,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 <span className="text-[9px] text-zinc-600 font-mono ml-auto">guide · no llm</span>
               </div>
 
-              {/* Message feed (AC-1, AC-5, AC-6) */}
               <div ref={guideScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-zinc-800">
                 {guideMessages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -549,7 +533,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                           <div className="bg-zinc-900/50 border border-zinc-700 px-3 py-2 text-xs text-zinc-300 font-mono leading-relaxed">
                             {msg.content}
                           </div>
-                          {/* Tour button (AC-3) */}
                           {msg.showTourButton && (
                             <button
                               onClick={() => {
@@ -562,17 +545,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                               Start Tour
                             </button>
                           )}
-                          {/* Fallback to Claude (AC-4) */}
                           {msg.showFallback && (
                             <div className="flex gap-2">
                               <button
                                 onClick={() => {
-                                  // Flip back to front face and pre-populate input
                                   if (msg.originalQuery) {
                                     setInput(msg.originalQuery)
                                   }
                                   toggleFlip('chat')
-                                  // Focus chat input after flip settles
                                   setTimeout(() => {
                                     const ta = document.querySelector<HTMLTextAreaElement>('[data-chat-input]')
                                     ta?.focus()
@@ -584,7 +564,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                               </button>
                               <button
                                 onClick={() => {
-                                  // Remove the fallback message
                                   setGuideMessages(prev => prev.filter(m => m.id !== msg.id))
                                 }}
                                 className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 border border-zinc-700 text-zinc-400 rounded-none hover:border-zinc-500 hover:text-zinc-300 transition-colors"
@@ -605,7 +584,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 ))}
               </div>
 
-              {/* Input (AC-1) */}
               <div className="px-3 pb-3 pt-2 border-t border-zinc-800 shrink-0">
                 <div className="flex gap-2 items-end">
                   <textarea
@@ -646,8 +624,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   useEffect(() => {
     invoke<any>('models:list').then((r: any) => setAvailableModels(unwrapIpc<any>(r) ?? [])).catch(log.error)
-
-    // Check if session is active (implies repo context)
     invoke<any>('devtime:status').then(res => {
         const d = unwrapIpc<any>(res)
         setIsRepoActive(!!(d && d.session))
@@ -728,7 +704,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           const updated = [...prev]
           const last = updated[updated.length - 1]
           if (last?.role === 'assistant') {
-            // Prepend status to the content as a temporary placeholder or small bubble
             updated[updated.length - 1] = { 
               ...last, 
               content: last.content ? last.content : `[${status}] ` 
@@ -784,7 +759,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       }])
     }
 
-    // Remove the @query or #query from the input
     const atMarker = (currentMode === 'file' || currentMode === 'codebase') ? '@' : '#'
     setInput(prev => {
       const idx = prev.lastIndexOf(atMarker)
@@ -797,7 +771,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     const currentInput = input.trim();
 
-    // Build the CommandContext that registry commands can use
     const cmdContext: CommandContext = {
       appendMessage: (role, content) =>
         setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role, content }]),
@@ -806,7 +779,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       getCurrentModel: () => model,
     }
 
-    // Try slash command first
     if (currentInput.startsWith('/')) {
       const handled = commandRegistry.execute(currentInput, cmdContext)
       if (handled) {
@@ -824,7 +796,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     setMessages(prev => [...prev, userMsg])
 
-    // Enrich with context
     let enrichedContent = currentInput
     if (context.length > 0) {
       const contextBlocks = context.map(c => `[CONTEXT: ${String(c.type || '').toUpperCase()} - ${c.label}]\n${c.content}`).join('\n\n')
@@ -839,11 +810,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           const m = typeof snapRes.data.messages === 'string' ? JSON.parse(snapRes.data.messages) : snapRes.data.messages
           const prevContext = m.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')
           enrichedContent = `[CONTEXT HANDOFF]\nPrevious session context:\n${prevContext}\n\n${enrichedContent}`
-        } catch { /* snapshot parse failed — skip */ }
+        } catch { }
       }
     }
 
-    // AC-7: UI Builder Context Injection
     if (centerMode === 'builder' && uiComponents.length > 0) {
       const treeJson = JSON.stringify(uiComponents, null, 2)
       enrichedContent += `\n\n<ui-canvas-context>\n${treeJson}\n</ui-canvas-context>`
@@ -852,7 +822,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     setInput('')
     setContext([])
 
-    // Context Injection Handling for legacy @help
     if (currentInput.includes('@help')) {
         try {
             const result = await invoke<{ ok: boolean; data?: string }>('fs:open-file', 'docs/help/USER_GUIDE.md');
@@ -868,7 +837,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     streamingIdRef.current = sessionId
     setIsStreaming(true)
 
-    // Inject LSP diagnostics for open file if available (Story 189)
     if (openFilePath) {
       try {
         const diagRes = await invoke<any>('lsp:get-diagnostics', openFilePath)
@@ -880,17 +848,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             .join('\n')
           enrichedContent = `[LSP diagnostics for ${filename}]\n${summary}\n\n---\n\n${enrichedContent}`
         }
-      } catch { /* LSP not running — skip */ }
+      } catch { }
     }
 
-    // Add placeholder assistant message
     setMessages(prev => [...prev, {
       id: `msg-${Date.now()}`,
       role: 'assistant',
       content: '',
     }])
 
-    // Prepare history for API
     const history = messages.map(m => ({ role: m.role, content: m.content }))
 
     invoke('chat:send', {
@@ -909,20 +875,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     try {
       const _rawContent = await invoke<any>('stories:get-content', activeStoryId);
       const currentContent: string = unwrapIpc<any>(_rawContent) ?? '';
-
-      // We want to update the "Implementation" section or append if not found
       let updatedContent = currentContent;
       const implMarker = '## Implementation';
-
       if (currentContent.includes(implMarker)) {
         const parts = currentContent.split(implMarker);
         updatedContent = `${parts[0]}${implMarker}\n${content}\n`;
       } else {
         updatedContent = `${currentContent}\n\n${implMarker}\n${content}\n`;
       }
-
       await invoke('stories:update-content', { id: activeStoryId, content: updatedContent });
-      // Show success toast? (Assuming toast store is available)
       window.ipcRenderer.send('db:log-intent', `Architected ${activeStoryId} via Chat`, 'COMPLETED', 'chat');
     } catch (e) {
       log.error("Failed to save to story", e);
@@ -966,10 +927,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     try {
       const filePath = await invoke<string | null>('fs:select-file')
       if (!filePath) return
-
       const content = await invoke<string>('fs:read-file', filePath)
       if (typeof content !== 'string') return
-
       setContext(prev => [...prev, {
         type: 'file',
         label: filePath.split(/[/\\]/).pop() ?? filePath,
@@ -1010,43 +969,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       id="chat"
       front={
         <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
-          {/* Tabs Header */}
-      <div className="flex bg-[#0A0A0A] border-b border-copernicus-steel h-9">
-        <button
-          onClick={() => setChatPanelTab('chat')}
-          className={`flex-1 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest uppercase transition-colors relative ${chatPanelTab === 'chat' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'}`}
-        >
-          CHAT
-          {chatPanelTab === 'chat' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-copernicus-phosphor" />}
-        </button>
-        <button
-          onClick={() => setChatPanelTab('guide')}
-          className={`flex-1 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest uppercase transition-colors relative ${chatPanelTab === 'guide' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'}`}
-        >
-          GUIDE
-          {chatPanelTab === 'guide' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-copernicus-phosphor" />}
-        </button>
-      </div>
-
-      {chatPanelTab === 'chat' ? (
-        <>
-          {/* Redesigned Header */}
-          <div className="h-6 flex items-center justify-between px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel select-none group">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest flex-none">Chat</span>
-              
-              <div className="relative min-w-0 flex-1 max-w-[180px]">
-                <div
-                    className="flex items-center bg-zinc-900/50 border border-copernicus-steel/50 rounded px-1.5 py-0.5 cursor-pointer hover:border-copernicus-phosphor transition-colors group/picker"
-                    onClick={() => setShowModelPicker(!showModelPicker)}
+          {/* Symmetrical Header Bar */}
+          <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 select-none group/chat">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <button
+                  onClick={() => setShowModelPicker(!showModelPicker)}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 hover:text-white transition-colors uppercase tracking-wider"
                 >
-                    <span className="text-[9px] text-copernicus-phosphor truncate flex-1">{model}</span>
-                    <ChevronDown size={10} className="text-zinc-600 group-hover/picker:text-copernicus-phosphor flex-none ml-1" />
-                </div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-copernicus-phosphor animate-pulse shadow-[0_0_5px_rgba(74,222,128,0.5)]" />
+                  {availableModels.find(m => m.id === model)?.name || 'Model'}
+                  <ChevronDown size={10} className={`transition-transform duration-200 ${showModelPicker ? 'rotate-180' : ''}`} />
+                </button>
 
                 {showModelPicker && (
-                    <div className="absolute top-full left-0 mt-1 w-64 bg-[#111] border border-copernicus-steel rounded shadow-xl z-[100] max-h-64 overflow-y-auto">
-                    <div className="px-3 py-1.5 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel font-bold">Select Model</div>
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 py-1 overflow-hidden">
                     {availableModels.map(m => (
                         <button
                         key={m.id}
@@ -1069,336 +1006,208 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 )}
               </div>
 
-              {/* Context Indicator */}
               <div className="flex items-center gap-1 flex-none" title={isRepoActive ? "Repo Context Active" : "No Repo Context"}>
                  <div className={`w-1.5 h-1.5 rounded-full ${isRepoActive ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500 animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.5)]'}`} />
               </div>
             </div>
 
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => toggleFlip('chat')} aria-label="Open chat tools" className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
-                <RotateCcw size={10} />
-              </button>
+            <div className="flex items-center gap-1 opacity-0 group-hover/chat:opacity-100 transition-opacity">
               <button
                 onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
-                className="text-zinc-500 hover:text-copernicus-phosphor transition-colors font-bold text-[10px] flex items-center justify-center min-w-[24px]"
-                title={spotlightPane === 'chat' ? "Exit Spotlight" : "Spotlight Panel"}
+                className={`p-1 rounded hover:bg-white/5 ${spotlightPane === 'chat' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
+                title={spotlightPane === 'chat' ? "Exit Spotlight" : "Spotlight Chat"}
               >
                 {spotlightPane === 'chat' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
               </button>
+              <button
+                onClick={() => toggleFlip('chat')}
+                className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+                title="Rotate Chat Tools"
+              >
+                <RotateCcw size={10} />
+              </button>
+              <button
+                onClick={() => setChatPanelOpen(false)}
+                className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                title="Close Chat"
+              >
+                <MessageSquare size={12} />
+              </button>
             </div>
           </div>
 
-          {/* Message Stream */}
-          <div
-            ref={scrollRef}
-            role="log"
-            aria-live="polite"
-            aria-label="Chat messages"
-            className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel"
-          >
-            {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale grayscale-100">
-                <Hash size={48} className="text-copernicus-phosphor mb-4" />
-                <div className="text-[10px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
-              </div>
-            ) : (
-              messages.map(m => (
-                <div key={m.id} role="article" aria-label={`${m.role}: ${m.content.slice(0, 80)}`}>
-                  <ChatMessage
-                    role={m.role}
-                    content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content}
-                    tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
-                  />
-                </div>
-              ))
-            )}
+          <div className="flex bg-[#0A0A0A] border-b border-copernicus-steel h-9">
+            <button
+              onClick={() => setChatPanelTab('chat')}
+              className={`flex-1 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest uppercase transition-colors relative ${chatPanelTab === 'chat' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+              CHAT
+              {chatPanelTab === 'chat' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-copernicus-phosphor" />}
+            </button>
+            <button
+              onClick={() => setChatPanelTab('guide')}
+              className={`flex-1 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest uppercase transition-colors relative ${chatPanelTab === 'guide' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+              GUIDE
+              {chatPanelTab === 'guide' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-copernicus-phosphor" />}
+            </button>
           </div>
 
-          {/* Context Area (Chips) */}
-          {context.length > 0 && (
-            <div className="px-2 py-1 flex flex-wrap gap-1 bg-zinc-900/50 border-t border-hairline border-copernicus-steel">
-              {context.map(c => <ContextChip key={c.label} label={c.label} onRemove={() => setContext(prev => prev.filter(i => i.label !== c.label))} />)}
+          {chatPanelTab === 'chat' ? (
+            <>
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel">
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale grayscale-100">
+                    <Hash size={48} className="text-copernicus-phosphor mb-4" />
+                    <div className="text-[10px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
+                  </div>
+                ) : (
+                  messages.map(m => (
+                    <div key={m.id} role="article">
+                      <ChatMessage
+                        role={m.role}
+                        content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content}
+                        tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {context.length > 0 && (
+                <div className="px-2 py-1 flex flex-wrap gap-1 bg-zinc-900/50 border-t border-hairline border-copernicus-steel">
+                  {context.map(c => <ContextChip key={c.label} label={c.label} onRemove={() => setContext(prev => prev.filter(i => i.label !== c.label))} />)}
+                </div>
+              )}
+
+              <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
+                <div className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5 shadow-sm">
+                  {/* Suggestion Popover (AC-2) */}
+                  {showSuggestions && slashSuggestions.length > 0 && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 py-1 overflow-hidden">
+                      {slashSuggestions.map(cmd => (
+                        <button
+                          key={cmd.name}
+                          className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex items-center gap-3"
+                          onClick={() => {
+                            setInput(cmd.name + ' ')
+                            setShowSuggestions(false)
+                          }}
+                        >
+                          <span className="text-copernicus-phosphor font-mono">{cmd.name}</span>
+                          <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">{cmd.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Context Picker Popover (AC-2) */}
+                  {pickerMode !== 'none' && pickerResults.length > 0 && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
+                      <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel bg-black/40">
+                        {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
+                      </div>
+                      {pickerResults.map(item => (
+                        <button
+                          key={item.value}
+                          className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex flex-col"
+                          onClick={() => handlePickerSelect(item)}
+                        >
+                          <span className="text-zinc-300 font-bold">{item.label}</span>
+                          <span className="text-[9px] text-zinc-600 truncate">{item.value}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <textarea
+                    value={input}
+                    aria-label="Chat input"
+                    data-chat-input
+                    onChange={(e) => {
+                      const newValue = e.target.value
+                      setInput(newValue)
+                      
+                      if (newValue.startsWith('/') && !newValue.includes(' ')) {
+                        setSlashSuggestions(commandRegistry.suggest(newValue))
+                        setShowSuggestions(true)
+                      } else {
+                        setShowSuggestions(false)
+                      }
+
+                      // Context Picker logic
+                      const atIndex = newValue.lastIndexOf('@')
+                      const hashIndex = newValue.lastIndexOf('#')
+
+                      const codebaseMatch = newValue.slice(atIndex).match(/^@codebase\s+(.+)$/)
+                      if (atIndex !== -1 && codebaseMatch) {
+                        const query = codebaseMatch[1]
+                        setPickerMode('codebase')
+                        invoke<any>('lsp:request', { method: 'workspace/symbol', params: { query } })
+                          .then((raw: any) => {
+                            const symbols: any[] = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []
+                            setPickerResults(symbols.slice(0, 20).map((s: any) => ({
+                              label: s.name ?? '',
+                              value: (s.location?.uri ?? '').replace('file://', ''),
+                              payload: `${s.containerName ? s.containerName + '.' : ''}${s.name}`,
+                            })))
+                          })
+                          .catch(() => setPickerResults([]))
+                      } else if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
+                        const query = newValue.slice(atIndex + 1)
+                        setPickerMode('file')
+                        invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '').then((result) => {
+                          const data = (result as any).data || result
+                          if (Array.isArray(data)) {
+                            const filtered = data.filter(n => !n.isDir && n.name.toLowerCase().includes(query.toLowerCase()))
+                            setPickerResults(filtered.map(n => ({ label: n.name, value: n.path, payload: n.path })))
+                          }
+                        }).catch(log.error)
+                      } else if (hashIndex !== -1 && hashIndex > atIndex && !newValue.slice(hashIndex).includes(' ')) {
+                        const query = newValue.slice(hashIndex + 1)
+                        setPickerMode('story')
+                        invoke<any[]>('stories:list').then((stories) => {
+                          const data = (stories as any).data || stories
+                          if (Array.isArray(data)) {
+                            const filtered = data.filter((s: any) => (s.id?.toLowerCase().includes(query.toLowerCase()) || s.title?.toLowerCase().includes(query.toLowerCase())))
+                            setPickerResults(filtered.map((s: any) => ({ label: s.title ?? s.id, value: s.id, payload: s.content ?? '' })))
+                          }
+                        }).catch(log.error)
+                      } else {
+                        setPickerMode('none')
+                      }
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
+                    placeholder={isStreaming ? "Streaming..." : "Strategic intent... (@file, #story)"}
+                    disabled={isStreaming}
+                    className="w-full bg-transparent border-none focus:ring-0 text-xs text-zinc-300 resize-none min-h-[40px] max-h-[200px] disabled:opacity-50 font-mono"
+                  />
+                  <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
+                    <div className="flex gap-2 text-zinc-500">
+                      <button onClick={handleFileAttach} className="hover:text-copernicus-phosphor transition-colors"><Paperclip size={12} /></button>
+                      <button onClick={() => triggerPicker('story')} className="hover:text-copernicus-phosphor transition-colors"><FileText size={12} /></button>
+                    </div>
+                    <button onClick={handleSendMessage} disabled={isStreaming} className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40"><Send size={14} /></button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col p-4 space-y-4">
+              <div className="flex items-center gap-3 border-b border-copernicus-steel pb-4">
+                <div className="w-10 h-10 rounded bg-copernicus-phosphor/20 flex items-center justify-center phosphor-glow-border">
+                  <span className="text-copernicus-phosphor font-bold font-mono">C</span>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-copernicus-phosphor">COPERNICUS</div>
+                  <div className="text-[9px] text-zinc-500 uppercase tracking-widest">Guide Persona</div>
+                </div>
+              </div>
+              <div className="flex-1 flex items-center justify-center opacity-20">
+                <Info size={48} />
+              </div>
             </div>
           )}
-
-          {/* Input Area */}
-          <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
-            {centerMode === 'builder' && uiComponents.length > 0 && (
-              <div className="flex items-center gap-1.5 px-2 pb-2 text-[8px] text-copernicus-phosphor/60 font-mono uppercase tracking-tighter">
-                <Layout size={10} />
-                <span>UI context active ({uiComponents.length} components)</span>
-              </div>
-            )}
-            
-            <div className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5">
-              {/* Slash Suggestions */}
-              {showSuggestions && slashSuggestions.length > 0 && (
-                <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded overflow-hidden z-50">
-                  {slashSuggestions.map(cmd => (
-                    <button
-                      key={cmd.name}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 flex items-center gap-3"
-                      onClick={() => {
-                        setInput(cmd.name + ' ')
-                        setShowSuggestions(false)
-                      }}
-                    >
-                      <span className="text-copernicus-phosphor font-mono">{cmd.name}</span>
-                      <span className="text-zinc-500">{cmd.description}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Context Picker Popover */}
-              {pickerMode !== 'none' && pickerResults.length > 0 && (
-                <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
-                  <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel">
-                    {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
-                  </div>
-                  {pickerResults.map(item => (
-                    <button
-                      key={item.value}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors"
-                      onClick={() => handlePickerSelect(item)}
-                    >
-                      <span className="text-zinc-300">{item.label}</span>
-                      <span className="text-zinc-600 ml-2 text-[10px] truncate">{item.value}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <textarea
-                value={input}
-                aria-label="Chat with Claude"
-                data-chat-input
-                onChange={(e) => {
-                  const newValue = e.target.value
-                  setInput(newValue)
-
-                  // Slash suggestions logic
-                  if (newValue.startsWith('/') && !newValue.includes(' ')) {
-                    const suggestions = commandRegistry.suggest(newValue)
-                    setSlashSuggestions(suggestions)
-                    setShowSuggestions(suggestions.length > 0)
-                  } else {
-                    setShowSuggestions(false)
-                  }
-
-                  // Context Picker logic
-                  const atIndex = newValue.lastIndexOf('@')
-                  const hashIndex = newValue.lastIndexOf('#')
-
-                  // @codebase <query> — LSP workspace/symbol search (Story 176)
-                  const codebaseMatch = newValue.slice(atIndex).match(/^@codebase\s+(.+)$/)
-                  if (atIndex !== -1 && codebaseMatch) {
-                    const query = codebaseMatch[1]
-                    setPickerMode('codebase')
-                    invoke<any>('lsp:request', { method: 'workspace/symbol', params: { query } })
-                      .then((raw: any) => {
-                        const symbols: any[] = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []
-                        setPickerResults(symbols.slice(0, 20).map((s: any) => ({
-                          label: s.name ?? '',
-                          value: (s.location?.uri ?? '').replace('file://', ''),
-                          payload: `${s.containerName ? s.containerName + '.' : ''}${s.name}`,
-                        })))
-                      })
-                      .catch(() => setPickerResults([]))
-                  } else if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
-                    const query = newValue.slice(atIndex + 1)
-                    setPickerMode('file')
-                    invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '').then((result) => {
-                      const data = (result as any).data || result
-                      if (Array.isArray(data)) {
-                        const filtered = data.filter(n =>
-                          !n.isDir && n.name.toLowerCase().includes(query.toLowerCase())
-                        )
-                        setPickerResults(filtered.map(n => ({
-                          label: n.name,
-                          value: n.path,
-                          payload: n.path,
-                        })))
-                      }
-                    }).catch(log.error)
-                  } else if (hashIndex !== -1 && hashIndex > atIndex && !newValue.slice(hashIndex).includes(' ')) {
-                    const query = newValue.slice(hashIndex + 1)
-                    setPickerMode('story')
-                    invoke<any[]>('stories:list').then((stories) => {
-                      const data = (stories as any).data || stories
-                      if (Array.isArray(data)) {
-                        const filtered = data.filter((s: any) =>
-                          s.id?.toLowerCase().includes(query.toLowerCase()) ||
-                          s.title?.toLowerCase().includes(query.toLowerCase())
-                        )
-                        setPickerResults(filtered.map((s: any) => ({
-                          label: s.title ?? s.id,
-                          value: s.id,
-                          payload: s.content ?? '',
-                        })))
-                      }
-                    }).catch(log.error)
-                  } else {
-                    setPickerMode('none')
-                  }
-
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-                placeholder={isStreaming ? "Streaming in progress..." : "Type strategic intent... (@file to attach context)"}
-                disabled={isStreaming}
-                className="w-full bg-transparent border-none focus:ring-0 text-xs text-zinc-300 resize-none min-h-[40px] max-h-[200px] disabled:opacity-50"
-              />
-              <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
-                <div className="flex gap-2 text-zinc-500">
-                  <button
-                    onClick={handleFileAttach}
-                    className="hover:text-copernicus-phosphor transition-colors"
-                    title="Attach File (Dialog)"
-                    disabled={isStreaming}
-                  >
-                    <Paperclip size={12} />
-                  </button>
-                  <button
-                    onClick={() => triggerPicker('story')}
-                    className="hover:text-copernicus-phosphor transition-colors"
-                    title="Attach Story (#)"
-                    disabled={isStreaming}
-                  >
-                    <FileText size={12} />
-                  </button>
-                </div>
-                <button
-                  onClick={handleSendMessage}
-                  disabled={isStreaming}
-                  aria-label="Send message"
-                  className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Send size={14} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="flex-1 flex flex-col p-4 space-y-4">
-          {/* Copernicus Guide Persona */}
-          <div className="flex items-center gap-3 border-b border-copernicus-steel pb-4">
-            <div className="w-10 h-10 rounded bg-copernicus-phosphor/20 flex items-center justify-center phosphor-glow-border">
-              <span className="text-copernicus-phosphor font-bold">C</span>
-            </div>
-            <div>
-              <div className="text-xs font-bold text-copernicus-phosphor">COPERNICUS</div>
-              <div className="text-[9px] text-zinc-500 uppercase tracking-widest">Guide Persona</div>
-            </div>
-          </div>
-
-          {/* Tour Content */}
-          <div className="flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-copernicus-steel">
-            {tourStep === 0 && (
-              <div className="space-y-4">
-                <p className="text-xs leading-relaxed text-zinc-300">
-                  Welcome. Want a 60-second tour before you dive in?
-                </p>
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={() => {
-                      setTourStep(1)
-                      setView('designer')
-                      setTourHighlight('planner')
-                    }}
-                    className="w-full py-2.5 bg-copernicus-phosphor/10 border border-copernicus-phosphor/40 text-copernicus-phosphor text-[10px] font-bold uppercase tracking-wider hover:bg-copernicus-phosphor/20 transition-all active:scale-[0.98]"
-                  >
-                    Let's go →
-                  </button>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => {
-                        setHasCompletedTour()
-                        setView('editor')
-                      }}
-                      className="text-left text-[9px] text-zinc-500 hover:text-copernicus-phosphor uppercase underline decoration-zinc-700 underline-offset-4 transition-colors"
-                    >
-                      Skip — take me to the Editor
-                    </button>
-                    <button
-                      onClick={() => {
-                        setHasCompletedTour()
-                        setView('planner')
-                      }}
-                      className="text-left text-[9px] text-zinc-500 hover:text-copernicus-phosphor uppercase underline decoration-zinc-700 underline-offset-4 transition-colors"
-                    >
-                      Skip — take me to the Planner
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {tourStep > 0 && tourStep < 6 && (
-              <div className="space-y-4">
-                <div className="p-3 bg-zinc-900/50 border border-copernicus-steel/30 rounded">
-                  <p className="text-xs leading-relaxed text-zinc-300">
-                    {tourStep === 1 && "Your Kanban board — every idea becomes a story, every story becomes code. Nine lanes from idea to Done."}
-                    {tourStep === 2 && "Write code with Claude. Monaco editor, LSP running live — Claude sees your diagnostics automatically."}
-                    {tourStep === 3 && "The Canvas — UI building, image review, live Playwright browser previews. You're in it now."}
-                    {tourStep === 4 && "Workflow engine — multi-step agent pipelines assigned to stories, running headlessly."}
-                    {tourStep === 5 && "Your control tower — agent swarms, active tasks, LSP state, stalls. Check here when anything feels stuck."}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    const nextStep = tourStep + 1
-                    setTourStep(nextStep)
-                    if (nextStep === 2) setTourHighlight('editor')
-                    else if (nextStep === 3) setTourHighlight('designer')
-                    else if (nextStep === 4) setTourHighlight('orchestrator')
-                    else if (nextStep === 5) setTourHighlight('reporter')
-                    else if (nextStep === 6) setTourHighlight(null)
-                  }}
-                  className="w-full py-2.5 bg-copernicus-phosphor/10 border border-copernicus-phosphor/40 text-copernicus-phosphor text-[10px] font-bold uppercase tracking-wider hover:bg-copernicus-phosphor/20 transition-all active:scale-[0.98]"
-                >
-                  Next →
-                </button>
-                <button
-                  onClick={() => setHasCompletedTour()}
-                  className="text-[9px] text-zinc-500 hover:text-zinc-300 uppercase underline decoration-zinc-700 underline-offset-4"
-                >
-                  Skip Tour
-                </button>
-              </div>
-            )}
-
-            {tourStep === 6 && (
-              <div className="space-y-4">
-                <p className="text-xs leading-relaxed text-zinc-300">
-                  That's everything. Where do you want to start?
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setHasCompletedTour()
-                      setView('editor')
-                    }}
-                    className="flex-1 py-2.5 bg-copernicus-phosphor/10 border border-copernicus-phosphor/40 text-copernicus-phosphor text-[10px] font-bold uppercase tracking-wider hover:bg-copernicus-phosphor/20 transition-all active:scale-[0.98]"
-                  >
-                    Editor
-                  </button>
-                  <button
-                    onClick={() => {
-                      setHasCompletedTour()
-                      setView('planner')
-                    }}
-                    className="flex-1 py-2.5 bg-zinc-900 border border-copernicus-steel text-zinc-400 text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-all active:scale-[0.98]"
-                  >
-                    Planner
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
         </div>
       }
       back={renderBackFace()}

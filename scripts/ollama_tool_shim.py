@@ -49,19 +49,6 @@ def execute_tool(tool_name, arguments):
                 return f.read()
         except Exception as e:
             return f"Error reading file: {e}"
-
-    elif tool_name == "write_file":
-        path = arguments.get("path")
-        content = arguments.get("content")
-        if not path or content is None: return "Error: path and content required"
-        try:
-            # Ensure directory exists
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w") as f:
-                f.write(content)
-            return f"File '{path}' written successfully."
-        except Exception as e:
-            return f"Error writing file: {e}"
             
     elif tool_name == "search_codebase":
         query = arguments.get("query")
@@ -72,10 +59,6 @@ def execute_tool(tool_name, arguments):
         
     elif tool_name == "mcp_call":
         mcp_tool = arguments.get("tool_name")
-        mcp_args = arguments.get("arguments", {})
-        # Fallback: model sometimes uses mcp_call to call built-in tools
-        if mcp_tool in ["read_file", "write_file", "search_codebase"]:
-            return execute_tool(mcp_tool, mcp_args)
         return f"MCP tool '{mcp_tool}' called successfully (Mock Output)."
         
     return f"Unknown tool: {tool_name}"
@@ -85,12 +68,8 @@ def execute_tool(tool_name, arguments):
 PERSONA_ROUTING = {
     "researcher": ("deepseek-v3.2:cloud",     OLLAMA_CLOUD_HOST, True),
     "architect":  ("glm-5:cloud",             OLLAMA_CLOUD_HOST, True),
-    "engineer":   ("devstral-2:123b:cloud",   OLLAMA_CLOUD_HOST, True),
     "thinker":    ("kimi-k2.5:cloud",         OLLAMA_CLOUD_HOST, True),
     "coder":      ("qwen3-coder-next:cloud",  OLLAMA_CLOUD_HOST, True),
-    "polymath":   ("qwen3.5:cloud",           OLLAMA_CLOUD_HOST, True),
-    "logistician":("minimax-m2.5:cloud",      OLLAMA_CLOUD_HOST, True),
-    "speedster":  ("gemini-3-flash:cloud",    OLLAMA_CLOUD_HOST, True),
     "expert":     ("cogito-2.1:cloud",        OLLAMA_CLOUD_HOST, True),
     "sentinel":   ("devstral-small-2:24b",    OLLAMA_CLOUD_HOST, True),
     "scribe":     ("qwen2.5-coder:1.5b",      OLLAMA_LOCAL_URL,  False),
@@ -123,44 +102,38 @@ def main():
 
     print(f"--- Routing to Ollama ({model}) via {target_url} (Persona: {persona}) ---")
     
-    messages = [
-        {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': user_prompt}
-    ]
-
-    max_turns = 10
-    for turn in range(max_turns):
-        try:
-            response = client.chat(model=model, messages=messages)
-            content = response['message']['content']
-            messages.append({'role': 'assistant', 'content': content})
-            
-            # Look for a tool call
-            tool_match = re.search(r"\[TOOL:\s*(\w+)\s*arguments:\s*(\{.*?\})\]", content, re.DOTALL)
-            if tool_match:
-                name = tool_match.group(1)
-                try:
-                    args = json.loads(tool_match.group(2))
-                    result = execute_tool(name, args)
-                    print(f"✅ Tool result received. Turn {turn+1}/{max_turns} for {model}...")
-                    
-                    follow_up = f"Tool '{name}' result:\n\n{result}\n\nApply the strict execution protocol to this result."
-                    messages.append({'role': 'user', 'content': follow_up})
-                    # Continue loop to process the model's reaction to the tool result
-                except Exception as e:
-                    print(f"Error parsing tool arguments: {e}")
-                    print(content)
-                    break # Stop if tool format is broken
-            else:
-                # No tool call found, model has finished its response
-                print(content)
-                break
+    try:
+        response = client.chat(model=model, messages=[
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': user_prompt}
+        ])
+        content = response['message']['content']
+        
+        # Tool-calling loop
+        tool_match = re.search(r"\[TOOL:\s*(\w+)\s*arguments:\s*(\{.*?\})\]", content, re.DOTALL)
+        if tool_match:
+            name = tool_match.group(1)
+            try:
+                args = json.loads(tool_match.group(2))
+                result = execute_tool(name, args)
+                print(f"✅ Tool result received. Re-prompting {model}...")
                 
-        except Exception as e:
-            print(f"Error in Ollama communication: {e}")
-            break
-    else:
-        print("--- Reached maximum turns for sub-agent session. ---")
+                follow_up = f"Tool '{name}' result:\n\n{result}\n\nApply the strict execution protocol to this result."
+                final_response = client.chat(model=model, messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt},
+                    {'role': 'assistant', 'content': content},
+                    {'role': 'user', 'content': follow_up}
+                ])
+                print(final_response['message']['content'])
+            except Exception as e:
+                print(f"Error parsing tool arguments: {e}")
+                print(content)
+        else:
+            print(content)
+            
+    except Exception as e:
+        print(f"Error in Ollama communication: {e}")
 
 if __name__ == "__main__":
     main()

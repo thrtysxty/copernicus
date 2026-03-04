@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
-         Image as ImageIcon, Database, Maximize2, Minimize2 } from 'lucide-react'
+         Image as ImageIcon, Database, Maximize2, Minimize2, RotateCcw } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
@@ -100,36 +100,32 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
         onClick={handleClick}
       >
         {node.isDir ? (
-          <>
-            {expanded
-              ? <ChevronDown size={10} className="text-zinc-500 shrink-0" />
-              : <ChevronRight size={10} className="text-zinc-500 shrink-0" />
-            }
-            {expanded
-              ? <FolderOpen size={11} className="text-copernicus-phosphor/70 shrink-0" />
-              : <Folder size={11} className="text-copernicus-phosphor/70 shrink-0" />
-            }
-          </>
+          expanded ? <ChevronDown size={14} className="text-zinc-500" /> : <ChevronRight size={14} className="text-zinc-500" />
         ) : (
-          <>
-            <span className="w-[10px] shrink-0" />
-        {classification === 'canvas' || classification === 'svg'
-              ? <ImageIcon size={11} className="text-blue-400/70 shrink-0" />
-              : classification === 'binary'
-              ? <Database size={11} className="text-red-400/50 shrink-0" />
-              : <FileText size={11} className="text-zinc-500 shrink-0" />
-            }
-          </>
+          <div className="w-[14px]" />
         )}
-        <span className="text-zinc-400 truncate">{node.name}</span>
+        {node.isDir ? (
+          expanded ? <FolderOpen size={14} className="text-copernicus-phosphor" /> : <Folder size={14} className="text-zinc-400" />
+        ) : (
+          classification === 'canvas' || classification === 'svg' ? <ImageIcon size={12} className="text-blue-400" /> :
+          classification === 'binary' ? <Database size={12} className="text-amber-400" /> :
+          <FileText size={12} className="text-zinc-500" />
+        )}
+        <span className={`${node.isDir ? 'font-semibold text-zinc-300' : 'text-zinc-400'} truncate`}>
+          {node.name}
+        </span>
       </div>
-      {node.isDir && expanded && children.map(child => (
-        <FileTreeNode
-          key={child.path}
-          node={child}
-          depth={depth + 1}
-        />
-      ))}
+      {node.isDir && expanded && (
+        <div className="ml-1">
+          {children.map(child => (
+            <FileTreeNode
+              key={child.path}
+              node={child}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -140,7 +136,7 @@ interface FileTreeProps {
 
 export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   const invoke = useIpcError()
-  const { spotlightPane, setSpotlight } = useLayoutStore()
+  const { spotlightPane, setSpotlight, toggleFlip } = useLayoutStore()
   const [rootChildren, setRootChildren] = useState<FileNode[]>([])
 
   useEffect(() => {
@@ -161,13 +157,23 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
     <div className="flex flex-col h-full bg-copernicus-bg">
       <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/tree">
         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>
-        <button
-          onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
-          className={`opacity-0 group-hover/tree:opacity-100 transition-all p-1 rounded hover:bg-white/5 ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
-          title={spotlightPane === 'explorer' ? "Shrink Explorer" : "Spotlight Explorer"}
-        >
-          {spotlightPane === 'explorer' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
-        </button>
+        
+        <div className="flex items-center gap-1 opacity-0 group-hover/tree:opacity-100 transition-all">
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
+            className={`p-1 rounded hover:bg-white/5 ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
+            title={spotlightPane === 'explorer' ? "Shrink Explorer" : "Spotlight Explorer"}
+          >
+            {spotlightPane === 'explorer' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+          </button>
+          <button
+            onClick={() => toggleFlip('sidebar')}
+            className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+            title="Rotate Explorer Content"
+          >
+            <RotateCcw size={10} />
+          </button>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-copernicus-steel">
         {rootChildren.map(node => (
