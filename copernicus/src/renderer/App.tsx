@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Github, Settings, BarChart2,
   Maximize2, RotateCcw, Layout, Brain,
@@ -25,6 +25,7 @@ import Wizard from './components/wizard/Wizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { UITestDrawer } from './components/testing/UITestDrawer'
 import { unwrapIpc } from './types/ipc'
+import { classifyFile } from './utils/fileUtils'
 
 const TERMINAL_HEIGHT = 200
 
@@ -62,6 +63,11 @@ export default function App() {
     setActivityBarCollapsed,
     setInProgressCount,
     chatPanelOpen,
+    paletteOpen,
+    setPaletteOpen,
+    inspectorOpen,
+    setInspectorOpen,
+    browserSessionActive
   } = useLayoutStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -208,6 +214,19 @@ export default function App() {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
+  const centerLabel = useMemo(() => {
+    if (activeView === 'orchestrator') return 'Orchestrator'
+    if (centerMode === 'code') return 'Editor'
+    if (centerMode === 'binary') return 'Binary'
+    
+    if (browserSessionActive) return 'Canvas: Browser'
+    if (activeFilePath) {
+      const type = classifyFile(activeFilePath)
+      if (type === 'canvas' || type === 'svg') return 'Canvas: Image'
+    }
+    return 'Canvas: UI'
+  }, [activeView, centerMode, browserSessionActive, activeFilePath])
+
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />
   }
@@ -344,13 +363,31 @@ export default function App() {
                       front={
                         <div className="flex flex-col h-full relative">
                           <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/center">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                              {activeView === 'orchestrator' ? 'Orchestrator' : (centerMode === 'code' ? 'Editor' : 'Canvas')}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                                {centerLabel}
+                              </span>
+                            </div>
+
                             <div className="flex items-center gap-2 opacity-0 group-hover/center:opacity-100 transition-opacity">
+                              {activeView === 'designer' && (
+                                <div className="flex bg-zinc-900 rounded p-0.5 border border-zinc-800 mr-2">
+                                  <button 
+                                    onClick={() => setPaletteOpen(!paletteOpen)}
+                                    className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${paletteOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                  >
+                                    Palette
+                                  </button>
+                                  <button 
+                                    onClick={() => setInspectorOpen(!inspectorOpen)}
+                                    className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${inspectorOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                  >
+                                    Inspector
+                                  </button>
+                                </div>
+                              )}
+                              <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel"><RotateCcw size={12} /></button>
                               <button onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')} className={`p-1 rounded ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`} title="Spotlight"><Maximize2 size={12} /></button>
-                              <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Flip Panel"><RotateCcw size={12} /></button>
-                              {activeView === 'designer' && <button onClick={toggleUIBuilder} className={`p-1 ${uiBuilderOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`} title="UI Builder"><Layout size={14} /></button>}
                             </div>
                           </header>
                           <div className="flex-1 overflow-hidden relative">

@@ -8,10 +8,12 @@ export interface Command {
 }
 
 export interface CommandContext {
-  appendMessage: (role: 'user' | 'assistant', content: string) => void
+  appendMessage: (role: 'user' | 'assistant' | 'copernicus', content: string) => void
   clearMessages: () => void
   setModel: (model: string) => void
   getCurrentModel: () => string
+  setBackTab: (tab: string) => void
+  flip: () => void
 }
 
 class CommandRegistry {
@@ -53,7 +55,7 @@ commandRegistry.register({
     const lines = commandRegistry.list().map(
       c => `  ${c.name.padEnd(12)} — ${c.description}`
     )
-    ctx.appendMessage('assistant', `**Available commands:**\n\`\`\`\n${lines.join('\n')}\n\`\`\``)
+    ctx.appendMessage('copernicus', `**Available commands:**\n\`\`\`\n${lines.join('\n')}\n\`\`\``)
   },
 })
 
@@ -62,6 +64,51 @@ commandRegistry.register({
   description: 'Clear chat history',
   execute: (_args, ctx) => {
     ctx.clearMessages()
+  },
+})
+
+commandRegistry.register({
+  name: '/context',
+  description: 'View/manage active context',
+  execute: (_args, ctx) => {
+    ctx.setBackTab('context')
+    ctx.flip()
+  },
+})
+
+commandRegistry.register({
+  name: '/persona',
+  description: 'Switch/edit active persona',
+  execute: (_args, ctx) => {
+    ctx.setBackTab('persona')
+    ctx.flip()
+  },
+})
+
+commandRegistry.register({
+  name: '/library',
+  description: 'Browse saved prompt library',
+  execute: (_args, ctx) => {
+    ctx.setBackTab('prompts')
+    ctx.flip()
+  },
+})
+
+commandRegistry.register({
+  name: '/history',
+  description: 'Browse session history',
+  execute: (_args, ctx) => {
+    ctx.setBackTab('history')
+    ctx.flip()
+  },
+})
+
+commandRegistry.register({
+  name: '/instructions',
+  description: 'Edit instruction files (agents.md, etc.)',
+  execute: (_args, ctx) => {
+    ctx.setBackTab('instructions')
+    ctx.flip()
   },
 })
 
@@ -83,7 +130,7 @@ commandRegistry.register({
   name: '/audit',
   description: 'Run Sentinel security audit on staged changes',
   execute: (_args, ctx) => {
-    ctx.appendMessage('assistant', '🔒 Dispatching Sentinel audit agent...')
+    ctx.appendMessage('copernicus', '🔒 Dispatching Sentinel audit agent...')
     ipcRenderer.send('terminal:spawn-agent', { agentId: 'sentinel' })
   },
 })
@@ -94,10 +141,10 @@ commandRegistry.register({
   usage: '/story "Title" [--type story|api|component]',
   execute: (args, ctx) => {
     if (!args.trim()) {
-      ctx.appendMessage('assistant', 'Usage: `/story "Title" [--type story|api|component]`')
+      ctx.appendMessage('copernicus', 'Usage: `/story "Title" [--type story|api|component]`')
       return
     }
-    ctx.appendMessage('assistant', `Scaffolding story: ${args}`)
+    ctx.appendMessage('copernicus', `Scaffolding story: ${args}`)
     ipcRenderer.send('story:scaffold', { args })
   },
 })

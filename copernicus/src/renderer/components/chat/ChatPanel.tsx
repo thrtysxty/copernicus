@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Book, User, History, Info, Layers, MessageSquare } from 'lucide-react'
+import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Book, User, History, Info, Layers, MessageSquare, Terminal, FileCode, ChevronRight } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
 import { UIUpdateChip } from './UIUpdateChip'
@@ -16,9 +16,10 @@ const ipcRenderer = window.ipcRenderer
 
 interface Message {
   id: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'copernicus'
   content: string
   tokens?: number
+  showTourButton?: boolean
 }
 
 interface ContextItem {
@@ -69,9 +70,10 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
     }
     setApplyError('')
     try {
-      const result = await invoke<{ ok: boolean; data?: string; error?: string }>('fs:open-file', openFilePath)
-      if (result.ok && result.data !== undefined) {
-        setExistingContent(result.data)
+      const result = await invoke<any>('fs:read-file', openFilePath)
+      const data = unwrapIpc<string>(result)
+      if (data !== undefined) {
+        setExistingContent(data)
         setShowDiff(true)
       } else {
         confirmApply()
@@ -85,14 +87,15 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
 
   const confirmApply = () => {
     setShowDiff(false)
-    invoke<{ ok: boolean; error?: string }>('fs:save-file', { filePath: openFilePath, content: code })
+    invoke<any>('fs:save-file', { filePath: openFilePath, content: code })
       .then((result) => {
-        if (result.ok) {
+        const data = unwrapIpc<any>(result)
+        if (data?.ok || result === true) {
           setApplied(true)
           onApply?.(code)
           setTimeout(() => setApplied(false), 2000)
-        } else if (result.error) {
-          setApplyError(result.error)
+        } else if (data?.error) {
+          setApplyError(data.error)
         }
       })
       .catch(() => { })
@@ -167,10 +170,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     spotlightPane,
     centerMode,
     uiComponents,
-    chatPanelTab,
-    setChatPanelTab,
     retakeTour,
     setChatPanelOpen,
+    flippedPanes
   } = useLayoutStore()
 
 
@@ -189,84 +191,38 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   const [activeBackTab, setActiveBackTab] = useState('context')
   const [showBackTabPicker, setShowBackTabPicker] = useState(false)
-  const { flippedPanes } = useLayoutStore()
   const isFlipped = flippedPanes.includes('chat')
 
-  // Guide tab ephemeral state
-  interface GuideMessage {
-    id: string
-    role: 'user' | 'copernicus'
-    content: string
-    showTourButton?: boolean
-    showFallback?: boolean
-    originalQuery?: string
+  // Instruction files state
+  const [instructionFiles, setInstructionFiles] = useState<{path: string, content: string}[]>([])
+  const [activeInstructionPath, setActiveInstructionPath] = useState('AGENTS.md')
+  const [instructionContent, setInstructionContent] = useState('')
+
+  useEffect(() => {
+    if (activeBackTab === 'instructions') {
+      const files = ['AGENTS.md', 'TECHNICAL_BIBLE.md', 'UX_BIBLE.md', 'gemini.md']
+      Promise.all(files.map(async f => {
+        try {
+          const res = await invoke<any>('fs:read-file', f)
+          return { path: f, content: unwrapIpc<string>(res) || '' }
+        } catch { return { path: f, content: '' } }
+      })).then(setInstructionFiles)
+    }
+  }, [activeBackTab, invoke])
+
+  useEffect(() => {
+    const file = instructionFiles.find(f => f.path === activeInstructionPath)
+    if (file) setInstructionContent(file.content)
+  }, [activeInstructionPath, instructionFiles])
+
+  const handleSaveInstruction = async () => {
+    try {
+      await invoke('fs:save-file', { filePath: activeInstructionPath, content: instructionContent })
+      setInstructionFiles(prev => prev.map(f => f.path === activeInstructionPath ? { ...f, content: instructionContent } : f))
+    } catch (e) { log.error('Failed to save instruction', e) }
   }
-  const [guideMessages, setGuideMessages] = useState<GuideMessage[]>([{
-    id: 'cp-welcome',
-    role: 'copernicus',
-    content: 'Hello. I\'m Copernicus — your guide to this IDE. Ask me anything about the workflow, settings, or features, and I\'ll point you in the right direction.',
-  }])
-  const [guideInput, setGuideInput] = useState('')
-  const guideScrollRef = useRef<HTMLDivElement>(null)
-  const guideInputRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    if (isFlipped) {
-      setActiveBackTab('context')
-    }
-  }, [isFlipped])
-
-  useEffect(() => {
-    if (activeBackTab !== 'guide') {
-      setGuideMessages([{
-        id: 'cp-welcome',
-        role: 'copernicus',
-        content: 'Hello. I\'m Copernicus — your guide to this IDE. Ask me anything about the workflow, settings, or features, and I\'ll point you in the right direction.',
-      }])
-      setGuideInput('')
-    }
-  }, [activeBackTab])
-
-  useEffect(() => {
-    if (guideScrollRef.current) {
-      guideScrollRef.current.scrollTop = guideScrollRef.current.scrollHeight
-    }
-  }, [guideMessages])
 
   const handleClearContext = () => setContext([])
-
-  const handleGuideSubmit = useCallback(() => {
-    const q = guideInput.trim()
-    if (!q) return
-
-    const userMsg: GuideMessage = {
-      id: `gu-${Date.now()}`,
-      role: 'user',
-      content: q,
-    }
-    setGuideMessages(prev => [...prev, userMsg])
-    setGuideInput('')
-
-    const match = matchKnowledge(q)
-    if (match) {
-      const cpMsg: GuideMessage = {
-        id: `cp-${Date.now()}`,
-        role: 'copernicus',
-        content: match.response,
-        showTourButton: !!match.showTourButton,
-      }
-      setGuideMessages(prev => [...prev, cpMsg])
-    } else {
-      const fallbackMsg: GuideMessage = {
-        id: `cp-fb-${Date.now()}`,
-        role: 'copernicus',
-        content: "I don't have a quick answer for that — but Claude can help. Want me to send this question to your active chat session?",
-        showFallback: true,
-        originalQuery: q,
-      }
-      setGuideMessages(prev => [...prev, fallbackMsg])
-    }
-  }, [guideInput])
 
   const [authStatus, setAuthStatus] = useState<any>(null)
   useEffect(() => {
@@ -298,7 +254,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     localStorage.setItem('copernicus:saved-prompts', JSON.stringify(updated))
   }
 
-  const usePrompt = (text: string) => setInput(text)
+  const usePrompt = (text: string) => {
+    setInput(text)
+    toggleFlip('chat')
+  }
 
   const exportChat = () => {
     const text = messages.map(m => `${m.role.toUpperCase()}:\n${m.content}\n`).join('\n---\n\n')
@@ -320,7 +279,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       { id: 'persona', label: 'Persona', icon: User },
       { id: 'prompts', label: 'Library', icon: Book },
       { id: 'history', label: 'History', icon: History },
-      { id: 'guide', label: 'Guide', icon: Info }
+      { id: 'instructions', label: 'Mandates', icon: FileCode }
     ]
 
     return (
@@ -422,7 +381,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               <div>
                 <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Active Persona</div>
                 <div className="text-xs flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${authStatus?.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full ${authStatus?.isActive || model === 'copernicus-guide' ? 'bg-green-500' : 'bg-red-500'}`} />
                   {availableModels.find(m => m.id === model)?.name || model} ({model})
                 </div>
                 <div className="text-[10px] text-zinc-500 mt-1">Provider: {availableModels.find(m => m.id === model)?.provider || '—'}</div>
@@ -509,106 +468,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </div>
           )}
 
-          {activeBackTab === 'guide' && (
-            <div className="h-full flex flex-col">
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-800 shrink-0">
-                <div className="w-6 h-6 rounded-none bg-copernicus-phosphor flex items-center justify-center text-[#050505] text-[10px] font-bold font-mono select-none">
-                  CP
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-copernicus-phosphor font-mono">
-                  Copernicus
-                </span>
-                <span className="text-[9px] text-zinc-600 font-mono ml-auto">guide · no llm</span>
+          {activeBackTab === 'instructions' && (
+            <div className="h-full flex flex-col space-y-3">
+              <div className="flex items-center justify-between">
+                <select 
+                  className="bg-zinc-900 border border-copernicus-steel text-[10px] rounded px-2 py-1 outline-none text-copernicus-phosphor"
+                  value={activeInstructionPath}
+                  onChange={(e) => setActiveInstructionPath(e.target.value)}
+                >
+                  {instructionFiles.map(f => <option key={f.path} value={f.path}>{f.path}</option>)}
+                </select>
+                <button onClick={handleSaveInstruction} className="text-[10px] bg-zinc-800 hover:bg-copernicus-phosphor/20 px-2 py-1 rounded flex items-center gap-1.5 transition-colors">
+                  <Save size={10} /> Save Mandate
+                </button>
               </div>
-
-              <div ref={guideScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-zinc-800">
-                {guideMessages.map(msg => (
-                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    {msg.role === 'copernicus' && (
-                      <div className="flex items-start gap-2 max-w-[90%]">
-                        <div className="w-5 h-5 rounded-none bg-copernicus-phosphor flex items-center justify-center text-[#050505] text-[9px] font-bold font-mono shrink-0 mt-0.5">
-                          CP
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="bg-zinc-900/50 border border-zinc-700 px-3 py-2 text-xs text-zinc-300 font-mono leading-relaxed">
-                            {msg.content}
-                          </div>
-                          {msg.showTourButton && (
-                            <button
-                              onClick={() => {
-                                retakeTour()
-                                setActiveBackTab('context')
-                                toggleFlip('chat')
-                              }}
-                              className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-copernicus-phosphor text-[#050505] rounded-none hover:opacity-90 transition-opacity"
-                            >
-                              Start Tour
-                            </button>
-                          )}
-                          {msg.showFallback && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  if (msg.originalQuery) {
-                                    setInput(msg.originalQuery)
-                                  }
-                                  toggleFlip('chat')
-                                  setTimeout(() => {
-                                    const ta = document.querySelector<HTMLTextAreaElement>('[data-chat-input]')
-                                    ta?.focus()
-                                  }, 350)
-                                }}
-                                className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-copernicus-phosphor text-[#050505] rounded-none hover:opacity-90 transition-opacity"
-                              >
-                                Yes, ask Claude
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setGuideMessages(prev => prev.filter(m => m.id !== msg.id))
-                                }}
-                                className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 border border-zinc-700 text-zinc-400 rounded-none hover:border-zinc-500 hover:text-zinc-300 transition-colors"
-                              >
-                                Never mind
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    {msg.role === 'user' && (
-                      <div className="max-w-[80%] bg-copernicus-phosphor/10 border border-copernicus-phosphor/20 px-3 py-2 text-xs text-zinc-300 font-mono leading-relaxed">
-                        {msg.content}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="px-3 pb-3 pt-2 border-t border-zinc-800 shrink-0">
-                <div className="flex gap-2 items-end">
-                  <textarea
-                    ref={guideInputRef}
-                    value={guideInput}
-                    onChange={e => setGuideInput(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleGuideSubmit()
-                      }
-                    }}
-                    placeholder="Ask Copernicus..."
-                    rows={2}
-                    className="flex-1 resize-none bg-zinc-900/80 border border-zinc-700 text-xs text-zinc-300 font-mono px-2 py-1.5 placeholder-zinc-600 focus:outline-none focus:border-copernicus-phosphor/50 transition-colors"
-                  />
-                  <button
-                    onClick={handleGuideSubmit}
-                    disabled={!guideInput.trim()}
-                    className="px-2 py-1.5 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold uppercase tracking-wider rounded-none hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"
-                  >
-                    Ask
-                  </button>
-                </div>
-              </div>
+              <textarea 
+                value={instructionContent}
+                onChange={(e) => setInstructionContent(e.target.value)}
+                className="flex-1 bg-zinc-950 border border-copernicus-steel p-3 text-xs font-mono text-zinc-400 resize-none outline-none focus:border-copernicus-phosphor/50 transition-colors"
+                placeholder="Edit mandates..."
+              />
             </div>
           )}
         </div>
@@ -623,7 +502,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [messages])
 
   useEffect(() => {
-    invoke<any>('models:list').then((r: any) => setAvailableModels(unwrapIpc<any>(r) ?? [])).catch(log.error)
+    invoke<any>('models:list').then((r: any) => {
+      const data = unwrapIpc<any[]>(r) ?? []
+      const guideModel = { id: 'copernicus-guide', name: 'Copernicus Guide', provider: 'built-in', contextWindow: 0 }
+      setAvailableModels([guideModel, ...data])
+    }).catch(log.error)
+    
     invoke<any>('devtime:status').then(res => {
         const d = unwrapIpc<any>(res)
         setIsRepoActive(!!(d && d.session))
@@ -651,7 +535,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         setMessages(prev => {
           const updated = [...prev]
           const last = updated[updated.length - 1]
-          if (last?.role === 'assistant') {
+          if (last?.role === 'assistant' || last?.role === 'copernicus') {
             updated[updated.length - 1] = { ...last, content: last.content + token }
           }
           return updated
@@ -668,7 +552,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         setMessages(prev => {
           const updated = [...prev]
           const last = updated[updated.length - 1]
-          if (last?.role === 'assistant') {
+          if (last?.role === 'assistant' || last?.role === 'copernicus') {
             updated[updated.length - 1] = { ...last, tokens: outputTokens }
           }
           return updated
@@ -685,28 +569,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         setMessages(prev => {
           const updated = [...prev]
           const last = updated[updated.length - 1]
-          if (last?.role === 'assistant') {
+          if (last?.role === 'assistant' || last?.role === 'copernicus') {
             updated[updated.length - 1] = {
               ...last,
               content: `⚠ Error: ${error}`,
-            }
-          }
-          return updated
-        })
-      }
-    )
-
-    const removeStatus = ipcRenderer.on(
-      'chat:status',
-      (_event: any, { sessionId, status }: { sessionId: string; status: string }) => {
-        if (sessionId !== streamingIdRef.current) return
-        setMessages(prev => {
-          const updated = [...prev]
-          const last = updated[updated.length - 1]
-          if (last?.role === 'assistant') {
-            updated[updated.length - 1] = { 
-              ...last, 
-              content: last.content ? last.content : `[${status}] ` 
             }
           }
           return updated
@@ -718,7 +584,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       removeToken()
       removeDone()
       removeError()
-      removeStatus()
     }
   }, [])
 
@@ -731,11 +596,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     if (currentMode === 'file') {
       try {
-        const result = await invoke<{ ok: boolean; data?: string; error?: string }>('fs:open-file', item.value)
-        if (result.ok && result.data !== undefined) {
-          injectedContent = result.data
+        const result = await invoke<any>('fs:read-file', item.value)
+        const data = unwrapIpc<string>(result)
+        if (data !== undefined) {
+          injectedContent = data
         } else {
-          injectedContent = `[Failed to read ${item.label}: ${result.error}]`
+          injectedContent = `[Failed to read ${item.label}]`
         }
       } catch {
         injectedContent = `[Failed to read ${item.label}]`
@@ -777,6 +643,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       clearMessages: () => setMessages([]),
       setModel: (m) => setModel(m),
       getCurrentModel: () => model,
+      setBackTab: (tab) => setActiveBackTab(tab),
+      flip: () => toggleFlip('chat')
     }
 
     if (currentInput.startsWith('/')) {
@@ -786,6 +654,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         setShowSuggestions(false)
         return
       }
+    }
+
+    // Story 188: Built-in Guide (forced if model is selected)
+    const match = matchKnowledge(currentInput)
+    if (match || model === 'copernicus-guide') {
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: currentInput }])
+      setInput('')
+      setTimeout(() => {
+        setMessages(prev => [...prev, { 
+          id: `cp-${Date.now()}`, 
+          role: 'copernicus', 
+          content: match ? match.response : "I don't have a specific answer for that in my knowledge base. Try asking about 'views', 'workflows', or 'jules'.",
+          showTourButton: match ? !!match.showTourButton : false 
+        }])
+      }, 100)
+      return
     }
 
     const userMsg: Message = {
@@ -805,9 +689,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     if (isFirstCallAfterSwitch.current) {
       isFirstCallAfterSwitch.current = false
       const snapRes = await invoke<any>('snapshot:restore', 'chat')
-      if (snapRes?.ok && snapRes.data) {
+      const snapData = unwrapIpc<any>(snapRes)
+      if (snapData?.messages) {
         try {
-          const m = typeof snapRes.data.messages === 'string' ? JSON.parse(snapRes.data.messages) : snapRes.data.messages
+          const m = typeof snapData.messages === 'string' ? JSON.parse(snapData.messages) : snapData.messages
           const prevContext = m.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')
           enrichedContent = `[CONTEXT HANDOFF]\nPrevious session context:\n${prevContext}\n\n${enrichedContent}`
         } catch { }
@@ -824,9 +709,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
     if (currentInput.includes('@help')) {
         try {
-            const result = await invoke<{ ok: boolean; data?: string }>('fs:open-file', 'docs/help/USER_GUIDE.md');
-            if (result.ok && result.data) {
-              enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${result.data}\n`);
+            const result = await invoke<any>('fs:read-file', 'docs/help/USER_GUIDE.md');
+            const data = unwrapIpc<string>(result)
+            if (data) {
+              enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${data}\n`);
             }
         } catch (e) {
             log.error('Failed to inject @help context:', e);
@@ -857,7 +743,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       content: '',
     }])
 
-    const history = messages.map(m => ({ role: m.role, content: m.content }))
+    const history = messages.filter(m => m.role !== 'copernicus').map(m => ({ role: m.role, content: m.content }))
 
     invoke('chat:send', {
       sessionId,
@@ -873,7 +759,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const handleSaveToStory = async (content: string) => {
     if (!activeStoryId) return;
     try {
-      const _rawContent = await invoke<any>('stories:get-content', activeStoryId);
+      const _rawContent = await invoke<any>('stories:hydrate', activeStoryId);
       const currentContent: string = unwrapIpc<any>(_rawContent) ?? '';
       let updatedContent = currentContent;
       const implMarker = '## Implementation';
@@ -883,7 +769,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       } else {
         updatedContent = `${currentContent}\n\n${implMarker}\n${content}\n`;
       }
-      await invoke('stories:update-content', { id: activeStoryId, content: updatedContent });
+      await invoke('stories:update', { id: activeStoryId, content: updatedContent });
       window.ipcRenderer.send('db:log-intent', `Architected ${activeStoryId} via Chat`, 'COMPLETED', 'chat');
     } catch (e) {
       log.error("Failed to save to story", e);
@@ -892,9 +778,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   function renderMessageContent(
     content: string,
-    openPath: string | null
+    openPath: string | null,
+    msgId: string
   ): React.ReactNode {
     const parts = content.split(/(```[\w]*\n[\s\S]*?```)/g)
+    const msg = messages.find(m => m.id === msgId)
+
     return (
       <>
         {parts.map((part, i) => {
@@ -911,12 +800,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           }
           return <span key={i} className="whitespace-pre-wrap">{part}</span>
         })}
-        {activeStoryId && (
+        {activeStoryId && msg?.role === 'assistant' && (
           <button
             onClick={() => handleSaveToStory(content)}
             className="mt-2 flex items-center gap-1.5 text-[9px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase font-bold tracking-wider"
           >
             <Save size={10} /> Save to active story
+          </button>
+        )}
+        {msg?.showTourButton && (
+          <button
+            onClick={() => retakeTour()}
+            className="mt-3 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 bg-copernicus-phosphor text-[#050505] rounded-none hover:opacity-90 transition-opacity"
+          >
+            Start Tour
           </button>
         )}
       </>
@@ -925,9 +822,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   const handleFileAttach = async () => {
     try {
-      const filePath = await invoke<string | null>('fs:select-file')
+      const filePath = await invoke<string | null>('fs:open-file')
       if (!filePath) return
-      const content = await invoke<string>('fs:read-file', filePath)
+      const result = await invoke<any>('fs:read-file', filePath)
+      const content = unwrapIpc<string>(result)
       if (typeof content !== 'string') return
       setContext(prev => [...prev, {
         type: 'file',
@@ -942,8 +840,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const triggerPicker = async (mode: PickerMode) => {
     setPickerMode(mode)
     if (mode === 'file') {
-      const result = await invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '')
-      const data = (result as any).data || result
+      const result = await invoke<any>('fs:list-dir', rootPath ?? '')
+      const data = unwrapIpc<any[]>(result)
       if (Array.isArray(data)) {
         setPickerResults(data.filter(n => !n.isDir).map(n => ({
           label: n.name,
@@ -952,8 +850,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         })))
       }
     } else if (mode === 'story') {
-      const stories = await invoke<any[]>('stories:list')
-      const data = (stories as any).data || stories
+      const result = await invoke<any[]>('stories:list')
+      const data = unwrapIpc<any[]>(result)
       if (Array.isArray(data)) {
         setPickerResults(data.map((s: any) => ({
           label: s.title ?? s.id,
@@ -969,7 +867,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       id="chat"
       front={
         <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
-          {/* Symmetrical Header Bar */}
+          {/* Unified Chat Header */}
           <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 select-none group/chat">
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -977,7 +875,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                   onClick={() => setShowModelPicker(!showModelPicker)}
                   className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 hover:text-white transition-colors uppercase tracking-wider"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-copernicus-phosphor animate-pulse shadow-[0_0_5px_rgba(74,222,128,0.5)]" />
+                  <div className={`w-1.5 h-1.5 rounded-full ${model === 'copernicus-guide' ? 'bg-copernicus-phosphor shadow-[0_0_5px_rgba(74,222,128,0.8)]' : 'bg-copernicus-phosphor animate-pulse shadow-[0_0_5px_rgba(74,222,128,0.5)]'}`} />
                   {availableModels.find(m => m.id === model)?.name || 'Model'}
                   <ChevronDown size={10} className={`transition-transform duration-200 ${showModelPicker ? 'rotate-180' : ''}`} />
                 </button>
@@ -990,8 +888,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                         className={`w-full text-left px-3 py-2 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor/5 border-l-2 border-copernicus-phosphor' : ''}`}
                         onClick={() => {
                             if (model !== m.id) {
-                              invoke('snapshot:save', { panel_id: 'chat', model_id: model, provider: availableModels.find((x: any) => x.id === model)?.provider || 'unknown', messages }).catch(() => {})
-                              isFirstCallAfterSwitch.current = true
+                              if (model !== 'copernicus-guide' && m.id !== 'copernicus-guide') {
+                                invoke('snapshot:save', { panel_id: 'chat', model_id: model, provider: availableModels.find((x: any) => x.id === model)?.provider || 'unknown', messages: messages.filter(m => m.role !== 'copernicus') }).catch(() => {})
+                                isFirstCallAfterSwitch.current = true
+                              }
                               setMessages(prev => [...prev, { id: `msg-divider-${Date.now()}`, role: 'assistant', content: `↔ Switched to ${m.name}` }])
                             }
                             setModel(m.id)
@@ -999,7 +899,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                         }}
                         >
                         <span className={model === m.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}>{m.name}</span>
-                        <span className="text-[8px] text-zinc-600 uppercase">{m.provider} • {m.contextWindow.toLocaleString()} tokens</span>
+                        <span className="text-[8px] text-zinc-600 uppercase">{m.provider} {m.contextWindow > 0 ? `• ${m.contextWindow.toLocaleString()} tokens` : ''}</span>
                         </button>
                     ))}
                     </div>
@@ -1029,185 +929,150 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               <button
                 onClick={() => setChatPanelOpen(false)}
                 className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
-                title="Close Chat"
+                title="Collapse Chat"
               >
-                <MessageSquare size={12} />
+                <ChevronRight size={14} />
               </button>
             </div>
           </div>
 
-          <div className="flex bg-[#0A0A0A] border-b border-copernicus-steel h-9">
-            <button
-              onClick={() => setChatPanelTab('chat')}
-              className={`flex-1 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest uppercase transition-colors relative ${chatPanelTab === 'chat' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'}`}
-            >
-              CHAT
-              {chatPanelTab === 'chat' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-copernicus-phosphor" />}
-            </button>
-            <button
-              onClick={() => setChatPanelTab('guide')}
-              className={`flex-1 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest uppercase transition-colors relative ${chatPanelTab === 'guide' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'}`}
-            >
-              GUIDE
-              {chatPanelTab === 'guide' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-copernicus-phosphor" />}
-            </button>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale grayscale-100">
+                <Hash size={48} className="text-copernicus-phosphor mb-4" />
+                <div className="text-[10px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
+              </div>
+            ) : (
+              messages.map(m => (
+                <div key={m.id} role="article">
+                  <ChatMessage
+                    role={m.role}
+                    content={m.role !== 'user' ? renderMessageContent(m.content, openFilePath, m.id) : m.content}
+                    tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
+                  />
+                </div>
+              ))
+            )}
           </div>
 
-          {chatPanelTab === 'chat' ? (
-            <>
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel">
-                {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale grayscale-100">
-                    <Hash size={48} className="text-copernicus-phosphor mb-4" />
-                    <div className="text-[10px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
-                  </div>
-                ) : (
-                  messages.map(m => (
-                    <div key={m.id} role="article">
-                      <ChatMessage
-                        role={m.role}
-                        content={m.role === 'assistant' ? renderMessageContent(m.content, openFilePath) : m.content}
-                        tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
+          {context.length > 0 && (
+            <div className="px-2 py-1 flex flex-wrap gap-1 bg-zinc-900/50 border-t border-hairline border-copernicus-steel">
+              {context.map(c => <ContextChip key={c.label} label={c.label} onRemove={() => setContext(prev => prev.filter(i => i.label !== c.label))} />)}
+            </div>
+          )}
 
-              {context.length > 0 && (
-                <div className="px-2 py-1 flex flex-wrap gap-1 bg-zinc-900/50 border-t border-hairline border-copernicus-steel">
-                  {context.map(c => <ContextChip key={c.label} label={c.label} onRemove={() => setContext(prev => prev.filter(i => i.label !== c.label))} />)}
+          <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
+            <div className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5 shadow-sm">
+              {/* Suggestion Popover (AC-2) */}
+              {showSuggestions && slashSuggestions.length > 0 && (
+                <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 py-1 overflow-hidden">
+                  {slashSuggestions.map(cmd => (
+                    <button
+                      key={cmd.name}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex items-center gap-3"
+                      onClick={() => {
+                        setInput(cmd.name + ' ')
+                        setShowSuggestions(false)
+                      }}
+                    >
+                      <span className="text-copernicus-phosphor font-mono">{cmd.name}</span>
+                      <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">{cmd.description}</span>
+                    </button>
+                  ))}
                 </div>
               )}
 
-              <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
-                <div className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5 shadow-sm">
-                  {/* Suggestion Popover (AC-2) */}
-                  {showSuggestions && slashSuggestions.length > 0 && (
-                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 py-1 overflow-hidden">
-                      {slashSuggestions.map(cmd => (
-                        <button
-                          key={cmd.name}
-                          className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex items-center gap-3"
-                          onClick={() => {
-                            setInput(cmd.name + ' ')
-                            setShowSuggestions(false)
-                          }}
-                        >
-                          <span className="text-copernicus-phosphor font-mono">{cmd.name}</span>
-                          <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">{cmd.description}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Context Picker Popover (AC-2) */}
-                  {pickerMode !== 'none' && pickerResults.length > 0 && (
-                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
-                      <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel bg-black/40">
-                        {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
-                      </div>
-                      {pickerResults.map(item => (
-                        <button
-                          key={item.value}
-                          className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex flex-col"
-                          onClick={() => handlePickerSelect(item)}
-                        >
-                          <span className="text-zinc-300 font-bold">{item.label}</span>
-                          <span className="text-[9px] text-zinc-600 truncate">{item.value}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <textarea
-                    value={input}
-                    aria-label="Chat input"
-                    data-chat-input
-                    onChange={(e) => {
-                      const newValue = e.target.value
-                      setInput(newValue)
-                      
-                      if (newValue.startsWith('/') && !newValue.includes(' ')) {
-                        setSlashSuggestions(commandRegistry.suggest(newValue))
-                        setShowSuggestions(true)
-                      } else {
-                        setShowSuggestions(false)
-                      }
-
-                      // Context Picker logic
-                      const atIndex = newValue.lastIndexOf('@')
-                      const hashIndex = newValue.lastIndexOf('#')
-
-                      const codebaseMatch = newValue.slice(atIndex).match(/^@codebase\s+(.+)$/)
-                      if (atIndex !== -1 && codebaseMatch) {
-                        const query = codebaseMatch[1]
-                        setPickerMode('codebase')
-                        invoke<any>('lsp:request', { method: 'workspace/symbol', params: { query } })
-                          .then((raw: any) => {
-                            const symbols: any[] = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []
-                            setPickerResults(symbols.slice(0, 20).map((s: any) => ({
-                              label: s.name ?? '',
-                              value: (s.location?.uri ?? '').replace('file://', ''),
-                              payload: `${s.containerName ? s.containerName + '.' : ''}${s.name}`,
-                            })))
-                          })
-                          .catch(() => setPickerResults([]))
-                      } else if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
-                        const query = newValue.slice(atIndex + 1)
-                        setPickerMode('file')
-                        invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath ?? '').then((result) => {
-                          const data = (result as any).data || result
-                          if (Array.isArray(data)) {
-                            const filtered = data.filter(n => !n.isDir && n.name.toLowerCase().includes(query.toLowerCase()))
-                            setPickerResults(filtered.map(n => ({ label: n.name, value: n.path, payload: n.path })))
-                          }
-                        }).catch(log.error)
-                      } else if (hashIndex !== -1 && hashIndex > atIndex && !newValue.slice(hashIndex).includes(' ')) {
-                        const query = newValue.slice(hashIndex + 1)
-                        setPickerMode('story')
-                        invoke<any[]>('stories:list').then((stories) => {
-                          const data = (stories as any).data || stories
-                          if (Array.isArray(data)) {
-                            const filtered = data.filter((s: any) => (s.id?.toLowerCase().includes(query.toLowerCase()) || s.title?.toLowerCase().includes(query.toLowerCase())))
-                            setPickerResults(filtered.map((s: any) => ({ label: s.title ?? s.id, value: s.id, payload: s.content ?? '' })))
-                          }
-                        }).catch(log.error)
-                      } else {
-                        setPickerMode('none')
-                      }
-                    }}
-                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-                    placeholder={isStreaming ? "Streaming..." : "Strategic intent... (@file, #story)"}
-                    disabled={isStreaming}
-                    className="w-full bg-transparent border-none focus:ring-0 text-xs text-zinc-300 resize-none min-h-[40px] max-h-[200px] disabled:opacity-50 font-mono"
-                  />
-                  <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
-                    <div className="flex gap-2 text-zinc-500">
-                      <button onClick={handleFileAttach} className="hover:text-copernicus-phosphor transition-colors"><Paperclip size={12} /></button>
-                      <button onClick={() => triggerPicker('story')} className="hover:text-copernicus-phosphor transition-colors"><FileText size={12} /></button>
-                    </div>
-                    <button onClick={handleSendMessage} disabled={isStreaming} className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40"><Send size={14} /></button>
+              {/* Context Picker Popover (AC-2) */}
+              {pickerMode !== 'none' && pickerResults.length > 0 && (
+                <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
+                  <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel bg-black/40">
+                    {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
                   </div>
+                  {pickerResults.map(item => (
+                    <button
+                      key={item.value}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex flex-col"
+                      onClick={() => handlePickerSelect(item)}
+                    >
+                      <span className="text-zinc-300 font-bold">{item.label}</span>
+                      <span className="text-[9px] text-zinc-600 truncate">{item.value}</span>
+                    </button>
+                  ))}
                 </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex flex-col p-4 space-y-4">
-              <div className="flex items-center gap-3 border-b border-copernicus-steel pb-4">
-                <div className="w-10 h-10 rounded bg-copernicus-phosphor/20 flex items-center justify-center phosphor-glow-border">
-                  <span className="text-copernicus-phosphor font-bold font-mono">C</span>
+              )}
+
+              <textarea
+                value={input}
+                aria-label="Chat input"
+                data-chat-input
+                onChange={(e) => {
+                  const newValue = e.target.value
+                  setInput(newValue)
+                  
+                  if (newValue.startsWith('/') && !newValue.includes(' ')) {
+                    setSlashSuggestions(commandRegistry.suggest(newValue))
+                    setShowSuggestions(true)
+                  } else {
+                    setShowSuggestions(false)
+                  }
+
+                  // Context Picker logic
+                  const atIndex = newValue.lastIndexOf('@')
+                  const hashIndex = newValue.lastIndexOf('#')
+
+                  const codebaseMatch = newValue.slice(atIndex).match(/^@codebase\s+(.+)$/)
+                  if (atIndex !== -1 && codebaseMatch) {
+                    const query = codebaseMatch[1]
+                    setPickerMode('codebase')
+                    invoke<any>('lsp:request', { method: 'workspace/symbol', params: { query } })
+                      .then((raw: any) => {
+                        const data = unwrapIpc<any[]>(raw)
+                        const symbols: any[] = Array.isArray(data) ? data : []
+                        setPickerResults(symbols.slice(0, 20).map((s: any) => ({
+                          label: s.name ?? '',
+                          value: (s.location?.uri ?? '').replace('file://', ''),
+                          payload: `${s.containerName ? s.containerName + '.' : ''}${s.name}`,
+                        })))
+                      })
+                      .catch(() => setPickerResults([]))
+                  } else if (atIndex !== -1 && atIndex >= hashIndex && !newValue.slice(atIndex).includes(' ')) {
+                    const query = newValue.slice(atIndex + 1)
+                    setPickerMode('file')
+                    invoke<any>('fs:list-dir', rootPath ?? '').then((result) => {
+                      const data = unwrapIpc<any[]>(result)
+                      if (Array.isArray(data)) {
+                        const filtered = data.filter(n => !n.isDir && n.name.toLowerCase().includes(query.toLowerCase()))
+                        setPickerResults(filtered.map(n => ({ label: n.name, value: n.path, payload: n.path })))
+                      }
+                    }).catch(log.error)
+                  } else if (hashIndex !== -1 && hashIndex > atIndex && !newValue.slice(hashIndex).includes(' ')) {
+                    const query = newValue.slice(hashIndex + 1)
+                    setPickerMode('story')
+                    invoke<any[]>('stories:list').then((result) => {
+                      const data = unwrapIpc<any[]>(result)
+                      if (Array.isArray(data)) {
+                        const filtered = data.filter((s: any) => (s.id?.toLowerCase().includes(query.toLowerCase()) || s.title?.toLowerCase().includes(query.toLowerCase())))
+                        setPickerResults(filtered.map((s: any) => ({ label: s.title ?? s.id, value: s.id, payload: s.content ?? '' })))
+                      }
+                    }).catch(log.error)
+                  } else {
+                    setPickerMode('none')
+                  }
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
+                placeholder={isStreaming ? "Streaming..." : "Strategic intent... (@file, #story)"}
+                disabled={isStreaming}
+                className="w-full bg-transparent border-none focus:ring-0 text-xs text-zinc-300 resize-none min-h-[40px] max-h-[200px] disabled:opacity-50 font-mono"
+              />
+              <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
+                <div className="flex gap-2 text-zinc-500">
+                  <button onClick={handleFileAttach} className="hover:text-copernicus-phosphor transition-colors" title="Attach File"><Paperclip size={12} /></button>
+                  <button onClick={() => triggerPicker('story')} className="hover:text-copernicus-phosphor transition-colors" title="Attach Story"><FileText size={12} /></button>
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-copernicus-phosphor">COPERNICUS</div>
-                  <div className="text-[9px] text-zinc-500 uppercase tracking-widest">Guide Persona</div>
-                </div>
-              </div>
-              <div className="flex-1 flex items-center justify-center opacity-20">
-                <Info size={48} />
+                <button onClick={handleSendMessage} disabled={isStreaming} className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40"><Send size={14} /></button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       }
       back={renderBackFace()}

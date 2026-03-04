@@ -92,6 +92,8 @@ interface LayoutState {
   // UI Builder State
   uiBuilderOpen: boolean
   uiTestingDrawerOpen: boolean
+  paletteOpen: boolean
+  inspectorOpen: boolean
   uiComponents: UIComponent[]
 
   // Browser Session
@@ -135,6 +137,8 @@ interface LayoutState {
   setActiveFileLanguage: (language: string) => void
   setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean }>) => void
   toggleUIBuilder: () => void
+  setPaletteOpen: (open: boolean) => void
+  setInspectorOpen: (open: boolean) => void
   toggleUITestingDrawer: () => void
   setUIComponents: (components: UIComponent[]) => void
   setWorkingDir: (dir: string) => void
