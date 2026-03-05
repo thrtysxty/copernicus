@@ -338,8 +338,8 @@ export default function App() {
             {isTieredLayout ? (
               /* Tiered Layout: Respects Panel Spotlight logic */
               <>
-                {/* Explorer Tier - FIXED: Added flex-shrink-0 to prevent overflow */}
-                <div className={`${sidebarOpen && (!spotlightPane || spotlightPane === 'explorer') ? (spotlightPane === 'explorer' ? 'flex-1' : 'w-64') : 'w-6 flex-shrink-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
+                {/* Explorer Tier - FIXED: Added flex-shrink-0 and explicit width to prevent overflow */}
+                <div className={`${sidebarOpen && (!spotlightPane || spotlightPane === 'explorer') ? (spotlightPane === 'explorer' ? 'flex-1' : 'w-64') : 'w-6'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden relative`}>
                   {sidebarOpen ? (
                     <FlippablePanel
                       id="sidebar"
@@ -366,10 +366,10 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Content Tiers (Center + Chat) - FIXED: Added min-width: 0 to center panel */}
-                <div className={`${spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'} flex overflow-hidden relative transition-all duration-500`}>
+                {/* Content Tiers (Center + Chat) - FIXED: Added min-width: 0 to allow proper shrinking */}
+                <div className={`${spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'} flex overflow-hidden relative transition-all duration-500`} style={{ minWidth: 0 }}>
                   
-                  {/* Center Tier (Editor / Canvas / Orchestrator) - FIXED: Added min-width: 0 */}
+                  {/* Center Tier (Editor / Canvas / Orchestrator) */}
                   <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : (spotlightPane === 'chat' || spotlightPane === 'terminal') ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`} style={{ minWidth: 0 }}>
                     <FlippablePanel
                       id="center-panel"

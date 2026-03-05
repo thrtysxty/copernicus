@@ -238,10 +238,10 @@ export function KanbanBoard() {
           <div className="w-px h-3 bg-zinc-800" />
           <button
             onClick={refreshData}
-            className="p-1 hover:text-copernicus-phosphor transition-colors"
+            className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
             title="Refresh Board"
           >
-            <RotateCcw size={12} />
+            Sync
           </button>
           <button
             onClick={() => setView('command-center')}

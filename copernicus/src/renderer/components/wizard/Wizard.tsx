@@ -86,6 +86,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       const path = unwrapIpc<string | null>(result);
       if (path) {
         setWorkspacePath(path);
+        // AC-1: Immediately sync path to system root
         await invoke('app:set-root-path', path);
       }
     } catch (error: any) {
