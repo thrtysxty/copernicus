@@ -369,69 +369,81 @@ export default function App() {
                 {/* Content Tiers (Center + Chat) - FIXED: Added min-width: 0 to allow proper shrinking */}
                 <div className={`${spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'} flex overflow-hidden relative transition-all duration-500`} style={{ minWidth: 0 }}>
                   
-                  {/* Center Tier (Editor / Canvas / Orchestrator) */}
+                  {/* Center Tier (Editor / Canvas / Orchestrator / Telemetry) */}
                   <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : (spotlightPane === 'chat' || spotlightPane === 'terminal') ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`} style={{ minWidth: 0 }}>
-                    <FlippablePanel
-                      id="center-panel"
-                      className="flex-1"
-                      front={
-                        <div className="flex flex-col h-full relative">
-                          <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/center">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                                {centerLabel}
-                              </span>
-                            </div>
+                    {spotlightPane === 'telemetry' ? (
+                      /* Story Inspection View */
+                      <div className="flex-1 flex overflow-hidden">
+                        <div className="flex-1 border-r border-copernicus-steel overflow-hidden">
+                           <StoryDetail storyId={activeStoryId || ''} stories={[]} />
+                        </div>
+                        <div className="w-80 flex-shrink-0 bg-black/20">
+                           <ChatPanel />
+                        </div>
+                      </div>
+                    ) : (
+                      <FlippablePanel
+                        id="center-panel"
+                        className="flex-1"
+                        front={
+                          <div className="flex flex-col h-full relative">
+                            <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/center">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                                  {centerLabel}
+                                </span>
+                              </div>
 
-                            <div className="flex items-center gap-2 opacity-0 group-hover/center:opacity-100 transition-opacity">
-                              {activeView === 'designer' && (
-                                <div className="flex bg-zinc-900 rounded p-0.5 border border-zinc-800 mr-2">
-                                  <button 
-                                    onClick={() => setPaletteOpen(!paletteOpen)}
-                                    className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${paletteOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
-                                  >
-                                    Palette
-                                  </button>
-                                  <button 
-                                    onClick={() => setInspectorOpen(!inspectorOpen)}
-                                    className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${inspectorOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
-                                  >
-                                    Inspector
-                                  </button>
-                                </div>
+                              <div className="flex items-center gap-2 opacity-0 group-hover/center:opacity-100 transition-opacity">
+                                {activeView === 'designer' && (
+                                  <div className="flex bg-zinc-900 rounded p-0.5 border border-zinc-800 mr-2">
+                                    <button 
+                                      onClick={() => setPaletteOpen(!paletteOpen)}
+                                      className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${paletteOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                    >
+                                      Palette
+                                    </button>
+                                    <button 
+                                      onClick={() => setInspectorOpen(!inspectorOpen)}
+                                      className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${inspectorOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                    >
+                                      Inspector
+                                    </button>
+                                  </div>
+                                )}
+                                <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel"><RotateCcw size={12} /></button>
+                                <button onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')} className={`p-1 rounded ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`} title="Spotlight"><Maximize2 size={12} /></button>
+                              </div>
+                            </header>
+                            <div className="flex-1 overflow-hidden relative">
+                              {activeView === 'orchestrator' ? (
+                                <WorkflowCanvas />
+                              ) : (
+                                <CenterPanelRouter 
+                                  filePath={activeFilePath} 
+                                  onChange={(val) => setActiveFilePath(val ?? null)} 
+                                />
                               )}
-                              <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel"><RotateCcw size={12} /></button>
-                              <button onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')} className={`p-1 rounded ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`} title="Spotlight"><Maximize2 size={12} /></button>
+                              {uiTestingDrawerOpen && <UITestDrawer />}
                             </div>
-                          </header>
-                          <div className="flex-1 overflow-hidden relative">
-                            {activeView === 'orchestrator' ? (
-                              <WorkflowCanvas />
-                            ) : (
-                              <CenterPanelRouter 
-                                filePath={activeFilePath} 
-                                onChange={(val) => setActiveFilePath(val ?? null)} 
-                              />
-                            )}
-                            {uiTestingDrawerOpen && <UITestDrawer />}
                           </div>
-                        </div>
-                      }
-                      back={
-                        <div className="h-full w-full bg-[#050505] flex flex-col">
-                          <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Backface</span>
-                            <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"><RotateCcw size={12} /></button>
-                          </header>
-                          <div className="flex-1 flex items-center justify-center font-mono text-xs text-zinc-500 uppercase tracking-tighter">Panel_Flipped</div>
-                        </div>
-                      }
-                    />
+                        }
+                        back={
+                          <div className="h-full w-full bg-[#050505] flex flex-col">
+                            <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Backface</span>
+                              <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"><RotateCcw size={12} /></button>
+                            </header>
+                            <div className="flex-1 flex items-center justify-center font-mono text-xs text-zinc-500 uppercase tracking-tighter">Panel_Flipped</div>
+                          </div>
+                        }
+                      />
+                    )}
                   </div>
 
                   {/* Chat Tier */}
-                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'terminal' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
-                    <ChatPanel />
+                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' || spotlightPane === 'telemetry' ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'terminal' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
+                    {spotlightPane !== 'telemetry' && <ChatPanel />}
                   </div>
                 </div>
               </>
