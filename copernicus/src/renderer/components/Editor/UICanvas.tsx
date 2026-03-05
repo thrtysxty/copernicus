@@ -1,12 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { useLayoutStore } from '../../store/layout';
-import { Globe, Code, ExternalLink, RefreshCcw } from 'lucide-react';
-import { useIpcError } from '../../hooks/useIpcError';
+import { Globe } from 'lucide-react';
 
 export const UICanvas: React.FC = () => {
   const { canvasContent, canvasUrl, setCanvasUrl, setCanvasContent } = useLayoutStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const invoke = useIpcError();
 
   useEffect(() => {
     if (canvasContent && iframeRef.current) {
@@ -41,11 +39,24 @@ export const UICanvas: React.FC = () => {
       if (canvasUrl) {
         iframeRef.current.src = canvasUrl;
       } else if (canvasContent) {
-        // re-render logic is already in useEffect
         setCanvasContent(canvasContent);
       }
     }
   };
+
+  useEffect(() => {
+    const removeRefresh = window.ipcRenderer.on('canvas:refresh', () => {
+      handleRefresh();
+    });
+    const removeClear = window.ipcRenderer.on('canvas:clear', () => {
+      setCanvasUrl(null);
+      setCanvasContent(null);
+    });
+    return () => {
+      removeRefresh();
+      removeClear();
+    };
+  }, [canvasUrl, canvasContent]);
 
   if (!canvasContent && !canvasUrl) {
     return (
@@ -59,37 +70,6 @@ export const UICanvas: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505]">
-      {/* Canvas Header */}
-      <div className="h-6 flex items-center justify-between px-2 bg-copernicus-bg border-b border-hairline border-copernicus-steel select-none group">
-        <div className="flex items-center gap-2">
-          {canvasUrl ? <Globe size={10} className="text-blue-400" /> : <Code size={10} className="text-copernicus-phosphor" />}
-          <span className="text-[9px] uppercase text-zinc-500 font-bold tracking-tighter">
-            {canvasUrl ? 'Live Preview' : 'Component Preview'}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={handleRefresh} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Refresh">
-            <RefreshCcw size={10} />
-          </button>
-          {canvasUrl && (
-            <button
-              onClick={() => invoke('app:open-external', canvasUrl)}
-              className="text-zinc-500 hover:text-copernicus-phosphor transition-colors"
-              title="Open in Browser"
-            >
-              <ExternalLink size={10} />
-            </button>
-          )}
-          <button
-            onClick={() => { setCanvasUrl(null); setCanvasContent(null); }}
-            className="text-zinc-500 hover:text-red-400 transition-colors"
-            title="Clear Canvas"
-          >
-            <X size={10} />
-          </button>
-        </div>
-      </div>
-
       {/* Content Area */}
       <div className="flex-1 relative bg-white rounded-sm m-2 overflow-hidden shadow-2xl">
         <iframe
@@ -109,11 +89,3 @@ export const UICanvas: React.FC = () => {
     </div>
   );
 };
-
-// Internal X helper
-const X = ({ size, className }: { size: number, className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <line x1="18" y1="6" x2="6" y2="18"></line>
-    <line x1="6" y1="6" x2="18" y2="18"></line>
-  </svg>
-);

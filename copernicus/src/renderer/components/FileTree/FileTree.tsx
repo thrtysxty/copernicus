@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
-         Image as ImageIcon, Database, Maximize2, Minimize2, RotateCcw } from 'lucide-react'
+         Image as ImageIcon, Database, Maximize2, Minimize2, RotateCcw, ChevronLeft } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
@@ -136,8 +136,9 @@ interface FileTreeProps {
 
 export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   const invoke = useIpcError()
-  const { spotlightPane, setSpotlight, toggleFlip } = useLayoutStore()
+  const { spotlightPane, setSpotlight, toggleFlip, setSidebarOpen } = useLayoutStore()
   const [rootChildren, setRootChildren] = useState<FileNode[]>([])
+  const [lspRunning, setLspRunning] = useState(false)
 
   useEffect(() => {
     if (!rootPath) return
@@ -147,6 +148,10 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
         setRootChildren(data)
       }
     }).catch(console.error)
+
+    invoke<any>('lsp:status').then((res: any) => {
+      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
+    }).catch(() => {})
   }, [rootPath, invoke])
 
   if (!rootPath) {
@@ -156,7 +161,13 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   return (
     <div className="flex flex-col h-full bg-copernicus-bg">
       <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/tree">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>
+          <div 
+            className={`w-1.5 h-1.5 rounded-full ${lspRunning ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]' : 'bg-red-500'} transition-all duration-500`}
+            title={lspRunning ? "LSP Online" : "LSP Offline"}
+          />
+        </div>
         
         <div className="flex items-center gap-1 opacity-0 group-hover/tree:opacity-100 transition-all">
           <button
@@ -172,6 +183,13 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
             title="Rotate Explorer Content"
           >
             <RotateCcw size={10} />
+          </button>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+            title="Collapse Sidebar"
+          >
+            <ChevronLeft size={14} />
           </button>
         </div>
       </div>

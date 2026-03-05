@@ -157,8 +157,8 @@ export const CapexDashboard: React.FC = () => {
           invoke<any>('devtime:report'),
           invoke<any>('devtime:weekly-velocity'),
         ])
-        setReport(unwrapIpc<CapexReportRow[]>(rep))
-        setWeeklyVelocity(unwrapIpc<WeeklyVelocity[]>(vel))
+        setReport(unwrapIpc<CapexReportRow[]>(rep) ?? [])
+        setWeeklyVelocity(unwrapIpc<WeeklyVelocity[]>(vel) ?? [])
       } finally { setFinLoading(false) }
     }
     if (tab === 'quality') {
@@ -166,8 +166,8 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('devtime:test-history'),
         invoke<any>('stories:bugs-by-assignee'),
       ])
-      setTestRuns(unwrapIpc<TestRunRecord[]>(hist))
-      setBugs(unwrapIpc<BugsByAssignee[]>(b))
+      setTestRuns(unwrapIpc<TestRunRecord[]>(hist) ?? [])
+      setBugs(unwrapIpc<BugsByAssignee[]>(b) ?? [])
     }
     if (tab === 'llm') {
       const [daily, byModel, byStory] = await Promise.all([
@@ -175,21 +175,25 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('ledger:cost-by-model'),
         invoke<any>('ledger:cost-by-story'),
       ])
-      const dc = unwrapIpc<DailyCost[]>(daily)
-      const bm = unwrapIpc<CostByModel[]>(byModel)
-      const bs = unwrapIpc<CostByStory[]>(byStory)
+      const dc = unwrapIpc<DailyCost[]>(daily) ?? []
+      const bm = unwrapIpc<CostByModel[]>(byModel) ?? []
+      const bs = unwrapIpc<CostByStory[]>(byStory) ?? []
       setDailyCosts(dc)
       setCostByModel(bm)
       setCostByStory(bs)
-      setTotalCost(bm.reduce((s: number, r: CostByModel) => s + (r.total_cost ?? 0), 0))
+      if (Array.isArray(bm)) {
+        setTotalCost(bm.reduce((s: number, r: CostByModel) => s + (r.total_cost ?? 0), 0))
+      } else {
+        setTotalCost(0)
+      }
     }
     if (tab === 'velocity') {
       const [tp, sd] = await Promise.all([
         invoke<any>('stories:throughput'),
         invoke<any>('stories:status-distribution'),
       ])
-      setThroughput(unwrapIpc<Throughput[]>(tp))
-      setStatusDist(unwrapIpc<StatusDist[]>(sd))
+      setThroughput(unwrapIpc<Throughput[]>(tp) ?? [])
+      setStatusDist(unwrapIpc<StatusDist[]>(sd) ?? [])
     }
   }
 
@@ -273,7 +277,7 @@ export const CapexDashboard: React.FC = () => {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
-        <div className={`space-y-4 w-full h-full flex flex-col ${spotlightId ? 'space-y-0' : ''}`}>
+        <div className={`space-y-4 w-full flex flex-col ${spotlightId ? 'space-y-0 h-full' : ''}`}>
 
           {/* ── FINANCIAL ─────────────────────────────────────────────────── */}
           {activeTab === 'financial' && (

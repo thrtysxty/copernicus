@@ -57,30 +57,39 @@ export interface StoryRecord {
   last_synced_at?: string
 }
 
+export interface ProjectRecord {
+  id: string;            // 'owner/repo'
+  path: string;          // local filesystem path
+  billing_mode: string;  // 'CAPEX', 'OPEX', 'NONE'
+  billing_details?: string; // JSON string
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface TestRunRecord {
-  id?: number
-  run_at?: string
-  total_tests: number
-  passed: number
-  failed: number
-  skipped: number
-  coverage_pct: number | null
-  duration_ms: number | null
+  id?: number;
+  run_at?: string;
+  total_tests: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+  coverage_pct: number | null;
+  duration_ms: number | null;
 }
 
 export interface ModelCallRecord {
-  id?: number
-  session_id: string
-  panel_id: string
-  model_id: string
-  provider: string
-  tokens_in: number
-  tokens_out: number
-  cost_usd: number
-  latency_ms?: number
-  workflow_run_id?: string
-  parent_call_id?: number
-  created_at?: string
+  id?: number;
+  session_id: string;
+  panel_id: string;
+  model_id: string;
+  provider: string;
+  tokens_in: number;
+  tokens_out: number;
+  cost_usd: number;
+  latency_ms?: number;
+  workflow_run_id?: string;
+  parent_call_id?: number;
+  created_at?: string;
 }
 
 export interface ModelCallStats {
@@ -142,9 +151,38 @@ export class StateLedger {
 
     // Model Call Ledger (Story 156)
     this.db.exec(SCHEMA.model_calls);
+
+    // Projects & Epics (Story 211)
+    this.db.exec(SCHEMA.projects);
+    this.db.exec(SCHEMA.epics);
+
+    // Dev Sessions (from DevtimeManager integration)
+    this.db.exec(SCHEMA.dev_sessions);
   }
 
-  // ... (rest of the class)
+  // ── Projects & Epics (Story 211) ──────────────────────────────────────────
+
+  upsertProject(p: ProjectRecord): void {
+    this.db.prepare(`
+      INSERT INTO projects (id, path, billing_mode, billing_details, updated_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(path) DO UPDATE SET
+        id = excluded.id,
+        billing_mode = excluded.billing_mode,
+        billing_details = excluded.billing_details,
+        updated_at = CURRENT_TIMESTAMP
+    `).run(p.id, p.path, p.billing_mode, p.billing_details ?? null)
+  }
+
+  getProjectByPath(path: string): ProjectRecord | null {
+    const row = this.db.prepare('SELECT * FROM projects WHERE path = ?').get(path) as any
+    return row ?? null
+  }
+
+  getProjectById(id: string): ProjectRecord | null {
+    const row = this.db.prepare('SELECT * FROM projects WHERE id = ?').get(id) as any
+    return row ?? null
+  }
 
   // ── Test Runs (Story 162) ────────────────────────────────────────────────
 

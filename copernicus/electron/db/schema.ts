@@ -7,7 +7,7 @@ export const SCHEMA = {
       status        TEXT NOT NULL DEFAULT 'DRAFT',
       priority      TEXT,
       type          TEXT,
-      epic          TEXT,
+      epic_id       TEXT,                   -- reference to epics table
       assigned_to   TEXT,                   -- model/agent
       blocked_by    TEXT DEFAULT '[]',      -- JSON array e.g. '["story_157"]'
       blocks        TEXT DEFAULT '[]',      -- JSON array e.g. '["story_160"]'
@@ -16,12 +16,35 @@ export const SCHEMA = {
       file_path     TEXT NOT NULL DEFAULT '',
       date          TEXT,
       updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-      last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(epic_id) REFERENCES epics(id)
     );
     CREATE INDEX IF NOT EXISTS idx_stories_status
       ON stories(status);
     CREATE INDEX IF NOT EXISTS idx_stories_priority
       ON stories(priority, status);
+  `,
+  projects: `
+    CREATE TABLE IF NOT EXISTS projects (
+      id            TEXT PRIMARY KEY,       -- repo full name e.g. 'owner/repo'
+      path          TEXT UNIQUE NOT NULL,    -- local filesystem path
+      billing_mode  TEXT DEFAULT 'NONE',    -- 'CAPEX', 'OPEX', 'NONE'
+      billing_details TEXT,                 -- JSON string for specific billing info
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `,
+  epics: `
+    CREATE TABLE IF NOT EXISTS epics (
+      id            TEXT PRIMARY KEY,       -- e.g. 'epic_001'
+      project_id    TEXT NOT NULL,          -- reference to projects(id)
+      title         TEXT NOT NULL,
+      description   TEXT,
+      status        TEXT DEFAULT 'OPEN',
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(project_id) REFERENCES projects(id)
+    );
   `,
   intents: `
     CREATE TABLE IF NOT EXISTS intents (
@@ -133,5 +156,30 @@ export const SCHEMA = {
       ON jules_sessions(story_id, started_at DESC);
     CREATE INDEX IF NOT EXISTS idx_jules_sessions_status
       ON jules_sessions(status);
+  `,
+  dev_sessions: `
+    CREATE TABLE IF NOT EXISTS dev_sessions (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      date        TEXT    NOT NULL,
+      start_time  TEXT,
+      duration_hours REAL NOT NULL CHECK (duration_hours >= 0.25),
+      phase       TEXT    NOT NULL CHECK (phase IN (
+                      'PLANNING', 'DEVELOPMENT', 'BUG_FIXING', 'MAINTENANCE')),
+      financial_category TEXT NOT NULL CHECK (financial_category IN ('CAPEX', 'OPEX', 'NONE')),
+      component   TEXT    NOT NULL,
+      description TEXT    NOT NULL,
+      commits     TEXT,
+      story_id    TEXT,
+      capitalizable INTEGER GENERATED ALWAYS AS (
+          CASE WHEN financial_category = 'CAPEX' AND phase = 'DEVELOPMENT'
+               THEN 1 ELSE 0 END
+      ) STORED,
+      created_at  TEXT DEFAULT (datetime('now')),
+      value       REAL
+    );
+    CREATE INDEX IF NOT EXISTS idx_dev_sessions_story
+      ON dev_sessions(story_id, date);
+    CREATE INDEX IF NOT EXISTS idx_dev_sessions_date
+      ON dev_sessions(date);
   `,
 };

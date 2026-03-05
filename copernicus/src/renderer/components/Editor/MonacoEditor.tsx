@@ -1,9 +1,7 @@
 import React from 'react';
 import Editor, { useMonaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
-import { Maximize2, Minimize2 } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
-import { useLayoutStore } from '../../store/layout';
 import log from '../../utils/logger'
 
 // Import workers using Vite's ?worker syntax
@@ -55,7 +53,6 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const monacoInstance = useMonaco();
   const editorRef = React.useRef<any>(null);
   const invoke = useIpcError();
-  const { spotlightPane, setSpotlight } = useLayoutStore();
 
   React.useEffect(() => {
     if (monacoInstance) {
@@ -267,17 +264,6 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
   return (
     <div className="h-full w-full bg-copernicus-bg relative group/editor">
-        {/* Spotlight Toggle AC-7 */}
-        <div className="absolute top-2 right-6 z-20 opacity-0 group-hover/editor:opacity-100 transition-opacity">
-          <button
-            onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-            className={`p-1.5 rounded bg-black/40 border border-zinc-800 backdrop-blur-sm transition-colors ${spotlightPane === 'editor' ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-white'}`}
-            title={spotlightPane === 'editor' ? "Shrink Editor" : "Spotlight Editor"}
-          >
-            {spotlightPane === 'editor' ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
-          </button>
-        </div>
-
         <Editor
         height="100%"
         path={filePath ?? undefined}

@@ -88,7 +88,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #209 | Designer Explorer Collapse By Default | DRAFT | Medium |
 | #210 | Restore Control Buttons To Canvas Preview | DRAFT | Medium |
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
-| #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | DRAFT | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
@@ -120,6 +119,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
 | #219 | Enhanced Rag System | APPROVED FOR IMPLEMENTATION | P0 |
 | #228 | Orchestrator-Led Dynamic Model Selection | APPROVED FOR IMPLEMENTATION | P1 |
+| #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | APPROVED FOR IMPLEMENTATION | P0 |
+| #230 | Agent Branch And Patch Workflow | APPROVED FOR IMPLEMENTATION | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
 | #169 | Auth Provider Management | COMPLETE | P0 |

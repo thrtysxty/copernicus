@@ -44,8 +44,7 @@ export class CodebaseIndexer {
 
   private initSchema() {
     stateLedger.db.exec(`
-      DROP TABLE IF EXISTS codebase_vec;
-      CREATE VIRTUAL TABLE codebase_vec USING vec0(
+      CREATE VIRTUAL TABLE IF NOT EXISTS codebase_vec USING vec0(
         chunk_id TEXT PRIMARY KEY,
         file_path TEXT,
         line_start INTEGER,

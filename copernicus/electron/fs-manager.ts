@@ -80,7 +80,7 @@ export class FSManager {
       this.assertSafe(expandedPath, 'read')
       const entries = fs.readdirSync(expandedPath, { withFileTypes: true })
       const data = entries
-        .filter(e => !e.name.startsWith('.') && e.name !== 'node_modules')
+        .filter(e => e.name !== 'node_modules')
         .map(e => ({
           name: e.name,
           path: path.join(expandedPath, e.name),

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useIpcError } from '../hooks/useIpcError'
+import { useLayoutStore } from '../store/layout'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Maximize2, Minimize2, ChevronLeft } from 'lucide-react'
 
 export function CommandDeck() {
   const invoke = useIpcError()
+  const { spotlightPane, setSpotlight, toggleFlip, setSidebarOpen } = useLayoutStore()
   const [targets, setTargets] = useState<string[]>([])
   const [running, setRunning] = useState<string | null>(null)
 
@@ -39,18 +41,36 @@ export function CommandDeck() {
       {/* Standard h-8 Header */}
       <div className="h-8 flex items-center px-3 bg-black/20 border-b border-copernicus-steel/30 justify-between shrink-0 group/cmd">
         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Command Deck</span>
-        <div className="flex items-center gap-2">
+        
+        <div className="flex items-center gap-1 opacity-0 group-hover/cmd:opacity-100 transition-all">
           {running && (
-            <span className="text-[9px] text-copernicus-phosphor font-mono animate-pulse uppercase tracking-tighter">
+            <span className="text-[9px] text-copernicus-phosphor font-mono animate-pulse uppercase tracking-tighter mr-2">
               Executing_{running}...
             </span>
           )}
-          <button 
-            onClick={fetchTargets} 
-            className="opacity-0 group-hover/cmd:opacity-100 transition-opacity p-1 hover:text-copernicus-phosphor"
-            title="Refresh Makefile"
+          
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
+            className={`p-1 rounded hover:bg-white/5 ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
+            title={spotlightPane === 'explorer' ? "Shrink Command Deck" : "Spotlight Command Deck"}
           >
-            <RotateCcw size={12} />
+            {spotlightPane === 'explorer' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+          </button>
+          
+          <button
+            onClick={() => toggleFlip('sidebar')}
+            className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+            title="Rotate to Explorer"
+          >
+            <RotateCcw size={10} />
+          </button>
+
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+            title="Collapse Sidebar"
+          >
+            <ChevronLeft size={14} />
           </button>
         </div>
       </div>

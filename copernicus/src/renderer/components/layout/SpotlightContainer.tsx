@@ -70,16 +70,16 @@ export const SpotlightContainer: React.FC<SpotlightContainerProps> = ({ sidebar,
       <motion.div
         initial={false}
         animate={{
-          width: spotlightPane === 'telemetry' ? '100%' : (spotlightPane ? 40 : 320),
-          flexGrow: spotlightPane === 'telemetry' ? 1 : 0,
-          flexShrink: spotlightPane === 'telemetry' ? 0 : 1,
-          minWidth: spotlightPane && spotlightPane !== 'telemetry' ? 40 : undefined
+          width: spotlightPane === 'inspector' ? '100%' : (spotlightPane ? 40 : 320),
+          flexGrow: spotlightPane === 'inspector' ? 1 : 0,
+          flexShrink: spotlightPane === 'inspector' ? 0 : 1,
+          minWidth: spotlightPane && spotlightPane !== 'inspector' ? 40 : undefined
         }}
         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         className="flex flex-col border-l border-copernicus-steel bg-copernicus-bg overflow-hidden relative"
       >
-        {spotlightPane && spotlightPane !== 'telemetry' ? (
-             <CollapsedPaneIcon icon={<Terminal size={16} />} label="TERM" onClick={() => setSpotlight('telemetry')} />
+        {spotlightPane && spotlightPane !== 'inspector' ? (
+             <CollapsedPaneIcon icon={<Terminal size={16} />} label="TERM" onClick={() => setSpotlight('inspector')} />
         ) : (
              <div className="w-full h-full flex flex-col min-w-[320px]">
                {right}

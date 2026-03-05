@@ -139,8 +139,17 @@ function ensureCopernicusDirectory() {
   try {
     if (!fs.existsSync(COPERNICUS_HOME)) fs.mkdirSync(COPERNICUS_HOME, { recursive: true });
     if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+    
+    // Check if settings exist and have a workspace
     const settingsPath = path.join(app.getPath('userData'), 'copernicus-settings.json');
-    if (!fs.existsSync(settingsPath)) isFirstRun = true;
+    if (!fs.existsSync(settingsPath)) {
+      isFirstRun = true;
+    } else {
+      const settings = settingsStore.getAll();
+      if (!settings.workspace) {
+        isFirstRun = true;
+      }
+    }
   } catch (error) {
     log.error('Failed to initialize .copernicus directory:', error);
   }
@@ -743,6 +752,13 @@ function registerIpcHandlers() {
   ipcMain.handle('story:scaffold', (_e, title: string, type = 'Feature') =>
     handleIpc(() => storiesManager.createStory({ title: title?.trim() || 'New Story', type, epic: '', priority: 'P2' }))
   )
+
+  // Project Billing (Story 211)
+  ipcMain.handle('project:save-billing', (_e, project: any) => 
+    handleIpc(() => stateLedger.upsertProject(project)))
+  
+  ipcMain.handle('project:get-billing', (_e, path: string) => 
+    handleIpc(() => stateLedger.getProjectByPath(path)))
 
   // Splash ready — renderer signals splash/wizard complete
   ipcMain.handle('splash-ready', (_e) => handleIpc(() => ({ ready: true })))

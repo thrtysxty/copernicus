@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Edit2, Save, ExternalLink, Play, Trash2, Archive, X } from 'lucide-react'
+import { ArrowLeft, Edit2, Save, Trash2, Archive, X } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
@@ -13,7 +13,7 @@ interface Story {
   path: string
   priority: 'P0' | 'P1' | 'P2' | 'P3' | 'UNKNOWN'
   type: string
-  epic: string | null
+  epic_id: string | null
   model: string | null
   workflowId?: string | null
   date: string
@@ -35,29 +35,21 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const invoke = useIpcError()
-  const { setDrawerStory, spotlightPane, setSpotlight, addTerminal, setActiveTerminal, setTerminalOpen, workingDir } = useLayoutStore()
-  const isSpotlit = spotlightPane === 'telemetry'
+  const { setDrawerStory, spotlightPane, setSpotlight } = useLayoutStore()
+  const isSpotlit = spotlightPane === 'inspector'
 
   const story = stories.find(s => s.id === storyId)
-  const epics = Array.from(new Set(stories.map(s => s.epic).filter(Boolean) as string[])).sort()
+  const epics = Array.from(new Set(stories.map(s => s.epic_id).filter(Boolean) as string[])).sort()
 
   const [content, setContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [isDispatchingGemini, setIsDispatchingGemini] = useState(false)
-  const [geminiError, setGeminiError] = useState<string | null>(null)
   const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
   const [workflowTemplates, setWorkflowTemplates] = useState<{ id: string, name: string }[]>([])
   const [workflowStatus, setWorkflowStatus] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeBtnRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    invoke<any>('stories:get-content', storyId)
-      .then((r: any) => setContent(unwrapIpc<string>(r) ?? ''))
-      .catch(log.error)
-  }, [storyId, invoke])
 
   useEffect(() => {
     invoke<any>('models:list').then(result => {
@@ -74,6 +66,12 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       }
     }).catch(() => {})
   }, [invoke])
+
+  useEffect(() => {
+    invoke<any>('stories:get-content', storyId)
+      .then((r: any) => setContent(unwrapIpc<string>(r) ?? ''))
+      .catch(log.error)
+  }, [storyId, invoke])
 
   useEffect(() => {
     invoke<any>('workflow:status').then(result => {
@@ -124,6 +122,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     try {
       await invoke('stories:delete', storyId)
       setDrawerStory(null)
+      setSpotlight(null)
     } catch (e) {
       log.error('Failed to delete story', e)
     }
@@ -133,52 +132,9 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     try {
       await invoke('stories:archive', storyId)
       setDrawerStory(null)
+      setSpotlight(null)
     } catch (e) {
       log.error('Failed to archive story', e)
-    }
-  }
-
-  const handleOpenInEditor = () => {
-    setSpotlight('telemetry')
-  }
-
-  const handleDispatchGemini = async () => {
-    if (!story) return
-    setIsDispatchingGemini(true)
-    setGeminiError(null)
-    try {
-      const statusResult = await invoke<any>('gemini:status')
-      const status = unwrapIpc<any>(statusResult)
-      if (!status?.available?.ok) {
-        setGeminiError(status?.available?.reason ?? 'Gemini not available')
-        return
-      }
-
-      const spawnResult = await invoke<any>('gemini:spawn', { cwd: workingDir || undefined })
-      const { sessionId } = unwrapIpc<any>(spawnResult)
-
-      const prompt = [
-        `You are implementing Story ${story.id} for the COPERNICUS IDE.`,
-        `Read AGENTS.md in the repo root first, then implement the following story:`,
-        ``,
-        content,
-        ``,
-        `When done, run: cd copernicus && npx tsc --noEmit`,
-        `Fix all TypeScript errors before finishing.`,
-      ].join('\n')
-
-      // Open terminal tab before sending (so output streams visibly)
-      addTerminal(`gemini-${sessionId}`, 'Gemini')
-      setActiveTerminal(`gemini-${sessionId}`)
-      setTerminalOpen(true)
-
-      // Fire-and-forget — output streams via gemini:output IPC push
-      invoke('gemini:send-prompt', { sessionId, text: prompt }).catch(log.error)
-    } catch (e) {
-      log.error('[StoryDetail] Gemini dispatch failed', e)
-      setGeminiError('Spawn failed — check Gemini credentials')
-    } finally {
-      setIsDispatchingGemini(false)
     }
   }
 
@@ -194,6 +150,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     if (e.key === 'Escape') {
       e.preventDefault()
       setDrawerStory(null)
+      setSpotlight(null)
       // Return focus to the triggering card if available
       const activeCard = document.querySelector<HTMLElement>('[aria-current="true"]') ??
         document.querySelector<HTMLElement>('[data-card-index="0"]')
@@ -223,7 +180,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
         first.focus()
       }
     }
-  }, [setDrawerStory])
+  }, [setDrawerStory, setSpotlight])
 
   // Auto-activate edit mode when spotlit
   useEffect(() => {
@@ -250,26 +207,16 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       <div className={`flex items-center justify-between px-3 h-8 border-b border-white/5 bg-black/20 flex-shrink-0 z-10 ${isSpotlit ? 'hidden' : ''}`}>
         <button
           ref={closeBtnRef}
-          onClick={() => setDrawerStory(null)}
+          onClick={() => { setDrawerStory(null); setSpotlight(null); }}
           aria-label="Close story drawer"
           className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
         >
           <ArrowLeft size={11} /> Board
         </button>
         <div className="flex items-center gap-2">
-          {/* ▶ Gemini dispatch button */}
-          <button
-            onClick={handleDispatchGemini}
-            disabled={isDispatchingGemini}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-copernicus-phosphor border border-zinc-800 hover:border-copernicus-phosphor/30 disabled:opacity-40 transition-all uppercase"
-            title={geminiError ?? 'Dispatch story to Gemini CLI'}
-          >
-            <Play size={9} /> {isDispatchingGemini ? 'Spawning…' : geminiError ? 'Error' : 'Gemini'}
-          </button>
-
           {!isEditing ? (
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={() => { setIsEditing(true); setSpotlight('inspector'); }}
               className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-copernicus-phosphor border border-zinc-800 hover:border-copernicus-phosphor/30 transition-all uppercase"
             >
               <Edit2 size={9} /> Edit
@@ -299,14 +246,6 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           >
             <Trash2 size={9} /> Delete
           </button>
-
-          <button
-            onClick={handleOpenInEditor}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-zinc-300 border border-zinc-800 transition-all uppercase"
-            title="Open Inspector"
-          >
-            <ExternalLink size={9} /> Inspect
-          </button>
         </div>
       </div>
 
@@ -317,7 +256,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           {isSpotlit && (
             <div className="flex items-center justify-between mb-4">
               <button
-                onClick={() => setDrawerStory(null)}
+                onClick={() => { setDrawerStory(null); setSpotlight(null); }}
                 className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
               >
                 <ArrowLeft size={11} /> Board
@@ -380,8 +319,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           <div>
             <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Epic Context</p>
             <select
-              defaultValue={story.epic ?? ''}
-              onChange={e => handleSetField('epic', e.target.value || '(none)')}
+              defaultValue={story.epic_id ?? ''}
+              onChange={e => handleSetField('epic_id', e.target.value || '(none)')}
               className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
             >
               <option value="">(No Epic)</option>

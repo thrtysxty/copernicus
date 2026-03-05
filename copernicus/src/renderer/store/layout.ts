@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { UIComponent } from '../components/Editor/ui-builder/types'
 
 export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github'
-export type PaneId = 'explorer' | 'editor' | 'telemetry' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
+export type PaneId = 'explorer' | 'editor' | 'inspector' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/5 border-slate-500/20',   accent: 'bg-slate-500' },
@@ -171,6 +171,10 @@ interface LayoutState {
   activityBarCollapsed: boolean
   setActivityBarCollapsed: (collapsed: boolean) => void
 
+  // Basement Archive
+  basementOpen: boolean
+  setBasementOpen: (open: boolean) => void
+
   // Story stats
   inProgressCount: number
   setInProgressCount: (count: number) => void
@@ -335,6 +339,9 @@ export const useLayoutStore = create<LayoutState>()(
 
       activityBarCollapsed: false,
       setActivityBarCollapsed: (collapsed) => set({ activityBarCollapsed: collapsed }),
+
+      basementOpen: false,
+      setBasementOpen: (open) => set({ basementOpen: open }),
 
       inProgressCount: 0,
       setInProgressCount: (count) => set({ inProgressCount: count }),

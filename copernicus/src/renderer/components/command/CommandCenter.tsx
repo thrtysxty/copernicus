@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useCommandStore, LspState, AgentSwarmEntry, ActiveTaskEntry } from '../../store/commandStore'
 import { useIpcError } from '../../hooks/useIpcError'
-import { Maximize2, Minimize2, RotateCcw } from 'lucide-react'
+import { Maximize2, Minimize2, RefreshCw } from 'lucide-react'
 
 export function CommandCenter() {
   const store = useCommandStore()
@@ -76,7 +76,7 @@ export function CommandCenter() {
       <span>{title}</span>
       <button 
         onClick={() => toggleSpotlight(id)}
-        className="p-1 hover:text-copernicus-phosphor transition-colors"
+        className={`p-1 transition-colors ${spotlightedSection === id ? 'text-copernicus-phosphor' : 'hover:text-copernicus-phosphor'}`}
         title={spotlightedSection === id ? "Exit Spotlight" : "Spotlight Pane"}
       >
         {spotlightedSection === id ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
@@ -85,10 +85,10 @@ export function CommandCenter() {
   )
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
+    <div className="flex flex-col h-full w-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
       <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 shrink-0 bg-black/20">
         <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
-          Command Center
+          Telemetry
         </h2>
         <button
           onClick={refreshData}
@@ -96,15 +96,15 @@ export function CommandCenter() {
           className="p-1 hover:text-copernicus-phosphor transition-colors disabled:opacity-50"
           title="Refresh Data"
         >
-          <RotateCcw size={12} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
         </button>
       </header>
 
-      <div className={`flex-1 grid gap-4 p-4 overflow-hidden ${spotlightedSection ? 'grid-cols-1 grid-rows-1' : 'grid-cols-2 grid-rows-2'}`}>
+      <div className={`flex-1 grid gap-4 p-4 overflow-hidden w-full ${spotlightedSection ? 'grid-cols-1 grid-rows-1' : 'grid-cols-2 grid-rows-2'}`}>
         
         {/* Agent Swarms */}
         {isVisible('swarms') && (
-          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden">
+          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden w-full h-full">
             {renderHeader('Agent Swarms', 'swarms')}
             <div className="flex-1 overflow-auto p-2">
               {store.agentSwarms.length === 0 ? (
@@ -128,7 +128,7 @@ export function CommandCenter() {
 
         {/* Active Tasks */}
         {isVisible('tasks') && (
-          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden">
+          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden w-full h-full">
             {renderHeader('Active Tasks', 'tasks')}
             <div className="flex-1 overflow-auto p-2">
               {store.activeTasks.length === 0 ? (
@@ -155,7 +155,7 @@ export function CommandCenter() {
 
         {/* LSP State */}
         {isVisible('lsp') && (
-          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden">
+          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden w-full h-full">
             {renderHeader('LSP State', 'lsp')}
             <div className="flex-1 overflow-auto p-2">
               {!store.lspState ? (
@@ -191,7 +191,7 @@ export function CommandCenter() {
 
         {/* Agent Stalls */}
         {isVisible('stalls') && (
-          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden">
+          <section className="flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden w-full h-full">
             {renderHeader('Agent Stalls', 'stalls')}
             <div className="flex-1 overflow-auto p-2">
               {store.agentStalls.length === 0 ? (

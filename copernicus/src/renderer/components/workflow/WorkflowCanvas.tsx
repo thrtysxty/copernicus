@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Maximize2, Minimize2 } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useLayoutStore } from '../../store/layout';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
@@ -105,8 +104,6 @@ export default function WorkflowCanvas() {
   const {
     activeStoryId,
     setActiveWorkflowTemplate,
-    spotlightPane,
-    setSpotlight,
     tourStep,
     setTourStep,
     setTourHighlight,
@@ -377,61 +374,30 @@ export default function WorkflowCanvas() {
       }
   };
 
+  useEffect(() => {
+    const removeSave = window.ipcRenderer.on('workflow:save', () => {
+      saveWorkflow();
+    });
+    const removeReset = window.ipcRenderer.on('workflow:reset-canvas', async () => {
+      await invoke('workflow:reset');
+      setNodes([]);
+      setEdges([]);
+      setIsRunning(false);
+      setActiveWorkflowTemplate(null);
+    });
+    const removeRun = window.ipcRenderer.on('workflow:run-canvas', () => {
+      runWorkflow();
+    });
+
+    return () => {
+      removeSave();
+      removeReset();
+      removeRun();
+    };
+  }, [invoke, nodes, edges, rootPath, activeStoryId]);
+
   return (
     <div className="flex flex-col h-full bg-[#050505] text-white overflow-hidden relative">
-      {/* Fixed Toolbar AC-6 */}
-      <div className="flex-none px-4 py-2 border-b border-copernicus-steel bg-zinc-950 flex items-center justify-between z-30">
-        <div className="flex items-center gap-4">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Workflow Studio</span>
-          <div className="px-2 py-0.5 border border-copernicus-steel rounded text-[9px] font-mono uppercase tracking-widest">
-            <span className={activeStoryId ? 'text-copernicus-phosphor' : 'text-zinc-600'}>
-              {activeStoryId ? `BOUND TO: ${activeStoryId}` : 'NO STORY SELECTED'}
-            </span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Spotlight Toggle AC-7 */}
-          <button
-            onClick={() => setSpotlight(spotlightPane === 'orchestrator' ? null : 'orchestrator')}
-            className={`p-1.5 rounded transition-colors ${spotlightPane === 'orchestrator' ? 'bg-copernicus-phosphor text-[#050505]' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'}`}
-            title={spotlightPane === 'orchestrator' ? "Shrink Canvas" : "Spotlight Canvas"}
-          >
-            {spotlightPane === 'orchestrator' ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
-          </button>
-
-          <div className="w-px h-4 bg-copernicus-steel mx-1 self-center" />
-
-          <button
-              onClick={saveWorkflow}
-              className="px-3 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
-          >
-              Save
-          </button>
-          <button
-            onClick={async () => {
-              await invoke('workflow:reset');
-              setNodes([]);
-              setEdges([]);
-              setIsRunning(false);
-              setActiveWorkflowTemplate(null);
-            }}
-            className="px-3 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
-          >
-            Reset
-          </button>
-          <button
-            onClick={runWorkflow}
-            disabled={isRunning}
-            className={`px-3 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider
-              ${isRunning ? 'bg-zinc-900 text-zinc-600 cursor-not-allowed' : 'bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/40 hover:bg-copernicus-phosphor/30'}
-              transition-colors`}
-          >
-            {isRunning ? 'Running...' : 'Run Workflow'}
-          </button>
-        </div>
-      </div>
-
       {/* FIXED: Modal Centering using flex-col and absolute inset-0 */}
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[100]">

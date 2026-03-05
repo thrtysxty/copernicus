@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   Github, Settings, BarChart2,
   Maximize2, RotateCcw, Brain,
-  Menu,
+  Menu, X, Archive,
   Palette, Code, Workflow, Kanban, Monitor
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from './store/layout'
@@ -15,6 +15,7 @@ import { FlippablePanel } from './components/layout/FlippablePanel'
 import { CenterPanelRouter } from './components/Editor/CenterPanelRouter'
 import { TerminalTabs } from './components/Terminal/TerminalTabs'
 import { KanbanBoard } from './components/KanbanBoard'
+import { StoryDetail } from './components/planning/StoryDetail'
 import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 import { SettingsPanel } from './components/settings/SettingsPanel'
@@ -60,17 +61,21 @@ export default function App() {
     setChatPanelTab,
     setInProgressCount,
     chatPanelOpen,
+    setChatPanelOpen,
     paletteOpen,
     setPaletteOpen,
     inspectorOpen,
     setInspectorOpen,
-    browserSessionActive
+    browserSessionActive,
+    basementOpen,
+    setBasementOpen
   } = useLayoutStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [isWizard, setIsWizard] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
+  const [stories, setStories] = useState<any[]>([])
 
   // Initial setup and IPC listeners
   useEffect(() => {
@@ -147,15 +152,17 @@ export default function App() {
     })
     invoke<any>('git:branch').then((r: any) => setGitBranch(unwrapIpc<any>(r) ?? '')).catch(() => {})
 
-    // Populate in-progress story count
+    // Populate in-progress story count and global stories list
     invoke<any>('stories:list').then((r: any) => {
       const data = unwrapIpc<any>(r)
       const list: any[] = Array.isArray(data) ? data : []
+      setStories(list)
       setInProgressCount(list.filter((s: any) => s.status === 'IN PROGRESS').length)
     }).catch(() => {})
 
-    const removeStoriesUpdated = (window as any).ipcRenderer.on('stories:updated', (_e: any, stories: any[]) => {
-      const list: any[] = Array.isArray(stories) ? stories : []
+    const removeStoriesUpdated = (window as any).ipcRenderer.on('stories:updated', (_e: any, newStories: any[]) => {
+      const list: any[] = Array.isArray(newStories) ? newStories : []
+      setStories(list)
       setInProgressCount(list.filter((s: any) => s.status === 'IN PROGRESS').length)
     })
 
@@ -242,7 +249,7 @@ export default function App() {
   const NavButton = ({ id, icon: Icon, label }: { id: StoryboardView, icon: any, label: string }) => (
     <button
       onClick={() => { setView(id); if (id === 'editor') setCenterMode('code'); else if (id === 'designer') setCenterMode('canvas') }}
-      className={`p-2 rounded transition-all duration-200 group relative ${activeView === id ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'}`}
+      className={`w-8 h-8 flex items-center justify-center rounded transition-all duration-200 group relative ${activeView === id ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'}`}
       title={label}
     >
       <Icon size={18} />
@@ -251,56 +258,75 @@ export default function App() {
   )
 
   // MULTI-PANEL logic: Only Editor, Designer, and Orchestrator use the tier-based spotlight system
-  const isTieredLayout = ['editor', 'designer', 'orchestrator'].includes(activeView)
+  // NEW: Inspector triggers the tiered layout to allow side-by-side chat.
+  // UPDATE: planner now also uses the tiered layout for the Single Header Row initiative
+  const isTieredLayout = ['editor', 'designer', 'orchestrator', 'planner'].includes(activeView) || spotlightPane === 'inspector'
 
   return (
     <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
       
       {/* Level 0: Top Dog - Application Title Bar (Spans full width) */}
       <header className="h-8 flex items-center justify-between px-2 bg-[#050505] shrink-0 draggable z-[110] border-b border-copernicus-steel/30 font-bold uppercase select-none">
-        <div className="flex-1"></div>
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center gap-2 px-2">
+          <div className="w-5 h-5 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
+            <span className="text-copernicus-phosphor font-bold text-[8px]">C</span>
+          </div>
           <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-zinc-500">Copernicus</span>
         </div>
         
-        <div className="flex-1 flex justify-end">
-          <div className="flex items-center gap-3 bg-zinc-950 border border-copernicus-steel/30 px-3 py-0.5 rounded-full overflow-hidden">
-            <span className="text-[9px] font-mono text-zinc-600 shrink-0 uppercase tracking-tighter font-black italic">Story //</span>
-            <span className="text-[9px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
-              {activeStoryId || 'UNASSIGNED'}
-            </span>
-            {activeFilePath && (
-              <>
-                <span className="text-zinc-800">|</span>
-                <span className="text-[9px] font-mono text-zinc-500 truncate tracking-tight uppercase">
-                  {activeFilePath.split('/').pop()}
-                </span>
-              </>
-            )}
-          </div>
+        <div className="flex-1 flex justify-center">
+          <nav className="flex items-center gap-1 bg-zinc-950/50 border border-white/5 rounded-full px-1 py-0.5">
+            <NavButton id="planner" icon={Kanban} label="Planner" />
+            <NavButton id="designer" icon={Palette} label="Designer" />
+            <NavButton id="editor" icon={Code} label="Editor" />
+            <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
+          </nav>
+        </div>
+        
+        <div className="flex items-center gap-3 bg-zinc-950 border border-copernicus-steel/30 px-3 py-0.5 rounded-full overflow-hidden">
+          <span className="text-[9px] font-mono text-zinc-600 shrink-0 uppercase tracking-tighter font-black italic">Story //</span>
+          <span className="text-[9px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
+            {activeStoryId || 'UNASSIGNED'}
+          </span>
+          {activeFilePath && (
+            <>
+              <span className="text-zinc-800">|</span>
+              <span className="text-[9px] font-mono text-zinc-500 truncate tracking-tight uppercase">
+                {activeFilePath.split('/').pop()}
+              </span>
+            </>
+          )}
         </div>
       </header>
 
       {/* Level 1: Horizontal Body Split */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Activity Side Bar - Permanent w-12 bar */}
+        {/* Activity Side Bar - Permanent w-12 bar (Compact) */}
         <aside className="w-12 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center h-full z-50">
-          <div className="pt-4">
-            <div className="w-8 h-8 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
-              <span className="text-copernicus-phosphor font-bold text-[10px]">C</span>
-            </div>
+          <div className="flex flex-col items-center gap-3 pt-4">
+            <button 
+              onClick={() => setView('command-center')} 
+              title="Telemetry" 
+              className={`p-2 rounded transition-colors ${activeView === 'command-center' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
+            >
+              <Monitor size={18} />
+            </button>
+            <button 
+              onClick={() => setView('memory')} 
+              title="Memory Browser" 
+              className={`p-2 rounded transition-colors ${activeView === 'memory' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
+            >
+              <Brain size={18} />
+            </button>
+            <button 
+              onClick={() => setView('reporter')} 
+              title="Reports" 
+              className={`p-2 rounded transition-colors ${activeView === 'reporter' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
+            >
+              <BarChart2 size={18} />
+            </button>
           </div>
-          
-          <nav className="flex flex-col items-center gap-3 pt-4">
-            <NavButton id="planner" icon={Kanban} label="Planner" />
-            <NavButton id="designer" icon={Palette} label="Designer" />
-            <NavButton id="editor" icon={Code} label="Editor" />
-            <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
-            <NavButton id="reporter" icon={BarChart2} label="Reports" />
-            <NavButton id="command-center" icon={Monitor} label="Command Center" />
-            <NavButton id="memory" icon={Brain} label="Memory Browser" />
-          </nav>
 
           <div className="flex-1" />
 
@@ -320,13 +346,22 @@ export default function App() {
               <Settings size={18} />
             </button>
             {isTieredLayout && (
-              <button 
-                onClick={() => setSidebarOpen(!sidebarOpen)} 
-                className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
-                title="Toggle Explorer"
-              >
-                <Menu size={18} />
-              </button>
+              <>
+                <button 
+                  onClick={() => setSidebarOpen(!sidebarOpen)} 
+                  className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+                  title="Toggle Explorer"
+                >
+                  <Menu size={18} />
+                </button>
+                <button 
+                  onClick={() => setChatPanelOpen(!chatPanelOpen)} 
+                  className={`p-2 rounded transition-colors ${chatPanelOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+                  title="Toggle Chat"
+                >
+                  <Brain size={18} />
+                </button>
+              </>
             )}
           </div>
         </aside>
@@ -338,7 +373,7 @@ export default function App() {
             {isTieredLayout ? (
               /* Tiered Layout: Respects Panel Spotlight logic */
               <>
-                {/* Explorer Tier - FIXED: Added flex-shrink-0 and explicit width to prevent overflow */}
+                {/* Explorer Tier */}
                 <div className={`${sidebarOpen && (!spotlightPane || spotlightPane === 'explorer') ? (spotlightPane === 'explorer' ? 'flex-1' : 'w-64') : 'w-6'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden relative`}>
                   {sidebarOpen ? (
                     <FlippablePanel
@@ -366,19 +401,25 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Content Tiers (Center + Chat) - FIXED: Added min-width: 0 to allow proper shrinking */}
+                {/* Content Tiers (Center + Chat) */}
                 <div className={`${spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'} flex overflow-hidden relative transition-all duration-500`} style={{ minWidth: 0 }}>
                   
-                  {/* Center Tier (Editor / Canvas / Orchestrator / Telemetry) */}
+                  {/* Center Tier (Editor / Canvas / Orchestrator / Inspector / Planner) */}
                   <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : (spotlightPane === 'chat' || spotlightPane === 'terminal') ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`} style={{ minWidth: 0 }}>
-                    {spotlightPane === 'telemetry' ? (
+                    {spotlightPane === 'inspector' ? (
                       /* Story Inspection View */
-                      <div className="flex-1 flex overflow-hidden">
-                        <div className="flex-1 border-r border-copernicus-steel overflow-hidden">
-                           <StoryDetail storyId={activeStoryId || ''} stories={[]} />
-                        </div>
-                        <div className="w-80 flex-shrink-0 bg-black/20">
-                           <ChatPanel />
+                      <div className="flex-1 flex flex-col overflow-hidden">
+                        <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Story Inspector</span>
+                          <button onClick={() => setSpotlight(null)} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"><X size={12} /></button>
+                        </header>
+                        <div className="flex-1 flex overflow-hidden">
+                          <div className="flex-1 border-r border-copernicus-steel overflow-hidden">
+                             <StoryDetail storyId={activeStoryId || ''} stories={stories} />
+                          </div>
+                          <div className="w-80 flex-shrink-0 bg-black/20">
+                             <ChatPanel />
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -389,28 +430,85 @@ export default function App() {
                           <div className="flex flex-col h-full relative">
                             <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/center">
                               <div className="flex items-center gap-2">
+                                <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"><Menu size={12} /></button>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                                   {centerLabel}
                                 </span>
                               </div>
 
                               <div className="flex items-center gap-2 opacity-0 group-hover/center:opacity-100 transition-opacity">
-                                {activeView === 'designer' && (
-                                  <div className="flex bg-zinc-900 rounded p-0.5 border border-zinc-800 mr-2">
-                                    <button 
-                                      onClick={() => setPaletteOpen(!paletteOpen)}
-                                      className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${paletteOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                {activeView === 'planner' && (
+                                  <div className="flex items-center gap-2 mr-4">
+                                    <button
+                                      onClick={() => setBasementOpen(!basementOpen)}
+                                      className={`flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest transition-colors ${basementOpen ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-white'}`}
+                                      title="Archive Basement"
                                     >
-                                      Palette
+                                      <Archive size={12} />
+                                      Archive
                                     </button>
-                                    <button 
-                                      onClick={() => setInspectorOpen(!inspectorOpen)}
-                                      className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${inspectorOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                    <div className="w-px h-3 bg-zinc-800" />
+                                    <button
+                                      onClick={() => window.ipcRenderer.send('planner:sync')}
+                                      className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+                                      title="Refresh Board"
                                     >
-                                      Inspector
+                                      Sync
+                                    </button>
+                                    <button
+                                      onClick={() => setView('command-center')}
+                                      className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+                                    >
+                                      Log
                                     </button>
                                   </div>
                                 )}
+
+                                {activeView === 'designer' && (
+                                  <div className="flex items-center gap-2 mr-2">
+                                    <div className="flex bg-zinc-900 rounded p-0.5 border border-zinc-800 mr-2">
+                                      <button 
+                                        onClick={() => setPaletteOpen(!paletteOpen)}
+                                        className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${paletteOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                      >
+                                        Palette
+                                      </button>
+                                      <button 
+                                        onClick={() => setInspectorOpen(!inspectorOpen)}
+                                        className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${inspectorOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                      >
+                                        Inspector
+                                      </button>
+                                    </div>
+                                    
+                                    <button onClick={() => window.ipcRenderer.send('canvas:refresh')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Refresh"><RotateCcw size={12} /></button>
+                                    <button onClick={() => window.ipcRenderer.send('canvas:clear')} className="text-zinc-500 hover:text-red-400 transition-colors" title="Clear Canvas"><X size={12} /></button>
+                                  </div>
+                                )}
+
+                                {activeView === 'orchestrator' && (
+                                  <div className="flex items-center gap-2 mr-4">
+                                    <button
+                                        onClick={() => window.ipcRenderer.send('workflow:save')}
+                                        className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                      onClick={() => window.ipcRenderer.send('workflow:reset-canvas')}
+                                      className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
+                                    >
+                                      Reset
+                                    </button>
+                                    <button
+                                      onClick={() => window.ipcRenderer.send('workflow:run-canvas')}
+                                      className="px-3 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/40 hover:bg-copernicus-phosphor/30 transition-colors"
+                                    >
+                                      Run
+                                    </button>
+                                  </div>
+                                )}
+
                                 <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel"><RotateCcw size={12} /></button>
                                 <button onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')} className={`p-1 rounded ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`} title="Spotlight"><Maximize2 size={12} /></button>
                               </div>
@@ -418,6 +516,8 @@ export default function App() {
                             <div className="flex-1 overflow-hidden relative">
                               {activeView === 'orchestrator' ? (
                                 <WorkflowCanvas />
+                              ) : activeView === 'planner' ? (
+                                <KanbanBoard />
                               ) : (
                                 <CenterPanelRouter 
                                   filePath={activeFilePath} 
@@ -432,7 +532,10 @@ export default function App() {
                           <div className="h-full w-full bg-[#050505] flex flex-col">
                             <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20">
                               <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Backface</span>
-                              <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"><RotateCcw size={12} /></button>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel"><RotateCcw size={12} /></button>
+                                <button onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')} className="p-1 text-zinc-600 hover:text-zinc-300" title="Spotlight"><Maximize2 size={12} /></button>
+                              </div>
                             </header>
                             <div className="flex-1 flex items-center justify-center font-mono text-xs text-zinc-500 uppercase tracking-tighter">Panel_Flipped</div>
                           </div>
@@ -442,8 +545,8 @@ export default function App() {
                   </div>
 
                   {/* Chat Tier */}
-                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' || spotlightPane === 'telemetry' ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'terminal' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
-                    {spotlightPane !== 'telemetry' && <ChatPanel />}
+                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'terminal' || spotlightPane === 'inspector' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
+                    <ChatPanel />
                   </div>
                 </div>
               </>
@@ -467,7 +570,7 @@ export default function App() {
             <TerminalTabs />
           </div>
 
-          <StatusBar onCommandPalette={() => setCommandPaletteOpen(true)} />
+          <StatusBar />
         </main>
       </div>
 

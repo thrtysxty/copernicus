@@ -12,12 +12,15 @@ import os
 import json
 import subprocess
 import re
+import sqlite3
+from datetime import datetime
 from ollama import Client
 
 # Config
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 OLLAMA_CLOUD_HOST = os.environ.get("OLLAMA_CLOUD_HOST", "https://ollama.com")
 OLLAMA_LOCAL_URL = os.environ.get("OLLAMA_LOCAL_URL", "http://192.168.1.185:11434")
+DB_PATH = os.path.expanduser("~/Library/Application Support/copernicus/copernicus.db")
 
 MODEL_METADATA = {
     'deepseek-v3.2:cloud': {'tier': 'high', 'context': 128000, 'specialty': 'complex-logic'},
@@ -26,9 +29,31 @@ MODEL_METADATA = {
     'qwen2.5-coder:1.5b': {'tier': 'low', 'context': 8000, 'specialty': 'formatting-fast'}
 }
 
-TOOL_DEFINITION_PROMPT = """
+# Structure Grounding
+REPO_INDEX_PATH = "repo_index.json"
+STRUCTURE_CONTEXT = ""
+if os.path.exists(REPO_INDEX_PATH):
+    try:
+        with open(REPO_INDEX_PATH, "r") as f:
+            idx = json.load(f)
+            clusters = idx.get("logical_clusters", {})
+            cluster_str = "\n".join([f"- {k}: `{v}`" for k, v in clusters.items()])
+            STRUCTURE_CONTEXT = f"""
+PROJECT STRUCTURE GROUNDING:
+This is an Electron-based project. Key logical clusters:
+{cluster_str}
+
+CRITICAL: Never assume a standard `/src` root. Always use the full path relative to the project root.
+If you are unsure of a file's location, use `get_repo_map()` or `list_directory`.
+"""
+    except:
+        pass
+
+TOOL_DEFINITION_PROMPT = f"""
+{STRUCTURE_CONTEXT}
+
 You have access to the following tools. To use a tool, output a JSON block in this format:
-[TOOL: <name> arguments: {<args>}]
+[TOOL: <name> arguments: {{<args>}}]
 
 Available Tools:
 1. read_file(path: string) - Read a file's content.
@@ -36,6 +61,8 @@ Available Tools:
 3. search_codebase(query: string) - Perform a local RAG search.
 4. dispatch(model: string, prompt: string) - Request a specific model to handle a sub-task. Use model names from /models:capabilities.
 5. mcp_call(tool_name: string, arguments: object) - Call a local MCP tool.
+6. get_repo_map() - Returns a full JSON index of the repository structure. Use this to resolve path ambiguities.
+7. signal_completion(summary: string) - Use this tool when your assigned task is 100% complete and verified.
 
 STRICT EXECUTION PROTOCOL:
 1. You are an industrial sub-agent within the COPERNICUS IDE.
@@ -63,11 +90,9 @@ class ContextManager:
 
         print(f"⚠️ Context window capacity exceeded ({total_tokens} tokens). Pruning...")
 
-        # Separate system prompt (Fixed)
         system_msg = [m for m in messages if m['role'] == 'system']
         other_msgs = [m for m in messages if m['role'] != 'system']
 
-        # Identification logic for RAG results
         rag_indices = [i for i, m in enumerate(other_msgs) if "Tool 'search_codebase' result:" in m['content']]
         
         if rag_indices:
@@ -82,7 +107,21 @@ class ContextManager:
 
         return system_msg + other_msgs
 
-def execute_tool(tool_name, arguments):
+def log_event(event_type, content, metadata=None):
+    """Logs an event to the Copernicus database."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO events (type, content, metadata, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+            (event_type, content, json.dumps(metadata) if metadata else "{}")
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error logging event: {e}")
+
+def execute_tool(tool_name, arguments, agent_id="default"):
     """Executes the requested tool and returns the result."""
     print(f"🔧 Executing Tool: {tool_name} with {arguments}...")
     
@@ -100,8 +139,10 @@ def execute_tool(tool_name, arguments):
         content = arguments.get("content")
         if not path or content is None: return "Error: path and content required"
         try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w") as f:
                 f.write(content)
+            log_event("FILE_WRITE", f"{agent_id} wrote to {path}", {"path": path})
             return f"Successfully wrote to {path}"
         except Exception as e:
             return f"Error writing file: {e}"
@@ -117,7 +158,6 @@ def execute_tool(tool_name, arguments):
         model = arguments.get("model")
         prompt = arguments.get("prompt")
         if not model or not prompt: return "Error: model and prompt required"
-        # Recursively call the shim with model override
         cmd = ["python3", "scripts/ollama_tool_shim.py", f"/model:{model} {prompt}"]
         res = subprocess.run(cmd, capture_output=True, text=True)
         return res.stdout
@@ -125,11 +165,21 @@ def execute_tool(tool_name, arguments):
     elif tool_name == "mcp_call":
         mcp_tool = arguments.get("tool_name")
         return f"MCP tool '{mcp_tool}' called successfully (Mock Output)."
+
+    elif tool_name == "get_repo_map":
+        if os.path.exists(REPO_INDEX_PATH):
+            with open(REPO_INDEX_PATH, "r") as f:
+                return f.read()
+        return "Error: repo_index.json not found."
+
+    elif tool_name == "signal_completion":
+        summary = arguments.get("summary", "No summary provided.")
+        log_event("TASK_COMPLETE", f"Agent {agent_id} completed task.", {"summary": summary})
+        print(f"\n✅ {agent_id.upper()} SIGNALED COMPLETION: {summary}")
+        return "COMPLETED"
         
     return f"Unknown tool: {tool_name}"
 
-# Persona Routing Matrix
-# Key: (Model, URL_Source, Is_Cloud)
 PERSONA_ROUTING = {
     "researcher": ("deepseek-v3.2:cloud",     OLLAMA_CLOUD_HOST, True),
     "architect":  ("glm-5:cloud",             OLLAMA_CLOUD_HOST, True),
@@ -160,7 +210,7 @@ def main():
         model_override = model_match.group(1)
         user_prompt = user_prompt.replace(model_match.group(0), "").strip()
     
-    persona = "junior-dev" # default
+    persona = "junior-dev" 
     for p in PERSONA_ROUTING.keys():
         if f"/{p}" in user_prompt:
             persona = p
@@ -181,6 +231,7 @@ def main():
     system_prompt = f"OPERATIONAL MODE: {persona.upper()} SUB-AGENT. PROJECT: COPERNICUS IDE. ACTIVE_MODEL: {model}.\n{TOOL_DEFINITION_PROMPT}"
 
     print(f"--- Routing to Ollama ({model}) via {target_url} (Persona: {persona}) ---")
+    log_event("AGENT_DISPATCH", f"Dispatched {persona} using {model}", {"prompt": user_prompt})
     
     messages = [
         {'role': 'system', 'content': system_prompt},
@@ -188,7 +239,7 @@ def main():
     ]
     
     try:
-        max_turns = 10
+        max_turns = 100 # INCREASED: High runway for async tasks
         turn = 0
         while turn < max_turns:
             messages = ctx_mgr.prune_context(messages)
@@ -196,7 +247,7 @@ def main():
             content = response['message']['content']
             messages.append({'role': 'assistant', 'content': content})
             
-            tool_match = re.search(r"\[TOOL:\s*(\w+)\s*arguments:\s*(\{.*?\})\]", content, re.DOTALL)
+            tool_match = re.search(r"\[TOOL:\s*(\w+)\s*arguments:\s*({.*?})\]", content, re.DOTALL)
             if not tool_match:
                 print(content)
                 break
@@ -204,7 +255,11 @@ def main():
             name = tool_match.group(1)
             try:
                 args = json.loads(tool_match.group(2))
-                result = execute_tool(name, args)
+                result = execute_tool(name, args, agent_id=persona)
+                
+                if result == "COMPLETED":
+                    break
+                    
                 follow_up = f"Tool '{name}' result:\n\n{result}\n\nApply the strict execution protocol."
                 messages.append({'role': 'user', 'content': follow_up})
                 print(f"✅ Turn {turn+1}: Tool {name} result received.")

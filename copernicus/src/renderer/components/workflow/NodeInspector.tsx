@@ -59,6 +59,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
         {/* Label — all types */}
         <Field label="Label">
           <DebouncedInput
+            autoFocus
             className="inspector-input"
             initialValue={node.label}
             onCommit={(val: string) => onChange({ ...node, label: val })}
