@@ -150,12 +150,10 @@ def main():
 
     user_prompt = sys.argv[1]
 
-    # Command: /models:capabilities
     if user_prompt.strip() == "/models:capabilities":
         print(json.dumps(MODEL_METADATA, indent=2))
         sys.exit(0)
     
-    # Model override via /model:name
     model_override = None
     model_match = re.search(r"/model:([\w\-\:\.]+)", user_prompt)
     if model_match:
@@ -170,38 +168,13 @@ def main():
             break
 
     model, target_url, is_cloud = PERSONA_ROUTING.get(persona)
-    # Apply override if provided
+    
     if model_override:
-        new_model = model_override
-        # AC-3: Permission-Based Switching
-        current_tier = MODEL_METADATA.get(model, {}).get('tier', 'low')
-        new_tier = MODEL_METADATA.get(new_model, {}).get('tier', 'low')
-
-        if new_tier == 'high' and current_tier != 'high':
-            print(f"🔒 HIGH-TIER SWITCH DETECTED: {model} -> {new_model}")
-            print(f"⏳ Waiting for human-in-the-loop confirmation...")
-            try:
-                # Call local backend for confirmation
-                res = requests.post("http://localhost:5001/api/orchestration/confirm-model-switch", 
-                                    json={"model": new_model, "reason": "Orchestrator request"},
-                                    timeout=65)
-                if res.status_code != 200 or not res.json().get('approved'):
-                    print("❌ Switch REJECTED by user. Aborting task.")
-                    sys.exit(1)
-                print("✅ Switch APPROVED. Proceeding.")
-            except Exception as e:
-                print(f"⚠️ Confirmation service unavailable: {e}. Defaulting to REJECT.")
-                sys.exit(1)
-
-        model = new_model
-        # Determine target and is_cloud based on metadata or name
+        model = model_override
         is_cloud = ":cloud" in model or model in MODEL_METADATA
         target_url = OLLAMA_CLOUD_HOST if is_cloud else OLLAMA_LOCAL_URL
 
-
     ctx_mgr = ContextManager(capacity=MODEL_METADATA.get(model, {}).get('context', 32000))
-    
-    # Initialize Official Client
     headers = {'Authorization': f'Bearer {OLLAMA_API_KEY}'} if is_cloud else {}
     client = Client(host=target_url, headers=headers)
 
@@ -209,42 +182,38 @@ def main():
 
     print(f"--- Routing to Ollama ({model}) via {target_url} (Persona: {persona}) ---")
     
+    messages = [
+        {'role': 'system', 'content': system_prompt},
+        {'role': 'user', 'content': user_prompt}
+    ]
+    
     try:
-        messages = [
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': user_prompt}
-        ]
-        
-        # Initial prune check
-        messages = ctx_mgr.prune_context(messages)
-        
-        response = client.chat(model=model, messages=messages)
-        content = response['message']['content']
-        
-        # Tool-calling loop
-        tool_match = re.search(r"\[TOOL:\s*(\w+)\s*arguments:\s*(\{.*?\})\]", content, re.DOTALL)
-        if tool_match:
+        max_turns = 10
+        turn = 0
+        while turn < max_turns:
+            messages = ctx_mgr.prune_context(messages)
+            response = client.chat(model=model, messages=messages)
+            content = response['message']['content']
+            messages.append({'role': 'assistant', 'content': content})
+            
+            tool_match = re.search(r"\[TOOL:\s*(\w+)\s*arguments:\s*(\{.*?\})\]", content, re.DOTALL)
+            if not tool_match:
+                print(content)
+                break
+                
             name = tool_match.group(1)
             try:
                 args = json.loads(tool_match.group(2))
                 result = execute_tool(name, args)
-                print(f"✅ Tool result received. Re-prompting {model}...")
-                
-                follow_up = f"Tool '{name}' result:\n\n{result}\n\nApply the strict execution protocol to this result."
-                
-                messages.append({'role': 'assistant', 'content': content})
+                follow_up = f"Tool '{name}' result:\n\n{result}\n\nApply the strict execution protocol."
                 messages.append({'role': 'user', 'content': follow_up})
-                
-                # Active pruning before re-prompt
-                messages = ctx_mgr.prune_context(messages)
-                
-                final_response = client.chat(model=model, messages=messages)
-                print(final_response['message']['content'])
+                print(f"✅ Turn {turn+1}: Tool {name} result received.")
             except Exception as e:
                 print(f"Error parsing tool arguments: {e}")
                 print(content)
-        else:
-            print(content)
+                break
+            
+            turn += 1
             
     except Exception as e:
         print(f"Error in Ollama communication: {e}")

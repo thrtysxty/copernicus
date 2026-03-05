@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   Github, Settings, BarChart2,
   Maximize2, RotateCcw, Brain,
-  ChevronLeft, ChevronRight, Menu,
+  Menu,
   Palette, Code, Workflow, Kanban, Monitor
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from './store/layout'
@@ -58,8 +58,6 @@ export default function App() {
     setCenterMode,
     hasCompletedTour,
     setChatPanelTab,
-    activityBarCollapsed,
-    setActivityBarCollapsed,
     setInProgressCount,
     chatPanelOpen,
     paletteOpen,
@@ -193,6 +191,13 @@ export default function App() {
     }
   }, [activeView, setSidebarOpen])
 
+  // NEW: Force open sidebar if in editor mode but no file is selected
+  useEffect(() => {
+    if (activeView === 'editor' && !activeFilePath && !sidebarOpen) {
+      setSidebarOpen(true)
+    }
+  }, [activeView, activeFilePath, sidebarOpen, setSidebarOpen])
+
   // Touch Bar Telemetry Update
   useEffect(() => {
     if (showSplash || isWizard) return
@@ -279,59 +284,51 @@ export default function App() {
       {/* Level 1: Horizontal Body Split */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Activity Side Bar - Sits next to the main application window, starts at the app bar bottom */}
-        <aside className={`flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center h-full z-50 transition-all duration-200 ease-in-out ${activityBarCollapsed ? 'w-0 border-none px-0 opacity-0' : 'w-12'}`}>
-          {!activityBarCollapsed && (
-            <>
-              <div className="pt-4">
-                <div className="w-8 h-8 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
-                  <span className="text-copernicus-phosphor font-bold text-[10px]">C</span>
-                </div>
-              </div>
-              
-              <nav className="flex flex-col items-center gap-3 pt-4">
-                <NavButton id="planner" icon={Kanban} label="Planner" />
-                <NavButton id="designer" icon={Palette} label="Designer" />
-                <NavButton id="editor" icon={Code} label="Editor" />
-                <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
-                <NavButton id="reporter" icon={BarChart2} label="Reports" />
-                <NavButton id="command-center" icon={Monitor} label="Command Center" />
-                <NavButton id="memory" icon={Brain} label="Memory Browser" />
-              </nav>
+        {/* Activity Side Bar - Permanent w-12 bar */}
+        <aside className="w-12 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center h-full z-50">
+          <div className="pt-4">
+            <div className="w-8 h-8 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
+              <span className="text-copernicus-phosphor font-bold text-[10px]">C</span>
+            </div>
+          </div>
+          
+          <nav className="flex flex-col items-center gap-3 pt-4">
+            <NavButton id="planner" icon={Kanban} label="Planner" />
+            <NavButton id="designer" icon={Palette} label="Designer" />
+            <NavButton id="editor" icon={Code} label="Editor" />
+            <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
+            <NavButton id="reporter" icon={BarChart2} label="Reports" />
+            <NavButton id="command-center" icon={Monitor} label="Command Center" />
+            <NavButton id="memory" icon={Brain} label="Memory Browser" />
+          </nav>
 
-              <div className="flex-1" />
+          <div className="flex-1" />
 
-              <div className="flex flex-col items-center gap-3 pb-4">
-                <button 
-                  onClick={() => setView('github')} 
-                  title="GitHub Manager" 
-                  className={`p-2 rounded transition-colors ${activeView === 'github' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
-                >
-                  <Github size={18} />
-                </button>
-                <button
-                  onClick={() => setSettingsOpen(true)}
-                  className="p-2 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
-                  title="Global Settings"
-                >
-                  <Settings size={18} />
-                </button>
-                {isTieredLayout && (
-                  <button 
-                    onClick={() => setSidebarOpen(!sidebarOpen)} 
-                    className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
-                    title="Toggle Explorer"
-                  >
-                    <Menu size={18} />
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-
-          <button onClick={() => setActivityBarCollapsed(!activityBarCollapsed)} className="mt-auto p-1 text-zinc-700 hover:text-zinc-400 mb-2">
-            {activityBarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={16} />}
-          </button>
+          <div className="flex flex-col items-center gap-3 pb-4">
+            <button 
+              onClick={() => setView('github')} 
+              title="GitHub Manager" 
+              className={`p-2 rounded transition-colors ${activeView === 'github' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
+            >
+              <Github size={18} />
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-2 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
+              title="Global Settings"
+            >
+              <Settings size={18} />
+            </button>
+            {isTieredLayout && (
+              <button 
+                onClick={() => setSidebarOpen(!sidebarOpen)} 
+                className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
+                title="Toggle Explorer"
+              >
+                <Menu size={18} />
+              </button>
+            )}
+          </div>
         </aside>
 
         {/* Level 2: Main Application Window (The Stage) */}
@@ -341,21 +338,39 @@ export default function App() {
             {isTieredLayout ? (
               /* Tiered Layout: Respects Panel Spotlight logic */
               <>
-                {/* Explorer Tier */}
-                <div className={`${sidebarOpen && (!spotlightPane || spotlightPane === 'explorer') ? (spotlightPane === 'explorer' ? 'flex-1' : 'w-64') : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
-                  <FlippablePanel
-                    id="sidebar"
-                    className="h-full w-full"
-                    front={<FileTree rootPath={workingDir} />}
-                    back={<CommandDeck />}
-                  />
+                {/* Explorer Tier - FIXED: Added flex-shrink-0 to prevent overflow */}
+                <div className={`${sidebarOpen && (!spotlightPane || spotlightPane === 'explorer') ? (spotlightPane === 'explorer' ? 'flex-1' : 'w-64') : 'w-6 flex-shrink-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
+                  {sidebarOpen ? (
+                    <FlippablePanel
+                      id="sidebar"
+                      className="h-full w-full"
+                      front={<FileTree rootPath={workingDir} />}
+                      back={<CommandDeck />}
+                    />
+                  ) : (
+                    <div 
+                      className="h-full w-6 flex flex-col items-center py-4 cursor-pointer hover:bg-white/5 transition-colors group/bookmark"
+                      onClick={() => setSidebarOpen(true)}
+                      title="Restore Explorer"
+                    >
+                      <Menu size={12} className="text-zinc-600 group-hover/bookmark:text-copernicus-phosphor mb-4" />
+                      <div className="flex-1 flex items-center justify-center">
+                        <span 
+                          className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter origin-center whitespace-nowrap"
+                          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                        >
+                          Explorer
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Content Tiers (Center + Chat) */}
+                {/* Content Tiers (Center + Chat) - FIXED: Added min-width: 0 to center panel */}
                 <div className={`${spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'} flex overflow-hidden relative transition-all duration-500`}>
                   
-                  {/* Center Tier (Editor / Canvas / Orchestrator) */}
-                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : (spotlightPane === 'chat' || spotlightPane === 'terminal') ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
+                  {/* Center Tier (Editor / Canvas / Orchestrator) - FIXED: Added min-width: 0 */}
+                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : (spotlightPane === 'chat' || spotlightPane === 'terminal') ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`} style={{ minWidth: 0 }}>
                     <FlippablePanel
                       id="center-panel"
                       className="flex-1"
