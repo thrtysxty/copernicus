@@ -349,21 +349,34 @@ ${title}
     this.broadcastUpdate()
   }
 
+  deleteStory(id: string) {
+    const record = this.ledger.getStoryById(id)
+    if (!record) return
+
+    this.ledger.deleteStory(id)
+    try {
+      if (fs.existsSync(record.file_path)) {
+        fs.unlinkSync(record.file_path)
+      }
+    } catch (e) {
+      log.warn(`[StoriesManager] Failed to delete file for story ${id}`, e)
+    }
+    this.broadcastUpdate()
+  }
+
   watch() {
     if (!fs.existsSync(this.storiesPath)) return
     if (this.watcher) this.watcher.close()
     
     this.watcher = fs.watch(this.storiesPath, (_eventType, filename) => {
         if (filename && filename.endsWith('.md') && !filename.endsWith('.tmp')) {
-            // We should ideally sync here, but to avoid infinite loops if we are the writer,
-            // we'll just broadcast for now or rely on the syncFromDisk on focus.
             this.broadcastUpdate()
         }
     })
   }
 
   private broadcastUpdate() {
-      if (this.window) {
+      if (this.window && !this.window.isDestroyed()) {
           try {
             this.window.webContents.send('stories:updated', this.listStories())
           } catch (e) {

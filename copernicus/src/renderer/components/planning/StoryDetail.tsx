@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Edit2, Save, ExternalLink, Play } from 'lucide-react'
+import { ArrowLeft, Edit2, Save, ExternalLink, Play, Trash2, Archive, X } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
@@ -119,6 +119,25 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirm(`Permanently delete ${storyId}? This will remove the markdown file and database record.`)) return
+    try {
+      await invoke('stories:delete', storyId)
+      setDrawerStory(null)
+    } catch (e) {
+      log.error('Failed to delete story', e)
+    }
+  }
+
+  const handleArchive = async () => {
+    try {
+      await invoke('stories:archive', storyId)
+      setDrawerStory(null)
+    } catch (e) {
+      log.error('Failed to archive story', e)
+    }
+  }
+
   const handleOpenInEditor = () => {
     setSpotlight('telemetry')
   }
@@ -228,7 +247,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       className={`flex h-full overflow-hidden bg-copernicus-bg ${isSpotlit ? 'flex-row' : 'flex-col'}`}
     >
       {/* Header bar */}
-      <div className={`flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/20 flex-shrink-0 ${isSpotlit ? 'hidden' : ''}`}>
+      <div className={`flex items-center justify-between px-3 h-8 border-b border-white/5 bg-black/20 flex-shrink-0 z-10 ${isSpotlit ? 'hidden' : ''}`}>
         <button
           ref={closeBtnRef}
           onClick={() => setDrawerStory(null)}
@@ -264,161 +283,183 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
               <Save size={9} /> {isSaving ? 'Saving…' : 'Save'}
             </button>
           )}
-          {isSpotlit ? (
-            <button
-              onClick={() => { setSpotlight(null); setIsEditing(false) }}
-              className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-amber-400/70 hover:text-amber-400 border border-amber-500/20 hover:border-amber-500/40 transition-all uppercase"
-            >
-              <ExternalLink size={9} /> Exit Editor
-            </button>
-          ) : (
-            <button
-              onClick={handleOpenInEditor}
-              className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-zinc-300 border border-zinc-800 transition-all uppercase"
-              title="Open Inspector"
-            >
-              <ExternalLink size={9} /> Inspect
-            </button>
-          )}
+          
+          <button
+            onClick={handleArchive}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-blue-400 border border-zinc-800 hover:border-blue-500/30 transition-all uppercase"
+            title="Archive Story"
+          >
+            <Archive size={9} /> Archive
+          </button>
+
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-red-400 border border-zinc-800 hover:border-red-500/30 transition-all uppercase"
+            title="Delete Story"
+          >
+            <Trash2 size={9} /> Delete
+          </button>
+
+          <button
+            onClick={handleOpenInEditor}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-zinc-300 border border-zinc-800 transition-all uppercase"
+            title="Open Inspector"
+          >
+            <ExternalLink size={9} /> Inspect
+          </button>
         </div>
       </div>
 
-      {/* Metadata panel */}
-      <div className={`flex-shrink-0 p-4 space-y-3 overflow-y-auto border-b border-white/5 ${isSpotlit ? 'w-80 border-b-0 border-r' : ''}`}>
-        {isSpotlit && (
-          <button
-            onClick={() => setDrawerStory(null)}
-            className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider mb-2"
-          >
-            <ArrowLeft size={11} /> Board
-          </button>
-        )}
+      {/* Main Container Split (Sidebar + Content) */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Metadata sidebar */}
+        <div className={`flex-shrink-0 p-4 space-y-3 overflow-y-auto border-r border-white/5 bg-black/10 ${isSpotlit ? 'w-80' : 'w-64'}`}>
+          {isSpotlit && (
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setDrawerStory(null)}
+                className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
+              >
+                <ArrowLeft size={11} /> Board
+              </button>
+              <button 
+                onClick={() => { setSpotlight(null); setIsEditing(false) }}
+                className="p-1 text-zinc-600 hover:text-zinc-300"
+                title="Close Inspector"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
-        <div>
-          <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">Story</p>
-          <p className="text-[10px] font-mono text-zinc-500">{story.id}</p>
-        </div>
-
-        <div>
-          <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Priority</p>
-          <select
-            defaultValue={story.priority}
-            onChange={e => handleSetField('priority', e.target.value)}
-            className={`text-[10px] font-bold border rounded px-1.5 py-0.5 focus:outline-none bg-transparent ${PRIORITY_COLORS[story.priority] ?? PRIORITY_COLORS.UNKNOWN}`}
-          >
-            <option value="P0">P0 — Critical</option>
-            <option value="P1">P1 — High</option>
-            <option value="P2">P2 — Normal</option>
-            <option value="P3">P3 — Low</option>
-          </select>
-        </div>
-
-        <div>
-          <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Type</p>
-          <select
-            defaultValue={story.type}
-            onChange={e => handleSetField('type', e.target.value)}
-            className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
-          >
-            {['Feature', 'Bug Fix', 'Epic', 'Chore', 'Security', 'Infrastructure'].map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Model / Assignee</p>
-          <select
-            defaultValue={story.model ?? '(unassigned)'}
-            onChange={e => handleSetField('model', e.target.value)}
-            className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
-          >
-            {modelOptions.map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Epic</p>
-          <select
-            defaultValue={story.epic ?? ''}
-            onChange={e => handleSetField('epic', e.target.value || '(none)')}
-            className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
-          >
-            <option value="">(No Epic)</option>
-            {epics.map(ep => (
-              <option key={ep} value={ep}>{ep}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-start gap-2">
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Workflow</p>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">Story Identifier</p>
+            <p className="text-[10px] font-mono text-copernicus-phosphor font-bold">{story.id}</p>
+          </div>
+
+          <div>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Priority</p>
             <select
-              value={story.workflowId ?? '— none —'}
-              onChange={e => handleSetField('workflowId', e.target.value)}
-              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
+              defaultValue={story.priority}
+              onChange={e => handleSetField('priority', e.target.value)}
+              className={`text-[10px] font-bold border rounded px-1.5 py-0.5 focus:outline-none bg-transparent w-full ${PRIORITY_COLORS[story.priority] ?? PRIORITY_COLORS.UNKNOWN}`}
             >
-              <option value="— none —">— none —</option>
-              {workflowTemplates.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+              <option value="P0">P0 — Critical</option>
+              <option value="P1">P1 — High</option>
+              <option value="P2">P2 — Normal</option>
+              <option value="P3">P3 — Low</option>
+            </select>
+          </div>
+
+          <div>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Type</p>
+            <select
+              defaultValue={story.type}
+              onChange={e => handleSetField('type', e.target.value)}
+              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
+            >
+              {['Feature', 'Bug Fix', 'Epic', 'Chore', 'Security', 'Infrastructure'].map(t => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>
 
-          <div className="mt-3">
-            <button
-              onClick={() => {
-                if (workflowStatus === 'RUNNING') {
-                  invoke('workflow:reset').then(() => setWorkflowStatus(null)).catch(() => {})
-                } else {
-                  invoke('workflow:run', { templateId: story.workflowId, context: { storyId, storyTitle: story.title } }).catch(() => {})
-                  setWorkflowStatus('RUNNING')
-                }
-              }}
-              disabled={!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status)}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status) ? 'opacity-50 cursor-not-allowed border-zinc-700 text-zinc-500' : 'border-copernicus-phosphor text-copernicus-phosphor hover:bg-copernicus-phosphor hover:text-[#050505]'}`}
+          <div>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Assignee</p>
+            <select
+              defaultValue={story.model ?? '(unassigned)'}
+              onChange={e => handleSetField('model', e.target.value)}
+              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
             >
-              {workflowStatus === 'RUNNING' ? '⏹ Stop' : '▶ Run'}
-            </button>
+              {modelOptions.map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
           </div>
 
-          {workflowStatus && workflowStatus !== 'IDLE' && (
-            <div className={`mt-3 text-[10px] font-medium px-2 py-0.5 rounded border ${workflowStatus === 'RUNNING' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : workflowStatus === 'COMPLETE' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
-              ● {workflowStatus}
+          <div>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Epic Context</p>
+            <select
+              defaultValue={story.epic ?? ''}
+              onChange={e => handleSetField('epic', e.target.value || '(none)')}
+              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
+            >
+              <option value="">(No Epic)</option>
+              {epics.map(ep => (
+                <option key={ep} value={ep}>{ep}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Workflow Engine</p>
+            <div className="flex gap-2">
+              <select
+                value={story.workflowId ?? '— none —'}
+                onChange={e => handleSetField('workflowId', e.target.value)}
+                className="flex-1 text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
+              >
+                <option value="— none —">— none —</option>
+                {workflowTemplates.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  if (workflowStatus === 'RUNNING') {
+                    invoke('workflow:reset').then(() => setWorkflowStatus(null)).catch(() => {})
+                  } else {
+                    invoke('workflow:run', { templateId: story.workflowId, context: { storyId, storyTitle: story.title } }).catch(() => {})
+                    setWorkflowStatus('RUNNING')
+                  }
+                }}
+                disabled={!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status)}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status) ? 'opacity-50 cursor-not-allowed border-zinc-700 text-zinc-500' : 'border-copernicus-phosphor text-copernicus-phosphor hover:bg-copernicus-phosphor hover:text-[#050505]'}`}
+              >
+                {workflowStatus === 'RUNNING' ? '⏹' : '▶'}
+              </button>
             </div>
-          )}
+
+            {workflowStatus && workflowStatus !== 'IDLE' && (
+              <div className={`text-[9px] font-mono px-2 py-1 rounded border text-center ${workflowStatus === 'RUNNING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' : workflowStatus === 'COMPLETE' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                SYSTEM_{workflowStatus}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-white/5">
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">Deployment Date</p>
+            <p className="text-[10px] text-zinc-500 font-mono">{story.date || '—'}</p>
+          </div>
+
+          <div>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">System Status</p>
+            <span className="text-[9px] font-bold text-zinc-400 border border-zinc-700 rounded px-2 py-0.5 inline-block uppercase tracking-tighter">
+              {story.status}
+            </span>
+          </div>
         </div>
 
-        <div>
-          <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">Date</p>
-          <p className="text-[10px] text-zinc-500">{story.date || '—'}</p>
+        {/* Body content */}
+        <div className="flex-1 overflow-y-auto p-6 bg-copernicus-bg/50">
+          <div className="max-w-3xl mx-auto">
+            <h1 className="text-xl font-bold text-white mb-6 border-b border-copernicus-phosphor/20 pb-4">
+              {story.title}
+            </h1>
+            {isEditing ? (
+              <textarea
+                ref={textareaRef}
+                defaultValue={content}
+                className="w-full h-full min-h-[500px] bg-black/40 border border-zinc-800 rounded p-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 resize-none leading-relaxed shadow-inner"
+                spellCheck={false}
+              />
+            ) : (
+              <pre className="text-xs font-mono text-zinc-400 whitespace-pre-wrap leading-relaxed">
+                {content}
+              </pre>
+            )}
+          </div>
         </div>
-
-        <div>
-          <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">Status</p>
-          <span className="text-[10px] text-zinc-400 border border-zinc-700 rounded px-1.5 py-0.5 inline-block">
-            {story.status}
-          </span>
-        </div>
-      </div>
-
-      {/* Body — markdown or textarea */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {isEditing ? (
-          <textarea
-            ref={textareaRef}
-            defaultValue={content}
-            className="w-full h-full min-h-[400px] bg-black/40 border border-zinc-800 rounded p-3 text-[11px] font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 resize-none leading-relaxed"
-            spellCheck={false}
-          />
-        ) : (
-          <pre className="text-[11px] font-mono text-zinc-400 whitespace-pre-wrap leading-relaxed">
-            {content}
-          </pre>
-        )}
       </div>
     </motion.div>
   )

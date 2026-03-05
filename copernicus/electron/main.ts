@@ -561,6 +561,14 @@ function registerIpcHandlers() {
     win?.webContents.send('editor:open', { path: filePath, content })
     return true
   }))
+  ipcMain.handle('stories:delete', (_event, id) => handleIpc(() => {
+    if (!/^story_\d+$/.test(id)) return;
+    return storiesManager.deleteStory(id)
+  }))
+  ipcMain.handle('stories:archive', (_event, id) => handleIpc(() => {
+    if (!/^story_\d+$/.test(id)) return;
+    return storiesManager.archiveStory(id)
+  }))
 
   // Devtime Handlers
   ipcMain.handle('devtime:start', (_event, data) => handleIpc(() => {
