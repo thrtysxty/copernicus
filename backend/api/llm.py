@@ -22,11 +22,12 @@ def chat():
     system_prompt = data.get('systemPrompt', "You are an AI assistant in the Copernicus IDE.")
     api_key = data.get('apiKey', '')
     base_url = data.get('baseUrl')
+    tools = data.get('tools')
 
     def generate():
         try:
             provider = get_provider(provider_name)
-            yield from provider.stream_chat(messages, model, system_prompt, api_key, base_url)
+            yield from provider.stream_chat(messages, model, system_prompt, api_key, base_url, tools)
         except Exception as e:
             logger.error(f"LLM Stream Error: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

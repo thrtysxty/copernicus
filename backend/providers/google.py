@@ -3,7 +3,7 @@ import google.generativeai as genai
 from backend.providers.base import LLMProvider
 
 class GoogleProvider(LLMProvider):
-    def stream_chat(self, messages, model, system, api_key, base_url=None):
+    def stream_chat(self, messages, model, system, api_key, base_url=None, tools=None):
         genai.configure(api_key=api_key)
         model_id = model.split('/')[-1]
         gen_model = genai.GenerativeModel(model_name=model_id, system_instruction=system)

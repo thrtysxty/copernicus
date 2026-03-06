@@ -3,7 +3,7 @@ from openai import OpenAI
 from backend.providers.base import LLMProvider
 
 class OpenAIProvider(LLMProvider):
-    def stream_chat(self, messages, model, system, api_key, base_url=None):
+    def stream_chat(self, messages, model, system, api_key, base_url=None, tools=None):
         client = OpenAI(api_key=api_key, base_url=base_url)
 
         stream = client.chat.completions.create(

@@ -199,7 +199,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const [instructionContent, setInstructionContent] = useState('')
 
   useEffect(() => {
-    if (activeBackTab === 'instructions') {
+    if (activeBackTab === 'guide') {
       const files = ['AGENTS.md', 'TECHNICAL_BIBLE.md', 'UX_BIBLE.md', 'gemini.md']
       Promise.all(files.map(async f => {
         try {
@@ -279,7 +279,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       { id: 'persona', label: 'Persona', icon: User },
       { id: 'prompts', label: 'Library', icon: Book },
       { id: 'history', label: 'History', icon: History },
-      { id: 'instructions', label: 'Mandates', icon: FileCode }
+      { id: 'guide', label: 'Guide', icon: FileCode }
     ]
 
     return (
@@ -468,7 +468,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </div>
           )}
 
-          {activeBackTab === 'instructions' && (
+          {activeBackTab === 'guide' && (
             <div className="h-full flex flex-col space-y-3">
               <div className="flex items-center justify-between">
                 <select 

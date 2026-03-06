@@ -22,7 +22,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #102 | Copernicus Platform Hardening | COMPLETE | CRITICAL |
 | #112 | Llm Streaming Service | COMPLETE | CRITICAL |
 | #113 | Filesystem Integration | COMPLETE | CRITICAL |
-| #223 | Python Shim To Service | PENDING | CRITICAL |
+| #223 | Python Shim To Service | COMPLETE | CRITICAL |
 | #214 | Ollama Cloud Authentication And Dynamic Routing | APPROVED FOR IMPLEMENTATION | High |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
@@ -88,6 +88,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #209 | Designer Explorer Collapse By Default | DRAFT | Medium |
 | #210 | Restore Control Buttons To Canvas Preview | DRAFT | Medium |
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
+| #236 | Comprehensive E2E Testing With Playwright | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | DRAFT | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
@@ -99,30 +100,19 @@ This file is auto-generated. Run `make backlog` to update.
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | APPROVED FOR IMPLEMENTATION | P1 — High |
 | #178 | Ipc Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P0 |
-| #179 | Vt Selection Highlight | APPROVED FOR IMPLEMENTATION | P1 |
 | #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
-| #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
-| #182 | Flippablepanel Mode Prop | APPROVED FOR IMPLEMENTATION | P1 |
 | #183 | Chat Tools Back Face | APPROVED FOR IMPLEMENTATION | P1 |
-| #184 | Command Center View | APPROVED FOR IMPLEMENTATION | P1 |
-| #185 | Designer Canvas Unification | APPROVED FOR IMPLEMENTATION | P1 |
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
+| #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
+| #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
+| #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
 | #187 | Jules Pr Manager Workflow | APPROVED FOR IMPLEMENTATION | P1 |
 | #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
-| #189 | Lsp Monaco Chatpanel Wiring | APPROVED FOR IMPLEMENTATION | P1 |
 | #190 | Mcp Settings Tab | APPROVED FOR IMPLEMENTATION | P2 |
-| #191 | Context Snapshots Project Memory | APPROVED FOR IMPLEMENTATION | P1 |
-| #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #193 | Accessibility Pass | APPROVED FOR IMPLEMENTATION | P2 |
-| #194 | Flask Backend Scaffold | APPROVED FOR IMPLEMENTATION | P1 |
-| #195 | Gemini Cli Pty Agent | APPROVED FOR IMPLEMENTATION | P1 |
-| #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
-| #219 | Enhanced Rag System | APPROVED FOR IMPLEMENTATION | P0 |
 | #228 | Orchestrator-Led Dynamic Model Selection | APPROVED FOR IMPLEMENTATION | P1 |
 | #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | APPROVED FOR IMPLEMENTATION | P0 |
 | #230 | Agent Branch And Patch Workflow | APPROVED FOR IMPLEMENTATION | P1 |
-| #231 | Activity Bar Vt Compliance | APPROVED FOR IMPLEMENTATION | P1 |
-| #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #233 | Generic Handoff Signal And Centralized Comms Bus | APPROVED FOR IMPLEMENTATION | P1 |
 | #235 | Container Runtime Viewer — Docker And Vm Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -134,10 +124,21 @@ This file is auto-generated. Run `make backlog` to update.
 | #172 | Ui Canvas File System | COMPLETE | P1 |
 | #173 | Model Dynamic Env | COMPLETE | P1 |
 | #174 | Hardware Touchbar | COMPLETE | P1 |
-| #177 | Renderer Bug Sweep | COMPLETE | P0 |
-| #201 | Agent Terminal Rework | COMPLETE | P2 |
-| #234 | Application Shell Hardening — Header, Activitybar, Session Dialog | COMPLETE | P1 |
 | #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | COMPLETE | P0 — Critical |
+| #177 | Renderer Bug Sweep | COMPLETE | P0 |
+| #179 | Vt Selection Highlight | COMPLETE | P1 |
+| #182 | Flippablepanel Mode Prop | COMPLETE | P1 |
+| #184 | Command Center View | COMPLETE | P1 |
+| #185 | Designer Canvas Unification | COMPLETE | P1 |
+| #189 | Lsp Monaco Chatpanel Wiring | COMPLETE | P1 |
+| #191 | Context Snapshots Project Memory | COMPLETE | P1 |
+| #192 | Console Log Cleanup | COMPLETE | P2 |
+| #194 | Flask Backend Scaffold | COMPLETE | P1 |
+| #195 | Gemini Cli Pty Agent | COMPLETE | P1 |
+| #201 | Agent Terminal Rework | COMPLETE | P2 |
+| #219 | Enhanced Rag System | COMPLETE | P0 |
+| #231 | Activity Bar Vt Compliance | COMPLETE | P1 |
+| #234 | Application Shell Hardening — Header, Activitybar, Session Dialog | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |

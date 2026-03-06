@@ -185,7 +185,7 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
           return (
             <div
               key={col.id}
-              className={`h-full flex flex-col rounded border shadow-sm ${col.color} transition-all duration-300 relative group/column overflow-hidden shrink-0 ${isSpotlit ? 'w-[400px]' : 'w-64'}`}
+              className={`h-full flex flex-col rounded border shadow-sm ${col.color} transition-all duration-300 relative group/column overflow-hidden shrink-0 ${isSpotlit ? 'flex-1 min-w-[320px]' : 'w-64'}`}
               onDrop={e => handleDrop(e, col.status)}
               onDragOver={e => e.preventDefault()}
             >

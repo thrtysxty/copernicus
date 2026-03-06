@@ -1,5 +1,9 @@
+import { exec } from 'node:child_process'
+import { promisify } from 'node:util'
 import { codebaseIndexer } from '../codebase-indexer'
 import { fsManager } from '../fs-manager'
+
+const execAsync = promisify(exec)
 
 export interface ToolDefinition {
   name: string
@@ -62,6 +66,39 @@ export const TOOLS: ToolDefinition[] = [
       },
       required: ['prompt']
     }
+  },
+  {
+    name: 'create_story',
+    description: 'Scaffold a new user story file in docs/stories/ using the standard template. Use this when the user describes a feature or task that needs formal tracking.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'Title of the story (e.g., "Add dark mode toggle to settings")'
+        }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'dispatch_agent',
+    description: 'Dispatch a story to a specialist agent for implementation. Routes to Jules (GitHub PR automation) or the local Ollama agent gateway.',
+    parameters: {
+      type: 'object',
+      properties: {
+        storyId: {
+          type: 'string',
+          description: 'ID of the story to dispatch (e.g., "story_205")'
+        },
+        provider: {
+          type: 'string',
+          description: 'Target agent provider',
+          enum: ['jules', 'ollama-cloud', 'ollama-local']
+        }
+      },
+      required: ['storyId', 'provider']
+    }
   }
 ]
 
@@ -74,6 +111,10 @@ export class ToolExecutor {
         return this.readFile(args.path)
       case 'local_research':
         return this.localResearch(args.prompt, args.persona)
+      case 'create_story':
+        return this.createStory(args.title)
+      case 'dispatch_agent':
+        return this.dispatchAgent(args.storyId, args.provider)
       default:
         throw new Error(`Unknown tool: ${name}`)
     }
@@ -107,6 +148,35 @@ ${r.content}
       throw new Error(data.error ?? `Local research failed with status ${response.status}`)
     }
     return data.data!.result
+  }
+
+  private async createStory(title: string): Promise<string> {
+    if (!title?.trim()) return 'Error: title is required'
+    const rootPath = fsManager.getRootPath()
+    if (!rootPath) return 'Error: no project root set — start a Dev Session first'
+    const safeTitle = title.replace(/"/g, '\\"')
+    const { stdout, stderr } = await execAsync(
+      `python3 scripts/utils/scaffold_story.py "${safeTitle}"`,
+      { cwd: rootPath }
+    )
+    return stdout.trim() || stderr.trim() || `Story created for: ${title}`
+  }
+
+  private async dispatchAgent(storyId: string, provider: string): Promise<string> {
+    if (!storyId || !provider) return 'Error: storyId and provider are required'
+    const rootPath = fsManager.getRootPath()
+    if (!rootPath) return 'Error: no project root set'
+
+    if (provider === 'jules') {
+      return `To dispatch ${storyId} to Jules: open the Kanban board, find the story card, and click the "→ Jules" button. Jules will create a PR automatically.`
+    }
+
+    const role = 'coder'
+    const { stdout, stderr } = await execAsync(
+      `python3 dev_orchestrator/cloud_agent.py ${role} "Implement ${storyId}" --worktree ${storyId}`,
+      { cwd: rootPath }
+    )
+    return stdout.trim() || stderr.trim() || `Agent dispatched for ${storyId} via ${provider}`
   }
 }
 
