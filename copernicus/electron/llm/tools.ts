@@ -1,8 +1,5 @@
 import { codebaseIndexer } from '../codebase-indexer'
 import { fsManager } from '../fs-manager'
-import { spawn } from 'child_process'
-import path from 'path'
-import { app } from 'electron'
 
 export interface ToolDefinition {
   name: string
@@ -100,28 +97,16 @@ ${r.content}
   }
 
   private async localResearch(prompt: string, persona: string = 'junior-dev'): Promise<string> {
-    return new Promise((resolve) => {
-      // Use the shim script we refined today
-      const scriptPath = path.join(app.getAppPath(), 'scripts', 'ollama_tool_shim.py')
-      const cmd = `/${persona} ${prompt}`
-      
-      const child = spawn('python3', [scriptPath, cmd], {
-        env: { ...process.env, OLLAMA_BASE_URL: 'http://192.168.1.185:11434' }
-      })
-
-      let output = ''
-      child.stdout.on('data', d => output += d.toString())
-      child.stderr.on('data', d => output += d.toString())
-      
-      child.on('close', (code) => {
-        if (code !== 0) {
-          resolve(`Local research failed (Exit ${code}):
-${output}`)
-        } else {
-          resolve(output.trim())
-        }
-      })
+    const response = await fetch('http://localhost:5001/api/agents/research', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, persona }),
     })
+    const data = await response.json() as { ok: boolean; data?: { result: string }; error?: string }
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error ?? `Local research failed with status ${response.status}`)
+    }
+    return data.data!.result
   }
 }
 

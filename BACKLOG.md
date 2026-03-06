@@ -124,6 +124,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #231 | Activity Bar Vt Compliance | APPROVED FOR IMPLEMENTATION | P1 |
 | #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #233 | Generic Handoff Signal And Centralized Comms Bus | APPROVED FOR IMPLEMENTATION | P1 |
+| #235 | Container Runtime Viewer — Docker And Vm Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
