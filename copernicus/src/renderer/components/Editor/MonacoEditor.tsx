@@ -188,7 +188,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     )
 
     // Diagnostics push → Monaco markers
-    const removeDiag = (window as any).ipcRenderer.on(
+    const removeDiag = window.ipcRenderer.on(
       'lsp:diagnostics-update',
       (_e: any, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
         const model = monacoInstance.editor.getModels().find(m => m.uri.toString() === uri)
