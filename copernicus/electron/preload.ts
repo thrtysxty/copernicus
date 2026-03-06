@@ -15,7 +15,8 @@ const SEND_CHANNELS = new Set([
   // LLM Chat
   'chat:send',
   // File System
-  'fs:list-dir', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'app:get-root-path', 'app:get-user-guide',
+  'fs:list-dir', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
+  'app:get-root-path', 'app:set-root-path', 'app:get-user-guide',
   // Git
   'git:branch',
   // Stories

@@ -1,0 +1,169 @@
+import React, { useState, useEffect, useCallback } from 'react'
+import { FolderOpen, Plus, X, Loader2 } from 'lucide-react'
+import { useIpcError } from '../../hooks/useIpcError'
+import { unwrapIpc } from '../../types/ipc'
+import { useLayoutStore } from '../../store/layout'
+
+interface FileNode {
+  name: string
+  path: string
+  isDir: boolean
+}
+
+interface Props {
+  open: boolean
+  onClose: () => void
+}
+
+const PROJECTS_ROOT = '~/Projects'
+
+export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
+  const invoke = useIpcError()
+  const { setWorkingDir } = useLayoutStore()
+  const [tab, setTab] = useState<'workspace' | 'new'>('workspace')
+  const [dirs, setDirs] = useState<FileNode[]>([])
+  const [loading, setLoading] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadDirs = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await invoke<any>('fs:list-dir', PROJECTS_ROOT)
+      const entries: FileNode[] = unwrapIpc<any>(result) ?? []
+      setDirs(entries.filter(e => e.isDir))
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to list directories')
+    } finally {
+      setLoading(false)
+    }
+  }, [invoke])
+
+  useEffect(() => {
+    if (open && tab === 'workspace') {
+      loadDirs()
+    }
+  }, [open, tab, loadDirs])
+
+  const selectDir = async (dirPath: string) => {
+    setError(null)
+    try {
+      await invoke<any>('app:set-root-path', dirPath)
+      setWorkingDir(dirPath)
+      onClose()
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to set project root')
+    }
+  }
+
+  const createProject = async () => {
+    if (!newName.trim()) return
+    setCreating(true)
+    setError(null)
+    const newPath = `${PROJECTS_ROOT}/${newName.trim()}`
+    try {
+      await invoke<any>('fs:make-dir', newPath)
+      await invoke<any>('app:set-root-path', newPath)
+      setWorkingDir(newPath)
+      onClose()
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to create project')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-zinc-900 border border-copernicus-steel rounded shadow-2xl w-[420px] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="h-10 flex items-center justify-between px-4 border-b border-copernicus-steel shrink-0">
+          <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-[0.25em]">SELECT PROJECT</span>
+          <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors">
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-copernicus-steel shrink-0">
+          {(['workspace', 'new'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex-1 h-8 text-[10px] font-mono uppercase tracking-widest transition-all
+                ${tab === t
+                  ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
+                  : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+            >
+              {t === 'workspace' ? 'Workspace' : 'New Project'}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto min-h-0 max-h-72">
+          {tab === 'workspace' && (
+            <>
+              {loading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 size={16} className="animate-spin text-copernicus-phosphor" />
+                </div>
+              )}
+              {!loading && dirs.length === 0 && !error && (
+                <div className="py-8 text-center text-zinc-600 text-[11px] font-mono">
+                  No directories found in ~/Projects
+                </div>
+              )}
+              {!loading && dirs.map(d => (
+                <button
+                  key={d.path}
+                  onClick={() => selectDir(d.path)}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50 text-left"
+                >
+                  <FolderOpen size={14} className="text-zinc-500 shrink-0" />
+                  <span className="flex-1 text-[12px] font-mono text-zinc-300 truncate">{d.name}</span>
+                </button>
+              ))}
+            </>
+          )}
+
+          {tab === 'new' && (
+            <div className="p-4 space-y-3">
+              <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
+                ~/Projects/
+              </div>
+              <input
+                autoFocus
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') createProject() }}
+                placeholder="project-name"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[12px] font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-copernicus-phosphor/50 transition-colors"
+              />
+              <button
+                onClick={createProject}
+                disabled={!newName.trim() || creating}
+                className="w-full flex items-center justify-center gap-2 h-9 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 text-copernicus-phosphor text-[11px] font-mono uppercase tracking-widest rounded hover:bg-copernicus-phosphor/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creating ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                {creating ? 'Creating…' : 'Create & Open'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/20 text-[10px] font-mono text-red-400">
+            {error}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

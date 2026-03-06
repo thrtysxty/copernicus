@@ -36,7 +36,11 @@ const PRIORITY_COLORS: Record<string, string> = {
 const PRIORITY_ORDER: Record<string, number> = { P0: 0, P1: 1, P2: 2, P3: 3, UNKNOWN: 4 }
 
 
-export function KanbanBoard() {
+interface KanbanBoardProps {
+  onStartSession?: () => void
+}
+
+export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
   const invoke = useIpcError()
   const [stories, setStories] = useState<Story[]>([])
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
@@ -139,7 +143,14 @@ export function KanbanBoard() {
             <Lock className="mx-auto text-red-500" size={32} />
             <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-200">Session Required</h3>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Please start a <span className="text-copernicus-phosphor font-bold">Dev Session</span> to target a repo.
+              Please start a{' '}
+              <button
+                onClick={onStartSession}
+                className="text-copernicus-phosphor font-bold underline underline-offset-2 hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                Dev Session
+              </button>{' '}
+              to target a repo.
             </p>
           </div>
         </div>

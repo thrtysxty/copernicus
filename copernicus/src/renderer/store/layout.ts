@@ -169,6 +169,10 @@ interface LayoutState {
   setTourActive: (active: boolean) => void
   retakeTour: () => void
 
+  // Settings
+  settingsOpen: boolean
+  setSettingsOpen: (v: boolean) => void
+
   // Activity Bar
   activityBarCollapsed: boolean
   setActivityBarCollapsed: (collapsed: boolean) => void
@@ -347,6 +351,9 @@ export const useLayoutStore = create<LayoutState>()(
       setTourStep: (step) => set({ tourStep: step }),
       setTourActive: (active) => set({ tourActive: active }),
       retakeTour: () => set({ tourActive: true, activeView: 'designer' as StoryboardView, centerMode: 'canvas' as CenterMode }),
+
+      settingsOpen: false,
+      setSettingsOpen: (v) => set({ settingsOpen: v }),
 
       activityBarCollapsed: false,
       setActivityBarCollapsed: (collapsed) => set({ activityBarCollapsed: collapsed }),

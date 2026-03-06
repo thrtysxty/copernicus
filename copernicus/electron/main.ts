@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell, session, globalShortcut, dialog } from 'electron'
 import path from 'node:path'
-import { spawn, execFile } from 'node:child_process'
+import { spawn, execFile, execSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import { createServer } from 'node:http'
@@ -473,15 +473,26 @@ function registerIpcHandlers() {
     return true;
   }));
 
-  ipcMain.handle('app:set-root-path', (_e, path: string) => handleIpc(() => {
-    settingsStore.set('workspace', path);
-    fsManager.setRootPath(path);
-    storiesManager.setProjectRoot(path);
+  ipcMain.handle('app:set-root-path', (_e, dirPath: string) => handleIpc(() => {
+    settingsStore.set('workspace', dirPath);
+    fsManager.setRootPath(dirPath);
+    storiesManager.setProjectRoot(dirPath);
     // Immediately start indexing and LSP for the new workspace
-    codebaseIndexer.startIndexing(path).catch(log.error)
+    codebaseIndexer.startIndexing(dirPath).catch(log.error)
     lspManager.stop()
-    lspManager.start(path)
+    lspManager.start(dirPath)
+    // Auto-init git if not already a repo
+    const gitDir = path.join(dirPath, '.git')
+    if (!fs.existsSync(gitDir)) {
+      try { execSync('git init', { cwd: dirPath }) } catch { /* non-fatal */ }
+    }
+    // Notify renderer so workingDir stays in sync
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:workspace-changed', { path: dirPath }))
     return true;
+  }));
+
+  ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc(() => {
+    fs.mkdirSync(dirPath, { recursive: true })
   }));
 
   ipcMain.handle('restart-app', () => handleIpc(() => { app.relaunch(); app.exit(0); }));
