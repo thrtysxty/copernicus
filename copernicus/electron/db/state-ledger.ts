@@ -53,6 +53,7 @@ export interface StoryRecord {
   body_md: string
   file_path: string
   date?: string
+  flagged?: boolean
   updated_at?: string
   last_synced_at?: string
 }
@@ -310,6 +311,7 @@ export class StateLedger {
       'ALTER TABLE stories ADD COLUMN body_md TEXT NOT NULL DEFAULT \'\'',
       'ALTER TABLE stories ADD COLUMN file_path TEXT NOT NULL DEFAULT \'\'',
       'ALTER TABLE stories ADD COLUMN date TEXT',
+      'ALTER TABLE stories ADD COLUMN flagged INTEGER DEFAULT 0',
       'ALTER TABLE stories ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP',
     ]
     for (const sql of newCols) {
@@ -388,9 +390,9 @@ export class StateLedger {
     this.db.prepare(`
       INSERT INTO stories
         (id, slug, title, status, priority, type, epic, assigned_to,
-         blocked_by, blocks, workflow_id, body_md, file_path, date,
+         blocked_by, blocks, workflow_id, body_md, file_path, date, flagged,
          updated_at, last_synced_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         slug           = excluded.slug,
         title          = excluded.title,
@@ -405,6 +407,7 @@ export class StateLedger {
         body_md        = excluded.body_md,
         file_path      = excluded.file_path,
         date           = excluded.date,
+        flagged        = excluded.flagged,
         updated_at     = CURRENT_TIMESTAMP,
         last_synced_at = CURRENT_TIMESTAMP
     `).run(
@@ -412,7 +415,8 @@ export class StateLedger {
       s.priority ?? null, s.type ?? null, s.epic ?? null, s.assigned_to ?? null,
       JSON.stringify(s.blocked_by ?? []), JSON.stringify(s.blocks ?? []),
       s.workflow_id ?? null,
-      s.body_md, s.file_path, s.date ?? null
+      s.body_md, s.file_path, s.date ?? null,
+      s.flagged ? 1 : 0
     )
   }
 
@@ -429,13 +433,16 @@ export class StateLedger {
   }
 
   updateStoryFields(id: string, fields: Partial<Pick<StoryRecord,
-    'status' | 'priority' | 'type' | 'epic' | 'assigned_to' | 'workflow_id' | 'body_md' | 'file_path'
+    'status' | 'priority' | 'type' | 'epic' | 'assigned_to' | 'workflow_id' | 'body_md' | 'file_path' | 'flagged'
   >>): void {
-    const allowed = ['status','priority','type','epic','assigned_to','workflow_id','body_md','file_path']
+    const allowed = ['status','priority','type','epic','assigned_to','workflow_id','body_md','file_path','flagged']
     const sets: string[] = []
     const vals: any[] = []
     for (const [k, v] of Object.entries(fields)) {
-      if (allowed.includes(k)) { sets.push(`${k} = ?`); vals.push(v) }
+      if (allowed.includes(k)) { 
+        sets.push(`${k} = ?`); 
+        vals.push(k === 'flagged' ? (v ? 1 : 0) : v) 
+      }
     }
     if (!sets.length) return
     sets.push('updated_at = CURRENT_TIMESTAMP')
@@ -456,6 +463,7 @@ export class StateLedger {
       ...row,
       blocked_by: row.blocked_by ? JSON.parse(row.blocked_by) : [],
       blocks:     row.blocks     ? JSON.parse(row.blocks)     : [],
+      flagged:    row.flagged === 1,
     }
   }
 

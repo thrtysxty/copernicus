@@ -17,6 +17,7 @@ interface Story {
   workflowId: string | null
   date: string
   blocked: boolean
+  flagged: boolean
 }
 
 function writeFileAtomic(targetPath: string, content: string): void {
@@ -120,6 +121,7 @@ export class StoriesManager {
       workflowId: r.workflow_id ?? null,
       date:       r.date ?? '',
       blocked:    (r.blocked_by ?? []).length > 0,
+      flagged:    r.flagged ?? false,
     }))
   }
 
@@ -174,6 +176,9 @@ export class StoriesManager {
     const dateMatch = content.match(/\*\*Date:\*\*\s*(.+)$/m)
     const date = dateMatch ? dateMatch[1].trim() : ''
 
+    const flaggedMatch = content.match(/\*\*Flagged:\*\*\s*(.+)$/m)
+    const flagged = flaggedMatch ? flaggedMatch[1].trim().toLowerCase() === 'true' : false
+
     return {
       id, title, status,
       priority, type, epic: epic ?? undefined,
@@ -183,6 +188,7 @@ export class StoriesManager {
       body_md: content,
       file_path: path.join(this.storiesPath, filename),
       date,
+      flagged,
     }
   }
 
@@ -276,6 +282,7 @@ ${title}
     this.ledger.upsertStory({
       id, slug, title, status: 'READY', priority, type, epic,
       blocked_by: [], blocks: [], body_md: body, file_path: filepath, date: dateStr,
+      flagged: false,
     })
 
     writeFileAtomic(filepath, body)
@@ -307,8 +314,8 @@ ${title}
     this.broadcastUpdate()
   }
 
-  setField(id: string, field: string, value: string) {
-    const ALLOWED_FIELDS = ['priority', 'type', 'model', 'epic', 'status', 'workflowId']
+  setField(id: string, field: string, value: string | boolean) {
+    const ALLOWED_FIELDS = ['priority', 'type', 'model', 'epic', 'status', 'workflowId', 'flagged']
     if (!ALLOWED_FIELDS.includes(field)) return
 
     const record = this.ledger.getStoryById(id)
@@ -318,7 +325,7 @@ ${title}
     if (field === 'model') fieldLabel = 'Model'
     if (field === 'workflowId') fieldLabel = 'Workflow'
 
-    const finalValue = (value === '— none —' || value === '(none)') ? '(none)' : value
+    const finalValue = (value === '— none —' || value === '(none)') ? '(none)' : String(value)
     const re = new RegExp(`^\\*\\*${fieldLabel}:\\*\\*(.*?)$`, 'm')
     let updatedBody = record.body_md
 
@@ -332,7 +339,7 @@ ${title}
     if (field === 'model') dbField = 'assigned_to'
     if (field === 'workflowId') dbField = 'workflow_id'
 
-    const dbValue = finalValue === '(none)' ? null : finalValue
+    const dbValue = finalValue === '(none)' ? null : (field === 'flagged' ? (value === true || value === 'true') : finalValue)
     this.ledger.updateStoryFields(id, { [dbField]: dbValue, body_md: updatedBody } as any)
     writeFileAtomic(record.file_path, updatedBody)
     this.broadcastUpdate()

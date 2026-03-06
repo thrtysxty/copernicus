@@ -30,6 +30,7 @@ import { WORKFLOW_TEMPLATES } from './workflow/templates'
 import { browserSession } from './browser-session'
 import { dispatchJulesSession } from './jules/dispatcher'
 import { julesMonitor } from './jules/monitor'
+import { julesManager } from './jules/jules-manager'
 import { lspManager } from './lsp/lsp-manager'
 import { backendManager } from './backend-manager'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
@@ -116,7 +117,7 @@ export function notifyWorkspaceChanged(window: BrowserWindow | null, newPath: st
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 const authManager = new AuthManager()
-new GithubManager(authManager)
+const githubManager = new GithubManager(authManager)
 const modelRegistry = new ModelRegistry()
 const settingsStore = new SettingsStore()
 export const storiesManager = new StoriesManager(os.homedir(), stateLedger)
@@ -1267,6 +1268,9 @@ function registerIpcHandlers() {
     stateLedger,
     fsManager,
     win: win!, // Added for Story 153
+    julesManager,
+    githubManager,
+    storiesManager,
   });
 
   ipcMain.handle('workflow:run', (_event, payload) => handleIpc(() => {

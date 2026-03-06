@@ -7,6 +7,9 @@ import type { StateLedger } from '../db/state-ledger';
 import type { FSManager } from '../fs-manager';
 import type { TriggerNodeData } from './types';
 import type { BrowserWindow } from 'electron';
+import type { JulesManager } from '../jules/jules-manager';
+import type { GithubManager } from '../github-manager';
+import type { StoriesManager } from '../stories';
 import log from '../utils/logger';
 
 export type StateCallback = (event: WorkflowExecutionEvent) => void;
@@ -18,6 +21,9 @@ export interface EngineServices {
   stateLedger: StateLedger;
   fsManager: FSManager;
   win: BrowserWindow;
+  julesManager: JulesManager;
+  githubManager: GithubManager;
+  storiesManager: StoriesManager;
 }
 
 export class WorkflowEngine {
@@ -419,57 +425,43 @@ export class WorkflowEngine {
       case 'jules-watch': {
         const sessionId = this.context.get('__julesSessionId')
         if (!sessionId) throw new Error('jules-watch: __julesSessionId not in context')
-        const { stateLedger } = this.services
-        let julesStatus = 'pending'
-        while (julesStatus === 'pending' || julesStatus === 'running') {
+        const { julesManager } = this.services
+        let jStatus = 'pending'
+        while (jStatus === 'pending' || jStatus === 'running') {
           await new Promise(resolve => setTimeout(resolve, 30_000))
-          const sessions = stateLedger.getJulesSessionsByStory(this.context.get('__storyId') ?? '')
-          const session = sessions.find(s => s.id === sessionId)
+          const session = await julesManager.getSessionStatus(sessionId)
           if (!session) throw new Error(`jules-watch: session ${sessionId} not found`)
-          julesStatus = session.status
+          jStatus = session.status
           if (session.pr_number != null) this.context.set('__prNumber', String(session.pr_number))
           if (session.pr_url)   this.context.set('__prUrl',  session.pr_url)
           if (session.repo)     this.context.set('__repo',   session.repo)
         }
-        if (julesStatus === 'failed') throw new Error('jules-watch: Jules session failed')
+        if (jStatus === 'failed') throw new Error('jules-watch: Jules session failed')
         return `jules-watch:completed:${sessionId}`
       }
       case 'github-fetch-diff': {
-        const prNumber = this.context.get('__prNumber')
-        const repo     = this.context.get('__repo')
-        if (!prNumber || !repo) throw new Error('github-fetch-diff: __prNumber or __repo missing from context')
-        const githubToken = this.services.authManager.getApiKey('github')
-        if (!githubToken) throw new Error('github-fetch-diff: GitHub token not configured')
-        const [owner, repoName] = repo.split('/')
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/pulls/${prNumber}`, {
-          headers: { 'Authorization': `Bearer ${githubToken}`, 'Accept': 'application/vnd.github.diff' },
-        })
-        if (!res.ok) throw new Error(`github-fetch-diff: GitHub API ${res.status}`)
-        const diff = await res.text()
+        const prNumberStr = this.context.get('__prNumber')
+        const repo        = this.context.get('__repo')
+        if (!prNumberStr || !repo) throw new Error('github-fetch-diff: __prNumber or __repo missing from context')
+        const prNumber = parseInt(prNumberStr, 10)
+        const diff = await this.services.githubManager.getPrDiff(repo, prNumber)
         this.context.set('__prDiff', diff)
         return `github-fetch-diff:${diff.length}chars`
       }
       case 'github-post-comment': {
-        const prNumber = this.context.get('__prNumber')
-        const repo     = this.context.get('__repo')
-        const body     = this.context.get('__lastOutput') ?? ''
-        if (!prNumber || !repo) throw new Error('github-post-comment: __prNumber or __repo missing from context')
-        const githubToken = this.services.authManager.getApiKey('github')
-        if (!githubToken) throw new Error('github-post-comment: GitHub token not configured')
-        const [owner, repoName] = repo.split('/')
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/issues/${prNumber}/comments`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${githubToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body }),
-        })
-        if (!res.ok) throw new Error(`github-post-comment: GitHub API ${res.status}`)
+        const prNumberStr = this.context.get('__prNumber')
+        const repo        = this.context.get('__repo')
+        const body        = this.context.get('__lastOutput') ?? ''
+        if (!prNumberStr || !repo) throw new Error('github-post-comment: __prNumber or __repo missing from context')
+        const prNumber = parseInt(prNumberStr, 10)
+        await this.services.githubManager.postPrComment(repo, prNumber, body)
         return 'github-post-comment:posted'
       }
       case 'kanban-flag-card': {
         const storyId = this.context.get('__storyId')
         if (!storyId) throw new Error('kanban-flag-card: __storyId missing from context')
-        this.services.stateLedger.logEvent('KANBAN_FLAG', storyId, {}, 'workflow')
-        this.services.win.webContents.send('stories:updated', [])
+        await (this.services.storiesManager as any).setField(storyId, 'flagged', true)
+        this.services.win.webContents.send('stories:updated', this.services.storiesManager.listStories())
         return `kanban-flag-card:flagged:${storyId}`
       }
       default:

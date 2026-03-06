@@ -34,6 +34,25 @@ export class GithubManager {
     return response.json();
   }
 
+  async getPrDiff(repo: string, prNumber: number): Promise<string> {
+    const [owner, repoName] = repo.split('/')
+    const token = this.authManager.getApiKey('github') || ''
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/pulls/${prNumber}`, {
+      headers: { Accept: 'application/vnd.github.diff', Authorization: `token ${token}` }
+    })
+    return res.text()
+  }
+
+  async postPrComment(repo: string, prNumber: number, body: string): Promise<void> {
+    const [owner, repoName] = repo.split('/')
+    const token = this.authManager.getApiKey('github') || ''
+    await fetch(`https://api.github.com/repos/${owner}/${repoName}/issues/${prNumber}/comments`, {
+      method: 'POST',
+      headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body })
+    })
+  }
+
   private registerHandlers() {
     ipcMain.handle('github:list-repos', (_e) =>
       handleIpc(() => this.fetchGithub('/user/repos?sort=updated&per_page=50'))
