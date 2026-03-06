@@ -43,6 +43,9 @@ copernicus/out/
 *.db-shm
 *.db-wal
 
+# Development Orchestrator
+dev_orchestrator/
+
 # Electron release artifacts
 copernicus/release/
 

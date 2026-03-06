@@ -38,6 +38,7 @@ const SEND_CHANNELS = new Set([
   'layout:update-telemetry', 'telemetry:update-touchbar',
   // Agent interop
   'agent:delegate', 'agent:forward',
+  'agent:patch-apply', 'agent:patch-reverse',
   // Security
   'security:git-push-response',
   // Settings

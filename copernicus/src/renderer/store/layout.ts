@@ -55,6 +55,7 @@ interface LayoutState {
   isFlipped: Record<string, boolean>
   spotlightPane: PaneId | null
   spotlightLane: string | null
+  collapsedPanes: PaneId[]
   activeStoryId: string | null
   drawerStoryId: string | null
   phosphorColor: PhosphorColor
@@ -120,6 +121,7 @@ interface LayoutState {
   toggleFlip: (paneId: string) => void
   setSpotlight: (paneId: PaneId | null) => void
   setSpotlightLane: (id: string | null) => void
+  setPaneCollapsed: (paneId: PaneId, collapsed: boolean) => void
   setActiveStoryId: (id: string | null) => void
   setDrawerStory: (id: string | null) => void
   setTelemetry: (data: Partial<LayoutState>) => void
@@ -191,6 +193,7 @@ export const useLayoutStore = create<LayoutState>()(
       },
       spotlightPane: null,
       spotlightLane: null,
+      collapsedPanes: [],
       activeStoryId: null,
       drawerStoryId: null,
       phosphorColor: 'green',
@@ -263,6 +266,14 @@ export const useLayoutStore = create<LayoutState>()(
       setSpotlight: (paneId) => set({ spotlightPane: paneId }),
 
       setSpotlightLane: (id) => set({ spotlightLane: id }),
+
+      setPaneCollapsed: (paneId, collapsed) => set((state) => {
+        const newCollapsed = [...state.collapsedPanes]
+        const idx = newCollapsed.indexOf(paneId)
+        if (collapsed && idx === -1) newCollapsed.push(paneId)
+        if (!collapsed && idx > -1) newCollapsed.splice(idx, 1)
+        return { collapsedPanes: newCollapsed }
+      }),
 
       setActiveStoryId: (id) => set({ activeStoryId: id }),
 

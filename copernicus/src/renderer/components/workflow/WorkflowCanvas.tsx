@@ -397,14 +397,11 @@ export default function WorkflowCanvas() {
   }, [invoke, nodes, edges, rootPath, activeStoryId]);
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-white overflow-hidden relative">
+    <div className="flex flex-col h-full bg-[#050505] text-white overflow-hidden relative pt-1">
       {/* FIXED: Modal Centering using flex-col and absolute inset-0 */}
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[100]">
           <div className="bg-zinc-900 border border-copernicus-steel rounded p-6 w-96 shadow-2xl">
-            <p className="text-xs uppercase tracking-widest text-zinc-500 mb-4 font-bold border-b border-copernicus-steel pb-2">
-              Select Workflow Template
-            </p>
             <div className="flex flex-col gap-2">
               {templates.map(t => (
                 <button

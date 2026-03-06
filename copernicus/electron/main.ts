@@ -32,6 +32,7 @@ import { dispatchJulesSession } from './jules/dispatcher'
 import { julesMonitor } from './jules/monitor'
 import { lspManager } from './lsp/lsp-manager'
 import { backendManager } from './backend-manager'
+import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 
 // The built directory structure
 //
@@ -226,6 +227,13 @@ function registerIpcHandlers() {
   ipcMain.handle('fs:tx-commit', () => handleIpc(() => fsManager.tx?.commit()))
   ipcMain.handle('fs:tx-rollback', () => handleIpc(() => fsManager.tx?.rollback()))
   ipcMain.handle('fs:tx-status', () => handleIpc(() => fsManager.tx?.getActiveTransactionId()))
+
+  // Agent Branch/Patch (Story 230)
+  ipcMain.handle('agent:patch-apply', (_e, { changes, baseCommit, workingTree, dryRun }) => 
+    handleIpc(() => applyAndVerifyPatch(changes, baseCommit, workingTree, dryRun)))
+  
+  ipcMain.handle('agent:patch-reverse', (_e, { changes, baseCommit, workingTree }) => 
+    handleIpc(() => reversePatch(changes, baseCommit, workingTree)))
 
   ipcMain.handle('settings:save', (_event, patch: unknown) => handleIpc(async () => {
     if (typeof patch === 'object' && patch !== null) settingsStore.setAll(patch as Record<string, any>)
@@ -1039,9 +1047,9 @@ function registerIpcHandlers() {
     const res = fsManager.readFile(filePath)
     return res.ok ? res.data : ''
   }))
-  ipcMain.handle('fs:save-file', (_event, { filePath, content }: any) => handleIpc(() => {
+  ipcMain.handle('fs:save-file', (_event, { filePath, content }: any) => handleIpc(async () => {
     const res = fsManager.writeFile(filePath, content)
-    if (res.ok) codebaseIndexer.indexFile(filePath).catch(log.error)
+    if ((await res).ok) codebaseIndexer.indexFile(filePath).catch(log.error)
     return res
   }))
   ipcMain.handle('app:get-root-path', () => handleIpc(() => {

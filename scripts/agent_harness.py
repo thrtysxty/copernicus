@@ -76,6 +76,9 @@ def main():
         proc.wait()
 
         # 3. Commit the work in the worktree
+        print(f"--- 📂 Files in Worktree ---")
+        subprocess.run(["ls", "-R", worktree_path])
+        
         run_git(["add", "."], cwd=worktree_path)
         run_git(["commit", "-m", f"Agent {persona} completed task: {task_desc}"], cwd=worktree_path)
 

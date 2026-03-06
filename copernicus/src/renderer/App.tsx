@@ -1,573 +1,203 @@
-import { useState, useEffect, useMemo } from 'react'
-import {
-  Github, Settings, BarChart2,
-  Maximize2, RotateCcw, Brain,
-  Menu, X, Archive,
-  Palette, Code, Workflow, Kanban, Monitor
-} from 'lucide-react'
-import { useLayoutStore, StoryboardView } from './store/layout'
-import { CommandCenter } from './components/command/CommandCenter'
+import { useState, useEffect } from 'react'
+import { useLayoutStore } from './store/layout'
 import { useIpcError } from './hooks/useIpcError'
+import { ApplicationHeader } from './components/layout/ApplicationHeader'
+import { ActivityBar } from './components/layout/ActivityBar'
+import { StatusBar } from './components/layout/StatusBar'
 import { FileTree } from './components/FileTree/FileTree'
 import { ChatPanel } from './components/chat/ChatPanel'
-import { StatusBar } from './components/layout/StatusBar'
-import { FlippablePanel } from './components/layout/FlippablePanel'
-import { CenterPanelRouter } from './components/Editor/CenterPanelRouter'
 import { TerminalTabs } from './components/Terminal/TerminalTabs'
 import { KanbanBoard } from './components/KanbanBoard'
-import { StoryDetail } from './components/planning/StoryDetail'
 import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
 import { GithubDashboard } from './components/github/GithubDashboard'
-import { CommandDeck } from './components/CommandDeck'
+import { CommandCenter } from './components/command/CommandCenter'
+import { FlippablePanel } from './components/layout/FlippablePanel'
+import { CenterPanelRouter } from './components/Editor/CenterPanelRouter'
+import { SharedPanelHeader } from './components/layout/SharedPanelHeader'
 import Wizard from './components/wizard/Wizard'
 import SplashScreen from './components/layout/SplashScreen'
-import { UITestDrawer } from './components/testing/UITestDrawer'
 import { unwrapIpc } from './types/ipc'
-import { classifyFile } from './utils/fileUtils'
 
 const TERMINAL_HEIGHT = 200
 
 export default function App() {
   const invoke = useIpcError()
   const {
-    activeView,
-    setView,
-    sidebarOpen,
-    setSidebarOpen,
+    activeView, setView,
+    sidebarOpen, setSidebarOpen,
+    chatPanelOpen, setChatPanelOpen,
     terminalOpen,
     spotlightPane,
-    setSpotlight,
     toggleFlip,
-    workingDir,
-    setWorkingDir,
-    gitBranch,
-    setGitBranch,
-    activeStoryId,
-    capexSessionTime,
-    capexTotal,
-    addTerminal,
-    removeTerminal,
-    setTerminalBusy,
-    uiTestingDrawerOpen,
-    toggleUIBuilder,
-    activeFilePath,
-    setActiveFilePath,
-    centerMode,
+    workingDir, setWorkingDir,
+    
+    
+    activeFilePath, setActiveFilePath,
     setCenterMode,
-    hasCompletedTour,
-    setChatPanelTab,
-    setInProgressCount,
-    chatPanelOpen,
-    setChatPanelOpen,
-    paletteOpen,
-    setPaletteOpen,
-    inspectorOpen,
-    setInspectorOpen,
-    browserSessionActive,
-    basementOpen,
-    setBasementOpen
+    setInProgressCount
   } = useLayoutStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [isWizard, setIsWizard] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
-  const [stories, setStories] = useState<any[]>([])
 
-  // Initial setup and IPC listeners
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('window') === 'wizard') {
-      setIsWizard(true)
-    }
+    if (params.get('window') === 'wizard') setIsWizard(true)
 
-    const removeWorkspaceChanged = (window as any).ipcRenderer.on('app:workspace-changed', (_e: any, { path }: any) => {
-      setWorkingDir(path)
-    })
+    const removeWorkspaceChanged = (window as any).ipcRenderer.on('app:workspace-changed', (_e: any, { path }: any) => setWorkingDir(path))
+    const removePaletteListener = (window as any).ipcRenderer.on('layout:open-palette', () => setCommandPaletteOpen(true))
+    const removeSetViewListener = (window as any).ipcRenderer.on('layout:set-view', (_e: any, viewId: any) => setView(viewId))
 
-    const removeActivateTab = (window as any).ipcRenderer.on('terminal:activate-tab', (_e: any, { agentId }: any) => {
-      addTerminal(`terminal-${agentId}`, agentId.toUpperCase())
-    })
-
-    const removeSpawnTerminal = (window as any).ipcRenderer.on('terminal:spawn', (_e: any, { id, label, ephemeral }: any) => {
-      addTerminal(id, label, ephemeral ?? false)
-    })
-
-    const removeBusyState = (window as any).ipcRenderer.on('terminal:set-busy', (_e: any, { id, busy }: any) => {
-      setTerminalBusy(id, busy)
-    })
-
-    const removeTerminalClosed = (window as any).ipcRenderer.on('terminal-closed', (_e: any, { id }: { id: string }) => {
-      removeTerminal(id)
-    })
-
-    const removeTerminalRemove = (window as any).ipcRenderer.on('terminal:remove', (_e: any, { id }: { id: string }) => {
-      removeTerminal(id)
-    })
-
-    const removeFlipListener = (window as any).ipcRenderer.on('layout:toggle-flip', () => {
-      toggleFlip('center-panel')
-    })
-
-    const removeSpotListener = (window as any).ipcRenderer.on('layout:toggle-spotlight', () => {
-      setSpotlight(spotlightPane ? null : 'editor')
-    })
-
-    const removeUiBuilderListener = (window as any).ipcRenderer.on('layout:toggle-ui-builder', () => {
-      toggleUIBuilder()
-    })
-
-    const removePaletteListener = (window as any).ipcRenderer.on('layout:open-palette', () => {
-      setCommandPaletteOpen(true)
-    })
-
-    const removeSetViewListener = (window as any).ipcRenderer.on('layout:set-view', (_e: any, viewId: any) => {
-      setView(viewId)
-    })
-
-    const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory'] as const
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); setCommandPaletteOpen(true) }
-      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '7') {
-        e.preventDefault()
-        const v = views[parseInt(e.key) - 1]
-        if (v) { setView(v); if (v === 'editor') setCenterMode('code'); else if (v === 'designer') setCenterMode('canvas') }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-
-    // Fetch initial state
     invoke<any>('app:get-root-path').then((r: any) => {
       const root = unwrapIpc<any>(r)
-      if (root) {
-        setWorkingDir(root)
-      } else {
-        setIsWizard(true)
-      }
-    }).catch(() => {
-      setIsWizard(true)
-    })
-    invoke<any>('git:branch').then((r: any) => setGitBranch(unwrapIpc<any>(r) ?? '')).catch(() => {})
-
-    // Populate in-progress story count and global stories list
+      if (root) setWorkingDir(root)
+      else setIsWizard(true)
+    }).catch(() => setIsWizard(true))
+    
+    
     invoke<any>('stories:list').then((r: any) => {
       const data = unwrapIpc<any>(r)
       const list: any[] = Array.isArray(data) ? data : []
-      setStories(list)
       setInProgressCount(list.filter((s: any) => s.status === 'IN PROGRESS').length)
     }).catch(() => {})
 
-    const removeStoriesUpdated = (window as any).ipcRenderer.on('stories:updated', (_e: any, newStories: any[]) => {
-      const list: any[] = Array.isArray(newStories) ? newStories : []
-      setStories(list)
-      setInProgressCount(list.filter((s: any) => s.status === 'IN PROGRESS').length)
-    })
-
     return () => {
       removeWorkspaceChanged()
-      removeActivateTab()
-      removeSpawnTerminal()
-      removeBusyState()
-      removeTerminalClosed()
-      removeTerminalRemove()
-      removeFlipListener()
-      removeSpotListener()
-      removeUiBuilderListener()
       removePaletteListener()
       removeSetViewListener()
-      removeStoriesUpdated()
-      window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView, setCenterMode, setInProgressCount])
+  }, [invoke, setWorkingDir,  setView, setInProgressCount])
 
-  // Tour Trigger on Mount
-  useEffect(() => {
-    if (!hasCompletedTour && !showSplash && !isWizard) {
-      setChatPanelTab('guide')
-      setView('planner')
-    }
-  }, [hasCompletedTour, showSplash, isWizard, setChatPanelTab, setView])
+  if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />
+  if (isWizard) return <Wizard onComplete={() => setIsWizard(false)} />
 
-  // Story 209: Auto-collapse sidebar when entering Designer view
-  useEffect(() => {
-    if (activeView === 'designer') {
-      setSidebarOpen(false)
-    }
-  }, [activeView, setSidebarOpen])
+  const is3PanelLayout = ['editor', 'designer', 'orchestrator', 'planner'].includes(activeView)
 
-  // NEW: Force open sidebar if in editor mode but no file is selected
-  useEffect(() => {
-    if (activeView === 'editor' && !activeFilePath && !sidebarOpen) {
-      setSidebarOpen(true)
-    }
-  }, [activeView, activeFilePath, sidebarOpen, setSidebarOpen])
-
-  // Touch Bar Telemetry Update
-  useEffect(() => {
-    if (showSplash || isWizard) return
-
-    ;(window as any).ipcRenderer.send('telemetry:update-touchbar', {
-      storyId: activeStoryId,
-      timer: formatTime(capexSessionTime),
-      view: activeView,
-      gitBranch,
-      capexTotal,
-    })
-  }, [activeStoryId, capexSessionTime, activeView, gitBranch, capexTotal, showSplash, isWizard])
-
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
-    const s = seconds % 60
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-  }
-
-  const centerLabel = useMemo(() => {
-    if (activeView === 'orchestrator') return 'Orchestrator'
-    if (centerMode === 'code') return 'Editor'
-    if (centerMode === 'binary') return 'Binary'
-    
-    if (browserSessionActive) return 'Canvas: Browser'
-    if (activeFilePath) {
-      const type = classifyFile(activeFilePath)
-      if (type === 'canvas' || type === 'svg') return 'Canvas: Image'
-    }
-    return 'Canvas: UI'
-  }, [activeView, centerMode, browserSessionActive, activeFilePath])
-
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />
-  }
-
-  if (isWizard) {
-    return <Wizard onComplete={() => setIsWizard(false)} />
-  }
-
-  const NavButton = ({ id, icon: Icon, label }: { id: StoryboardView, icon: any, label: string }) => (
-    <button
-      onClick={() => { setView(id); if (id === 'editor') setCenterMode('code'); else if (id === 'designer') setCenterMode('canvas') }}
-      className={`w-8 h-8 flex items-center justify-center rounded transition-all duration-200 group relative ${activeView === id ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'}`}
-      title={label}
+  const CollapsedStrip = ({ name, onClick }: { name: string, onClick: () => void }) => (
+    <div 
+      className="w-6 h-full bg-[#080808] border-r border-copernicus-steel flex flex-col items-center py-4 cursor-pointer hover:bg-zinc-900 transition-colors group shrink-0"
+      onClick={onClick}
     >
-      <Icon size={18} />
-      {activeView === id && <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-copernicus-phosphor rounded-full" />}
-    </button>
+      <span 
+        className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter origin-center whitespace-nowrap group-hover:text-copernicus-phosphor"
+        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+      >
+        {name}
+      </span>
+    </div>
   )
-
-  // MULTI-PANEL logic: Only Editor, Designer, and Orchestrator use the tier-based spotlight system
-  // NEW: Inspector triggers the tiered layout to allow side-by-side chat.
-  // UPDATE: planner now also uses the tiered layout for the Single Header Row initiative
-  const isTieredLayout = ['editor', 'designer', 'orchestrator', 'planner'].includes(activeView) || spotlightPane === 'inspector'
 
   return (
     <div className="flex flex-col h-screen w-screen bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
       
-      {/* Level 0: Top Dog - Application Title Bar (Spans full width) */}
-      <header className="h-8 flex items-center justify-between px-2 bg-[#050505] shrink-0 draggable z-[110] border-b border-copernicus-steel/30 font-bold uppercase select-none">
-        <div className="flex items-center gap-2 px-2">
-          <div className="w-5 h-5 bg-copernicus-phosphor/20 rounded flex items-center justify-center phosphor-glow-border">
-            <span className="text-copernicus-phosphor font-bold text-[8px]">C</span>
-          </div>
-          <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-zinc-500">Copernicus</span>
-        </div>
-        
-        <div className="flex-1 flex justify-center">
-          <nav className="flex items-center gap-1 bg-zinc-950/50 border border-white/5 rounded-full px-1 py-0.5">
-            <NavButton id="planner" icon={Kanban} label="Planner" />
-            <NavButton id="designer" icon={Palette} label="Designer" />
-            <NavButton id="editor" icon={Code} label="Editor" />
-            <NavButton id="orchestrator" icon={Workflow} label="Orchestrator" />
-          </nav>
-        </div>
-        
-        <div className="flex items-center gap-3 bg-zinc-950 border border-copernicus-steel/30 px-3 py-0.5 rounded-full overflow-hidden">
-          <span className="text-[9px] font-mono text-zinc-600 shrink-0 uppercase tracking-tighter font-black italic">Story //</span>
-          <span className="text-[9px] font-mono text-copernicus-phosphor truncate font-bold uppercase tracking-wider">
-            {activeStoryId || 'UNASSIGNED'}
-          </span>
-          {activeFilePath && (
-            <>
-              <span className="text-zinc-800">|</span>
-              <span className="text-[9px] font-mono text-zinc-500 truncate tracking-tight uppercase">
-                {activeFilePath.split('/').pop()}
-              </span>
-            </>
-          )}
-        </div>
-      </header>
+      {/* Level 0: Application Header (Top Fixed) */}
+      <ApplicationHeader />
 
-      {/* Level 1: Horizontal Body Split */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Activity Side Bar - Permanent w-12 bar (Compact) */}
-        <aside className="w-12 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center h-full z-50">
-          <div className="flex flex-col items-center gap-3 pt-4">
-            <button 
-              onClick={() => setView('command-center')} 
-              title="Telemetry" 
-              className={`p-2 rounded transition-colors ${activeView === 'command-center' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
-            >
-              <Monitor size={18} />
-            </button>
-            <button 
-              onClick={() => setView('memory')} 
-              title="Memory Browser" 
-              className={`p-2 rounded transition-colors ${activeView === 'memory' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
-            >
-              <Brain size={18} />
-            </button>
-            <button 
-              onClick={() => setView('reporter')} 
-              title="Reports" 
-              className={`p-2 rounded transition-colors ${activeView === 'reporter' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
-            >
-              <BarChart2 size={18} />
-            </button>
-          </div>
+        {/* Level 1: Activity Bar (Left, Header to Status Bar) */}
+        <ActivityBar />
 
-          <div className="flex-1" />
-
-          <div className="flex flex-col items-center gap-3 pb-4">
-            <button 
-              onClick={() => setView('github')} 
-              title="GitHub Manager" 
-              className={`p-2 rounded transition-colors ${activeView === 'github' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900'}`}
-            >
-              <Github size={18} />
-            </button>
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="p-2 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
-              title="Global Settings"
-            >
-              <Settings size={18} />
-            </button>
-            {isTieredLayout && (
-              <>
-                <button 
-                  onClick={() => setSidebarOpen(!sidebarOpen)} 
-                  className={`p-2 rounded transition-colors ${sidebarOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
-                  title="Toggle Explorer"
-                >
-                  <Menu size={18} />
-                </button>
-                <button 
-                  onClick={() => setChatPanelOpen(!chatPanelOpen)} 
-                  className={`p-2 rounded transition-colors ${chatPanelOpen ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}
-                  title="Toggle Chat"
-                >
-                  <Brain size={18} />
-                </button>
-              </>
-            )}
-          </div>
-        </aside>
-
-        {/* Level 2: Main Application Window (The Stage) */}
-        <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Level 2: Main Content (3-Panel Grid or Full Panel) */}
+        <main className="flex-1 flex flex-col overflow-hidden relative">
           
-          <div className="flex-1 flex overflow-hidden relative">
-            {isTieredLayout ? (
-              /* Tiered Layout: Respects Panel Spotlight logic */
+          <div className="flex-1 flex overflow-hidden">
+            {is3PanelLayout ? (
               <>
-                {/* Explorer Tier */}
-                <div className={`${sidebarOpen && (!spotlightPane || spotlightPane === 'explorer') ? (spotlightPane === 'explorer' ? 'flex-1' : 'w-64') : 'w-6'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden relative`}>
-                  {sidebarOpen ? (
-                    <FlippablePanel
-                      id="sidebar"
-                      className="h-full w-full"
-                      front={<FileTree rootPath={workingDir} />}
-                      back={<CommandDeck />}
+                {/* Left Panel: Explorer */}
+                {!sidebarOpen ? (
+                  <CollapsedStrip name="Explorer" onClick={() => setSidebarOpen(true)} />
+                ) : (
+                  <div className={`transition-all duration-300 border-r border-copernicus-steel bg-[#080808] flex flex-col shrink-0 ${spotlightPane === ('explorer' as any) ? 'flex-1' : (spotlightPane && spotlightPane !== ('explorer' as any) ? 'w-0 opacity-0 pointer-events-none overflow-hidden' : 'w-64')}`}>
+                    <SharedPanelHeader 
+                      id="explorer" 
+                      name="Explorer" 
+                      direction="left" 
+                      onChevron={() => setSidebarOpen(false)}
+                      onRotate={() => toggleFlip('sidebar')}
                     />
-                  ) : (
-                    <div 
-                      className="h-full w-6 flex flex-col items-center py-4 cursor-pointer hover:bg-white/5 transition-colors group/bookmark"
-                      onClick={() => setSidebarOpen(true)}
-                      title="Restore Explorer"
-                    >
-                      <Menu size={12} className="text-zinc-600 group-hover/bookmark:text-copernicus-phosphor mb-4" />
-                      <div className="flex-1 flex items-center justify-center">
-                        <span 
-                          className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter origin-center whitespace-nowrap"
-                          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                        >
-                          Explorer
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content Tiers (Center + Chat) */}
-                <div className={`${spotlightPane === 'explorer' ? 'w-0 opacity-0 pointer-events-none' : 'flex-1'} flex overflow-hidden relative transition-all duration-500`} style={{ minWidth: 0 }}>
-                  
-                  {/* Center Tier (Editor / Canvas / Orchestrator / Inspector / Planner) */}
-                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : (spotlightPane === 'chat' || spotlightPane === 'terminal') ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`} style={{ minWidth: 0 }}>
-                    {spotlightPane === 'inspector' ? (
-                      /* Story Inspection View */
-                      <div className="flex-1 flex flex-col overflow-hidden">
-                        <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Story Inspector</span>
-                          <button onClick={() => setSpotlight(null)} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"><X size={12} /></button>
-                        </header>
-                        <div className="flex-1 flex overflow-hidden">
-                          <div className="flex-1 border-r border-copernicus-steel overflow-hidden">
-                             <StoryDetail storyId={activeStoryId || ''} stories={stories} />
-                          </div>
-                          <div className="w-80 flex-shrink-0 bg-black/20">
-                             <ChatPanel />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
+                    <div className="flex-1 overflow-hidden">
                       <FlippablePanel
-                        id="center-panel"
-                        className="flex-1"
-                        front={
-                          <div className="flex flex-col h-full relative">
-                            <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/center">
-                              <div className="flex items-center gap-2">
-                                <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"><Menu size={12} /></button>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                                  {centerLabel}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-2 opacity-0 group-hover/center:opacity-100 transition-opacity">
-                                {activeView === 'planner' && (
-                                  <div className="flex items-center gap-2 mr-4">
-                                    <button
-                                      onClick={() => setBasementOpen(!basementOpen)}
-                                      className={`flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest transition-colors ${basementOpen ? 'text-copernicus-phosphor' : 'text-zinc-500 hover:text-white'}`}
-                                      title="Archive Basement"
-                                    >
-                                      <Archive size={12} />
-                                      Archive
-                                    </button>
-                                    <div className="w-px h-3 bg-zinc-800" />
-                                    <button
-                                      onClick={() => window.ipcRenderer.send('planner:sync')}
-                                      className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
-                                      title="Refresh Board"
-                                    >
-                                      Sync
-                                    </button>
-                                    <button
-                                      onClick={() => setView('command-center')}
-                                      className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
-                                    >
-                                      Log
-                                    </button>
-                                  </div>
-                                )}
-
-                                {activeView === 'designer' && (
-                                  <div className="flex items-center gap-2 mr-2">
-                                    <div className="flex bg-zinc-900 rounded p-0.5 border border-zinc-800 mr-2">
-                                      <button 
-                                        onClick={() => setPaletteOpen(!paletteOpen)}
-                                        className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${paletteOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
-                                      >
-                                        Palette
-                                      </button>
-                                      <button 
-                                        onClick={() => setInspectorOpen(!inspectorOpen)}
-                                        className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase transition-colors ${inspectorOpen ? 'bg-zinc-800 text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`}
-                                      >
-                                        Inspector
-                                      </button>
-                                    </div>
-                                    
-                                    <button onClick={() => window.ipcRenderer.send('canvas:refresh')} className="text-zinc-500 hover:text-copernicus-phosphor transition-colors" title="Refresh"><RotateCcw size={12} /></button>
-                                    <button onClick={() => window.ipcRenderer.send('canvas:clear')} className="text-zinc-500 hover:text-red-400 transition-colors" title="Clear Canvas"><X size={12} /></button>
-                                  </div>
-                                )}
-
-                                {activeView === 'orchestrator' && (
-                                  <div className="flex items-center gap-2 mr-4">
-                                    <button
-                                        onClick={() => window.ipcRenderer.send('workflow:save')}
-                                        className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
-                                    >
-                                        Save
-                                    </button>
-                                    <button
-                                      onClick={() => window.ipcRenderer.send('workflow:reset-canvas')}
-                                      className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-copernicus-steel hover:bg-zinc-800 transition-colors"
-                                    >
-                                      Reset
-                                    </button>
-                                    <button
-                                      onClick={() => window.ipcRenderer.send('workflow:run-canvas')}
-                                      className="px-3 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/40 hover:bg-copernicus-phosphor/30 transition-colors"
-                                    >
-                                      Run
-                                    </button>
-                                  </div>
-                                )}
-
-                                <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel"><RotateCcw size={12} /></button>
-                                <button onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')} className={`p-1 rounded ${spotlightPane === 'editor' ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`} title="Spotlight"><Maximize2 size={12} /></button>
-                              </div>
-                            </header>
-                            <div className="flex-1 overflow-hidden relative">
-                              {activeView === 'orchestrator' ? (
-                                <WorkflowCanvas />
-                              ) : activeView === 'planner' ? (
-                                <KanbanBoard />
-                              ) : (
-                                <CenterPanelRouter 
-                                  filePath={activeFilePath} 
-                                  onChange={(val) => setActiveFilePath(val ?? null)} 
-                                />
-                              )}
-                              {uiTestingDrawerOpen && <UITestDrawer />}
-                            </div>
-                          </div>
-                        }
-                        back={
-                          <div className="h-full w-full bg-[#050505] flex flex-col">
-                            <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Backface</span>
-                              <div className="flex items-center gap-2">
-                                <button onClick={() => toggleFlip('center-panel')} className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel"><RotateCcw size={12} /></button>
-                                <button onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')} className="p-1 text-zinc-600 hover:text-zinc-300" title="Spotlight"><Maximize2 size={12} /></button>
-                              </div>
-                            </header>
-                            <div className="flex-1 flex items-center justify-center font-mono text-xs text-zinc-500 uppercase tracking-tighter">Panel_Flipped</div>
-                          </div>
-                        }
+                        id="sidebar"
+                        front={<FileTree rootPath={workingDir} />}
+                        back={<div className="p-4 text-[10px] font-mono text-zinc-600 uppercase tracking-widest italic bg-black/20 h-full">Git_View_Stub</div>}
                       />
-                    )}
+                    </div>
                   </div>
+                )}
 
-                  {/* Chat Tier */}
-                  <div className={`flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : (spotlightPane === 'editor' || spotlightPane === 'terminal' || spotlightPane === 'inspector' || !chatPanelOpen) ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
-                    <ChatPanel />
+                {/* Center Panel: Main View (Single Header Row) */}
+                <div className={`flex-1 flex flex-col border-r border-copernicus-steel transition-all duration-500 overflow-hidden ${spotlightPane === 'editor' || spotlightPane === 'kanban' || spotlightPane === 'orchestrator' ? 'flex-[3]' : (spotlightPane && !['editor','kanban','orchestrator'].includes(spotlightPane!) ? 'w-0 opacity-0 pointer-events-none' : 'flex-1')}`}>
+                  <SharedPanelHeader 
+                    id={activeView === 'planner' ? 'kanban' : (activeView === 'orchestrator' ? 'orchestrator' : 'editor')}
+                    name={activeView.toUpperCase()}
+                    onRotate={() => toggleFlip('center-panel')}
+                  >
+                    {activeView === 'orchestrator' && (
+                      <div className="flex items-center gap-2 mr-2">
+                        <button onClick={() => window.ipcRenderer.send('workflow:save')} className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-white/10 hover:bg-zinc-800 transition-colors">Save</button>
+                        <button onClick={() => window.ipcRenderer.send('workflow:reset-canvas')} className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-white/10 hover:bg-zinc-800 transition-colors">Reset</button>
+                        <button onClick={() => window.ipcRenderer.send('workflow:run-canvas')} className="px-3 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/40 hover:bg-copernicus-phosphor/30 transition-colors">Run</button>
+                      </div>
+                    )}
+                  </SharedPanelHeader>
+                  <div className="flex-1 overflow-hidden relative bg-black/20">
+                    {activeView === 'planner' ? <KanbanBoard /> :
+                     activeView === 'orchestrator' ? <WorkflowCanvas /> :
+                     <CenterPanelRouter filePath={activeFilePath} onChange={(v: string | undefined) => setActiveFilePath(v || null)} />}
                   </div>
                 </div>
+
+                {/* Right Panel: Assistant */}
+                {!chatPanelOpen ? (
+                  <CollapsedStrip name="Assistant" onClick={() => setChatPanelOpen(true)} />
+                ) : (
+                  <div className={`transition-all duration-500 bg-black/10 flex flex-col shrink-0 ${spotlightPane === ('chat' as any) || spotlightPane === ('inspector' as any) ? 'flex-1' : (spotlightPane && spotlightPane !== ('chat' as any) && spotlightPane !== ('inspector' as any) ? 'w-0 opacity-0 pointer-events-none overflow-hidden' : 'w-80')}`}>
+                    <SharedPanelHeader 
+                      id={spotlightPane === ('inspector' as any) ? 'inspector' : 'chat'}
+                      name={spotlightPane === ('inspector' as any) ? "Inspector" : "Assistant"}
+                      direction="right"
+                      onChevron={() => setChatPanelOpen(false)}
+                      onRotate={() => toggleFlip('chat')}
+                    />
+                    <div className="flex-1 overflow-hidden">
+                      <FlippablePanel
+                        id="chat"
+                        front={<ChatPanel />}
+                        back={<div className="p-4 text-[10px] font-mono text-zinc-600 uppercase tracking-widest italic bg-black/20 h-full">Quick_Edits_Stub</div>}
+                      />
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
-              /* Solo Layout: Fullscreen views that handle their own internal spotlighting */
-              <div className="flex-1 flex flex-col overflow-hidden bg-copernicus-bg">
-                {activeView === 'command-center' && <CommandCenter />}
-                {activeView === 'planner' && <KanbanBoard />}
-                {activeView === 'reporter' && <CapexDashboard />}
-                {activeView === 'github' && <GithubDashboard />}
-                {activeView === 'memory' && <div className="h-full w-full flex items-center justify-center font-mono text-zinc-600 uppercase tracking-tighter italic">Memory_Browser_Online</div>}
+              /* Solo Layout (Reports, Telemetry, etc.) with Single Header Row */
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <SharedPanelHeader id="editor" name={activeView.toUpperCase()} />
+                <div className="flex-1 overflow-hidden bg-copernicus-bg p-4">
+                  {activeView === 'command-center' && <CommandCenter />}
+                  {activeView === 'reporter' && <CapexDashboard />}
+                  {activeView === 'github' && <GithubDashboard />}
+                  {activeView === 'memory' && <div className="h-full flex items-center justify-center font-mono text-zinc-600 uppercase tracking-tighter italic border border-white/5 bg-zinc-950/50 rounded">Memory_Browser_Online</div>}
+                </div>
               </div>
             )}
           </div>
 
           {/* Terminal Drawer (Main Stage relative) */}
           <div 
-            className={`bg-[#050505] transition-all duration-300 ease-in-out border-t border-copernicus-steel ${spotlightPane === 'terminal' ? 'flex-1' : (terminalOpen ? `h-[${TERMINAL_HEIGHT}px]` : 'h-0')}`} 
+            className={`bg-[#050505] transition-all duration-300 border-t border-copernicus-steel overflow-hidden flex flex-col ${spotlightPane === 'terminal' ? 'flex-1' : (terminalOpen ? `h-[${TERMINAL_HEIGHT}px]` : 'h-0')}`} 
             style={{ height: spotlightPane === 'terminal' ? '100%' : (terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px') }}
           >
-            <TerminalTabs />
+            {terminalOpen && <SharedPanelHeader id="terminal" name="Terminal" />}
+            <div className="flex-1 overflow-hidden">
+              <TerminalTabs />
+            </div>
           </div>
 
           <StatusBar />

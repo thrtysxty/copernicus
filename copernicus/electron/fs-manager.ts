@@ -113,14 +113,14 @@ export class FSManager {
     }
   }
 
-  writeFile(filePath: string, content: string, opts?: { dryRun?: boolean }): { ok: true } | { ok: false; error: string } {
+  async writeFile(filePath: string, content: string, opts?: { dryRun?: boolean }): Promise<{ ok: true } | { ok: false; error: string }> {
     try {
       const expandedPath = this.expandHome(filePath)
       this.assertSafe(expandedPath, 'write')
       
       // If we have an active transaction and NOT dryRun, stage it instead of writing
       if (this.tx?.getActiveTransactionId() && !opts?.dryRun) {
-        this.tx.stageEdit(expandedPath, content)
+        await this.tx.stageEdit(expandedPath, content)
         return { ok: true }
       }
 

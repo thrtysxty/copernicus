@@ -1,117 +1,274 @@
-import fs from 'fs'
-import path from 'path'
-import { randomUUID } from 'crypto'
-import log from 'electron-log'
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import crypto from 'crypto';
+import { createWriteStream } from 'fs';
 
-export interface Transaction {
-  id: string
-  timestamp: number
-  backups: Record<string, string> // originalFilePath -> backupFilePath
-  pending: Record<string, string> // originalFilePath -> newContent
+// Constants
+const SHADOW_SUFFIX = '.shadow';
+const METADATA_FIELD_MAP = ['mode', 'mtime', 'atime', 'uid', 'gid'];
+
+// Types
+interface WALRecord {
+  id: string;
+  timestamp: number;
+  transactionId: string;
+  operation: 'write' | 'delete' | 'commit' | 'begin';
+  filePath: string;
+  prevHash?: string; // SHA-256 before modification
+  prevStat?: {
+    mode?: number;
+    mtime?: number;
+    atime?: number;
+    uid?: number;
+    gid?: number;
+  };
+  dataHash?: string; // SHA-256 of new data
+  dataPath?: string; // path to shadow copy
+}
+
+interface TransactionConfig {
+  id: string;
+  parent?: Transaction;
+  readOnly?: boolean;
+}
+
+// Utility
+const ensureDir = async (dir: string) => {
+  try {
+    await fs.mkdir(dir, { recursive: true });
+  } catch (e: any) {
+    if (e.code !== 'EEXIST') throw e;
+  }
+};
+
+const sha256 = (data: Buffer | string) =>
+  crypto.createHash('sha256').update(data).digest('hex');
+
+const hashFile = async (filepath: string): Promise<string | undefined> => {
+  try {
+    const buffer = await fs.readFile(filepath);
+    return sha256(buffer);
+  } catch {
+    return undefined;
+  }
+};
+
+const preserveStat = async (filepath: string): Promise<WALRecord['prevStat'] | undefined> => {
+  try {
+    const stat = await fs.stat(filepath);
+    const result: WALRecord['prevStat'] = {};
+    for (const field of METADATA_FIELD_MAP) {
+      if (field === 'mtime' || field === 'atime') {
+        result[field] = (stat as any)[field + 'Ms'];
+      } else {
+        result[field as keyof typeof result] = (stat as any)[field];
+      }
+    }
+    return result;
+  } catch {
+    return undefined;
+  }
+};
+
+// --- Advisory Locking ---
+export class AdvisoryLock {
+  private fd?: fs.FileHandle;
+  private lockPath: string;
+  // private exclusive: boolean;
+
+  constructor(targetPath: string, lockDir: string, _exclusive = false) {
+    this.lockPath = path.join(lockDir, crypto.createHash('md5').update(targetPath).digest('hex') + '.lock');
+    // this.exclusive = exclusive;
+  }
+
+  async acquire() {
+    await ensureDir(path.dirname(this.lockPath));
+    this.fd = await fs.open(this.lockPath, 'w');
+    // Using simple file existence/open for lock in this implementation 
+    // as flock requires specific platform support or libraries.
+    // For a more robust implementation, we'd use a dedicated library.
+  }
+
+  async release() {
+    if (this.fd) {
+      await this.fd.close();
+      this.fd = undefined;
+      await fs.unlink(this.lockPath).catch(() => {});
+    }
+  }
+
+  async with<T>(fn: () => Promise<T>): Promise<T> {
+    await this.acquire();
+    try {
+      return await fn();
+    } finally {
+      await this.release();
+    }
+  }
+}
+
+export class TransactionError extends Error {
+  constructor(message: string, public code: string) {
+    super(message);
+    this.name = 'TransactionError';
+  }
+}
+
+export class Transaction {
+  public readonly id: string;
+  private walStream?: any;
+  // private readonly config: TransactionConfig;
+  private isCommitted = false;
+  private isAborted = false;
+  private readonly walFile: string;
+  private readonly shadowDir: string;
+  // private readonly lockDir: string;
+
+  constructor(config: TransactionConfig, walDir: string) {
+    this.id = config.id;
+    // this.config = config;
+    this.walFile = path.join(walDir, `wal.${this.id}.wal`);
+    this.shadowDir = path.join(walDir, this.id);
+    // this.lockDir = path.join(walDir, 'locks');
+  }
+
+  private async ensureWalStream(): Promise<void> {
+    if (!this.walStream) {
+      await ensureDir(path.dirname(this.walFile));
+      this.walStream = createWriteStream(this.walFile, { flags: 'a' });
+    }
+  }
+
+  private async appendRecord(record: WALRecord): Promise<void> {
+    await this.ensureWalStream();
+    const line = JSON.stringify(record) + '\n';
+    await new Promise<void>((resolve, reject) => {
+      this.walStream.write(line, (err: any) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  }
+
+  public async stageWrite(filePath: string, data: string): Promise<void> {
+    if (this.isCommitted || this.isAborted) throw new TransactionError('TX_CLOSED', 'TX_CLOSED');
+    
+    const absPath = path.resolve(filePath);
+    await ensureDir(this.shadowDir);
+
+    const prevStat = await preserveStat(absPath);
+    const prevHash = await hashFile(absPath);
+    const dataBuffer = Buffer.from(data);
+    const dataHash = sha256(dataBuffer);
+
+    const shadowPath = path.join(this.shadowDir, crypto.randomUUID() + SHADOW_SUFFIX);
+    await fs.writeFile(shadowPath, dataBuffer);
+
+    const record: WALRecord = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      transactionId: this.id,
+      operation: 'write',
+      filePath: absPath,
+      prevStat,
+      prevHash,
+      dataHash,
+      dataPath: shadowPath,
+    };
+
+    await this.appendRecord(record);
+  }
+
+  public async commit(): Promise<void> {
+    if (this.isCommitted || this.isAborted) return;
+
+    await this.readWAL();
+    const records = await this.readWAL();
+    for (const rec of records) {
+      if (rec.operation === 'write' && rec.dataPath) {
+        await fs.copyFile(rec.dataPath, rec.filePath);
+        if (rec.prevStat) {
+          await fs.utimes(rec.filePath, rec.prevStat.atime! / 1000, rec.prevStat.mtime! / 1000).catch(() => {});
+        }
+      }
+    }
+
+    await this.appendRecord({
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      transactionId: this.id,
+      operation: 'commit',
+      filePath: '',
+    });
+
+    this.isCommitted = true;
+    await this.cleanup();
+  }
+
+  public async rollback(): Promise<void> {
+    if (this.isCommitted || this.isAborted) return;
+    this.isAborted = true;
+    await this.cleanup();
+  }
+
+  private async cleanup(): Promise<void> {
+    if (this.walStream) {
+      await new Promise<void>(resolve => this.walStream.end(resolve));
+    }
+    await fs.rm(this.shadowDir, { recursive: true, force: true }).catch(() => {});
+  }
+
+  private async readWAL(): Promise<WALRecord[]> {
+    try {
+      const data = await fs.readFile(this.walFile, 'utf8');
+      return data.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+    } catch {
+      return [];
+    }
+  }
+
+  public async revertChanges(): Promise<void> {
+    await this.readWAL();
+    // Rollback is usually defined as reverting a partially applied commit or crash recovery
+    // In our WAL-first model, commit IS the application.
+    // If we crash before commit, we just delete the shadow files.
+    await this.cleanup();
+  }
 }
 
 export class TransactionManager {
-  private transactionsDir: string
-  private activeTransaction: Transaction | null = null
+  private activeTx: Transaction | null = null;
+  private readonly walDir: string;
 
   constructor(baseDir: string) {
-    this.transactionsDir = path.join(baseDir, 'transactions')
-    if (!fs.existsSync(this.transactionsDir)) {
-      fs.mkdirSync(this.transactionsDir, { recursive: true })
-    }
+    this.walDir = path.join(baseDir, 'wal');
   }
 
-  createTransaction(): string {
-    if (this.activeTransaction) {
-      throw new Error(`Transaction ${this.activeTransaction.id} already active`)
-    }
-    const id = randomUUID()
-    this.activeTransaction = {
-      id,
-      timestamp: Date.now(),
-      backups: {},
-      pending: {}
-    }
-    log.info(`[TransactionManager] Created transaction: ${id}`)
-    return id
+  public async createTransaction(): Promise<string> {
+    if (this.activeTx) throw new Error('Transaction already active');
+    const id = crypto.randomUUID();
+    this.activeTx = new Transaction({ id }, this.walDir);
+    return id;
   }
 
-  stageEdit(originalPath: string, content: string): void {
-    if (!this.activeTransaction) {
-      throw new Error('No active transaction')
-    }
-
-    // Only backup if we haven't already backed up this file in this transaction
-    if (!this.activeTransaction.backups[originalPath]) {
-      if (fs.existsSync(originalPath)) {
-        const backupFileName = `${this.activeTransaction.id}_${path.basename(originalPath)}_${Date.now()}.bak`
-        const backupPath = path.join(this.transactionsDir, backupFileName)
-        fs.copyFileSync(originalPath, backupPath)
-        this.activeTransaction.backups[originalPath] = backupPath
-      } else {
-        // Sentinel for new file creation
-        this.activeTransaction.backups[originalPath] = 'NEW_FILE'
-      }
-    }
-
-    this.activeTransaction.pending[originalPath] = content
-    log.info(`[TransactionManager] Staged edit for: ${originalPath}`)
+  public async stageEdit(filePath: string, content: string): Promise<void> {
+    if (!this.activeTx) throw new Error('No active transaction');
+    await this.activeTx.stageWrite(filePath, content);
   }
 
-  commit(): void {
-    if (!this.activeTransaction) {
-      throw new Error('No active transaction')
-    }
-
-    try {
-      for (const [originalPath, content] of Object.entries(this.activeTransaction.pending)) {
-        const dir = path.dirname(originalPath)
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true })
-        }
-        fs.writeFileSync(originalPath, content, 'utf-8')
-      }
-      log.info(`[TransactionManager] Committed transaction: ${this.activeTransaction.id}`)
-      this.cleanup()
-    } catch (err) {
-      log.error(`[TransactionManager] Commit failed, rolling back: ${this.activeTransaction.id}`, err)
-      this.rollback()
-      throw err
-    }
+  public async commit(): Promise<void> {
+    if (!this.activeTx) throw new Error('No active transaction');
+    await this.activeTx.commit();
+    this.activeTx = null;
   }
 
-  rollback(): void {
-    if (!this.activeTransaction) {
-      throw new Error('No active transaction')
-    }
-
-    for (const [originalPath, backupPath] of Object.entries(this.activeTransaction.backups)) {
-      if (backupPath === 'NEW_FILE') {
-        if (fs.existsSync(originalPath)) {
-          fs.unlinkSync(originalPath)
-        }
-      } else {
-        fs.copyFileSync(backupPath, originalPath)
-      }
-    }
-    log.info(`[TransactionManager] Rolled back transaction: ${this.activeTransaction.id}`)
-    this.cleanup()
+  public async rollback(): Promise<void> {
+    if (!this.activeTx) throw new Error('No active transaction');
+    await this.activeTx.rollback();
+    this.activeTx = null;
   }
 
-  private cleanup(): void {
-    if (!this.activeTransaction) return
-
-    // Remove backup files
-    for (const backupPath of Object.values(this.activeTransaction.backups)) {
-      if (backupPath !== 'NEW_FILE' && fs.existsSync(backupPath)) {
-        fs.unlinkSync(backupPath)
-      }
-    }
-
-    this.activeTransaction = null
-  }
-
-  getActiveTransactionId(): string | null {
-    return this.activeTransaction?.id ?? null
+  public getActiveTransactionId(): string | null {
+    return this.activeTx?.id ?? null;
   }
 }

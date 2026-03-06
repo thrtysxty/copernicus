@@ -327,7 +327,7 @@ export class WorkflowEngine {
       case 'file-write': {
         if (!d.filePath) throw new Error('file-write: filePath is required');
         const content = this.interpolate(d.content ?? '');
-        const result = fsManager.writeFile(d.filePath, content);
+        const result = await fsManager.writeFile(d.filePath, content);
         if (!result.ok) throw new Error(result.error ?? 'file-write failed');
         return `written:${d.filePath}`;
       }

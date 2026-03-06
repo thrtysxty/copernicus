@@ -41,14 +41,14 @@ describe('FSManager', () => {
     }
   })
 
-  it('should write files within root', () => {
+  it('should write files within root', async () => {
     const filePath = path.join(testRoot, 'new-file.txt')
-    const result = fsManager.writeFile(filePath, 'new content')
+    const result = await fsManager.writeFile(filePath, 'new content')
     expect(result.ok).toBe(true)
     expect(fs.readFileSync(filePath, 'utf-8')).toBe('new content')
   })
 
-  it('should block path traversal outside root and home', () => {
+  it('should block path traversal outside root and home', async () => {
     const unsafePath = path.resolve(testRoot, '../../etc/passwd')
 
     const listResult = fsManager.listDir(unsafePath)
@@ -59,7 +59,7 @@ describe('FSManager', () => {
     expect(readResult.ok).toBe(false)
     if (!readResult.ok) expect(readResult.error).toMatch(/Path traversal blocked/)
 
-    const writeResult = fsManager.writeFile(unsafePath, 'malicious')
+    const writeResult = await fsManager.writeFile(unsafePath, 'malicious')
     expect(writeResult.ok).toBe(false)
     if (!writeResult.ok) expect(writeResult.error).toMatch(/Write blocked outside project root/)
   })

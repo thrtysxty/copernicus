@@ -13,6 +13,10 @@
   - `/scribe` (Kimi Cloud): Documentation/Summarization.
   - `/researcher` (DeepSeek-R1 Local): Reasoning/Bug tracing.
   - `/sentinel` (Mistral-v0.2): Fast local security audits.
+- **High-Intel / Experimental Drafting:** Use the development orchestrator to delegate planning, complex coding, or vision tasks to high-parameter cloud models. 
+  - `python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" [--worktree <branch_name>]`
+  - Roles available: `thinker` (Kimi), `coder` (Qwen3-Coder), `vision` (Qwen3-VL), `researcher` (DeepSeek-V3), `fast` (Gemini-Flash).
+  - **CRITICAL:** ALWAYS use `--worktree <branch_name>` when the subagent needs to draft or modify code, to ensure its workspace is safely isolated from the main branch.
 
 ## Tool Use Protocol
 You have access to tools. To use them, output strict XML tags in your response.
@@ -24,6 +28,8 @@ You have access to tools. To use them, output strict XML tags in your response.
 3. **Local RAG & Research (Subagent):**
    - Direct RAG: `<exec_command>python3 scripts/claude_ollama_cli.py "/persona <prompt>"</exec_command>`
    - Tool-Enabled Research: `<exec_command>python3 scripts/ollama_tool_shim.py "<prompt>"</exec_command>` (Allows Ollama to call read_file, search_codebase, etc.)
+4. **Development Orchestrator:**
+   `<exec_command>python3 dev_orchestrator/cloud_agent.py coder "Refactor IPC" --worktree feature-refactor</exec_command>`
 
 ## Common Commands
 ```bash
