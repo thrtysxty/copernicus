@@ -30,6 +30,9 @@ export class ModelRegistry {
     // Ollama Cloud
     this.registerModel({ id: 'deepseek-v3.2:cloud', name: 'DeepSeek V3.2 (Cloud)', provider: 'ollama', contextWindow: 128000, costPer1kIn: 0.00014, costPer1kOut: 0.00028 });
     this.registerModel({ id: 'devstral-2:cloud', name: 'Devstral 2 (Cloud)', provider: 'ollama', contextWindow: 128000, costPer1kIn: 0.00012, costPer1kOut: 0.00024 });
+    this.registerModel({ id: 'glm-5:744b-cloud', name: 'GLM-5 (Cloud)', provider: 'ollama', contextWindow: 128000, costPer1kIn: 0.003, costPer1kOut: 0.009 });
+    this.registerModel({ id: 'minimax-m2.5:cloud', name: 'MiniMax M2.5 (Cloud)', provider: 'ollama', contextWindow: 128000, costPer1kIn: 0.002, costPer1kOut: 0.006 });
+    this.registerModel({ id: 'gpt-oss:20b-cloud', name: 'GPT-OSS 20B (Cloud)', provider: 'ollama', contextWindow: 32000, costPer1kIn: 0.0002, costPer1kOut: 0.0006 });
 
     // DeepInfra examples
     this.registerModel({ id: 'deepinfra/meta-llama/Llama-2-70b-chat-hf', name: 'Llama 2 70b (DeepInfra)', provider: 'deepinfra', contextWindow: 4096 });

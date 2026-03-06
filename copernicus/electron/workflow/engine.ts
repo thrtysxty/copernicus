@@ -416,6 +416,62 @@ export class WorkflowEngine {
             throw new Error(`browser-action: unknown action: ${action}`)
         }
       }
+      case 'jules-watch': {
+        const sessionId = this.context.get('__julesSessionId')
+        if (!sessionId) throw new Error('jules-watch: __julesSessionId not in context')
+        const { stateLedger } = this.services
+        let julesStatus = 'pending'
+        while (julesStatus === 'pending' || julesStatus === 'running') {
+          await new Promise(resolve => setTimeout(resolve, 30_000))
+          const sessions = stateLedger.getJulesSessionsByStory(this.context.get('__storyId') ?? '')
+          const session = sessions.find(s => s.id === sessionId)
+          if (!session) throw new Error(`jules-watch: session ${sessionId} not found`)
+          julesStatus = session.status
+          if (session.pr_number != null) this.context.set('__prNumber', String(session.pr_number))
+          if (session.pr_url)   this.context.set('__prUrl',  session.pr_url)
+          if (session.repo)     this.context.set('__repo',   session.repo)
+        }
+        if (julesStatus === 'failed') throw new Error('jules-watch: Jules session failed')
+        return `jules-watch:completed:${sessionId}`
+      }
+      case 'github-fetch-diff': {
+        const prNumber = this.context.get('__prNumber')
+        const repo     = this.context.get('__repo')
+        if (!prNumber || !repo) throw new Error('github-fetch-diff: __prNumber or __repo missing from context')
+        const githubToken = this.services.authManager.getApiKey('github')
+        if (!githubToken) throw new Error('github-fetch-diff: GitHub token not configured')
+        const [owner, repoName] = repo.split('/')
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/pulls/${prNumber}`, {
+          headers: { 'Authorization': `Bearer ${githubToken}`, 'Accept': 'application/vnd.github.diff' },
+        })
+        if (!res.ok) throw new Error(`github-fetch-diff: GitHub API ${res.status}`)
+        const diff = await res.text()
+        this.context.set('__prDiff', diff)
+        return `github-fetch-diff:${diff.length}chars`
+      }
+      case 'github-post-comment': {
+        const prNumber = this.context.get('__prNumber')
+        const repo     = this.context.get('__repo')
+        const body     = this.context.get('__lastOutput') ?? ''
+        if (!prNumber || !repo) throw new Error('github-post-comment: __prNumber or __repo missing from context')
+        const githubToken = this.services.authManager.getApiKey('github')
+        if (!githubToken) throw new Error('github-post-comment: GitHub token not configured')
+        const [owner, repoName] = repo.split('/')
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/issues/${prNumber}/comments`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${githubToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body }),
+        })
+        if (!res.ok) throw new Error(`github-post-comment: GitHub API ${res.status}`)
+        return 'github-post-comment:posted'
+      }
+      case 'kanban-flag-card': {
+        const storyId = this.context.get('__storyId')
+        if (!storyId) throw new Error('kanban-flag-card: __storyId missing from context')
+        this.services.stateLedger.logEvent('KANBAN_FLAG', storyId, {}, 'workflow')
+        this.services.win.webContents.send('stories:updated', [])
+        return `kanban-flag-card:flagged:${storyId}`
+      }
       default:
         throw new Error(`Unknown tool variant: ${(d as any).variant}`);
     }

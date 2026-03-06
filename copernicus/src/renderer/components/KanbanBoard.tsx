@@ -16,6 +16,7 @@ interface Story {
   epic_id: string | null
   model: string | null
   workflowId?: string | null
+  flagged?: boolean
   date: string
   blocked: boolean
 }
@@ -27,7 +28,7 @@ type CreationPhase =
 const PRIORITY_COLORS: Record<string, string> = {
   P0: 'bg-red-500/20 text-red-400 border-red-500/30',
   P1: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  P2: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  P2: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   P3: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
   UNKNOWN: 'bg-zinc-800 text-zinc-600 border-zinc-700',
 }
@@ -38,22 +39,21 @@ const PRIORITY_ORDER: Record<string, number> = { P0: 0, P1: 1, P2: 2, P3: 3, UNK
 export function KanbanBoard() {
   const invoke = useIpcError()
   const [stories, setStories] = useState<Story[]>([])
-      const [isRepoTargeted, setIsRepoTargeted] = useState(false)
+  const [isRepoTargeted, setIsRepoTargeted] = useState(false)
 
-  const { 
-    activeStoryId, setActiveStoryId,  
+  const {
+    activeStoryId, setActiveStoryId,
     setSpotlight, setSpotlightLane, spotlightLane,
     columns,
     setTerminalOpen
   } = useLayoutStore()
-  
+
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
   const [newTitle, setNewTitle] = useState('')
   const [newEpic, setNewEpic] = useState('')
   const [newPriority, setNewPriority] = useState('P2')
   const [showCreateDropdown, setShowCreateDropdown] = useState(false)
-
-  
+  const [workflowStatus, setWorkflowStatus] = useState<{ storyId: string | null; state: string } | null>(null)
 
   const fetchJulesSessions = useCallback(async () => {
     try {
@@ -75,11 +75,29 @@ export function KanbanBoard() {
 
   useEffect(() => {
     refreshData()
+
+    const removeWorkflowStatus = window.ipcRenderer.on('workflow:status-update', async (_event: any, _payload: any) => {
+      try {
+        const result = await invoke<any>('workflow:status')
+        if (result?.ok && result?.data?.state) {
+          setWorkflowStatus({
+            storyId: result.data?.context?.storyId ?? null,
+            state: result.data.state
+          })
+        }
+      } catch (e) {
+        log.warn('Failed to get workflow status', e)
+      }
+    })
+
     const removeStoriesUpdate = window.ipcRenderer.on('stories:updated', (_event: any, newStories: Story[]) => {
       setStories(newStories)
       invoke<any>('stories:is-repo-targeted').then((r: any) => setIsRepoTargeted(unwrapIpc<any>(r) ?? false))
     })
-    return () => removeStoriesUpdate()
+    return () => {
+      removeWorkflowStatus()
+      removeStoriesUpdate()
+    }
   }, [invoke, fetchJulesSessions, refreshData])
 
   const handleDrop = async (e: React.DragEvent, targetStatus: string) => {
@@ -113,7 +131,7 @@ export function KanbanBoard() {
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
-      
+
       {/* Target Repo Warning Overlay */}
       {!isRepoTargeted && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-8">
@@ -127,7 +145,7 @@ export function KanbanBoard() {
         </div>
       )}
 
-      {/* Main Board Area (9 Rows Architecture) */}
+      {/* Main Board Area */}
       <div className="flex-1 flex overflow-x-auto gap-3 p-3 select-none scrollbar-thin scrollbar-thumb-copernicus-steel">
         {(columns || []).map(col => {
           const colStories = (stories || []).filter(s => s.status === col.status)
@@ -140,15 +158,15 @@ export function KanbanBoard() {
             return (
               <div
                 key={col.id}
-                className="w-8 h-full flex flex-col rounded border border-white/5 bg-black/40 transition-all duration-300 cursor-pointer hover:bg-zinc-900 overflow-hidden shrink-0"
+                className="w-10 h-full flex flex-col rounded border border-white/5 bg-black/40 transition-all duration-300 cursor-pointer hover:bg-zinc-900 overflow-hidden shrink-0"
                 onClick={() => setSpotlightLane(null)}
               >
-                 <div className={`h-0.5 w-full ${col.accent} opacity-40`} />
-                 <div className="flex-1 flex items-center justify-center">
-                   <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest origin-center whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                     {col.label}
-                   </span>
-                 </div>
+                <div className={`h-0.5 w-full ${col.accent} opacity-40`} />
+                <div className="flex-1 flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest origin-center whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                    {col.label}
+                  </span>
+                </div>
               </div>
             )
           }
@@ -162,14 +180,15 @@ export function KanbanBoard() {
             >
               <div className={`h-0.5 w-full ${col.accent} opacity-40 group-hover/column:opacity-100 transition-opacity`} />
 
-              {/* Column Header (Single Row) */}
-              <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
+              {/* Column Header */}
+              <div className="h-9 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
                 <span className="font-bold text-[9px] text-zinc-500 uppercase tracking-widest truncate">{col.label}</span>
                 <div className="flex items-center gap-2">
-                  {col.id === 'planning' && (
-                    <button 
+                  {col.id === 'ready-to-build' && (
+                    <button
                       onClick={() => setCreation({ phase: 'form', type: 'Story' })}
                       className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+                      title="New Story"
                     >
                       <Plus size={14} />
                     </button>
@@ -179,9 +198,9 @@ export function KanbanBoard() {
               </div>
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-none">
-                
-                {/* Planning Form */}
-                {col.id === 'planning' && creation.phase === 'form' && (
+
+                {/* Creation Form (available from ready-to-build) */}
+                {col.id === 'ready-to-build' && creation.phase === 'form' && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-zinc-900 border border-copernicus-phosphor/30 rounded shadow-xl space-y-2 mb-4">
                     <div className="flex justify-between items-center">
                       <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">New {creation.type}</span>
@@ -201,7 +220,7 @@ export function KanbanBoard() {
                     key={story.id}
                     draggable
                     onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
-                    className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'}`}
+                    className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
                     onClick={() => { setActiveStoryId(story.id); setSpotlightLane(col.id); }}
                     onDoubleClick={() => setSpotlight('inspector')}
                   >
@@ -209,20 +228,37 @@ export function KanbanBoard() {
                       {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
                       <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
                     </div>
-                    
+
                     <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
                       <span className="text-[8px] font-mono text-zinc-600">{story.id}</span>
                       <div className="flex gap-1">
+                        {story.flagged && (
+                          <span className="px-1 py-0.5 rounded-[2px] text-[7px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">⚑ Review</span>
+                        )}
                         <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
                       </div>
                     </div>
+
+                    {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && (
+                      <div className={`mt-1.5 flex items-center gap-1 text-[8px] font-mono ${
+                        workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
+                        workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          workflowStatus.state === 'RUNNING' ? 'bg-amber-400 animate-pulse' :
+                          workflowStatus.state === 'COMPLETE' ? 'bg-green-400' : 'bg-red-400'
+                        }`} />
+                        {workflowStatus.state === 'RUNNING' ? 'RUNNING' :
+                         workflowStatus.state === 'COMPLETE' ? 'DONE' : 'FAILED'}
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
 
               {/* Archive Button Footer */}
               <div className="h-8 border-t border-white/5 bg-black/10 flex items-center px-3 justify-between">
-                <button 
+                <button
                   onClick={() => setTerminalOpen(true)}
                   className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
                 >

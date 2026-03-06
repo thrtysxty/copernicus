@@ -20,7 +20,8 @@ export interface AgentNodeData {
 
 export interface ToolNodeData {
   variant: 'shell-command' | 'makefile-run' | 'file-read' | 'file-write'
-         | 'story-update' | 'log-event' | 'send-chat' | 'notify' | 'screenshot' | 'browser-action';
+         | 'story-update' | 'log-event' | 'send-chat' | 'notify' | 'screenshot' | 'browser-action'
+         | 'jules-watch' | 'github-fetch-diff' | 'github-post-comment' | 'kanban-flag-card';
   command?: string;       // shell-command, makefile-run
   filePath?: string;      // file-read, file-write
   content?: string;       // file-write

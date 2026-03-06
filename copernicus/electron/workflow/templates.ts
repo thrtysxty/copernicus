@@ -27,6 +27,44 @@ const agentNode = (
 
 export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   {
+    id: 'jules-pr-manager',
+    name: 'Jules PR Manager',
+    description: 'Monitors a Jules session, reviews the PR, and flags for merge approval.',
+    graph: {
+      id: 'tpl-jules-pr-manager',
+      name: 'Jules PR Manager',
+      nodes: [
+        { id: 'watch-session', type: 'tool', label: 'Watch Jules Session', x: 50,  y: 150,
+          data: { variant: 'jules-watch' } as ToolNodeData },
+        { id: 'fetch-diff',    type: 'tool', label: 'Fetch PR Diff',       x: 230, y: 150,
+          data: { variant: 'github-fetch-diff' } as ToolNodeData },
+        {
+          id: 'review-agent', type: 'agent', label: 'Claude Code Review', x: 410, y: 150,
+          data: {
+            variant: 'agent',
+            provider: 'anthropic',
+            modelId: 'claude-sonnet-4-6',
+            persona: 'senior_dev',
+            systemPrompt: 'You are a senior engineer reviewing a pull request. Read the diff and provide concise, actionable feedback. Flag any bugs, security issues, or style violations. End with a verdict: APPROVE or REQUEST_CHANGES.',
+            task: 'Review the following PR diff and provide feedback:\n\n{{__prDiff}}',
+            contextFiles: [],
+            outputChannel: 'terminal',
+          } as AgentNodeData,
+        },
+        { id: 'post-review',   type: 'tool', label: 'Post Review Comment',   x: 590, y: 150,
+          data: { variant: 'github-post-comment' } as ToolNodeData },
+        { id: 'flag-approval', type: 'tool', label: 'Flag Card for Approval', x: 770, y: 150,
+          data: { variant: 'kanban-flag-card' } as ToolNodeData },
+      ],
+      edges: [
+        { id: 'e1', source: 'watch-session',  target: 'fetch-diff' },
+        { id: 'e2', source: 'fetch-diff',     target: 'review-agent' },
+        { id: 'e3', source: 'review-agent',   target: 'post-review' },
+        { id: 'e4', source: 'post-review',    target: 'flag-approval' },
+      ],
+    },
+  },
+  {
     id: 'story-pipeline',
     name: 'Story Implementation Pipeline',
     description: 'Standard story development: plan → implement → test → review',
