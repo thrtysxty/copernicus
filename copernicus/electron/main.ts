@@ -980,13 +980,11 @@ function registerIpcHandlers() {
     return true
   }))
 
-  ipcMain.handle('mcp:get-status', () => handleIpc(() => {
+  ipcMain.handle('mcp:get-status', (_e) => handleIpc(() => {
+    // Return amber status for all configured servers until MCP runtime is wired
     const settings = settingsStore.getAll()
-    const servers = (settings.mcp as any)?.servers || []
-    return servers.map((s: any) => ({
-      name: s.name,
-      status: 'disconnected' // MCP runtime not yet wired, per AC-5
-    }))
+    const servers: Array<{ name: string }> = settings?.mcp?.servers ?? []
+    return servers.map(s => ({ name: s.name, status: 'disconnected' }))
   }))
 
   ipcMain.handle('mcp:test-server', (_e, server: any) => handleIpc(async () => {

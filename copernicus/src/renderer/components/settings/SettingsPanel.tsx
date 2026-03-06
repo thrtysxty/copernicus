@@ -142,7 +142,7 @@ function TabButton({ id, label, icon, active, onClick }: { id: TabId, label: str
       className={`flex items-center gap-3 px-4 py-2.5 text-[11px] font-mono uppercase tracking-widest transition-all rounded-none
         ${isActive
           ? 'text-[#050505] bg-copernicus-phosphor font-bold'
-          : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'}`}
+          : 'text-zinc-600 hover:text-zinc-300'}`}
     >
       <span className={isActive ? 'text-[#050505]' : 'text-zinc-600'}>{icon}</span>
       {label}
