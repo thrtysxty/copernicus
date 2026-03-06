@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+"""
+Gemini CLI Session Manager — dev orchestration tool.
+
+Claude uses this to spawn Gemini in background and get notified on completion.
+NOT a Copernicus end-user feature — lives in dev_orchestrator/.
+
+Usage:
+  python3 dev_orchestrator/gemini_session_manager.py spawn "prompt" --stories 228 214
+  python3 dev_orchestrator/gemini_session_manager.py list
+  python3 dev_orchestrator/gemini_session_manager.py tail <session_id>
+  python3 dev_orchestrator/gemini_session_manager.py kill <session_id>
+"""
+import argparse, json, sqlite3, subprocess, sys, time, uuid
+from pathlib import Path
+
+SESSIONS_DIR = Path.home() / '.copernicus' / 'gemini-sessions'
+SESSIONS_FILE = SESSIONS_DIR / 'sessions.json'
+DB_PATH = Path(__file__).parent.parent / 'copernicus' / 'copernicus.db'
+
+
+def load_sessions() -> list:
+    if SESSIONS_FILE.exists():
+        try:
+            return json.loads(SESSIONS_FILE.read_text())
+        except Exception:
+            return []
+    return []
+
+
+def save_sessions(sessions: list) -> None:
+    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    SESSIONS_FILE.write_text(json.dumps(sessions, indent=2))
+
+
+def write_db_event(session_id: str, stories: list, exit_code: int, log_path: Path, duration_s: float) -> None:
+    if not DB_PATH.exists():
+        return
+    try:
+        conn = sqlite3.connect(str(DB_PATH), timeout=5)
+        conn.execute(
+            "INSERT INTO events (type, content, metadata, agent_id) VALUES (?, ?, ?, ?)",
+            (
+                'GEMINI_SESSION_COMPLETE',
+                f"Stories: {', '.join(stories)} | Exit: {exit_code}",
+                json.dumps({
+                    'session_id': session_id,
+                    'stories': stories,
+                    'exit_code': exit_code,
+                    'log_path': str(log_path),
+                    'duration_s': duration_s,
+                }),
+                'gemini-session-manager',
+            )
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass  # non-fatal
+
+
+def cmd_spawn(prompt: str, stories: list) -> None:
+    session_id = str(uuid.uuid4())
+    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    log_path = SESSIONS_DIR / f'{session_id}.log'
+
+    sessions = load_sessions()
+    sessions.append({
+        'id': session_id,
+        'stories': stories,
+        'status': 'running',
+        'started_at': time.time(),
+        'log_path': str(log_path),
+    })
+    save_sessions(sessions)
+
+    print(f'SESSION_ID: {session_id}', flush=True)
+    print(f'LOG: {log_path}', flush=True)
+
+    start = time.time()
+    with open(log_path, 'w') as log_f:
+        proc = subprocess.Popen(
+            ['gemini', '--approval-mode', 'yolo', '-p', prompt],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            cwd=str(Path(__file__).parent.parent),
+        )
+        for line in (proc.stdout or []):
+            log_f.write(line)
+            log_f.flush()
+            print(line, end='', flush=True)
+        proc.wait()
+
+    duration = round(time.time() - start, 1)
+    exit_code = proc.returncode
+    status = 'complete' if exit_code == 0 else 'failed'
+
+    sessions = load_sessions()
+    for s in sessions:
+        if s['id'] == session_id:
+            s.update({
+                'status': status,
+                'exit_code': exit_code,
+                'completed_at': time.time(),
+                'duration_s': duration,
+            })
+    save_sessions(sessions)
+
+    write_db_event(session_id, stories, exit_code, log_path, duration)
+
+    print(f'\nDONE: exit={exit_code}, stories={",".join(stories)}, duration={duration}s', flush=True)
+    sys.exit(exit_code)
+
+
+def cmd_list() -> None:
+    sessions = load_sessions()
+    if not sessions:
+        print('No sessions.')
+        return
+    for s in reversed(sessions[-20:]):
+        status = s.get('status', '?')
+        sym = '●' if status == 'running' else ('✓' if status == 'complete' else '✗')
+        stories = ', '.join(s.get('stories', []))
+        dur = f"{s.get('duration_s', '?')}s" if 'duration_s' in s else 'running'
+        print(f"  {sym} {s['id'][:8]}  {stories:<20} {status:<10} {dur}")
+
+
+def cmd_tail(session_id: str) -> None:
+    sessions = load_sessions()
+    match = next((s for s in sessions if s['id'].startswith(session_id)), None)
+    if not match:
+        print(f'Session not found: {session_id}')
+        return
+    log = Path(match['log_path'])
+    if log.exists():
+        lines = log.read_text().splitlines()
+        print('\n'.join(lines[-50:]))
+    else:
+        print('Log file not found.')
+
+
+def cmd_kill(session_id: str) -> None:
+    # Sessions run as child processes of the caller — for detached sessions,
+    # use pkill. We update the status in sessions.json as killed.
+    sessions = load_sessions()
+    match = next((s for s in sessions if s['id'].startswith(session_id)), None)
+    if not match:
+        print(f'Session not found: {session_id}')
+        return
+    short = match['id'][:8]
+    print(f'To kill: pkill -f "gemini.*{short}" or pkill -f "{short}"')
+    # Mark as killed in JSON
+    for s in sessions:
+        if s['id'].startswith(session_id) and s.get('status') == 'running':
+            s['status'] = 'killed'
+            s['completed_at'] = time.time()
+    save_sessions(sessions)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Gemini CLI Session Manager — spawn and track background Gemini sessions'
+    )
+    sub = parser.add_subparsers(dest='cmd')
+
+    sp = sub.add_parser('spawn', help='Spawn a Gemini session with a prompt')
+    sp.add_argument('prompt', help='Prompt text to pass to gemini -p')
+    sp.add_argument('--stories', nargs='+', default=[], help='Story IDs being worked on')
+
+    sub.add_parser('list', help='List recent sessions')
+
+    tp = sub.add_parser('tail', help='Tail the log for a session')
+    tp.add_argument('session_id', help='Session ID prefix (first 8 chars ok)')
+
+    kp = sub.add_parser('kill', help='Kill a running session')
+    kp.add_argument('session_id', help='Session ID prefix')
+
+    args = parser.parse_args()
+
+    if args.cmd == 'spawn':
+        cmd_spawn(args.prompt, args.stories)
+    elif args.cmd == 'list':
+        cmd_list()
+    elif args.cmd == 'tail':
+        cmd_tail(args.session_id)
+    elif args.cmd == 'kill':
+        cmd_kill(args.session_id)
+    else:
+        parser.print_help()
