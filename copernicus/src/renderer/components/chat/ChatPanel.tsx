@@ -172,7 +172,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     uiComponents,
     retakeTour,
     setChatPanelOpen,
-    flippedPanes
+    flippedPanes,
+    setView,
+    setCenterMode
   } = useLayoutStore()
 
 
@@ -193,34 +195,28 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const [showBackTabPicker, setShowBackTabPicker] = useState(false)
   const isFlipped = flippedPanes.includes('chat')
 
-  // Instruction files state
-  const [instructionFiles, setInstructionFiles] = useState<{path: string, content: string}[]>([])
-  const [activeInstructionPath, setActiveInstructionPath] = useState('AGENTS.md')
-  const [instructionContent, setInstructionContent] = useState('')
+  // Copernicus Guide State (Story 188)
+  const [guideMessages, setGuideMessages] = useState<Array<{ role: 'user' | 'guide'; content: string; showTourButton?: boolean; showClaudeButton?: boolean }>>([
+    { role: 'guide', content: "Hello! I'm Copernicus, your IDE guide. Ask me anything about the IDE, or type 'tour' to start the Quick Tour." }
+  ])
+  const [guideInput, setGuideInput] = useState('')
 
-  useEffect(() => {
-    if (activeBackTab === 'guide') {
-      const files = ['AGENTS.md', 'TECHNICAL_BIBLE.md', 'UX_BIBLE.md', 'gemini.md']
-      Promise.all(files.map(async f => {
-        try {
-          const res = await invoke<any>('fs:read-file', f)
-          return { path: f, content: unwrapIpc<string>(res) || '' }
-        } catch { return { path: f, content: '' } }
-      })).then(setInstructionFiles)
+  const handleGuideSubmit = useCallback(() => {
+    const q = guideInput.trim()
+    if (!q) return
+    setGuideInput('')
+    setGuideMessages(prev => [...prev, { role: 'user', content: q }])
+    const match = matchKnowledge(q)
+    if (match) {
+      setGuideMessages(prev => [...prev, { role: 'guide', content: match.response, showTourButton: match.showTourButton }])
+    } else {
+      setGuideMessages(prev => [...prev, {
+        role: 'guide',
+        content: "I don't have a quick answer for that — but Claude can help. Want me to send this question to your active chat session?",
+        showClaudeButton: true
+      }])
     }
-  }, [activeBackTab, invoke])
-
-  useEffect(() => {
-    const file = instructionFiles.find(f => f.path === activeInstructionPath)
-    if (file) setInstructionContent(file.content)
-  }, [activeInstructionPath, instructionFiles])
-
-  const handleSaveInstruction = async () => {
-    try {
-      await invoke('fs:save-file', { filePath: activeInstructionPath, content: instructionContent })
-      setInstructionFiles(prev => prev.map(f => f.path === activeInstructionPath ? { ...f, content: instructionContent } : f))
-    } catch (e) { log.error('Failed to save instruction', e) }
-  }
+  }, [guideInput])
 
   const handleClearContext = () => setContext([])
 
@@ -469,25 +465,75 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           )}
 
           {activeBackTab === 'guide' && (
-            <div className="h-full flex flex-col space-y-3">
-              <div className="flex items-center justify-between">
-                <select 
-                  className="bg-zinc-900 border border-copernicus-steel text-[10px] rounded px-2 py-1 outline-none text-copernicus-phosphor"
-                  value={activeInstructionPath}
-                  onChange={(e) => setActiveInstructionPath(e.target.value)}
+            <div className="h-full flex flex-col">
+              {/* Copernicus avatar header */}
+              <div className="flex items-center gap-2 pb-3 border-b border-zinc-800 mb-3">
+                <span className="text-copernicus-phosphor font-mono font-bold text-xs">© COPERNICUS</span>
+                <span className="text-[9px] text-zinc-600 uppercase tracking-widest">Guide Agent</span>
+              </div>
+
+              {/* Message feed — ephemeral, not in main history */}
+              <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-copernicus-steel mb-3">
+                {guideMessages.map((msg, i) => (
+                  <div key={i} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className={`text-[10px] px-2 py-1.5 rounded max-w-[90%] leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-copernicus-phosphor/10 text-zinc-300'
+                        : 'bg-zinc-900/50 border border-zinc-700 text-zinc-300'
+                    }`}>
+                      {msg.role === 'guide' && <span className="text-copernicus-phosphor font-mono text-[8px] mr-1">©</span>}
+                      {msg.content}
+                    </div>
+                    {msg.showTourButton && (
+                      <button
+                        onClick={() => { setView('designer'); setCenterMode('canvas') }}
+                        className="text-[9px] px-2 py-1 border border-copernicus-phosphor/40 text-copernicus-phosphor rounded hover:bg-copernicus-phosphor/10 transition-colors"
+                      >
+                        [Start Tour]
+                      </button>
+                    )}
+                    {msg.showClaudeButton && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => { 
+                            toggleFlip('chat')
+                            const lastUserMsg = guideMessages.filter(m => m.role === 'user').pop()
+                            if (lastUserMsg) {
+                              setTimeout(() => setInput(lastUserMsg.content), 100)
+                            }
+                          }}
+                          className="text-[9px] px-2 py-1 border border-zinc-700 text-zinc-400 rounded hover:bg-zinc-800"
+                        >
+                          Yes, ask Claude
+                        </button>
+                        <button
+                          onClick={() => setGuideMessages(prev => prev.slice(0, -1))}
+                          className="text-[9px] px-2 py-1 text-zinc-600 hover:text-zinc-400"
+                        >
+                          Never mind
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Input */}
+              <div className="flex gap-2">
+                <input
+                  value={guideInput}
+                  onChange={e => setGuideInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleGuideSubmit() }}
+                  placeholder="Ask Copernicus..."
+                  className="flex-1 bg-black/40 border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
+                />
+                <button
+                  onClick={handleGuideSubmit}
+                  className="px-2 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor rounded text-[9px] border border-copernicus-phosphor/30 hover:bg-copernicus-phosphor/20"
                 >
-                  {instructionFiles.map(f => <option key={f.path} value={f.path}>{f.path}</option>)}
-                </select>
-                <button onClick={handleSaveInstruction} className="text-[10px] bg-zinc-800 hover:bg-copernicus-phosphor/20 px-2 py-1 rounded flex items-center gap-1.5 transition-colors">
-                  <Save size={10} /> Save Mandate
+                  Ask
                 </button>
               </div>
-              <textarea 
-                value={instructionContent}
-                onChange={(e) => setInstructionContent(e.target.value)}
-                className="flex-1 bg-zinc-950 border border-copernicus-steel p-3 text-xs font-mono text-zinc-400 resize-none outline-none focus:border-copernicus-phosphor/50 transition-colors"
-                placeholder="Edit mandates..."
-              />
             </div>
           )}
         </div>
