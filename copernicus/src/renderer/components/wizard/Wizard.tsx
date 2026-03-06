@@ -81,15 +81,20 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   // Load projects when entering step 3
   useEffect(() => {
     if (step === 3 && workspacePath) {
+      console.log('[Wizard] Step 3 entered, workspacePath:', workspacePath);
       invoke<any>('fs:list-dir', workspacePath).then((result) => {
+        console.log('[Wizard] fs:list-dir result:', result);
         const nodes = unwrapIpc<any[]>(result) ?? [];
         const dirs = nodes.filter(n => n.isDir).map(n => n.name);
+        console.log('[Wizard] found directories:', dirs);
         setAvailableProjects(dirs);
         if (dirs.length > 0 && !selectedProject) {
           setSelectedProject(dirs[0]);
         } else if (dirs.length === 0) {
           setIsCreatingNew(true);
         }
+      }).catch(err => {
+        console.error('[Wizard] fs:list-dir failed:', err);
       });
     }
   }, [step, workspacePath, invoke]);

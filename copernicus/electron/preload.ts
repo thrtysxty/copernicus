@@ -84,6 +84,8 @@ const SEND_CHANNELS = new Set([
   'touchbar:rebuild',
   // Command Center (Story 184)
   'command:request-telemetry',
+  // Project Billing (Story 211)
+  'project:save-billing', 'project:get-billing',
   // Splash / wizard
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',

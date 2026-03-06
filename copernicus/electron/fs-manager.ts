@@ -77,7 +77,11 @@ export class FSManager {
   listDir(dirPath: string): { ok: true; data: FileNode[] } | { ok: false; error: string } {
     try {
       const expandedPath = this.expandHome(dirPath)
+      // Special case: during Wizard setup, we might list the rootPath itself before it's "established"
+      // or we might want to list directories outside the current sandbox root for discovery.
+      // We allow reading anything in homedir (except blocked ones) regardless of rootPath.
       this.assertSafe(expandedPath, 'read')
+      
       const entries = fs.readdirSync(expandedPath, { withFileTypes: true })
       const data = entries
         .filter(e => e.name !== 'node_modules')
