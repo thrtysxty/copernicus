@@ -257,231 +257,152 @@ git push
 
 ---
 
-### TASK 5 — Story 237: GeminiSessionManager *(~90 minutes)*
+### TASK 5 — Story 237: GeminiSessionManager *(~45 minutes)*
 
-Full implementation from scratch — this is the largest task.
+**This is a dev orchestration tool in Python — NOT an Electron feature.**
+Lives in `dev_orchestrator/`, no TypeScript, no IPC, no BrowserWindow.
+Pure stdlib Python. The IDE panel for sessions is deferred to post-workflow-engine.
 
-**File:** `copernicus/electron/gemini-session-manager.ts` *(new)*
+**File:** `dev_orchestrator/gemini_session_manager.py` *(new)*
 
-```typescript
-import { spawn, ChildProcess } from 'node:child_process'
-import { createWriteStream, existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { app, BrowserWindow } from 'electron'
-import { randomUUID } from 'node:crypto'
-import log from './utils/logger'
+```python
+#!/usr/bin/env python3
+"""
+Gemini CLI Session Manager — dev orchestration tool.
+Claude uses this to spawn Gemini in background and get notified on completion.
+NOT a Copernicus end-user feature — lives in dev_orchestrator/.
+"""
+import argparse, json, os, sqlite3, subprocess, sys, time, uuid
+from pathlib import Path
 
-export interface GeminiSession {
-  id: string
-  storyIds: string[]
-  pid: number
-  status: 'running' | 'complete' | 'failed'
-  startedAt: number
-  completedAt?: number
-  exitCode?: number
-  logPath: string
-}
+SESSIONS_DIR = Path.home() / '.copernicus' / 'gemini-sessions'
+SESSIONS_FILE = SESSIONS_DIR / 'sessions.json'
+DB_PATH = Path(__file__).parent.parent / 'copernicus' / 'copernicus.db'
 
-class GeminiSessionManager {
-  private sessions = new Map<string, GeminiSession>()
-  private processes = new Map<string, ChildProcess>()
+def load_sessions():
+    if SESSIONS_FILE.exists():
+        return json.loads(SESSIONS_FILE.read_text())
+    return []
 
-  private broadcast(channel: string, payload: object) {
-    BrowserWindow.getAllWindows().forEach(w => {
-      if (!w.isDestroyed()) w.webContents.send(channel, payload)
-    })
-  }
+def save_sessions(sessions):
+    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    SESSIONS_FILE.write_text(json.dumps(sessions, indent=2))
 
-  spawn(prompt: string, storyIds: string[]): GeminiSession {
-    const id = randomUUID()
-    const logDir = join(app.getPath('userData'), 'gemini-sessions')
-    const { mkdirSync } = require('node:fs')
-    mkdirSync(logDir, { recursive: true })
-    const logPath = join(logDir, `${id}.log`)
-    const logStream = createWriteStream(logPath, { flags: 'a' })
+def write_db_event(session_id, stories, exit_code, log_path, duration_s):
+    if not DB_PATH.exists():
+        return
+    try:
+        conn = sqlite3.connect(str(DB_PATH), timeout=5)
+        conn.execute(
+            "INSERT INTO events (type, content, metadata, agent_id) VALUES (?, ?, ?, ?)",
+            (
+                'GEMINI_SESSION_COMPLETE',
+                f"Stories: {', '.join(stories)} | Exit: {exit_code}",
+                json.dumps({'session_id': session_id, 'stories': stories,
+                            'exit_code': exit_code, 'log_path': str(log_path),
+                            'duration_s': duration_s}),
+                'gemini-session-manager'
+            )
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass  # non-fatal
 
-    const child = spawn('gemini', ['--approval-mode', 'yolo', '-p', prompt], {
-      cwd: app.getAppPath().replace('/app.asar', ''),
-      env: { ...process.env },
-      stdio: ['ignore', 'pipe', 'pipe']
-    })
+def cmd_spawn(prompt, stories):
+    session_id = str(uuid.uuid4())
+    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    log_path = SESSIONS_DIR / f'{session_id}.log'
 
-    const session: GeminiSession = {
-      id, storyIds, pid: child.pid ?? 0,
-      status: 'running', startedAt: Date.now(), logPath
-    }
-    this.sessions.set(id, session)
-    this.processes.set(id, child)
+    sessions = load_sessions()
+    sessions.append({'id': session_id, 'stories': stories, 'status': 'running',
+                     'started_at': time.time(), 'log_path': str(log_path)})
+    save_sessions(sessions)
 
-    const onLine = (line: string) => {
-      logStream.write(line + '\n')
-      this.broadcast('gemini:session-output', { id, line: line.toString() })
-    }
+    print(f'SESSION_ID: {session_id}', flush=True)
+    print(f'LOG: {log_path}', flush=True)
 
-    child.stdout?.on('data', d => d.toString().split('\n').filter(Boolean).forEach(onLine))
-    child.stderr?.on('data', d => d.toString().split('\n').filter(Boolean).forEach(onLine))
+    start = time.time()
+    with open(log_path, 'w') as log_f:
+        proc = subprocess.Popen(
+            ['gemini', '--approval-mode', 'yolo', '-p', prompt],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1,
+            cwd=str(Path(__file__).parent.parent)
+        )
+        for line in proc.stdout:
+            log_f.write(line)
+            log_f.flush()
+            print(line, end='', flush=True)
+        proc.wait()
 
-    child.on('exit', (code) => {
-      const s = this.sessions.get(id)
-      if (s) {
-        s.status = code === 0 ? 'complete' : 'failed'
-        s.exitCode = code ?? -1
-        s.completedAt = Date.now()
-      }
-      logStream.end()
-      this.processes.delete(id)
-      this.broadcast('gemini:session-status', { id, storyIds, status: s?.status, exitCode: code })
-      log.info(`[GeminiSession] ${id} exited with code ${code}`)
-    })
+    duration = round(time.time() - start, 1)
+    exit_code = proc.returncode
+    status = 'complete' if exit_code == 0 else 'failed'
 
-    this.broadcast('gemini:session-status', { id, storyIds, status: 'running' })
-    return session
-  }
+    sessions = load_sessions()
+    for s in sessions:
+        if s['id'] == session_id:
+            s.update({'status': status, 'exit_code': exit_code,
+                      'completed_at': time.time(), 'duration_s': duration})
+    save_sessions(sessions)
 
-  listSessions(): GeminiSession[] {
-    return Array.from(this.sessions.values())
-  }
+    write_db_event(session_id, stories, exit_code, log_path, duration)
 
-  killSession(id: string): void {
-    this.processes.get(id)?.kill('SIGTERM')
-    const s = this.sessions.get(id)
-    if (s) { s.status = 'failed'; s.exitCode = -1; s.completedAt = Date.now() }
-  }
+    print(f'\nDONE: exit={exit_code}, stories={",".join(stories)}, duration={duration}s', flush=True)
+    sys.exit(exit_code)
 
-  getSessionLog(id: string): string {
-    const s = this.sessions.get(id)
-    if (!s || !existsSync(s.logPath)) return ''
-    return readFileSync(s.logPath, 'utf8')
-  }
-}
+def cmd_list():
+    sessions = load_sessions()
+    if not sessions:
+        print('No sessions.')
+        return
+    for s in reversed(sessions[-20:]):
+        status = s.get('status', '?')
+        sym = '●' if status == 'running' else ('✓' if status == 'complete' else '✗')
+        stories = ', '.join(s.get('stories', []))
+        dur = f"{s.get('duration_s', '?')}s" if 'duration_s' in s else 'running'
+        print(f"  {sym} {s['id'][:8]}  {stories:<20} {status:<10} {dur}")
 
-export const geminiSessionManager = new GeminiSessionManager()
+def cmd_tail(session_id):
+    sessions = load_sessions()
+    match = next((s for s in sessions if s['id'].startswith(session_id)), None)
+    if not match:
+        print(f'Session not found: {session_id}')
+        return
+    log = Path(match['log_path'])
+    if log.exists():
+        lines = log.read_text().splitlines()
+        print('\n'.join(lines[-50:]))
+
+def cmd_kill(session_id):
+    print(f'Kill not supported for detached sessions. Use: pkill -f "gemini.*{session_id[:8]}"')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Gemini CLI Session Manager')
+    sub = parser.add_subparsers(dest='cmd')
+
+    sp = sub.add_parser('spawn')
+    sp.add_argument('prompt')
+    sp.add_argument('--stories', nargs='+', default=[])
+
+    sub.add_parser('list')
+
+    tp = sub.add_parser('tail')
+    tp.add_argument('session_id')
+
+    kp = sub.add_parser('kill')
+    kp.add_argument('session_id')
+
+    args = parser.parse_args()
+    if args.cmd == 'spawn':   cmd_spawn(args.prompt, args.stories)
+    elif args.cmd == 'list':  cmd_list()
+    elif args.cmd == 'tail':  cmd_tail(args.session_id)
+    elif args.cmd == 'kill':  cmd_kill(args.session_id)
+    else: parser.print_help()
 ```
 
-**File:** `copernicus/electron/main.ts`
-
-Import and register handlers:
-```typescript
-import { geminiSessionManager } from './gemini-session-manager'
-
-ipcMain.handle('gemini:spawn', (_e, prompt: string, storyIds: string[]) =>
-  handleIpc(() => geminiSessionManager.spawn(prompt, storyIds)))
-
-ipcMain.handle('gemini:list-sessions', () =>
-  handleIpc(() => geminiSessionManager.listSessions()))
-
-ipcMain.handle('gemini:kill', (_e, id: string) =>
-  handleIpc(() => geminiSessionManager.killSession(id)))
-
-ipcMain.handle('gemini:get-log', (_e, id: string) =>
-  handleIpc(() => geminiSessionManager.getSessionLog(id)))
-```
-
-**File:** `copernicus/electron/preload.ts`
-
-Add to SEND_CHANNELS: `'gemini:spawn'`, `'gemini:list-sessions'`, `'gemini:kill'`, `'gemini:get-log'`
-Add to RECEIVE_CHANNELS: `'gemini:session-status'`, `'gemini:session-output'`
-
-**File:** `copernicus/src/renderer/components/commandcenter/GeminiSessions.tsx` *(new)*
-
-```tsx
-import { useState, useEffect, useCallback } from 'react'
-import { useIpcError } from '../../hooks/useIpcError'
-import { unwrapIpc } from '../../types/ipc'
-import { Play, Square, ChevronDown, ChevronRight } from 'lucide-react'
-
-interface GeminiSession {
-  id: string; storyIds: string[]; status: 'running' | 'complete' | 'failed'
-  startedAt: number; completedAt?: number; exitCode?: number; logPath: string
-}
-
-export function GeminiSessions() {
-  const invoke = useIpcError()
-  const [sessions, setSessions] = useState<GeminiSession[]>([])
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const [logs, setLogs] = useState<Record<string, string[]>>({})
-
-  const refresh = useCallback(() => {
-    invoke<any>('gemini:list-sessions').then(r => {
-      setSessions(unwrapIpc<GeminiSession[]>(r) ?? [])
-    }).catch(() => {})
-  }, [invoke])
-
-  useEffect(() => {
-    refresh()
-    const removeSt = window.ipcRenderer.on('gemini:session-status', () => refresh())
-    const removeOut = window.ipcRenderer.on('gemini:session-output', (_e: any, { id, line }: any) => {
-      setLogs(prev => ({ ...prev, [id]: [...(prev[id] ?? []).slice(-99), line] }))
-    })
-    return () => { removeSt(); removeOut() }
-  }, [refresh])
-
-  const kill = async (id: string) => {
-    await invoke('gemini:kill', id).catch(() => {})
-    refresh()
-  }
-
-  const toggleExpand = async (id: string) => {
-    if (expanded === id) { setExpanded(null); return }
-    setExpanded(id)
-    if (!logs[id]) {
-      const r = await invoke<any>('gemini:get-log', id).catch(() => null)
-      const text = unwrapIpc<string>(r) ?? ''
-      setLogs(prev => ({ ...prev, [id]: text.split('\n').filter(Boolean).slice(-50) }))
-    }
-  }
-
-  return (
-    <div className="p-3 space-y-2">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Gemini Sessions</span>
-        <span className="text-[9px] text-zinc-700">{sessions.filter(s => s.status === 'running').length} running</span>
-      </div>
-
-      {sessions.length === 0 && (
-        <p className="text-[10px] text-zinc-600">No sessions yet.</p>
-      )}
-
-      {sessions.map(s => (
-        <div key={s.id} className="bg-black/30 border border-zinc-800 rounded overflow-hidden">
-          <div
-            className="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-zinc-900/50"
-            onClick={() => toggleExpand(s.id)}
-          >
-            <div className="flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${
-                s.status === 'running' ? 'bg-amber-400 animate-pulse' :
-                s.status === 'complete' ? 'bg-green-400' : 'bg-red-400'
-              }`} />
-              <span className="text-[9px] font-mono text-zinc-500">{s.id.slice(0, 8)}</span>
-              <span className="text-[9px] text-zinc-400">{s.storyIds.join(', ')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {s.status === 'running' && (
-                <button onClick={e => { e.stopPropagation(); kill(s.id) }}
-                  className="p-0.5 text-zinc-600 hover:text-red-400">
-                  <Square size={10} />
-                </button>
-              )}
-              {expanded === s.id ? <ChevronDown size={10} className="text-zinc-600" /> : <ChevronRight size={10} className="text-zinc-600" />}
-            </div>
-          </div>
-
-          {expanded === s.id && (
-            <div className="px-2 pb-2">
-              <pre className="text-[8px] font-mono text-zinc-500 bg-black/40 rounded p-2 max-h-32 overflow-y-auto whitespace-pre-wrap">
-                {(logs[s.id] ?? []).join('\n') || '(no output)'}
-              </pre>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-```
-
-Wire `<GeminiSessions />` into the Command Center view (wherever CommandCenter renders — add it as a section).
+**No changes to Electron.** The Command Center panel for sessions is deferred until the workflow engine is live.
 
 **Verification:**
 ```bash
