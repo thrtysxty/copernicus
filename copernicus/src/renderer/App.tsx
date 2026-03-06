@@ -74,7 +74,7 @@ export default function App() {
   }, [invoke, setWorkingDir,  setView, setInProgressCount])
 
   if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />
-  if (isWizard) return <Wizard onComplete={() => setIsWizard(false)} />
+  if (isWizard) return <Wizard onComplete={() => { setIsWizard(false); setView('planner'); }} />
 
   const is3PanelLayout = ['editor', 'designer', 'orchestrator', 'planner'].includes(activeView)
 

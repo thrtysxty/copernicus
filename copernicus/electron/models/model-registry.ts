@@ -27,6 +27,10 @@ export class ModelRegistry {
     this.registerModel({ id: 'openrouter/google/gemini-pro', name: 'Gemini Pro (OpenRouter)', provider: 'openrouter', contextWindow: 32000 });
     this.registerModel({ id: 'openrouter/mistralai/mistral-7b-instruct', name: 'Mistral 7B (OpenRouter)', provider: 'openrouter', contextWindow: 32000 });
 
+    // Ollama Cloud
+    this.registerModel({ id: 'deepseek-v3.2:cloud', name: 'DeepSeek V3.2 (Cloud)', provider: 'ollama', contextWindow: 128000, costPer1kIn: 0.00014, costPer1kOut: 0.00028 });
+    this.registerModel({ id: 'devstral-2:cloud', name: 'Devstral 2 (Cloud)', provider: 'ollama', contextWindow: 128000, costPer1kIn: 0.00012, costPer1kOut: 0.00024 });
+
     // DeepInfra examples
     this.registerModel({ id: 'deepinfra/meta-llama/Llama-2-70b-chat-hf', name: 'Llama 2 70b (DeepInfra)', provider: 'deepinfra', contextWindow: 4096 });
   }

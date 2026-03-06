@@ -42,11 +42,26 @@ export class FSManager {
   }
 
   private assertSafe(filePath: string, mode: 'read' | 'write' = 'read'): void {
+    const resolved = path.resolve(this.expandHome(filePath))
+    const home = os.homedir()
+
+    // Reads: allow home directory EXCEPT blocked subdirectories
+    // This check is independent of rootPath to allow project discovery
+    if (mode === 'read') {
+      if (resolved.startsWith(home + path.sep) || resolved === home) {
+        for (const blocked of BLOCKED_HOME_SUBDIRS) {
+          if (resolved.startsWith(path.join(home, blocked))) {
+            throw new Error(`[fs-manager] Read blocked — sensitive directory: ${filePath}`)
+          }
+        }
+        return
+      }
+    }
+
+    // From here on, we need rootPath for strict project-relative checks
     if (!this.rootPath) {
       throw new Error('[fs-manager] rootPath not set — call setRootPath() before file operations')
     }
-    const resolved = path.resolve(this.expandHome(filePath))
-    const home = os.homedir()
 
     // Writes are restricted to project root only
     if (mode === 'write') {
@@ -56,18 +71,8 @@ export class FSManager {
       return
     }
 
-    // Reads: allow project root
+    // Reads: allow project root (if not already allowed by home check above)
     if (resolved.startsWith(this.rootPath + path.sep) || resolved === this.rootPath) {
-      return
-    }
-
-    // Reads: allow home directory EXCEPT blocked subdirectories
-    if (resolved.startsWith(home + path.sep)) {
-      for (const blocked of BLOCKED_HOME_SUBDIRS) {
-        if (resolved.startsWith(path.join(home, blocked))) {
-          throw new Error(`[fs-manager] Read blocked — sensitive directory: ${filePath}`)
-        }
-      }
       return
     }
 

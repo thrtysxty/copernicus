@@ -7,15 +7,16 @@
 
 ## Subagent Policy
 **Always launch Sonnet subagents unless specified otherwise. Use the local Ollama RAG bridge for repository research to preserve tokens.**
-- Use `scripts/ollama_tool_shim.py` with the following personas for specialized sub-tasks:
+- Use `scripts/claude_ollama_cli.py "/persona <prompt>"` to route to local Ollama personas:
   - `/architect` (Gemma 3 12B): High-intel local architectural decisions.
   - `/senior-dev` (GLM 4.7 9B): Strong local coding and logic.
   - `/scribe` (Kimi Cloud): Documentation/Summarization.
   - `/researcher` (DeepSeek-R1 Local): Reasoning/Bug tracing.
   - `/sentinel` (Mistral-v0.2): Fast local security audits.
-- **High-Intel / Experimental Drafting:** Use the development orchestrator to delegate planning, complex coding, or vision tasks to high-parameter cloud models. 
+- **High-Intel / Experimental Drafting:** Use `dev_orchestrator/cloud_agent.py` — the canonical cloud dispatch tool — to delegate planning, complex coding, or vision tasks to high-parameter cloud models.
   - `python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" [--worktree <branch_name>]`
   - Roles available: `thinker` (Kimi), `coder` (Qwen3-Coder), `vision` (Qwen3-VL), `researcher` (DeepSeek-V3), `fast` (Gemini-Flash).
+  - Full model registry: `dev_orchestrator/models.json` (14 cloud models with `:cloud` suffix).
   - **CRITICAL:** ALWAYS use `--worktree <branch_name>` when the subagent needs to draft or modify code, to ensure its workspace is safely isolated from the main branch.
 
 ## Tool Use Protocol
@@ -26,9 +27,8 @@ You have access to tools. To use them, output strict XML tags in your response.
 2. **Execute Shell Command:**
    `<exec_command>python scripts/test.py</exec_command>`
 3. **Local RAG & Research (Subagent):**
-   - Direct RAG: `<exec_command>python3 scripts/claude_ollama_cli.py "/persona <prompt>"</exec_command>`
-   - Tool-Enabled Research: `<exec_command>python3 scripts/ollama_tool_shim.py "<prompt>"</exec_command>` (Allows Ollama to call read_file, search_codebase, etc.)
-4. **Development Orchestrator:**
+   - `<exec_command>python3 scripts/claude_ollama_cli.py "/persona <prompt>"</exec_command>`
+4. **Development Orchestrator (Cloud Dispatch):**
    `<exec_command>python3 dev_orchestrator/cloud_agent.py coder "Refactor IPC" --worktree feature-refactor</exec_command>`
 
 ## Common Commands

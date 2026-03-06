@@ -52,9 +52,11 @@ CORE PROTOCOLS:
         await this.streamAnthropic(sessionId, messages, model, system, callStart)
       } else if (provider === 'google') {
         await this.streamGoogle(sessionId, messages, model, system, callStart)
-      } else {
-        // openai / openrouter / deepinfra — all OpenAI-compatible
+      } else if (provider === 'openai' || provider === 'openrouter' || provider === 'deepinfra' || provider === 'ollama') {
+        // openai / openrouter / deepinfra / ollama — all OpenAI-compatible
         await this.streamOpenAICompat(sessionId, messages, model, system, callStart)
+      } else {
+        throw new Error(`Unsupported provider: ${provider}`)
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)

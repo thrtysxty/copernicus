@@ -45,7 +45,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   // Initial Load: Check for existing credentials and workspace
   useEffect(() => {
     // 1. Check Preferences (Workspace)
-    invoke<any>('get-preferences').then((prefs) => {
+    invoke<any>('settings:load').then((prefs) => {
       const p = unwrapIpc<any>(prefs);
       if (p?.workspace) setWorkspacePath(p.workspace);
       if (p?.capex?.rate) setHourlyRate(String(p.capex.rate));
@@ -116,6 +116,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         setWorkspacePath(path);
         // AC-1: Immediately sync path to system root
         await invoke('app:set-root-path', path);
+        setStep(3); // Auto-advance to project selection
       }
     } catch (error: any) {
       console.error('Folder selection failed:', error);
