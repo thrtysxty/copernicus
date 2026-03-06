@@ -7,6 +7,7 @@ import { SettingsStore } from './settings-store'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import log from './utils/logger'
 import { lspManager } from './lsp/lsp-manager'
+import * as chokidar from 'chokidar'
 
 const settingsStore = new SettingsStore()
 
@@ -22,6 +23,7 @@ export class CodebaseIndexer {
   private filesIndexed = 0
   private totalFiles = 0
   private activeProvider = 'none'
+  private watcher?: chokidar.FSWatcher
 
   constructor() {
     try {
@@ -136,15 +138,22 @@ export class CodebaseIndexer {
       if (symbols.length > 0) {
         chunks = symbols.map((s, i) => ({
           chunk_id: `${filePath}#${i}`,
-          line_start: s.range.start.line,
-          line_end: s.range.end.line,
+          line_start: s.location?.range?.start?.line ?? s.range?.start?.line ?? 0,
+          line_end: s.location?.range?.end?.line ?? s.range?.end?.line ?? 0,
           symbols: s.name,
           chunk_index: i,
-          content: lines.slice(s.range.start.line, s.range.end.line + 1).join('\n')
+          content: lines.slice(
+            s.location?.range?.start?.line ?? s.range?.start?.line ?? 0,
+            (s.location?.range?.end?.line ?? s.range?.end?.line ?? 0) + 1
+          ).join('\n')
         }))
       } else {
-        for (let i = 0; i < content.length; i += 800) {
-          const chunkContent = content.slice(i, i + 1000)
+        // Recursive character splitter (1000 chars, 200 overlap)
+        const chunkSize = 1000
+        const overlap = 200
+        const step = chunkSize - overlap
+        for (let i = 0; i < content.length; i += step) {
+          const chunkContent = content.slice(i, i + chunkSize)
           chunks.push({
             chunk_id: `${filePath}#c${i}`,
             line_start: 0,
@@ -153,6 +162,7 @@ export class CodebaseIndexer {
             chunk_index: chunks.length,
             content: chunkContent
           })
+          if (i + chunkSize >= content.length) break
         }
       }
 
@@ -207,6 +217,20 @@ export class CodebaseIndexer {
         await this.indexFile(file)
         this.filesIndexed++
       }
+
+      // Background watcher for incremental re-indexing on file changes
+      if (this.watcher) await this.watcher.close()
+      this.watcher = chokidar.watch(rootPath, {
+        ignored: [/(^|[/\\])\../, /node_modules/],
+        persistent: true,
+        ignoreInitial: true,
+      })
+      this.watcher.on('change', async (changedPath) => {
+        if (['.ts', '.tsx', '.py', '.md', '.json', '.sql'].includes(path.extname(changedPath))) {
+          log.info(`[Indexer] Re-indexing modified file: ${changedPath}`)
+          await this.indexFile(changedPath)
+        }
+      })
     } catch (e) {
       log.error('[Indexer] Full index failed:', e)
     } finally {
@@ -216,6 +240,18 @@ export class CodebaseIndexer {
 
   public async search(query: string, topK = 5): Promise<any[]> {
     const { embedding } = await this.getEmbedding(query)
+
+    // Fetch workspace symbols for the query to boost relevant chunks
+    let symbolNames: string[] = []
+    try {
+      const wsSymbols = await lspManager.sendRequest('workspace/symbol', { query })
+      if (Array.isArray(wsSymbols)) {
+        symbolNames = wsSymbols.map((s: any) => s.name.toLowerCase())
+      }
+    } catch {
+      // LSP may not be running — non-fatal
+    }
+
     const stmt = stateLedger.db.prepare(`
       SELECT chunk_id, file_path, line_start, line_end, symbols, content, distance
       FROM codebase_vec
@@ -223,11 +259,25 @@ export class CodebaseIndexer {
       ORDER BY distance
       LIMIT ?
     `)
-    const rows = stmt.all(new Float32Array(embedding), topK)
-    return rows.map((r: any) => ({
-      chunkId: r.chunk_id, path: r.file_path, lineStart: r.line_start, lineEnd: r.line_end,
-      symbols: r.symbols, content: r.content, similarity: 1 - r.distance
-    }))
+    // Fetch 2× to allow re-ranking with symbol boost
+    const rows = stmt.all(new Float32Array(embedding), topK * 2) as any[]
+
+    const ranked = rows.map((r) => {
+      let similarity = 1 - r.distance
+      if (r.symbols && symbolNames.length > 0) {
+        const chunkSymbols = r.symbols.split(',').map((s: string) => s.trim().toLowerCase())
+        if (chunkSymbols.some((cs: string) => symbolNames.includes(cs))) {
+          similarity += 0.2
+        }
+      }
+      return {
+        chunkId: r.chunk_id, path: r.file_path, lineStart: r.line_start, lineEnd: r.line_end,
+        symbols: r.symbols, content: r.content, similarity
+      }
+    })
+
+    ranked.sort((a, b) => b.similarity - a.similarity)
+    return ranked.slice(0, topK)
   }
 
   private walk(dir: string): string[] {

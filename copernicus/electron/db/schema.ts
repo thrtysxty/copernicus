@@ -157,6 +157,20 @@ export const SCHEMA = {
     CREATE INDEX IF NOT EXISTS idx_jules_sessions_status
       ON jules_sessions(status);
   `,
+  // Note: actual table creation is deferred to CodebaseIndexer after the
+  // sqlite-vec extension is loaded. This entry documents the schema only.
+  codebase_vec: `
+    CREATE VIRTUAL TABLE IF NOT EXISTS codebase_vec USING vec0(
+      chunk_id TEXT PRIMARY KEY,
+      file_path TEXT,
+      line_start INTEGER,
+      line_end INTEGER,
+      symbols TEXT,
+      chunk_index INTEGER,
+      content TEXT,
+      embedding FLOAT[768]
+    );
+  `,
   dev_sessions: `
     CREATE TABLE IF NOT EXISTS dev_sessions (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,

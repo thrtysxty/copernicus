@@ -1,16 +1,20 @@
 from flask import Blueprint, jsonify, request
 from backend.middleware.auth import require_auth
-from ollama import Client
+import subprocess
 import os
+from pathlib import Path
 
 agents_bp = Blueprint("agents", __name__)
 
-MODEL_MAP = {
-    "junior-dev": "qwen2.5-coder:7b",
-    "scribe": "mistral:7b",
-    "code-reviewer": "deepseek-coder:6.7b",
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+GATEWAY_PATH = PROJECT_ROOT / "scripts" / "agent_gateway.py"
+
+# Map chat tool personas to agent gateway roles
+PERSONA_ROLE_MAP = {
+    "junior-dev": "coder",
+    "scribe": "researcher",
+    "code-reviewer": "architect",
 }
-DEFAULT_MODEL = "qwen2.5-coder:7b"
 
 
 @agents_bp.route("/status", methods=["GET"])
@@ -42,25 +46,28 @@ def research():
         return jsonify({"ok": False, "error": "Prompt is required"}), 400
 
     persona = data.get("persona", "junior-dev")
-    model = MODEL_MAP.get(persona, DEFAULT_MODEL)
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://192.168.1.185:11434")
+    role = PERSONA_ROLE_MAP.get(persona, "coder")
 
     try:
-        client = Client(host=base_url)
-        response = client.chat(
-            model=model,
-            messages=[{"role": "user", "content": prompt}]
+        result = subprocess.run(
+            ["python3", str(GATEWAY_PATH), prompt, "--role", role, "--no-stream"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env={**os.environ},
         )
-        # ollama SDK returns an object, not a dict
-        result = response.message.content
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr.strip() or f"Gateway exited with code {result.returncode}")
 
         return jsonify({
             "ok": True,
             "data": {
-                "result": result,
-                "model": model,
+                "result": result.stdout.strip(),
+                "role": role,
                 "persona": persona,
             }
         }), 200
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "error": "Research timed out after 120s"}), 504
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
