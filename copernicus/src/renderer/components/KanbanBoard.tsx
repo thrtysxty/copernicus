@@ -129,8 +129,8 @@ export function KanbanBoard() {
 
       {/* Main Board Area (9 Rows Architecture) */}
       <div className="flex-1 flex overflow-x-auto gap-3 p-3 select-none scrollbar-thin scrollbar-thumb-copernicus-steel">
-        {columns.map(col => {
-          const colStories = stories.filter(s => s.status === col.status)
+        {(columns || []).map(col => {
+          const colStories = (stories || []).filter(s => s.status === col.status)
             .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 4) - (PRIORITY_ORDER[b.priority] ?? 4))
 
           const isSpotlit = spotlightLane === col.id
