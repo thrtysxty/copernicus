@@ -25,7 +25,7 @@ export const COPERNICUS_KB: KnowledgeEntry[] = [
   {
     trigger: ['onboarding', 'wizard', 'first launch', 'getting started', 'set up for the first time'],
     response:
-      'First launch shows the Setup Wizard. For Claude (Anthropic) you choose one of two options: (1) Claude Code CLI — uses your existing `claude login` session, works with any Claude.ai subscription, no separate billing; or (2) API Key — paste a key from console.anthropic.com, billed per token. Google OAuth, workspace selection, and CapEx rate are also set in the Wizard. You can change any of these later in Settings → Providers.',
+      'First launch shows the Setup Wizard. For Claude (Anthropic) you choose one of two options: (1) Claude Code CLI — uses your existing `claude login` session, works with any Claude.ai subscription, no separate billing; or (2) API Key — paste a key from console.anthropic.com, billed per token. Google OAuth, repository store selection, and CapEx rate are also set in the Wizard. You can change any of these later in Settings → Providers.',
   },
   {
     trigger: ['sign in', 'anthropic login', 'claude login', 'how do i connect claude', 'authentication', 'oauth', 'api key', 'connect anthropic'],

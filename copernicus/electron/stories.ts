@@ -39,8 +39,20 @@ export class StoriesManager {
 
   setProjectRoot(rootPath: string) {
     this.projectRoot = rootPath
-    this.storiesPath = path.join(rootPath, 'docs/stories')
-    log.info(`[StoriesManager] path set: ${this.storiesPath}`)
+    const potentialPath = path.join(rootPath, 'docs/stories')
+    
+    // If the root itself is a project, target it
+    if (fs.existsSync(potentialPath) || fs.existsSync(path.join(rootPath, '.git'))) {
+      this.targetProject(rootPath)
+    } else {
+      this.storiesPath = ''
+      log.info(`[StoriesManager] Repo store root recognized: ${rootPath}. No active project stories mapped.`)
+    }
+  }
+
+  targetProject(projectPath: string) {
+    this.storiesPath = path.join(projectPath, 'docs/stories')
+    log.info(`[StoriesManager] Project stories targeted: ${this.storiesPath}`)
 
     if (this.watcher) {
       this.watcher.close()
@@ -51,8 +63,9 @@ export class StoriesManager {
       this.watch()
       this.syncFromDisk()
     } else {
-      log.warn(`Stories path not found: ${this.storiesPath}`)
+      log.warn(`Stories path not found in project: ${this.storiesPath}`)
     }
+    this.broadcastUpdate()
   }
 
   setWindow(win: BrowserWindow) {
@@ -281,7 +294,7 @@ ${title}
   }
 
   isRepoTargeted(): boolean {
-    return !this.storiesPath.endsWith('.copernicus/docs/stories') && this.storiesPath.split(path.sep).length > 4;
+    return this.storiesPath !== '' && fs.existsSync(this.storiesPath);
   }
 
   updateStoryContent(id: string, content: string) {

@@ -763,7 +763,27 @@ function registerIpcHandlers() {
 
   // Project Billing (Story 211)
   ipcMain.handle('project:save-billing', (_e, project: any) => 
-    handleIpc(() => stateLedger.upsertProject(project)))
+    handleIpc(async () => {
+      let finalPath = project.path;
+      if (!path.isAbsolute(finalPath)) {
+        const root = fsManager.getRootPath();
+        finalPath = path.join(root, finalPath);
+      }
+      
+      // Ensure directory exists
+      if (!fs.existsSync(finalPath)) {
+        fs.mkdirSync(finalPath, { recursive: true });
+        log.info(`[Main] Created project directory: ${finalPath}`);
+      }
+
+      const record = {
+        ...project,
+        path: finalPath
+      };
+      
+      stateLedger.upsertProject(record);
+      return { ok: true, path: finalPath };
+    }))
   
   ipcMain.handle('project:get-billing', (_e, path: string) => 
     handleIpc(() => stateLedger.getProjectByPath(path)))
@@ -868,6 +888,15 @@ function registerIpcHandlers() {
   ipcMain.handle('github:set-target-repo', (_e, repoName: string) => handleIpc(() => {
     settingsStore.set('github:target-repo', repoName)
     authManager.setBaseUrl('jules', repoName)
+    
+    // Resolve local path and update StoriesManager
+    const rootPath = fsManager.getRootPath()
+    const localName = repoName.split('/')[1] || repoName
+    const projectPath = path.join(rootPath, localName)
+    if (fs.existsSync(projectPath)) {
+        storiesManager.targetProject(projectPath)
+    }
+    
     return { ok: true }
   }))
 

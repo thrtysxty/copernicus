@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
-         ShieldCheck, Key, Zap, Github } from 'lucide-react';
+         ShieldCheck, Key, Zap, Github, Plus, Layout } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc'
 
@@ -15,6 +15,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [cliStatus, setCliStatus] = useState<Record<string, boolean> | null>(null);
   const [workspacePath, setWorkspacePath] = useState('');
   const [hourlyRate, setHourlyRate] = useState('65');
+
+  // Step 3 State
+  const [availableProjects, setAvailableProjects] = useState<string[]>([]);
+  const [selectedProject, setSelectedProject] = useState('');
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [billingMode, setBillingMode] = useState<'CAPEX' | 'OPEX' | 'NONE'>('CAPEX');
 
   // Anthropic
   const [anthropicMethod, setAnthropicMethod] = useState<'cli' | 'apikey' | null>(null);
@@ -70,6 +77,22 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       if (key) setOllamaKey('saved');
     }).catch(() => {});
   }, [invoke]);
+
+  // Load projects when entering step 3
+  useEffect(() => {
+    if (step === 3 && workspacePath) {
+      invoke<any>('fs:list-dir', workspacePath).then((result) => {
+        const nodes = unwrapIpc<any[]>(result) ?? [];
+        const dirs = nodes.filter(n => n.isDir).map(n => n.name);
+        setAvailableProjects(dirs);
+        if (dirs.length > 0 && !selectedProject) {
+          setSelectedProject(dirs[0]);
+        } else if (dirs.length === 0) {
+          setIsCreatingNew(true);
+        }
+      });
+    }
+  }, [step, workspacePath, invoke]);
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
@@ -128,7 +151,14 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   }, []);
 
   const handleFinish = async () => {
-    // 1. Final Key Commit
+    // 1. Validate Step 3 requirements
+    const projectName = isCreatingNew ? newProjectName.trim() : selectedProject;
+    if (!projectName) {
+      alert('Please select or create an initial project to continue.');
+      return;
+    }
+
+    // 2. Final Key Commit
     if (anthropicMethod === 'cli') {
       await invoke('auth:store-api-key', 'anthropic', '__cli__', undefined, 'cli').catch(() => {})
     } else if (anthropicMethod === 'apikey' && anthropicKey && anthropicKey !== 'saved') {
@@ -143,7 +173,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke('auth:store-api-key', 'google', googleKey).catch(() => {})
     }
 
-    // 2. Final Preferences Commit
+    // 3. Final Preferences Commit
     const preferences = {
       workspace: workspacePath,
       googleOAuthClientId: googleOAuthClientId.trim(),
@@ -152,13 +182,28 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     };
     
     if (!workspacePath) {
-      alert('A workspace directory is required to initialize COPERNICUS.');
+      alert('A repository store directory is required to initialize COPERNICUS.');
       setStep(2);
       return;
     }
     
     try {
       await invoke('save-preferences', preferences);
+      
+      // 4. Project Initialization
+      // We pass the projectName; the backend resolves it against the workspace root.
+      
+      // Save billing mode for this project
+      await invoke('project:save-billing', {
+        id: `${githubUser?.login || 'local'}/${projectName}`,
+        path: projectName,
+        billing_mode: billingMode,
+        billing_details: JSON.stringify({ hourly_rate: parseFloat(hourlyRate) })
+      });
+
+      // Target this repo
+      await invoke('github:set-target-repo', `${githubUser?.login || 'local'}/${projectName}`);
+      
       onWizardComplete();
     } catch (error: any) {
       alert(`Initialization failed: ${error.message}`);
@@ -291,16 +336,16 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                 <div className="space-y-6 max-w-2xl mx-auto w-full py-12">
                   <div className="flex flex-col gap-1 mb-6 text-center">
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
-                      <FolderOpen size={32} className="text-copernicus-phosphor" /> Project Anchor
+                      <FolderOpen size={32} className="text-copernicus-phosphor" /> Repository Store
                     </h2>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Mounting local development root</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configuring project discovery root</p>
                   </div>
                   
                   <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-10 space-y-8 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-copernicus-phosphor/20 to-transparent" />
                     
                     <div className="flex flex-col gap-3">
-                      <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest ml-1">Current Mount Point</label>
+                      <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest ml-1">Repository Store Root</label>
                       <div className="flex gap-3">
                         <input
                           type="text"
@@ -312,7 +357,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           onClick={handleSelectFolder} 
                           className="bg-copernicus-phosphor text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-copernicus-phosphor/20"
                         >
-                          Mount
+                          Select Store
                         </button>
                       </div>
                     </div>
@@ -322,13 +367,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <ShieldCheck size={24} className="flex-none text-green-400" />
                         <div className="space-y-1">
                           <p className="text-xs font-bold text-green-400 uppercase tracking-wide">Path Synchronized</p>
-                          <p className="text-[10px] font-mono opacity-70 leading-relaxed">Directory is now registered as the system root for stories and indexing.</p>
+                          <p className="text-[10px] font-mono opacity-70 leading-relaxed">Directory is now registered as the root for project discovery and indexing.</p>
                         </div>
                       </div>
                     ) : (
                       <div className="p-6 border border-dashed border-zinc-800 rounded-xl text-center">
                         <p className="text-[11px] text-zinc-500 italic leading-relaxed">
-                          Select the directory where COPERNICUS will orchestrate your projects. <br/> This path is used for implementation stories and local memory buffers.
+                          Select the parent directory where your projects are stored. <br/> COPERNICUS will use this root to discover and manage your repositories.
                         </p>
                       </div>
                     )}
@@ -336,30 +381,109 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                 </div>
               )}
 
-              {/* ── Phase 3: Economics ──────────────────────────────────────── */}
+              {/* ── Phase 3: Economics & Initial Project ─────────────────────── */}
               {step === 3 && (
-                <div className="space-y-6 max-w-2xl mx-auto w-full py-12">
-                  <div className="flex flex-col gap-1 mb-6 text-center">
+                <div className="space-y-8 max-w-2xl mx-auto w-full py-6">
+                  <div className="flex flex-col gap-1 mb-2 text-center">
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
                       <DollarSign size={32} className="text-copernicus-phosphor" /> CapEx Dynamics
                     </h2>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configuring implementer billing metrics</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configuring initial project and billing</p>
                   </div>
 
-                  <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-12 flex flex-col items-center gap-8 shadow-2xl relative">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Project Selection */}
+                    <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
+                      <div className="flex items-center gap-2 text-copernicus-phosphor mb-2">
+                        <Layout size={18} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Initial Project</span>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] text-zinc-500 uppercase font-mono">Selection Mode</span>
+                          <button 
+                            onClick={() => setIsCreatingNew(!isCreatingNew)}
+                            className="text-[9px] text-copernicus-phosphor hover:underline uppercase font-bold"
+                          >
+                            {isCreatingNew ? 'Pick Existing' : 'Create New'}
+                          </button>
+                        </div>
+
+                        {isCreatingNew ? (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              autoFocus
+                              className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors"
+                              placeholder="new-project-name"
+                              value={newProjectName}
+                              onChange={(e) => setNewProjectName(e.target.value)}
+                            />
+                            <p className="text-[9px] text-zinc-600 italic">Will be created in your Repository Store.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <select
+                              className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor appearance-none cursor-pointer"
+                              value={selectedProject}
+                              onChange={(e) => setSelectedProject(e.target.value)}
+                            >
+                              {availableProjects.length > 0 ? (
+                                availableProjects.map(p => <option key={p} value={p}>{p}</option>)
+                              ) : (
+                                <option value="" disabled>No projects found in store</option>
+                              )}
+                            </select>
+                            {availableProjects.length === 0 && (
+                              <button 
+                                onClick={() => setIsCreatingNew(true)}
+                                className="w-full py-2 border border-dashed border-zinc-800 rounded-lg text-[9px] text-zinc-500 hover:text-zinc-300 transition-colors uppercase font-bold"
+                              >
+                                <Plus size={10} className="inline mr-1" /> Create First Project
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Billing Configuration */}
+                    <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
+                      <div className="flex items-center gap-2 text-copernicus-phosphor mb-2">
+                        <DollarSign size={18} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Billing Model</span>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {(['CAPEX', 'OPEX', 'NONE'] as const).map(mode => (
+                          <button
+                            key={mode}
+                            onClick={() => setBillingMode(mode)}
+                            className={`flex items-center justify-between p-3 rounded-lg border transition-all ${billingMode === mode ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/20 text-zinc-500 hover:border-zinc-700'}`}
+                          >
+                            <span className="text-[10px] font-black uppercase tracking-widest">{mode}</span>
+                            {billingMode === mode && <Check size={12} className="text-copernicus-phosphor" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Global Rate */}
+                  <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-8 flex flex-col items-center gap-6 shadow-2xl relative">
                     <div className="flex items-center gap-6">
-                      <span className="text-5xl text-zinc-700 font-extralight select-none">$</span>
+                      <span className="text-4xl text-zinc-700 font-extralight select-none">$</span>
                       <input
                         type="number"
-                        className="bg-transparent text-7xl font-black text-white w-48 outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:text-copernicus-phosphor transition-colors"
+                        className="bg-transparent text-6xl font-black text-white w-40 outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:text-copernicus-phosphor transition-colors"
                         value={hourlyRate}
                         onChange={(e) => setHourlyRate(e.target.value)}
                       />
-                      <span className="text-zinc-700 text-3xl font-mono tracking-tighter select-none">/HR</span>
+                      <span className="text-zinc-700 text-2xl font-mono tracking-tighter select-none">/HR</span>
                     </div>
-                    <div className="h-px w-24 bg-zinc-800" />
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] text-center leading-relaxed max-w-xs">
-                      Default hourly implementation rate used for <br/> system-wide CapEx tracking.
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] text-center leading-relaxed">
+                      Default hourly implementation rate for CapEx tracking.
                     </p>
                   </div>
                 </div>
