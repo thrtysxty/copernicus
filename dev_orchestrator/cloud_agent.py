@@ -67,16 +67,20 @@ class StandaloneCloudAgent:
         self.worktree = None
 
     def load_config(self):
-        with open(CONFIG_PATH, "r") as f:
-            self.config = json.load(f)
+        try:
+            with open(CONFIG_PATH, "r") as f:
+                self.config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"WARNING: Could not load models.json: {e}", file=sys.stderr)
+            self.config = {"cloud_models": []}
         # Default role mappings
         self.role_defaults = {
-            "thinker": "kimi-k2.5:cloud",
-            "coder": "qwen3-coder-next:cloud",
-            "vision": "qwen3-vl:cloud",
-            "researcher": "deepseek-v3.2:cloud",
-            "architect": "glm-5:744b-cloud",
-            "fast": "gpt-oss:20b-cloud"
+            "thinker":    "kimi-k2.5:cloud",
+            "coder":      "qwen3-coder-next:cloud",
+            "vision":     "qwen3-vl:235b:cloud",
+            "researcher": "deepseek-v3.1:671b:cloud",
+            "architect":  "glm-5:cloud",
+            "fast":       "gpt-oss:20b:cloud",
         }
 
     def get_client_for_model(self, model_name):
@@ -104,12 +108,13 @@ class StandaloneCloudAgent:
             try:
                 with open(LOG_PATH, "r") as f:
                     logs = json.load(f)
-            except: pass
+            except (json.JSONDecodeError, OSError):
+                logs = []  # reset corrupted log
         logs.append(log_entry)
         with open(LOG_PATH, "w") as f:
             json.dump(logs, f, indent=2)
 
-    def log_event(self, event_type: str, content: str, metadata: dict = None) -> None:
+    def log_event(self, event_type: str, content: str, metadata: dict | None = None) -> None:
         """Write an event to the centralized comms bus (events table in copernicus.db)."""
         db_path = os.path.join(os.path.dirname(__file__), '..', 'copernicus', 'copernicus.db')
         db_path = os.path.normpath(db_path)
@@ -118,7 +123,7 @@ class StandaloneCloudAgent:
         
         def _write():
             try:
-                conn = sqlite3.connect(db_path)
+                conn = sqlite3.connect(db_path, timeout=5)
                 conn.execute(
                     "INSERT INTO events (type, content, metadata, agent_id) VALUES (?, ?, ?, ?)",
                     (event_type, content, json.dumps(metadata or {}), getattr(self, 'role', 'cloud_agent'))
@@ -130,14 +135,14 @@ class StandaloneCloudAgent:
 
         threading.Thread(target=_write, daemon=True).start()
 
-    def run(self, model_or_role, prompt, worktree_branch=None, stream=True):
+    def run(self, model_or_role: str, prompt: str, worktree_branch: str | None = None, stream: bool = True):
         model_name = self.role_defaults.get(model_or_role, model_or_role)
         self.model = model_name
         self.role = model_or_role
         self.worktree = worktree_branch
         client, tier = self.get_client_for_model(model_name)
         # Strip internal routing suffix before sending to API
-        api_model_name = (model_name or model_or_role).replace(":cloud", "")
+        api_model_name = (model_name or model_or_role).removesuffix(":cloud")
         
         wt_context = ""
         if worktree_branch:

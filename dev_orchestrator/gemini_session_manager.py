@@ -30,7 +30,9 @@ def load_sessions() -> list:
 
 def save_sessions(sessions: list) -> None:
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    SESSIONS_FILE.write_text(json.dumps(sessions, indent=2))
+    tmp = SESSIONS_FILE.with_suffix('.tmp')
+    tmp.write_text(json.dumps(sessions, indent=2))
+    tmp.replace(SESSIONS_FILE)
 
 
 def write_db_event(session_id: str, stories: list, exit_code: int, log_path: Path, duration_s: float) -> None:
@@ -78,7 +80,7 @@ def cmd_spawn(prompt: str, stories: list) -> None:
     print(f'LOG: {log_path}', flush=True)
 
     start = time.time()
-    with open(log_path, 'w') as log_f:
+    try:
         proc = subprocess.Popen(
             ['gemini', '--approval-mode', 'yolo', '-p', prompt],
             stdout=subprocess.PIPE,
@@ -87,6 +89,17 @@ def cmd_spawn(prompt: str, stories: list) -> None:
             bufsize=1,
             cwd=str(Path(__file__).parent.parent),
         )
+    except FileNotFoundError:
+        sessions = load_sessions()
+        for s in sessions:
+            if s['id'] == session_id:
+                s.update({'status': 'failed', 'exit_code': 127,
+                          'completed_at': time.time(), 'duration_s': 0})
+        save_sessions(sessions)
+        print('ERROR: gemini binary not found on PATH', file=sys.stderr)
+        sys.exit(127)
+
+    with open(log_path, 'w') as log_f:
         for line in (proc.stdout or []):
             log_f.write(line)
             log_f.flush()
