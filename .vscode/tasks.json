@@ -1,0 +1,84 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Gemini: Run Session",
+      "type": "shell",
+      "command": "/tmp/gemini_launch.sh",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "name": "Gemini Session",
+        "focus": true,
+        "showReuseMessage": false,
+        "clear": true,
+        "close": true
+      },
+      "isBackground": false,
+      "problemMatcher": []
+    },
+    {
+      "label": "Gemini: Run Session B",
+      "type": "shell",
+      "command": "/tmp/gemini_launch_b.sh",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "name": "Gemini Session B",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true,
+        "close": true
+      },
+      "isBackground": false,
+      "problemMatcher": []
+    },
+    {
+      "label": "Gemini: Run Session C",
+      "type": "shell",
+      "command": "/tmp/gemini_launch_c.sh",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "name": "Gemini Session C",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true,
+        "close": true
+      },
+      "isBackground": false,
+      "problemMatcher": []
+    },
+    {
+      "label": "Jules: Run Session",
+      "type": "shell",
+      "command": "/tmp/jules_launch.sh",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "name": "Jules Session",
+        "focus": true,
+        "showReuseMessage": false,
+        "clear": true,
+        "close": true
+      },
+      "isBackground": false,
+      "problemMatcher": []
+    },
+    {
+      "label": "Gemini: Tail Last Log",
+      "type": "shell",
+      "command": "tail -f $(ls -t ~/.copernicus/gemini-sessions/*.log 2>/dev/null | head -1)",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "name": "Gemini Log",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

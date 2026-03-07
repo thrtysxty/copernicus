@@ -38,8 +38,10 @@ python3 dev_orchestrator/gemini_session_manager.py spawn "$(cat /tmp/gemini_prom
 LAUNCH
 chmod +x /tmp/gemini_launch.sh
 
-# Step 3 — open a new VS Code terminal tab and run the launcher
-# Ctrl+Shift+` creates a new tab (Ctrl+` toggles — do NOT use that)
+# Step 3 — trigger the VS Code task (auto-closes terminal on completion)
+# Single session → "Gemini: Run Session" (reads /tmp/gemini_launch.sh)
+# Parallel B     → "Gemini: Run Session B" (reads /tmp/gemini_launch_b.sh)
+# Parallel C     → "Gemini: Run Session C" (reads /tmp/gemini_launch_c.sh)
 osascript << 'APPLESCRIPT'
 tell application "Visual Studio Code"
   activate
@@ -47,20 +49,23 @@ end tell
 delay 0.5
 tell application "System Events"
   tell process "Code"
-    keystroke "`" using {control down, shift down}
-    delay 1.5
-    keystroke "/tmp/gemini_launch.sh"
-    delay 0.3
+    key code 35 using {command down, shift down}
+    delay 0.8
+    keystroke "Tasks: Run Task"
+    key code 36
+    delay 1.0
+    keystroke "Gemini: Run Session"
     key code 36
   end tell
 end tell
 APPLESCRIPT
 ```
-A **"Gemini Session"** terminal panel opens in VS Code. Claude returns tokens to the user. When the task finishes, Claude reviews `git diff HEAD~1`.
+A **"Gemini Session"** terminal panel opens in VS Code and **closes automatically on completion**. Claude returns tokens to the user. When the task finishes, Claude reviews `git diff HEAD~1`.
 **Cost of doing Gemini's work yourself: ~$40 in wasted tokens. Cost of delegating: $0.**
 
 > Always trigger the VS Code task on dispatch. Never run Gemini silently.
 > Jules dispatch: same pattern — write `/tmp/jules_launch.sh`, trigger **"Jules: Run Session"** task.
+> Parallel dispatch: write to `gemini_launch_b.sh` / `gemini_launch_c.sh`, trigger Session B / Session C tasks.
 
 ---
 
