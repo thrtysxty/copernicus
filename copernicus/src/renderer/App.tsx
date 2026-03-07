@@ -22,6 +22,7 @@ import { CommandPalette } from './components/layout/CommandPalette'
 import { GithubDashboard } from './components/github/GithubDashboard'
 import Wizard from './components/wizard/Wizard'
 import SplashScreen from './components/layout/SplashScreen'
+import { ContainerViewer } from './components/runtime/ContainerViewer'
 
 const TERMINAL_HEIGHT = 200
 
@@ -358,8 +359,21 @@ export default function App() {
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
                 {/* Sidebar */}
-                <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden`}>
-                  <FileTree rootPath={workingDir} />
+                <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden relative`}>
+                  <div className="absolute top-2 right-2 z-10 flex gap-1">
+                     <button
+                        onClick={() => toggleFlip('sidebar')}
+                        className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors bg-[#080808] rounded border border-copernicus-steel"
+                        title="Flip Sidebar"
+                     >
+                        <RotateCcw size={12} />
+                     </button>
+                  </div>
+                  <FlippablePanel
+                    id="sidebar"
+                    front={<FileTree rootPath={workingDir} />}
+                    back={<ContainerViewer />}
+                  />
                 </div>
 
                 {/* Center Panel & Chat */}

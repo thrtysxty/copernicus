@@ -92,6 +92,8 @@ const SEND_CHANNELS = new Set([
   'save-preferences', 'restart-app', 'app:quit',
   // App Control
   'app:open-log', 'app:open-external',
+  // Runtime
+  'runtime:list-containers', 'runtime:manage-container',
   // OAuth
   'oauth:start-google', 'oauth:start-anthropic', 'oauth:start-openrouter',
   'app:start-oauth-listener',
