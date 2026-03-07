@@ -61,10 +61,40 @@ def write_db_event(session_id: str, stories: list, exit_code: int, log_path: Pat
         pass  # non-fatal
 
 
-def cmd_spawn(prompt: str, stories: list) -> None:
+REPO_ROOT = Path(__file__).parent.parent
+PERSONAS_DIR = REPO_ROOT / '.gemini' / 'personas'
+
+DEV_ORCHESTRATOR_FOOTER = """
+---
+
+## Sub-Delegation
+
+For any sub-task requiring cloud model help, run:
+```bash
+python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" --worktree <branch_name>
+```
+Roles: `thinker`, `coder`, `vision`, `researcher`, `fast`.
+Always use `--worktree` when the sub-agent drafts or modifies code.
+"""
+
+
+def load_persona(name: str) -> str:
+    """Load persona markdown from .gemini/personas/<name>.md — empty string if missing."""
+    path = PERSONAS_DIR / f'{name}.md'
+    if path.exists():
+        return path.read_text().strip() + '\n\n---\n\n'
+    return ''
+
+
+def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
     session_id = str(uuid.uuid4())
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
     log_path = SESSIONS_DIR / f'{session_id}.log'
+
+    persona_text = load_persona(persona)
+    if persona_text:
+        print(f'PERSONA: {persona}', flush=True)
+    prompt = persona_text + prompt + DEV_ORCHESTRATOR_FOOTER
 
     sessions = load_sessions()
     sessions.append({
@@ -181,6 +211,7 @@ if __name__ == '__main__':
     sp = sub.add_parser('spawn', help='Spawn a Gemini session with a prompt')
     sp.add_argument('prompt', help='Prompt text to pass to gemini -p')
     sp.add_argument('--stories', nargs='+', default=[], help='Story IDs being worked on')
+    sp.add_argument('--persona', default='dev', help='Persona to inject (default: dev). File: .gemini/personas/<name>.md')
 
     sub.add_parser('list', help='List recent sessions')
 
@@ -193,7 +224,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.cmd == 'spawn':
-        cmd_spawn(args.prompt, args.stories)
+        cmd_spawn(args.prompt, args.stories, persona=args.persona)
     elif args.cmd == 'list':
         cmd_list()
     elif args.cmd == 'tail':
