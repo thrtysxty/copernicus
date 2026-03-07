@@ -49,7 +49,7 @@ export interface StoryRecord {
   assigned_to?: string
   blocked_by?: string[]   // deserialized from JSON
   blocks?: string[]       // deserialized from JSON
-  workflow_id?: string
+  workflow_id: string | null
   body_md: string
   file_path: string
   date?: string

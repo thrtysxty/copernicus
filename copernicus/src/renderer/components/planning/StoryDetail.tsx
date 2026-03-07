@@ -15,7 +15,7 @@ interface Story {
   type: string
   epic_id: string | null
   model: string | null
-  workflowId?: string | null
+  workflowId: string | null
   date: string
   blocked: boolean
 }
@@ -47,6 +47,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
   const [workflowTemplates, setWorkflowTemplates] = useState<{ id: string, name: string }[]>([])
   const [workflowStatus, setWorkflowStatus] = useState<string | null>(null)
+  const [workflowStartTime, setWorkflowStartTime] = useState<number | null>(null)
+  const [elapsedTime, setElapsedTime] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeBtnRef = useRef<HTMLButtonElement>(null)
@@ -77,14 +79,20 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     invoke<any>('workflow:status').then(result => {
       if (result?.ok && result.data?.context?.storyId === storyId) {
         setWorkflowStatus(result.data.state)
+        if (result.data.state === 'RUNNING' && !workflowStartTime) {
+          setWorkflowStartTime(Date.now())
+        }
       }
     }).catch(() => {})
 
-    const removeListener = window.ipcRenderer.on('workflow:status-update', () => {
+    const removeListener = window.ipcRenderer.on('workflow:status-update', (_event, payload: any) => {
       invoke<any>('workflow:status').then(result => {
         if (result?.ok) {
           if (result.data?.context?.storyId === storyId) {
             setWorkflowStatus(result.data.state)
+            if (result.data.state === 'RUNNING' && !workflowStartTime) {
+              setWorkflowStartTime(payload.timestamp || Date.now())
+            }
           } else if (workflowStatus === 'RUNNING') {
             setWorkflowStatus(null)
           }
@@ -93,7 +101,28 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     })
 
     return () => removeListener()
-  }, [invoke, storyId, workflowStatus])
+  }, [invoke, storyId, workflowStatus, workflowStartTime])
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null
+    if (workflowStatus === 'RUNNING' && workflowStartTime) {
+      timer = setInterval(() => {
+        const diff = Date.now() - workflowStartTime
+        const mins = Math.floor(diff / 60000)
+        const secs = Math.floor((diff % 60000) / 1000)
+        setElapsedTime(`${mins}:${secs.toString().padStart(2, '0')}`)
+      }, 1000)
+    } else if (workflowStatus === 'COMPLETE' && workflowStartTime) {
+      const diff = Date.now() - workflowStartTime
+      const mins = Math.floor(diff / 60000)
+      const secs = Math.floor((diff % 60000) / 1000)
+      setElapsedTime(`${mins}:${secs.toString().padStart(2, '0')}`)
+    } else if (!workflowStatus) {
+      setElapsedTime(null)
+      setWorkflowStartTime(null)
+    }
+    return () => { if (timer) clearInterval(timer) }
+  }, [workflowStatus, workflowStartTime])
 
   const handleSetField = async (field: string, value: string) => {
     try {
@@ -331,8 +360,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           </div>
 
           <div className="space-y-2">
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Workflow Engine</p>
-            <div className="flex gap-2">
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Workflow</p>
+            <div className="flex items-center gap-2">
               <select
                 value={story.workflowId ?? '— none —'}
                 onChange={e => handleSetField('workflowId', e.target.value)}
@@ -346,22 +375,37 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
               <button
                 onClick={() => {
                   if (workflowStatus === 'RUNNING') {
-                    invoke('workflow:reset').then(() => setWorkflowStatus(null)).catch(() => {})
+                    invoke('workflow:reset').then(() => {
+                      setWorkflowStatus(null)
+                      setWorkflowStartTime(null)
+                    }).catch(() => {})
                   } else {
                     invoke('workflow:run', { templateId: story.workflowId, context: { storyId, storyTitle: story.title } }).catch(() => {})
                     setWorkflowStatus('RUNNING')
+                    setWorkflowStartTime(Date.now())
                   }
                 }}
                 disabled={!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status)}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${!story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status) ? 'opacity-50 cursor-not-allowed border-zinc-700 text-zinc-500' : 'border-copernicus-phosphor text-copernicus-phosphor hover:bg-copernicus-phosphor hover:text-[#050505]'}`}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold border transition-all ${
+                  !story.workflowId || story.workflowId === '— none —' || !['IN_PROGRESS', 'SPRINT_PLANNING'].includes(story.status) 
+                    ? 'opacity-40 cursor-not-allowed border-zinc-800 text-zinc-600' 
+                    : workflowStatus === 'RUNNING'
+                      ? 'border-red-500/50 text-red-400 hover:bg-red-500/10'
+                      : 'border-copernicus-phosphor/50 text-copernicus-phosphor hover:bg-copernicus-phosphor/10'
+                }`}
               >
-                {workflowStatus === 'RUNNING' ? '⏹' : '▶'}
+                {workflowStatus === 'RUNNING' ? <><span className="text-[8px]">⏹</span> Stop</> : <><span className="text-[8px]">▶</span> Run Workflow</>}
               </button>
             </div>
 
             {workflowStatus && workflowStatus !== 'IDLE' && (
-              <div className={`text-[9px] font-mono px-2 py-1 rounded border text-center ${workflowStatus === 'RUNNING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' : workflowStatus === 'COMPLETE' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-                SYSTEM_{workflowStatus}
+              <div className={`flex items-center justify-center gap-1.5 text-[9px] font-mono px-2 py-1 rounded border ${
+                workflowStatus === 'RUNNING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' : 
+                workflowStatus === 'COMPLETE' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                'bg-red-500/10 text-red-400 border-red-500/20'
+              }`}>
+                {workflowStatus === 'RUNNING' ? '● RUNNING' : workflowStatus === 'COMPLETE' ? '● DONE' : '● FAILED'}
+                {elapsedTime && <span className="opacity-60 ml-1">[{elapsedTime}]</span>}
               </div>
             )}
           </div>

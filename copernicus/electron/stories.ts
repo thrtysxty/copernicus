@@ -157,7 +157,7 @@ export class StoriesManager {
 
     const workflowMatch = content.match(/\*\*(?:Workflow):\*\*\s*(.+)$/m)
     const workflow_id = workflowMatch && workflowMatch[1].trim() !== '(none)' && workflowMatch[1].trim() !== '— none —' && workflowMatch[1].trim() !== ''
-      ? workflowMatch[1].trim() : undefined
+      ? workflowMatch[1].trim() : null
 
     const blockedByMatch = content.match(/##\s+Blocked By\s*\n([\s\S]*?)(?=\n##|$)/)
     const blockedByLines = (blockedByMatch?.[1] ?? '').trim().split('\n')
@@ -281,6 +281,7 @@ ${title}
 
     this.ledger.upsertStory({
       id, slug, title, status: 'READY', priority, type, epic,
+      workflow_id: null,
       blocked_by: [], blocks: [], body_md: body, file_path: filepath, date: dateStr,
       flagged: false,
     })

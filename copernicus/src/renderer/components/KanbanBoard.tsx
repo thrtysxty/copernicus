@@ -221,6 +221,17 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                           <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
                         </div>
 
+                        {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && story.status !== 'COMPLETE' && (
+                          <div className={`mt-1 flex items-center gap-1 text-[8px] font-mono ${
+                            workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
+                            workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            <span className={workflowStatus.state === 'RUNNING' ? 'animate-pulse' : ''}>●</span>
+                            {workflowStatus.state === 'RUNNING' ? 'RUNNING' :
+                             workflowStatus.state === 'COMPLETE' ? 'DONE' : 'FAILED'}
+                          </div>
+                        )}
+
                         <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
                           <span className="text-[8px] font-mono text-zinc-600">{story.id}</span>
                           <div className="flex gap-1">
@@ -230,20 +241,6 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                             <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
                           </div>
                         </div>
-
-                        {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && (
-                          <div className={`mt-1.5 flex items-center gap-1 text-[8px] font-mono ${
-                            workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
-                            workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              workflowStatus.state === 'RUNNING' ? 'bg-amber-400 animate-pulse' :
-                              workflowStatus.state === 'COMPLETE' ? 'bg-green-400' : 'bg-red-400'
-                            }`} />
-                            {workflowStatus.state === 'RUNNING' ? 'RUNNING' :
-                             workflowStatus.state === 'COMPLETE' ? 'DONE' : 'FAILED'}
-                          </div>
-                        )}
                       </motion.div>
                     ))}
                   </div>

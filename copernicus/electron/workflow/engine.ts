@@ -338,6 +338,9 @@ export class WorkflowEngine {
         return `written:${d.filePath}`;
       }
       case 'story-update': {
+        if (d.field === 'status' && d.storyId && d.value) {
+          this.services.storiesManager.updateStoryStatus(d.storyId, d.value);
+        }
         stateLedger.logEvent(
           'STORY_UPDATE',
           JSON.stringify({ field: d.field, value: d.value, storyId: d.storyId }),
