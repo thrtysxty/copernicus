@@ -203,14 +203,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const isFirstCallAfterSwitch = useRef(false)
   const memoryInjectedRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const guideScrollRef = useRef<HTMLDivElement>(null)
 
   const [activeBackTab, setActiveBackTab] = useState('context')
   const isFlipped = flippedPanes.includes('chat')
+
+  const [guideMessages, setGuideMessages] = useState<Message[]>([])
+  const [guideInput, setGuideInput] = useState('')
+  const [showClaudeFallback, setShowClaudeFallback] = useState(false)
+  const [lastGuideQuestion, setLastGuideQuestion] = useState('')
 
   const [isSavingPrompt, setIsSavingPrompt] = useState(false)
   const [newPromptName, setNewPromptName] = useState('')
 
   useEffect(() => {
+    setGuideMessages([])
+    setShowClaudeFallback(false)
     if (isFlipped) {
       setActiveBackTab('context')
       // Refresh active model on flip
@@ -219,7 +227,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         if (activeId) setModel(activeId)
       }).catch(() => {})
     }
-  }, [isFlipped, invoke])
+  }, [isFlipped, activeBackTab, invoke])
 
   const confirmSavePrompt = () => {
     const text = input.trim()
@@ -257,6 +265,33 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const usePrompt = (text: string) => {
     setInput(text)
     toggleFlip('chat')
+  }
+
+  const handleAskClaude = () => {
+    toggleFlip('chat')
+    setInput(lastGuideQuestion)
+    setShowClaudeFallback(false)
+    setGuideMessages([])
+  }
+
+  const handleGuideSubmit = () => {
+    const q = guideInput.trim()
+    if (!q) return
+    setLastGuideQuestion(q)
+    setGuideMessages(prev => [...prev, { id: `gu-${Date.now()}`, role: 'user', content: q }])
+    setGuideInput('')
+
+    const match = matchKnowledge(q)
+    if (match) {
+      setGuideMessages(prev => [...prev, {
+        id: `gc-${Date.now()}`,
+        role: 'copernicus',
+        content: match.response,
+        showTourButton: match.showTourButton
+      }])
+    } else {
+      setShowClaudeFallback(true)
+    }
   }
 
   const exportChat = () => {
@@ -378,9 +413,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                     </span>
                   </div>
                   <div 
-                    className={`w-2 h-2 rounded-full ${authStatus?.isActive || model === 'copernicus-guide' ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} 
+                    className={`w-2 h-2 rounded-full ${authStatus?.isActive ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} 
                     title={authStatus?.isActive ? 'Authenticated' : 'Not Authenticated'}
                   />
+
                 </div>
               </div>
 
@@ -517,13 +553,91 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </div>
           )}
 
-          {/* AC-6 Guide Tab Placeholder */}
+          {/* Story 188: Guide Tab Implementation */}
           {activeBackTab === 'guide' && (
-            <div className="relative h-full flex flex-col items-center justify-center p-8 text-center overflow-hidden border border-copernicus-steel/20 rounded bg-black/40">
-              <div className="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] pointer-events-none opacity-20"></div>
-              <div className="relative z-10">
-                <div className="text-copernicus-phosphor font-mono text-lg mb-2 glow-sm tracking-tighter">© COPERNICUS</div>
-                <div className="text-zinc-500 text-xs font-mono uppercase tracking-widest">Guide will appear here.</div>
+            <div className="flex flex-col h-full bg-[#0a0a0a] border border-copernicus-steel/20 rounded overflow-hidden">
+              {/* Message Feed */}
+              <div 
+                ref={guideScrollRef}
+                className="flex-1 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-copernicus-steel"
+              >
+                {guideMessages.length === 0 ? (
+                   <div className="h-full flex flex-col items-center justify-center p-8 text-center opacity-40">
+                      <div className="text-copernicus-phosphor font-mono text-lg mb-2 glow-sm tracking-tighter uppercase">© Copernicus</div>
+                      <div className="text-zinc-500 text-[10px] font-mono uppercase tracking-[0.2em]">Ready_To_Assist</div>
+                   </div>
+                ) : (
+                  guideMessages.map(m => (
+                    <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end ml-auto' : 'items-start mr-auto'} max-w-[90%]`}>
+                      <div className="flex items-center gap-1.5 mb-1 px-1">
+                        {m.role === 'copernicus' && <span className="text-copernicus-phosphor font-mono text-[10px]">©</span>}
+                        <span className={`text-[8px] uppercase font-bold tracking-widest ${m.role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'}`}>
+                          {m.role === 'user' ? 'DEVELOPER' : 'COPERNICUS'}
+                        </span>
+                      </div>
+                      <div className={`p-3 text-xs border rounded transition-all duration-300 ${
+                        m.role === 'user' 
+                          ? 'bg-copernicus-phosphor/10 border-copernicus-phosphor/20 text-zinc-300 rounded-l-md rounded-tr-md'
+                          : 'bg-zinc-900/50 border-zinc-700 text-zinc-200 rounded-r-md rounded-tl-md'
+                      }`}>
+                        <div className="whitespace-pre-wrap">{m.content}</div>
+                        {m.showTourButton && (
+                          <button
+                            onClick={() => retakeTour()}
+                            className="mt-3 w-full py-1.5 bg-copernicus-phosphor text-[#050505] font-bold text-[9px] uppercase tracking-widest hover:opacity-90 transition-opacity"
+                          >
+                            Start Tour
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+
+                {showClaudeFallback && (
+                  <div className="bg-zinc-900/80 border border-copernicus-phosphor/30 p-4 rounded animate-in fade-in slide-in-from-bottom-2">
+                    <div className="text-xs text-zinc-300 mb-3 leading-relaxed">
+                      I don't have a quick answer for that — but Claude can help.
+                      Want me to send this question to your active chat session?
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={handleAskClaude}
+                        className="flex-1 bg-copernicus-phosphor text-[#050505] text-[9px] font-bold py-2 uppercase tracking-wider"
+                      >
+                        Yes, ask Claude
+                      </button>
+                      <button 
+                        onClick={() => setShowClaudeFallback(false)}
+                        className="flex-1 border border-zinc-700 text-zinc-400 text-[9px] font-bold py-2 uppercase tracking-wider hover:bg-white/5 transition-colors"
+                      >
+                        Never mind
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input Field */}
+              <div className="p-2 bg-[#080808] border-t border-copernicus-steel/30">
+                <div className="relative flex items-center bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1">
+                  <input
+                    value={guideInput}
+                    onChange={e => setGuideInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleGuideSubmit()
+                    }}
+                    placeholder="Ask Copernicus..."
+                    className="flex-1 bg-transparent border-none focus:ring-0 text-xs text-zinc-300 px-2 py-1 font-mono"
+                  />
+                  <button 
+                    onClick={handleGuideSubmit}
+                    disabled={!guideInput.trim()}
+                    className="p-1.5 text-zinc-600 hover:text-copernicus-phosphor transition-colors disabled:opacity-30"
+                  >
+                    <Send size={12} />
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -539,10 +653,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   }, [messages])
 
   useEffect(() => {
+    if (guideScrollRef.current) {
+      guideScrollRef.current.scrollTop = guideScrollRef.current.scrollHeight
+    }
+  }, [guideMessages, showClaudeFallback])
+
+  useEffect(() => {
     invoke<any>('models:list').then((r: any) => {
       const data = unwrapIpc<any[]>(r) ?? []
-      const guideModel = { id: 'copernicus-guide', name: 'Copernicus Guide', provider: 'built-in', contextWindow: 0 }
-      setAvailableModels([guideModel, ...data])
+      setAvailableModels(data)
     }).catch(log.error)
     
     invoke<any>('devtime:status').then(res => {
@@ -696,22 +815,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         setShowSuggestions(false)
         return
       }
-    }
-
-    // Story 188: Built-in Guide (forced if model is selected)
-    const match = matchKnowledge(currentInput)
-    if (match || model === 'copernicus-guide') {
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: currentInput }])
-      setInput('')
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          id: `cp-${Date.now()}`, 
-          role: 'copernicus', 
-          content: match ? match.response : "I don't have a specific answer for that in my knowledge base. Try asking about 'views', 'workflows', or 'jules'.",
-          showTourButton: match ? !!match.showTourButton : false 
-        }])
-      }, 100)
-      return
     }
 
     const userMsg: Message = {
@@ -917,7 +1020,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                   onClick={() => setShowModelPicker(!showModelPicker)}
                   className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 hover:text-white transition-colors uppercase tracking-wider"
                 >
-                  <div className={`w-1.5 h-1.5 rounded-full ${model === 'copernicus-guide' ? 'bg-copernicus-phosphor shadow-[0_0_5px_rgba(74,222,128,0.8)]' : 'bg-copernicus-phosphor animate-pulse shadow-[0_0_5px_rgba(74,222,128,0.5)]'}`} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-copernicus-phosphor animate-pulse shadow-[0_0_5px_rgba(74,222,128,0.5)]" />
                   {availableModels.find(m => m.id === model)?.name || 'Model'}
                   <ChevronDown size={10} className={`transition-transform duration-200 ${showModelPicker ? 'rotate-180' : ''}`} />
                 </button>
@@ -930,10 +1033,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                         className={`w-full text-left px-3 py-2 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor/5 border-l-2 border-copernicus-phosphor' : ''}`}
                         onClick={() => {
                             if (model !== m.id) {
-                              if (model !== 'copernicus-guide' && m.id !== 'copernicus-guide') {
-                                invoke('snapshot:save', { panel_id: 'chat', model_id: model, provider: availableModels.find((x: any) => x.id === model)?.provider || 'unknown', messages: messages.filter(m => m.role !== 'copernicus') }).catch(() => {})
-                                isFirstCallAfterSwitch.current = true
-                              }
+                              invoke('snapshot:save', { panel_id: 'chat', model_id: model, provider: availableModels.find((x: any) => x.id === model)?.provider || 'unknown', messages: messages.filter(m => m.role !== 'copernicus') }).catch(() => {})
+                              isFirstCallAfterSwitch.current = true
                               setMessages(prev => [...prev, { id: `msg-divider-${Date.now()}`, role: 'assistant', content: `↔ Switched to ${m.name}` }])
                             }
                             setModel(m.id)
