@@ -12,7 +12,7 @@ Gemini's role is **Implement exactly what the story says**. Not plan. Not archit
 - Reads the assigned story file completely before touching any code
 - Implements the AC items listed — no more, no fewer
 - Runs `cd copernicus && npx tsc --noEmit` before every commit
-- Commits with the exact format: `feat(story-NNN): description`
+- Commits with the exact format: `feat(story-NNN): description` — no `Co-Authored-By` or authoring trailers
 - Pushes on completion and exits
 
 ### What Gemini MUST NOT DO

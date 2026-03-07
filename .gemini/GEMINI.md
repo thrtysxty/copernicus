@@ -50,6 +50,32 @@ gemini.md            ← Gemini-specific addendum — READ THIS SECOND
 
 ---
 
+## Sub-Delegation Policy
+
+**Prefer cloud model subagents for all substantive sub-tasks. Use local Ollama as fallback only when cloud is unavailable.**
+
+Delegate in this priority order:
+
+1. **Cloud Dispatch — drafting, research, vision:**
+   ```bash
+   python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" --worktree <branch_name>
+   ```
+   Roles: `thinker`, `coder`, `vision`, `researcher`, `fast`.
+   Always use `--worktree` when the sub-agent drafts or modifies code.
+
+2. **Jules — isolated sub-stories that need a PR:**
+   ```bash
+   bash scripts/jules_assign.sh docs/stories/story_NNN_*.md
+   ```
+   Only dispatch to Jules if Claude has explicitly approved it for the sub-task.
+
+3. **Local Ollama — fallback only:**
+   ```bash
+   python3 scripts/claude_ollama_cli.py "/persona <prompt>"
+   ```
+
+---
+
 ## Non-Negotiable Technical Rules
 
 ### IPC (Electron)
@@ -82,7 +108,7 @@ className="border-b-2 border-copernicus-phosphor ..."  // underline
 # TypeScript stories — run before every commit
 cd copernicus && npx tsc --noEmit   # must be zero errors
 
-# Commit format — one story per commit
+# Commit format — one story per commit. No Co-Authored-By or authoring trailers.
 git commit -m "feat(story-NNN): description"
 git push
 ```

@@ -24,7 +24,7 @@ Spending tokens on planning here wastes the entire pairing model.
 2. **Read the files listed** in the story's "Files to Modify" section
 3. **Implement exactly the AC** — nothing beyond scope
 4. **Verify:** `cd copernicus && npx tsc --noEmit` — zero errors before commit (TypeScript stories only)
-5. **Commit:** `feat(story-NNN): description` — one commit per story
+5. **Commit:** `feat(story-NNN): description` — one commit per story. **No `Co-Authored-By` or authoring trailers of any kind.**
 6. **Push:** `git push`
 
 ---
@@ -39,25 +39,51 @@ Output `[[SIGNAL_ORCHESTRATOR]]` and stop if:
 
 ---
 
+## Prompt Efficiency (applies to all cloud sub-agent calls)
+
+- **Be direct:** Imperative first. "Implement X" not "Please implement X".
+- **Use delimiters:** Separate instructions from code with `###` or `---`.
+- **Set max_tokens:** Pass an explicit output cap on every `cloud_agent.py` call to prevent over-generation.
+- **Stop sequences:** Use `[[DONE]]` or `\n\n` to halt after the answer — not mid-sentence padding.
+- **Skeletonize:** Send function signatures + the target block, not full files. Strip imports not relevant to the task.
+- **Sliding window:** When re-dispatching, include only the last 3 turns + a ≤200-token summary — not the full session.
+
+---
+
 ## Technical Standards (non-negotiable)
 
 - **IPC handlers:** every `ipcMain.handle` uses `handleIpc()` wrapper in `main.ts`
 - **Renderer IPC:** `useIpcError()` hook + `unwrapIpc()` — never bare `window.ipcRenderer.invoke`
 - **tsc:** must pass with zero errors before every commit
-- **Commit format:** `feat(story-NNN): description` — one story per commit
+- **Commit format:** `feat(story-NNN): description` — one story per commit, no authoring trailers
 - **No placeholders:** complete code blocks only — no `// ... rest of code`
 - **VT active state:** `bg-copernicus-phosphor text-[#050505] rounded-none`
 
 ---
 
-## Dev Orchestrator (for Gemini's own sub-delegation)
+## Sub-Delegation (for Gemini's own complex sub-tasks)
 
-For complex sub-tasks within a story, Gemini may use:
-```bash
-python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" --worktree <branch_name>
-```
-**Always use `--worktree` when delegating code drafts.**
-Roles: `thinker`, `coder`, `vision`, `researcher`, `fast`.
+**Cloud models are Gemini's primary tool. Local Ollama is fallback. Jules for sub-tasks that need a PR.**
+
+Delegate in this priority order:
+
+1. **Cloud Dispatch — drafting, research, vision (Gemini is the cloud orchestrator):**
+   ```bash
+   python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" --worktree <branch_name>
+   ```
+   Roles: `thinker`, `coder`, `vision`, `researcher`, `fast`.
+   Always use `--worktree` when the sub-agent drafts or modifies code.
+
+2. **Jules — isolated sub-stories that need a PR:**
+   ```bash
+   bash scripts/jules_assign.sh docs/stories/story_NNN_*.md
+   ```
+   Only dispatch to Jules if Claude has explicitly approved it for the sub-task.
+
+3. **Local Ollama — fallback only (cloud unavailable):**
+   ```bash
+   python3 scripts/claude_ollama_cli.py "/senior-dev <prompt>"
+   ```
 
 ---
 
