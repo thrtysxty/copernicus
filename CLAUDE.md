@@ -34,7 +34,7 @@ EOF
 cat > /tmp/gemini_launch.sh << 'LAUNCH'
 #!/bin/zsh
 cd /Users/dadmin/Projects/agentic-platform
-python3 dev_orchestrator/gemini_session_manager.py spawn "$(cat /tmp/gemini_prompt.md)" --stories NNN
+python3 dev_orchestrator/gemini_session_manager.py spawn --prompt-file /tmp/gemini_prompt.md --stories NNN
 LAUNCH
 chmod +x /tmp/gemini_launch.sh
 

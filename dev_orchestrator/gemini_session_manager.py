@@ -221,7 +221,8 @@ if __name__ == '__main__':
     sub = parser.add_subparsers(dest='cmd')
 
     sp = sub.add_parser('spawn', help='Spawn a Gemini session with a prompt')
-    sp.add_argument('prompt', help='Prompt text to pass to gemini -p')
+    sp.add_argument('prompt', nargs='?', default=None, help='Prompt text (use --prompt-file to avoid shell escaping issues)')
+    sp.add_argument('--prompt-file', help='Path to file containing the prompt (avoids shell quoting issues)')
     sp.add_argument('--stories', nargs='+', default=[], help='Story IDs being worked on')
     sp.add_argument('--persona', default='dev', help='Persona to inject (default: dev). File: .gemini/personas/<name>.md')
 
@@ -236,7 +237,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.cmd == 'spawn':
-        cmd_spawn(args.prompt, args.stories, persona=args.persona)
+        if args.prompt_file:
+            prompt = Path(args.prompt_file).read_text()
+        elif args.prompt:
+            prompt = args.prompt
+        else:
+            parser.error('spawn requires either a prompt argument or --prompt-file')
+        cmd_spawn(prompt, args.stories, persona=args.persona)
     elif args.cmd == 'list':
         cmd_list()
     elif args.cmd == 'tail':
