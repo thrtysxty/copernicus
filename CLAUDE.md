@@ -38,10 +38,10 @@ python3 dev_orchestrator/gemini_session_manager.py spawn "$(cat /tmp/gemini_prom
 LAUNCH
 chmod +x /tmp/gemini_launch.sh
 
-# Step 3 — trigger the VS Code task (auto-closes terminal on completion)
-# Single session → "Gemini: Run Session" (reads /tmp/gemini_launch.sh)
-# Parallel B     → "Gemini: Run Session B" (reads /tmp/gemini_launch_b.sh)
-# Parallel C     → "Gemini: Run Session C" (reads /tmp/gemini_launch_c.sh)
+# Step 3 — open terminal tabs (one per session; slots A/B/C for parallel)
+# Single:   /tmp/gemini_launch.sh   → "Gemini: Run Session" task
+# Parallel B: /tmp/gemini_launch_b.sh → "Gemini: Run Session B"
+# Parallel C: /tmp/gemini_launch_c.sh → "Gemini: Run Session C"
 osascript << 'APPLESCRIPT'
 tell application "Visual Studio Code"
   activate
@@ -49,12 +49,10 @@ end tell
 delay 0.5
 tell application "System Events"
   tell process "Code"
-    key code 35 using {command down, shift down}
-    delay 0.8
-    keystroke "Tasks: Run Task"
-    key code 36
-    delay 1.0
-    keystroke "Gemini: Run Session"
+    keystroke "`" using {control down, shift down}
+    delay 1.5
+    keystroke "/tmp/gemini_launch.sh"
+    delay 0.3
     key code 36
   end tell
 end tell
