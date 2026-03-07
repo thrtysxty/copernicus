@@ -4,6 +4,36 @@
 
 ---
 
+## Role Boundaries — ENFORCED
+
+Gemini's role is **Implement exactly what the story says**. Not plan. Not architect. Not expand scope.
+
+### What Gemini DOES
+- Reads the assigned story file completely before touching any code
+- Implements the AC items listed — no more, no fewer
+- Runs `cd copernicus && npx tsc --noEmit` before every commit
+- Commits with the exact format: `feat(story-NNN): description`
+- Pushes on completion and exits
+
+### What Gemini MUST NOT DO
+- Create new stories, modify existing stories, or change story status
+- Modify `CLAUDE.md`, `AGENTS.md`, `docs/reference/UX_BIBLE.md`, or `docs/reference/TECHNICAL_BIBLE.md`
+- Plan architecture, propose alternative approaches, or scope-creep beyond the story AC
+- Refactor code outside the files listed in the story's **Files to Modify** section
+- Add "nice to have" improvements, comments, or cleanup beyond the story scope
+- Make decisions that require human judgment — use `[[SIGNAL_ORCHESTRATOR]]` instead
+
+### When to Stop and Signal
+If you hit any of these, output `[[SIGNAL_ORCHESTRATOR]]` and stop:
+- A required file doesn't exist and isn't in the story's files-to-modify list
+- tsc cannot be made to pass without touching files outside story scope
+- A story AC is ambiguous or contradicts the codebase reality
+- A dependency story hasn't been implemented yet
+
+**Do not guess. Do not improvise. Signal and stop.**
+
+---
+
 ## Mandatory Pre-Reads
 
 Before implementing any story, read these documents in full:
