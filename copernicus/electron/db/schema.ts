@@ -166,6 +166,7 @@ export const SCHEMA = {
       line_start INTEGER,
       line_end INTEGER,
       symbols TEXT,
+      lsp_metadata TEXT,
       chunk_index INTEGER,
       content TEXT,
       embedding FLOAT[768]

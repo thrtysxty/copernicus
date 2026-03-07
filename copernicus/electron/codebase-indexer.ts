@@ -8,6 +8,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import log from './utils/logger'
 import { lspManager } from './lsp/lsp-manager'
 import * as chokidar from 'chokidar'
+import { EmbeddingGenerator } from './llm/embedding-generator'
+import { normalizeEmbedding } from './llm/alignment'
 
 const settingsStore = new SettingsStore()
 
@@ -52,6 +54,7 @@ export class CodebaseIndexer {
         line_start INTEGER,
         line_end INTEGER,
         symbols TEXT,
+        lsp_metadata TEXT,
         chunk_index INTEGER,
         content TEXT,
         embedding FLOAT[768]
@@ -167,8 +170,8 @@ export class CodebaseIndexer {
       }
 
       const insertStmt = stateLedger.db.prepare(`
-        INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, chunk_index, content, embedding)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, lsp_metadata, chunk_index, content, embedding)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       stateLedger.db.transaction(() => {
@@ -179,6 +182,7 @@ export class CodebaseIndexer {
         try {
           const { embedding, provider } = await this.getEmbedding(chunk.content)
           this.activeProvider = provider
+          const normalized = normalizeEmbedding(embedding)
           stateLedger.db.transaction(() => {
             insertStmt.run(
               chunk.chunk_id,
@@ -186,9 +190,10 @@ export class CodebaseIndexer {
               chunk.line_start,
               chunk.line_end,
               chunk.symbols,
+              null, // lsp_metadata initially null
               chunk.chunk_index,
               chunk.content,
-              new Float32Array(embedding)
+              new Float32Array(normalized)
             )
           })()
         } catch (e) {
@@ -218,6 +223,8 @@ export class CodebaseIndexer {
         this.filesIndexed++
       }
 
+      await this.indexWithLsp()
+
       // Background watcher for incremental re-indexing on file changes
       if (this.watcher) await this.watcher.close()
       this.watcher = chokidar.watch(rootPath, {
@@ -238,8 +245,77 @@ export class CodebaseIndexer {
     }
   }
 
+  public async indexWithLsp() {
+    try {
+      // Fetch all symbols across the workspace
+      const symbols = await lspManager.sendRequest('workspace/symbol', { query: '' })
+      if (!Array.isArray(symbols)) return
+
+      const fileMap = new Map<string, any[]>()
+      for (const sym of symbols) {
+        let uri = sym.location?.uri || sym.uri
+        if (!uri) continue
+        const filePath = uri.replace('file://', '')
+        if (!fileMap.has(filePath)) fileMap.set(filePath, [])
+        fileMap.get(filePath)!.push(sym)
+      }
+
+      stateLedger.db.transaction(() => {
+        const stmtSelect = stateLedger.db.prepare(`SELECT * FROM codebase_vec WHERE file_path = ?`)
+        const stmtDelete = stateLedger.db.prepare(`DELETE FROM codebase_vec WHERE chunk_id = ?`)
+        const stmtInsert = stateLedger.db.prepare(`
+          INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, lsp_metadata, chunk_index, content, embedding)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+
+        for (const [filePath, fileSymbols] of fileMap.entries()) {
+          const rows = stmtSelect.all(filePath) as any[]
+          for (const row of rows) {
+            // Find symbols that overlap with this chunk
+            const matchingSymbols = fileSymbols.filter(sym => {
+              const startLine = sym.location?.range?.start?.line ?? sym.range?.start?.line ?? -1
+              const endLine = sym.location?.range?.end?.line ?? sym.range?.end?.line ?? -1
+              if (startLine === -1 || endLine === -1) return false
+              // Overlap check
+              return Math.max(startLine, row.line_start) <= Math.min(endLine, row.line_end)
+            })
+
+            if (matchingSymbols.length > 0) {
+              const lspMetadata = JSON.stringify(matchingSymbols.map(sym => ({
+                symbolName: sym.name,
+                kind: sym.kind,
+                range: sym.location?.range ?? sym.range
+              })))
+
+              stmtDelete.run(row.chunk_id)
+              // Parse Buffer to Float32Array properly
+              const buffer = row.embedding as Buffer;
+              const baseEmbedding = Array.from(new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4));
+              const weightedEmbedding = EmbeddingGenerator.applyWeights(baseEmbedding, lspMetadata);
+
+              stmtInsert.run(
+                row.chunk_id,
+                row.file_path,
+                row.line_start,
+                row.line_end,
+                row.symbols,
+                lspMetadata,
+                row.chunk_index,
+                row.content,
+                new Float32Array(weightedEmbedding)
+              )
+            }
+          }
+        }
+      })()
+    } catch (e) {
+      log.error('[Indexer] indexWithLsp failed:', e)
+    }
+  }
+
   public async search(query: string, topK = 5): Promise<any[]> {
     const { embedding } = await this.getEmbedding(query)
+    const normalizedQuery = normalizeEmbedding(embedding)
 
     // Fetch workspace symbols for the query to boost relevant chunks
     let symbolNames: string[] = []
@@ -260,7 +336,7 @@ export class CodebaseIndexer {
       LIMIT ?
     `)
     // Fetch 2× to allow re-ranking with symbol boost
-    const rows = stmt.all(new Float32Array(embedding), topK * 2) as any[]
+    const rows = stmt.all(new Float32Array(normalizedQuery), topK * 2) as any[]
 
     const ranked = rows.map((r) => {
       let similarity = 1 - r.distance
