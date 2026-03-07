@@ -25,28 +25,100 @@ Claude's role is **Plan → Delegate → Review**. Not implement.
 
 ### Dispatch Protocol
 ```bash
-# ALWAYS use the session manager — never bare gemini spawn
-python3 dev_orchestrator/gemini_session_manager.py spawn "$(cat /tmp/prompt.md)" --stories NNN
-# run_in_background: true on the Bash tool — no & needed
+# Step 1 — write prompt to file
+cat > /tmp/gemini_prompt.md << 'EOF'
+<prompt content>
+EOF
+
+# Step 2 — write launcher script
+cat > /tmp/gemini_launch.sh << 'LAUNCH'
+#!/bin/zsh
+cd /Users/dadmin/Projects/agentic-platform
+python3 dev_orchestrator/gemini_session_manager.py spawn "$(cat /tmp/gemini_prompt.md)" --stories NNN
+LAUNCH
+chmod +x /tmp/gemini_launch.sh
+
+# Step 3 — open a new VS Code terminal tab and run the launcher
+# Ctrl+Shift+` creates a new tab (Ctrl+` toggles — do NOT use that)
+osascript << 'APPLESCRIPT'
+tell application "Visual Studio Code"
+  activate
+end tell
+delay 0.5
+tell application "System Events"
+  tell process "Code"
+    keystroke "`" using {control down, shift down}
+    delay 1.5
+    keystroke "/tmp/gemini_launch.sh"
+    delay 0.3
+    key code 36
+  end tell
+end tell
+APPLESCRIPT
 ```
-Claude returns tokens to the user. When the task notification fires, Claude reviews.
+A **"Gemini Session"** terminal panel opens in VS Code. Claude returns tokens to the user. When the task finishes, Claude reviews `git diff HEAD~1`.
 **Cost of doing Gemini's work yourself: ~$40 in wasted tokens. Cost of delegating: $0.**
+
+> Always trigger the VS Code task on dispatch. Never run Gemini silently.
+> Jules dispatch: same pattern — write `/tmp/jules_launch.sh`, trigger **"Jules: Run Session"** task.
 
 ---
 
 ## Subagent Policy
-**Always launch Sonnet subagents unless specified otherwise. Use the local Ollama RAG bridge for repository research to preserve tokens.**
-- Use `scripts/claude_ollama_cli.py "/persona <prompt>"` to route to local Ollama personas:
-  - `/architect` (Gemma 3 12B): High-intel local architectural decisions.
-  - `/senior-dev` (GLM 4.7 9B): Strong local coding and logic.
-  - `/scribe` (Kimi Cloud): Documentation/Summarization.
-  - `/researcher` (DeepSeek-R1 Local): Reasoning/Bug tracing.
-  - `/sentinel` (Mistral-v0.2): Fast local security audits.
-- **High-Intel / Experimental Drafting:** Use `dev_orchestrator/cloud_agent.py` — the canonical cloud dispatch tool — to delegate planning, complex coding, or vision tasks to high-parameter cloud models.
-  - `python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" [--worktree <branch_name>]`
-  - Roles available: `thinker` (Kimi), `coder` (Qwen3-Coder), `vision` (Qwen3-VL), `researcher` (DeepSeek-V3), `fast` (Gemini-Flash).
-  - Full model registry: `dev_orchestrator/models.json` (14 cloud models with `:cloud` suffix).
-  - **CRITICAL:** ALWAYS use `--worktree <branch_name>` when the subagent needs to draft or modify code, to ensure its workspace is safely isolated from the main branch.
+**Delegate early and often — every task Claude handles directly costs tokens. Gemini orchestrates cloud models; Claude plans, delegates, and reviews.**
+
+### Delegate Selection (in priority order)
+
+1. **Jules — self-contained implementation stories (async PR, zero Claude tokens):**
+   ```bash
+   bash scripts/jules_assign.sh docs/stories/story_NNN_*.md
+   # Optional persona overlay: --as bolt|palette|sentinel
+   ```
+   Use for TypeScript/React stories. Story must be `APPROVED FOR IMPLEMENTATION`.
+
+2. **Gemini — multi-file implementation + cloud model orchestration (zero Claude tokens):**
+   ```bash
+   python3 dev_orchestrator/gemini_session_manager.py spawn "$(cat /tmp/prompt.md)" --stories NNN
+   ```
+   Gemini manages cloud sub-agents internally and hands results back to Claude for review.
+
+3. **Local Ollama — quick lookups, RAG, security scans (zero cost, fast):**
+   ```bash
+   python3 scripts/claude_ollama_cli.py "/persona <prompt>"
+   ```
+   Personas: `/architect` (Gemma 3 12B), `/senior-dev` (GLM 4.7 9B), `/scribe` (Kimi), `/researcher` (DeepSeek-R1), `/sentinel` (Mistral-v0.2).
+
+4. **Cloud Dispatch — only when Gemini is not available and local cannot handle it:**
+   ```bash
+   python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" [--worktree <branch_name>]
+   ```
+   Roles: `thinker` (Kimi), `coder` (Qwen3-Coder), `vision` (Qwen3-VL), `researcher` (DeepSeek-V3), `fast` (Gemini-Flash).
+   **CRITICAL:** Always use `--worktree <branch_name>` when the subagent drafts or modifies code.
+
+- Always use the most token-efficient subagent capable of the task.
+
+## Context Discipline — Token Efficiency
+
+**Goal: minimize tokens Claude processes directly. Apply on every session.**
+
+### Prompt Construction
+- **Be direct:** Start with the imperative. "Summarize:" not "Could you please summarize..."
+- **Use delimiters:** Separate instructions from content with `###` or `---`. No wordy transitions.
+- **Limit output:** Specify length explicitly — "3-bullet list", "under 50 words", "one-line diff". Models respect hard constraints.
+- **Skeletonize dispatch prompts:** Send interfaces, function signatures, and the target block — not full files. A 50-line skeleton beats a 1,000-line file in every dispatch.
+- **Active scope only:** Reference only files listed in the story scope. Never attach build artifacts or files outside story scope.
+
+### History Management
+- **Checkpoint every ~15 turns:** Run `/handoff` to compress session state into a ≤200-token summary. Open a fresh session with that summary — lose the fluff, keep the engineering state.
+- **Sliding window:** When re-dispatching to Gemini/Jules, include only the last 3 exchanges + a short summary of earlier context. Not the full history.
+- **Strip fluff:** Before a handoff, remove "Thank you", "Got it", and other non-functional turns. Every word sent is a token charged.
+- **Diff-only review:** On Gemini/Jules completion, read `git diff HEAD~1` — not full files. Claude reviews the change, not the context it already knows.
+
+### Technical Controls (for cloud_agent.py and LLMService calls)
+- **max_tokens:** Set a hard output cap on every cloud dispatch. Prevents rambling after the answer is complete.
+- **stop_sequences:** Use `\n\n` or a sentinel like `[[DONE]]` to halt generation at the right point.
+- **Router pattern:** Use `fast` (Gemini-Flash) or local Ollama for parsing, searching, and classifying. Reserve heavy models for planning and complex reasoning only.
+- **RAG limits:** Cap local Ollama at 3–5 high-relevance snippets per query. More is diminishing return + bloat.
 
 ## Tool Use Protocol
 You have access to tools. To use them, output strict XML tags in your response.

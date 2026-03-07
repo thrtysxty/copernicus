@@ -463,7 +463,7 @@ export class WorkflowEngine {
       case 'kanban-flag-card': {
         const storyId = this.context.get('__storyId')
         if (!storyId) throw new Error('kanban-flag-card: __storyId missing from context')
-        await (this.services.storiesManager as any).setField(storyId, 'flagged', true)
+        await this.services.storiesManager.setField(storyId, 'flagged', true)
         this.services.win.webContents.send('stories:updated', this.services.storiesManager.listStories())
         return `kanban-flag-card:flagged:${storyId}`
       }
@@ -541,7 +541,15 @@ export class WorkflowEngine {
   }
 
   private interpolate(template: string): string {
-    return template
+    let result = template;
+    for (const [key, value] of this.context.entries()) {
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`\\{\\{${escapedKey}\\}\\}(\\}?)`, 'g');
+      // If we matched {{key}}, replace it. If it was {{key}}}, we might have a conflict with triple braces if we used them, but here we just do simple {{key}}
+      result = result.replace(re, value);
+    }
+    // Also keep the legacy ones for backward compatibility if they aren't in context
+    return result
       .replace(/\{\{storyId\}\}/g,    this.context.get('__storyId') ?? '')
       .replace(/\{\{storyTitle\}\}/g, this.context.get('__storyTitle') ?? '')
       .replace(/\{\{prevOutput\}\}/g, this.context.get('__lastOutput') ?? '');

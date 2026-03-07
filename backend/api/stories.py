@@ -39,33 +39,40 @@ except Exception:
 @stories_bp.route('', methods=['GET'])
 @require_auth
 def list_stories():
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.execute('SELECT * FROM stories ORDER BY created_at DESC')
         stories = [dict(row) for row in cursor.fetchall()]
-        conn.close()
         return jsonify({"ok": True, "data": stories}), 200
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @stories_bp.route('/<story_id>', methods=['GET'])
 @require_auth
 def get_story(story_id):
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
         row = cursor.fetchone()
-        conn.close()
         if row:
             return jsonify({"ok": True, "data": dict(row)}), 200
         else:
             return jsonify({"ok": False, "error": "Story not found"}), 404
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @stories_bp.route('', methods=['POST'])
 @require_auth
 def create_story():
+    conn = None
     try:
         data = request.get_json() or {}
         story_id = data.get('id', str(uuid.uuid4()))
@@ -83,15 +90,18 @@ def create_story():
 
         cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
         new_story = dict(cursor.fetchone())
-        conn.close()
 
         return jsonify({"ok": True, "data": new_story}), 201
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @stories_bp.route('/<story_id>', methods=['PUT'])
 @require_auth
 def update_story(story_id):
+    conn = None
     try:
         data = request.get_json() or {}
 
@@ -99,7 +109,6 @@ def update_story(story_id):
         # First check if exists
         cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
         if not cursor.fetchone():
-            conn.close()
             return jsonify({"ok": False, "error": "Story not found"}), 404
 
         update_fields = []
@@ -111,7 +120,6 @@ def update_story(story_id):
                 values.append(data[field])
 
         if not update_fields:
-            conn.close()
             return jsonify({"ok": False, "error": "No valid fields to update"}), 400
 
         now = int(time.time() * 1000)
@@ -126,26 +134,30 @@ def update_story(story_id):
 
         cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
         updated_story = dict(cursor.fetchone())
-        conn.close()
 
         return jsonify({"ok": True, "data": updated_story}), 200
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @stories_bp.route('/<story_id>', methods=['DELETE'])
 @require_auth
 def delete_story(story_id):
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
         if not cursor.fetchone():
-            conn.close()
             return jsonify({"ok": False, "error": "Story not found"}), 404
 
         conn.execute('DELETE FROM stories WHERE id = ?', (story_id,))
         conn.commit()
-        conn.close()
 
         return jsonify({"ok": True, "data": {"deleted": True}}), 200
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()

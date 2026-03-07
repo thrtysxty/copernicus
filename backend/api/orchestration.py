@@ -10,7 +10,7 @@ confirmation_results = {}
 
 @orchestration_bp.route('/confirm-model-switch', methods=['POST'])
 def request_confirmation():
-    data = request.json
+    data = request.json or {}
     request_id = str(int(time.time() * 1000))
     model_name = data.get('model')
     reason = data.get('reason')
@@ -33,7 +33,7 @@ def request_confirmation():
     while request_id not in confirmation_results:
         if time.time() - start_time > timeout:
             return jsonify({"approved": False, "error": "User confirmation timed out"}), 408
-        time.sleep(0.5)
+        time.sleep(0.1)
         
     result = confirmation_results.pop(request_id)
     pending_confirmations.pop(request_id, None)
@@ -46,7 +46,7 @@ def get_pending():
 
 @orchestration_bp.route('/resolve-confirmation', methods=['POST'])
 def resolve_confirmation():
-    data = request.json
+    data = request.json or {}
     request_id = data.get('request_id')
     approved = data.get('approved', False)
     

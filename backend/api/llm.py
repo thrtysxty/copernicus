@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import subprocess
-from flask import Blueprint, request, Response, stream_with_context
+from flask import Blueprint, request, Response, stream_with_context, jsonify
 from backend.providers.factory import get_provider
 
 llm_bp = Blueprint('llm', __name__)
@@ -14,15 +14,18 @@ def chat():
     Unified streaming chat endpoint.
     Expects JSON: { sessionId, messages, model, provider, systemPrompt, apiKey, baseUrl ... }
     """
-    data = request.json
+    data = request.json or {}
     session_id = data.get('sessionId')
-    messages = data.get('messages', [])
+    messages = data.get('messages')
     model = data.get('model')
     provider_name = data.get('provider', 'anthropic')
     system_prompt = data.get('systemPrompt', "You are an AI assistant in the Copernicus IDE.")
     api_key = data.get('apiKey', '')
     base_url = data.get('baseUrl')
     tools = data.get('tools')
+
+    if not model or not messages:
+        return Response(json.dumps({'error': 'Missing required fields: model or messages'}), status=400, mimetype='application/json')
 
     def generate():
         try:
@@ -40,9 +43,9 @@ def get_git_context():
     try:
         status = subprocess.check_output(["git", "status", "--short"], text=True).strip() or "Clean"
         files = subprocess.check_output(["git", "ls-files"], text=True).strip().split("\n")[:50]
-        return json.dumps({
+        return jsonify({
             "status": status,
             "files": files
         })
     except Exception as e:
-        return json.dumps({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500

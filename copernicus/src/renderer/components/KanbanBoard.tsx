@@ -246,6 +246,12 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                           <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
                         </div>
 
+                        {story.flagged && (
+                          <div className="mt-1">
+                            <span className="px-1 py-0.5 rounded-[2px] text-[7px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">⚑ Review</span>
+                          </div>
+                        )}
+
                         {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && story.status !== 'COMPLETE' && (
                           <div className={`mt-1 flex items-center gap-1 text-[8px] font-mono ${
                             workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
@@ -260,9 +266,6 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                         <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
                           <span className="text-[8px] font-mono text-zinc-600">{story.id}</span>
                           <div className="flex gap-1">
-                            {story.flagged && (
-                              <span className="px-1 py-0.5 rounded-[2px] text-[7px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">⚑ Review</span>
-                            )}
                             <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
                           </div>
                         </div>

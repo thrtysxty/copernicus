@@ -9,6 +9,9 @@ class GoogleProvider(LLMProvider):
         gen_model = genai.GenerativeModel(model_name=model_id, system_instruction=system)
 
         history = []
+        if not messages:
+            raise ValueError("messages required")
+            
         for m in messages[:-1]:
             history.append({
                 "role": "model" if m["role"] == "assistant" else "user",

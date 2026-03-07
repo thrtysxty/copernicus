@@ -33,6 +33,7 @@ def get_semantic_context(query, top_k=5):
     # Path to the sqlite-vec extension (Darwin ARM64)
     extension_path = os.path.join(os.getcwd(), "copernicus/node_modules/sqlite-vec-darwin-arm64/vec0.dylib")
     
+    conn = None
     try:
         conn = sqlite3.connect(DB_PATH)
         
@@ -60,7 +61,7 @@ def get_semantic_context(query, top_k=5):
     except Exception as e:
         return f"Index search error: {e}"
     finally:
-        if 'conn' in locals(): conn.close()
+        if conn: conn.close()
 
 def get_git_context():
     """Retrieves basic git context (status and file list)."""

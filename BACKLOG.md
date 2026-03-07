@@ -119,7 +119,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
 | #187 | Jules Pr Manager Workflow | APPROVED FOR IMPLEMENTATION | P1 |
 | #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
-| #190 | Mcp Settings Tab | APPROVED FOR IMPLEMENTATION | P2 |
+| #190 | Mcp Settings Tab | COMPLETE | P2 |
 | #193 | Accessibility Pass | APPROVED FOR IMPLEMENTATION | P2 |
 | #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
 | #228 | Orchestrator-Led Dynamic Model Selection | APPROVED FOR IMPLEMENTATION | P1 |

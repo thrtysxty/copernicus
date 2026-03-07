@@ -13,6 +13,6 @@ class OpenAIProvider(LLMProvider):
         )
 
         for chunk in stream:
-            if chunk.choices[0].delta.content:
+            if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
                 yield f"data: {json.dumps({'token': chunk.choices[0].delta.content})}\n\n"
         yield "data: [DONE]\n\n"

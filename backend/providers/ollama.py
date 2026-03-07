@@ -7,7 +7,7 @@ class OllamaProvider(LLMProvider):
     def __init__(self):
         self.api_key = os.environ.get("OLLAMA_API_KEY")
         self.cloud_host = os.environ.get("OLLAMA_CLOUD_HOST", "https://ollama.com")
-        self.local_url = os.environ.get("OLLAMA_LOCAL_URL", "http://192.168.1.185:11434")
+        self.local_url = os.environ.get("OLLAMA_LOCAL_URL", "http://localhost:11434")
 
     def stream_chat(self, messages, model, system, api_key=None, base_url=None, tools=None):
         # api_key and base_url overrides from request
