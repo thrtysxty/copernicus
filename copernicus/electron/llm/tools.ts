@@ -1,6 +1,7 @@
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import { codebaseIndexer } from '../codebase-indexer'
+import { hybridRetriever } from './hybrid-retrieval'
 import { fsManager } from '../fs-manager'
 
 const execAsync = promisify(exec)
@@ -29,6 +30,11 @@ export const TOOLS: ToolDefinition[] = [
         query: {
           type: 'string',
           description: 'The semantic search query (e.g., "IPC handler for stories" or "layout store definition")'
+        },
+        mode: {
+          type: 'string',
+          description: 'The search mode to use. "fast" uses pure semantic search. "deep" uses a hybrid semantic + symbol search.',
+          enum: ['fast', 'deep']
         }
       },
       required: ['query']
@@ -106,7 +112,7 @@ export class ToolExecutor {
   async execute(name: string, args: any): Promise<string> {
     switch (name) {
       case 'search_codebase':
-        return this.searchCodebase(args.query)
+        return this.searchCodebase(args.query, args.mode)
       case 'read_file':
         return this.readFile(args.path)
       case 'local_research':
@@ -120,8 +126,14 @@ export class ToolExecutor {
     }
   }
 
-  private async searchCodebase(query: string): Promise<string> {
-    const results = await codebaseIndexer.search(query, 5)
+  private async searchCodebase(query: string, mode: 'fast' | 'deep' = 'fast'): Promise<string> {
+    let results;
+    if (mode === 'deep') {
+      results = await hybridRetriever.search(query, 5)
+    } else {
+      results = await codebaseIndexer.search(query, 5)
+    }
+
     if (results.length === 0) return 'No relevant snippets found.'
     
     return results.map(r => 
