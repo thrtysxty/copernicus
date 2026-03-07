@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, Book, User, History, Info, Layers, FileCode, ChevronRight } from 'lucide-react'
+import { Send, Hash, FileText, Paperclip, ChevronDown, Save, RotateCcw, Maximize2, Minimize2, ChevronRight } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { ContextChip } from './ContextChip'
 import { UIUpdateChip } from './UIUpdateChip'
@@ -172,9 +172,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     uiComponents,
     retakeTour,
     setChatPanelOpen,
-    flippedPanes,
-    setView,
-    setCenterMode
+    flippedPanes
   } = useLayoutStore()
 
 
@@ -207,31 +205,33 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const [activeBackTab, setActiveBackTab] = useState('context')
-  const [showBackTabPicker, setShowBackTabPicker] = useState(false)
   const isFlipped = flippedPanes.includes('chat')
 
-  // Copernicus Guide State (Story 188)
-  const [guideMessages, setGuideMessages] = useState<Array<{ role: 'user' | 'guide'; content: string; showTourButton?: boolean; showClaudeButton?: boolean }>>([
-    { role: 'guide', content: "Hello! I'm Copernicus, your IDE guide. Ask me anything about the IDE, or type 'tour' to start the Quick Tour." }
-  ])
-  const [guideInput, setGuideInput] = useState('')
+  const [isSavingPrompt, setIsSavingPrompt] = useState(false)
+  const [newPromptName, setNewPromptName] = useState('')
 
-  const handleGuideSubmit = useCallback(() => {
-    const q = guideInput.trim()
-    if (!q) return
-    setGuideInput('')
-    setGuideMessages(prev => [...prev, { role: 'user', content: q }])
-    const match = matchKnowledge(q)
-    if (match) {
-      setGuideMessages(prev => [...prev, { role: 'guide', content: match.response, showTourButton: match.showTourButton }])
-    } else {
-      setGuideMessages(prev => [...prev, {
-        role: 'guide',
-        content: "I don't have a quick answer for that — but Claude can help. Want me to send this question to your active chat session?",
-        showClaudeButton: true
-      }])
+  useEffect(() => {
+    if (isFlipped) {
+      setActiveBackTab('context')
+      // Refresh active model on flip
+      invoke<any>('models:active').then((r: any) => {
+        const activeId = unwrapIpc<string>(r)
+        if (activeId) setModel(activeId)
+      }).catch(() => {})
     }
-  }, [guideInput])
+  }, [isFlipped, invoke])
+
+  const confirmSavePrompt = () => {
+    const text = input.trim()
+    const name = newPromptName.trim()
+    if (!text || !name) return
+    const newPrompt = { id: Date.now().toString(), name, text }
+    const updated = [...savedPrompts, newPrompt]
+    setSavedPrompts(updated)
+    localStorage.setItem('copernicus:saved-prompts', JSON.stringify(updated))
+    setIsSavingPrompt(false)
+    setNewPromptName('')
+  }
 
   const handleClearContext = () => setContext([])
 
@@ -247,17 +247,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       if (stored) setSavedPrompts(JSON.parse(stored))
     } catch {}
   }, [isFlipped])
-
-  const savePrompt = () => {
-    const text = input.trim()
-    if (!text) return
-    const name = prompt('Enter a short name for this prompt:')
-    if (!name) return
-    const newPrompt = { id: Date.now().toString(), name, text }
-    const updated = [...savedPrompts, newPrompt]
-    setSavedPrompts(updated)
-    localStorage.setItem('copernicus:saved-prompts', JSON.stringify(updated))
-  }
 
   const deletePrompt = (id: string) => {
     const updated = savedPrompts.filter(p => p.id !== id)
@@ -286,71 +275,48 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   const renderBackFace = () => {
     const tabs = [
-      { id: 'context', label: 'Context', icon: Layers },
-      { id: 'persona', label: 'Persona', icon: User },
-      { id: 'prompts', label: 'Library', icon: Book },
-      { id: 'history', label: 'History', icon: History },
-      { id: 'guide', label: 'Guide', icon: FileCode }
+      { id: 'context', label: 'Context' },
+      { id: 'persona', label: 'Persona' },
+      { id: 'prompts', label: 'Prompts' },
+      { id: 'history', label: 'History' },
+      { id: 'guide', label: 'Guide' }
     ]
 
     return (
       <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
-        <div className="h-8 flex items-center px-2 bg-copernicus-bg border-b border-white/5 bg-black/20 shrink-0 gap-2 relative">
-          <div className="flex items-center gap-1 min-w-0 flex-1">
-            <span className="text-[9px] uppercase font-bold text-zinc-600 tracking-widest">Utility</span>
-            <span className="text-[9px] text-zinc-700">/</span>
-            <div 
-              className="flex items-center gap-1.5 cursor-pointer hover:text-copernicus-phosphor transition-colors group/crumb min-w-0"
-              onClick={() => setShowBackTabPicker(!showBackTabPicker)}
+        {/* Tab Bar AC-1 */}
+        <div className="flex bg-[#111] border-b border-copernicus-steel/30 shrink-0">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveBackTab(tab.id)}
+              className={`flex-1 py-2 text-[9px] uppercase font-bold tracking-widest transition-colors ${
+                activeBackTab === tab.id
+                  ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
             >
-              {(() => {
-                const active = tabs.find(t => t.id === activeBackTab)
-                const Icon = active?.icon || Info
-                return (
-                  <>
-                    <Icon size={10} className="text-zinc-500 group-hover/crumb:text-copernicus-phosphor" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest truncate">{active?.label}</span>
-                    <ChevronDown size={10} className="text-zinc-700 group-hover/crumb:text-copernicus-phosphor" />
-                  </>
-                )
-              })()}
-            </div>
-
-            {showBackTabPicker && (
-              <div className="absolute top-full left-2 mt-1 w-40 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-[120] overflow-hidden">
-                {tabs.map(tab => {
-                  const TabIcon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      className={`w-full flex items-center gap-3 px-3 py-2 text-[10px] uppercase font-bold tracking-widest transition-colors ${activeBackTab === tab.id ? 'bg-copernicus-phosphor text-[#050505]' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'}`}
-                      onClick={() => {
-                        setActiveBackTab(tab.id)
-                        setShowBackTabPicker(false)
-                      }}
-                    >
-                      <TabIcon size={12} />
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button onClick={() => toggleFlip('chat')} aria-label="Close chat tools" className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors" title="Rotate Panel">
-              <RotateCcw size={12} />
+              {tab.label}
             </button>
-          </div>
+          ))}
+          <button 
+            onClick={() => toggleFlip('chat')} 
+            className="px-3 text-zinc-600 hover:text-copernicus-phosphor transition-colors border-l border-white/5"
+            title="Rotate Panel"
+          >
+            <RotateCcw size={12} />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-copernicus-steel">
+          {/* AC-2 Context Tab */}
           {activeBackTab === 'context' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Model Context Usage</div>
-                <div className="text-xs">{model} • {availableModels.find(m => m.id === model)?.provider || '—'}</div>
+                <div className="text-xs flex items-center justify-between">
+                  <span>{model} • {availableModels.find(m => m.id === model)?.provider || '—'}</span>
+                </div>
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
                     <div
@@ -365,10 +331,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               </div>
 
               <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">LSP Status</div>
+                <div className="text-xs text-zinc-400">LSP: connecting…</div>
+              </div>
+
+              <div>
                 <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 flex justify-between items-center">
                   <span>Attached Files ({context.length})</span>
                   {context.length > 0 && (
-                    <button onClick={handleClearContext} className="hover:text-copernicus-phosphor transition-colors">Clear Context</button>
+                    <button 
+                      onClick={handleClearContext} 
+                      className="text-[9px] hover:text-copernicus-phosphor transition-colors border border-zinc-800 px-1.5 py-0.5 rounded"
+                    >
+                      Clear Context
+                    </button>
                   )}
                 </div>
                 {context.length === 0 ? (
@@ -387,59 +363,115 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </div>
           )}
 
+          {/* AC-3 Persona Tab */}
           {activeBackTab === 'persona' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Active Persona</div>
-                <div className="text-xs flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${authStatus?.isActive || model === 'copernicus-guide' ? 'bg-green-500' : 'bg-red-500'}`} />
-                  {availableModels.find(m => m.id === model)?.name || model} ({model})
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Current Persona</div>
+                <div className="flex items-center justify-between bg-zinc-900 border border-copernicus-steel/30 p-3 rounded">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold text-copernicus-phosphor">
+                      {availableModels.find(m => m.id === model)?.name || model}
+                    </span>
+                    <span className="text-[9px] text-zinc-500 uppercase">
+                      {availableModels.find(m => m.id === model)?.provider || '—'} • {model}
+                    </span>
+                  </div>
+                  <div 
+                    className={`w-2 h-2 rounded-full ${authStatus?.isActive || model === 'copernicus-guide' ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} 
+                    title={authStatus?.isActive ? 'Authenticated' : 'Not Authenticated'}
+                  />
                 </div>
-                <div className="text-[10px] text-zinc-500 mt-1">Provider: {availableModels.find(m => m.id === model)?.provider || '—'}</div>
               </div>
 
               <div>
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Switch Model</div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2">Switch Model</div>
                 <select
-                  className="w-full bg-zinc-900 border border-copernicus-steel rounded px-2 py-1 text-xs text-zinc-300 focus:border-copernicus-phosphor outline-none"
+                  className="w-full bg-zinc-900 border border-copernicus-steel rounded px-2 py-2 text-xs text-zinc-300 focus:border-copernicus-phosphor outline-none appearance-none"
                   value={model}
-                  onChange={(e) => setModel(e.target.value)}
+                  onChange={async (e) => {
+                    const newModel = e.target.value
+                    try {
+                        await invoke('models:set-active', newModel)
+                        setModel(newModel)
+                    } catch (err) {
+                        log.error('Failed to set model', err)
+                    }
+                  }}
                 >
                   {availableModels.map(m => (
                     <option key={m.id} value={m.id}>{m.name} ({m.provider})</option>
                   ))}
                 </select>
+                <div className="mt-2 text-[9px] text-zinc-600 text-center italic">
+                  Select a model to switch the global active persona.
+                </div>
               </div>
             </div>
           )}
 
+          {/* AC-4 Prompts Tab */}
           {activeBackTab === 'prompts' && (
             <div className="space-y-4 flex flex-col h-full">
-              <button
-                onClick={savePrompt}
-                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-xs py-1.5 rounded flex items-center justify-center gap-2"
-              >
-                + Save Current Input
-              </button>
+              {isSavingPrompt ? (
+                <div className="bg-zinc-900 border border-copernicus-phosphor p-3 rounded space-y-3">
+                  <div className="text-[10px] text-copernicus-phosphor uppercase font-bold">New Saved Prompt</div>
+                  <input
+                    autoFocus
+                    placeholder="Enter short name..."
+                    className="w-full bg-black border border-copernicus-steel rounded px-2 py-1.5 text-xs text-zinc-300 focus:border-copernicus-phosphor outline-none"
+                    value={newPromptName}
+                    onChange={e => setNewPromptName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') confirmSavePrompt()
+                      if (e.key === 'Escape') setIsSavingPrompt(false)
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={confirmSavePrompt}
+                      className="flex-1 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold py-1 uppercase"
+                    >
+                      Confirm Save
+                    </button>
+                    <button 
+                      onClick={() => setIsSavingPrompt(false)}
+                      className="flex-1 border border-zinc-700 text-zinc-400 text-[10px] font-bold py-1 uppercase"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsSavingPrompt(true)}
+                  disabled={!input.trim()}
+                  className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-50"
+                >
+                  + Save Current Input
+                </button>
+              )}
 
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 overflow-y-auto pr-1">
                 {savedPrompts.length === 0 ? (
-                  <div className="text-xs text-zinc-600 text-center py-4">No saved prompts yet.</div>
+                  <div className="text-xs text-zinc-600 text-center py-8 border border-dashed border-zinc-800 rounded">
+                    No saved prompts yet.
+                  </div>
                 ) : (
                   savedPrompts.map(p => (
-                    <div key={p.id} className="bg-zinc-900 border border-copernicus-steel/50 rounded p-2">
-                      <div className="text-xs font-bold text-copernicus-phosphor mb-1">{p.name}</div>
-                      <div className="text-[10px] text-zinc-400 truncate mb-2">{p.text}</div>
+                    <div key={p.id} className="bg-zinc-900 border border-copernicus-steel/50 rounded p-2 hover:border-zinc-700 transition-colors">
+                      <div className="text-xs font-bold text-copernicus-phosphor mb-1 uppercase tracking-tight">{p.name}</div>
+                      <div className="text-[10px] text-zinc-500 truncate mb-2 italic">"{p.text}"</div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => usePrompt(p.text)}
-                          className="text-[10px] px-2 py-0.5 bg-zinc-800 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor transition-colors rounded"
+                          className="flex-1 text-[9px] uppercase font-bold py-1 bg-zinc-800 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor transition-colors rounded"
                         >
                           Use
                         </button>
                         <button
                           onClick={() => deletePrompt(p.id)}
-                          className="text-[10px] px-2 py-0.5 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 transition-colors rounded"
+                          className="px-2 text-[9px] uppercase font-bold py-1 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 transition-colors rounded"
                         >
                           Delete
                         </button>
@@ -451,25 +483,31 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </div>
           )}
 
+          {/* AC-5 History Tab */}
           {activeBackTab === 'history' && (
-            <div className="space-y-4 flex flex-col h-full">
+            <div className="space-y-4 flex flex-col h-full overflow-hidden">
               <button
                 onClick={exportChat}
-                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-xs py-1.5 rounded flex items-center justify-center gap-2"
+                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider"
               >
-                Export Chat
+                Export Chat (.txt)
               </button>
 
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 overflow-y-auto pr-1">
                 {messages.length === 0 ? (
-                  <div className="text-xs text-zinc-600 text-center py-4">No history.</div>
+                  <div className="text-xs text-zinc-600 text-center py-8 border border-dashed border-zinc-800 rounded">
+                    No conversation history.
+                  </div>
                 ) : (
                   messages.slice(-20).map((m, i) => (
-                    <div key={i} className="bg-zinc-900 border border-copernicus-steel/50 rounded p-2">
-                      <div className={`text-[10px] font-bold mb-1 ${m.role === 'user' ? 'text-zinc-400' : 'text-copernicus-phosphor'}`}>
-                        {m.role === 'user' ? 'You' : model}
+                    <div key={i} className="bg-zinc-900 border border-copernicus-steel/30 rounded p-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-[9px] font-bold uppercase ${m.role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'}`}>
+                          {m.role === 'user' ? 'You' : (availableModels.find(x => x.id === model)?.name || model)}
+                        </span>
+                        {m.tokens && <span className="text-[8px] text-zinc-700">{m.tokens} tokens</span>}
                       </div>
-                      <div className="text-xs text-zinc-300 whitespace-pre-wrap truncate max-h-[40px]">
+                      <div className="text-xs text-zinc-400 line-clamp-2 italic">
                         {m.content.substring(0, 120)}{m.content.length > 120 ? '...' : ''}
                       </div>
                     </div>
@@ -479,75 +517,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             </div>
           )}
 
+          {/* AC-6 Guide Tab Placeholder */}
           {activeBackTab === 'guide' && (
-            <div className="h-full flex flex-col">
-              {/* Copernicus avatar header */}
-              <div className="flex items-center gap-2 pb-3 border-b border-zinc-800 mb-3">
-                <span className="text-copernicus-phosphor font-mono font-bold text-xs">© COPERNICUS</span>
-                <span className="text-[9px] text-zinc-600 uppercase tracking-widest">Guide Agent</span>
-              </div>
-
-              {/* Message feed — ephemeral, not in main history */}
-              <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-copernicus-steel mb-3">
-                {guideMessages.map((msg, i) => (
-                  <div key={i} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div className={`text-[10px] px-2 py-1.5 rounded max-w-[90%] leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-copernicus-phosphor/10 text-zinc-300'
-                        : 'bg-zinc-900/50 border border-zinc-700 text-zinc-300'
-                    }`}>
-                      {msg.role === 'guide' && <span className="text-copernicus-phosphor font-mono text-[8px] mr-1">©</span>}
-                      {msg.content}
-                    </div>
-                    {msg.showTourButton && (
-                      <button
-                        onClick={() => { setView('designer'); setCenterMode('canvas') }}
-                        className="text-[9px] px-2 py-1 border border-copernicus-phosphor/40 text-copernicus-phosphor rounded hover:bg-copernicus-phosphor/10 transition-colors"
-                      >
-                        [Start Tour]
-                      </button>
-                    )}
-                    {msg.showClaudeButton && (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => { 
-                            toggleFlip('chat')
-                            const lastUserMsg = guideMessages.filter(m => m.role === 'user').pop()
-                            if (lastUserMsg) {
-                              setTimeout(() => setInput(lastUserMsg.content), 100)
-                            }
-                          }}
-                          className="text-[9px] px-2 py-1 border border-zinc-700 text-zinc-400 rounded hover:bg-zinc-800"
-                        >
-                          Yes, ask Claude
-                        </button>
-                        <button
-                          onClick={() => setGuideMessages(prev => prev.slice(0, -1))}
-                          className="text-[9px] px-2 py-1 text-zinc-600 hover:text-zinc-400"
-                        >
-                          Never mind
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Input */}
-              <div className="flex gap-2">
-                <input
-                  value={guideInput}
-                  onChange={e => setGuideInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleGuideSubmit() }}
-                  placeholder="Ask Copernicus..."
-                  className="flex-1 bg-black/40 border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
-                />
-                <button
-                  onClick={handleGuideSubmit}
-                  className="px-2 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor rounded text-[9px] border border-copernicus-phosphor/30 hover:bg-copernicus-phosphor/20"
-                >
-                  Ask
-                </button>
+            <div className="relative h-full flex flex-col items-center justify-center p-8 text-center overflow-hidden border border-copernicus-steel/20 rounded bg-black/40">
+              <div className="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] pointer-events-none opacity-20"></div>
+              <div className="relative z-10">
+                <div className="text-copernicus-phosphor font-mono text-lg mb-2 glow-sm tracking-tighter">© COPERNICUS</div>
+                <div className="text-zinc-500 text-xs font-mono uppercase tracking-widest">Guide will appear here.</div>
               </div>
             </div>
           )}
