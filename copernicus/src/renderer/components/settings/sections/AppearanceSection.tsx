@@ -18,17 +18,19 @@ export const AppearanceSection: React.FC = () => {
         <p className="text-[10px] text-zinc-500 font-mono mt-1">Customise the visual interface and ergonomics of the IDE.</p>
       </div>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 text-zinc-400">
+      <fieldset className="space-y-4 border-none p-0 m-0">
+        <legend className="flex items-center gap-2 text-zinc-400">
           <Palette size={14} />
           <h3 className="text-[10px] uppercase font-bold tracking-wider">System Phosphor</h3>
-        </div>
+        </legend>
         <div className="grid grid-cols-4 gap-3 bg-zinc-900/30 p-4 rounded-lg border border-zinc-800/50">
           {PRESET_ENTRIES.map(([key, preset]) => (
             <button
               key={key}
+              aria-label={`Set phosphor color to ${preset.label}`}
+              aria-pressed={phosphorColor === key}
               onClick={() => setPhosphorColor(key)}
-              className={`flex flex-col items-center gap-2 p-2 rounded border transition-all ${
+              className={`flex flex-col items-center gap-2 p-2 rounded border transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${
                 phosphorColor === key 
                   ? 'border-white bg-white/5 shadow-[0_0_15px_-3px_rgba(255,255,255,0.2)]' 
                   : 'border-zinc-800 hover:border-zinc-700 bg-black/20'
@@ -47,20 +49,21 @@ export const AppearanceSection: React.FC = () => {
             </button>
           ))}
         </div>
-      </section>
+      </fieldset>
 
       <div className="grid grid-cols-1 gap-6">
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 text-zinc-400">
+        <fieldset className="space-y-4 border-none p-0 m-0">
+          <legend className="flex items-center gap-2 text-zinc-400">
             <Maximize size={14} />
             <h3 className="text-[10px] uppercase font-bold tracking-wider">UI Density</h3>
-          </div>
+          </legend>
           <div className="flex bg-zinc-900/50 p-1 rounded-md border border-zinc-800">
             {(['compact', 'normal', 'comfortable'] as const).map((d) => (
               <button
                 key={d}
+                aria-pressed={uiDensity === d}
                 onClick={() => setAppearance({ uiDensity: d })}
-                className={`flex-1 py-1.5 text-[9px] font-bold uppercase rounded transition-all ${
+                className={`flex-1 py-1.5 text-[9px] font-bold uppercase rounded transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${
                   uiDensity === d 
                     ? 'bg-zinc-800 text-copernicus-phosphor shadow-inner' 
                     : 'text-zinc-500 hover:text-zinc-300'
@@ -70,28 +73,30 @@ export const AppearanceSection: React.FC = () => {
               </button>
             ))}
           </div>
-        </section>
+        </fieldset>
 
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 text-zinc-400">
+        <fieldset className="space-y-4 border-none p-0 m-0">
+          <legend className="flex items-center gap-2 text-zinc-400">
             <Type size={14} />
             <h3 className="text-[10px] uppercase font-bold tracking-wider">Editor Font Size</h3>
-          </div>
+          </legend>
           <div className="flex items-center gap-4 bg-zinc-900/30 p-4 rounded-lg border border-zinc-800/50">
             <input 
+              id="font-size-slider"
               type="range" 
               min="10" 
               max="18" 
               step="1"
               value={fontSize}
               onChange={(e) => setAppearance({ fontSize: parseInt(e.target.value) })}
+              aria-label="Editor Font Size"
               className="flex-1 accent-copernicus-phosphor h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
             />
-            <span className="min-w-[32px] text-xs font-mono text-copernicus-phosphor text-center">
+            <label htmlFor="font-size-slider" className="min-w-[32px] text-xs font-mono text-copernicus-phosphor text-center">
               {fontSize}px
-            </span>
+            </label>
           </div>
-        </section>
+        </fieldset>
 
         <section className="flex items-center justify-between p-4 bg-zinc-900/30 rounded-lg border border-zinc-800/50">
           <div className="flex items-center gap-3">
@@ -105,7 +110,9 @@ export const AppearanceSection: React.FC = () => {
           </div>
           <button
             onClick={() => setAppearance({ animationsEnabled: !animationsEnabled })}
-            className={`w-10 h-5 rounded-full transition-colors relative ${
+            aria-label="Toggle interface animations"
+            aria-pressed={animationsEnabled}
+            className={`w-10 h-5 rounded-full transition-colors relative focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${
               animationsEnabled ? 'bg-copernicus-phosphor' : 'bg-zinc-700'
             }`}
           >

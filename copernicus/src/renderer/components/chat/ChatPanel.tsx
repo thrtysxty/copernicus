@@ -1057,29 +1057,37 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             <div className="flex items-center gap-1 opacity-0 group-hover/chat:opacity-100 transition-opacity">
               <button
                 onClick={() => setSpotlight(spotlightPane === 'chat' ? null : 'chat')}
-                className={`p-1 rounded hover:bg-white/5 ${spotlightPane === 'chat' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
+                className={`p-1 rounded hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${spotlightPane === 'chat' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
                 title={spotlightPane === 'chat' ? "Exit Spotlight" : "Spotlight Chat"}
+                aria-label={spotlightPane === 'chat' ? "Exit Spotlight" : "Spotlight Chat"}
               >
                 {spotlightPane === 'chat' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
               </button>
               <button
                 onClick={() => toggleFlip('chat')}
-                className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+                className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
                 title="Rotate Chat Tools"
+                aria-label={isFlipped ? "Close chat tools" : "Open chat tools"}
               >
                 <RotateCcw size={10} />
               </button>
               <button
                 onClick={() => setChatPanelOpen(false)}
-                className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                className="p-1 text-zinc-600 hover:text-red-400 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
                 title="Collapse Chat"
+                aria-label="Collapse Chat"
               >
                 <ChevronRight size={14} />
               </button>
             </div>
           </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel">
+          <div 
+            ref={scrollRef} 
+            role="log"
+            aria-live="polite"
+            className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-copernicus-steel"
+          >
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale grayscale-100">
                 <Hash size={48} className="text-copernicus-phosphor mb-4" />
@@ -1087,7 +1095,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               </div>
             ) : (
               messages.map(m => (
-                <div key={m.id} role="article">
+                <div key={m.id}>
                   <ChatMessage
                     role={m.role}
                     content={m.role !== 'user' ? renderMessageContent(m.content, openFilePath, m.id) : m.content}
@@ -1166,7 +1174,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
               <textarea
                 value={input}
-                aria-label="Chat input"
+                aria-label="Chat with Claude"
                 data-chat-input
                 onChange={(e) => {
                   const newValue = e.target.value
@@ -1229,10 +1237,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
               />
               <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
                 <div className="flex gap-2 text-zinc-500">
-                  <button onClick={handleFileAttach} className="hover:text-copernicus-phosphor transition-colors" title="Attach File"><Paperclip size={12} /></button>
-                  <button onClick={() => triggerPicker('story')} className="hover:text-copernicus-phosphor transition-colors" title="Attach Story"><FileText size={12} /></button>
+                  <button onClick={handleFileAttach} aria-label="Attach File" className="hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none" title="Attach File"><Paperclip size={12} /></button>
+                  <button onClick={() => triggerPicker('story')} aria-label="Attach Story" className="hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none" title="Attach Story"><FileText size={12} /></button>
                 </div>
-                <button onClick={handleSendMessage} disabled={isStreaming} className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40"><Send size={14} /></button>
+                <button onClick={handleSendMessage} aria-label="Send message" disabled={isStreaming} className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"><Send size={14} /></button>
               </div>
             </div>
           </div>

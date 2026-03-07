@@ -10,8 +10,15 @@ interface ChatMessageProps {
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, tokens }) => {
   const invoke = useIpcError()
+  const ariaLabel = typeof content === 'string' 
+    ? `${role}: ${content.substring(0, 80)}${content.length > 80 ? '...' : ''}`
+    : `${role} message`
+
   return (
-    <div className={clsx(
+    <div 
+      role="article"
+      aria-label={ariaLabel}
+      className={clsx(
       'flex flex-col max-w-[85%] group animate-in fade-in slide-in-from-bottom-2 duration-300',
       role === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'
     )}>

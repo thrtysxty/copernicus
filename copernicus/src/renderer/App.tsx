@@ -66,36 +66,42 @@ const PanelHeader: React.FC<{
       <div className="flex items-center gap-3">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
         {showLspStatus && (
-          <div
-            className="flex items-center gap-2 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors"
+          <button
+            aria-label="Toggle command palette"
+            className="flex items-center gap-2 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
             onClick={onCommandPalette}
           >
             <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
             <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
               LSP {errorCount}E {warnCount}W
             </span>
-          </div>
+          </button>
         )}
       </div>
       <div className="flex items-center gap-2">
         <button
           onClick={onBuilder}
-          className={`p-1.5 rounded transition-colors ${isBuilderActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+          aria-pressed={isBuilderActive}
+          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isBuilderActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
           title="UI Builder"
+          aria-label="UI Builder"
         >
           <Layout size={14} />
         </button>
         <button
           onClick={onFlip}
-          className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+          className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
           title="Flip Panel"
+          aria-label="Flip Panel"
         >
           <RotateCcw size={14} />
         </button>
         <button
           onClick={onSpotlight}
-          className={`p-1.5 rounded transition-colors ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+          aria-pressed={isSpotlightActive}
+          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
           title="Spotlight"
+          aria-label={isSpotlightActive ? "Minimize Spotlight" : "Maximize Spotlight"}
         >
           {isSpotlightActive ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </button>
@@ -422,17 +428,19 @@ export default function App() {
             <TerminalTabs />
           </div>
 
-          <div
-            className="h-6 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer hover:bg-zinc-900 transition-colors"
+          <button
+            className="h-6 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer hover:bg-zinc-900 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
             onClick={() => setTerminalOpen(!terminalOpen)}
+            aria-expanded={terminalOpen}
+            aria-label="Toggle terminal"
           >
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 pointer-events-none">
               <span className={`text-[10px] font-mono uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor phosphor-glow animate-pulse' : 'text-zinc-500'}`}>
                 {terminalOpen ? '▼' : '▲'} TERMINAL_PULSE
               </span>
               {anyTerminalBusy && <Loader2 size={10} className="animate-spin text-copernicus-phosphor" />}
             </div>
-          </div>
+          </button>
 
           <StatusBar />
 

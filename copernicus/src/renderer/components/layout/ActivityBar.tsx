@@ -35,7 +35,7 @@ export const ActivityBar: React.FC = () => {
         <button
           onClick={handleClick}
           aria-label={label}
-          aria-current={id && activeView === id ? 'page' : undefined}
+          aria-current={active ? 'page' : undefined}
           className={[
             'w-12 h-12 flex items-center justify-center transition-all duration-200',
             'focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none relative',

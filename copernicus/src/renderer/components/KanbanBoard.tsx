@@ -207,14 +207,39 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                     )}
 
                     {/* Cards */}
-                    {colStories.map(story => (
+                    {colStories.map((story, idx) => (
                       <motion.div
                         key={story.id}
+                        data-story-id={story.id}
+                        role="button"
+                        tabIndex={activeStoryId === story.id || (idx === 0 && !colStories.some(s => s.id === activeStoryId)) ? 0 : -1}
+                        aria-label={`${story.title} — ${story.status}`}
                         draggable
                         onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
-                        className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
+                        className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
                         onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(col.id); }}
                         onDoubleClick={() => setSpotlight('inspector')}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setActiveStoryId(story.id);
+                            setSpotlightLane(col.id);
+                          } else if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const next = colStories[idx + 1];
+                            if (next) {
+                              (e.currentTarget.nextElementSibling as HTMLElement)?.focus();
+                              setActiveStoryId(next.id);
+                            }
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            const prev = colStories[idx - 1];
+                            if (prev) {
+                              (e.currentTarget.previousElementSibling as HTMLElement)?.focus();
+                              setActiveStoryId(prev.id);
+                            }
+                          }
+                        }}
                       >
                         <div className="flex items-start gap-2">
                           {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}

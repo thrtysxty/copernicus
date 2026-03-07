@@ -181,8 +181,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       setDrawerStory(null)
       setSpotlight(null)
       // Return focus to the triggering card if available
-      const activeCard = document.querySelector<HTMLElement>('[aria-current="true"]') ??
-        document.querySelector<HTMLElement>('[data-card-index="0"]')
+      const activeCard = document.querySelector<HTMLElement>(`[data-story-id="${storyId}"]`)
       activeCard?.focus()
       return
     }
@@ -236,7 +235,14 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       <div className={`flex items-center justify-between px-3 h-8 border-b border-white/5 bg-black/20 flex-shrink-0 z-10 ${isSpotlit ? 'hidden' : ''}`}>
         <button
           ref={closeBtnRef}
-          onClick={() => { setDrawerStory(null); setSpotlight(null); }}
+          onClick={() => {
+            setDrawerStory(null)
+            setSpotlight(null)
+            setTimeout(() => {
+              const activeCard = document.querySelector<HTMLElement>(`[data-story-id="${storyId}"]`)
+              activeCard?.focus()
+            }, 0)
+          }}
           aria-label="Close story drawer"
           className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
         >
@@ -291,8 +297,17 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
                 <ArrowLeft size={11} /> Board
               </button>
               <button 
-                onClick={() => { setSpotlight(null); setIsEditing(false) }}
+                onClick={() => {
+                  setSpotlight(null)
+                  setIsEditing(false)
+                  setDrawerStory(null)
+                  setTimeout(() => {
+                    const activeCard = document.querySelector<HTMLElement>(`[data-story-id="${storyId}"]`)
+                    activeCard?.focus()
+                  }, 0)
+                }}
                 className="p-1 text-zinc-600 hover:text-zinc-300"
+                aria-label="Close Inspector"
                 title="Close Inspector"
               >
                 <X size={14} />
