@@ -165,118 +165,111 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
           const isSpotlit = spotlightLane === col.id
           const isCollapsed = spotlightLane !== null && !isSpotlit
 
-          if (isCollapsed) {
-            return (
-              <div
-                key={col.id}
-                className="w-10 h-full flex flex-col rounded border border-white/5 bg-black/40 transition-all duration-300 cursor-pointer hover:bg-zinc-900 overflow-hidden shrink-0"
-                onClick={() => setSpotlightLane(null)}
-              >
-                <div className={`h-0.5 w-full ${col.accent} opacity-40`} />
+          return (
+            <div
+              key={col.id}
+              className={`h-full flex flex-col rounded border shadow-sm transition-all duration-300 relative group/column overflow-hidden shrink-0 
+                ${isSpotlit ? 'flex-1 min-w-[320px] border-copernicus-phosphor/20' : isCollapsed ? 'w-10 bg-black/40 border-white/5 cursor-pointer hover:bg-zinc-900' : 'w-56 border-white/5'} ${col.color}`}
+              onDrop={e => !isCollapsed ? handleDrop(e, col.status) : undefined}
+              onDragOver={e => !isCollapsed ? e.preventDefault() : undefined}
+              onClick={isCollapsed ? () => setSpotlightLane(null) : undefined}
+            >
+              <div className={`h-0.5 w-full ${col.accent} ${isCollapsed ? 'opacity-40' : 'opacity-40 group-hover/column:opacity-100'} transition-opacity`} />
+
+              {isCollapsed ? (
                 <div className="flex-1 flex items-center justify-center">
                   <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest origin-center whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
                     {col.label}
                   </span>
                 </div>
-              </div>
-            )
-          }
+              ) : (
+                <>
+                  {/* Column Header */}
+                  <div className="h-9 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
+                    <span className="font-bold text-[9px] text-zinc-500 uppercase tracking-widest truncate">{col.label}</span>
+                    <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
+                  </div>
 
-          return (
-            <div
-              key={col.id}
-              className={`h-full flex flex-col rounded border shadow-sm ${col.color} transition-all duration-300 relative group/column overflow-hidden shrink-0 ${isSpotlit ? 'flex-1 min-w-[320px]' : 'w-64'}`}
-              onDrop={e => handleDrop(e, col.status)}
-              onDragOver={e => e.preventDefault()}
-            >
-              <div className={`h-0.5 w-full ${col.accent} opacity-40 group-hover/column:opacity-100 transition-opacity`} />
-
-              {/* Column Header */}
-              <div className="h-9 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
-                <span className="font-bold text-[9px] text-zinc-500 uppercase tracking-widest truncate">{col.label}</span>
-                <div className="flex items-center gap-2">
-                  {col.id === 'ready-to-build' && (
-                    <button
-                      onClick={() => setCreation({ phase: 'form', type: 'Story' })}
-                      className="p-1 text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-                      title="New Story"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  )}
-                  <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
-                </div>
-              </div>
-
-              <div className="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-none">
-
-                {/* Creation Form (available from ready-to-build) */}
-                {col.id === 'ready-to-build' && creation.phase === 'form' && (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-zinc-900 border border-copernicus-phosphor/30 rounded shadow-xl space-y-2 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">New {creation.type}</span>
-                      <button onClick={() => setShowCreateDropdown(!showCreateDropdown)} className="text-zinc-600 hover:text-white"><ChevronDown size={12} /></button>
-                    </div>
-                    <input autoFocus className="w-full bg-black/40 border border-zinc-800 rounded p-1.5 text-[10px] focus:border-copernicus-phosphor outline-none" placeholder="Title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreate()} />
-                    <div className="flex justify-between gap-2">
-                      <button onClick={() => setCreation({ phase: 'idle' })} className="text-[8px] uppercase font-bold text-zinc-600 hover:text-zinc-400">Cancel</button>
-                      <button onClick={handleCreate} className="px-3 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor rounded text-[8px] font-bold uppercase">Create</button>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Cards */}
-                {colStories.map(story => (
-                  <motion.div
-                    key={story.id}
-                    draggable
-                    onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
-                    className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
-                    onClick={() => { setActiveStoryId(story.id); setSpotlightLane(col.id); }}
-                    onDoubleClick={() => setSpotlight('inspector')}
-                  >
-                    <div className="flex items-start gap-2">
-                      {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
-                      <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
-                    </div>
-
-                    <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
-                      <span className="text-[8px] font-mono text-zinc-600">{story.id}</span>
-                      <div className="flex gap-1">
-                        {story.flagged && (
-                          <span className="px-1 py-0.5 rounded-[2px] text-[7px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">⚑ Review</span>
-                        )}
-                        <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
-                      </div>
-                    </div>
-
-                    {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && (
-                      <div className={`mt-1.5 flex items-center gap-1 text-[8px] font-mono ${
-                        workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
-                        workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          workflowStatus.state === 'RUNNING' ? 'bg-amber-400 animate-pulse' :
-                          workflowStatus.state === 'COMPLETE' ? 'bg-green-400' : 'bg-red-400'
-                        }`} />
-                        {workflowStatus.state === 'RUNNING' ? 'RUNNING' :
-                         workflowStatus.state === 'COMPLETE' ? 'DONE' : 'FAILED'}
-                      </div>
+                  <div className="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-none">
+                    {/* Creation Form (available from ready-to-build) */}
+                    {col.id === 'ready-to-build' && creation.phase === 'form' && (
+                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-zinc-900 border border-copernicus-phosphor/30 rounded shadow-xl space-y-2 mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">New {creation.type}</span>
+                          <button onClick={() => setShowCreateDropdown(!showCreateDropdown)} className="text-zinc-600 hover:text-white"><ChevronDown size={12} /></button>
+                        </div>
+                        <input autoFocus className="w-full bg-black/40 border border-zinc-800 rounded p-1.5 text-[10px] focus:border-copernicus-phosphor outline-none" placeholder="Title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreate()} />
+                        <div className="flex justify-between gap-2">
+                          <button onClick={() => setCreation({ phase: 'idle' })} className="text-[8px] uppercase font-bold text-zinc-600 hover:text-zinc-400">Cancel</button>
+                          <button onClick={handleCreate} className="px-3 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor rounded text-[8px] font-bold uppercase">Create</button>
+                        </div>
+                      </motion.div>
                     )}
-                  </motion.div>
-                ))}
-              </div>
 
-              {/* Archive Button Footer */}
-              <div className="h-8 border-t border-white/5 bg-black/10 flex items-center px-3 justify-between">
-                <button
-                  onClick={() => setTerminalOpen(true)}
-                  className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-                >
-                  <Archive size={10} />
-                  View Archive
-                </button>
-              </div>
+                    {/* Cards */}
+                    {colStories.map(story => (
+                      <motion.div
+                        key={story.id}
+                        draggable
+                        onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
+                        className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(col.id); }}
+                        onDoubleClick={() => setSpotlight('inspector')}
+                      >
+                        <div className="flex items-start gap-2">
+                          {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
+                          <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
+                          <span className="text-[8px] font-mono text-zinc-600">{story.id}</span>
+                          <div className="flex gap-1">
+                            {story.flagged && (
+                              <span className="px-1 py-0.5 rounded-[2px] text-[7px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">⚑ Review</span>
+                            )}
+                            <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
+                          </div>
+                        </div>
+
+                        {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && (
+                          <div className={`mt-1.5 flex items-center gap-1 text-[8px] font-mono ${
+                            workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
+                            workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              workflowStatus.state === 'RUNNING' ? 'bg-amber-400 animate-pulse' :
+                              workflowStatus.state === 'COMPLETE' ? 'bg-green-400' : 'bg-red-400'
+                            }`} />
+                            {workflowStatus.state === 'RUNNING' ? 'RUNNING' :
+                             workflowStatus.state === 'COMPLETE' ? 'DONE' : 'FAILED'}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="h-8 border-t border-white/5 bg-black/10 flex items-center px-3 justify-between">
+                    <button
+                      onClick={() => setTerminalOpen(true)}
+                      className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+                    >
+                      <Archive size={10} />
+                      View Archive
+                    </button>
+
+                    {col.id === 'ready-to-build' && (
+                      <button
+                        onClick={() => setCreation({ phase: 'form', type: 'Story' })}
+                        className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+                      >
+                        <Plus size={10} />
+                        New Story
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )
         })}
