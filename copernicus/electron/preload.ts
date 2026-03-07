@@ -68,7 +68,7 @@ const SEND_CHANNELS = new Set([
   // Review gate
   'review:log',
   // Codebase semantic index
-  'codebase:search-deep', 'codebase:search-fast', 'codebase:index-status',
+  'codebase:search-deep', 'codebase:search-fast', 'codebase:index-status', 'codebase:run-benchmark',
   // LSP (Story 176 + 189)
   'lsp:status', 'lsp:request', 'lsp:notify',
   'lsp:open-file', 'lsp:close-file', 'lsp:get-diagnostics', 'lsp:check-file', 'lsp:workspace-check',

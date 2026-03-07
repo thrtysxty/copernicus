@@ -35,6 +35,7 @@ import { julesManager } from './jules/jules-manager'
 import { lspManager } from './lsp/lsp-manager'
 import { backendManager } from './backend-manager'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
+import { runRAGBenchmark } from './utils/rag-benchmark'
 
 // The built directory structure
 //
@@ -1086,6 +1087,7 @@ function registerIpcHandlers() {
   ipcMain.handle('codebase:index-status', () => handleIpc(() => codebaseIndexer.getStatus()))
   ipcMain.handle('codebase:search-deep', async (_event, query: string) => handleIpc(() => hybridRetriever.search(query)))
   ipcMain.handle('codebase:search-fast', async (_event, query: string) => handleIpc(() => codebaseIndexer.search(query)))
+  ipcMain.handle('codebase:run-benchmark', () => handleIpc(() => runRAGBenchmark()))
 
   // LSP (Story 176)
   ipcMain.handle('lsp:status',  () => handleIpc(() => lspManager.getStatus()))

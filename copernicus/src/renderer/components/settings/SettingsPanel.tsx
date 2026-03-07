@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { 
   X, Shield, Key, Layout, Cpu, 
   Settings, GitBranch, Workflow, FileText, 
-  Terminal, Database, User, Layers
+  Terminal, Database, User, Layers, Search
 } from 'lucide-react'
 
 // Import Sections
@@ -14,6 +14,7 @@ import { GitSection } from './sections/GitSection'
 import { WorkflowSection } from './sections/WorkflowSection'
 import { MCPSection } from './sections/MCPSection'
 import { SecuritySection } from './sections/SecuritySection'
+import { RAGSettings } from './RAGSettings'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { EnvironmentSection } from './sections/EnvironmentSection'
 import { DataSection } from './sections/DataSection'
@@ -27,6 +28,7 @@ type TabId =
   | 'git' 
   | 'workflow' 
   | 'mcp'
+  | 'rag'
   | 'security' 
   | 'templates'
   | 'environment' 
@@ -49,6 +51,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'git':         return <GitSection />
       case 'workflow':    return <WorkflowSection />
       case 'mcp':         return <MCPSection />
+      case 'rag':         return <RAGSettings />
       case 'security':    return <SecuritySection />
       case 'templates':   return <TemplatesSection />
       case 'environment': return <EnvironmentSection />
@@ -90,6 +93,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <TabButton id="git" label="Git & GitHub" icon={<GitBranch size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="workflow" label="Workflow" icon={<Workflow size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="mcp" label="MCP" icon={<Layers size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="rag" label="RAG Tuning" icon={<Search size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="templates" label="Templates" icon={<FileText size={14} />} active={activeTab} onClick={setActiveTab} />
 
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
