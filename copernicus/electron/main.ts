@@ -1095,6 +1095,50 @@ function registerIpcHandlers() {
   ipcMain.handle('lsp:get-diagnostics', (_e, filePath: string) => handleIpc(() => lspManager.getDiagnostics(filePath)))
   ipcMain.handle('lsp:check-file',      (_e, filePath: string) => handleIpc(() => lspManager.getDiagnostics(filePath)))
 
+  // Container Runtime Handlers
+  ipcMain.handle('runtime:list-containers', () => handleIpc(async () => {
+    return new Promise((resolve) => {
+      execFile('docker', ['ps', '-a', '--format', '{{json .}}'], (error: any, stdout: string) => {
+        if (error) {
+          log.error('Failed to list containers:', error);
+          resolve([]);
+          return;
+        }
+
+        try {
+          const lines = stdout.trim().split('\n').filter(Boolean);
+          const containers = lines.map(line => JSON.parse(line));
+          resolve(containers);
+        } catch (e) {
+          log.error('Failed to parse container list:', e);
+          resolve([]);
+        }
+      });
+    });
+  }));
+
+  ipcMain.handle('runtime:manage-container', (_event, { id, action }: { id: string, action: 'start' | 'stop' | 'logs' }) => handleIpc(async () => {
+    if (action === 'logs') {
+      const termId = `logs-${id}-${Date.now()}`;
+      if (win) {
+        win.webContents.send('terminal:spawn', { id: termId, label: `Logs: ${id.substring(0, 8)}`, ephemeral: true });
+        ptyManager.createEphemeral(termId, `docker logs -f ${id}`, fsManager.getRootPath(), win);
+      }
+      return { ok: true, termId };
+    }
+
+    return new Promise((resolve, reject) => {
+      execFile('docker', [action, id], (error: any, _stdout: string, stderr: string) => {
+        if (error) {
+          log.error(`Failed to ${action} container ${id}:`, error, stderr);
+          reject(new Error(stderr || error.message));
+        } else {
+          resolve({ ok: true });
+        }
+      });
+    });
+  }));
+
   // File System
   ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc(() => fsManager.listDir(dirPath)))
   ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc(() => fsManager.readFile(filePath)))
