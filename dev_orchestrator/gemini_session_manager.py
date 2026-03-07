@@ -129,12 +129,24 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
         print('ERROR: gemini binary not found on PATH', file=sys.stderr)
         sys.exit(127)
 
-    with open(log_path, 'w') as log_f:
-        for line in (proc.stdout or []):
-            log_f.write(line)
-            log_f.flush()
-            print(line, end='', flush=True)
+    try:
+        with open(log_path, 'w') as log_f:
+            for line in (proc.stdout or []):
+                log_f.write(line)
+                log_f.flush()
+                print(line, end='', flush=True)
+            proc.wait()
+    except KeyboardInterrupt:
+        proc.terminate()
         proc.wait()
+        sessions = load_sessions()
+        for s in sessions:
+            if s['id'] == session_id:
+                s.update({'status': 'killed', 'exit_code': -1,
+                          'completed_at': time.time(), 'duration_s': round(time.time() - start, 1)})
+        save_sessions(sessions)
+        print('\nSession killed by user.', flush=True)
+        sys.exit(1)
 
     duration = round(time.time() - start, 1)
     exit_code = proc.returncode
