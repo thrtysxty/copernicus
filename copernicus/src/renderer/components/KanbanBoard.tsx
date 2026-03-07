@@ -83,10 +83,11 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
     const removeWorkflowStatus = window.ipcRenderer.on('workflow:status-update', async (_event: any, _payload: any) => {
       try {
         const result = await invoke<any>('workflow:status')
-        if (result?.ok && result?.data?.state) {
+        const data = unwrapIpc<any>(result)
+        if (data?.state) {
           setWorkflowStatus({
-            storyId: result.data?.context?.storyId ?? null,
-            state: result.data.state
+            storyId: data?.context?.storyId ?? null,
+            state: data.state
           })
         }
       } catch (e) {

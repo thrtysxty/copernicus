@@ -45,7 +45,7 @@ const PanelHeader: React.FC<{
 
   useEffect(() => {
     invoke<any>('lsp:status').then((res: any) => {
-      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
+      if (res?.ok && res.data) setLspRunning(res?.data?.running ?? false)
     }).catch(() => {})
 
     const removeDiag = window.ipcRenderer.on(
@@ -232,9 +232,9 @@ export default function App() {
       if (root) setWorkingDir(root)
       else setIsWizard(true)
     }).catch(() => setIsWizard(true))
-    invoke<any>('git:branch').then((r: any) => setGitBranch(r?.data ?? r ?? '')).catch(() => {})
+    invoke<any>('git:branch').then((r: any) => setGitBranch(unwrapIpc<string>(r))).catch(() => {})
     invoke<any>('stories:list').then((r: any) => {
-      const list: any[] = Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : []
+      const list: any[] = unwrapIpc<any[]>(r) ?? []
       setInProgressCount(list.filter((s: any) => s.status === 'IN PROGRESS').length)
     }).catch(() => {})
 
