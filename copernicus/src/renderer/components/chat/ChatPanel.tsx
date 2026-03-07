@@ -186,6 +186,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const [pickerMode, setPickerMode] = useState<PickerMode>('none')
   const [pickerResults, setPickerResults] = useState<Array<{ label: string; value: string; payload: string }>>([])
 
+  const [pendingModelSwitch, setPendingModelSwitch] = useState<{ model: string; reason: string; sessionId: string } | null>(null)
+
+  const acceptModelSwitch = useCallback((sw: { model: string; reason: string; sessionId: string }) => {
+    setModel(sw.model)
+    setPendingModelSwitch(null)
+    invoke('chat:confirm-model-switch', { sessionId: sw.sessionId, accepted: true, model: sw.model }).catch(() => {})
+  }, [invoke, setModel])
+
+  const rejectModelSwitch = useCallback(() => {
+    if (pendingModelSwitch) {
+      invoke('chat:confirm-model-switch', { sessionId: pendingModelSwitch.sessionId, accepted: false }).catch(() => {})
+    }
+    setPendingModelSwitch(null)
+  }, [invoke, pendingModelSwitch])
+
   const streamingIdRef = useRef<string | null>(null)
   const isFirstCallAfterSwitch = useRef(false)
   const memoryInjectedRef = useRef(false)
@@ -626,10 +641,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       }
     )
 
+    const removeModelSwitch = window.ipcRenderer.on('chat:confirm-model-switch', (_e: any, payload: any) => {
+      setPendingModelSwitch(payload)
+    })
+
     return () => {
       removeToken()
       removeDone()
       removeError()
+      removeModelSwitch()
     }
   }, [])
 
@@ -998,6 +1018,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                   />
                 </div>
               ))
+            )}
+            {pendingModelSwitch && (
+              <div className="mx-4 mb-2 p-2 bg-zinc-900 border border-amber-500/30 rounded text-[10px]">
+                <span className="text-amber-400 font-mono">Orchestrator → </span>
+                <span className="text-zinc-300">Use <strong>{pendingModelSwitch.model}</strong> for {pendingModelSwitch.reason}</span>
+                <div className="flex gap-2 mt-1.5">
+                  <button
+                    onClick={() => acceptModelSwitch(pendingModelSwitch)}
+                    className="px-2 py-0.5 bg-copernicus-phosphor text-[#050505] rounded-none text-[9px] font-bold"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => rejectModelSwitch()}
+                    className="px-2 py-0.5 border border-zinc-700 text-zinc-500 rounded text-[9px]"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 

@@ -115,6 +115,17 @@ export class AuthManager {
     return deleted;
   }
 
+  public revokeKey(provider: string): void {
+    const deleted = this.authState.delete(provider);
+    if (deleted) {
+      this.saveConfig();
+      if (provider === 'google' || provider === 'jules') {
+        const geminiPath = path.join(os.homedir(), '.gemini', 'oauth_creds.json');
+        if (fs.existsSync(geminiPath)) fs.unlinkSync(geminiPath);
+      }
+    }
+  }
+
   public getApiKey(provider: ProviderType): string | null {
     // 1. Check Secure Storage (Highest priority as it's user-explicit)
     const config = this.authState.get(provider);

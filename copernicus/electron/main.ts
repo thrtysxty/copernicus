@@ -513,6 +513,18 @@ function registerIpcHandlers() {
   }));
   ipcMain.handle('auth:resolve-openai-config', () => handleIpc(() => authManager.resolveOpenAICompatibleKey()));
 
+  ipcMain.handle('auth:validate-ollama-cloud', () => handleIpc(async () => {
+    const key = authManager.getApiKey('ollama')
+    if (!key) return false
+    const cloudHost = authManager.getBaseUrl('ollama') || 'https://ollama.com'
+    const res = await fetch(`${cloudHost}/api/tags`, {
+      headers: { Authorization: `Bearer ${key}` }
+    }).catch(() => null)
+    return res?.ok ?? false
+  }))
+
+  ipcMain.handle('auth:revoke-key', (_e, provider) => handleIpc(() => authManager.revokeKey(provider)))
+
   // Model Handlers
   ipcMain.handle('models:list', () => handleIpc(() => modelRegistry.getModels()));
   ipcMain.handle('models:active', () => handleIpc(() => modelRegistry.getActiveModel()));
@@ -1054,6 +1066,10 @@ function registerIpcHandlers() {
   ipcMain.handle('chat:send', (_event, payload: any) => handleIpc(async () => {
     llmService.streamChat(payload).catch(err => log.error('[LLM] streamChat error:', err))
     return true
+  }))
+  ipcMain.handle('chat:confirm-model-switch', (_e, payload) => handleIpc(() => {
+    BrowserWindow.getAllWindows().forEach(w =>
+      w.webContents.send('chat:model-switch-decision', payload))
   }))
 
   // Review

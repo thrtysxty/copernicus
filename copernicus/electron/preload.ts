@@ -13,7 +13,7 @@ const SEND_CHANNELS = new Set([
   // Models
   'models:list', 'models:active', 'models:set-active', 'models:list-ollama',
   // LLM Chat
-  'chat:send',
+  'chat:send', 'chat:confirm-model-switch',
   // File System
   'fs:list-dir', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
   'app:get-root-path', 'app:set-root-path', 'app:get-user-guide',
@@ -96,7 +96,7 @@ const SEND_CHANNELS = new Set([
   'oauth:start-google', 'oauth:start-anthropic', 'oauth:start-openrouter',
   'app:start-oauth-listener',
   // Auth revoke
-  'auth:revoke',
+  'auth:revoke', 'auth:revoke-key', 'auth:validate-ollama-cloud',
   // Canvas interaction (Story 153)
   'canvas:get-iframe-bounds', 'canvas:capture-screenshot', 'canvas:screenshot-preview',
   'canvas:execute-js', 'canvas:send-input',
@@ -105,7 +105,7 @@ const SEND_CHANNELS = new Set([
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
 const LISTEN_CHANNELS = new Set([
   'main-process-message',
-  'chat:token', 'chat:done', 'chat:error',
+  'chat:token', 'chat:done', 'chat:error', 'chat:confirm-model-switch', 'chat:model-switch-decision',
   'terminal-incoming', 'terminal-closed', 'terminal:data', 'terminal-blocked',
   'terminal:activate-tab', 'terminal:spawn', 'terminal:set-busy', 'terminal:remove',
   'stories:updated',
