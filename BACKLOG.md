@@ -88,7 +88,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #209 | Designer Explorer Collapse By Default | DRAFT | Medium |
 | #210 | Restore Control Buttons To Canvas Preview | DRAFT | Medium |
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
-| #237 | Gemini Cli Session Manager — Background Terminal Tracking | DRAFT | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | DRAFT | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
@@ -101,12 +100,18 @@ This file is auto-generated. Run `make backlog` to update.
 | #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | APPROVED FOR IMPLEMENTATION | P1 — High |
 | #178 | Ipc Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P0 |
 | #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
+| #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
 | #183 | Chat Tools Back Face | APPROVED FOR IMPLEMENTATION | P1 |
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
 | #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
 | #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
+| #235 | Container Runtime Viewer — Docker And Vm Integration | APPROVED FOR IMPLEMENTATION | P1 |
+| #238 | Lsp Metadata Augmentation & Hybrid Schema | APPROVED FOR IMPLEMENTATION | P1 |
+| #239 | Type-Aware Weighted Embeddings | APPROVED FOR IMPLEMENTATION | P1 |
+| #240 | Hybrid Retrieval Engine & Mode Selection | APPROVED FOR IMPLEMENTATION | P1 |
+| #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
+| #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
 | #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
-| #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
 | #183 | Chat Tools Back Face | APPROVED FOR IMPLEMENTATION | P1 |
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
 | #187 | Jules Pr Manager Workflow | APPROVED FOR IMPLEMENTATION | P1 |
@@ -119,8 +124,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #230 | Agent Branch And Patch Workflow | APPROVED FOR IMPLEMENTATION | P1 |
 | #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #233 | Generic Handoff Signal And Centralized Comms Bus | APPROVED FOR IMPLEMENTATION | P1 |
-| #235 | Container Runtime Viewer — Docker And Vm Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #236 | Comprehensive E2E Testing With Playwright | APPROVED FOR IMPLEMENTATION | P1 |
+| #237 | Gemini Cli Session Manager — Background Terminal Tracking | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
