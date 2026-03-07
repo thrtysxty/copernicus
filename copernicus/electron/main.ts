@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell, session, globalShortcut, dialog } from 'electron'
 import path from 'node:path'
-import { spawn, execFile, execSync } from 'node:child_process'
+import { spawn, execFile, execSync, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import { createServer } from 'node:http'
@@ -979,8 +979,8 @@ function registerIpcHandlers() {
       const content = `# gitignore for ${opts.gitignoreTemplate}\nnode_modules/\ndist/\n.env\n`
       fs.writeFileSync(path.join(root, '.gitignore'), content)
     }
-    if (opts.authorName) execSync(`git config user.name "${opts.authorName}"`, { cwd: root })
-    if (opts.authorEmail) execSync(`git config user.email "${opts.authorEmail}"`, { cwd: root })
+    if (opts.authorName) execFileSync('git', ['config', 'user.name', opts.authorName], { cwd: root })
+    if (opts.authorEmail) execFileSync('git', ['config', 'user.email', opts.authorEmail], { cwd: root })
     return true
   }))
 
@@ -1014,9 +1014,9 @@ function registerIpcHandlers() {
   ipcMain.handle('env:scan', () => handleIpc(async () => {
     const check = async (bin: string): Promise<{ found: boolean; version?: string }> => {
       try {
-        const { execSync } = await import('child_process')
-        const v = execSync(`${bin} --version 2>/dev/null || ${bin} -v 2>/dev/null`,
-                           { timeout: 3000 }).toString().trim()
+        const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx']
+        if (!ALLOWED_BINS.includes(bin)) throw new Error(`Disallowed binary: ${bin}`)
+        const v = execFileSync(bin, ['--version'], { timeout: 3000 }).toString().trim()
         return { found: true, version: v.split('\n')[0].trim() }
       } catch {
         return { found: false }

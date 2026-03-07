@@ -1,10 +1,11 @@
-import { exec } from 'node:child_process'
+import { exec, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { codebaseIndexer } from '../codebase-indexer'
 import { hybridRetriever } from './hybrid-retrieval'
 import { fsManager } from '../fs-manager'
 
 const execAsync = promisify(exec)
+const execFileAsync = promisify(execFile)
 
 export interface ToolDefinition {
   name: string
@@ -184,8 +185,10 @@ ${r.content}
     }
 
     const role = 'coder'
-    const { stdout, stderr } = await execAsync(
-      `python3 dev_orchestrator/cloud_agent.py ${role} "Implement ${storyId}" --worktree ${storyId}`,
+    if (!/^[\w\-]+$/.test(storyId)) return 'Error: invalid storyId format'
+    const { stdout, stderr } = await execFileAsync(
+      'python3',
+      ['dev_orchestrator/cloud_agent.py', role, `Implement ${storyId}`, '--worktree', storyId],
       { cwd: rootPath }
     )
     return stdout.trim() || stderr.trim() || `Agent dispatched for ${storyId} via ${provider}`
