@@ -172,6 +172,30 @@ export const SCHEMA = {
       embedding FLOAT[768]
     );
   `,
+  model_performance: `
+    CREATE TABLE IF NOT EXISTS model_performance (
+      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      model_id            TEXT NOT NULL,
+      provider            TEXT NOT NULL,
+      task_type           TEXT NOT NULL,
+      timestamp           DATETIME DEFAULT CURRENT_TIMESTAMP,
+      duration_ms         INTEGER NOT NULL,
+      tokens_used         INTEGER NOT NULL,
+      tokens_per_sec      REAL NOT NULL,
+      cost_usd            REAL NOT NULL,
+      speed_score         REAL NOT NULL,
+      cost_score          REAL NOT NULL,
+      accuracy_score      REAL NOT NULL,
+      adherence_score     REAL NOT NULL,
+      composite_qs        REAL NOT NULL,
+      verification_passed INTEGER NOT NULL DEFAULT 1,
+      worktree_branch     TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_model_performance_model
+      ON model_performance(model_id, timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_model_performance_task
+      ON model_performance(task_type, timestamp DESC);
+  `,
   dev_sessions: `
     CREATE TABLE IF NOT EXISTS dev_sessions (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
