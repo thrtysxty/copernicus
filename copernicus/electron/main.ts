@@ -26,6 +26,7 @@ import { llmService } from './llm/service'
 import { fsManager } from './fs-manager'
 import { workflowEngine } from './workflow/engine'
 import { codebaseIndexer } from './codebase-indexer'
+import { hybridRetriever } from './llm/hybrid-retrieval'
 import { WORKFLOW_TEMPLATES } from './workflow/templates'
 import { browserSession } from './browser-session'
 import { dispatchJulesSession } from './jules/dispatcher'
@@ -1083,7 +1084,8 @@ function registerIpcHandlers() {
 
   // Codebase Indexing
   ipcMain.handle('codebase:index-status', () => handleIpc(() => codebaseIndexer.getStatus()))
-  ipcMain.handle('codebase:search', async (_event, query: string) => handleIpc(() => codebaseIndexer.search(query)))
+  ipcMain.handle('codebase:search-deep', async (_event, query: string) => handleIpc(() => hybridRetriever.search(query)))
+  ipcMain.handle('codebase:search-fast', async (_event, query: string) => handleIpc(() => codebaseIndexer.search(query)))
 
   // LSP (Story 176)
   ipcMain.handle('lsp:status',  () => handleIpc(() => lspManager.getStatus()))

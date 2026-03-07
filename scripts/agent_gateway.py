@@ -80,12 +80,14 @@ def main():
     parser.add_argument("--context-id", help="Story ID or Session UUID for targeted context")
     parser.add_argument("--worktree", help="Optional: Branch name for isolated worktree execution")
     parser.add_argument("--no-stream", action="store_false", dest="stream", help="Disable streaming output")
+    parser.add_argument("--mode", choices=["fast", "deep"], default="fast", help="Mode for codebase search (fast or deep)")
     
     args = parser.parse_args()
     
     # 1. Fetch Handoff Context
     handoff = get_handoff_context(args.context_id)
-    full_prompt = f"{handoff}\n\nUser Request: {args.prompt}"
+    mode_instruction = f"Search Mode Override: When searching the codebase, you MUST use the '{args.mode}' mode.\n"
+    full_prompt = f"{handoff}\n\n{mode_instruction}User Request: {args.prompt}"
     
     # 2. Initialize the Proven Engine
     agent = StandaloneCloudAgent()
