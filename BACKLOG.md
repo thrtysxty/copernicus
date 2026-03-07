@@ -90,7 +90,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
 | #244 | Security Fix — Command Injection In Electron Ipc Subprocess Calls | DRAFT | Medium |
 | #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | DRAFT | Medium |
-| #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | DRAFT | Medium |
+| #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | COMPLETE | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | DRAFT | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
