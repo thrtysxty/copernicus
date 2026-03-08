@@ -13,6 +13,9 @@ def get_db_connection():
     db_path = os.environ.get('COPERNICUS_DB_PATH', os.path.expanduser('~/.copernicus/copernicus.db'))
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     conn = sqlite3.connect(db_path)
+    conn.execute('PRAGMA foreign_keys = ON')
+    conn.execute('PRAGMA journal_mode = WAL')
+    conn.execute('PRAGMA synchronous = NORMAL')
     conn.row_factory = sqlite3.Row
     return conn
 

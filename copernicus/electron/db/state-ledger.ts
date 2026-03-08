@@ -130,11 +130,13 @@ export class StateLedger {
     }
 
     this.db = new Database(finalPath);
+    this.db.pragma('foreign_keys = ON');
+    this.db.pragma('journal_mode = WAL');
+    this.db.pragma('synchronous = NORMAL');
     this.init();
   }
 
   private init() {
-    this.db.pragma('journal_mode = WAL');
     this.db.exec(SCHEMA.intents);
     this.db.exec(SCHEMA.events);
     this.db.exec(SCHEMA.memory);

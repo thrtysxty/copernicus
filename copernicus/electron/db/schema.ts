@@ -64,6 +64,8 @@ export const SCHEMA = {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       agent_id TEXT DEFAULT 'default'
     );
+    CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);
+    CREATE INDEX IF NOT EXISTS idx_events_agent ON events(agent_id);
   `,
   memory: `
     CREATE TABLE IF NOT EXISTS memory (

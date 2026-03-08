@@ -26,6 +26,9 @@ def client():
         
         # Also initialize jules_sessions for agents tests
         conn = sqlite3.connect(os.environ['COPERNICUS_DB_PATH'])
+        conn.execute('PRAGMA foreign_keys = ON')
+        conn.execute('PRAGMA journal_mode = WAL')
+        conn.execute('PRAGMA synchronous = NORMAL')
         conn.execute('''
             CREATE TABLE IF NOT EXISTS jules_sessions (
                 id TEXT PRIMARY KEY,

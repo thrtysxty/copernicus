@@ -456,6 +456,9 @@ def context_handoff(request_data: ContextHandoffRequest):
              return jsonify({"ok": True, "data": {"context": None}, "message": f"DB not found at {db_path}"}), 200
 
         conn = sqlite3.connect(db_path)
+        conn.execute('PRAGMA foreign_keys = ON')
+        conn.execute('PRAGMA journal_mode = WAL')
+        conn.execute('PRAGMA synchronous = NORMAL')
         cursor = conn.cursor()
         
         # Pull from jules_sessions if story_id provided, or by session_id

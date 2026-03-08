@@ -81,12 +81,15 @@ export class StoriesManager {
     const files = fs.readdirSync(this.storiesPath)
       .filter(f => f.endsWith('.md') && !f.endsWith('.tmp'))
 
+    const allInDb = this.ledger.listStoriesFromDb()
+    const dbMap = new Map(allInDb.map(s => [s.id, s]))
+
     for (const file of files) {
       const id = file.replace('.md', '')
       const filePath = path.join(this.storiesPath, file)
 
       try {
-        const existing = this.ledger.getStoryById(id)
+        const existing = dbMap.get(id)
         const mtime = fs.statSync(filePath).mtimeMs
 
         // Import if new OR if file has been modified since last sync
