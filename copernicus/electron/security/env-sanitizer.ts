@@ -40,6 +40,38 @@ export const PASSTHROUGH_VARS = [
 ];
 
 /**
+ * Strict regex validation for known-safe environment variable values.
+ * AC-2: Each key in allowList must have a corresponding pattern entry.
+ */
+export const VALUE_PATTERNS: Record<string, RegExp> = {
+  'PATH': /^[a-zA-Z0-9\/\-_\:\.]+$/,
+  'HOME': /^[a-zA-Z0-9\/\-_\.]+$/,
+  'USER': /^[a-z_][a-z0-9_-]*$/,
+  'LOGNAME': /^[a-z_][a-z0-9_-]*$/,
+  'SHELL': /^[a-zA-Z0-9\/\-_]+$/,
+  'TERM': /^[a-zA-Z0-9\-_]+$/,
+  'COLORTERM': /^[a-zA-Z0-9\-_]+$/,
+  'LANG': /^[a-zA-Z0-9\._-]+$/,
+  'LC_ALL': /^[a-zA-Z0-9\._-]+$/,
+  'LC_CTYPE': /^[a-zA-Z0-9\._-]+$/,
+  'TMPDIR': /^[a-zA-Z0-9\/\-_\.]+$/,
+  'TMP': /^[a-zA-Z0-9\/\-_\.]+$/,
+  'TEMP': /^[a-zA-Z0-9\/\-_\.]+$/,
+  'XDG_RUNTIME_DIR': /^[a-zA-Z0-9\/\-_\.]+$/,
+  'XDG_CONFIG_HOME': /^[a-zA-Z0-9\/\-_\.]+$/,
+  'XDG_DATA_HOME': /^[a-zA-Z0-9\/\-_\.]+$/,
+  'DISPLAY': /^[a-zA-Z0-9\.\-_:]+$/,
+  'WAYLAND_DISPLAY': /^[a-zA-Z0-9\.\-_:]+$/,
+  'EDITOR': /^[a-zA-Z0-9\/\-_\s]+$/,
+  'VISUAL': /^[a-zA-Z0-9\/\-_\s]+$/,
+  'PAGER': /^[a-zA-Z0-9\/\-_\s]+$/,
+  'MANPATH': /^[a-zA-Z0-9\/\-_\:\.]+$/,
+  'INFOPATH': /^[a-zA-Z0-9\/\-_\:\.]+$/,
+  'NODE_ENV': /^(development|production|test)$/,
+  'VITE_DEV_SERVER_URL': /^http:\/\/localhost:\d+$/
+};
+
+/**
  * Constructs a clean environment for the agent process.
  *
  * @param agentId The ID of the agent (e.g., 'claude', 'gemini')
@@ -50,7 +82,7 @@ export function buildSafeEnv(_agentId: string, allowList: string[] = []): NodeJS
   const safeEnv: NodeJS.ProcessEnv = {};
   const originalEnv = process.env;
 
-  // 1. Start with passthrough variables
+  // 1. Start with passthrough variables (these are internal and trusted)
   for (const key of PASSTHROUGH_VARS) {
     if (originalEnv[key] !== undefined) {
       safeEnv[key] = originalEnv[key];
@@ -58,9 +90,15 @@ export function buildSafeEnv(_agentId: string, allowList: string[] = []): NodeJS
   }
 
   // 2. Add user-opted-in variables (from Settings)
+  // AC-2: Validate values against patterns. Keys without patterns are excluded.
   for (const key of allowList) {
     if (originalEnv[key] !== undefined) {
-      safeEnv[key] = originalEnv[key];
+      const pattern = VALUE_PATTERNS[key];
+      if (pattern && pattern.test(originalEnv[key]!)) {
+        safeEnv[key] = originalEnv[key];
+      } else {
+        console.warn(`[Security] Environment variable ${key} excluded: ${pattern ? 'invalid value format' : 'no pattern defined'}`);
+      }
     }
   }
 

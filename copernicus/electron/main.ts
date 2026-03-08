@@ -117,7 +117,13 @@ export function notifyWorkspaceChanged(window: BrowserWindow | null, newPath: st
 }
 
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
-const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
+// AC-3: Guard VITE_DEV_SERVER_URL behind development check
+const VITE_DEV_SERVER_URL = process.env.NODE_ENV === 'development' ? process.env['VITE_DEV_SERVER_URL'] : undefined
+
+// Build-time/startup assertion for production safety
+if (process.env.NODE_ENV === 'production' && process.env['VITE_DEV_SERVER_URL']) {
+  throw new Error('Security violation: VITE_DEV_SERVER_URL exposed in production');
+}
 
 const authManager = new AuthManager()
 const githubManager = new GithubManager(authManager)
