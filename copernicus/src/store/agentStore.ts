@@ -73,17 +73,17 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     }
   })),
 
-  setClipboard: (content) => set({ agentClipboard: content }),
+  setClipboard: (content: string) => set({ agentClipboard: content }),
   getClipboard: () => get().agentClipboard,
 
-  sendDelegate: (target, task) => {
+  sendDelegate: (target: string, task: string) => {
     const ipcRenderer = window.ipcRenderer;
     if (ipcRenderer) {
       ipcRenderer.send('agent:delegate', { target, task })
     }
   },
 
-  sendForward: (target, content) => {
+  sendForward: (target: string, content: string) => {
     const ipcRenderer = window.ipcRenderer;
     if (ipcRenderer) {
       ipcRenderer.send('agent:forward', { target, content })
