@@ -23,7 +23,7 @@ class ToolExecutor:
             try:
                 termios.tcflush(sys.stdin, termios.TCIFLUSH)
             except Exception:
-        logger.error("Unexpected error", exc_info=True)
+                logger.error("Unexpected error", exc_info=True)
 
         try:
             response = input("   Execute? [y/N]: ").strip().lower()

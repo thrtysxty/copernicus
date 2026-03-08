@@ -17,7 +17,6 @@ def chat(request_data: ChatRequest):
     Unified streaming chat endpoint.
     Expects JSON: { sessionId, messages, model, provider, systemPrompt, apiKey, baseUrl ... }
     """
-    session_id = request_data.sessionId
     messages = [m.model_dump() for m in request_data.messages]
     model = request_data.model
     provider_name = request_data.provider or 'anthropic'

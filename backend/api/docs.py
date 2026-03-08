@@ -1,9 +1,8 @@
 import os
 import re
 import subprocess
-import json
 from datetime import datetime
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify
 from backend.utils.path_guard import assert_safe_path
 from backend.utils.validate import validate
 from backend.schemas.docs import GenerateDocsRequest

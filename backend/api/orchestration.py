@@ -1,6 +1,5 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 import time
-import threading
 from backend.utils.validate import validate
 from backend.schemas.orchestration import ModelSwitchRequest, ResolveConfirmationRequest
 
@@ -23,12 +22,6 @@ def request_confirmation(request_data: ModelSwitchRequest):
         "reason": reason,
         "status": "pending"
     }
-    
-    # In a real Electron app, this would trigger a push event to the renderer
-    # For now, we simulate the wait. 
-    # The shim will poll or wait for the result.
-    
-    # BLOCKING WAIT (with timeout)
     timeout = 60 # seconds
     start_time = time.time()
     

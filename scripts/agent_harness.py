@@ -12,7 +12,6 @@ import subprocess
 import sqlite3
 import json
 import argparse
-from datetime import datetime
 
 def get_repo_root():
     try:

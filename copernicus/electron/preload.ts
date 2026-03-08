@@ -1,10 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-// ---------------------------------------------------------------------------
-// Channel allowlists — the ONLY channels the renderer may use.
-// Add new channels here when new IPC handlers are registered in main.ts.
-// ---------------------------------------------------------------------------
-
 /** Channels the renderer may SEND to main (ipcMain.on / ipcMain.handle) */
 const SEND_CHANNELS = new Set([
   // Auth
@@ -134,10 +129,6 @@ const LISTEN_CHANNELS = new Set([
   // Workflow engine state push (Story 186)
   'workflow:status-update',
 ])
-
-// ---------------------------------------------------------------------------
-// Expose filtered API to renderer via contextBridge
-// ---------------------------------------------------------------------------
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {
     if (!LISTEN_CHANNELS.has(channel)) {

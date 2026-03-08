@@ -86,9 +86,6 @@ export class AdvisoryLock {
   async acquire() {
     await ensureDir(path.dirname(this.lockPath));
     this.fd = await fs.open(this.lockPath, 'w');
-    // Using simple file existence/open for lock in this implementation 
-    // as flock requires specific platform support or libraries.
-    // For a more robust implementation, we'd use a dedicated library.
   }
 
   async release() {
@@ -231,9 +228,6 @@ export class Transaction {
 
   public async revertChanges(): Promise<void> {
     await this.readWAL();
-    // Rollback is usually defined as reverting a partially applied commit or crash recovery
-    // In our WAL-first model, commit IS the application.
-    // If we crash before commit, we just delete the shadow files.
     await this.cleanup();
   }
 }

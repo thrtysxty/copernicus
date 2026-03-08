@@ -256,7 +256,7 @@ class AgentConsole:
             except KeyboardInterrupt:
                 print("\nExiting...")
                 break
-            except Exception as e:
+            except Exception:
                 logger.error("Error occurred", exc_info=True)
 
 

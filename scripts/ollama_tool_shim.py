@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import logging
 """
 Ollama Tool Shim - COPERNICUS (Official Library Edition)
 

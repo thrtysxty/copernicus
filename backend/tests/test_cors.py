@@ -1,4 +1,3 @@
-import pytest
 from backend.app import validate_origin
 
 def test_valid_origin_allowed():

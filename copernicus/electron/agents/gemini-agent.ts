@@ -19,7 +19,7 @@ export interface GeminiAgentOptions {
 export class GeminiAgent extends EventEmitter {
   private ptyProcess: pty.IPty | null = null
   private buffer: string = ''
-  private pendingResolver: ((text: string) => void) | null = null
+  private pendingResolver: ((_text: string) => void) | null = null
   private pendingRejecter: ((err: Error) => void) | null = null
   // Gemini CLI ready prompt — matches '> ' or '❯ ' on its own line
   private readonly PROMPT_RE = /(?:^|\n)[>❯]\s*$/
@@ -69,7 +69,7 @@ export class GeminiAgent extends EventEmitter {
   }
 
   /** Sends a prompt and resolves with the full response text when done */
-  async sendPrompt(text: string): Promise<string> {
+  async sendPrompt(_text: string): Promise<string> {
     if (!this.ptyProcess) throw new Error('GeminiAgent not spawned')
     if (this.pendingResolver) throw new Error('Already waiting for a response')
 
@@ -84,7 +84,7 @@ export class GeminiAgent extends EventEmitter {
         reject(new Error(`Gemini response timed out after ${this.TIMEOUT_MS / 1000}s`))
       }, this.TIMEOUT_MS)
 
-      this.ptyProcess!.write(text + '\r')
+      this.ptyProcess!.write(_text + '\r')
     })
   }
 

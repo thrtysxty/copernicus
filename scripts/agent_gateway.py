@@ -10,11 +10,8 @@ Enables context continuity via AC-2 "Context Handoff" (Ledger-backed RAG chunks)
 """
 
 import sys
-import os
-import json
 import sqlite3
 import argparse
-import subprocess
 import time
 from pathlib import Path
 

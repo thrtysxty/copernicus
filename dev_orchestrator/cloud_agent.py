@@ -17,6 +17,8 @@ OLLAMA_CLOUD_URL = os.environ.get("OLLAMA_CLOUD_HOST", os.environ.get("OLLAMA_CL
 OLLAMA_LOCAL_URL = "http://localhost:11434"
 DELL_SERVER_URL = "http://192.168.1.185:11434"
 
+EVENT_SIGNAL_ORCHESTRATOR = "SIGNAL_ORCHESTRATOR"
+MODEL_SUFFIX_CLOUD = ":cloud"
 BASE_DIR = os.path.dirname(__file__)
 CONFIG_PATH = os.path.join(BASE_DIR, "models.json")
 LOG_PATH = os.path.join(BASE_DIR, "performance_log.json")
@@ -104,7 +106,7 @@ class StandaloneCloudAgent:
             pass # Use hardcoded fallbacks
 
     def get_client_for_model(self, model_name):
-        if ":cloud" in model_name:
+        if MODEL_SUFFIX_CLOUD in model_name:
             if not self.api_key:
                 print("WARNING: OLLAMA_API_KEY not set — cloud request will be rejected (401)", file=sys.stderr)
             headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
@@ -162,7 +164,7 @@ class StandaloneCloudAgent:
         self.worktree = worktree_branch
         client, tier = self.get_client_for_model(model_name)
         # Strip internal routing suffix before sending to API
-        api_model_name = (model_name or model_or_role).removesuffix(":cloud")
+        api_model_name = (model_name or model_or_role).removesuffix(MODEL_SUFFIX_CLOUD)
         
         wt_context = ""
         if worktree_branch:

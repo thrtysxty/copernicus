@@ -10,10 +10,6 @@ export class BackendManager {
 
   async start(): Promise<void> {
     if (this.process) return
-
-    // Find the backend entry point relative to the app path
-    // In dev: project_root/backend/app.py
-    // In prod: app.getAppPath()/backend/app.py (if bundled)
     const isPackaged = app.isPackaged
     const backendPath = isPackaged 
       ? path.join(process.resourcesPath, 'backend', 'app.py')

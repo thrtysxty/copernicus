@@ -1,4 +1,4 @@
-from typing import Any
+from backend.utils.errors import AppError
 from backend.providers.base import BaseProvider
 from backend.providers.anthropic import AnthropicProvider
 from backend.providers.google import GoogleProvider
@@ -15,4 +15,4 @@ def get_provider(provider_name: str) -> BaseProvider:
     elif provider_name == 'openai':
         return OpenAIProvider()
     else:
-        raise ValueError(f"Unknown provider: {provider_name}")
+        raise AppError(f"Unknown provider: {provider_name}")

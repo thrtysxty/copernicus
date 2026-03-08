@@ -209,10 +209,6 @@ class FilePickerScreen(ModalScreen):
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle file path submission."""
-        # Test: Empty path should be dismissed with None
-        # Test: Non-existent file should show error message
-        # Test: File > MAX_FILE_SIZE should show error message
-        # Test: Valid file should dismiss with path
         path = event.value.strip()
 
         if not path:
@@ -488,7 +484,7 @@ class DevTimeModal(ModalScreen):
                         m = r // 60
                         elapsed = f"{h}h {m}m"
                     except:
-    logger.error("Unexpected error", exc_info=True)
+                        logger.error("Unexpected error", exc_info=True)
 
                 info = f"{self.existing_session.get('financial_category')} · {self.existing_session.get('component')} · {elapsed} elapsed"
                 yield Static(info, classes="devtime-row")
@@ -685,7 +681,7 @@ class DevTimeCloseModal(ModalScreen):
                 if self.manager.LOCK_PATH.exists():
                     self.manager.LOCK_PATH.unlink()
             except:
-    logger.error("Unexpected error", exc_info=True)
+                        logger.error("Unexpected error", exc_info=True)
             self.dismiss("quit")
 
         elif event.button.id == "btn-save":
@@ -925,9 +921,6 @@ class AgentMessage(Vertical):
         self.content = ""  # Store content for title preview
 
     def compose(self) -> ComposeResult:
-        # Test: AgentMessage should be wrapped in Collapsible
-        # Test: Should start expanded (collapsed=False)
-        # Test: Title should show persona name with visible activity indicator
         self.collapsible = Collapsible(
             title=f"● {self.persona} - generating...",
             collapsed=False,
@@ -941,9 +934,6 @@ class AgentMessage(Vertical):
         yield self.collapsible
 
     def update_text(self, content: str):
-        # Test: First call to update_text should hide spinner
-        # Test: is_loading should transition from True to False
-        # Test: Title should update with content preview
         if self.is_loading and self.spinner:
             self.spinner.display = False  # Hide spinner on first content
             self.is_loading = False
@@ -994,9 +984,6 @@ class ToolExecution(Vertical):
         yield self.collapsible
 
     def update_result(self, result: str):
-        # Test: update_result should change status icon from ⏳ to ✓
-        # Test: Collapsible should collapse after result arrives
-        # Test: Result widget should display the result text
         if self.collapsible and self._tool_running:
             self._tool_running = False
             # Update title to show completion
@@ -1090,11 +1077,6 @@ class StatusBar(Static):
             task_count: Number of background tasks
             file_change: Tuple of (additions, deletions) for a file change
         """
-        # Test: Calling update_status should refresh the displayed text
-        # Test: Story parameter should be optional
-        # Test: task_count parameter should be optional
-        # Test: task_count should update the displayed task count
-        # Test: file_change should increment files_changed counter
         if story is not None:
             self.story = story
         if task_count is not None:
@@ -1526,9 +1508,6 @@ class AgentTui(App):
         self.file_attachment_widget: FileAttachment | None = (
             None  # File attachment display widget
         )
-        # Test: background_tasks should be empty list initially
-        # Test: background_tasks should store BackgroundTask objects
-        # Test: Should limit to 5 background tasks max to minimize memory
         self.background_tasks: list[
             BackgroundTask
         ] = []  # Store background tasks (max 5)
@@ -1605,7 +1584,7 @@ class AgentTui(App):
                         f"Cleaned up {stale_count} stale agent(s)", severity="warning"
                     )
             except Exception:
-        logger.error("Unexpected error", exc_info=True)
+                        logger.error("Unexpected error", exc_info=True)
             self.set_interval(2.0, self.refresh_subagent_count)
 
         # DevTime: Check for active session or start new one
@@ -1689,7 +1668,7 @@ class AgentTui(App):
                     SubagentActivity.SubagentStatus(running)
                 )
             except Exception:
-        logger.error("Unexpected error", exc_info=True)  # Silently ignore telemetry errors
+                        logger.error("Unexpected error", exc_info=True)  # Silently ignore telemetry errors
 
     @on(TextArea.Changed)
     def on_text_changed(self, event: TextArea.Changed) -> None:
@@ -1763,13 +1742,6 @@ class AgentTui(App):
 
     async def submit_command(self) -> None:
         """Submit the command from the TextArea."""
-        # Test: submit_command should read from TextArea, not Input
-        # Test: Empty commands should be ignored
-        # Test: Command should be added to history after submission
-        # Test: History list should not exceed 50 items
-        # Test: history_index should be reset to -1 after submission
-        # Test: Should include attached file contents in the prompt context
-        # Test: Should clear attached files after submission
         text_area = self.query_one("#input-box", TextArea)
         cmd = text_area.text.strip()
         if not cmd:
@@ -1912,9 +1884,6 @@ class AgentTui(App):
         # Build command with file attachments
         full_cmd = cmd
         if self.attached_files:
-            # Test: File contents should be prefixed with "Context files:" header
-            # Test: Each file should be labeled with its path
-            # Test: Files that can't be read should show error message
             file_context = "\n\nContext files:\n"
             for file_path in self.attached_files:
                 try:
@@ -1954,10 +1923,6 @@ class AgentTui(App):
             if len(parts) > 1 and len(parts[1]) > 30
             else (parts[1] if len(parts) > 1 else "")
         )
-
-        # Collapse previous agent messages to reduce clutter (keep last 2 expanded)
-        # Test: Previous agent messages should be collapsed when new one is created
-        # Fix Pi Constraint: Use list comprehension instead of explicit list() conversion
         agent_messages = [msg for msg in scroll.query("AgentMessage")]
         if len(agent_messages) >= 2:
             for msg in agent_messages[:-1]:  # Collapse all but the most recent
@@ -1967,10 +1932,6 @@ class AgentTui(App):
         self.current_agent_msg = AgentMessage(persona, self.bridge.provider)
         self.accumulated_text = ""
         await scroll.mount(self.current_agent_msg)
-
-        # Test: current_worker should be set when starting agent worker
-        # Test: full_cmd (with file context) should be passed to worker, not cmd
-        # Build task description for status bar (persona: query_preview)
         task_desc = f"{persona}: {query_preview}" if query_preview else persona
         self.set_working_state(True, task_desc)
         self.current_worker = self.run_agent_worker(full_cmd)
@@ -1988,9 +1949,6 @@ class AgentTui(App):
         finally:
             # Always mark as done, even on error
             self.call_from_thread(self.set_working_state, False)
-        # Test: After response completes, should estimate tokens and update display
-        # Test: Token estimation should use accumulated_text length
-        # Test: Should handle case where token_display is None
         self.call_from_thread(self.update_token_count)
 
     def estimate_tokens(self, text: str) -> int:
@@ -2353,9 +2311,6 @@ class AgentTui(App):
 
     def update_status(self, story: str | None = None, task_count: int | None = None):
         """Update the status bar with new story information and/or task count."""
-        # Test: Calling update_status should update status_bar widget
-        # Test: Should handle case where status_bar is None gracefully
-        # Test: Should pass task_count to status_bar if provided
         if self.status_bar:
             self.status_bar.update_status(story=story, task_count=task_count)
         if story is not None:
@@ -2382,14 +2337,10 @@ class AgentTui(App):
                     "[dim]^d[/dim] quit  [dim]?[/dim] help  [dim]esc[/dim] cancel"
                 )
         except Exception:
-        logger.error("Unexpected error", exc_info=True)
+                        logger.error("Unexpected error", exc_info=True)
 
     def action_cancel_generation(self) -> None:
         """Cancel the current agent generation (Escape key)."""
-        # Test: Should do nothing if no worker is running
-        # Test: Should call worker.cancel() if worker exists
-        # Test: Should update agent message to show "Cancelled"
-        # Test: Should reset current_worker to None
         if self.current_worker is not None:
             self.current_worker.cancel()
             if self.current_agent_msg:
@@ -2400,9 +2351,6 @@ class AgentTui(App):
 
     def action_show_help(self) -> None:
         """Show the help overlay with keyboard shortcuts (? or Ctrl+/)."""
-        # Test: Should push HelpOverlay screen
-        # Test: Should display all keyboard shortcuts
-        # Test: HelpOverlay should be centered and modal
         self.push_screen(HelpOverlay())
 
     def action_toggle_collapse(self) -> None:
@@ -2436,10 +2384,6 @@ class AgentTui(App):
 
     def action_history_up(self) -> None:
         """Navigate to previous command in history (Up arrow)."""
-        # Test: Should do nothing if history is empty
-        # Test: Should not go beyond the oldest command (index 0)
-        # Test: Should populate TextArea with historical command
-        # Test: history_index should increment up to len(history)-1
         if not self.command_history:
             return
 
@@ -2455,10 +2399,6 @@ class AgentTui(App):
 
     def action_history_down(self) -> None:
         """Navigate to next command in history (Down arrow)."""
-        # Test: Should do nothing if history_index is -1 (not navigating)
-        # Test: Should move toward more recent commands
-        # Test: Should clear TextArea when reaching the end (index -1)
-        # Test: history_index should decrement down to -1
         if self.history_index == -1:
             return
 
@@ -2587,10 +2527,6 @@ class AgentTui(App):
         # Can only background if there's an active task
         if not self.current_agent_msg or not self.current_worker:
             return
-
-        # Get the command from the most recent UserMessage
-        # For simplicity, we'll store a placeholder command
-        # In a full implementation, we'd track the original command
         text_area = self.query_one("#input-box", TextArea)
         cmd = text_area.text.strip() if text_area.text else "Background task"
 
@@ -2649,7 +2585,7 @@ class AgentTui(App):
             try:
                 agents = telemetry.get_running_agents()
             except Exception:
-        logger.error("Unexpected error", exc_info=True)
+                        logger.error("Unexpected error", exc_info=True)
         self.push_screen(SubagentStatusScreen(agents), self._on_subagent_screen_dismiss)
 
     def _on_subagent_screen_dismiss(self, result: str | None) -> None:

@@ -2,7 +2,6 @@ import { ChildProcess, spawn } from 'child_process'
 import path from 'path'
 import fs from 'fs'
 import { app, BrowserWindow } from 'electron'
-import log from '../utils/logger'
 import log from 'electron-log'
 
 interface PendingRequest {

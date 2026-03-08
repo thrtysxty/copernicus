@@ -19,11 +19,6 @@ import subprocess
 import re
 import sqlite3
 import os
-import json
-
-# CROSS-REFERENCE: Story 197 (Local Bridge) -> Story 196 (Project Work)
-# This script implements the local repository-specific RAG bridge for Story 197.
-# Lessons learned here will be productized in Story 196 within the Electron app.
 
 DB_PATH = "copernicus/copernicus.db"
 
@@ -45,11 +40,6 @@ def get_semantic_context(query, top_k=5):
             conn.load_extension(extension_path)
         
         cursor = conn.cursor()
-        
-        # Simple keyword fallback on the content column of the vec table for now
-        # until we have a way to generate embeddings in this script.
-        # NOTE: Real semantic search would use: 
-        # SELECT file_path, content FROM codebase_vec WHERE embedding MATCH ?
         cursor.execute("SELECT file_path, content FROM codebase_vec WHERE content LIKE ? LIMIT ?", (f'%{query}%', top_k))
         rows = cursor.fetchall()
         

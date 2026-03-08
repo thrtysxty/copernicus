@@ -45,8 +45,3 @@ def validate_write_safety(file_path, new_content):
                 )
 
     return True, ""
-
-
-# Note: This module is intended to be imported by the ToolExecutor or AgentBridge,
-# or run as a standalone script if the architecture supports hook scripts.
-# For this implementation, we will integrate the logic into the AgentBridge/ToolExecutor flow.

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import json
-import sys
 
 # Directory to ignore to keep the index clean and lightweight
 IGNORE_DIRS = {

@@ -1,9 +1,8 @@
-from backend.utils.errors import AppError
 import logging
 logger = logging.getLogger(__name__)
 import json
 import os
-from flask import Blueprint, jsonify, current_app, request
+from flask import Blueprint, jsonify
 from backend.utils.validate import validate
 from backend.schemas.registry import ReloadRequest
 

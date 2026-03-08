@@ -272,7 +272,7 @@ def main():
     status_parser = subparsers.add_parser("status", help="Get status of a task")
     status_parser.add_argument("story_id", help="Story ID")
 
-    list_parser = subparsers.add_parser("list", help="List queues and counts")
+    subparsers.add_parser("list", help="List queues and counts")
 
     args = parser.parse_args()
 

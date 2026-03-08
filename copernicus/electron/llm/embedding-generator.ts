@@ -36,11 +36,6 @@ export class EmbeddingGenerator {
 
     // First normalize the embedding to unit length (L2 normalization)
     const normalized = normalizeEmbedding(embedding);
-
-    // Then apply the scaling factor
-    // Note: Since cosine similarity = dot product of unit vectors,
-    // multiplying a unit vector by 'weight' will scale its magnitude,
-    // which linearly scales the dot product distance when compared to unit query vectors!
     return normalized.map(val => val * weight);
   }
 }

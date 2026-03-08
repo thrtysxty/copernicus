@@ -1,7 +1,3 @@
-// Log file locations:
-// macOS: ~/Library/Logs/COPERNICUS/main.log
-// Windows: %USERPROFILE%\AppData\Roaming\COPERNICUS\logs\main.log
-// Linux: ~/.config/COPERNICUS/logs/main.log
 
 import log from 'electron-log/main'
 

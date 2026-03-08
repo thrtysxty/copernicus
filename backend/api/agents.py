@@ -10,13 +10,30 @@ import os
 import re
 import time
 import uuid
-import json
 import sqlite3
 from contextlib import closing
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 from collections import OrderedDict
+
+# Constants for roles, models, and events
+ROLE_SYSTEM = "system"
+ROLE_USER = "user"
+ROLE_ASSISTANT = "assistant"
+ROLE_TOOL = "tool"
+
+TYPE_MESSAGE = "message"
+TYPE_TOOL_OUTPUT = "tool_output"
+
+PERSONA_JUNIOR_DEV = "junior-dev"
+PERSONA_SCRIBE = "scribe"
+PERSONA_CODE_REVIEWER = "code-reviewer"
+
+GATEWAY_ROLE_CODER = "coder"
+GATEWAY_ROLE_RESEARCHER = "researcher"
+GATEWAY_ROLE_ARCHITECT = "architect"
+
 
 agents_bp = Blueprint("agents", __name__)
 
@@ -37,9 +54,9 @@ def get_db_path():
 
 # Map chat tool personas to agent gateway roles
 PERSONA_ROLE_MAP = {
-    "junior-dev": "coder",
-    "scribe": "researcher",
-    "code-reviewer": "architect",
+    PERSONA_JUNIOR_DEV: GATEWAY_ROLE_CODER,
+    PERSONA_SCRIBE: GATEWAY_ROLE_RESEARCHER,
+    PERSONA_CODE_REVIEWER: GATEWAY_ROLE_ARCHITECT,
 }
 
 # Model tier detection (case-insensitive, supports e.g., :7b, :70b, -7b, etc.)
@@ -53,7 +70,7 @@ class ContextItem:
     content: str
     timestamp: float = field(default_factory=time.time)
     token_count: int = 0
-    type: str = "message"  # e.g., 'message', 'tool_output'
+    type: str = TYPE_MESSAGE  # e.g., 'message', 'tool_output'
     pinned: bool = False
 
 
@@ -130,8 +147,8 @@ class ContextManager:
         # Prioritize: pinned > system > tool outputs > others (latest first)
         # Group by priority
         pinned = [i for i in items if i.pinned]
-        system = [i for i in items if i.role == "system" and not i.pinned]
-        tools = [i for i in items if i.type == "tool_output" and not i.pinned and i.role != "system"]
+        system = [i for i in items if i.role == ROLE_SYSTEM and not i.pinned]
+        tools = [i for i in items if i.type == TYPE_TOOL_OUTPUT and not i.pinned and i.role != ROLE_SYSTEM]
         others = [i for i in items if i not in pinned and i not in system and i not in tools]
 
         # Re-sort others by timestamp descending (newest first)
@@ -313,21 +330,21 @@ def _add_context_to_payload(
 
     # Prepend system instruction (if persona -> system prompt mapping exists)
     system_prompts = {
-        "junior-dev": "You are a capable junior developer. Explain code clearly and concisely.",
-        "scribe": "You are a technical writer. Respond in clear, structured markdown.",
-        "code-reviewer": "You are an expert code reviewer. Focus on correctness, maintainability, and best practices.",
+        PERSONA_JUNIOR_DEV: "You are a capable junior developer. Explain code clearly and concisely.",
+        PERSONA_SCRIBE: "You are a technical writer. Respond in clear, structured markdown.",
+        PERSONA_CODE_REVIEWER: "You are an expert code reviewer. Focus on correctness, maintainability, and best practices.",
     }
     system_content = system_prompts.get(persona, "You are an helpful assistant.")
 
     # Add system item if not already present
-    system_item = next((i for i in items if i.role == "system"), None)
+    system_item = next((i for i in items if i.role == ROLE_SYSTEM), None)
     if not system_item:
         system_item = ContextItem(
             id=f"sys_{session_id}",
-            role="system",
+            role=ROLE_SYSTEM,
             content=system_content,
             token_count=len(system_content.split()),
-            type="message",
+            type=TYPE_MESSAGE,
         )
         context_manager.add_item(session_id, system_item, model_name=model_name)
         items = [system_item] + items  # prepend for gateway order
@@ -339,14 +356,14 @@ def _add_context_to_payload(
             "role": item.role,
             "content": item.content,
         }
-        if item.type == "tool_output":
-            msg["tool_role"] = "tool"  # optional extension
+        if item.type == TYPE_TOOL_OUTPUT:
+            msg["tool_role"] = ROLE_TOOL  # optional extension
         messages.append(msg)
 
     return {
         "messages": messages,
         "new_message": {
-            "role": "user",
+            "role": ROLE_USER,
             "content": prompt,
         },
     }
@@ -358,7 +375,7 @@ def _add_context_to_payload(
 def research(request_data: AgentRunRequest):
     prompt = request_data.prompt
     persona = request_data.persona
-    role = PERSONA_ROLE_MAP.get(persona, "coder")
+    role = PERSONA_ROLE_MAP.get(persona, GATEWAY_ROLE_CODER)
 
     session_id = request_data.session_id or str(uuid.uuid4())
     model_name = request_data.model
@@ -390,19 +407,19 @@ def research(request_data: AgentRunRequest):
         assistant_output = result.stdout.strip()
         response_item = ContextItem(
             id=str(uuid.uuid4()),
-            role="assistant",
+            role=ROLE_ASSISTANT,
             content=assistant_output,
             token_count=len(assistant_output.split()),
-            type="message",
+            type=TYPE_MESSAGE,
         )
 
         # Record user query too (if not already present)
         user_item = ContextItem(
             id=str(uuid.uuid4()),
-            role="user",
+            role=ROLE_USER,
             content=prompt,
             token_count=len(prompt.split()),
-            type="message",
+            type=TYPE_MESSAGE,
         )
 
         # Add both to context (may trigger pruning)
@@ -457,7 +474,7 @@ def context_handoff(request_data: ContextHandoffRequest):
     db_path = get_db_path()
     try:
         if not os.path.exists(db_path):
-             return jsonify({"ok": True, "data": {"context": None}, "message": f"DB not found at {db_path}"}), 200
+             return jsonify({"ok": True, "data": {"context": None}, TYPE_MESSAGE: f"DB not found at {db_path}"}), 200
 
         with closing(sqlite3.connect(db_path)) as conn:
             conn.execute('PRAGMA foreign_keys = ON')
@@ -479,17 +496,17 @@ def context_handoff(request_data: ContextHandoffRequest):
             if session_id:
                 handoff_item = ContextItem(
                     id=f"handoff_{int(time.time())}",
-                    role="system",
+                    role=ROLE_SYSTEM,
                     content=f"[HANDOFF CONTEXT]\nPrior relevant chunks:\n{context}",
                     token_count=len(context.split()),
-                    type="message",
+                    type=TYPE_MESSAGE,
                     pinned=True
                 )
                 context_manager.add_item(session_id, handoff_item)
             
             return jsonify({"ok": True, "data": {"context": context}}), 200
         else:
-            return jsonify({"ok": True, "data": {"context": None}, "message": "No handoff context found"}), 200
+            return jsonify({"ok": True, "data": {"context": None}, TYPE_MESSAGE: "No handoff context found"}), 200
 
     except Exception as e:
         raise AppError(str(e))

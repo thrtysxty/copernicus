@@ -1,6 +1,5 @@
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, Field, model_validator
-from backend.utils.validate import validate_no_paths
 
 
 class ContextHandoffRequest(BaseModel):

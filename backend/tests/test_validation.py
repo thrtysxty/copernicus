@@ -2,17 +2,11 @@ import pytest
 from pydantic import ValidationError
 from backend.schemas.agents import ContextHandoffRequest, AgentRunRequest, ResetContextRequest
 from backend.schemas.stories import StoryCreateRequest, StoryUpdateRequest
-from backend.schemas.registry import ReloadRequest
 from backend.schemas.llm import ChatRequest, Message
 from backend.schemas.orchestration import ModelSwitchRequest, ResolveConfirmationRequest
 from backend.schemas.settings import UpdateSettingsRequest
 from backend.schemas.docs import GenerateDocsRequest
 from backend.utils.validate import _is_path_violating
-
-
-# --------------------------
-# Path Rejection Tests
-# --------------------------
 @pytest.mark.parametrize("value,expected", [
     ("/etc/passwd", True),
     ("C:\\Users\\temp", True),
@@ -27,11 +21,6 @@ from backend.utils.validate import _is_path_violating
 ])
 def test_path_rejection(value, expected):
     assert _is_path_violating(value) == expected
-
-
-# --------------------------
-# Schema Validation Tests
-# --------------------------
 class TestAgents:
     def test_context_handoff_valid(self):
         req = ContextHandoffRequest(session_id="s123")
@@ -112,7 +101,7 @@ class TestOrchestration:
 
 class TestSettings:
     def test_update_settings(self):
-        req = UpdateSettingsRequest.model_validate({"theme": "dark", "max_retries": 5})
+        UpdateSettingsRequest.model_validate({"theme": "dark", "max_retries": 5})
         # pass
 
 

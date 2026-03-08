@@ -261,7 +261,7 @@ export class CodebaseIndexer {
 
       const fileMap = new Map<string, any[]>()
       for (const sym of symbols) {
-        let uri = sym.location?.uri || sym.uri
+        const uri = sym.location?.uri || sym.uri
         if (!uri) continue
         const filePath = uri.replace('file://', '')
         if (!fileMap.has(filePath)) fileMap.set(filePath, [])

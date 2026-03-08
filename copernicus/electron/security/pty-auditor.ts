@@ -68,12 +68,6 @@ export class PTYAuditor {
     let stream = this.activeStreams.get(streamKey);
 
     if (!stream) {
-      // Close any other stream for this agent (e.g. yesterday's)
-      // Actually, we might have multiple agents. But one agent usually has one active log per day.
-      // We should close old streams occasionally.
-      // For now, we rely on the map key being unique per day per agent.
-      // If the day changes, a new stream is created. Old stream stays open until close() or rotation.
-      // This is acceptable as long as we don't leak file descriptors indefinitely (rotation handles deletion).
 
       stream = fs.createWriteStream(logFile, { flags: 'a' });
       stream.on('error', (err) => log.error(`Error writing to audit log ${logFile}:`, err));

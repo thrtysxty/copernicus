@@ -1,7 +1,7 @@
 from backend.utils.errors import AppError
 import logging
 logger = logging.getLogger(__name__)
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 import sqlite3
 import os
 import uuid
