@@ -1,6 +1,8 @@
 import json
 import os
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, current_app, request
+from backend.utils.validate import validate
+from backend.schemas.registry import ReloadRequest
 
 registry_bp = Blueprint('registry', __name__)
 
@@ -56,7 +58,8 @@ def get_persona(alias):
     return jsonify({"error": "Persona not found"}), 404
 
 @registry_bp.route('/reload', methods=['POST'])
-def reload_registry():
+@validate(ReloadRequest)
+def reload_registry(request_data: ReloadRequest):
     if load_registry():
         return jsonify({"message": "Registry reloaded successfully"})
     return jsonify({"error": "Failed to reload registry"}), 500

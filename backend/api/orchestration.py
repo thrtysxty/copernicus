@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 import time
 import threading
+from backend.utils.validate import validate
+from backend.schemas.orchestration import ModelSwitchRequest, ResolveConfirmationRequest
 
 orchestration_bp = Blueprint('orchestration', __name__)
 
@@ -9,11 +11,11 @@ pending_confirmations = {}
 confirmation_results = {}
 
 @orchestration_bp.route('/confirm-model-switch', methods=['POST'])
-def request_confirmation():
-    data = request.json or {}
+@validate(ModelSwitchRequest)
+def request_confirmation(request_data: ModelSwitchRequest):
     request_id = str(int(time.time() * 1000))
-    model_name = data.get('model')
-    reason = data.get('reason')
+    model_name = request_data.model
+    reason = request_data.reason
     
     # Store the request
     pending_confirmations[request_id] = {
@@ -45,10 +47,10 @@ def get_pending():
     return jsonify(pending_confirmations), 200
 
 @orchestration_bp.route('/resolve-confirmation', methods=['POST'])
-def resolve_confirmation():
-    data = request.json or {}
-    request_id = data.get('request_id')
-    approved = data.get('approved', False)
+@validate(ResolveConfirmationRequest)
+def resolve_confirmation(request_data: ResolveConfirmationRequest):
+    request_id = request_data.request_id
+    approved = request_data.approved
     
     if request_id in pending_confirmations:
         confirmation_results[request_id] = approved

@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request
 import os
 import json
 from backend.middleware.auth import require_auth
+from backend.utils.validate import validate
+from backend.schemas.settings import UpdateSettingsRequest
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -24,7 +26,8 @@ def get_settings():
 
 @settings_bp.route('', methods=['PUT'])
 @require_auth
-def update_settings():
+@validate(UpdateSettingsRequest)
+def update_settings(request_data: UpdateSettingsRequest):
     settings_path = get_settings_path()
     try:
         data = request.get_json() or {}

@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 from backend.middleware.auth import require_auth
+from backend.utils.validate import validate
+from backend.schemas.agents import AgentRunRequest, ResetContextRequest, ContextHandoffRequest
 import subprocess
 import os
 import re
@@ -348,18 +350,14 @@ def _add_context_to_payload(
 
 @agents_bp.route("/research", methods=["POST"])
 @require_auth
-def research():
-    data = request.get_json() or {}
-
-    prompt = data.get("prompt")
-    if not prompt:
-        return jsonify({"ok": False, "error": "Prompt is required"}), 400
-
-    persona = data.get("persona", "junior-dev")
+@validate(AgentRunRequest)
+def research(request_data: AgentRunRequest):
+    prompt = request_data.prompt
+    persona = request_data.persona
     role = PERSONA_ROLE_MAP.get(persona, "coder")
 
-    session_id = data.get("session_id", str(uuid.uuid4()))
-    model_name = data.get("model", None)
+    session_id = request_data.session_id or str(uuid.uuid4())
+    model_name = request_data.model
 
     # Ensure session and generate context-aware payload
     payload = _add_context_to_payload(session_id, persona, prompt, model_name)
@@ -430,15 +428,12 @@ def research():
 
 @agents_bp.route("/context/reset", methods=["POST"])
 @require_auth
-def reset_context():
+@validate(ResetContextRequest)
+def reset_context(request_data: ResetContextRequest):
     """
     Optional endpoint: reset context for session (e.g., new task).
     """
-    data = request.get_json() or {}
-    session_id = data.get("session_id")
-
-    if not session_id:
-        return jsonify({"ok": False, "error": "session_id required"}), 400
+    session_id = request_data.session_id
 
     context_manager.reset_session(session_id)
     return jsonify({"ok": True, "data": {"session_id": session_id, "reset": True}}), 200
@@ -446,17 +441,14 @@ def reset_context():
 
 @agents_bp.route("/context/handoff", methods=["POST"])
 @require_auth
-def context_handoff():
+@validate(ContextHandoffRequest)
+def context_handoff(request_data: ContextHandoffRequest):
     """
     AC-2: Cross-Model "Context Handoff"
     Pulls the Top 5 most relevant RAG chunks from the previous agent's session.
     """
-    data = request.get_json() or {}
-    session_id = data.get("session_id")
-    story_id = data.get("story_id")
-
-    if not session_id and not story_id:
-         return jsonify({"ok": False, "error": "session_id or story_id required"}), 400
+    session_id = request_data.session_id
+    story_id = request_data.story_id
 
     db_path = get_db_path()
     try:

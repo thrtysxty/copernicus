@@ -5,6 +5,8 @@ import json
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from backend.utils.path_guard import assert_safe_path
+from backend.utils.validate import validate
+from backend.schemas.docs import GenerateDocsRequest
 
 docs_bp = Blueprint('docs', __name__)
 
@@ -74,10 +76,10 @@ def parse_story(filepath):
     }
 
 @docs_bp.route('/generate', methods=['POST'])
-def generate_docs():
-    data = request.json
-    story_id = data.get('story_id')
-    status = data.get('status')
+@validate(GenerateDocsRequest)
+def generate_docs(request_data: GenerateDocsRequest):
+    story_id = request_data.story_id
+    status = request_data.status
     
     if not story_id:
         return jsonify({"error": "story_id is required"}), 400

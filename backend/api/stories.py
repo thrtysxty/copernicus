@@ -4,6 +4,8 @@ import os
 import uuid
 import time
 from backend.middleware.auth import require_auth
+from backend.utils.validate import validate
+from backend.schemas.stories import StoryCreateRequest, StoryUpdateRequest
 
 stories_bp = Blueprint('stories', __name__)
 
@@ -71,14 +73,14 @@ def get_story(story_id):
 
 @stories_bp.route('', methods=['POST'])
 @require_auth
-def create_story():
+@validate(StoryCreateRequest)
+def create_story(request_data: StoryCreateRequest):
     conn = None
     try:
-        data = request.get_json() or {}
-        story_id = data.get('id', str(uuid.uuid4()))
-        title = data.get('title', 'New Story')
-        body_md = data.get('body_md', '')
-        status = data.get('status', 'PLANNING')
+        story_id = request_data.id or str(uuid.uuid4())
+        title = request_data.title or 'New Story'
+        body_md = request_data.body_md or ''
+        status = request_data.status or 'PLANNING'
         now = int(time.time() * 1000)
 
         conn = get_db_connection()
@@ -100,11 +102,10 @@ def create_story():
 
 @stories_bp.route('/<story_id>', methods=['PUT'])
 @require_auth
-def update_story(story_id):
+@validate(StoryUpdateRequest)
+def update_story(story_id, request_data: StoryUpdateRequest):
     conn = None
     try:
-        data = request.get_json() or {}
-
         conn = get_db_connection()
         # First check if exists
         cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
@@ -114,8 +115,10 @@ def update_story(story_id):
         update_fields = []
         values = []
 
+        data = request_data.model_dump(exclude_unset=True)
+
         for field in ['title', 'body_md', 'status']:
-            if field in data:
+            if field in data and data[field] is not None:
                 update_fields.append(field + " = ?")
                 values.append(data[field])
 

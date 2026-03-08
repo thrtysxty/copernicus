@@ -4,28 +4,27 @@ import logging
 import subprocess
 from flask import Blueprint, request, Response, stream_with_context, jsonify
 from backend.providers.factory import get_provider
+from backend.utils.validate import validate
+from backend.schemas.llm import ChatRequest
 
 llm_bp = Blueprint('llm', __name__)
 logger = logging.getLogger(__name__)
 
 @llm_bp.route('/chat', methods=['POST'])
-def chat():
+@validate(ChatRequest)
+def chat(request_data: ChatRequest):
     """
     Unified streaming chat endpoint.
     Expects JSON: { sessionId, messages, model, provider, systemPrompt, apiKey, baseUrl ... }
     """
-    data = request.json or {}
-    session_id = data.get('sessionId')
-    messages = data.get('messages')
-    model = data.get('model')
-    provider_name = data.get('provider', 'anthropic')
-    system_prompt = data.get('systemPrompt', "You are an AI assistant in the Copernicus IDE.")
-    api_key = data.get('apiKey', '')
-    base_url = data.get('baseUrl')
-    tools = data.get('tools')
-
-    if not model or not messages:
-        return Response(json.dumps({'error': 'Missing required fields: model or messages'}), status=400, mimetype='application/json')
+    session_id = request_data.sessionId
+    messages = [m.model_dump() for m in request_data.messages]
+    model = request_data.model
+    provider_name = request_data.provider or 'anthropic'
+    system_prompt = request_data.systemPrompt or "You are an AI assistant in the Copernicus IDE."
+    api_key = request_data.apiKey or ''
+    base_url = request_data.baseUrl
+    tools = request_data.tools
 
     # Story 236: Mock LLM check for E2E testing
     mock = request.args.get('mock') == 'true' or \
