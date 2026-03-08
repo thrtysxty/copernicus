@@ -1069,9 +1069,24 @@ function registerIpcHandlers() {
     llmService.streamChat(payload).catch(err => log.error('[LLM] streamChat error:', err))
     return true
   }))
-  ipcMain.handle('chat:confirm-model-switch', (_e, payload) => handleIpc(() => {
+  ipcMain.handle('chat:confirm-model-switch', (_e, payload) => handleIpc(async () => {
+    // Notify all windows
     BrowserWindow.getAllWindows().forEach(w =>
       w.webContents.send('chat:model-switch-decision', payload))
+    
+    // Notify Python backend (Story 228 AC-3)
+    try {
+      await fetch('http://localhost:5001/api/orchestration/resolve-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_id: payload.request_id || payload.sessionId, // accommodate both naming conventions
+          approved: payload.accepted
+        })
+      })
+    } catch (err) {
+      log.error('[Main] Failed to notify backend of model switch decision:', err)
+    }
   }))
 
   // Review

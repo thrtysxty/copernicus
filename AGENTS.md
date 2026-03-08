@@ -527,6 +527,23 @@ Run ALL of these before submitting your pull request:
 
 ---
 
+## Specialist Models (Story 228)
+
+The COPERNICUS platform uses a dynamic model selection strategy to optimize for intelligence and cost.
+
+| Model ID | Tier | Context | Specialty |
+|---|---|---|---|
+| `deepseek-v3.2:cloud` | High | 128k | Architectural reasoning, complex logic |
+| `glm-5:cloud` | High | 64k | Planning, multi-file orchestration |
+| `devstral-small-2:24b` | Med | 32k | Precise TypeScript coding, refactoring |
+| `qwen2.5-coder:1.5b` | Low | 8k | Fast formatting, JSON output, tactical tasks |
+
+- **High-Tier Models** always require UI confirmation before activation if switching from a lower tier.
+- **Model Reasoning** MUST be provided as a `[MODEL REASONING]` block before any tool or model dispatch.
+- **Protocol:** See `docs/reference/TECHNICAL_BIBLE.md` §8.6.
+
+---
+
 ## Story Format Reference
 
 ```markdown

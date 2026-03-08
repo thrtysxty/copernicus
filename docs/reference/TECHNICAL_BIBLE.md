@@ -429,6 +429,18 @@ Before writing any code, the implementing agent must be able to answer YES to al
 - [ ] I will call `lsp:workspace-check` before declaring done
 - [ ] I have read the relevant UX_BIBLE section for any UI changes
 
+### 8.6 Dynamic Model Selection (Story 228)
+
+Orchestrators (and the user) can switch models mid-session to balance cost, latency, and intelligence.
+
+1. **Capability Discovery:** Use `scripts/ollama_tool_shim.py /models:capabilities` to query available models, context windows, and specialties.
+2. **Model Reasoning:** Agents MUST provide a `[MODEL REASONING]` block before switching models or calling tools.
+3. **High-Tier Confirmation:** Switching from a low/med tier to a `high` tier model (e.g., `deepseek-v3.2:cloud`) requires human-in-the-loop confirmation.
+   - The shim pauses and calls `POST http://localhost:5001/api/orchestration/confirm-model-switch`.
+   - The UI displays a confirmation chip in the ChatPanel.
+4. **Audit Logging:** All model switches and the associated orchestrator reasoning are logged to the `model_calls` table in `copernicus.db`.
+5. **Dispatch Tool:** Use `[TOOL: dispatch arguments: {"model": "...", "prompt": "..."}]` for sub-task delegation to specialized models.
+
 ---
 
 ## 9. Forbidden Patterns — Complete List

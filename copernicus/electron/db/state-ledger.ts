@@ -88,6 +88,7 @@ export interface ModelCallRecord {
   tokens_out: number;
   cost_usd: number;
   latency_ms?: number;
+  reasoning?: string;
   workflow_run_id?: string;
   parent_call_id?: number;
   created_at?: string;
@@ -207,12 +208,13 @@ export class StateLedger {
     const info = this.db.prepare(`
       INSERT INTO model_calls
         (session_id, panel_id, model_id, provider, tokens_in, tokens_out,
-         cost_usd, latency_ms, workflow_run_id, parent_call_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         cost_usd, latency_ms, reasoning, workflow_run_id, parent_call_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       record.session_id, record.panel_id, record.model_id, record.provider,
       record.tokens_in, record.tokens_out, record.cost_usd,
-      record.latency_ms ?? null, record.workflow_run_id ?? null,
+      record.latency_ms ?? null, record.reasoning ?? null,
+      record.workflow_run_id ?? null,
       record.parent_call_id ?? null
     )
     return info.lastInsertRowid as number

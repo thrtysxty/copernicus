@@ -126,6 +126,7 @@ export const SCHEMA = {
       tokens_out      INTEGER NOT NULL DEFAULT 0,
       cost_usd        REAL NOT NULL DEFAULT 0,
       latency_ms      INTEGER,
+      reasoning       TEXT,
       workflow_run_id TEXT,
       parent_call_id  INTEGER REFERENCES model_calls(id),
       created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
