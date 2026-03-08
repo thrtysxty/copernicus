@@ -1,5 +1,5 @@
 # COPERNICUS IDE — Technical Implementation Bible
-**Version:** 1.0 | **Date:** 2026-03-01 | **Authority:** Architect
+**Version:** 1.1 | **Date:** 2026-03-07 | **Authority:** Architect
 
 This document is the authoritative specification for every technical pattern
 used in COPERNICUS IDE. All agents (Claude, Gemini, Jules) implementing any
@@ -848,3 +848,264 @@ opaque bearer token, not necessarily an API key string.
 - Hardcoding tokens or client secrets anywhere in the codebase
 - Using `BrowserWindow` / webview to embed the OAuth login page
   (Google blocks embedded OAuth; use `shell.openExternal` only)
+
+---
+
+## 16. Security Standards — Non-Negotiable
+
+Findings from the 2026-03-07 codebase audit (devstral-2:123b + deepseek-v3.1:671b). All patterns below are **blocking defects** — PRs containing them are rejected without review.
+
+### 16.1 SQL Safety
+
+```python
+# ❌ FORBIDDEN — string interpolation in SQL
+query = f"UPDATE stories SET {', '.join(fields)} WHERE id = ?"
+cursor.execute(f"SELECT * FROM events WHERE type = '{event_type}'")
+
+# ✅ REQUIRED — parameterized queries only
+placeholders = ', '.join(['?'] * len(fields))
+cursor.execute(f"UPDATE stories SET {placeholders} WHERE id = ?", (*values, story_id))
+# Note: column name interpolation (not values) is acceptable ONLY when
+# column names come from an internal allowlist, never from user input.
+```
+
+Every `conn.execute()` / `cursor.execute()` call in `backend/` must use `?` placeholders for all values. **Zero exceptions.**
+
+### 16.2 Path Safety
+
+All file paths originating from user input or IPC payloads must be validated before use:
+
+```python
+# backend/utils/path_guard.py
+from pathlib import Path
+
+ALLOWED_ROOTS = [
+    str(Path.home() / 'Projects'),
+    '/tmp/copernicus',
+]
+
+def assert_safe_path(path: str, roots: list[str] = ALLOWED_ROOTS) -> Path:
+    resolved = Path(path).resolve()
+    if not any(str(resolved).startswith(r) for r in roots):
+        raise ValueError(f"Path outside allowed roots: {resolved}")
+    return resolved
+```
+
+```typescript
+// copernicus/electron/utils/path-guard.ts
+import path from 'path'
+const ALLOWED_ROOTS = [process.env.HOME + '/Projects']
+export function assertSafePath(p: string): string {
+  const resolved = path.resolve(p)
+  if (!ALLOWED_ROOTS.some(r => resolved.startsWith(r)))
+    throw new Error(`Path outside allowed roots: ${resolved}`)
+  return resolved
+}
+```
+
+### 16.3 Subprocess Safety
+
+```python
+# ❌ FORBIDDEN
+subprocess.run(f"git {user_command}", shell=True)
+os.system(f"rm {user_path}")
+
+# ✅ REQUIRED — list form, shell=False (default)
+subprocess.run(['git', 'status'], cwd=safe_path, check=True)
+```
+
+```typescript
+// ❌ FORBIDDEN
+execSync(`git ${userCommand}`)
+spawn('sh', ['-c', userInput])
+
+// ✅ REQUIRED — explicit argument array, shell: false
+execFileSync('git', ['status'], { cwd: safePath })
+spawn('git', ['status'], { shell: false })
+```
+
+**`shell: true` is forbidden in any call where any argument is user-controlled.**
+
+### 16.4 Input Validation
+
+Every Flask endpoint that accepts a request body must use a Pydantic schema:
+
+```python
+# backend/utils/validate.py
+from functools import wraps
+from flask import request, jsonify
+from pydantic import BaseModel, ValidationError
+
+def validate(schema_class):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                validated = schema_class(**request.get_json(force=True))
+                return fn(validated, *args, **kwargs)
+            except ValidationError as e:
+                return jsonify({"error": "Validation failed", "detail": e.errors()}), 422
+        return wrapper
+    return decorator
+```
+
+All schemas live in `backend/schemas/`. UUIDs use `pydantic.UUID4`. Model name fields use `constr(pattern=r'^[a-zA-Z0-9._:\-]{1,100}$')`. File path fields are forbidden — use dedicated path endpoints with `assert_safe_path`.
+
+### 16.5 CORS Policy
+
+```python
+# ✅ REQUIRED — validation function, not list
+ALLOWED_ORIGINS = {'http://localhost:3000', 'http://localhost:5001', 'app://copernicus'}
+
+def validate_origin(origin: str) -> str | None:
+    return origin if origin in ALLOWED_ORIGINS else None
+
+CORS(app, origins=validate_origin, supports_credentials=False)
+```
+
+Apply the same `validate_origin` to Flask-SocketIO `cors_allowed_origins`.
+
+---
+
+## 17. Error Handling Standards
+
+### 17.1 Python — no silent swallowing
+
+```python
+# ❌ FORBIDDEN — silent pass
+try:
+    do_thing()
+except Exception:
+    pass
+
+# ✅ REQUIRED — log and continue, or re-raise
+import logging
+logger = logging.getLogger(__name__)
+
+try:
+    do_thing()
+except Exception as e:
+    logger.error("do_thing failed: %s", e)
+    # re-raise if the caller needs to know:
+    raise AppError("do_thing failed", status=500) from e
+```
+
+**Every `except` block must log or re-raise. `pass` is a blocking defect.**
+
+All modules use `logger = logging.getLogger(__name__)`. No `print("ERROR: ...")` in `backend/` or `scripts/`.
+
+### 17.2 Python — `AppError`
+
+```python
+# backend/utils/errors.py
+class AppError(Exception):
+    def __init__(self, message: str, status: int = 500, detail: dict = None):
+        super().__init__(message)
+        self.status = status
+        self.detail = detail or {}
+```
+
+Raise `AppError` for all expected failure paths. The Flask global handler converts it to a structured JSON response.
+
+### 17.3 TypeScript — no empty catch
+
+```typescript
+// ❌ FORBIDDEN
+try { await doThing() } catch {}
+try { await doThing() } catch (e) { /* non-fatal */ }
+
+// ✅ REQUIRED
+try {
+  await doThing()
+} catch (e) {
+  console.error('[ChannelName] doThing failed:', e)
+  // re-throw if caller needs to handle:
+  throw e
+}
+```
+
+`handleIpc()` already catches and logs — but code inside the handler's callback must not swallow errors before they reach `handleIpc`.
+
+---
+
+## 18. TypeScript Quality Standards
+
+### 18.1 Strict mode required
+
+`copernicus/tsconfig.json` must include:
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
+  }
+}
+```
+
+### 18.2 `any` is a blocking defect in new code
+
+```typescript
+// ❌ FORBIDDEN in new code
+const data: any = result
+const items = response as any
+
+// ✅ REQUIRED
+const data: MyInterface = result
+// If type is genuinely unknown at compile time:
+const data: unknown = result
+if (isMyInterface(data)) { /* use data */ }
+```
+
+Existing `any` in untouched files is technical debt tracked by story 254. Do not add new instances.
+
+### 18.3 IPC payload interfaces
+
+Every IPC channel must have a typed request and response interface in `copernicus/src/renderer/types/ipc.ts` or an adjacent types file. Channels accepting `any` payload are forbidden in new code.
+
+---
+
+## 19. SQLite Configuration Standards
+
+Every `new Database(path)` or `sqlite3.connect(path)` call must immediately set:
+
+```typescript
+// TypeScript (better-sqlite3)
+const db = new Database(dbPath)
+db.pragma('foreign_keys = ON')
+db.pragma('journal_mode = WAL')
+db.pragma('synchronous = NORMAL')
+```
+
+```python
+# Python
+conn = sqlite3.connect(db_path, timeout=5)
+conn.execute('PRAGMA foreign_keys = ON')
+conn.execute('PRAGMA journal_mode = WAL')
+conn.execute('PRAGMA synchronous = NORMAL')
+```
+
+**`foreign_keys = ON` is mandatory.** Schema FK declarations are meaningless without it.
+
+Required indexes (maintained in `schema.ts`):
+- `idx_events_type` on `events(type)`
+- `idx_events_agent` on `events(agent_id)`
+- `idx_stories_status` on `stories(status)`
+- `idx_model_calls_session` on `model_calls(session_id)`
+- `idx_jules_sessions_story` on `jules_sessions(story_id)`
+
+---
+
+## 20. Updated Pre-Commit Checklist
+
+**All items from §12 apply, plus:**
+
+- [ ] No f-string SQL construction — all values use `?` placeholders
+- [ ] All user-supplied file paths pass through `assert_safe_path()`
+- [ ] No `subprocess.run(..., shell=True)` with user input
+- [ ] No `execSync(userString)` or `spawn('sh', ['-c', userInput])`
+- [ ] All new Flask endpoints use `@validate(SchemaClass)` decorator
+- [ ] No `except Exception: pass` — every catch logs or re-raises
+- [ ] No empty `catch {}` in TypeScript — every catch logs
+- [ ] No new `: any` types — use typed interfaces or `unknown`
+- [ ] SQLite connections set FK/WAL/synchronous PRAGMAs on open
