@@ -91,9 +91,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
 
     if (mode === 'all') {
       // Load Files (recursive list-dir if possible, or just top level for now)
-      invoke<{ ok: boolean, data: any[] }>('fs:list-dir', rootPath)
+      invoke<any>('fs:list-dir', rootPath)
         .then(res => {
-          if (res.ok) setRawFiles(res.data.filter((f: any) => !f.isDir))
+          const data = unwrapIpc<any[]>(res)
+          if (Array.isArray(data)) setRawFiles(data.filter((f: any) => !f.isDir))
         })
         .catch(() => {}) // Error handled by useIpcError
 
@@ -186,16 +187,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ mode, onClose, o
     switch (item.type) {
       case 'file': {
         // Open file
-        invoke<{ ok: boolean, data?: string }>('fs:open-file', item.payload.path)
+        invoke<any>('fs:open-file', item.payload.path)
           .then(res => {
-            if (res.ok && res.data !== undefined) {
+            const data = unwrapIpc<string>(res)
+            if (data !== undefined) {
               const ext = item.payload.name.split('.').pop() || 'txt'
               const langMap: Record<string, string> = {
                   ts: 'typescript', tsx: 'typescript', js: 'javascript',
                   jsx: 'javascript', py: 'python', md: 'markdown',
                   json: 'json', css: 'css', html: 'html', sh: 'shell',
               }
-              onFileOpen(item.payload.path, res.data, langMap[ext] || 'plaintext')
+              onFileOpen(item.payload.path, data, langMap[ext] || 'plaintext')
             }
           })
         break

@@ -143,14 +143,15 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   useEffect(() => {
     if (!rootPath) return
     invoke<FileNode[]>('fs:list-dir', rootPath).then((result) => {
-      const data = (result as any).data || result
+      const data = unwrapIpc<FileNode[]>(result)
       if (Array.isArray(data)) {
         setRootChildren(data)
       }
     }).catch(console.error)
 
     invoke<any>('lsp:status').then((res: any) => {
-      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
+      const data = unwrapIpc<any>(res)
+      if (data) setLspRunning(data.running ?? false)
     }).catch(() => {})
   }, [rootPath, invoke])
 

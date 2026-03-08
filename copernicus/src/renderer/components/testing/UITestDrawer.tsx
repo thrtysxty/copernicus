@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import { Play, PlaySquare, X, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { unwrapIpc } from '../../types/ipc'
 
 interface TestResult {
   title: string
@@ -24,7 +25,7 @@ export const UITestDrawer: React.FC = () => {
   const loadTestFiles = async () => {
     try {
       const res = await invoke<any>('fs:list-dir', 'e2e')
-      const data = res?.data?.data || res?.data || res
+      const data = unwrapIpc<any[]>(res)
       if (Array.isArray(data)) {
         const files = data
           .filter((f: any) => !f.isDir && (f.name.endsWith('.spec.ts') || f.name.endsWith('.test.ts')))

@@ -328,15 +328,12 @@ export class WorkflowEngine {
       }
       case 'file-read': {
         if (!d.filePath) throw new Error('file-read: filePath is required');
-        const result = fsManager.readFile(d.filePath);
-        if (!result.ok) throw new Error(result.error ?? 'file-read failed');
-        return result.data ?? '';
+        return fsManager.readFile(d.filePath);
       }
       case 'file-write': {
         if (!d.filePath) throw new Error('file-write: filePath is required');
         const content = this.interpolate(d.content ?? '');
-        const result = await fsManager.writeFile(d.filePath, content);
-        if (!result.ok) throw new Error(result.error ?? 'file-write failed');
+        await fsManager.writeFile(d.filePath, content);
         return `written:${d.filePath}`;
       }
       case 'story-update': {

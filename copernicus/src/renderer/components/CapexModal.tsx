@@ -38,9 +38,10 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
       if (type === 'start') {
         invoke<any>('app:get-root-path').then((r: any) => {
           const rootPath: string = unwrapIpc<any>(r);
-          invoke<{ ok: boolean; data: any[] }>('fs:list-dir', rootPath).then(res => {
-            if (res.ok) {
-              setRepos(res.data.filter((item: any) => item.isDir));
+          invoke<any>('fs:list-dir', rootPath).then(res => {
+            const data = unwrapIpc<any[]>(res)
+            if (Array.isArray(data)) {
+              setRepos(data.filter((item: any) => item.isDir));
             }
           });
         });

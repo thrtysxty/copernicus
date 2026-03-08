@@ -25,43 +25,28 @@ describe('FSManager', () => {
 
   it('should list directories within root', () => {
     const result = fsManager.listDir(testRoot)
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      expect(result.data.length).toBeGreaterThan(0)
-      expect(result.data.find(n => n.name === 'test-file.txt')).toBeDefined()
-      expect(result.data.find(n => n.name === 'test-dir')?.isDir).toBe(true)
-    }
+    expect(result.length).toBeGreaterThan(0)
+    expect(result.find(n => n.name === 'test-file.txt')).toBeDefined()
+    expect(result.find(n => n.name === 'test-dir')?.isDir).toBe(true)
   })
 
   it('should read files within root', () => {
     const result = fsManager.readFile(path.join(testRoot, 'test-file.txt'))
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      expect(result.data).toBe('hello world')
-    }
+    expect(result).toBe('hello world')
   })
 
   it('should write files within root', async () => {
     const filePath = path.join(testRoot, 'new-file.txt')
-    const result = await fsManager.writeFile(filePath, 'new content')
-    expect(result.ok).toBe(true)
+    await fsManager.writeFile(filePath, 'new content')
     expect(fs.readFileSync(filePath, 'utf-8')).toBe('new content')
   })
 
   it('should block path traversal outside root and home', async () => {
     const unsafePath = path.resolve(testRoot, '../../etc/passwd')
 
-    const listResult = fsManager.listDir(unsafePath)
-    expect(listResult.ok).toBe(false)
-    if (!listResult.ok) expect(listResult.error).toMatch(/Path traversal blocked/)
-
-    const readResult = fsManager.readFile(unsafePath)
-    expect(readResult.ok).toBe(false)
-    if (!readResult.ok) expect(readResult.error).toMatch(/Path traversal blocked/)
-
-    const writeResult = await fsManager.writeFile(unsafePath, 'malicious')
-    expect(writeResult.ok).toBe(false)
-    if (!writeResult.ok) expect(writeResult.error).toMatch(/Write blocked outside project root/)
+    expect(() => fsManager.listDir(unsafePath)).toThrow(/Path traversal blocked/)
+    expect(() => fsManager.readFile(unsafePath)).toThrow(/Path traversal blocked/)
+    await expect(fsManager.writeFile(unsafePath, 'malicious')).rejects.toThrow(/Write blocked outside project root/)
   })
 
   it('should allow access to home directory (for user convenience)', () => {

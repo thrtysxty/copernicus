@@ -79,71 +79,60 @@ export class FSManager {
     throw new Error(`[fs-manager] Path traversal blocked: ${filePath} (Root: ${this.rootPath})`)
   }
 
-  listDir(dirPath: string): { ok: true; data: FileNode[] } | { ok: false; error: string } {
-    try {
-      const expandedPath = this.expandHome(dirPath)
-      // Special case: during Wizard setup, we might list the rootPath itself before it's "established"
-      // or we might want to list directories outside the current sandbox root for discovery.
-      // We allow reading anything in homedir (except blocked ones) regardless of rootPath.
-      this.assertSafe(expandedPath, 'read')
-      
-      const entries = fs.readdirSync(expandedPath, { withFileTypes: true })
-      const data = entries
-        .filter(e => e.name !== 'node_modules')
-        .map(e => ({
+  listDir(dirPath: string): FileNode[] {
+    const expandedPath = path.resolve(this.expandHome(dirPath))
+    // Special case: during Wizard setup, we might list the rootPath itself before it's "established"
+    // or we might want to list directories outside the current sandbox root for discovery.
+    // We allow reading anything in homedir (except blocked ones) regardless of rootPath.
+    this.assertSafe(expandedPath, 'read')
+    
+    const entries = fs.readdirSync(expandedPath, { withFileTypes: true })
+    const data = entries
+      .filter(e => e.name !== 'node_modules')
+      .map(e => {
+        const fullPath = path.join(expandedPath, e.name)
+        let isDir = e.isDirectory()
+        if (e.isSymbolicLink()) {
+          try {
+            isDir = fs.statSync(fullPath).isDirectory()
+          } catch { /* ignore broken symlinks */ }
+        }
+        return {
           name: e.name,
-          path: path.join(expandedPath, e.name),
-          isDir: e.isDirectory(),
-        }))
-        .sort((a, b) => {
-          // Directories first
-          if (a.isDir && !b.isDir) return -1
-          if (!a.isDir && b.isDir) return 1
-          return a.name.localeCompare(b.name)
-        })
-      return { ok: true, data }
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err.message : String(err)
-      log.error('[FSManager] listDir error:', error)
-      return { ok: false, error }
-    }
+          path: fullPath,
+          isDir,
+        }
+      })
+      .sort((a, b) => {
+        // Directories first
+        if (a.isDir && !b.isDir) return -1
+        if (!a.isDir && b.isDir) return 1
+        return a.name.localeCompare(b.name)
+      })
+    return data
   }
 
-  readFile(filePath: string): { ok: true; data: string } | { ok: false; error: string } {
-    try {
-      const expandedPath = this.expandHome(filePath)
-      this.assertSafe(expandedPath, 'read')
-      const data = fs.readFileSync(expandedPath, 'utf-8')
-      return { ok: true, data }
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err.message : String(err)
-      log.error('[FSManager] readFile error:', error)
-      return { ok: false, error }
-    }
+  readFile(filePath: string): string {
+    const expandedPath = this.expandHome(filePath)
+    this.assertSafe(expandedPath, 'read')
+    return fs.readFileSync(expandedPath, 'utf-8')
   }
 
-  async writeFile(filePath: string, content: string, opts?: { dryRun?: boolean }): Promise<{ ok: true } | { ok: false; error: string }> {
-    try {
-      const expandedPath = this.expandHome(filePath)
-      this.assertSafe(expandedPath, 'write')
-      
-      // If we have an active transaction and NOT dryRun, stage it instead of writing
-      if (this.tx?.getActiveTransactionId() && !opts?.dryRun) {
-        await this.tx.stageEdit(expandedPath, content)
-        return { ok: true }
-      }
-
-      if (opts?.dryRun) {
-        return { ok: true }
-      }
-
-      fs.writeFileSync(expandedPath, content, 'utf-8')
-      return { ok: true }
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err.message : String(err)
-      log.error('[FSManager] writeFile error:', error)
-      return { ok: false, error }
+  async writeFile(filePath: string, content: string, opts?: { dryRun?: boolean }): Promise<void> {
+    const expandedPath = this.expandHome(filePath)
+    this.assertSafe(expandedPath, 'write')
+    
+    // If we have an active transaction and NOT dryRun, stage it instead of writing
+    if (this.tx?.getActiveTransactionId() && !opts?.dryRun) {
+      await this.tx.stageEdit(expandedPath, content)
+      return
     }
+
+    if (opts?.dryRun) {
+      return
+    }
+
+    fs.writeFileSync(expandedPath, content, 'utf-8')
   }
 
   getRootPath(): string {

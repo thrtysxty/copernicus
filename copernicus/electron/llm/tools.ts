@@ -146,9 +146,11 @@ ${r.content}
   }
 
   private async readFile(filePath: string): Promise<string> {
-    const res = fsManager.readFile(filePath)
-    if (res.ok) return res.data
-    return `Error reading file: ${res.error}`
+    try {
+      return fsManager.readFile(filePath)
+    } catch (err: any) {
+      return `Error reading file: ${err.message}`
+    }
   }
 
   private async localResearch(prompt: string, persona: string = 'junior-dev'): Promise<string> {

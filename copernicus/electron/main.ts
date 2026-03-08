@@ -1161,14 +1161,11 @@ function registerIpcHandlers() {
   // File System
   ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc(() => fsManager.listDir(dirPath)))
   ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc(() => fsManager.readFile(filePath)))
-  ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc(() => {
-    const res = fsManager.readFile(filePath)
-    return res.ok ? res.data : ''
-  }))
+  ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc(() => fsManager.readFile(filePath)))
   ipcMain.handle('fs:save-file', (_event, { filePath, content }: any) => handleIpc(async () => {
-    const res = fsManager.writeFile(filePath, content)
-    if ((await res).ok) codebaseIndexer.indexFile(filePath).catch(log.error)
-    return res
+    await fsManager.writeFile(filePath, content)
+    codebaseIndexer.indexFile(filePath).catch(log.error)
+    return true
   }))
   ipcMain.handle('app:get-root-path', () => handleIpc(() => {
     if (isFirstRun) return null;
