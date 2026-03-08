@@ -1,15 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Generator, List, Dict, Optional
+from typing import Iterator, List, Dict, Optional
 
-class LLMProvider(ABC):
+class BaseProvider(ABC):
     @abstractmethod
     def stream_chat(
         self,
         messages: List[Dict[str, str]],
         model: str,
-        system: str,
-        api_key: str,
-        base_url: str = None,
-        tools: Optional[List[Dict]] = None
-    ) -> Generator[str, None, None]:
+        **kwargs
+    ) -> Iterator[str]:
+        """Stream response tokens one at a time."""
         pass
+
+    def chat(self, messages: List[Dict[str, str]], model: str, **kwargs) -> str:
+        """Non-streaming chat; consumes stream_chat and joins tokens."""
+        return "".join(self.stream_chat(messages, model, **kwargs))

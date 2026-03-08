@@ -173,52 +173,66 @@ class StandaloneCloudAgent:
             
         print(f"\n>>> [Cloud Agent: {model_name} (Tier: {tier})] <<<\n{wt_context}", file=sys.stderr)
         
-        start_time = time.time()
-        token_count = 0
-        shoulder_tap_detected = False
-        SHOULDER_TAP_TOKEN = "[[SIGNAL_ORCHESTRATOR]]"
+        max_retries = 3
+        delays = [5, 15, 45]
         
-        try:
-            response = client.chat(
-                model=api_model_name,
-                messages=[{'role': 'user', 'content': prompt}],
-                stream=stream
-            )
-            
-            full_text = ""
-            # Handle both streaming (Iterator[ChatResponse]) and non-streaming (ChatResponse)
-            chunks = response if stream else [response]
-            for chunk in chunks:
-                msg = getattr(chunk, 'message', None)
-                content = getattr(msg, 'content', None) or getattr(msg, 'thinking', None) or ''
-                sys.stdout.write(content)
-                sys.stdout.flush()
-                full_text += content
-                token_count += 1
-                if SHOULDER_TAP_TOKEN in full_text and not shoulder_tap_detected:
-                    shoulder_tap_detected = True
-                    self.log_event(
-                        event_type='SIGNAL_ORCHESTRATOR',
-                        content=f'Agent {getattr(self, "role", "unknown")} requested orchestrator intervention',
-                        metadata={
-                            'model': getattr(self, 'model', 'unknown'),
-                            'role': getattr(self, 'role', 'unknown'),
-                            'worktree': getattr(self, 'worktree', None),
-                        }
-                    )
-                    print("\n\n⚠️  [SHOULDER TAP DETECTED] Agent is requesting Orchestrator intervention...\n", file=sys.stderr)
-            
-            sys.stdout.write("\n")
-            duration = time.time() - start_time
-            self.log_performance(model_name, tier, duration, token_count, len(prompt))
-            
-            if shoulder_tap_detected:
-                print("\n🔔 ACTION REQUIRED: The sub-agent has reached a decision point or boundary. Handing over to an active Orchestrator.\n", file=sys.stderr)
-            
-            return full_text
-        except Exception as e:
-            print(f"\nError calling {model_name} on {tier}: {e}", file=sys.stderr)
-            return None
+        for attempt in range(max_retries + 1):
+            try:
+                start_time = time.time()
+                response = client.chat(
+                    model=api_model_name,
+                    messages=[{'role': 'user', 'content': prompt}],
+                    stream=stream
+                )
+                
+                token_count = 0
+                shoulder_tap_detected = False
+                SHOULDER_TAP_TOKEN = "[[SIGNAL_ORCHESTRATOR]]"
+                
+                full_text = ""
+                # Handle both streaming (Iterator[ChatResponse]) and non-streaming (ChatResponse)
+                chunks = response if stream else [response]
+                for chunk in chunks:
+                    msg = getattr(chunk, 'message', None)
+                    content = getattr(msg, 'content', None) or getattr(msg, 'thinking', None) or ''
+                    sys.stdout.write(content)
+                    sys.stdout.flush()
+                    full_text += content
+                    token_count += 1
+                    if SHOULDER_TAP_TOKEN in full_text and not shoulder_tap_detected:
+                        shoulder_tap_detected = True
+                        self.log_event(
+                            event_type='SIGNAL_ORCHESTRATOR',
+                            content=f'Agent {getattr(self, "role", "unknown")} requested orchestrator intervention',
+                            metadata={
+                                'model': getattr(self, 'model', 'unknown'),
+                                'role': getattr(self, 'role', 'unknown'),
+                                'worktree': getattr(self, 'worktree', None),
+                            }
+                        )
+                        print("\n\n⚠️  [SHOULDER TAP DETECTED] Agent is requesting Orchestrator intervention...\n", file=sys.stderr)
+                
+                sys.stdout.write("\n")
+                duration = time.time() - start_time
+                self.log_performance(model_name, tier, duration, token_count, len(prompt))
+                
+                if shoulder_tap_detected:
+                    print("\n🔔 ACTION REQUIRED: The sub-agent has reached a decision point or boundary. Handing over to an active Orchestrator.\n", file=sys.stderr)
+                
+                return full_text
+            except Exception as e:
+                status_code = getattr(e, 'status_code', None)
+                if status_code in (429, 500, 503) and attempt < max_retries:
+                    delay = delays[attempt]
+                    print(f"\n[Retry {attempt+1}/{max_retries}] {model_name} returned {status_code}. Retrying in {delay}s...", file=sys.stderr)
+                    time.sleep(delay)
+                    continue
+                
+                print(f"\nError calling {model_name} on {tier}: {e}", file=sys.stderr)
+                if attempt >= max_retries:
+                    print(f"CRITICAL: All {max_retries} retries exhausted for {model_name}.", file=sys.stderr)
+                    sys.exit(1)
+                return None
 
 def main():
     parser = argparse.ArgumentParser(description="Standalone Cloud Agent CLI (V2.3)")

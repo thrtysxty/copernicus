@@ -149,6 +149,7 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
         'id': session_id,
         'stories': stories,
         'status': 'running',
+        'retry_count': 0,
         'started_at': time.time(),
         'log_path': str(log_path),
     })

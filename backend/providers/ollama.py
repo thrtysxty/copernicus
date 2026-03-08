@@ -1,15 +1,20 @@
 import os
 import json
+from typing import Iterator, List, Dict
 from ollama import Client as OllamaClient
-from backend.providers.base import LLMProvider
+from backend.providers.base import BaseProvider
 
-class OllamaProvider(LLMProvider):
+class OllamaProvider(BaseProvider):
     def __init__(self):
         self.api_key = os.environ.get("OLLAMA_API_KEY")
         self.cloud_host = os.environ.get("OLLAMA_CLOUD_HOST", "https://ollama.com")
         self.local_url = os.environ.get("OLLAMA_LOCAL_URL", "http://localhost:11434")
 
-    def stream_chat(self, messages, model, system, api_key=None, base_url=None, tools=None):
+    def stream_chat(self, messages: List[Dict[str, str]], model: str, **kwargs) -> Iterator[str]:
+        api_key = kwargs.get("api_key")
+        system = kwargs.get("system")
+        base_url = kwargs.get("base_url")
+
         # api_key and base_url overrides from request
         effective_api_key = api_key or self.api_key
         

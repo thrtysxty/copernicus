@@ -47,7 +47,7 @@ def chat(request_data: ChatRequest):
     def generate():
         try:
             provider = get_provider(provider_name)
-            yield from provider.stream_chat(messages, model, system_prompt, api_key, base_url, tools)
+            yield from provider.stream_chat(messages, model, system=system_prompt, api_key=api_key, base_url=base_url, tools=tools)
         except Exception as e:
             logger.error(f"LLM Stream Error: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

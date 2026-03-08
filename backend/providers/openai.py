@@ -1,9 +1,14 @@
 import json
+from typing import Iterator, List, Dict
 from openai import OpenAI
-from backend.providers.base import LLMProvider
+from backend.providers.base import BaseProvider
 
-class OpenAIProvider(LLMProvider):
-    def stream_chat(self, messages, model, system, api_key, base_url=None, tools=None):
+class OpenAIProvider(BaseProvider):
+    def stream_chat(self, messages: List[Dict[str, str]], model: str, **kwargs) -> Iterator[str]:
+        api_key = kwargs.get("api_key")
+        system = kwargs.get("system")
+        base_url = kwargs.get("base_url")
+
         client = OpenAI(api_key=api_key, base_url=base_url)
 
         stream = client.chat.completions.create(
