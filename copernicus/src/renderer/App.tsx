@@ -3,6 +3,7 @@ import {
   Loader2, Maximize2, Minimize2, RotateCcw, Layout,
 } from 'lucide-react'
 import { useLayoutStore } from './store/layout'
+import { useToastStore } from './store/toastStore'
 import { ActivityBar } from './components/layout/ActivityBar'
 import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog'
 import { CommandCenter } from './components/command/CommandCenter'
@@ -246,7 +247,13 @@ export default function App() {
       setInProgressCount(stories.filter((s: any) => s.status === 'IN PROGRESS').length)
     })
 
+    const removeCriticalError = (window as any).ipcRenderer.on('app:critical-error', (_e: any, payload: any) => {
+      const p = payload as { type: string; message: string }
+      useToastStore.getState().addToast(`[Main] ${p.type}: ${p.message}`, 'error')
+    })
+
     return () => {
+      removeCriticalError()
       removeStoriesUpdated()
       removeWorkspaceChanged()
       removeActivateTab()

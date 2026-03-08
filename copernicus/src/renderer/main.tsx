@@ -26,14 +26,6 @@ window.onunhandledrejection = (event: PromiseRejectionEvent) => {
   log.error('[Renderer] unhandledRejection:', event.reason)
 }
 
-// Listen for critical errors from the main process
-if (window.ipcRenderer) {
-  window.ipcRenderer.on('app:critical-error', (_e: unknown, payload: any) => {
-    const p = payload as { type: string; message: string };
-    useToastStore.getState().addToast(`[Main] ${p.type}: ${p.message}`, 'error')
-  })
-}
-
 const isSplash = window.location.search.includes('window=splash');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
