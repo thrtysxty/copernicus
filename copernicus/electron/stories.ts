@@ -193,6 +193,9 @@ export class StoriesManager {
   }
 
   updateStoryStatus(id: string, newStatus: string) {
+    const record = this.ledger.getStoryById(id)
+    if (!record) return
+
     if (newStatus === 'COMPLETE') {
        try {
          const auditScript = path.join(this.projectRoot, 'scripts/utils/security_audit.py')
@@ -213,12 +216,18 @@ export class StoriesManager {
        return
     }
 
+    if (newStatus === 'DOCUMENTING') {
+      log.info(`[StoriesManager] Story ${id} entered DOCUMENTING state. Triggering scribe...`);
+      fetch('http://localhost:5001/api/docs/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ story_id: id, status: 'DOCUMENTING' })
+      }).catch(err => log.error('[StoriesManager] Failed to trigger documentation generation:', err));
+    }
+
     const verboseStatus = newStatus === 'READY'   ? 'READY FOR IMPLEMENTATION'
                         : newStatus === 'REVIEW'  ? 'READY FOR REVIEW'
                         : newStatus
-
-    const record = this.ledger.getStoryById(id)
-    if (!record) return
 
     const updatedBody = record.body_md.replace(
       /(\*\*Status:\*\*).+$/m, `$1 ${verboseStatus}`
@@ -227,6 +236,10 @@ export class StoriesManager {
     this.ledger.updateStoryFields(id, { status: newStatus, body_md: updatedBody })
     writeFileAtomic(record.file_path, updatedBody)
     this.broadcastUpdate()
+    
+    if (this.window) {
+      this.window.webContents.send('story:status-changed', { id, status: newStatus })
+    }
   }
 
   createStory({ title, type = 'Feature', epic = '(none)', priority = 'P2' }: {
@@ -366,8 +379,19 @@ ${title}
 
     writeFileAtomic(archivePath, archivedBody)
 
+    // Trigger Implementation Report Generation (Story 227)
+    fetch('http://localhost:5001/api/docs/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ story_id: id, status: 'COMPLETE' })
+    }).catch(err => log.error('[StoriesManager] Failed to trigger implementation report:', err));
+
     try { fs.unlinkSync(record.file_path) } catch { /* ignore */ }
     this.broadcastUpdate()
+    
+    if (this.window) {
+      this.window.webContents.send('story:status-changed', { id, status: 'COMPLETE' })
+    }
   }
 
   deleteStory(id: string) {
