@@ -44,7 +44,7 @@ def get_db_connection():
 def get_handoff_context(context_id=None, top_k=5):
     """
     AC-2: Pull 'Top 5 most relevant RAG chunks' from the ledger.
-    If context_id (e.g. story ID) is provided, it targets that session.
+    If context_id (e.g. story ID) is provided, it targets that session's last search context.
     """
     conn = get_db_connection()
     if not conn:
@@ -52,7 +52,23 @@ def get_handoff_context(context_id=None, top_k=5):
     
     try:
         cursor = conn.cursor()
-        # AC-2 Implementation: Pulling recent chunks as continuity context
+        # AC-2 Implementation: Pulling recent chunks as continuity context from jules_sessions
+        if context_id:
+            query = """
+                SELECT last_search_context FROM jules_sessions 
+                WHERE (id = ? OR story_id = ?) AND last_search_context IS NOT NULL 
+                ORDER BY started_at DESC LIMIT 1
+            """
+            cursor.execute(query, (context_id, context_id))
+        else:
+            query = "SELECT last_search_context FROM jules_sessions WHERE last_search_context IS NOT NULL ORDER BY started_at DESC LIMIT 1"
+            cursor.execute(query)
+            
+        row = cursor.fetchone()
+        if row and row[0]:
+            return f"\n[HANDOFF CONTEXT]\nPrior relevant chunks:\n{row[0]}\n"
+        
+        # Fallback to codebase_vec if no session context found
         query = """
             SELECT file_path, line_start, line_end, symbols, content 
             FROM codebase_vec 

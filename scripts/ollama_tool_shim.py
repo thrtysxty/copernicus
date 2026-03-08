@@ -29,13 +29,17 @@ MODEL_METADATA = {
 }
 
 TOOL_DEFINITION_PROMPT = """
-You have access to the following tools. To use a tool, output a JSON block in this format:
+CRITICAL: To use any tool, you MUST output a JSON block in this EXACT format:
 [TOOL: <name> arguments: {<args>}]
+
+Example:
+[TOOL: read_file arguments: {"path": "example.txt"}]
 
 Available Tools:
 1. read_file(path: string) - Read a file's content.
 2. write_file(path: string, content: string) - Write content to a file.
-3. search_codebase(query: string) - Perform a local RAG search.
+3. replace(path: string, old_text: string, new_text: string) - Replace ONE occurrence of old_text with new_text.
+4. search_codebase(query: string) - Perform a local RAG search.
 4. dispatch(model: string, prompt: string) - Request a specific model to handle a sub-task. Use model names from /models:capabilities.
 5. mcp_call(tool_name: string, arguments: object) - Call a local MCP tool.
 6. signal_completion() - Signal that the task is complete and ready for integration.
@@ -109,6 +113,24 @@ def execute_tool(tool_name, arguments):
         except Exception as e:
             return f"Error writing file: {e}"
 
+    elif tool_name == "replace":
+        path = arguments.get("path")
+        old_text = arguments.get("old_text")
+        new_text = arguments.get("new_text")
+        if not path or old_text is None or new_text is None:
+            return "Error: path, old_text, and new_text required"
+        try:
+            with open(path, "r") as f:
+                content = f.read()
+            if content.count(old_text) != 1:
+                return f"Error: old_text must appear exactly once (found {content.count(old_text)})."
+            new_content = content.replace(old_text, new_text)
+            with open(path, "w") as f:
+                f.write(new_content)
+            return f"Successfully replaced text in {path}"
+        except Exception as e:
+            return f"Error replacing text: {e}"
+
     elif tool_name == "search_codebase":
         query = arguments.get("query")
         if not query: return "Error: query required"
@@ -141,7 +163,7 @@ PERSONA_ROUTING = {
     "researcher": ("deepseek-v3.2:cloud",     OLLAMA_CLOUD_HOST, True),
     "architect":  ("glm-5:cloud",             OLLAMA_CLOUD_HOST, True),
     "thinker":    ("kimi-k2.5:cloud",         OLLAMA_CLOUD_HOST, True),
-    "coder":      ("devstral-small-2:24b",    OLLAMA_CLOUD_HOST, True),
+    "coder":      ("qwen2.5-coder:1.5b",      OLLAMA_LOCAL_URL,  False),
     "expert":     ("cogito-2.1:cloud",        OLLAMA_CLOUD_HOST, True),
     "sentinel":   ("devstral-small-2:24b",    OLLAMA_CLOUD_HOST, True),
     "scribe":     ("qwen2.5-coder:1.5b",      OLLAMA_LOCAL_URL,  False),
@@ -156,6 +178,23 @@ def main():
         sys.exit(1)
 
     user_prompt = sys.argv[1]
+    
+    # AC-2: Pull Handoff Context from Backend
+    session_id = os.environ.get("AGENT_SESSION_ID")
+    handoff_context = ""
+    if session_id:
+        try:
+            url = "http://localhost:5001/api/agents/context/handoff"
+            data = json.dumps({"session_id": session_id}).encode('utf-8')
+            req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                res_data = json.loads(response.read().decode('utf-8'))
+                if res_data.get('ok') and res_data.get('data', {}).get('context'):
+                    handoff_context = f"\n[HANDOFF CONTEXT]\nPrior relevant chunks:\n{res_data['data']['context']}\n"
+                    print(f"✅ Handoff context injected for session {session_id}")
+        except Exception:
+            # Silent fallback if handoff service unavailable
+            pass
 
     # Command: /models:capabilities
     if user_prompt.strip() == "/models:capabilities":
@@ -214,7 +253,7 @@ def main():
     headers = {'Authorization': f'Bearer {OLLAMA_API_KEY}'} if is_cloud else {}
     client = Client(host=target_url, headers=headers)
 
-    system_prompt = f"OPERATIONAL MODE: {persona.upper()} SUB-AGENT. PROJECT: COPERNICUS IDE. ACTIVE_MODEL: {model}.\n{TOOL_DEFINITION_PROMPT}"
+    system_prompt = f"OPERATIONAL MODE: {persona.upper()} SUB-AGENT. PROJECT: COPERNICUS IDE. ACTIVE_MODEL: {model}.\n{handoff_context}\n{TOOL_DEFINITION_PROMPT}"
 
     print(f"--- Routing to Ollama ({model}) via {target_url} (Persona: {persona}) ---")
     
@@ -229,17 +268,39 @@ def main():
         
         response = client.chat(model=model, messages=messages)
         content = response['message']['content']
-        
+
         # Tool-calling loop (AC-2 mandate Reasoning)
-        # We allow up to 10 turns for the loop
-        for _ in range(10):
-            tool_match = re.search(r"\[TOOL:\s*(\w+)\s*arguments:\s*(\{.*?\})\]", content, re.DOTALL)
+        # We allow up to 20 turns for the loop
+        for _ in range(20):
+            # Improved regex to find the start of the tool block
+            tool_match = re.search(r"\[TOOL:\s*(\w+)\s*\]?\s*(?:arguments:\s*)?(\{.*)", content, re.DOTALL)
             if not tool_match:
-                break
-                
+                if "[[signal_completion]]" in content:
+                    break
+                # If no tool found and no completion, re-prompt to use a tool
+                print(f"⚠️ No tool call or completion signal found. Re-prompting {model} to use tools...")
+                messages.append({'role': 'assistant', 'content': content})
+                messages.append({'role': 'user', 'content': "You must use the [TOOL: name arguments: {args}] syntax to perform actions. If you are done, use 'signal_completion()'."})
+                response = client.chat(model=model, messages=messages)
+                content = response['message']['content']
+                continue
+
             name = tool_match.group(1)
+            remaining = tool_match.group(2)
+            
+            # Find the matching closing brace for the JSON arguments
+            # Simple brace counter
+            brace_count = 0
+            json_str = ""
+            for i, char in enumerate(remaining):
+                if char == '{': brace_count += 1
+                elif char == '}': brace_count -= 1
+                json_str += char
+                if brace_count == 0:
+                    break
+            
             try:
-                args = json.loads(tool_match.group(2))
+                args = json.loads(json_str)
                 result = execute_tool(name, args)
                 print(f"✅ Tool result received. Re-prompting {model}...")
                 
@@ -254,6 +315,7 @@ def main():
                 content = response['message']['content']
             except Exception as e:
                 print(f"Error parsing tool arguments: {e}")
+                # Fallback: if it's not a tool call we can parse, break the loop
                 break
         
         print(content)

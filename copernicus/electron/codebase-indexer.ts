@@ -8,7 +8,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import log from './utils/logger'
 import { lspManager } from './lsp/lsp-manager'
 import * as chokidar from 'chokidar'
-import { EmbeddingGenerator } from './llm/embedding-generator'
 import { normalizeEmbedding } from './llm/alignment'
 
 const settingsStore = new SettingsStore()
@@ -54,6 +53,7 @@ export class CodebaseIndexer {
         line_start INTEGER,
         line_end INTEGER,
         symbols TEXT,
+        symbol_uid TEXT,
         lsp_metadata TEXT,
         chunk_index INTEGER,
         content TEXT,
@@ -144,6 +144,7 @@ export class CodebaseIndexer {
           line_start: s.location?.range?.start?.line ?? s.range?.start?.line ?? 0,
           line_end: s.location?.range?.end?.line ?? s.range?.end?.line ?? 0,
           symbols: s.name,
+          symbol_uid: s.uid || `${filePath}#${s.name}#${s.range?.start?.line ?? 0}`,
           chunk_index: i,
           content: lines.slice(
             s.location?.range?.start?.line ?? s.range?.start?.line ?? 0,
@@ -162,6 +163,7 @@ export class CodebaseIndexer {
             line_start: 0,
             line_end: 0,
             symbols: '',
+            symbol_uid: null,
             chunk_index: chunks.length,
             content: chunkContent
           })
@@ -170,8 +172,8 @@ export class CodebaseIndexer {
       }
 
       const insertStmt = stateLedger.db.prepare(`
-        INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, lsp_metadata, chunk_index, content, embedding)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, symbol_uid, lsp_metadata, chunk_index, content, embedding)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       stateLedger.db.transaction(() => {
@@ -190,6 +192,7 @@ export class CodebaseIndexer {
               chunk.line_start,
               chunk.line_end,
               chunk.symbols,
+              chunk.symbol_uid,
               null, // lsp_metadata initially null
               chunk.chunk_index,
               chunk.content,
@@ -211,19 +214,24 @@ export class CodebaseIndexer {
     this.filesIndexed = 0
 
     try {
-      const files = this.walk(rootPath).filter(f =>
-        ['.ts', '.tsx', '.py', '.md', '.json', '.sql'].includes(path.extname(f)) &&
-        !f.includes('node_modules') && !f.includes('.git')
-      )
+      log.info('[Indexer] Starting LSP-driven fast path indexing...')
+      // AC-1: LSP-Driven Indexing (The "Fast Path")
+      const symbolsIndexed = await this.indexWithLsp()
+      
+      if (!symbolsIndexed) {
+        log.warn('[Indexer] LSP indexing returned no symbols, falling back to walk()...')
+        const files = this.walk(rootPath).filter(f =>
+          ['.ts', '.tsx', '.py', '.md', '.json', '.sql'].includes(path.extname(f)) &&
+          !f.includes('node_modules') && !f.includes('.git')
+        )
 
-      this.totalFiles = files.length
+        this.totalFiles = files.length
 
-      for (const file of files) {
-        await this.indexFile(file)
-        this.filesIndexed++
+        for (const file of files) {
+          await this.indexFile(file)
+          this.filesIndexed++
+        }
       }
-
-      await this.indexWithLsp()
 
       // Background watcher for incremental re-indexing on file changes
       if (this.watcher) await this.watcher.close()
@@ -245,11 +253,11 @@ export class CodebaseIndexer {
     }
   }
 
-  public async indexWithLsp() {
+  public async indexWithLsp(): Promise<boolean> {
     try {
       // Fetch all symbols across the workspace
       const symbols = await lspManager.sendRequest('workspace/symbol', { query: '' })
-      if (!Array.isArray(symbols)) return
+      if (!Array.isArray(symbols) || symbols.length === 0) return false
 
       const fileMap = new Map<string, any[]>()
       for (const sym of symbols) {
@@ -260,60 +268,47 @@ export class CodebaseIndexer {
         fileMap.get(filePath)!.push(sym)
       }
 
-      stateLedger.db.transaction(() => {
-        const stmtSelect = stateLedger.db.prepare(`SELECT * FROM codebase_vec WHERE file_path = ?`)
-        const stmtDelete = stateLedger.db.prepare(`DELETE FROM codebase_vec WHERE chunk_id = ?`)
-        const stmtInsert = stateLedger.db.prepare(`
-          INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, lsp_metadata, chunk_index, content, embedding)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `)
-
-        for (const [filePath, fileSymbols] of fileMap.entries()) {
-          const rows = stmtSelect.all(filePath) as any[]
-          for (const row of rows) {
-            // Find symbols that overlap with this chunk
-            const matchingSymbols = fileSymbols.filter(sym => {
-              const startLine = sym.location?.range?.start?.line ?? sym.range?.start?.line ?? -1
-              const endLine = sym.location?.range?.end?.line ?? sym.range?.end?.line ?? -1
-              if (startLine === -1 || endLine === -1) return false
-              // Overlap check
-              return Math.max(startLine, row.line_start) <= Math.min(endLine, row.line_end)
-            })
-
-            if (matchingSymbols.length > 0) {
-              const lspMetadata = JSON.stringify(matchingSymbols.map(sym => ({
-                symbolName: sym.name,
-                kind: sym.kind,
-                range: sym.location?.range ?? sym.range
-              })))
-
-              stmtDelete.run(row.chunk_id)
-              // Parse Buffer to Float32Array properly
-              const buffer = row.embedding as Buffer;
-              const baseEmbedding = Array.from(new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4));
-              const weightedEmbedding = EmbeddingGenerator.applyWeights(baseEmbedding, lspMetadata);
-
-              stmtInsert.run(
-                row.chunk_id,
-                row.file_path,
-                row.line_start,
-                row.line_end,
-                row.symbols,
-                lspMetadata,
-                row.chunk_index,
-                row.content,
-                new Float32Array(weightedEmbedding)
-              )
-            }
-          }
-        }
-      })()
+      this.totalFiles = fileMap.size
+      
+      for (const [filePath] of fileMap.entries()) {
+        if (!fs.existsSync(filePath)) continue
+        
+        // Use indexFile for each file identified by LSP
+        // It will use document symbols for granular chunking
+        await this.indexFile(filePath)
+        this.filesIndexed++
+      }
+      
+      return true
     } catch (e) {
       log.error('[Indexer] indexWithLsp failed:', e)
+      return false
     }
   }
 
+  public async searchBySymbol(symbolUid: string): Promise<any[]> {
+    const stmt = stateLedger.db.prepare(`
+      SELECT chunk_id, file_path, line_start, line_end, symbols, content
+      FROM codebase_vec
+      WHERE symbol_uid = ?
+    `)
+    const rows = stmt.all(symbolUid) as any[]
+    return rows.map(r => ({
+      chunkId: r.chunk_id, path: r.file_path, lineStart: r.line_start, line_end: r.line_end,
+      symbols: r.symbols, content: r.content
+    }))
+  }
+
   public async search(query: string, topK = 5): Promise<any[]> {
+    // AC-4: JIT indexing - if searching for a symbol not yet indexed
+    if (query.startsWith('symbol:')) {
+      const symbolUid = query.replace('symbol:', '')
+      const results = await this.searchBySymbol(symbolUid)
+      if (results.length > 0) return results
+      // Symbol not found, potentially trigger JIT index if we can resolve the file
+      // For now, fall back to normal search
+    }
+
     const { embedding } = await this.getEmbedding(query)
     const normalizedQuery = normalizeEmbedding(embedding)
 

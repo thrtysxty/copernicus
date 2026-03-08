@@ -34,6 +34,18 @@ If you hit any of these, output `[[SIGNAL_ORCHESTRATOR]]` and stop:
 
 ---
 
+## Context Handoff (Story 229)
+
+**Handoff Context** allows an agent to inherit the research and context of a previous agent during a model switch.
+
+### How to use Handoff Context
+- When switching from another model (e.g. Claude -> Gemini), the system will automatically inject a `[HANDOFF CONTEXT]` block into your initial prompt.
+- **NEVER** re-perform the same codebase search if its results are already present in the handoff context.
+- **ALWAYS** reference prior search findings from the handoff context to maintain task continuity.
+- This mechanism reduces API costs and improves execution speed by skipping redundant research phases.
+
+---
+
 ## Mandatory Pre-Reads
 
 Before implementing any story, read these documents in full:

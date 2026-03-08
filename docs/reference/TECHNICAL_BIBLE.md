@@ -261,6 +261,14 @@ As of March 2026, all agentic tool execution (file operations, RAG search, MCP c
     *   **Tactical:** Local sidekick (Ollama on 192.168.1.185) is used for quick completions and formatting.
 3.  **Strict Execution:** The shim enforces the "Industrial Sub-agent" persona, preventing conversational filler and ensuring JSON-only tool outputs.
 
+### 5.2 Context Handoff (Story 229)
+To maintain continuity during model switches (e.g., Claude → Gemini), COPERNICUS uses a **Context Handoff** mechanism.
+
+1.  **Storage:** The `last_search_context` is stored in the `jules_sessions` table in `copernicus.db`.
+2.  **Retrieval:** The `POST /api/agents/context/handoff` endpoint pulls the top 5 most relevant RAG chunks from the previous agent's session.
+3.  **Injection:** The `ollama_tool_shim.py` and `agent_gateway.py` automatically inject this context as a `[HANDOFF CONTEXT]` block into the new agent's initial prompt.
+4.  **Purpose:** This allows the new agent to inherit the "Search Path" and key findings of its predecessor without re-indexing or re-searching the codebase.
+
 ---
 
 ## 6. LSP Guardrail — Mandatory for All Agents

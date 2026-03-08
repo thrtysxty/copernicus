@@ -5,6 +5,8 @@ import os
 import re
 import time
 import uuid
+import json
+import sqlite3
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from pathlib import Path
@@ -14,6 +16,18 @@ agents_bp = Blueprint("agents", __name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 GATEWAY_PATH = PROJECT_ROOT / "scripts" / "agent_gateway.py"
+
+def get_db_path():
+    """Returns the path to the Copernicus SQLite database."""
+    # Priority: ENV > Default home location > Local repo location
+    env_path = os.environ.get('COPERNICUS_DB_PATH')
+    if env_path: return env_path
+    
+    home_path = os.path.expanduser('~/.copernicus/copernicus.db')
+    if os.path.exists(home_path): return home_path
+    
+    local_path = PROJECT_ROOT / "copernicus" / "copernicus.db"
+    return str(local_path.resolve())
 
 # Map chat tool personas to agent gateway roles
 PERSONA_ROLE_MAP = {
@@ -428,3 +442,56 @@ def reset_context():
 
     context_manager.reset_session(session_id)
     return jsonify({"ok": True, "data": {"session_id": session_id, "reset": True}}), 200
+
+
+@agents_bp.route("/context/handoff", methods=["POST"])
+@require_auth
+def context_handoff():
+    """
+    AC-2: Cross-Model "Context Handoff"
+    Pulls the Top 5 most relevant RAG chunks from the previous agent's session.
+    """
+    data = request.get_json() or {}
+    session_id = data.get("session_id")
+    story_id = data.get("story_id")
+
+    if not session_id and not story_id:
+         return jsonify({"ok": False, "error": "session_id or story_id required"}), 400
+
+    db_path = get_db_path()
+    try:
+        if not os.path.exists(db_path):
+             return jsonify({"ok": True, "data": {"context": None}, "message": f"DB not found at {db_path}"}), 200
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Pull from jules_sessions if story_id provided, or by session_id
+        if story_id:
+            cursor.execute("SELECT last_search_context FROM jules_sessions WHERE story_id = ? AND last_search_context IS NOT NULL ORDER BY started_at DESC LIMIT 1", (story_id,))
+        else:
+            cursor.execute("SELECT last_search_context FROM jules_sessions WHERE id = ? LIMIT 1", (session_id,))
+            
+        row = cursor.fetchone()
+        conn.close()
+
+        if row and row[0]:
+            context = row[0]
+            # Pre-inject into current session's context manager
+            if session_id:
+                handoff_item = ContextItem(
+                    id=f"handoff_{int(time.time())}",
+                    role="system",
+                    content=f"[HANDOFF CONTEXT]\nPrior relevant chunks:\n{context}",
+                    token_count=len(context.split()),
+                    type="message",
+                    pinned=True
+                )
+                context_manager.add_item(session_id, handoff_item)
+            
+            return jsonify({"ok": True, "data": {"context": context}}), 200
+        else:
+            return jsonify({"ok": True, "data": {"context": None}, "message": "No handoff context found"}), 200
+
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
