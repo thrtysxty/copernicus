@@ -400,28 +400,26 @@ export default function App() {
                 {/* Center Panel & Chat */}
                 <div className="flex-1 flex overflow-hidden relative">
                   <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : spotlightPane === 'chat' ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
+                    <PanelHeader
+                      title={activeStoryId ? `STORY // ${activeStoryId}` : 'DEVELOPMENT_CORE'}
+                      onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+                      onFlip={() => toggleFlip('center-panel')}
+                      isSpotlightActive={spotlightPane === 'editor'}
+                      onBuilder={toggleUIBuilder}
+                      isBuilderActive={uiBuilderOpen}
+                      onCommandPalette={() => setCommandPaletteOpen(true)}
+                      showLspStatus={activeView === 'designer' || activeView === 'editor'}
+                    />
                     <FlippablePanel
                       id="center-panel"
                       className="flex-1"
                       front={
-                        <div className="flex flex-col h-full">
-                          <PanelHeader
-                            title={activeStoryId ? `STORY // ${activeStoryId}` : 'DEVELOPMENT_CORE'}
-                            onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-                            onFlip={() => toggleFlip('center-panel')}
-                            isSpotlightActive={spotlightPane === 'editor'}
-                            onBuilder={toggleUIBuilder}
-                            isBuilderActive={uiBuilderOpen}
-                            onCommandPalette={() => setCommandPaletteOpen(true)}
-                            showLspStatus={activeView === 'designer' || activeView === 'editor'}
-                          />
-                          <CenterPanelRouter
-                            filePath={activeFilePath}
-                            content={activeFileContent}
-                            language={activeFileLanguage}
-                            onChange={(v) => setActiveFileContent(v ?? '')}
-                          />
-                        </div>
+                        <CenterPanelRouter
+                          filePath={activeFilePath}
+                          content={activeFileContent}
+                          language={activeFileLanguage}
+                          onChange={(v) => setActiveFileContent(v ?? '')}
+                        />
                       }
                       back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
                     />
