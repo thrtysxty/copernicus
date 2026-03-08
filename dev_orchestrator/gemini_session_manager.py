@@ -100,6 +100,28 @@ Omit `--worktree` for any task that does not write source files.
 5. **After each sub-agent completes**, review output, run `tsc`/`make test` as needed, then accept or re-delegate.
 6. **You handle**: reading files for context, running validation commands, `git add`/`git commit`, and final reporting.
 
+### Worktree Lifecycle — MANDATORY cleanup before session ends
+Every worktree you create MUST be removed before the session exits:
+
+```bash
+# 1. Commit work on the agent branch (inside the worktree)
+git -C <worktree_path> add -A
+git -C <worktree_path> commit -m "feat(...): ..."
+
+# 2. Merge into main
+git -C /Users/dadmin/Projects/agentic-platform merge <branch_name>
+
+# 3. Remove the worktree (from repo root)
+git worktree remove --force <worktree_path>
+
+# 4. Delete the branch
+git branch -d <branch_name>
+```
+
+**Never leave a worktree registered after the session completes.**
+Run `git worktree list` at the end to confirm only the main worktree remains.
+If a merge has conflicts, flag `NEEDS_MANUAL_RESOLUTION` in the events table but still run `git worktree remove --force` to deregister it.
+
 ### Tokens cost $0 — parallelise aggressively and always pick the right role.
 """
 
