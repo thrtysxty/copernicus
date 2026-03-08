@@ -11,6 +11,7 @@ import re
 import time
 import uuid
 import sqlite3
+import threading
 from contextlib import closing
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
@@ -80,6 +81,8 @@ class ContextManager:
     - Tracks token usage per session.
     - Auto-prunes (keep system & recent tool outputs) when >80%.
     - Supports pinning, relevance scoring, and tiered pruning.
+    - Thread-safe with RLock.
+    - Max 100 sessions with TTL cleanup.
     """
 
     # Default token limits per tier (model size approximation)
@@ -91,12 +94,46 @@ class ContextManager:
 
     # Relevance decay per hour (e.g., 0.2 = 20% per hour)
     DECAY_RATE = 0.2
+    
+    # Story 261: Session management constants
+    MAX_SESSIONS = 100
+    SESSION_TTL = 1800  # 30 minutes in seconds
+    CLEANUP_INTERVAL = 300  # 5 minutes in seconds
 
     def __init__(self):
         # session_id -> OrderedDict of context items (ordered by insertion, but with pin priority for pruning)
         self._sessions: Dict[str, OrderedDict] = {}
         # session_id -> total token count
         self._token_counts: Dict[str, int] = {}
+        # session_id -> last accessed timestamp
+        self._last_accessed: Dict[str, float] = {}
+        # Thread safety
+        self._lock = threading.RLock()
+        # Cleanup thread control
+        self._stop_cleanup = threading.Event()
+        self._cleanup_thread = threading.Thread(target=self._cleanup_expired_sessions, daemon=True)
+        self._cleanup_thread.start()
+
+    def _cleanup_expired_sessions(self):
+        """Daemon thread that removes expired sessions every CLEANUP_INTERVAL."""
+        while not self._stop_cleanup.is_set():
+            time.sleep(self.CLEANUP_INTERVAL)
+            if self._stop_cleanup.is_set():
+                break
+            self._remove_expired_sessions()
+
+    def _remove_expired_sessions(self):
+        """Remove sessions not accessed in SESSION_TTL seconds."""
+        now = time.time()
+        with self._lock:
+            expired_sessions = [
+                session_id for session_id, last_accessed in self._last_accessed.items()
+                if now - last_accessed > self.SESSION_TTL
+            ]
+            for session_id in expired_sessions:
+                self._sessions.pop(session_id, None)
+                self._token_counts.pop(session_id, None)
+                self._last_accessed.pop(session_id, None)
 
     def _get_tier(self, model_name: Optional[str] = None) -> str:
         if not model_name:
@@ -124,67 +161,85 @@ class ContextManager:
         return 0.80
 
     def ensure_session(self, session_id: str, model_name: Optional[str] = None) -> None:
-        if session_id not in self._sessions:
-            self._sessions[session_id] = OrderedDict()
-            self._token_counts[session_id] = 0
+        with self._lock:
+            if session_id not in self._sessions:
+                # Story 261: Max session cap with LRU eviction (insertion-ordered)
+                if len(self._sessions) >= self.MAX_SESSIONS:
+                    # Evict oldest session (first inserted in OrderedDict)
+                    oldest_session_id = next(iter(self._sessions))
+                    self._sessions.pop(oldest_session_id, None)
+                    self._token_counts.pop(oldest_session_id, None)
+                    self._last_accessed.pop(oldest_session_id, None)
+                
+                self._sessions[session_id] = OrderedDict()
+                self._token_counts[session_id] = 0
+                self._last_accessed[session_id] = time.time()
 
     def add_item(self, session_id: str, item: ContextItem, model_name: Optional[str] = None) -> None:
-        self.ensure_session(session_id, model_name)
-        self._sessions[session_id][item.id] = item
-        self._token_counts[session_id] += item.token_count
+        with self._lock:
+            self.ensure_session(session_id, model_name)
+            self._sessions[session_id][item.id] = item
+            self._token_counts[session_id] += item.token_count
+            # Story 261: Update last accessed
+            self._last_accessed[session_id] = time.time()
 
-        # Auto-prune if >80% limit
-        limit = self._get_limit(model_name)
-        if self._token_counts[session_id] > 0.8 * limit:
-            self._prune(session_id, model_name)
+            # Auto-prune if >80% limit
+            limit = self._get_limit(model_name)
+            if self._token_counts[session_id] > 0.8 * limit:
+                self._prune(session_id, model_name)
 
     def get_items(self, session_id: str) -> List[ContextItem]:
-        return list(self._sessions.get(session_id, {}).values())
+        with self._lock:
+            # Story 261: Update last accessed
+            if session_id in self._sessions:
+                self._last_accessed[session_id] = time.time()
+            return list(self._sessions.get(session_id, {}).values())
 
     def _prune(self, session_id: str, model_name: Optional[str] = None) -> None:
-        items = list(self._sessions[session_id].values())
+        with self._lock:
+            items = list(self._sessions[session_id].values())
 
-        # Prioritize: pinned > system > tool outputs > others (latest first)
-        # Group by priority
-        pinned = [i for i in items if i.pinned]
-        system = [i for i in items if i.role == ROLE_SYSTEM and not i.pinned]
-        tools = [i for i in items if i.type == TYPE_TOOL_OUTPUT and not i.pinned and i.role != ROLE_SYSTEM]
-        others = [i for i in items if i not in pinned and i not in system and i not in tools]
+            # Prioritize: pinned > system > tool outputs > others (latest first)
+            # Group by priority
+            pinned = [i for i in items if i.pinned]
+            system = [i for i in items if i.role == ROLE_SYSTEM and not i.pinned]
+            tools = [i for i in items if i.type == TYPE_TOOL_OUTPUT and not i.pinned and i.role != ROLE_SYSTEM]
+            others = [i for i in items if i not in pinned and i not in system and i not in tools]
 
-        # Re-sort others by timestamp descending (newest first)
-        others.sort(key=lambda x: x.timestamp, reverse=True)
+            # Re-sort others by timestamp descending (newest first)
+            others.sort(key=lambda x: x.timestamp, reverse=True)
 
-        # Combine: pinned + system + tools (latest first) + recent others
-        prioritized = (
-            pinned +
-            system +
-            tools +
-            others  # we’ll cut later
-        )
+            # Combine: pinned + system + tools (latest first) + recent others
+            prioritized = (
+                pinned +
+                system +
+                tools +
+                others  # we'll cut later
+            )
 
-        # Find cutoff based on limit and aggressiveness
-        limit = self._get_limit(model_name)
-        target = int(self._prune_aggressiveness(model_name) * limit)
+            # Find cutoff based on limit and aggressiveness
+            limit = self._get_limit(model_name)
+            target = int(self._prune_aggressiveness(model_name) * limit)
 
-        total_tokens = sum(i.token_count for i in prioritized)
-        if total_tokens <= target:
-            return
+            total_tokens = sum(i.token_count for i in prioritized)
+            if total_tokens <= target:
+                return
 
-        kept_items: List[ContextItem] = []
-        kept_tokens = 0
+            kept_items: List[ContextItem] = []
+            kept_tokens = 0
 
-        for item in prioritized:
-            if kept_tokens + item.token_count <= target:
-                kept_items.append(item)
-                kept_tokens += item.token_count
-            else:
-                break
+            for item in prioritized:
+                if kept_tokens + item.token_count <= target:
+                    kept_items.append(item)
+                    kept_tokens += item.token_count
+                else:
+                    break
 
-        # Update session state
-        self._sessions[session_id] = OrderedDict()
-        for item in kept_items:
-            self._sessions[session_id][item.id] = item
-        self._token_counts[session_id] = kept_tokens
+            # Update session state
+            self._sessions[session_id] = OrderedDict()
+            for item in kept_items:
+                self._sessions[session_id][item.id] = item
+            self._token_counts[session_id] = kept_tokens
 
     def get_relevance_score(self, session_id: str, task_keywords: List[str]) -> Dict[str, float]:
         """
@@ -192,54 +247,60 @@ class ContextManager:
           - recency: exp(-decay * age_hours)
           - keyword overlap: cosine-like (simplified: overlap / len(task_keywords))
         """
-        if not task_keywords:
-            return {item.id: 1.0 for item in self._sessions.get(session_id, {}).values()}
+        with self._lock:
+            if not task_keywords:
+                return {item.id: 1.0 for item in self._sessions.get(session_id, {}).values()}
 
-        scores: Dict[str, float] = {}
-        now = time.time()
-        items = self.get_items(session_id)
+            scores: Dict[str, float] = {}
+            now = time.time()
+            items = self.get_items(session_id)
 
-        for item in items:
-            # Recency score
-            age_hours = (now - item.timestamp) / 3600.0
-            recency = max(0.0, 1.0 - self.DECAY_RATE * age_hours)
+            for item in items:
+                # Recency score
+                age_hours = (now - item.timestamp) / 3600.0
+                recency = max(0.0, 1.0 - self.DECAY_RATE * age_hours)
 
-            # Keyword overlap (simple Jaccard-like)
-            content_tokens = set(item.content.lower().split())
-            task_tokens = set(task_keywords)
-            overlap = len(content_tokens & task_tokens)
-            keyword_score = overlap / len(task_keywords) if task_keywords else 0.0
+                # Keyword overlap (simple Jaccard-like)
+                content_tokens = set(item.content.lower().split())
+                task_tokens = set(task_keywords)
+                overlap = len(content_tokens & task_tokens)
+                keyword_score = overlap / len(task_keywords) if task_keywords else 0.0
 
-            # Combine: weighted average (can tune weights)
-            scores[item.id] = 0.6 * recency + 0.4 * keyword_score
+                # Combine: weighted average (can tune weights)
+                scores[item.id] = 0.6 * recency + 0.4 * keyword_score
 
-        return scores
+            return scores
 
     def pin_item(self, session_id: str, item_id: str) -> bool:
-        session = self._sessions.get(session_id)
-        if not session or item_id not in session:
-            return False
-        session[item_id].pinned = True
-        return True
+        with self._lock:
+            session = self._sessions.get(session_id)
+            if not session or item_id not in session:
+                return False
+            session[item_id].pinned = True
+            return True
 
     def get_status(self, session_id: str) -> Dict[str, Any]:
-        if session_id not in self._sessions:
-            return {"session_id": session_id, "active": False}
-        items = list(self._sessions[session_id].values())
-        return {
-            "session_id": session_id,
-            "active": True,
-            "token_count": self._token_counts.get(session_id, 0),
-            "item_count": len(items),
-            "pinned_count": sum(1 for i in items if i.pinned),
-            "last_updated": max((i.timestamp for i in items), default=0.0),
-        }
+        with self._lock:
+            if session_id not in self._sessions:
+                return {"session_id": session_id, "active": False}
+            items = list(self._sessions[session_id].values())
+            return {
+                "session_id": session_id,
+                "active": True,
+                "token_count": self._token_counts.get(session_id, 0),
+                "item_count": len(items),
+                "pinned_count": sum(1 for i in items if i.pinned),
+                "last_updated": max((i.timestamp for i in items), default=0.0),
+            }
 
     def reset_session(self, session_id: str) -> None:
-        if session_id in self._sessions:
-            del self._sessions[session_id]
-        if session_id in self._token_counts:
-            del self._token_counts[session_id]
+        with self._lock:
+            if session_id in self._sessions:
+                del self._sessions[session_id]
+            if session_id in self._token_counts:
+                del self._token_counts[session_id]
+            if session_id in self._last_accessed:
+                del self._last_accessed[session_id]
 
 
 # Instantiate context manager
