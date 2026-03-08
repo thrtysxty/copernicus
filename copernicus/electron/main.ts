@@ -542,6 +542,18 @@ function registerIpcHandlers() {
 
   ipcMain.handle('auth:revoke-key', (_e, provider) => handleIpc(() => authManager.revokeKey(provider)))
 
+  // Registry Handlers
+  ipcMain.handle('registry:list-models', () => handleIpc(() => modelRegistry.getModels()))
+  ipcMain.handle('registry:list-personas', () => handleIpc(async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/registry/personas');
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (e) {
+      return [];
+    }
+  }))
+
   // Model Handlers
   ipcMain.handle('models:list', () => handleIpc(() => modelRegistry.getModels()));
   ipcMain.handle('models:active', () => handleIpc(() => modelRegistry.getActiveModel()));

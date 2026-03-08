@@ -12,6 +12,9 @@ export class ModelRegistry {
   private activeModelId: string = 'claude-3-5-sonnet-20240620'; // Default fallback
 
   constructor() {
+    // Start async fetch from registry, while keeping defaults as synchronous fallback
+    this.fetchRegistry().catch(() => {});
+
     // Register default models with pricing (USD per 1k tokens)
     this.registerModel({ id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'openai', contextWindow: 16385, costPer1kIn: 0.0005, costPer1kOut: 0.0015 });
     this.registerModel({ id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'openai', contextWindow: 128000, costPer1kIn: 0.010, costPer1kOut: 0.030 });
@@ -36,6 +39,28 @@ export class ModelRegistry {
 
     // DeepInfra examples
     this.registerModel({ id: 'deepinfra/meta-llama/Llama-2-70b-chat-hf', name: 'Llama 2 70b (DeepInfra)', provider: 'deepinfra', contextWindow: 4096 });
+  }
+
+  private async fetchRegistry() {
+    try {
+      const response = await fetch('http://localhost:5001/api/registry/models');
+      if (!response.ok) return;
+      const data = await response.json() as any[];
+      if (Array.isArray(data)) {
+        data.forEach(m => {
+          this.registerModel({
+            id: m.id,
+            name: m.displayName || m.name,
+            provider: m.provider,
+            contextWindow: m.contextWindow,
+            costPer1kIn: m.costPer1kTokens || 0,
+            costPer1kOut: m.costPer1kTokens || 0
+          });
+        });
+      }
+    } catch (e) {
+      // Backend unreachable, fallback already initialized
+    }
   }
 
   registerModel(config: ModelConfig) {
