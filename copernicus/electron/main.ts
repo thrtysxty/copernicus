@@ -34,6 +34,7 @@ import { julesMonitor } from './jules/monitor'
 import { julesManager } from './jules/jules-manager'
 import { lspManager } from './lsp/lsp-manager'
 import { backendManager } from './backend-manager'
+import { socketManager } from './socket-manager'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
 
@@ -843,6 +844,10 @@ function registerIpcHandlers() {
     return true
   }))
 
+  // WebSocket Handlers
+  ipcMain.handle('ws:subscribe-session', (_e, sessionId: string) => handleIpc(() => socketManager.subscribeSession(sessionId)))
+  ipcMain.handle('ws:unsubscribe-session', (_e, sessionId: string) => handleIpc(() => socketManager.unsubscribeSession(sessionId)))
+
   // System Execution
   ipcMain.on('system:make', (_, target: string) => {
     const ALLOWED = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy'];
@@ -1463,12 +1468,14 @@ app.on('will-quit', () => { globalShortcut.unregisterAll() })
 app.on('before-quit', async () => {
   lspManager.stop()
   backendManager.stop()
+  socketManager.disconnect()
   if (browserSession.browser) await browserSession.browser.close().catch(() => {})
 })
 
 app.whenReady().then(() => {
   registerIpcHandlers();
   backendManager.start()
+  socketManager.connect()
 
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({
