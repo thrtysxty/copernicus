@@ -1,14 +1,7 @@
 import React from 'react'
 import { Send } from 'lucide-react'
 import { useLayoutStore } from '../../store/layout'
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant' | 'copernicus'
-  content: string
-  tokens?: number
-  showTourButton?: boolean
-}
+import { Message } from './useChatPanel'
 
 interface GuideCopernicusProps {
   guideMessages: Message[]

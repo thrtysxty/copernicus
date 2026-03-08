@@ -1,40 +1,28 @@
 import React from 'react'
 import { RotateCcw } from 'lucide-react'
 import { GuideCopernicus } from './GuideCopernicus'
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant' | 'copernicus'
-  content: string
-  tokens?: number
-  showTourButton?: boolean
-}
-
-interface ContextItem {
-  type: 'file' | 'story' | 'help'
-  label: string
-  content: string
-}
+import { Message, ContextItem, ModelInfo, AuthStatus, SavedPrompt } from './useChatPanel'
 
 interface ChatBackFaceProps {
+  input: string
   activeBackTab: string
   setActiveBackTab: (v: string) => void
   toggleFlip: (id: string) => void
   model: string
   setModel: (v: string) => void
-  availableModels: any[]
+  availableModels: ModelInfo[]
   totalTokens: number
   contextMaxTokens: number
   context: ContextItem[]
   setContext: React.Dispatch<React.SetStateAction<ContextItem[]>>
   handleClearContext: () => void
-  authStatus: any
+  authStatus: AuthStatus | null
   isSavingPrompt: boolean
   setIsSavingPrompt: (v: boolean) => void
   newPromptName: string
   setNewPromptName: (v: string) => void
   confirmSavePrompt: () => void
-  savedPrompts: { id: string; name: string; text: string }[]
+  savedPrompts: SavedPrompt[]
   usePrompt: (text: string) => void
   deletePrompt: (id: string) => void
   messages: Message[]
@@ -48,10 +36,10 @@ interface ChatBackFaceProps {
   setShowClaudeFallback: (v: boolean) => void
   guideScrollRef: React.RefObject<HTMLDivElement>
   invoke: any
-  input: string
 }
 
 export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
+  input,
   activeBackTab,
   setActiveBackTab,
   toggleFlip,
@@ -83,7 +71,6 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
   setShowClaudeFallback,
   guideScrollRef,
   invoke,
-  input,
 }) => {
   const tabs = [
     { id: 'context', label: 'Context' },

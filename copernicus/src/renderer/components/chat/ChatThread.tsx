@@ -6,17 +6,7 @@ import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import { unwrapIpc } from '../../types/ipc'
-import log from '../../utils/logger'
-
-// ── Types ──────────────────────────────────────────────────────────────────
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant' | 'copernicus'
-  content: string
-  tokens?: number
-  showTourButton?: boolean
-}
+import { Message, ModelInfo } from './useChatPanel'
 
 interface ChatThreadProps {
   messages: Message[]
@@ -27,7 +17,7 @@ interface ChatThreadProps {
   handleSaveToStory: (content: string) => Promise<void>
   model: string
   setModel: (v: string) => void
-  availableModels: any[]
+  availableModels: ModelInfo[]
   showModelPicker: boolean
   setShowModelPicker: (v: boolean) => void
   isRepoActive: boolean
@@ -61,7 +51,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
           setUIComponents(parsed)
         }
       } catch (e) {
-        log.error('Failed to parse component-update', e)
+        console.error('Failed to parse component-update', e)
       }
     }
   }, [language, code, setUIComponents])
@@ -256,7 +246,6 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
                     onClick={() => {
                         if (model !== m.id) {
                           invoke('snapshot:save', { panel_id: 'chat', model_id: model, provider: availableModels.find((x: any) => x.id === model)?.provider || 'unknown', messages: messages.filter(m => m.role !== 'copernicus') }).catch(() => {})
-                          // isFirstCallAfterSwitch is handled in parent via setModel effect or similar, but for simplicity we assume setModel handles it
                         }
                         setModel(m.id)
                         setShowModelPicker(false)

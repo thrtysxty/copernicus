@@ -8,7 +8,7 @@ import { unwrapIpc } from '../../types/ipc'
 
 const ipcRenderer = window.ipcRenderer
 
-interface Message {
+export interface Message {
   id: string
   role: 'user' | 'assistant' | 'copernicus'
   content: string
@@ -16,10 +16,36 @@ interface Message {
   showTourButton?: boolean
 }
 
-interface ContextItem {
+export interface ContextItem {
   type: 'file' | 'story' | 'help'
   label: string
   content: string
+}
+
+export interface ModelInfo {
+  id: string
+  name: string
+  provider: string
+  contextWindow: number
+}
+
+export interface AuthStatus {
+  isActive: boolean
+  user?: any
+}
+
+export interface SavedPrompt {
+  id: string
+  name: string
+  text: string
+}
+
+export type PickerMode = 'none' | 'file' | 'story' | 'codebase'
+
+export interface PickerResult {
+  label: string
+  value: string
+  payload: string
 }
 
 export function useChatPanel(openFilePath: string | null | undefined, rootPath: string | undefined) {
@@ -27,7 +53,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [model, setModel] = useState('claude-3-5-sonnet-20240620')
-  const [availableModels, setAvailableModels] = useState<any[]>([])
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
   const [showModelPicker, setShowModelPicker] = useState(false)
   const [context, setContext] = useState<ContextItem[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
@@ -42,9 +68,9 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   const [slashSuggestions, setSlashSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [pickerMode, setPickerMode] = useState<any>('none')
-  const [pickerResults, setPickerResults] = useState<any[]>([])
-  const [pendingModelSwitch, setPendingModelSwitch] = useState<any>(null)
+  const [pickerMode, setPickerMode] = useState<PickerMode>('none')
+  const [pickerResults, setPickerResults] = useState<PickerResult[]>([])
+  const [pendingModelSwitch, setPendingModelSwitch] = useState<{ model: string; reason: string; sessionId: string } | null>(null)
   const [activeBackTab, setActiveBackTab] = useState('context')
   const [guideMessages, setGuideMessages] = useState<Message[]>([])
   const [guideInput, setGuideInput] = useState('')
@@ -52,8 +78,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [lastGuideQuestion, setLastGuideQuestion] = useState('')
   const [isSavingPrompt, setIsSavingPrompt] = useState(false)
   const [newPromptName, setNewPromptName] = useState('')
-  const [authStatus, setAuthStatus] = useState<any>(null)
-  const [savedPrompts, setSavedPrompts] = useState<any[]>([])
+  const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null)
+  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([])
 
   const streamingIdRef = useRef<string | null>(null)
   const isFirstCallAfterSwitch = useRef(false)
