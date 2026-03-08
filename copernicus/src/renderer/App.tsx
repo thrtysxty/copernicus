@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Loader2, Maximize2, Minimize2, RotateCcw, Layout,
 } from 'lucide-react'
@@ -148,7 +148,11 @@ export default function App() {
     setInProgressCount,
     settingsOpen,
     setSettingsOpen,
+    setSidebarOpen,
   } = useLayoutStore()
+
+  const previousSidebarOpenRef = useRef<boolean>(sidebarOpen)
+  const prevViewRef = useRef<string>(activeView)
 
   const [projectSelectorOpen, setProjectSelectorOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
@@ -258,6 +262,17 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView])
+
+  // Story 209: Auto-collapse explorer on designer view entry
+  useEffect(() => {
+    if (activeView === 'designer' && prevViewRef.current !== 'designer') {
+      previousSidebarOpenRef.current = sidebarOpen
+      setSidebarOpen(false)
+    } else if (prevViewRef.current === 'designer' && activeView === 'editor') {
+      setSidebarOpen(previousSidebarOpenRef.current)
+    }
+    prevViewRef.current = activeView
+  }, [activeView, sidebarOpen, setSidebarOpen])
 
   // Tour Trigger on Mount
   useEffect(() => {
