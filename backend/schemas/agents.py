@@ -1,5 +1,5 @@
-from typing import Optional
-from pydantic import BaseModel, Field, model_validator
+from typing import Optional, Literal
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 
 class ContextHandoffRequest(BaseModel):
@@ -22,3 +22,18 @@ class AgentRunRequest(BaseModel):
 
 class ResetContextRequest(BaseModel):
     session_id: str
+
+
+class ResearchRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, max_length=32000)
+    persona: str = Field(default='scribe', pattern=r'^[a-zA-Z0-9._-]{1,50}$')
+    role: Optional[Literal['researcher', 'coder', 'thinker', 'fast']] = Field(default=None)
+    session_id: Optional[str] = Field(default=None)
+    model: str = Field(..., pattern=r'^[a-zA-Z0-9._:-]{1,100}$')
+
+    @field_validator('prompt')
+    @classmethod
+    def prompt_no_leading_dash(cls, v: str) -> str:
+        if v and v.lstrip().startswith('-'):
+            raise ValueError("Prompt must not start with '-' or whitespace followed by '-'")
+        return v
