@@ -1,6 +1,7 @@
 import { ipcMain, BrowserWindow, shell, app } from 'electron'
 import path from 'node:path'
-import { spawn, execFile, execFileSync } from 'node:child_process'
+import { spawn, execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import fs from 'node:fs'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
@@ -8,6 +9,8 @@ import { assertSafePath } from '../utils/path-guard'
 import { setupCommandHandlers as setupDispatcherHandlers } from '../commands/dispatcher'
 
 import { IpcHandlerDeps } from './deps'
+
+const execFileAsync = promisify(execFile)
 
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { 
@@ -68,12 +71,12 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   // CAPEX Analytics (Story 162)
   ipcMain.handle('devtime:run-tests', () => handleIpc('devtime:run-tests', [], async () => {
     const start = Date.now()
-    const raw = execFileSync(
+    const { stdout } = await execFileAsync(
       'npx',
       ['vitest', 'run', '--reporter=json'],
-      { cwd: path.join(__dirname, '..'), encoding: 'utf-8', timeout: 120_000, stdio: ['pipe', 'pipe', 'pipe'], shell: false }
-    ).toString()
-    const result = JSON.parse(raw)
+      { cwd: path.join(__dirname, '..'), encoding: 'utf-8', timeout: 120_000, shell: false }
+    )
+    const result = JSON.parse(stdout.toString())
     const record = {
       total_tests: result.numTotalTests ?? 0,
       passed:      result.numPassedTests ?? 0,
@@ -266,7 +269,8 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       try {
         const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx']
         if (!ALLOWED_BINS.includes(bin)) throw new Error(`Disallowed binary: ${bin}`)
-        const v = execFileSync(bin, ['--version'], { timeout: 3000, shell: false }).toString().trim()
+        const { stdout } = await execFileAsync(bin, ['--version'], { timeout: 3000, shell: false })
+        const v = stdout.toString().trim()
         return { found: true, version: v.split('\n')[0]?.trim() ?? '' }
       } catch {
         return { found: false }
@@ -279,17 +283,17 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     )
 
     const copernicusRoot = path.join(app.getAppPath(), '..')
-    const checkNpmDep = (pkg: string) => {
+    const checkNpmDep = async (pkg: string) => {
       const p = path.join(copernicusRoot, 'node_modules', pkg, 'package.json')
       if (!fs.existsSync(p)) return { installed: false }
       try {
-        const meta = JSON.parse(fs.readFileSync(p, 'utf-8'))
+        const meta = JSON.parse(await fs.promises.readFile(p, 'utf-8'))
         return { installed: true, version: meta.version }
       } catch { return { installed: false } }
     }
 
     const IDE_DEPS = ['playwright-core', 'eslint', 'vitest']
-    const ideDeps = Object.fromEntries(IDE_DEPS.map(d => [d, checkNpmDep(d)]))
+    const ideDeps = Object.fromEntries(await Promise.all(IDE_DEPS.map(async d => [d, await checkNpmDep(d)])))
 
     return { toolchain, ideDeps }
   }))
@@ -375,18 +379,18 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const root = fsManager.getRootPath()
     if (!root) throw new Error('NO_ROOT')
     if (!fs.existsSync(path.join(root, '.git'))) {
-      execFileSync('git', ['init'], { cwd: root, shell: false })
+      await execFileAsync('git', ['init'], { cwd: root, shell: false })
     }
     if (opts.gitignoreTemplate && opts.gitignoreTemplate !== 'None') {
       const content = `# gitignore for ${opts.gitignoreTemplate}\nnode_modules/\ndist/\n.env\n`
-      fs.writeFileSync(path.join(root, '.gitignore'), content)
+      await fs.promises.writeFile(path.join(root, '.gitignore'), content)
     }
-    if (opts.authorName) execFileSync('git', ['config', 'user.name', opts.authorName], { cwd: root, shell: false })
-    if (opts.authorEmail) execFileSync('git', ['config', 'user.email', opts.authorEmail], { cwd: root, shell: false })
+    if (opts.authorName) await execFileAsync('git', ['config', 'user.name', opts.authorName], { cwd: root, shell: false })
+    if (opts.authorEmail) await execFileAsync('git', ['config', 'user.email', opts.authorEmail], { cwd: root, shell: false })
     return true
   }))
 
-  ipcMain.handle('app:set-root-path', (_e, dirPath: string) => handleIpc('app:set-root-path', [dirPath], () => {
+  ipcMain.handle('app:set-root-path', (_e, dirPath: string) => handleIpc('app:set-root-path', [dirPath], async () => {
     assertSafePath(dirPath);
     settingsStore.set('workspace', dirPath);
     fsManager.setRootPath(dirPath);
@@ -398,7 +402,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     // Auto-init git if not already a repo
     const gitDir = path.join(dirPath, '.git')
     if (!fs.existsSync(gitDir)) {
-      try { execFileSync('git', ['init'], { cwd: dirPath, shell: false }) } catch { /* non-fatal */ }
+      try { await execFileAsync('git', ['init'], { cwd: dirPath, shell: false }) } catch { /* non-fatal */ }
     }
     // Notify renderer so workingDir stays in sync
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:workspace-changed', { path: dirPath }))
@@ -410,15 +414,15 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return settingsStore.get('workspace', null) || fsManager.getRootPath();
   }))
 
-  ipcMain.handle('app:get-user-guide', () => handleIpc('app:get-user-guide', [], () => {
+  ipcMain.handle('app:get-user-guide', () => handleIpc('app:get-user-guide', [], async () => {
     const guidePath = path.join(app.getAppPath(), 'docs/help/USER_GUIDE.md')
     try {
-      const content = fs.readFileSync(guidePath, 'utf-8')
+      const content = await fs.promises.readFile(guidePath, 'utf-8')
       return content
     } catch {
       try {
         const fallback = path.join(__dirname, '../../../docs/help/USER_GUIDE.md')
-        return fs.readFileSync(fallback, 'utf-8')
+        return await fs.promises.readFile(fallback, 'utf-8')
       } catch {
         return '# User Guide\n\nGuide not found in packaged app resources.'
       }

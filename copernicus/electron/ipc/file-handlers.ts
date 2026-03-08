@@ -57,9 +57,9 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return canceled ? null : filePaths[0];
   }));
 
-  ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc('fs:make-dir', [dirPath], () => {
+  ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc('fs:make-dir', [dirPath], async () => {
     assertSafePath(dirPath);
-    fs.mkdirSync(dirPath, { recursive: true })
+    await fs.promises.mkdir(dirPath, { recursive: true })
   }));
 
   // File System
@@ -82,7 +82,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       
       // Ensure directory exists
       if (!fs.existsSync(finalPath)) {
-        fs.mkdirSync(finalPath, { recursive: true });
+        await fs.promises.mkdir(finalPath, { recursive: true });
         log.info(`[Main] Created project directory: ${finalPath}`);
       }
 

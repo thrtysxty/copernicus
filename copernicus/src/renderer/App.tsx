@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   Loader2, Maximize2, Minimize2, RotateCcw, Layout,
 } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useToastStore } from './store/toastStore'
 import { ActivityBar } from './components/layout/ActivityBar'
@@ -42,7 +43,7 @@ const PanelHeader: React.FC<{
   const [errorCount, setErrorCount] = useState(0)
   const [warnCount, setWarnCount] = useState(0)
   const invoke = useIpcError()
-  const { activeFilePath } = useLayoutStore()
+  const activeFilePath = useLayoutStore(s => s.activeFilePath)
 
   useEffect(() => {
     invoke<IpcResult<LspStatusResponse>>('lsp:status').then((res) => {
@@ -113,44 +114,48 @@ const PanelHeader: React.FC<{
 
 export default function App() {
   const invoke = useIpcError()
-  const {
-    activeView,
-    setView,
-    sidebarOpen,
-    terminalOpen,
-    setTerminalOpen,
-    spotlightPane,
-    setSpotlight,
-    toggleFlip,
-    workingDir,
-    setWorkingDir,
-    gitBranch,
-    setGitBranch,
-    activeStoryId,
-    capexSessionTime,
-    capexTotal,
-    terminals,
-    addTerminal,
-    removeTerminal,
-    setTerminalBusy,
-    uiBuilderOpen,
-    toggleUIBuilder,
-    activeFilePath,
-    activeFileContent,
-    activeFileLanguage,
-    setActiveFilePath,
-    setActiveFileContent,
-    setActiveFileLanguage,
-    setCenterMode,
-    hasCompletedTour,
-    tourHighlight,
-    setTourHighlight,
-    setChatPanelTab,
-    setInProgressCount,
-    settingsOpen,
-    setSettingsOpen,
-    setSidebarOpen,
-  } = useLayoutStore()
+  
+  // Selective subscriptions for primitives
+  const activeView = useLayoutStore(s => s.activeView)
+  const sidebarOpen = useLayoutStore(s => s.sidebarOpen)
+  const terminalOpen = useLayoutStore(s => s.terminalOpen)
+  const spotlightPane = useLayoutStore(s => s.spotlightPane)
+  const workingDir = useLayoutStore(s => s.workingDir)
+  const gitBranch = useLayoutStore(s => s.gitBranch)
+  const activeStoryId = useLayoutStore(s => s.activeStoryId)
+  const capexSessionTime = useLayoutStore(s => s.capexSessionTime)
+  const capexTotal = useLayoutStore(s => s.capexTotal)
+  const uiBuilderOpen = useLayoutStore(s => s.uiBuilderOpen)
+  const activeFilePath = useLayoutStore(s => s.activeFilePath)
+  const activeFileContent = useLayoutStore(s => s.activeFileContent)
+  const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
+  const hasCompletedTour = useLayoutStore(s => s.hasCompletedTour)
+  const tourHighlight = useLayoutStore(s => s.tourHighlight)
+  const settingsOpen = useLayoutStore(s => s.settingsOpen)
+
+  // Subscriptions for functions (these don't change, so they don't trigger re-renders)
+  const setView = useLayoutStore(s => s.setView)
+  const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen)
+  const setSpotlight = useLayoutStore(s => s.setSpotlight)
+  const toggleFlip = useLayoutStore(s => s.toggleFlip)
+  const setWorkingDir = useLayoutStore(s => s.setWorkingDir)
+  const setGitBranch = useLayoutStore(s => s.setGitBranch)
+  const addTerminal = useLayoutStore(s => s.addTerminal)
+  const removeTerminal = useLayoutStore(s => s.removeTerminal)
+  const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy)
+  const toggleUIBuilder = useLayoutStore(s => s.toggleUIBuilder)
+  const setActiveFilePath = useLayoutStore(s => s.setActiveFilePath)
+  const setActiveFileContent = useLayoutStore(s => s.setActiveFileContent)
+  const setActiveFileLanguage = useLayoutStore(s => s.setActiveFileLanguage)
+  const setCenterMode = useLayoutStore(s => s.setCenterMode)
+  const setTourHighlight = useLayoutStore(s => s.setTourHighlight)
+  const setChatPanelTab = useLayoutStore(s => s.setChatPanelTab)
+  const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
+  const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
+  const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
+
+  // Subscriptions for arrays/objects with useShallow
+  const terminals = useLayoutStore(useShallow(s => s.terminals))
 
   const previousSidebarOpenRef = useRef<boolean>(sidebarOpen)
   const prevViewRef = useRef<string>(activeView)

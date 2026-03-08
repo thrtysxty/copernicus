@@ -121,7 +121,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
           await authManager.storeApiKey('google', access_token, undefined, 'oauth', { email })
 
           const geminiDir = path.join(os.homedir(), '.gemini')
-          if (!fs.existsSync(geminiDir)) fs.mkdirSync(geminiDir, { recursive: true })
+          if (!fs.existsSync(geminiDir)) await fs.promises.mkdir(geminiDir, { recursive: true })
           const geminiCreds = {
             access_token,
             client_id: clientId,
@@ -129,7 +129,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
             expiry: new Date(Date.now() + 3600 * 1000).toISOString(),
             email
           }
-          fs.writeFileSync(path.join(geminiDir, 'oauth_creds.json'), JSON.stringify(geminiCreds, null, 2))
+          await fs.promises.writeFile(path.join(geminiDir, 'oauth_creds.json'), JSON.stringify(geminiCreds, null, 2))
 
           win?.webContents.send('oauth:google-complete', { ok: true, email })
           if (win) { win.show(); win.focus(); }

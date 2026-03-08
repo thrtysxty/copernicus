@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { commandRegistry } from '../../commands/registry'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
@@ -58,13 +59,12 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [context, setContext] = useState<ContextItem[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [isRepoActive, setIsRepoActive] = useState(false)
-  const {
-    activeStoryId,
-    toggleFlip,
-    centerMode,
-    uiComponents,
-    flippedPanes
-  } = useLayoutStore()
+  
+  const activeStoryId = useLayoutStore(s => s.activeStoryId)
+  const toggleFlip = useLayoutStore(s => s.toggleFlip)
+  const centerMode = useLayoutStore(s => s.centerMode)
+  const uiComponents = useLayoutStore(useShallow(s => s.uiComponents))
+  const flippedPanes = useLayoutStore(useShallow(s => s.flippedPanes))
 
   const [slashSuggestions, setSlashSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
