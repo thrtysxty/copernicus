@@ -13,6 +13,7 @@ import sys
 import sqlite3
 import argparse
 import time
+import json
 from pathlib import Path
 
 # Add project root to path for dev_orchestrator imports
@@ -38,7 +39,7 @@ def get_db_connection():
         conn.load_extension(str(EXTENSION_PATH))
     return conn
 
-def get_handoff_context(context_id=None, top_k=5):
+def get_handoff_context(context_id=None):
     """
     AC-2: Pull 'Top 5 most relevant RAG chunks' from the ledger.
     If context_id (e.g. story ID) is provided, it targets that session's last search context.
@@ -72,7 +73,7 @@ def get_handoff_context(context_id=None, top_k=5):
             ORDER BY chunk_id DESC 
             LIMIT ?
         """
-        cursor.execute(query, (top_k,))
+        cursor.execute(query, (5,))
         rows = cursor.fetchall()
         
         if not rows:
@@ -87,22 +88,50 @@ def get_handoff_context(context_id=None, top_k=5):
     finally:
         conn.close()
 
+def load_prompt_from_history(history_path: str) -> str:
+    """
+    Load the new_message content from a JSON history file.
+    Falls back to sys.argv[1] (prompt positional arg) if not found.
+    """
+    try:
+        with open(history_path, 'r') as f:
+            payload = json.load(f)
+            return payload.get('new_message', {}).get('content', '')
+    except Exception:
+        return ""
+
 def main():
     parser = argparse.ArgumentParser(description="COPERNICUS Agent Gateway")
-    parser.add_argument("prompt", help="The user prompt or task")
     parser.add_argument("--role", "-r", default="coder", help="Agent role (thinker, coder, architect, researcher, fast)")
     parser.add_argument("--context-id", help="Story ID or Session UUID for targeted context")
     parser.add_argument("--worktree", help="Optional: Branch name for isolated worktree execution")
     parser.add_argument("--no-stream", action="store_false", dest="stream", help="Disable streaming output")
     parser.add_argument("--mode", choices=["fast", "deep"], default="fast", help="Mode for codebase search (fast or deep)")
     parser.add_argument("--auto-select", action="store_true", help="Auto-select the best model for the role using QS")
-    
+    parser.add_argument("--history", help="Path to JSON history file containing 'new_message' content")
+    parser.add_argument("prompt", nargs="?", default="", help="The user prompt or task (fallback if --history missing)")
+
     args = parser.parse_args()
+    
+    # Resolve prompt: prefer payload from history JSON
+    if args.history:
+        prompt = load_prompt_from_history(args.history)
+        if prompt:
+            args.prompt = prompt
+        else:
+            # Fall back to positional arg if history does not contain new_message
+            prompt = args.prompt
+    else:
+        prompt = args.prompt
+
+    if not prompt:
+        print("Error: Prompt must be provided either as positional argument or in --history JSON.", file=sys.stderr)
+        sys.exit(1)
     
     # 1. Fetch Handoff Context
     handoff = get_handoff_context(args.context_id)
     mode_instruction = f"Search Mode Override: When searching the codebase, you MUST use the '{args.mode}' mode.\n"
-    full_prompt = f"{handoff}\n\n{mode_instruction}User Request: {args.prompt}"
+    full_prompt = f"{handoff}\n\n{mode_instruction}User Request: {prompt}"
     
     # 2. Resolve target role/model
     target_role_or_model = args.role

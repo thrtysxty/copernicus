@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 from flask import Blueprint, jsonify, request
 from backend.middleware.auth import require_auth
 from backend.utils.validate import validate
-from backend.schemas.agents import AgentRunRequest, ResetContextRequest, ContextHandoffRequest
+from backend.schemas.agents import AgentRunRequest, ResetContextRequest, ContextHandoffRequest, ResearchRequest
 import subprocess
 import os
 import re
@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 from collections import OrderedDict
+import json
 
 # Constants for roles, models, and events
 ROLE_SYSTEM = "system"
@@ -371,11 +372,11 @@ def _add_context_to_payload(
 
 @agents_bp.route("/research", methods=["POST"])
 @require_auth
-@validate(AgentRunRequest)
-def research(request_data: AgentRunRequest):
+@validate(ResearchRequest)
+def research(request_data: ResearchRequest):
     prompt = request_data.prompt
     persona = request_data.persona
-    role = PERSONA_ROLE_MAP.get(persona, GATEWAY_ROLE_CODER)
+    role = PERSONA_ROLE_MAP.get(persona, request_data.role or GATEWAY_ROLE_CODER)
 
     session_id = request_data.session_id or str(uuid.uuid4())
     model_name = request_data.model
@@ -383,8 +384,8 @@ def research(request_data: AgentRunRequest):
     # Ensure session and generate context-aware payload
     payload = _add_context_to_payload(session_id, persona, prompt, model_name)
 
-    # Pass full chat context to gateway (via JSON file or env)
-    # For now, serialize messages & new_message as a JSON string passed as --history
+    # Pass full chat context to gateway (via JSON file)
+    # Do NOT include prompt in command-line args — only in history file.
     import json
     import tempfile
 
@@ -393,8 +394,15 @@ def research(request_data: AgentRunRequest):
         history_path = f.name
 
     try:
+        # Clean command-line args: prompt moved into history JSON, so omit it from args
         result = subprocess.run(
-            ["python3", str(GATEWAY_PATH), prompt, "--role", role, "--no-stream", "--history", history_path],
+            [
+                "python3", str(GATEWAY_PATH),
+                "--role", role,
+                "--no-stream",
+                "--history", history_path,
+                "--context-id", session_id,
+            ],
             capture_output=True,
             text=True,
             timeout=120,
