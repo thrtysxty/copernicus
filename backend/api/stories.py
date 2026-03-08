@@ -116,7 +116,7 @@ def update_story(story_id):
 
         for field in ['title', 'body_md', 'status']:
             if field in data:
-                update_fields.append(f"{field} = ?")
+                update_fields.append(field + " = ?")
                 values.append(data[field])
 
         if not update_fields:
@@ -126,7 +126,7 @@ def update_story(story_id):
         update_fields.append("updated_at = ?")
         values.append(now)
 
-        query = f"UPDATE stories SET {', '.join(update_fields)} WHERE id = ?"
+        query = "UPDATE stories SET " + ", ".join(update_fields) + " WHERE id = ?"
         values.append(story_id)
 
         conn.execute(query, tuple(values))
