@@ -2,6 +2,7 @@ from backend.utils.errors import AppError
 import logging
 logger = logging.getLogger(__name__)
 from flask import Blueprint, jsonify, request
+from backend.limiter import limiter
 from backend.middleware.auth import require_auth
 from backend.utils.validate import validate
 from backend.schemas.agents import AgentRunRequest, ResetContextRequest, ContextHandoffRequest, ResearchRequest
@@ -433,6 +434,7 @@ def _add_context_to_payload(
 
 @agents_bp.route("/research", methods=["POST"])
 @require_auth
+@limiter.limit("10 per minute")
 @validate(ResearchRequest)
 def research(request_data: ResearchRequest):
     prompt = request_data.prompt

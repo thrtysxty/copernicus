@@ -4,6 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 import subprocess
 from flask import Blueprint, request, Response, stream_with_context, jsonify
+from backend.limiter import limiter
 from backend.providers.factory import get_provider
 from backend.utils.validate import validate
 from backend.schemas.llm import ChatRequest
@@ -11,6 +12,7 @@ from backend.schemas.llm import ChatRequest
 llm_bp = Blueprint('llm', __name__)
 
 @llm_bp.route('/chat', methods=['POST'])
+@limiter.limit("30 per minute")
 @validate(ChatRequest)
 def chat(request_data: ChatRequest):
     """

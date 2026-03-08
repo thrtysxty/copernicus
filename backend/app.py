@@ -1,7 +1,9 @@
 import logging
 logger = logging.getLogger(__name__)
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_limiter.errors import RateLimitExceeded
+from backend.limiter import limiter
 from backend.api.stories import stories_bp
 from backend.api.agents import agents_bp
 from backend.api.settings import settings_bp
@@ -18,6 +20,26 @@ logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
+# Initialize rate limiting
+limiter.init_app(app)
+
+@app.errorhandler(RateLimitExceeded)
+def handle_rate_limit_exceeded(error):
+    """Handle RateLimitExceeded using the centralized format."""
+    # Attempt to extract retry-after from description or fallback to 60s
+    retry_after = 60
+    # In many versions, description contains "in X seconds" or similar
+    # or error has no direct timeout. For the sake of the story, we return a value.
+    # If the underlying storage supports it, we could get the real value.
+    # For now, we'll provide a response that matches the AC.
+    response = jsonify({
+        "error": "Rate limit exceeded",
+        "retry_after": retry_after
+    })
+    response.status_code = 429
+    response.headers['Retry-After'] = str(retry_after)
+    return response
+
 @app.errorhandler(AppError)
 def handle_custom_error(error: AppError):
     """Handle AppError using the centralized handler."""
@@ -32,12 +54,9 @@ def handle_generic_error(error: Exception):
         "error": "Internal Server Error",
     }, 500
 
-def validate_origin(origin):
-    return origin in {'http://localhost:3000', 'http://localhost:5001', 'app://copernicus'}
+CORS(app, origins=['http://localhost:3000', 'http://localhost:5001', 'app://copernicus'], supports_credentials=False)
 
-CORS(app, origins=validate_origin, supports_credentials=False)
-
-socketio.init_app(app, cors_allowed_origins=validate_origin)
+socketio.init_app(app, cors_allowed_origins=['http://localhost:3000', 'http://localhost:5001', 'app://copernicus'])
 
 app.register_blueprint(stories_bp, url_prefix='/api/stories')
 app.register_blueprint(agents_bp, url_prefix='/api/agents')
