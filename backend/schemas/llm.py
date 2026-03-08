@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, field_validator
+import re
 from backend.utils.validate import validate_no_paths
 
 
@@ -10,13 +11,21 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[Message]
-    model: str = Field(..., pattern=r'^[a-zA-Z0-9._:-]{1,100}$')
+    model: str = Field(...)
     sessionId: Optional[str] = Field(default=None, pattern=r'^[a-zA-Z0-9._:-]{1,100}$')
     provider: Optional[str] = Field(default=None, pattern=r'^[a-zA-Z0-9._-]{1,50}$')
     systemPrompt: Optional[str] = None
     apiKey: Optional[str] = None
     baseUrl: Optional[str] = None
     tools: Optional[List[Dict[str, Any]]] = None
+
+    @field_validator('model')
+    @classmethod
+    def validate_model_name(cls, v: str) -> str:
+        pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9_.:\-/]{0,99})$'
+        if not re.match(pattern, v):
+            raise ValueError('Invalid model name format')
+        return v
 
     @field_validator('systemPrompt')
     @classmethod

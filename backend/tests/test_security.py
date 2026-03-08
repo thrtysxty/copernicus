@@ -2,13 +2,14 @@ import pytest
 import json
 import subprocess
 import os
-from backend.app import create_app
+import pydantic
+from backend.app import app, validate_origin
+from backend.schemas.agents import AgentRunRequest
 from backend.utils.errors import AppError
 
 
 @pytest.fixture
 def client():
-    app = create_app()
     app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
@@ -89,3 +90,20 @@ class TestResearchEndpointSecurity:
         assert payload["prompt"] not in cmd_args
         # Should contain --history
         assert "--history" in cmd_args
+
+
+class TestSecurityHardening:
+    """Tests for Story 264 security hardening."""
+
+    def test_cors_null_origin(self):
+        """Test that validate_origin rejects 'null' (case-insensitive)."""
+        assert validate_origin('null') is False
+        assert validate_origin('NULL') is False
+        assert validate_origin('Null') is False
+        assert validate_origin('') is False
+        assert validate_origin(None) is False
+
+    def test_invalid_model_name(self):
+        """Test that AgentRunRequest rejects model names with path traversal."""
+        with pytest.raises(pydantic.ValidationError):
+            AgentRunRequest(model='../../etc/passwd')

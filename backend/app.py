@@ -1,6 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter.errors import RateLimitExceeded
 from backend.limiter import limiter
@@ -20,8 +20,34 @@ logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
+# Allowed origins set
+ALLOWED_ORIGINS = {'http://localhost:3000', 'http://localhost:5001', 'app://copernicus'}
+
+def validate_origin(origin: str) -> bool:
+    """Validate if the given origin is allowed and not suspicious.
+    
+    Args:
+        origin: The origin string to validate.
+        
+    Returns:
+        bool: True if origin is allowed, False otherwise.
+    """
+    # Reject None, empty string, or 'null' (case-insensitive)
+    if origin is None or origin == '' or origin.lower() == 'null':
+        return False
+    
+    # Normalize for comparison (handle case, trailing slash, etc.)
+    return origin in ALLOWED_ORIGINS
+
 # Initialize rate limiting
 limiter.init_app(app)
+
+@app.before_request
+def check_origin():
+    """Validate Origin header if present for security."""
+    origin = request.headers.get('Origin')
+    if origin and not validate_origin(origin):
+        return jsonify({"error": "Origin not allowed"}), 403
 
 @app.errorhandler(RateLimitExceeded)
 def handle_rate_limit_exceeded(error):
@@ -54,9 +80,9 @@ def handle_generic_error(error: Exception):
         "error": "Internal Server Error",
     }, 500
 
-CORS(app, origins=['http://localhost:3000', 'http://localhost:5001', 'app://copernicus'], supports_credentials=False)
+CORS(app, origins=list(ALLOWED_ORIGINS), supports_credentials=False)
 
-socketio.init_app(app, cors_allowed_origins=['http://localhost:3000', 'http://localhost:5001', 'app://copernicus'])
+socketio.init_app(app, cors_allowed_origins=list(ALLOWED_ORIGINS))
 
 app.register_blueprint(stories_bp, url_prefix='/api/stories')
 app.register_blueprint(agents_bp, url_prefix='/api/agents')

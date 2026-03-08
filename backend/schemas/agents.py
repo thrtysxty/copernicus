@@ -17,7 +17,16 @@ class AgentRunRequest(BaseModel):
     prompt: str
     persona: str = Field(default='junior-dev', pattern=r'^[a-zA-Z0-9._-]{1,50}$')
     session_id: Optional[str] = Field(default=None)
-    model: str = Field(..., pattern=r'^[a-zA-Z0-9._:-]{1,100}$')
+    model: str = Field(...)
+
+    @field_validator('model')
+    @classmethod
+    def validate_model_name(cls, v: str) -> str:
+        import re
+        pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9_.:\-/]{0,99})$'
+        if not re.match(pattern, v):
+            raise ValueError('Invalid model name format')
+        return v
 
 
 class ResetContextRequest(BaseModel):
@@ -29,7 +38,16 @@ class ResearchRequest(BaseModel):
     persona: str = Field(default='scribe', pattern=r'^[a-zA-Z0-9._-]{1,50}$')
     role: Optional[Literal['researcher', 'coder', 'thinker', 'fast']] = Field(default=None)
     session_id: Optional[str] = Field(default=None)
-    model: str = Field(..., pattern=r'^[a-zA-Z0-9._:-]{1,100}$')
+    model: str = Field(...)
+
+    @field_validator('model')
+    @classmethod
+    def validate_model_name(cls, v: str) -> str:
+        import re
+        pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9_.:\-/]{0,99})$'
+        if not re.match(pattern, v):
+            raise ValueError('Invalid model name format')
+        return v
 
     @field_validator('prompt')
     @classmethod
