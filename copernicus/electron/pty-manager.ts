@@ -9,7 +9,7 @@ const getShell = () => {
   if (os.platform() === 'win32') return 'powershell.exe';
 
   // Preferred shells in order (must be absolute paths for reliable spawning in packaged apps)
-  const shells = ['/bin/zsh', '/bin/bash', '/usr/bin/zsh', '/usr/bin/bash'];
+  const shells = ['/bin/zsh', '/bin/bash', '/bin/sh'];
   for (const s of shells) {
     try {
       if (fs.existsSync(s)) return s;

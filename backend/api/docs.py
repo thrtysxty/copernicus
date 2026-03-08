@@ -4,6 +4,7 @@ import subprocess
 import json
 from datetime import datetime
 from flask import Blueprint, request, jsonify
+from backend.utils.path_guard import assert_safe_path
 
 docs_bp = Blueprint('docs', __name__)
 
@@ -89,6 +90,11 @@ def generate_docs():
         stories_dir = os.path.join(project_root, "docs/stories")
         # Try both active and completed directories
         filepath = os.path.join(stories_dir, f"{story_id}.md")
+        try:
+            assert_safe_path(filepath)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 403
+            
         if not os.path.exists(filepath):
             filepath = os.path.join(stories_dir, "completed", f"{story_id}.md")
             
@@ -101,6 +107,11 @@ def generate_docs():
         os.makedirs(reports_dir, exist_ok=True)
         
         report_path = os.path.join(reports_dir, f"story_{story_id}_implementation_report.md")
+        try:
+            assert_safe_path(report_path)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 403
+            
         with open(report_path, "w") as f:
             f.write(report_content)
             

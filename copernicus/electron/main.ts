@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, session, globalShortcut, dialog } from 'electron'
 import path from 'node:path'
-import { spawn, execFile, execSync, execFileSync } from 'node:child_process'
+import { spawn, execFile, execFileSync } from 'node:child_process'
+import { assertSafePath } from './utils/path-guard'
 import fs from 'node:fs'
 import os from 'node:os'
 import { createServer } from 'node:http'
@@ -442,7 +443,7 @@ function registerIpcHandlers() {
     results['node'] = true;
     await Promise.all(
       tools.filter(t => t !== 'node').map(tool => new Promise<void>(resolve => {
-        execFile(cmd, [tool], { env }, (error) => { results[tool] = !error; resolve(); });
+        execFile(cmd, [tool], { env, shell: false }, (error) => { results[tool] = !error; resolve(); });
       }))
     );
     return results;
@@ -498,6 +499,7 @@ function registerIpcHandlers() {
   }));
 
   ipcMain.handle('app:set-root-path', (_e, dirPath: string) => handleIpc(() => {
+    assertSafePath(dirPath);
     settingsStore.set('workspace', dirPath);
     fsManager.setRootPath(dirPath);
     storiesManager.setProjectRoot(dirPath);
@@ -508,7 +510,7 @@ function registerIpcHandlers() {
     // Auto-init git if not already a repo
     const gitDir = path.join(dirPath, '.git')
     if (!fs.existsSync(gitDir)) {
-      try { execSync('git init', { cwd: dirPath }) } catch { /* non-fatal */ }
+      try { execFileSync('git', ['init'], { cwd: dirPath, shell: false }) } catch { /* non-fatal */ }
     }
     // Notify renderer so workingDir stays in sync
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:workspace-changed', { path: dirPath }))
@@ -516,6 +518,7 @@ function registerIpcHandlers() {
   }));
 
   ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc(() => {
+    assertSafePath(dirPath);
     fs.mkdirSync(dirPath, { recursive: true })
   }));
 
@@ -603,7 +606,7 @@ function registerIpcHandlers() {
   // Git Handlers
   ipcMain.handle('git:branch', () => handleIpc(async () => {
     return new Promise((resolve) => {
-      execFile('git', ['rev-parse', '--abbrev-ref', 'HEAD'], (error: any, stdout: string) => {
+      execFile('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { shell: false }, (error: any, stdout: string) => {
         if (error) resolve('unknown');
         else resolve(stdout.trim());
       });
@@ -665,12 +668,12 @@ function registerIpcHandlers() {
 
   // CAPEX Analytics (Story 162)
   ipcMain.handle('devtime:run-tests', () => handleIpc(async () => {
-    const { execSync } = require('child_process')
     const start = Date.now()
-    const raw = execSync(
-      'npx vitest run --reporter=json',
-      { cwd: path.join(__dirname, '..'), encoding: 'utf-8', timeout: 120_000, stdio: ['pipe', 'pipe', 'pipe'] }
-    )
+    const raw = execFileSync(
+      'npx',
+      ['vitest', 'run', '--reporter=json'],
+      { cwd: path.join(__dirname, '..'), encoding: 'utf-8', timeout: 120_000, stdio: ['pipe', 'pipe', 'pipe'], shell: false }
+    ).toString()
     const result = JSON.parse(raw)
     const record = {
       total_tests: result.numTotalTests ?? 0,
@@ -687,11 +690,14 @@ function registerIpcHandlers() {
   ipcMain.handle('devtime:run-playwright', (_e, { file } = {}) => handleIpc(async () => {
     return new Promise((resolve, reject) => {
       const args = ['playwright', 'test', '--reporter=json']
-      if (file) args.push(file)
+      if (file) {
+        assertSafePath(file);
+        args.push(file);
+      }
       
       const child = spawn('npx', args, {
         cwd: fsManager.getRootPath(),
-        shell: true,
+        shell: false,
         env: { ...process.env, CI: 'true' }
       })
 
@@ -855,7 +861,7 @@ function registerIpcHandlers() {
   ipcMain.handle('makefile:run', (_event, target) => handleIpc(() => {
     const ALLOWED = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy'];
     if (!ALLOWED.includes(target)) return;
-    const child = spawn('make', [target], { cwd: fsManager.getRootPath() })
+    const child = spawn('make', [target], { cwd: fsManager.getRootPath(), shell: false })
     child.stdout.on('data', (data) => win?.webContents.send('terminal:data', data.toString()))
     child.stderr.on('data', (data) => win?.webContents.send('terminal:data', data.toString()))
     child.on('close', (code) => win?.webContents.send('terminal:data', `\n[Process exited with code ${code}]`))
@@ -869,7 +875,7 @@ function registerIpcHandlers() {
   // System Execution
   ipcMain.on('system:make', (_, target: string) => {
     const ALLOWED = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy'];
-    if (ALLOWED.includes(target)) spawn('make', [target], { cwd: fsManager.getRootPath() })
+    if (ALLOWED.includes(target)) spawn('make', [target], { cwd: fsManager.getRootPath(), shell: false })
   });
 
   // Terminal IPC
@@ -1008,16 +1014,15 @@ function registerIpcHandlers() {
   ipcMain.handle('git:init-workspace', (_e, opts: any) => handleIpc(async () => {
     const root = fsManager.getRootPath()
     if (!root) throw new Error('NO_ROOT')
-    const { execSync } = await import('child_process')
     if (!fs.existsSync(path.join(root, '.git'))) {
-      execSync('git init', { cwd: root })
+      execFileSync('git', ['init'], { cwd: root, shell: false })
     }
     if (opts.gitignoreTemplate && opts.gitignoreTemplate !== 'None') {
       const content = `# gitignore for ${opts.gitignoreTemplate}\nnode_modules/\ndist/\n.env\n`
       fs.writeFileSync(path.join(root, '.gitignore'), content)
     }
-    if (opts.authorName) execFileSync('git', ['config', 'user.name', opts.authorName], { cwd: root })
-    if (opts.authorEmail) execFileSync('git', ['config', 'user.email', opts.authorEmail], { cwd: root })
+    if (opts.authorName) execFileSync('git', ['config', 'user.name', opts.authorName], { cwd: root, shell: false })
+    if (opts.authorEmail) execFileSync('git', ['config', 'user.email', opts.authorEmail], { cwd: root, shell: false })
     return true
   }))
 
@@ -1053,7 +1058,7 @@ function registerIpcHandlers() {
       try {
         const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx']
         if (!ALLOWED_BINS.includes(bin)) throw new Error(`Disallowed binary: ${bin}`)
-        const v = execFileSync(bin, ['--version'], { timeout: 3000 }).toString().trim()
+        const v = execFileSync(bin, ['--version'], { timeout: 3000, shell: false }).toString().trim()
         return { found: true, version: v.split('\n')[0].trim() }
       } catch {
         return { found: false }
@@ -1154,7 +1159,7 @@ function registerIpcHandlers() {
   // Container Runtime Handlers
   ipcMain.handle('runtime:list-containers', () => handleIpc(async () => {
     return new Promise((resolve) => {
-      execFile('docker', ['ps', '-a', '--format', '{{json .}}'], (error: any, stdout: string) => {
+      execFile('docker', ['ps', '-a', '--format', '{{json .}}'], { shell: false }, (error: any, stdout: string) => {
         if (error) {
           log.error('Failed to list containers:', error);
           resolve([]);
@@ -1184,7 +1189,7 @@ function registerIpcHandlers() {
     }
 
     return new Promise((resolve, reject) => {
-      execFile('docker', [action, id], (error: any, _stdout: string, stderr: string) => {
+      execFile('docker', [action, id], { shell: false }, (error: any, _stdout: string, stderr: string) => {
         if (error) {
           log.error(`Failed to ${action} container ${id}:`, error, stderr);
           reject(new Error(stderr || error.message));
