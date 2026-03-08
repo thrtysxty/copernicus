@@ -73,9 +73,15 @@ You are the **orchestrator**. You do NOT write implementation code or analysis d
 
 ### Delegate ALL substantive work to a sub-agent:
 ```bash
+# Implementation (writes files):
 python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" --worktree <branch_name>
+
+# Research / planning (read-only — output goes to docs):
+python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" \
+  > "docs/planning/agentic platform/<descriptive_snake_case_name>.md"
 ```
-Omit `--worktree` only for read-only tasks (research, analysis, planning) that produce no file changes.
+Research and planning tasks MUST be saved to `docs/planning/agentic platform/` with a descriptive filename.
+Omit `--worktree` for any task that does not write source files.
 
 ### Role selection — match the model to the task:
 | Role | Best for |
