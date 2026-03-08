@@ -169,6 +169,7 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
           return (
             <div
               key={col.id}
+              data-testid={`column-${col.id}`}
               className={`h-full flex flex-col rounded border shadow-sm transition-all duration-300 relative group/column overflow-hidden shrink-0 
                 ${isSpotlit ? 'flex-1 min-w-[320px] border-copernicus-phosphor/20' : isCollapsed ? 'w-10 bg-black/40 border-white/5 cursor-pointer hover:bg-zinc-900' : 'w-56 border-white/5'} ${col.color}`}
               onDrop={e => !isCollapsed ? handleDrop(e, col.status) : undefined}
@@ -199,10 +200,24 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                           <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">New {creation.type}</span>
                           <button onClick={() => setShowCreateDropdown(!showCreateDropdown)} className="text-zinc-600 hover:text-white"><ChevronDown size={12} /></button>
                         </div>
-                        <input autoFocus className="w-full bg-black/40 border border-zinc-800 rounded p-1.5 text-[10px] focus:border-copernicus-phosphor outline-none" placeholder="Title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreate()} />
+                        <input 
+                          autoFocus 
+                          data-testid="new-story-title"
+                          className="w-full bg-black/40 border border-zinc-800 rounded p-1.5 text-[10px] focus:border-copernicus-phosphor outline-none" 
+                          placeholder="Title..." 
+                          value={newTitle} 
+                          onChange={e => setNewTitle(e.target.value)} 
+                          onKeyDown={e => e.key === 'Enter' && handleCreate()} 
+                        />
                         <div className="flex justify-between gap-2">
                           <button onClick={() => setCreation({ phase: 'idle' })} className="text-[8px] uppercase font-bold text-zinc-600 hover:text-zinc-400">Cancel</button>
-                          <button onClick={handleCreate} className="px-3 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor rounded text-[8px] font-bold uppercase">Create</button>
+                          <button 
+                            onClick={handleCreate} 
+                            data-testid="create-story-confirm"
+                            className="px-3 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor rounded text-[8px] font-bold uppercase"
+                          >
+                            Create
+                          </button>
                         </div>
                       </motion.div>
                     )}
@@ -212,6 +227,7 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                       <motion.div
                         key={story.id}
                         data-story-id={story.id}
+                        data-testid={`story-card-${story.id}`}
                         role="button"
                         tabIndex={activeStoryId === story.id || (idx === 0 && !colStories.some(s => s.id === activeStoryId)) ? 0 : -1}
                         aria-label={`${story.title} — ${story.status}`}
@@ -287,6 +303,7 @@ export function KanbanBoard({ onStartSession }: KanbanBoardProps) {
                     {col.id === 'ready-to-build' && (
                       <button
                         onClick={() => setCreation({ phase: 'form', type: 'Story' })}
+                        data-testid="add-story-button"
                         className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
                       >
                         <Plus size={10} />

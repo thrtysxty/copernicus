@@ -441,12 +441,16 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
         {/* Body content */}
         <div className="flex-1 overflow-y-auto p-6 bg-copernicus-bg/50">
           <div className="max-w-3xl mx-auto">
-            <h1 className="text-xl font-bold text-white mb-6 border-b border-copernicus-phosphor/20 pb-4">
+            <h1 
+              data-testid="story-detail-title"
+              className="text-xl font-bold text-white mb-6 border-b border-copernicus-phosphor/20 pb-4"
+            >
               {story.title}
             </h1>
             {isEditing ? (
               <textarea
                 ref={textareaRef}
+                data-testid="story-detail-content"
                 defaultValue={content}
                 className="w-full h-full min-h-[500px] bg-black/40 border border-zinc-800 rounded p-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 resize-none leading-relaxed shadow-inner"
                 spellCheck={false}

@@ -22,6 +22,10 @@ export default defineConfig({
       testMatch: '**/smoke.test.ts',
     },
     {
+      name: 'functional',
+      testMatch: ['**/workflow.test.ts', '**/onboarding.test.ts'],
+    },
+    {
       name: 'screenshots',
       testMatch: '**/screenshots.test.ts',
       // Screenshots tests are slow — longer per-test timeout.

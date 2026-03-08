@@ -27,6 +27,24 @@ def chat():
     if not model or not messages:
         return Response(json.dumps({'error': 'Missing required fields: model or messages'}), status=400, mimetype='application/json')
 
+    # Story 236: Mock LLM check for E2E testing
+    mock = request.args.get('mock') == 'true' or \
+           request.headers.get('COPERNICUS_MOCK_LLM') == '1' or \
+           os.environ.get('COPERNICUS_MOCK_LLM') == '1'
+
+    if mock:
+        def generate_mock():
+            mock_resp = {
+                "id": "mock-chat-completion",
+                "object": "chat.completion.chunk",
+                "created": 123456789,
+                "model": model,
+                "choices": [{"index": 0, "delta": {"content": "Mock Response: I am an AI assistant in the Copernicus IDE. How can I help you?"}, "finish_reason": None}]
+            }
+            yield f"data: {json.dumps(mock_resp)}\n\n"
+            yield f"data: {json.dumps({'choices': [{'index': 0, 'delta': {}, 'finish_reason': 'stop'}]})}\n\n"
+        return Response(stream_with_context(generate_mock()), mimetype='text/event-stream')
+
     def generate():
         try:
             provider = get_provider(provider_name)

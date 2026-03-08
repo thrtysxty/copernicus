@@ -14,6 +14,7 @@ interface NavItemProps {
   isActive?: boolean
   badge?: number
   highlightId?: string
+  testId?: string
 }
 
 export const ActivityBar: React.FC = () => {
@@ -25,7 +26,7 @@ export const ActivityBar: React.FC = () => {
   } = useLayoutStore()
 
   const NavItem: React.FC<NavItemProps> = ({
-    id, icon: Icon, label, onClick, shortcut, isActive, badge, highlightId,
+    id, icon: Icon, label, onClick, shortcut, isActive, badge, highlightId, testId,
   }) => {
     const active = isActive !== undefined ? isActive : (id ? activeView === id : false)
     const handleClick = onClick ?? (id ? () => setView(id) : undefined)
@@ -36,6 +37,7 @@ export const ActivityBar: React.FC = () => {
           onClick={handleClick}
           aria-label={label}
           aria-current={active ? 'page' : undefined}
+          data-testid={testId || (id ? `nav-${id}` : undefined)}
           className={[
             'w-12 h-12 flex items-center justify-center transition-all duration-200',
             'focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none relative',
@@ -70,12 +72,13 @@ export const ActivityBar: React.FC = () => {
 
       {/* Top Nav */}
       <div className="flex flex-col items-center w-full">
-        <NavItem id="planner" icon={FolderOpen} label="Planner" shortcut="⌘1" badge={inProgressCount} />
+        <NavItem id="planner" icon={FolderOpen} label="Planner" shortcut="⌘1" badge={inProgressCount} testId="nav-planner" />
         <NavItem
           id="editor"
           icon={Code}
           label="Editor"
           shortcut="⌘2"
+          testId="nav-editor"
           onClick={() => { setView('editor'); setCenterMode('code') }}
         />
         <NavItem
@@ -83,23 +86,25 @@ export const ActivityBar: React.FC = () => {
           icon={Palette}
           label="Designer"
           shortcut="⌘3"
+          testId="nav-designer"
           onClick={() => { setView('designer'); setCenterMode('canvas') }}
         />
-        <NavItem id="orchestrator" icon={Workflow} label="Orchestrator" shortcut="⌘4" />
-        <NavItem id="reporter" icon={BarChart2} label="Reporter" shortcut="⌘5" />
+        <NavItem id="orchestrator" icon={Workflow} label="Orchestrator" shortcut="⌘4" testId="nav-orchestrator" />
+        <NavItem id="reporter" icon={BarChart2} label="Reporter" shortcut="⌘5" testId="nav-reporter" />
       </div>
 
       <div className="flex-1" />
 
       {/* Bottom Tools */}
       <div className="flex flex-col items-center w-full pb-2">
-        <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘6" />
-        <NavItem id="memory" icon={Brain} label="Agent Memory" shortcut="⌘7" />
-        <NavItem id="github" icon={Github} label="GitHub" />
+        <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘6" testId="nav-telemetry" />
+        <NavItem id="memory" icon={Brain} label="Agent Memory" shortcut="⌘7" testId="nav-memory" />
+        <NavItem id="github" icon={Github} label="GitHub" testId="nav-github" />
         <NavItem
           icon={Settings}
           label="Settings"
           isActive={settingsOpen}
+          testId="nav-settings"
           onClick={() => setSettingsOpen(true)}
         />
       </div>

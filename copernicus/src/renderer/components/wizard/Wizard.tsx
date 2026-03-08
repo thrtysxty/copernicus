@@ -235,6 +235,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
+              data-testid={`wizard-step-${step}`}
               initial={{ opacity: 0, x: 15 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -15 }}
@@ -361,6 +362,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         />
                         <button 
                           onClick={handleSelectFolder} 
+                          data-testid="wizard-select-folder"
                           className="bg-copernicus-phosphor text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-copernicus-phosphor/20"
                         >
                           Select Store
@@ -503,12 +505,14 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           <button
             onClick={handleBack}
             disabled={step === 1}
+            data-testid="wizard-back-button"
             className={`flex items-center gap-3 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${step === 1 ? 'opacity-0 pointer-events-none' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
           >
             <ArrowLeft size={14} /> Back
           </button>
           <button
             onClick={handleNext}
+            data-testid="wizard-next-button"
             className="group flex items-center gap-4 bg-copernicus-phosphor text-black px-12 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-xl shadow-copernicus-phosphor/20"
           >
             {step === 3 ? 'Initialize Core' : 'Advance'} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

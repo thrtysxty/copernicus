@@ -1176,6 +1176,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                 value={input}
                 aria-label="Chat with Claude"
                 data-chat-input
+                data-testid="chat-input"
                 onChange={(e) => {
                   const newValue = e.target.value
                   setInput(newValue)
@@ -1240,7 +1241,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
                   <button onClick={handleFileAttach} aria-label="Attach File" className="hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none" title="Attach File"><Paperclip size={12} /></button>
                   <button onClick={() => triggerPicker('story')} aria-label="Attach Story" className="hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none" title="Attach Story"><FileText size={12} /></button>
                 </div>
-                <button onClick={handleSendMessage} aria-label="Send message" disabled={isStreaming} className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"><Send size={14} /></button>
+                <button 
+                  onClick={handleSendMessage} 
+                  aria-label="Send message" 
+                  data-testid="chat-send-button"
+                  disabled={isStreaming} 
+                  className="p-1 hover:text-copernicus-phosphor text-zinc-600 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
+                >
+                  <Send size={14} />
+                </button>
               </div>
             </div>
           </div>

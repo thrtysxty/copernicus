@@ -263,7 +263,10 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   }, [filePath, monacoInstance, invoke]);
 
   return (
-    <div className="h-full w-full bg-copernicus-bg relative group/editor">
+    <div 
+      data-testid="monaco-container"
+      className="h-full w-full bg-copernicus-bg relative group/editor"
+    >
         <Editor
         height="100%"
         path={filePath ?? undefined}
