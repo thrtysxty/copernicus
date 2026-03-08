@@ -16,7 +16,7 @@ export function register(win: BrowserWindow, deps: any) {
     if (win && isSafe) ptyManager.create(id, cols, rows, resolvedCwd, win);
   });
 
-  ipcMain.handle('terminal:resize', (_e, { id, cols, rows }) => handleIpc(() => ptyManager.resize(id, cols, rows)));
+  ipcMain.handle('terminal:resize', (_e, { id, cols, rows }) => handleIpc('terminal:resize', [{ id, cols, rows }], () => ptyManager.resize(id, cols, rows)));
 
   ipcMain.on('terminal-write', (_event, payload: any) => {
     if (payload?.id && payload?.data) ptyManager.write(payload.id, payload.data);
@@ -24,7 +24,7 @@ export function register(win: BrowserWindow, deps: any) {
 
   ipcMain.on('terminal-kill', (_event, { id }) => ptyManager.kill(id));
 
-  ipcMain.handle('terminal:stop-agent', (_event, { id }) => handleIpc(() => ptyManager.kill(id)));
+  ipcMain.handle('terminal:stop-agent', (_event, { id }) => handleIpc('terminal:stop-agent', [{ id }], () => ptyManager.kill(id)));
 
   ipcMain.on('terminal:spawn-agent', (_event, { agentId }: any) => {
     if (!/^[a-z0-9_-]+$/.test(agentId)) return;
@@ -38,7 +38,7 @@ export function register(win: BrowserWindow, deps: any) {
   });
 
   // ── Browser Handlers (Story 155) ──────────────────────────────────────────
-  ipcMain.handle('browser:launch', (_event, opts?: { headless?: boolean; executablePath?: string }) => handleIpc(async () => {
+  ipcMain.handle('browser:launch', (_event, opts?: { headless?: boolean; executablePath?: string }) => handleIpc('browser:launch', [opts], async () => {
     const { chromium } = await getPlaywright()
     if (browserSession.browser) await browserSession.browser.close()
     browserSession.browser = await chromium.launch({
@@ -50,13 +50,13 @@ export function register(win: BrowserWindow, deps: any) {
     return true
   }))
 
-  ipcMain.handle('browser:navigate', (_event, url: string) => handleIpc(async () => {
+  ipcMain.handle('browser:navigate', (_event, url: string) => handleIpc('browser:navigate', [url], async () => {
     if (!browserSession.page) throw new Error('NO_BROWSER')
     await browserSession.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 })
     return browserSession.page.url()
   }))
 
-  ipcMain.handle('browser:screenshot', (_event, opts?: { selector?: string }) => handleIpc(async () => {
+  ipcMain.handle('browser:screenshot', (_event, opts?: { selector?: string }) => handleIpc('browser:screenshot', [opts], async () => {
     if (!browserSession.page) throw new Error('NO_BROWSER')
     let buffer: Buffer
     if (opts?.selector) {
@@ -73,25 +73,25 @@ export function register(win: BrowserWindow, deps: any) {
     return dataUrl
   }))
 
-  ipcMain.handle('browser:click', (_event, selector: string) => handleIpc(async () => {
+  ipcMain.handle('browser:click', (_event, selector: string) => handleIpc('browser:click', [selector], async () => {
     if (!browserSession.page) throw new Error('NO_BROWSER')
     await browserSession.page.click(selector, { timeout: 5000 })
     return true
   }))
 
-  ipcMain.handle('browser:fill', (_event, { selector, value }: { selector: string; value: string }) => handleIpc(async () => {
+  ipcMain.handle('browser:fill', (_event, { selector, value }: { selector: string; value: string }) => handleIpc('browser:fill', [{ selector, value }], async () => {
     if (!browserSession.page) throw new Error('NO_BROWSER')
     await browserSession.page.fill(selector, value)
     return true
   }))
 
-  ipcMain.handle('browser:evaluate', (_event, script: string) => handleIpc(async () => {
+  ipcMain.handle('browser:evaluate', (_event, script: string) => handleIpc('browser:evaluate', [script], async () => {
     if (!browserSession.page) throw new Error('NO_BROWSER')
     const result = await browserSession.page.evaluate(script)
     return JSON.stringify(result)
   }))
 
-  ipcMain.handle('browser:close', () => handleIpc(async () => {
+  ipcMain.handle('browser:close', () => handleIpc('browser:close', [], async () => {
     if (browserSession.browser) {
       await browserSession.browser.close()
       browserSession.browser = null
@@ -101,7 +101,7 @@ export function register(win: BrowserWindow, deps: any) {
   }))
 
   // Container Runtime Handlers
-  ipcMain.handle('runtime:list-containers', () => handleIpc(async () => {
+  ipcMain.handle('runtime:list-containers', () => handleIpc('runtime:list-containers', [], async () => {
     return new Promise((resolve) => {
       execFile('docker', ['ps', '-a', '--format', '{{json .}}'], { shell: false }, (error: any, stdout: string) => {
         if (error) {
@@ -122,7 +122,7 @@ export function register(win: BrowserWindow, deps: any) {
     });
   }));
 
-  ipcMain.handle('runtime:manage-container', (_event, { id, action }: { id: string, action: 'start' | 'stop' | 'logs' }) => handleIpc(async () => {
+  ipcMain.handle('runtime:manage-container', (_event, { id, action }: { id: string, action: 'start' | 'stop' | 'logs' }) => handleIpc('runtime:manage-container', [{ id, action }], async () => {
     if (action === 'logs') {
       const termId = `logs-${id}-${Date.now()}`;
       if (win) {
@@ -147,8 +147,7 @@ export function register(win: BrowserWindow, deps: any) {
   // ── Gemini PTY Agent (Story 195) ──────────────────────────────────────────
   const geminiAgents = new Map<string, GeminiAgent>()
 
-  ipcMain.handle('gemini:spawn', (_e, opts: { cwd: string }) =>
-    handleIpc(async () => {
+  ipcMain.handle('gemini:spawn', (_e, opts: { cwd: string }) => handleIpc('gemini:spawn', [opts], async () => {
       const agent = new GeminiAgent({
         cwd: opts.cwd || fsManager.getRootPath(),
         onOutput: (chunk) => {
@@ -162,8 +161,7 @@ export function register(win: BrowserWindow, deps: any) {
     })
   )
 
-  ipcMain.handle('gemini:send-prompt', (_e, { sessionId, text }: { sessionId: string; text: string }) =>
-    handleIpc(async () => {
+  ipcMain.handle('gemini:send-prompt', (_e, { sessionId, text }: { sessionId: string; text: string }) => handleIpc('gemini:send-prompt', [{ sessionId, text }], async () => {
       const agent = geminiAgents.get(sessionId)
       if (!agent) throw new Error(`No Gemini session: ${sessionId}`)
       const response = await agent.sendPrompt(text)
@@ -171,8 +169,7 @@ export function register(win: BrowserWindow, deps: any) {
     })
   )
 
-  ipcMain.handle('gemini:close', (_e, sessionId: string) =>
-    handleIpc(() => {
+  ipcMain.handle('gemini:close', (_e, sessionId: string) => handleIpc('gemini:close', [sessionId], () => {
       geminiAgents.get(sessionId)?.close()
       geminiAgents.delete(sessionId)
       return null

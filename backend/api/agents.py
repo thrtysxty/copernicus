@@ -1,3 +1,6 @@
+from backend.utils.errors import AppError
+import logging
+logger = logging.getLogger(__name__)
 from flask import Blueprint, jsonify, request
 from backend.middleware.auth import require_auth
 from backend.utils.validate import validate
@@ -235,7 +238,7 @@ def get_context_status():
     model_name = request.args.get("model", None)
 
     if not session_id:
-        return jsonify({"ok": False, "error": "session_id required"}), 400
+        raise AppError("session_id required", status=400)
 
     # Ensure session exists (if not, return empty status)
     context_manager.ensure_session(session_id, model_name)
@@ -252,11 +255,11 @@ def pin_context_item():
     item_id = data.get("item_id")
 
     if not session_id or not item_id:
-        return jsonify({"ok": False, "error": "session_id and item_id required"}), 400
+        raise AppError("session_id and item_id required", status=400)
 
     success = context_manager.pin_item(session_id, item_id)
     if not success:
-        return jsonify({"ok": False, "error": "Item or session not found"}), 404
+        raise AppError("Item or session not found", status=404)
 
     return jsonify({"ok": True, "data": {"pinned": True}}), 200
 
@@ -273,7 +276,7 @@ def get_context_relevance():
     task_query = data.get("task_query", "")
 
     if not session_id:
-        return jsonify({"ok": False, "error": "session_id required"}), 400
+        raise AppError("session_id required", status=400)
 
     context_manager.ensure_session(session_id)
 
@@ -416,9 +419,9 @@ def research(request_data: AgentRunRequest):
             }
         }), 200
     except subprocess.TimeoutExpired:
-        return jsonify({"ok": False, "error": "Research timed out after 120s"}), 504
+        raise AppError("Research timed out after 120s", status=504)
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        raise AppError(str(e))
     finally:
         # Cleanup temp file
         try:
@@ -489,4 +492,4 @@ def context_handoff(request_data: ContextHandoffRequest):
             return jsonify({"ok": True, "data": {"context": None}, "message": "No handoff context found"}), 200
 
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        raise AppError(str(e))

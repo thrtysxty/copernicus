@@ -30,41 +30,41 @@ export function register(win: BrowserWindow, deps: any) {
     isFirstRun
   } = deps
 
-  ipcMain.handle('settings:save', (_event, patch: unknown) => handleIpc(async () => {
+  ipcMain.handle('settings:save', (_event, patch: unknown) => handleIpc('settings:save', [patch], async () => {
     if (typeof patch === 'object' && patch !== null) settingsStore.setAll(patch as Record<string, any>)
     return true
   }))
 
-  ipcMain.handle('settings:load', () => handleIpc(() => settingsStore.getAll()))
+  ipcMain.handle('settings:load', () => handleIpc('settings:load', [], () => settingsStore.getAll()))
 
-  ipcMain.handle('app:open-log', () => handleIpc(() => {
+  ipcMain.handle('app:open-log', () => handleIpc('app:open-log', [], () => {
     const logFilePath = path.join(LOG_DIR, 'copernicus.log')
     return shell.openPath(logFilePath)
   }))
 
-  ipcMain.handle('app:open-external', (_event, url: string) => handleIpc(() => shell.openExternal(url)))
+  ipcMain.handle('app:open-external', (_event, url: string) => handleIpc('app:open-external', [url], () => shell.openExternal(url)))
 
-  ipcMain.handle('restart-app', () => handleIpc(() => { app.relaunch(); app.exit(0); }));
+  ipcMain.handle('restart-app', () => handleIpc('restart-app', [], () => { app.relaunch(); app.exit(0); }));
 
   // Devtime Handlers
-  ipcMain.handle('devtime:start', (_event, data) => handleIpc(() => {
+  ipcMain.handle('devtime:start', (_event, data) => handleIpc('devtime:start', [data], () => {
     if (data.repo_path) {
       storiesManager.setProjectRoot(data.repo_path)
     }
     return devtimeManager.startSession(data)
   }));
-  ipcMain.handle('devtime:status', () => handleIpc(() => ({
+  ipcMain.handle('devtime:status', () => handleIpc('devtime:status', [], () => ({
     session: devtimeManager.getActiveSession(),
     total: devtimeManager.getTotalMonthValue(),
     isRepoTargeted: storiesManager.isRepoTargeted()
   })));
-  ipcMain.handle('devtime:close', (_event, data) => handleIpc(() => devtimeManager.closeSession(data)));
-  ipcMain.handle('devtime:defaults', () => handleIpc(() => devtimeManager.getDefaults()));
-  ipcMain.handle('devtime:report', () => handleIpc(() => devtimeManager.getReport()));
-  ipcMain.handle('devtime:list-stories', (_event, repoPath: string) => handleIpc(() => devtimeManager.listStories(repoPath)));
+  ipcMain.handle('devtime:close', (_event, data) => handleIpc('devtime:close', [data], () => devtimeManager.closeSession(data)));
+  ipcMain.handle('devtime:defaults', () => handleIpc('devtime:defaults', [], () => devtimeManager.getDefaults()));
+  ipcMain.handle('devtime:report', () => handleIpc('devtime:report', [], () => devtimeManager.getReport()));
+  ipcMain.handle('devtime:list-stories', (_event, repoPath: string) => handleIpc('devtime:list-stories', [repoPath], () => devtimeManager.listStories(repoPath)));
 
   // CAPEX Analytics (Story 162)
-  ipcMain.handle('devtime:run-tests', () => handleIpc(async () => {
+  ipcMain.handle('devtime:run-tests', () => handleIpc('devtime:run-tests', [], async () => {
     const start = Date.now()
     const raw = execFileSync(
       'npx',
@@ -84,7 +84,7 @@ export function register(win: BrowserWindow, deps: any) {
     return record
   }))
 
-  ipcMain.handle('devtime:run-playwright', (_e, { file } = {}) => handleIpc(async () => {
+  ipcMain.handle('devtime:run-playwright', (_e, { file } = {}) => handleIpc('devtime:run-playwright', [{ file }], async () => {
     return new Promise((resolve, reject) => {
       const args = ['playwright', 'test', '--reporter=json']
       if (file) {
@@ -138,10 +138,9 @@ export function register(win: BrowserWindow, deps: any) {
     })
   }))
 
-  ipcMain.handle('devtime:test-history', (_e, limit: number = 20) =>
-    handleIpc(() => stateLedger.getTestRunHistory(limit)))
+  ipcMain.handle('devtime:test-history', (_e, limit: number = 20) => handleIpc('devtime:test-history', [limit], () => stateLedger.getTestRunHistory(limit)))
 
-  ipcMain.handle('ledger:daily-costs', (_e, days: number = 30) => handleIpc(() =>
+  ipcMain.handle('ledger:daily-costs', (_e, days: number = 30) => handleIpc('ledger:daily-costs', [days], () =>
     stateLedger.db.prepare(`
       SELECT date(created_at) as day,
              SUM(cost_usd) as total_cost,
@@ -152,7 +151,7 @@ export function register(win: BrowserWindow, deps: any) {
     `).all(days)
   ))
 
-  ipcMain.handle('ledger:cost-by-model', () => handleIpc(() =>
+  ipcMain.handle('ledger:cost-by-model', () => handleIpc('ledger:cost-by-model', [], () =>
     stateLedger.db.prepare(`
       SELECT model_id, provider,
              SUM(cost_usd) as total_cost,
@@ -163,7 +162,7 @@ export function register(win: BrowserWindow, deps: any) {
     `).all()
   ))
 
-  ipcMain.handle('ledger:cost-by-story', () => handleIpc(() =>
+  ipcMain.handle('ledger:cost-by-story', () => handleIpc('ledger:cost-by-story', [], () =>
     stateLedger.db.prepare(`
       SELECT panel_id as story_id,
              SUM(cost_usd) as total_cost,
@@ -175,7 +174,7 @@ export function register(win: BrowserWindow, deps: any) {
     `).all()
   ))
 
-  ipcMain.handle('devtime:weekly-velocity', (_e, weeks: number = 8) => handleIpc(() =>
+  ipcMain.handle('devtime:weekly-velocity', (_e, weeks: number = 8) => handleIpc('devtime:weekly-velocity', [weeks], () =>
     stateLedger.db.prepare(`
       SELECT strftime('%Y-W%W', start_time) as week,
              SUM(duration_hours) as hours,
@@ -187,49 +186,46 @@ export function register(win: BrowserWindow, deps: any) {
   ))
 
   // Model Call Ledger — AC-3 (Story 178)
-  ipcMain.handle('ledger:session-stats', (_e, session_id: string) =>
-    handleIpc(() => stateLedger.getSessionStats(session_id))
+  ipcMain.handle('ledger:session-stats', (_e, session_id: string) => handleIpc('ledger:session-stats', [session_id], () => stateLedger.getSessionStats(session_id))
   )
-  ipcMain.handle('ledger:recent-calls', (_e, limit = 100, panel_id?: string) =>
-    handleIpc(() => stateLedger.getRecentCalls(limit, panel_id))
+  ipcMain.handle('ledger:recent-calls', (_e, limit = 100, panel_id?: string) => handleIpc('ledger:recent-calls', [limit, panel_id], () => stateLedger.getRecentCalls(limit, panel_id))
   )
-  ipcMain.handle('ledger:all-time-cost', () =>
-    handleIpc(() => stateLedger.getAllTimeCost())
+  ipcMain.handle('ledger:all-time-cost', () => handleIpc('ledger:all-time-cost', [], () => stateLedger.getAllTimeCost())
   )
 
   // Splash ready — renderer signals splash/wizard complete
-  ipcMain.handle('splash-ready', (_e) => handleIpc(() => ({ ready: true })))
+  ipcMain.handle('splash-ready', (_e) => handleIpc('splash-ready', [], () => ({ ready: true })))
 
   // Database IPC
-  ipcMain.handle('db:log-intent', (_, content, status, agentId) => handleIpc(() => stateLedger.logIntent(content, status, agentId)));
-  ipcMain.handle('db:get-intents', (_, limit) => handleIpc(() => stateLedger.getRecentIntents(limit)));
-  ipcMain.handle('db:log-event', (_, type, content, metadata, agentId) => handleIpc(() => stateLedger.logEvent(type, content, metadata, agentId)));
-  ipcMain.handle('db:get-events', (_, limit) => handleIpc(() => stateLedger.getRecentEvents(limit)));
-  ipcMain.handle('db:add-memory', (_, payload) => handleIpc(() => {
+  ipcMain.handle('db:log-intent', (_, content, status, agentId) => handleIpc('db:log-intent', [content, status, agentId], () => stateLedger.logIntent(content, status, agentId)));
+  ipcMain.handle('db:get-intents', (_, limit) => handleIpc('db:get-intents', [limit], () => stateLedger.getRecentIntents(limit)));
+  ipcMain.handle('db:log-event', (_, type, content, metadata, agentId) => handleIpc('db:log-event', [type, content, metadata, agentId], () => stateLedger.logEvent(type, content, metadata, agentId)));
+  ipcMain.handle('db:get-events', (_, limit) => handleIpc('db:get-events', [limit], () => stateLedger.getRecentEvents(limit)));
+  ipcMain.handle('db:add-memory', (_, payload) => handleIpc('db:add-memory', [payload], () => {
     if (typeof payload === 'string') {
       stateLedger.addProjectMemory({ content: payload, source: 'manual' });
     } else {
       stateLedger.addProjectMemory(payload);
     }
   }));
-  ipcMain.handle('db:search-memory', (_, limit) => handleIpc(() => stateLedger.searchProjectMemory(limit)));
-  ipcMain.handle('db:vacuum', () => handleIpc(() => {
+  ipcMain.handle('db:search-memory', (_, limit) => handleIpc('db:search-memory', [limit], () => stateLedger.searchProjectMemory(limit)));
+  ipcMain.handle('db:vacuum', () => handleIpc('db:vacuum', [], () => {
     stateLedger.vacuum();
     return true;
   }));
 
   // Context Snapshots & Project Memory (Stories 157 & 158)
-  ipcMain.handle('snapshot:save', (_e, payload) => handleIpc(() => {
+  ipcMain.handle('snapshot:save', (_e, payload) => handleIpc('snapshot:save', [payload], () => {
     stateLedger.saveSnapshot(payload);
   }));
-  ipcMain.handle('snapshot:restore', (_e, panelId: string) => handleIpc(() =>
+  ipcMain.handle('snapshot:restore', (_e, panelId: string) => handleIpc('snapshot:restore', [panelId], () =>
     stateLedger.getLatestSnapshot(panelId)
   ));
 
-  ipcMain.handle('app:quit', () => handleIpc(() => { app.quit(); }));
+  ipcMain.handle('app:quit', () => handleIpc('app:quit', [], () => { app.quit(); }));
 
   // Command Center (Story 184)
-  ipcMain.handle('command:request-telemetry', () => handleIpc(() => {
+  ipcMain.handle('command:request-telemetry', () => handleIpc('command:request-telemetry', [], () => {
     const swarms = (workflowEngine as any).getActiveSessions?.() ?? []
     const tasks = (workflowEngine as any).getRunningGraphs?.() ?? []
     win?.webContents.send('command:telemetry-update', { agentSwarms: swarms, activeTasks: tasks, mcpUsage: [] })
@@ -237,24 +233,24 @@ export function register(win: BrowserWindow, deps: any) {
   }))
 
   // MCP Handlers (Story 190)
-  ipcMain.handle('mcp:list-servers', () => handleIpc(() => {
+  ipcMain.handle('mcp:list-servers', () => handleIpc('mcp:list-servers', [], () => {
     const settings = settingsStore.getAll()
     return (settings.mcp as any)?.servers || []
   }))
 
-  ipcMain.handle('mcp:save-servers', (_e, servers: any[]) => handleIpc(() => {
+  ipcMain.handle('mcp:save-servers', (_e, servers: any[]) => handleIpc('mcp:save-servers', [servers], () => {
     settingsStore.setAll({ mcp: { servers } })
     return true
   }))
 
-  ipcMain.handle('mcp:get-status', (_e) => handleIpc(() => {
+  ipcMain.handle('mcp:get-status', (_e) => handleIpc('mcp:get-status', [], () => {
     // Return amber status for all configured servers until MCP runtime is wired
     const settings = settingsStore.getAll()
     const servers: Array<{ name: string }> = settings?.mcp?.servers ?? []
     return servers.map(s => ({ name: s.name, status: 'disconnected' }))
   }))
 
-  ipcMain.handle('mcp:test-server', (_e, server: any) => handleIpc(async () => {
+  ipcMain.handle('mcp:test-server', (_e, server: any) => handleIpc('mcp:test-server', [server], async () => {
     if (server.transport === 'sse') {
       const res = await fetch(server.url, { method: 'HEAD', signal: AbortSignal.timeout(3000) })
       return res.ok
@@ -263,7 +259,7 @@ export function register(win: BrowserWindow, deps: any) {
   }))
 
   // Environment Handlers
-  ipcMain.handle('env:scan', () => handleIpc(async () => {
+  ipcMain.handle('env:scan', () => handleIpc('env:scan', [], async () => {
     const check = async (bin: string): Promise<{ found: boolean; version?: string }> => {
       try {
         const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx']
@@ -296,7 +292,7 @@ export function register(win: BrowserWindow, deps: any) {
     return { toolchain, ideDeps }
   }))
 
-  ipcMain.handle('env:install', (_e, opts: { id: string; label: string; command: string; cwd?: string }) => handleIpc(async () => {
+  ipcMain.handle('env:install', (_e, opts: { id: string; label: string; command: string; cwd?: string }) => handleIpc('env:install', [opts], async () => {
     if (!/^[a-zA-Z0-9 _./-]+$/.test(opts.command)) {
       throw new Error('INVALID_COMMAND')
     }
@@ -309,7 +305,7 @@ export function register(win: BrowserWindow, deps: any) {
     return termId
   }))
 
-  ipcMain.handle('env:get-versions', () => handleIpc(() => ({
+  ipcMain.handle('env:get-versions', () => handleIpc('env:get-versions', [], () => ({
     node: process.versions.node,
     electron: process.versions.electron ?? '',
     appVersion: app.getVersion(),
@@ -317,7 +313,7 @@ export function register(win: BrowserWindow, deps: any) {
   })))
 
   // ── Jules Handlers (Story 161) ──────────────────────────────────────────
-  ipcMain.handle('jules:dispatch-session', (_e, storyId: string) => handleIpc(async () => {
+  ipcMain.handle('jules:dispatch-session', (_e, storyId: string) => handleIpc('jules:dispatch-session', [storyId], async () => {
     const story = stateLedger.getStoryById(storyId)
     if (!story) throw new Error('STORY_NOT_FOUND')
 
@@ -339,13 +335,13 @@ export function register(win: BrowserWindow, deps: any) {
     return result
   }))
 
-  ipcMain.handle('jules:list-sessions', (_e, status?: string) => handleIpc(() =>
+  ipcMain.handle('jules:list-sessions', (_e, status?: string) => handleIpc('jules:list-sessions', [status], () =>
     stateLedger.listJulesSessions(status)))
 
-  ipcMain.handle('jules:story-sessions', (_e, storyId: string) => handleIpc(() =>
+  ipcMain.handle('jules:story-sessions', (_e, storyId: string) => handleIpc('jules:story-sessions', [storyId], () =>
     stateLedger.getJulesSessionsByStory(storyId)))
 
-  ipcMain.handle('jules:retry-session', (_e, storyId: string) => handleIpc(async () => {
+  ipcMain.handle('jules:retry-session', (_e, storyId: string) => handleIpc('jules:retry-session', [storyId], async () => {
     const story = stateLedger.getStoryById(storyId)
     if (!story) throw new Error('STORY_NOT_FOUND')
     const apiKey = authManager.getApiKey('jules')
@@ -356,7 +352,7 @@ export function register(win: BrowserWindow, deps: any) {
     return result
   }))
 
-  ipcMain.handle('touchbar:rebuild', (_e, config: any) => handleIpc(() => {
+  ipcMain.handle('touchbar:rebuild', (_e, config: any) => handleIpc('touchbar:rebuild', [config], () => {
     if (process.platform !== 'darwin' || !win) return
     deps.touchBarCleanup?.remove()
     deps.touchBarCleanup = createTouchBar(win, config)
@@ -364,7 +360,7 @@ export function register(win: BrowserWindow, deps: any) {
   }))
 
   // Git Handlers
-  ipcMain.handle('git:branch', () => handleIpc(async () => {
+  ipcMain.handle('git:branch', () => handleIpc('git:branch', [], async () => {
     return new Promise((resolve) => {
       execFile('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { shell: false }, (error: any, stdout: string) => {
         if (error) resolve('unknown');
@@ -373,7 +369,7 @@ export function register(win: BrowserWindow, deps: any) {
     });
   }));
 
-  ipcMain.handle('git:init-workspace', (_e, opts: any) => handleIpc(async () => {
+  ipcMain.handle('git:init-workspace', (_e, opts: any) => handleIpc('git:init-workspace', [opts], async () => {
     const root = fsManager.getRootPath()
     if (!root) throw new Error('NO_ROOT')
     if (!fs.existsSync(path.join(root, '.git'))) {
@@ -388,7 +384,7 @@ export function register(win: BrowserWindow, deps: any) {
     return true
   }))
 
-  ipcMain.handle('app:set-root-path', (_e, dirPath: string) => handleIpc(() => {
+  ipcMain.handle('app:set-root-path', (_e, dirPath: string) => handleIpc('app:set-root-path', [dirPath], () => {
     assertSafePath(dirPath);
     settingsStore.set('workspace', dirPath);
     fsManager.setRootPath(dirPath);
@@ -407,12 +403,12 @@ export function register(win: BrowserWindow, deps: any) {
     return true;
   }));
 
-  ipcMain.handle('app:get-root-path', () => handleIpc(() => {
+  ipcMain.handle('app:get-root-path', () => handleIpc('app:get-root-path', [], () => {
     if (isFirstRun) return null;
     return settingsStore.get('workspace', null) || fsManager.getRootPath();
   }))
 
-  ipcMain.handle('app:get-user-guide', () => handleIpc(() => {
+  ipcMain.handle('app:get-user-guide', () => handleIpc('app:get-user-guide', [], () => {
     const guidePath = path.join(app.getAppPath(), 'docs/help/USER_GUIDE.md')
     try {
       const content = fs.readFileSync(guidePath, 'utf-8')
@@ -427,7 +423,7 @@ export function register(win: BrowserWindow, deps: any) {
     }
   }))
 
-  ipcMain.handle('check-cli-tools', () => handleIpc(async () => {
+  ipcMain.handle('check-cli-tools', () => handleIpc('check-cli-tools', [], async () => {
     const tools = ['claude', 'gemini', 'git', 'node'];
     const results: Record<string, boolean> = {};
     const cmd = process.platform === 'win32' ? 'where' : 'which';
@@ -445,7 +441,7 @@ export function register(win: BrowserWindow, deps: any) {
     return results;
   }));
 
-  ipcMain.handle('save-preferences', (_event, preferences: any) => handleIpc(async () => {
+  ipcMain.handle('save-preferences', (_event, preferences: any) => handleIpc('save-preferences', [preferences], async () => {
     const { keys, workspace, ...settings } = preferences;
     if (keys) {
         if (keys.anthropic && keys.anthropic !== 'saved' && keys.anthropic !== 'oauth') await authManager.storeApiKey('anthropic', keys.anthropic, undefined, 'apikey');

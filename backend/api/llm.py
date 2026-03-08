@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+logger = logging.getLogger(__name__)
 import subprocess
 from flask import Blueprint, request, Response, stream_with_context, jsonify
 from backend.providers.factory import get_provider
@@ -8,7 +9,6 @@ from backend.utils.validate import validate
 from backend.schemas.llm import ChatRequest
 
 llm_bp = Blueprint('llm', __name__)
-logger = logging.getLogger(__name__)
 
 @llm_bp.route('/chat', methods=['POST'])
 @validate(ChatRequest)

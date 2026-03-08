@@ -3,6 +3,7 @@ import * as path from 'path';
 import crypto from 'crypto';
 import { createWriteStream } from 'fs';
 import { StateLedger } from '../db/state-ledger';
+import log from 'electron-log'
 
 // Constants
 const SHADOW_SUFFIX = '.shadow';
@@ -94,7 +95,7 @@ export class AdvisoryLock {
     if (this.fd) {
       await this.fd.close();
       this.fd = undefined;
-      await fs.unlink(this.lockPath).catch(() => {});
+      await fs.unlink(this.lockPath).catch(err => log.error(err));
     }
   }
 
@@ -189,7 +190,7 @@ export class Transaction {
       if (rec.operation === 'write' && rec.dataPath) {
         await fs.copyFile(rec.dataPath, rec.filePath);
         if (rec.prevStat) {
-          await fs.utimes(rec.filePath, rec.prevStat.atime! / 1000, rec.prevStat.mtime! / 1000).catch(() => {});
+          await fs.utimes(rec.filePath, rec.prevStat.atime! / 1000, rec.prevStat.mtime! / 1000).catch(err => log.error(err));
         }
       }
     }
@@ -216,7 +217,7 @@ export class Transaction {
     if (this.walStream) {
       await new Promise<void>(resolve => this.walStream.end(resolve));
     }
-    await fs.rm(this.shadowDir, { recursive: true, force: true }).catch(() => {});
+    await fs.rm(this.shadowDir, { recursive: true, force: true }).catch(err => log.error(err));
   }
 
   public async readWAL(): Promise<WALRecord[]> {

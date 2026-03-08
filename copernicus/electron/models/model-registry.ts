@@ -1,3 +1,4 @@
+import log from 'electron-log'
 export interface ModelConfig {
   id: string; // e.g. 'gpt-4', 'claude-3-opus'
   name: string;
@@ -13,7 +14,7 @@ export class ModelRegistry {
 
   constructor() {
     // Start async fetch from registry, while keeping defaults as synchronous fallback
-    this.fetchRegistry().catch(() => {});
+    this.fetchRegistry().catch(err => log.error(err));
 
     // Register default models with pricing (USD per 1k tokens)
     this.registerModel({ id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'openai', contextWindow: 16385, costPer1kIn: 0.0005, costPer1kOut: 0.0015 });

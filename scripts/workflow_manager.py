@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import logging
+logger = logging.getLogger(__name__)
 """
 Workflow Manager - Deterministic File System Backlog
 
@@ -84,7 +86,7 @@ def push_task(story_id, target_queue):
     """
     target_dir = os.path.join(QUEUES_DIR, target_queue)
     if not os.path.exists(target_dir):
-        print(f"Error: Queue '{target_queue}' does not exist.")
+        logger.error("Error occurred", exc_info=True)
         sys.exit(1)
 
     # Use a unique staging filename
@@ -105,7 +107,7 @@ def push_task(story_id, target_queue):
             with open(staging_path, "r") as f:
                 token_data = json.load(f)
         except FileNotFoundError:
-            print(f"Error: Token {story_id} moved before we could lock it. Retrying...")
+            logger.error("Error occurred", exc_info=True)
             # Ideally retry recursively or loop, but for now exit to keep it simple
             sys.exit(1)
         except OSError as e:
@@ -154,7 +156,7 @@ def pull_task(persona):
     """
     queue_dir = os.path.join(QUEUES_DIR, persona)
     if not os.path.exists(queue_dir):
-        print(f"Error: Queue '{persona}' does not exist.")
+        logger.error("Error occurred", exc_info=True)
         sys.exit(1)
 
     # Find tasks in the queue
@@ -200,7 +202,7 @@ def pull_task(persona):
         with open(staging_path, "r") as f:
             token_data = json.load(f)
     except json.JSONDecodeError:
-        print(f"Error: Corrupt token file {staging_path}.")
+        logger.error("Error occurred", exc_info=True)
         # Move to lost+found or just leave in staging?
         return
 

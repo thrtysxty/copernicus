@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 from flask import Flask
 from flask_cors import CORS
 from backend.api.stories import stories_bp
@@ -9,8 +11,27 @@ from backend.api.orchestration import orchestration_bp
 from backend.api.docs import docs_bp
 from backend.api.registry import registry_bp
 from backend.socket_manager import socketio
+from backend.utils.errors import AppError, handle_app_error
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
+
+@app.errorhandler(AppError)
+def handle_custom_error(error: AppError):
+    """Handle AppError using the centralized handler."""
+    return handle_app_error(error)
+
+@app.errorhandler(Exception)
+def handle_generic_error(error: Exception):
+    """Catch-all handler for unhandled exceptions."""
+    logger.exception("Unhandled exception occurred: %s", str(error))
+    return {
+        "ok": False,
+        "error": "Internal Server Error",
+    }, 500
+
 def validate_origin(origin):
     return origin in {'http://localhost:3000', 'http://localhost:5001', 'app://copernicus'}
 

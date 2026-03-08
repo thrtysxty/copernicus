@@ -10,14 +10,14 @@ export function register(win: BrowserWindow, deps: any) {
   const { authManager, settingsStore, storiesManager, fsManager, ptyManager } = deps
 
   // ── Anthropic: API key only — no OAuth ────────
-  ipcMain.handle('oauth:start-anthropic', () => handleIpc(() => {
+  ipcMain.handle('oauth:start-anthropic', () => handleIpc('oauth:start-anthropic', [], () => {
     throw new Error('Anthropic does not support OAuth. Paste your API key from console.anthropic.com/settings/keys into the Providers settings panel.')
   }))
 
   // ── OpenRouter OAuth ──────────────────────────────────────────────────────
   const OPENROUTER_OAUTH_PORT = 47324
 
-  ipcMain.handle('oauth:start-openrouter', () => handleIpc(() => {
+  ipcMain.handle('oauth:start-openrouter', () => handleIpc('oauth:start-openrouter', [], () => {
     return new Promise<{ ok: boolean; error?: string }>((resolve) => {
       const state = randomBytes(16).toString('hex')
       const server = createServer(async (req, res) => {
@@ -90,7 +90,7 @@ export function register(win: BrowserWindow, deps: any) {
     return { access_token: data.access_token as string, email: (user.email ?? '') as string }
   }
 
-  ipcMain.handle('app:start-oauth-listener', () => handleIpc(() => {
+  ipcMain.handle('app:start-oauth-listener', () => handleIpc('app:start-oauth-listener', [], () => {
     const clientId = (settingsStore.get('googleOAuthClientId', '') as string).trim() || 'copernicus-ide-default.apps.googleusercontent.com';
 
     return new Promise<{ ok: boolean }>((resolve, reject) => {
@@ -161,26 +161,24 @@ export function register(win: BrowserWindow, deps: any) {
     })
   }))
 
-  ipcMain.handle('oauth:start-google', () => handleIpc(() => {
+  ipcMain.handle('oauth:start-google', () => handleIpc('oauth:start-google', [], () => {
     throw new Error('Use app:start-oauth-listener instead')
   }))
 
   // Auth Handlers
   ipcMain.handle('auth:status', () => handleIpc(async () => authManager.getAuthStatus()));
-  ipcMain.handle('auth:store-api-key', (_, provider: string, apiKey: string, baseUrl?: string) => 
-    handleIpc(() => authManager.storeApiKey(provider, apiKey, baseUrl, 'apikey')));
-  ipcMain.handle('auth:revoke', (_, provider: string) => 
-    handleIpc(() => authManager.revokeApiKey(provider)));
-  ipcMain.handle('auth:get-api-key', (_, provider: string) => handleIpc(() => {
+  ipcMain.handle('auth:store-api-key', (_, provider: string, apiKey: string, baseUrl?: string) => handleIpc('auth:store-api-key', [provider, apiKey, baseUrl], () => authManager.storeApiKey(provider, apiKey, baseUrl, 'apikey')));
+  ipcMain.handle('auth:revoke', (_, provider: string) => handleIpc('auth:revoke', [provider], () => authManager.revokeApiKey(provider)));
+  ipcMain.handle('auth:get-api-key', (_, provider: string) => handleIpc('auth:get-api-key', [provider], () => {
     if (provider === 'openai' || provider === 'openrouter' || provider === 'deepinfra') {
        const resolved = authManager.resolveOpenAICompatibleKey();
        return resolved ? resolved.key : null;
     }
     return authManager.getApiKey(provider);
   }));
-  ipcMain.handle('auth:resolve-openai-config', () => handleIpc(() => authManager.resolveOpenAICompatibleKey()));
+  ipcMain.handle('auth:resolve-openai-config', () => handleIpc('auth:resolve-openai-config', [], () => authManager.resolveOpenAICompatibleKey()));
 
-  ipcMain.handle('auth:validate-ollama-cloud', () => handleIpc(async () => {
+  ipcMain.handle('auth:validate-ollama-cloud', () => handleIpc('auth:validate-ollama-cloud', [], async () => {
     const key = authManager.getApiKey('ollama')
     if (!key) return false
     const cloudHost = authManager.getBaseUrl('ollama') || 'https://ollama.com'
@@ -190,10 +188,10 @@ export function register(win: BrowserWindow, deps: any) {
     return res?.ok ?? false
   }))
 
-  ipcMain.handle('auth:revoke-key', (_e, provider) => handleIpc(() => authManager.revokeKey(provider)))
+  ipcMain.handle('auth:revoke-key', (_e, provider) => handleIpc('auth:revoke-key', [provider], () => authManager.revokeKey(provider)))
 
   // GitHub Handlers
-  ipcMain.handle('github:set-trust', (_e, repoName: string, trusted: boolean) => handleIpc(() => {
+  ipcMain.handle('github:set-trust', (_e, repoName: string, trusted: boolean) => handleIpc('github:set-trust', [repoName, trusted], () => {
     const trusted_repos: string[] = settingsStore.get('github:trusted-repos', []) as string[]
     if (trusted) {
       if (!trusted_repos.includes(repoName)) trusted_repos.push(repoName)
@@ -205,7 +203,7 @@ export function register(win: BrowserWindow, deps: any) {
     return { ok: true }
   }))
 
-  ipcMain.handle('github:add-repo', (_e, repoName: string) => handleIpc(() => {
+  ipcMain.handle('github:add-repo', (_e, repoName: string) => handleIpc('github:add-repo', [repoName], () => {
     const tracked: string[] = settingsStore.get('github:tracked-repos', []) as string[]
     if (!tracked.includes(repoName)) {
       tracked.push(repoName)
@@ -214,7 +212,7 @@ export function register(win: BrowserWindow, deps: any) {
     return { ok: true, tracked }
   }))
 
-  ipcMain.handle('github:remove-repo', (_e, repoName: string) => handleIpc(() => {
+  ipcMain.handle('github:remove-repo', (_e, repoName: string) => handleIpc('github:remove-repo', [repoName], () => {
     const tracked: string[] = settingsStore.get('github:tracked-repos', []) as string[]
     const trusted: string[] = settingsStore.get('github:trusted-repos', []) as string[]
     const filteredTracked = tracked.filter(r => r !== repoName)
@@ -225,14 +223,14 @@ export function register(win: BrowserWindow, deps: any) {
   }))
 
   // GitHub trust list
-  ipcMain.handle('github:get-trust-list', () => handleIpc(() => {
+  ipcMain.handle('github:get-trust-list', () => handleIpc('github:get-trust-list', [], () => {
     return {
       trusted: settingsStore.get('github:trusted-repos', []) as string[],
       tracked: settingsStore.get('github:tracked-repos', []) as string[],
     }
   }))
 
-  ipcMain.handle('github:set-target-repo', (_e, repoName: string) => handleIpc(() => {
+  ipcMain.handle('github:set-target-repo', (_e, repoName: string) => handleIpc('github:set-target-repo', [repoName], () => {
     settingsStore.set('github:target-repo', repoName)
     authManager.setBaseUrl('jules', repoName)
     
@@ -247,11 +245,11 @@ export function register(win: BrowserWindow, deps: any) {
     return { ok: true }
   }))
 
-  ipcMain.handle('github:get-target-repo', () => handleIpc(() => {
+  ipcMain.handle('github:get-target-repo', () => handleIpc('github:get-target-repo', [], () => {
     return settingsStore.get('github:target-repo', null)
   }))
 
-  ipcMain.handle('github:search', (_e, query: string) => handleIpc(async () => {
+  ipcMain.handle('github:search', (_e, query: string) => handleIpc('github:search', [query], async () => {
     const token = authManager.getApiKey('github')
     if (!token) throw new Error('NO_TOKEN')
     const res = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(query)}`, {
@@ -266,7 +264,7 @@ export function register(win: BrowserWindow, deps: any) {
     return data.items
   }))
 
-  ipcMain.handle('github:clone-repo', (_e, { repoUrl, repoName }: { repoUrl: string, repoName: string }) => handleIpc(async () => {
+  ipcMain.handle('github:clone-repo', (_e, { repoUrl, repoName }: { repoUrl: string, repoName: string }) => handleIpc('github:clone-repo', [{ repoUrl, repoName }], async () => {
     if (!win) throw new Error('NO_WINDOW')
     const termId = `git-clone-${Date.now()}`
     const rootPath = fsManager.getRootPath()
@@ -276,7 +274,7 @@ export function register(win: BrowserWindow, deps: any) {
     return { ok: true, termId }
   }))
 
-  ipcMain.handle('github:test-connection', () => handleIpc(async () => {
+  ipcMain.handle('github:test-connection', () => handleIpc('github:test-connection', [], async () => {
     const token = authManager.getApiKey('github')
     if (!token) throw new Error('NO_TOKEN')
     const res = await fetch('https://api.github.com/user', {

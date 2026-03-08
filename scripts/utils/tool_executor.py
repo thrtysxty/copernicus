@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 import os
 import subprocess
 import sys
@@ -21,7 +23,7 @@ class ToolExecutor:
             try:
                 termios.tcflush(sys.stdin, termios.TCIFLUSH)
             except Exception:
-                pass
+        logger.error("Unexpected error", exc_info=True)
 
         try:
             response = input("   Execute? [y/N]: ").strip().lower()

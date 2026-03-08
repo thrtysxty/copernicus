@@ -1,3 +1,6 @@
+from backend.utils.errors import AppError
+import logging
+logger = logging.getLogger(__name__)
 from flask import Blueprint, jsonify, request
 import sqlite3
 import os
@@ -39,7 +42,7 @@ def init_db():
 try:
     init_db()
 except Exception:
-    pass
+        logger.error("Unexpected error", exc_info=True)
 
 @stories_bp.route('', methods=['GET'])
 @require_auth
@@ -50,7 +53,7 @@ def list_stories():
             stories = [dict(row) for row in cursor.fetchall()]
             return jsonify({"ok": True, "data": stories}), 200
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        raise AppError(str(e))
 
 @stories_bp.route('/<story_id>', methods=['GET'])
 @require_auth
@@ -62,9 +65,9 @@ def get_story(story_id):
             if row:
                 return jsonify({"ok": True, "data": dict(row)}), 200
             else:
-                return jsonify({"ok": False, "error": "Story not found"}), 404
+                raise AppError("Story not found", status=404)
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        raise AppError(str(e))
 
 @stories_bp.route('', methods=['POST'])
 @require_auth
@@ -89,7 +92,7 @@ def create_story(request_data: StoryCreateRequest):
 
             return jsonify({"ok": True, "data": new_story}), 201
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        raise AppError(str(e))
 
 @stories_bp.route('/<story_id>', methods=['PUT'])
 @require_auth
@@ -100,7 +103,7 @@ def update_story(story_id, request_data: StoryUpdateRequest):
             # First check if exists
             cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
             if not cursor.fetchone():
-                return jsonify({"ok": False, "error": "Story not found"}), 404
+                raise AppError("Story not found", status=404)
 
             update_fields = []
             values = []
@@ -113,7 +116,7 @@ def update_story(story_id, request_data: StoryUpdateRequest):
                     values.append(data[field])
 
             if not update_fields:
-                return jsonify({"ok": False, "error": "No valid fields to update"}), 400
+                raise AppError("No valid fields to update", status=400)
 
             now = int(time.time() * 1000)
             update_fields.append("updated_at = ?")
@@ -130,7 +133,7 @@ def update_story(story_id, request_data: StoryUpdateRequest):
 
             return jsonify({"ok": True, "data": updated_story}), 200
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        raise AppError(str(e))
 
 @stories_bp.route('/<story_id>', methods=['DELETE'])
 @require_auth
@@ -139,11 +142,11 @@ def delete_story(story_id):
         with closing(get_db_connection()) as conn:
             cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
             if not cursor.fetchone():
-                return jsonify({"ok": False, "error": "Story not found"}), 404
+                raise AppError("Story not found", status=404)
 
             conn.execute('DELETE FROM stories WHERE id = ?', (story_id,))
             conn.commit()
 
             return jsonify({"ok": True, "data": {"deleted": True}}), 200
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        raise AppError(str(e))

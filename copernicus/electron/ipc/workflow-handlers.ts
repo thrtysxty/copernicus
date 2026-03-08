@@ -7,14 +7,14 @@ export function register(_win: BrowserWindow, deps: any) {
   const { workflowEngine, socketManager } = deps
 
   // Workflow Handlers
-  ipcMain.handle('workflow:update-node-data', (_e, { nodeId, field, value }: any) => handleIpc(() => {
+  ipcMain.handle('workflow:update-node-data', (_e, { nodeId, field, value }: any) => handleIpc('workflow:update-node-data', [{ nodeId, field, value }], () => {
     // This is primarily for external persistence if needed, 
     // but the renderer currently manages the graph state.
     log.info(`[Workflow] Update Node ${nodeId}: ${field} = ${value}`);
     return true;
   }));
 
-  ipcMain.handle('workflow:ollama-status', () => handleIpc(async () => {
+  ipcMain.handle('workflow:ollama-status', () => handleIpc('workflow:ollama-status', [], async () => {
     try {
       const res = await fetch('http://localhost:11434/api/tags', {
         signal: AbortSignal.timeout(2000),
@@ -25,7 +25,7 @@ export function register(_win: BrowserWindow, deps: any) {
     }
   }));
 
-  ipcMain.handle('workflow:run', (_event, payload) => handleIpc(() => {
+  ipcMain.handle('workflow:run', (_event, payload) => handleIpc('workflow:run', [payload], () => {
     if (payload && payload.templateId) {
       const tpl = WORKFLOW_TEMPLATES.find(t => t.id === payload.templateId)
       if (!tpl) throw new Error('TEMPLATE_NOT_FOUND')
@@ -35,28 +35,28 @@ export function register(_win: BrowserWindow, deps: any) {
     return workflowEngine.runGraph(payload)
   }))
 
-  ipcMain.handle('workflow:status', () => handleIpc(() => ({
+  ipcMain.handle('workflow:status', () => handleIpc('workflow:status', [], () => ({
     state: workflowEngine.getState(),
     nodeStatuses: workflowEngine.getNodeStatusDetails(),
     context: workflowEngine.getContext(),
   })))
 
-  ipcMain.handle('workflow:list-templates', () => handleIpc(() =>
+  ipcMain.handle('workflow:list-templates', () => handleIpc('workflow:list-templates', [], () =>
     WORKFLOW_TEMPLATES.map(({ id, name, description }) => ({ id, name, description }))
   ))
 
-  ipcMain.handle('workflow:get-template', (_event, id: string) => handleIpc(() => {
+  ipcMain.handle('workflow:get-template', (_event, id: string) => handleIpc('workflow:get-template', [id], () => {
     const tpl = WORKFLOW_TEMPLATES.find(t => t.id === id)
     if (!tpl) throw new Error('NOT_FOUND')
     return tpl
   }))
 
-  ipcMain.handle('workflow:reset', () => handleIpc(() => {
+  ipcMain.handle('workflow:reset', () => handleIpc('workflow:reset', [], () => {
     workflowEngine.reset()
     return true
   }))
 
   // WebSocket Handlers
-  ipcMain.handle('ws:subscribe-session', (_e, sessionId: string) => handleIpc(() => socketManager.subscribeSession(sessionId)))
-  ipcMain.handle('ws:unsubscribe-session', (_e, sessionId: string) => handleIpc(() => socketManager.unsubscribeSession(sessionId)))
+  ipcMain.handle('ws:subscribe-session', (_e, sessionId: string) => handleIpc('ws:subscribe-session', [sessionId], () => socketManager.subscribeSession(sessionId)))
+  ipcMain.handle('ws:unsubscribe-session', (_e, sessionId: string) => handleIpc('ws:unsubscribe-session', [sessionId], () => socketManager.unsubscribeSession(sessionId)))
 }
