@@ -222,4 +222,24 @@ export const SCHEMA = {
     CREATE INDEX IF NOT EXISTS idx_dev_sessions_date
       ON dev_sessions(date);
   `,
+  file_transactions: `
+    CREATE TABLE IF NOT EXISTS file_transactions (
+      id TEXT PRIMARY KEY,
+      status TEXT NOT NULL, -- 'COMMITTED' | 'ROLLED_BACK'
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `,
+  file_transaction_entries: `
+    CREATE TABLE IF NOT EXISTS file_transaction_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      transaction_id TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      before_hash TEXT,
+      after_hash TEXT,
+      FOREIGN KEY(transaction_id) REFERENCES file_transactions(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_file_tx_entries_tx ON file_transaction_entries(transaction_id);
+  `,
 };

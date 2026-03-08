@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import crypto from 'crypto';
 import { createWriteStream } from 'fs';
+import { StateLedger } from '../db/state-ledger';
 
 // Constants
 const SHADOW_SUFFIX = '.shadow';
@@ -218,7 +219,7 @@ export class Transaction {
     await fs.rm(this.shadowDir, { recursive: true, force: true }).catch(() => {});
   }
 
-  private async readWAL(): Promise<WALRecord[]> {
+  public async readWAL(): Promise<WALRecord[]> {
     try {
       const data = await fs.readFile(this.walFile, 'utf8');
       return data.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
@@ -239,16 +240,18 @@ export class Transaction {
 export class TransactionManager {
   private activeTx: Transaction | null = null;
   private readonly walDir: string;
+  private ledger: StateLedger;
 
-  constructor(baseDir: string) {
+  constructor(baseDir: string, ledger: StateLedger) {
     this.walDir = path.join(baseDir, 'wal');
+    this.ledger = ledger;
   }
 
-  public async createTransaction(): Promise<string> {
+  public async createTransaction(id?: string): Promise<string> {
     if (this.activeTx) throw new Error('Transaction already active');
-    const id = crypto.randomUUID();
-    this.activeTx = new Transaction({ id }, this.walDir);
-    return id;
+    const txId = id || crypto.randomUUID();
+    this.activeTx = new Transaction({ id: txId }, this.walDir);
+    return txId;
   }
 
   public async stageEdit(filePath: string, content: string): Promise<void> {
@@ -258,13 +261,47 @@ export class TransactionManager {
 
   public async commit(): Promise<void> {
     if (!this.activeTx) throw new Error('No active transaction');
-    await this.activeTx.commit();
+    const tx = this.activeTx;
+    const records = await tx.readWAL();
+    
+    await tx.commit();
+    
+    // Log to ledger after successful commit
+    const files = records.filter(r => r.operation === 'write').map(r => ({
+      path: r.filePath,
+      beforeHash: r.prevHash,
+      afterHash: r.dataHash
+    }));
+    
+    this.ledger.logTransaction({
+      id: tx.id,
+      status: 'COMMITTED',
+      files
+    });
+    
     this.activeTx = null;
   }
 
   public async rollback(): Promise<void> {
     if (!this.activeTx) throw new Error('No active transaction');
-    await this.activeTx.rollback();
+    const tx = this.activeTx;
+    const records = await tx.readWAL();
+    
+    await tx.rollback();
+    
+    // Log to ledger
+    const files = records.filter(r => r.operation === 'write').map(r => ({
+      path: r.filePath,
+      beforeHash: r.prevHash,
+      afterHash: r.dataHash
+    }));
+    
+    this.ledger.logTransaction({
+      id: tx.id,
+      status: 'ROLLED_BACK',
+      files
+    });
+    
     this.activeTx = null;
   }
 

@@ -160,6 +160,54 @@ export class StateLedger {
 
     // Dev Sessions (from DevtimeManager integration)
     this.db.exec(SCHEMA.dev_sessions);
+
+    // File Transactions (Story 220)
+    this.db.exec(SCHEMA.file_transactions);
+    this.db.exec(SCHEMA.file_transaction_entries);
+  }
+
+  // ── File Transactions (Story 220) ──────────────────────────────────────────
+
+  logTransaction(tx: { id: string, status: string, description?: string, files: any[] }): void {
+    this.db.prepare(`
+      INSERT INTO file_transactions (id, status, description)
+      VALUES (?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        status = excluded.status,
+        updated_at = CURRENT_TIMESTAMP
+    `).run(tx.id, tx.status, tx.description ?? null)
+
+    // Clear existing entries if we're updating
+    this.db.prepare('DELETE FROM file_transaction_entries WHERE transaction_id = ?').run(tx.id)
+
+    for (const f of tx.files) {
+      this.db.prepare(`
+        INSERT INTO file_transaction_entries (transaction_id, file_path, before_hash, after_hash)
+        VALUES (?, ?, ?, ?)
+      `).run(tx.id, f.path, f.beforeHash, f.afterHash)
+    }
+  }
+
+  getLastTransaction(): { id: string, files: any[] } | null {
+    const row = this.db.prepare(`
+      SELECT * FROM file_transactions 
+      WHERE status = 'COMMITTED' 
+      ORDER BY created_at DESC LIMIT 1
+    `).get() as any
+    if (!row) return null
+
+    const entries = this.db.prepare(`
+      SELECT * FROM file_transaction_entries WHERE transaction_id = ?
+    `).all(row.id) as any[]
+
+    return {
+      id: row.id,
+      files: entries.map(e => ({
+        path: e.file_path,
+        beforeHash: e.before_hash,
+        afterHash: e.after_hash
+      }))
+    }
   }
 
   // ── Projects & Epics (Story 211) ──────────────────────────────────────────

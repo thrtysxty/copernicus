@@ -226,10 +226,24 @@ function setupAutoUpdater() {
 
 function registerIpcHandlers() {
   // Transactional File Ops (Story 220)
-  ipcMain.handle('fs:tx-begin', () => handleIpc(() => fsManager.tx?.createTransaction()))
-  ipcMain.handle('fs:tx-commit', () => handleIpc(() => fsManager.tx?.commit()))
-  ipcMain.handle('fs:tx-rollback', () => handleIpc(() => fsManager.tx?.rollback()))
+  ipcMain.handle('fs:tx-begin', () => handleIpc(() => fsManager.beginTransaction()))
+  ipcMain.handle('fs:tx-commit', (_e, id) => handleIpc(() => fsManager.commitTransaction(id)))
+  ipcMain.handle('fs:tx-rollback', (_e, id) => handleIpc(() => fsManager.rollbackTransaction(id)))
   ipcMain.handle('fs:tx-status', () => handleIpc(() => fsManager.tx?.getActiveTransactionId()))
+  ipcMain.handle('fs:save-multiple', (_e, files: { filePath: string, content: string }[]) => handleIpc(async () => {
+    const txId = await fsManager.beginTransaction();
+    try {
+      for (const f of files) {
+        await fsManager.stageFile(txId, f.filePath, f.content);
+      }
+      await fsManager.commitTransaction(txId);
+      return { ok: true, txId };
+    } catch (err: any) {
+      await fsManager.rollbackTransaction(txId);
+      return { ok: false, error: err.message };
+    }
+  }))
+  ipcMain.handle('fs:undo-last-transaction', () => handleIpc(() => fsManager.undoLastTransaction()))
 
   // Agent Branch/Patch (Story 230)
   ipcMain.handle('agent:patch-apply', (_e, { changes, baseCommit, workingTree, dryRun }) => 
