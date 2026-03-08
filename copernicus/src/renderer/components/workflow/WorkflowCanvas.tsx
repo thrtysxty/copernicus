@@ -128,6 +128,7 @@ export default function WorkflowCanvas() {
   const [context, setContext] = useState<Record<string, string>>({});
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const wasNodeClickHandled = useRef<boolean>(false);
 
   // Fetch root path and templates
   useEffect(() => {
@@ -227,6 +228,7 @@ export default function WorkflowCanvas() {
   const handleMouseDown = (e: React.MouseEvent, nodeId: string) => {
     e.stopPropagation();
     setSelectedNodeId(nodeId);
+    wasNodeClickHandled.current = true;
     if (e.shiftKey) {
         setConnectingNodeId(nodeId);
         setDraggingNodeId(null);
@@ -259,10 +261,12 @@ export default function WorkflowCanvas() {
     setDraggingNodeId(null);
     setConnectingNodeId(null);
     setMousePos(null);
+    wasNodeClickHandled.current = false;
   };
 
   const handleNodeMouseUp = (e: React.MouseEvent, targetId: string) => {
       e.stopPropagation();
+      wasNodeClickHandled.current = true;
 
       if (connectingNodeId) {
           if (connectingNodeId !== targetId) {
@@ -398,7 +402,7 @@ export default function WorkflowCanvas() {
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-white overflow-hidden relative pt-1">
-      {/* FIXED: Modal Centering using flex-col and absolute inset-0 */}
+      {/* AC1: Modal Centering using 'absolute inset-0 flex items-center justify-center' */}
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[100]">
           <div className="bg-zinc-900 border border-copernicus-steel rounded p-6 w-96 shadow-2xl">
@@ -442,7 +446,7 @@ export default function WorkflowCanvas() {
         </div>
       )}
 
-      {/* FIXED: Edge-to-edge layout by ensuring w-full on flex container */}
+      {/* AC2: Canvas SVG and parent div are 'w-full h-full' */}
       <div className="flex flex-row flex-1 overflow-hidden w-full relative">
         {/* Palette */}
         <div className="w-40 bg-[#080808] border-r border-copernicus-steel
@@ -455,14 +459,20 @@ export default function WorkflowCanvas() {
         </div>
 
         {/* SVG Canvas - Full width expansion */}
-        <div className="flex-1 relative bg-black">
+        <div className="flex-1 relative bg-black w-full h-full">
           <svg
             ref={svgRef}
             tabIndex={0}
             className="w-full h-full cursor-crosshair outline-none"
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onClick={() => setSelectedNodeId(null)}
+            onClick={() => {
+              // AC3: Only clear selection if no node click was handled
+              if (!wasNodeClickHandled.current) {
+                setSelectedNodeId(null);
+              }
+              wasNodeClickHandled.current = false;
+            }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleCanvasDrop}
           >
