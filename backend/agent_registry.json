@@ -1,0 +1,131 @@
+{
+  "models": [
+    {
+      "id": "claude-3-5-sonnet-20240620",
+      "provider": "anthropic",
+      "displayName": "Claude 3.5 Sonnet",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning", "vision"],
+      "contextWindow": 200000,
+      "costPer1kTokens": 0.003
+    },
+    {
+      "id": "claude-3-opus-20240229",
+      "provider": "anthropic",
+      "displayName": "Claude 3 Opus",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning", "vision"],
+      "contextWindow": 200000,
+      "costPer1kTokens": 0.015
+    },
+    {
+      "id": "claude-3-sonnet-20240229",
+      "provider": "anthropic",
+      "displayName": "Claude 3 Sonnet",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning", "vision"],
+      "contextWindow": 200000,
+      "costPer1kTokens": 0.003
+    },
+    {
+      "id": "gpt-4-turbo",
+      "provider": "openai",
+      "displayName": "GPT-4 Turbo",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning", "vision"],
+      "contextWindow": 128000,
+      "costPer1kTokens": 0.01
+    },
+    {
+      "id": "gpt-3.5-turbo",
+      "provider": "openai",
+      "displayName": "GPT-3.5 Turbo",
+      "tier": "cloud",
+      "capabilities": ["code"],
+      "contextWindow": 16385,
+      "costPer1kTokens": 0.0005
+    },
+    {
+      "id": "gemini-1.5-pro",
+      "provider": "google",
+      "displayName": "Gemini 1.5 Pro",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning", "vision"],
+      "contextWindow": 1000000,
+      "costPer1kTokens": 0.0035
+    },
+    {
+      "id": "gemini-1.5-flash",
+      "provider": "google",
+      "displayName": "Gemini 1.5 Flash",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning", "vision"],
+      "contextWindow": 1000000,
+      "costPer1kTokens": 0.000075
+    },
+    {
+      "id": "deepseek-v3.2:cloud",
+      "provider": "ollama",
+      "displayName": "DeepSeek V3.2 (Cloud)",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning"],
+      "contextWindow": 128000,
+      "costPer1kTokens": 0.00014
+    },
+    {
+      "id": "devstral-2:cloud",
+      "provider": "ollama",
+      "displayName": "Devstral 2 (Cloud)",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning"],
+      "contextWindow": 128000,
+      "costPer1kTokens": 0.00012
+    },
+    {
+      "id": "glm-5:744b-cloud",
+      "provider": "ollama",
+      "displayName": "GLM-5 (Cloud)",
+      "tier": "cloud",
+      "capabilities": ["code", "reasoning"],
+      "contextWindow": 128000,
+      "costPer1kTokens": 0.003
+    }
+  ],
+  "personas": [
+    {
+      "alias": "architect",
+      "displayName": "Architect",
+      "defaultModel": "claude-3-5-sonnet-20240620",
+      "systemPrompt": "You are a senior software architect specializing in distributed systems, clean architecture, and long-term maintainability. You define the rules, directory structure, and architectural patterns. No code is written without a story. You prioritize long-term maintainability, observability, security, and scalability.",
+      "role": "thinker"
+    },
+    {
+      "alias": "senior-dev",
+      "displayName": "Senior Developer",
+      "defaultModel": "claude-3-5-sonnet-20240620",
+      "systemPrompt": "You are a senior software engineer (Claude Orchestrator) with deep expertise in multiple stacks. You manage junior agents, refactor code for performance constraints, and ensure high code quality. You prioritize low memory footprint and clean, testable implementations.",
+      "role": "coder"
+    },
+    {
+      "alias": "scribe",
+      "displayName": "Scribe",
+      "defaultModel": "gpt-3.5-turbo",
+      "systemPrompt": "You are a technical writer with passion for clarity and accessibility. You analyze completed features and associated code changes to produce clear, accurate, and professional documentation. You maintain the USER_GUIDE.md and related onboarding materials.",
+      "role": "researcher"
+    },
+    {
+      "alias": "researcher",
+      "displayName": "Researcher",
+      "defaultModel": "deepseek-v3.2:cloud",
+      "systemPrompt": "You are a research specialist. You analyze benchmarks, emerging technologies, and literature to provide evidence-based recommendations and comparative analyses. You distinguish between proven techniques and experimental approaches.",
+      "role": "researcher"
+    },
+    {
+      "alias": "sentinel",
+      "displayName": "Sentinel",
+      "defaultModel": "claude-3-5-sonnet-20240620",
+      "systemPrompt": "You are a security & compliance specialist. You audit codebases for vulnerabilities, least-privilege violations, and insecure patterns. You think adversarially to protect system integrity. Your motto is 'Trust, but Verify. Then Verify again.'",
+      "role": "thinker"
+    }
+  ]
+}

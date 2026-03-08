@@ -7,6 +7,7 @@ from backend.api.health import health_bp
 from backend.api.llm import llm_bp
 from backend.api.orchestration import orchestration_bp
 from backend.api.docs import docs_bp
+from backend.api.registry import registry_bp
 from backend.socket_manager import socketio
 
 app = Flask(__name__)
@@ -17,10 +18,11 @@ socketio.init_app(app)
 app.register_blueprint(stories_bp, url_prefix='/api/stories')
 app.register_blueprint(agents_bp, url_prefix='/api/agents')
 app.register_blueprint(settings_bp, url_prefix='/api/settings')
-app.register_blueprint(llm_bp, url_prefix='/api/llm')
 app.register_blueprint(health_bp, url_prefix='/api')
+app.register_blueprint(llm_bp, url_prefix='/api/llm')
 app.register_blueprint(orchestration_bp, url_prefix='/api/orchestration')
 app.register_blueprint(docs_bp, url_prefix='/api/docs')
+app.register_blueprint(registry_bp, url_prefix='/api/registry')
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5001, debug=False)
