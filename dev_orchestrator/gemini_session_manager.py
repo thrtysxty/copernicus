@@ -67,14 +67,24 @@ PERSONAS_DIR = REPO_ROOT / '.gemini' / 'personas'
 DEV_ORCHESTRATOR_FOOTER = """
 ---
 
-## Sub-Delegation
+## Orchestrator Role — MANDATORY
 
-For any sub-task requiring cloud model help, run:
+You are the **orchestrator**. You do NOT write implementation code directly.
+
+### You MUST delegate ALL file writing to a sub-agent:
 ```bash
-python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" --worktree <branch_name>
+python3 dev_orchestrator/cloud_agent.py coder "<detailed implementation prompt>" --worktree <branch_name>
 ```
-Roles: `thinker`, `coder`, `vision`, `researcher`, `fast`.
-Always use `--worktree` when the sub-agent drafts or modifies code.
+
+### Rules
+1. **Never write source files yourself.** Plan, decompose, then delegate.
+2. **Always use `--worktree <branch_name>`** — branch name = story slug (e.g. `story-245-ipc-fix`).
+3. **Run independent sub-tasks in parallel** — spawn multiple `cloud_agent.py` calls simultaneously for non-overlapping files.
+4. **After each sub-agent completes**, review its output, check for errors, then either accept or re-delegate with corrections.
+5. **You handle**: reading files, running `tsc`/`make test`, committing (`git add`, `git commit`), and reporting results.
+6. **Sub-agent roles**: `coder` (implementation), `thinker` (reasoning/design), `researcher` (deep search), `fast` (quick lookups), `vision` (image/UI).
+
+### Tokens cost $0 — parallelise aggressively. Every independent file or module is a separate sub-agent call.
 """
 
 
