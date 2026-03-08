@@ -9,6 +9,7 @@ import time
 import uuid
 import json
 import sqlite3
+from contextlib import closing
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from pathlib import Path
@@ -455,20 +456,19 @@ def context_handoff(request_data: ContextHandoffRequest):
         if not os.path.exists(db_path):
              return jsonify({"ok": True, "data": {"context": None}, "message": f"DB not found at {db_path}"}), 200
 
-        conn = sqlite3.connect(db_path)
-        conn.execute('PRAGMA foreign_keys = ON')
-        conn.execute('PRAGMA journal_mode = WAL')
-        conn.execute('PRAGMA synchronous = NORMAL')
-        cursor = conn.cursor()
-        
-        # Pull from jules_sessions if story_id provided, or by session_id
-        if story_id:
-            cursor.execute("SELECT last_search_context FROM jules_sessions WHERE story_id = ? AND last_search_context IS NOT NULL ORDER BY started_at DESC LIMIT 1", (story_id,))
-        else:
-            cursor.execute("SELECT last_search_context FROM jules_sessions WHERE id = ? LIMIT 1", (session_id,))
+        with closing(sqlite3.connect(db_path)) as conn:
+            conn.execute('PRAGMA foreign_keys = ON')
+            conn.execute('PRAGMA journal_mode = WAL')
+            conn.execute('PRAGMA synchronous = NORMAL')
+            cursor = conn.cursor()
             
-        row = cursor.fetchone()
-        conn.close()
+            # Pull from jules_sessions if story_id provided, or by session_id
+            if story_id:
+                cursor.execute("SELECT last_search_context FROM jules_sessions WHERE story_id = ? AND last_search_context IS NOT NULL ORDER BY started_at DESC LIMIT 1", (story_id,))
+            else:
+                cursor.execute("SELECT last_search_context FROM jules_sessions WHERE id = ? LIMIT 1", (session_id,))
+                
+            row = cursor.fetchone()
 
         if row and row[0]:
             context = row[0]
