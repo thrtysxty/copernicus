@@ -115,6 +115,18 @@ def main():
 
     persona, user_prompt = parse_input(input_text)
 
+    # Attempt to resolve persona to its default model via Registry API (Story 226 AC-5)
+    model_to_run = persona
+    try:
+        import urllib.request
+        import json
+        with urllib.request.urlopen(f"http://localhost:5001/api/registry/personas/{persona}", timeout=1) as response:
+            if response.status == 200:
+                p_data = json.loads(response.read().decode())
+                model_to_run = p_data.get('defaultModel', persona)
+    except Exception:
+        pass # FALLBACK — registry unreachable, use persona alias as model name
+
     if not user_prompt.strip():
         # Interactive mode or just empty prompt?
         # For now, just warn
@@ -124,7 +136,7 @@ def main():
     semantic = get_semantic_context(user_prompt)
     full_prompt = f"Context:\n{context}\n\n{semantic}\n\nTask:\n{user_prompt}"
 
-    print(f"--- Routing to Persona: {persona} ---")
+    print(f"--- Routing to Persona: {persona} (Model: {model_to_run}) ---")
 
     try:
         # Check if ollama is installed
@@ -134,8 +146,8 @@ def main():
             stderr=subprocess.DEVNULL,
         )
 
-        # Execute ollama run with the persona and prompt
-        subprocess.run(["ollama", "run", persona, full_prompt], check=True)
+        # Execute ollama run with the resolved model and prompt
+        subprocess.run(["ollama", "run", model_to_run, full_prompt], check=True)
 
     except FileNotFoundError:
         print(

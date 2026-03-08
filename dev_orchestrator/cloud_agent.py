@@ -73,7 +73,8 @@ class StandaloneCloudAgent:
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"WARNING: Could not load models.json: {e}", file=sys.stderr)
             self.config = {"cloud_models": []}
-        # Default role mappings
+        
+        # FALLBACK — registry unreachable
         self.role_defaults = {
             "thinker":    "kimi-k2.5:cloud",
             "coder":      "qwen3-coder-next:cloud",
@@ -82,6 +83,26 @@ class StandaloneCloudAgent:
             "architect":  "glm-5:cloud",
             "fast":       "gpt-oss:20b:cloud",
         }
+
+        # Attempt to load from Registry API (Story 226 AC-4)
+        try:
+            import urllib.request
+            import json
+            with urllib.request.urlopen("http://localhost:5001/api/registry/personas", timeout=1) as response:
+                if response.status == 200:
+                    personas = json.loads(response.read().decode())
+                    for p in personas:
+                        # Map registry persona alias to its default model
+                        alias = p.get('alias')
+                        if alias:
+                            self.role_defaults[alias] = p.get('defaultModel', self.role_defaults.get(alias))
+                        
+                        # Also map the persona's role if present
+                        role = p.get('role')
+                        if role:
+                            self.role_defaults[role] = p.get('defaultModel', self.role_defaults.get(role))
+        except Exception:
+            pass # Use hardcoded fallbacks
 
     def get_client_for_model(self, model_name):
         if ":cloud" in model_name:
