@@ -3,6 +3,7 @@ import { promisify } from 'node:util'
 import { codebaseIndexer } from '../codebase-indexer'
 import { hybridRetriever } from './hybrid-retrieval'
 import { fsManager } from '../fs-manager'
+import { authManager } from '../auth-manager'
 
 const execAsync = promisify(exec)
 const execFileAsync = promisify(execFile)
@@ -186,10 +187,19 @@ ${r.content}
 
     const role = 'coder'
     if (!/^[\w\-]+$/.test(storyId)) return 'Error: invalid storyId format'
+
+    const env = { ...process.env }
+    if (provider === 'ollama-cloud') {
+      env['OLLAMA_API_KEY'] = authManager.getApiKey('ollama-cloud') || process.env.OLLAMA_API_KEY || ''
+      env['OLLAMA_CLOUD_HOST'] = authManager.getBaseUrl('ollama-cloud') || process.env.OLLAMA_CLOUD_HOST || 'https://ollama.com'
+      // AC-4 Document how this flows: The cloud_agent.py uses OLLAMA_API_KEY and OLLAMA_CLOUD_HOST
+      // which are sourced from the user-configured Ollama Cloud settings in Copernicus.
+    }
+
     const { stdout, stderr } = await execFileAsync(
       'python3',
       ['dev_orchestrator/cloud_agent.py', role, `Implement ${storyId}`, '--worktree', storyId],
-      { cwd: rootPath }
+      { cwd: rootPath, env }
     )
     return stdout.trim() || stderr.trim() || `Agent dispatched for ${storyId} via ${provider}`
   }

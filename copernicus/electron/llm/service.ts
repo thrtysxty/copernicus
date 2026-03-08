@@ -63,6 +63,13 @@ CORE PROTOCOLS:
           apiKey = resolved.key
           baseUrl = resolved.baseUrl || ''
         }
+      } else if (provider === 'ollama' || provider === 'ollama-cloud') {
+        if (model.endsWith(':cloud') || provider === 'ollama-cloud') {
+          apiKey = authManager.getApiKey('ollama-cloud') || ''
+          baseUrl = authManager.getBaseUrl('ollama-cloud') || ''
+        } else {
+          baseUrl = authManager.getBaseUrl('ollama') || ''
+        }
       }
 
       const response = await fetch('http://127.0.0.1:5001/api/llm/chat', {

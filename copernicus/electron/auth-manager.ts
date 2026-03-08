@@ -5,7 +5,7 @@ import * as os from 'os';
 import yaml from 'js-yaml';
 import log from './utils/logger';
 
-export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'deepinfra' | 'ollama' | string;
+export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'deepinfra' | 'ollama' | 'ollama-cloud' | string;
 export type AuthType = 'oauth' | 'apikey' | 'session' | 'file' | 'env' | 'cli';
 
 export interface AuthConfig {
@@ -152,7 +152,17 @@ export class AuthManager {
   }
 
   public getBaseUrl(provider: ProviderType): string | undefined {
-    return this.authState.get(provider)?.baseUrl;
+    const stored = this.authState.get(provider)?.baseUrl;
+    if (stored) return stored;
+
+    // Fallbacks
+    if (provider === 'ollama-cloud') return process.env.OLLAMA_CLOUD_HOST || process.env.OLLAMA_CLOUD_URL || 'https://ollama.com';
+    if (provider === 'ollama') return process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    if (provider === 'openrouter') return 'https://openrouter.ai/api/v1';
+    if (provider === 'openai') return 'https://api.openai.com/v1';
+    if (provider === 'deepinfra') return 'https://api.deepinfra.com/v1/openai';
+
+    return undefined;
   }
 
   public setBaseUrl(provider: ProviderType, baseUrl: string): void {
@@ -182,6 +192,7 @@ export class AuthManager {
       case 'deepinfra': return process.env.DEEPINFRA_API_KEY;
       case 'github': return process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
       case 'ollama': return process.env.OLLAMA_API_KEY || process.env.OLLAMA_CLOUD_TOKEN;
+      case 'ollama-cloud': return process.env.OLLAMA_CLOUD_TOKEN || process.env.OLLAMA_API_KEY;
       default: return undefined;
     }
   }
@@ -222,7 +233,7 @@ export class AuthManager {
   }
 
   public async getAuthStatus() {
-    const defaultProviders = ['openai', 'anthropic', 'google', 'jules', 'openrouter', 'deepinfra', 'github', 'ollama'];
+    const defaultProviders = ['openai', 'anthropic', 'google', 'jules', 'openrouter', 'deepinfra', 'github', 'ollama', 'ollama-cloud'];
     const allProviders = new Set([...defaultProviders, ...this.authState.keys()]);
 
     const statuses = await Promise.all(Array.from(allProviders).map(async p => {

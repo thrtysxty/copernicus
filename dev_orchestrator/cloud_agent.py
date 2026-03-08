@@ -13,7 +13,7 @@ from ollama import Client as OllamaClient
 # Development-only tool for orchestration via an active Orchestrator.
 # Routes :cloud models directly to Ollama's Cloud API.
 
-OLLAMA_CLOUD_URL = "https://ollama.com"
+OLLAMA_CLOUD_URL = os.environ.get("OLLAMA_CLOUD_HOST", os.environ.get("OLLAMA_CLOUD_URL", "https://ollama.com"))
 OLLAMA_LOCAL_URL = "http://localhost:11434"
 DELL_SERVER_URL = "http://192.168.1.185:11434"
 

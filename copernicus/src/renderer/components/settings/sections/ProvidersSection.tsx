@@ -21,7 +21,7 @@ export const ProvidersSection: React.FC = () => {
   const [status, setStatus] = useState<AuthStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
-  const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'jules', 'openrouter', 'deepinfra', 'ollama'])
+  const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'jules', 'openrouter', 'deepinfra', 'ollama', 'ollama-cloud'])
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [keyDraft, setKeyDraft] = useState<Record<string, string>>({})
   const [baseUrlDraft, setBaseUrlDraft] = useState<Record<string, string>>({})
@@ -251,6 +251,7 @@ export const ProvidersSection: React.FC = () => {
           const s = status.find(st => st.provider === id)
           const isOAuth = ['google', 'openrouter'].includes(id)
           const isOllama = id === 'ollama'
+          const isOllamaCloud = id === 'ollama-cloud'
           
           return (
             <div
@@ -273,8 +274,8 @@ export const ProvidersSection: React.FC = () => {
                     s?.hasKey ? 'bg-green-400' :
                     'bg-amber-400'
                   }`} title={authFailed.has(id) ? 'Auth failed' : s?.hasKey ? 'Authenticated' : 'No key'} />
-                  <div className={`p-2 rounded ${s?.hasKey ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600'}`}>
-                    {isOllama ? <Globe size={16} /> : <Key size={16} />}
+                  <div className={`p-2 rounded ${isOllama || isOllamaCloud ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600'}`}>
+                    {isOllama || isOllamaCloud ? <Globe size={16} /> : <Key size={16} />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -366,24 +367,24 @@ export const ProvidersSection: React.FC = () => {
                 </div>
               )}
               {/* Input row: API key + base URL */}
-              <div className="mt-3 pt-3 border-t border-zinc-800/50 grid gap-2" style={{ gridTemplateColumns: isOllama ? '1fr' : (id === 'openrouter' || isOllama ? '1fr 1fr' : '1fr') }}>
+              <div className="mt-3 pt-3 border-t border-zinc-800/50 grid gap-2" style={{ gridTemplateColumns: (id === 'openrouter' || isOllamaCloud) ? '1fr 1fr' : '1fr' }}>
                 {!isOllama && (
                   <input
                     type="password"
                     value={keyDraft[id] ?? ''}
                     onChange={e => setKeyDraft(prev => ({ ...prev, [id]: e.target.value }))}
                     onBlur={() => saveKey(id)}
-                    placeholder={s?.hasKey ? 'API key stored — paste to replace' : 'Paste API key…'}
+                    placeholder={s?.hasKey ? 'API key stored — paste to replace' : (isOllamaCloud ? 'Bearer Token…' : 'Paste API key…')}
                     className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[10px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
                   />
                 )}
-                {(isOllama || id === 'openrouter') && (
+                {(isOllama || id === 'openrouter' || isOllamaCloud) && (
                   <input
                     type="text"
                     value={baseUrlDraft[id] ?? ''}
                     onChange={e => setBaseUrlDraft(prev => ({ ...prev, [id]: e.target.value }))}
                     onBlur={() => saveBaseUrl(id)}
-                    placeholder={isOllama ? 'http://localhost:11434' : 'https://openrouter.ai/api/v1'}
+                    placeholder={isOllama ? 'http://localhost:11434' : (isOllamaCloud ? 'https://ollama.com' : 'https://openrouter.ai/api/v1')}
                     className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[10px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
                   />
                 )}
