@@ -184,6 +184,12 @@ interface LayoutState {
   // Story stats
   inProgressCount: number
   setInProgressCount: (count: number) => void
+
+  // Diff Review
+  reviewMode: boolean
+  pendingDiff: { files: { path: string, original: string, modified: string, status: 'added' | 'modified' | 'deleted' }[] } | null
+  setReviewMode: (files: { path: string, original: string, modified: string, status: 'added' | 'modified' | 'deleted' }[]) => void
+  clearReviewMode: () => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -363,6 +369,11 @@ export const useLayoutStore = create<LayoutState>()(
 
       inProgressCount: 0,
       setInProgressCount: (count) => set({ inProgressCount: count }),
+
+      reviewMode: false,
+      pendingDiff: null,
+      setReviewMode: (files) => set({ reviewMode: true, pendingDiff: { files } }),
+      clearReviewMode: () => set({ reviewMode: false, pendingDiff: null }),
     }),
     {
       name: 'copernicus-layout-storage',

@@ -4,6 +4,7 @@ import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
 import { UICanvas } from './UICanvas'
 import { UIBuilderCanvas } from './ui-builder/UIBuilderCanvas'
+import DiffPanel from './DiffPanel'
 import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
 
@@ -25,8 +26,13 @@ export function CenterPanelRouter({
     activeView,
     canvasContent, canvasUrl,
     activeFilePath, activeFileContent, activeFileLanguage,
-    setActiveFileContent, browserSessionActive
+    setActiveFileContent, browserSessionActive,
+    reviewMode
   } = useLayoutStore()
+
+  if (reviewMode) {
+    return <DiffPanel />
+  }
 
   const filePath = activeFilePath ?? propFilePath ?? null
   
