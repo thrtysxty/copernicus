@@ -10,7 +10,7 @@ export const COP_KNOWLEDGE_BASE: KnowledgeEntry[] = [
     response: "Open the Story Drawer (click a card), set Assigned to Jules, then click → Jules. I'll watch the session and flag the card when the PR is ready for your review."
   },
   {
-    trigger: ['what is the canvas', 'designer', 'ui builder'],
+    trigger: ['what is the canvas', 'designer', 'ui builder', 'canvas'],
     response: 'The Canvas (Designer view) is your unified graphic surface — UI components, image previews, Playwright frames, and agent visual output all render here.'
   },
   {
@@ -27,24 +27,28 @@ export const COP_KNOWLEDGE_BASE: KnowledgeEntry[] = [
     showTourButton: true
   },
   {
-    trigger: ['workflow assignment', 'assign story', 'workflow'],
-    response: 'Stories can be assigned to different agents or human roles. Use the Kanban swimlanes to move cards through the pipeline, or the Story Drawer to assign specific tasks.'
+    trigger: ['stories', 'kanban', 'board', 'cards'],
+    response: 'The Kanban board shows your active stories. Move cards between columns (Planning → Done) to track progress. Click a card to open the Story Drawer for details and assignment.'
   },
   {
-    trigger: ['mcp servers', 'mcp', 'context'],
-    response: 'Model Context Protocol (MCP) servers extend my reach. You can configure them in settings to give Claude access to your local tools, databases, and APIs.'
+    trigger: ['workflow', 'pipeline', 'agent assignment'],
+    response: 'Workflows define how tasks move from planning to completion. You can assign stories to Jules (agent) or yourself. Check the Activity bar for automated pipeline status.'
   },
   {
-    trigger: ['keyboard shortcuts', 'shortcuts', 'hotkeys'],
+    trigger: ['keyboard shortcuts', 'shortcuts', 'keybindings', 'hotkeys'],
     response: "Use Cmd/Ctrl+K for the Command Palette, Cmd/Ctrl+Shift+F for global search, and Cmd/Ctrl+B to toggle the sidebar. Most standard VS Code shortcuts work here too."
   },
   {
-    trigger: ['chat panel tabs', 'tabs', 'context tab'],
-    response: "The Chat Panel back face has 5 tabs: Context (active session data), Persona (model switching), Prompts (saved snippets), History (previous chats), and Guide (me!)."
+    trigger: ['help', 'getting help', 'documentation', 'guide'],
+    response: "I'm Copernicus, your guide! You can ask me about IDE features, use the @help context in chat for the full manual, or click the '?' in the status bar for a quick overview."
   },
   {
-    trigger: ['model switching', 'change model', 'claude vs gemini'],
-    response: "You can switch models in the Persona tab or by clicking the model name in the Chat Header. Claude is great for coding; Gemini is excellent for long-context research."
+    trigger: ['model switching', 'change model', 'claude', 'gemini'],
+    response: "Switch models in the Persona tab (on the back of this panel) or click the model name in the Chat Header. Use Claude for coding and Gemini for long-context research."
+  },
+  {
+    trigger: ['mcp servers', 'mcp', 'context'],
+    response: 'Model Context Protocol (MCP) servers extend my reach. Configure them in Settings to give Claude access to your local tools, databases, and APIs.'
   }
 ]
 
