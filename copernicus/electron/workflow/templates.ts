@@ -35,9 +35,17 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
       name: 'Jules PR Manager',
       nodes: [
         { id: 'watch-session', type: 'tool', label: 'Watch Jules Session', x: 50,  y: 150,
-          data: { variant: 'jules-watch' } as ToolNodeData },
+          data: { 
+            variant: 'jules-watch',
+            label: 'Watch Jules Session',
+            description: 'Poll Jules session status until PR is created or session fails.'
+          } as any },
         { id: 'fetch-diff',    type: 'tool', label: 'Fetch PR Diff',       x: 230, y: 150,
-          data: { variant: 'github-fetch-diff' } as ToolNodeData },
+          data: { 
+            variant: 'github-fetch-diff',
+            label: 'Fetch PR Diff',
+            description: 'Fetch PR diff from GitHub when Jules creates the PR.'
+          } as any },
         {
           id: 'review-agent', type: 'agent', label: 'Claude Code Review', x: 410, y: 150,
           data: {
@@ -45,16 +53,26 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
             provider: 'anthropic',
             modelId: 'claude-sonnet-4-6',
             persona: 'senior_dev',
+            label: 'Claude Code Review',
+            description: 'AI agent that reviews PR diffs and provides feedback.',
             systemPrompt: 'You are a senior engineer reviewing a pull request. Read the diff and provide concise, actionable feedback. Flag any bugs, security issues, or style violations. End with a verdict: APPROVE or REQUEST_CHANGES.',
             task: 'Review the following PR diff and provide feedback:\n\n{{__prDiff}}',
             contextFiles: [],
             outputChannel: 'terminal',
-          } as AgentNodeData,
+          } as any,
         },
         { id: 'post-review',   type: 'tool', label: 'Post Review Comment',   x: 590, y: 150,
-          data: { variant: 'github-post-comment' } as ToolNodeData },
+          data: { 
+            variant: 'github-post-comment',
+            label: 'Post Review Comment',
+            description: 'Post the review agent output as a PR comment.'
+          } as any },
         { id: 'flag-approval', type: 'tool', label: 'Flag Card for Approval', x: 770, y: 150,
-          data: { variant: 'kanban-flag-card' } as ToolNodeData },
+          data: { 
+            variant: 'kanban-flag-card',
+            label: 'Flag Card for Approval',
+            description: 'Set story card to amber-highlighted state, awaiting human merge.'
+          } as any },
       ],
       edges: [
         { id: 'e1', source: 'watch-session',  target: 'fetch-diff' },

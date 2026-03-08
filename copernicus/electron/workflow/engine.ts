@@ -12,6 +12,8 @@ import type { GithubManager } from '../github-manager';
 import type { StoriesManager } from '../stories';
 import log from '../utils/logger';
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export type StateCallback = (event: WorkflowExecutionEvent) => void;
 
 export interface EngineServices {
@@ -431,7 +433,7 @@ export class WorkflowEngine {
         const { julesManager } = this.services
         let jStatus = 'pending'
         while (jStatus === 'pending' || jStatus === 'running') {
-          await new Promise(resolve => setTimeout(resolve, 30_000))
+          await sleep(30_000)
           const session = await julesManager.getSessionStatus(sessionId)
           if (!session) throw new Error(`jules-watch: session ${sessionId} not found`)
           jStatus = session.status
@@ -505,7 +507,7 @@ export class WorkflowEngine {
           {},
           'workflow'
         );
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await sleep(3000);
         return 'Yes';
       }
       default:
@@ -518,7 +520,7 @@ export class WorkflowEngine {
     switch (d.variant) {
       case 'delay': {
         const ms = Math.min(d.durationMs ?? 1000, 300_000); // cap at 5 min
-        await new Promise(resolve => setTimeout(resolve, ms));
+        await sleep(ms);
         return `delayed:${ms}ms`;
       }
       default:
