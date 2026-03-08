@@ -131,11 +131,11 @@ export class StoriesManager {
   private _parseStoryRecord(filename: string, content: string): StoryRecord {
     const id = filename.replace('.md', '')
     const titleMatch = content.match(/^#\s+(.+)$/m)
-    let title = titleMatch ? titleMatch[1] : id
+    let title = titleMatch ? titleMatch[1]! : id
     title = title.replace(/^Story \d+[:\s—]+\s*/, '')
 
     const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)$/m)
-    const statusRaw = statusMatch ? statusMatch[1].trim() : 'UNKNOWN'
+    const statusRaw = statusMatch ? statusMatch[1]!.trim() : 'UNKNOWN'
     let status = 'UNKNOWN'
     if (statusRaw.includes('READY')) status = 'READY'
     else if (statusRaw.includes('IN PROGRESS')) status = 'IN PROGRESS'
@@ -148,19 +148,19 @@ export class StoriesManager {
     const priority = priorityMatch ? priorityMatch[1] : 'UNKNOWN'
 
     const typeMatch = content.match(/\*\*Type:\*\*\s*(.+)$/m)
-    const type = typeMatch ? typeMatch[1].trim() : 'Unknown'
+    const type = typeMatch ? typeMatch[1]!.trim() : 'Unknown'
 
     const epicMatch = content.match(/\*\*Epic:\*\*\s*(.+)$/m)
-    const epic = epicMatch && epicMatch[1].trim() !== '(none)' && epicMatch[1].trim() !== ''
-      ? epicMatch[1].trim() : null
+    const epic = epicMatch && epicMatch[1]!.trim() !== '(none)' && epicMatch[1]!.trim() !== ''
+      ? epicMatch[1]!.trim() : null
 
     const modelMatch = content.match(/\*\*(?:Model|Assigned To):\*\*\s*(.+)$/m)
-    const assigned_to = modelMatch && modelMatch[1].trim() !== '(unassigned)'
-      ? modelMatch[1].trim() : undefined
+    const assigned_to = modelMatch && modelMatch[1]!.trim() !== '(unassigned)'
+      ? modelMatch[1]!.trim() : undefined
 
     const workflowMatch = content.match(/\*\*(?:Workflow):\*\*\s*(.+)$/m)
-    const workflow_id = workflowMatch && workflowMatch[1].trim() !== '(none)' && workflowMatch[1].trim() !== '— none —' && workflowMatch[1].trim() !== ''
-      ? workflowMatch[1].trim() : null
+    const workflow_id = workflowMatch && workflowMatch[1]!.trim() !== '(none)' && workflowMatch[1]!.trim() !== '— none —' && workflowMatch[1]!.trim() !== ''
+      ? workflowMatch[1]!.trim() : null
 
     const blockedByMatch = content.match(/##\s+Blocked By\s*\n([\s\S]*?)(?=\n##|$)/)
     const blockedByLines = (blockedByMatch?.[1] ?? '').trim().split('\n')
@@ -177,10 +177,10 @@ export class StoriesManager {
       .map(l => l.match(/story_\d+/i)?.[0] ?? l)
 
     const dateMatch = content.match(/\*\*Date:\*\*\s*(.+)$/m)
-    const date = dateMatch ? dateMatch[1].trim() : ''
+    const date = dateMatch ? dateMatch[1]!.trim() : ''
 
     const flaggedMatch = content.match(/\*\*Flagged:\*\*\s*(.+)$/m)
-    const flagged = flaggedMatch ? flaggedMatch[1].trim().toLowerCase() === 'true' : false
+    const flagged = flaggedMatch ? flaggedMatch[1]!.trim().toLowerCase() === 'true' : false
 
     return {
       id, title, status,
@@ -256,7 +256,7 @@ export class StoriesManager {
     const rows = this.ledger.listStoriesFromDb()
     const maxId = rows.reduce((max, r) => {
       const m = r.id.match(/story_(\d+)/)
-      return m ? Math.max(max, parseInt(m[1], 10)) : max
+      return m ? Math.max(max, parseInt(m[1]!, 10)) : max
     }, 0)
 
     const nextNum = maxId + 1

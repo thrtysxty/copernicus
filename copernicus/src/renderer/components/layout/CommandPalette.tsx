@@ -55,7 +55,7 @@ function calculateScore(query: string, text: string): number {
         score += 5
       }
       // Bonus for match at start or after separator
-      if (i === 0 || /[/\-_ ]/.test(lowerText[i - 1])) {
+      if (i === 0 || (i > 0 && /[/\-_ ]/.test(lowerText[i - 1]!))) {
         score += 5
       }
       prevMatchIdx = i

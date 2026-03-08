@@ -56,8 +56,8 @@ describe('FSManager', () => {
     expect(() => {
         try {
             fsManager.listDir(homePath)
-        } catch (e: any) {
-            if (e.message.includes('Path traversal blocked')) throw e
+        } catch (e: unknown) {
+            if ((e as any).message.includes('Path traversal blocked')) throw e
             // Other errors like EPERM are fine for this test
         }
     }).not.toThrow(/Path traversal blocked/)

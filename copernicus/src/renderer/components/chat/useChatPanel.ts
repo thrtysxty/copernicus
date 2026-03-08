@@ -4,7 +4,7 @@ import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import log from '../../utils/logger'
 import { matchKnowledge } from './CopernicusKnowledgeBase'
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc, IpcResult } from '../../types/ipc'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -92,15 +92,14 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     setGuideMessages([]); setShowClaudeFallback(false)
     if (isFlipped) {
       setActiveBackTab('context')
-      invoke<any>('models:active').then(r => {
-        const activeId = unwrapIpc<string>(r)
+      invoke<string>('models:active').then(activeId => {
         if (activeId) setModel(activeId)
       }).catch(() => {})
     }
   }, [isFlipped, invoke])
 
   useEffect(() => {
-    invoke<any>('auth:status').then(r => setAuthStatus(unwrapIpc<any>(r))).catch(() => {})
+    invoke<AuthStatus>('auth:status').then(status => setAuthStatus(status)).catch(() => {})
   }, [invoke, isFlipped])
 
   useEffect(() => {
@@ -146,16 +145,16 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   }
 
   useEffect(() => {
-    invoke<any>('models:list').then(r => setAvailableModels(unwrapIpc<any[]>(r) ?? [])).catch(log.error)
-    invoke<any>('devtime:status').then(res => { const d = unwrapIpc<any>(res); setIsRepoActive(!!(d && d.session)) })
+    invoke<ModelInfo[]>('models:list').then(models => setAvailableModels(models ?? [])).catch(log.error)
+    invoke<any>('devtime:status').then(res => { setIsRepoActive(!!(res && res.session)) })
   }, [invoke])
 
   useEffect(() => {
     if (memoryInjectedRef.current) return
     memoryInjectedRef.current = true
-    invoke<any>('db:search-memory', 5).then((res: any) => {
-      if (res?.ok && res.data?.length > 0) {
-        const memories = res.data.map((m: any) => m.content).join('\n')
+    invoke<IpcResult<any[]>>('db:search-memory', 5).then((res) => {
+      if (res?.ok && res.data && res.data.length > 0) {
+        const memories = res.data.map((m: { content: string }) => m.content).join('\n')
         setMessages([{ id: `msg-${Date.now()}`, role: 'assistant', content: `[Project Memory]\n${memories}\n\n---\n\nMemory injected silently.` }])
       }
     }).catch(() => {})
@@ -193,11 +192,11 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     return () => { removeToken(); removeDone(); removeError(); removeModelSwitch() }
   }, [])
 
-  const handlePickerSelect = useCallback(async (item: any) => {
+  const handlePickerSelect = useCallback(async (item: PickerResult) => {
     const currentMode = pickerMode; setPickerMode('none'); setPickerResults([])
     let injectedContent = item.payload
     if (currentMode === 'file') {
-      try { const result = await invoke<any>('fs:read-file', item.value); injectedContent = unwrapIpc<string>(result) ?? `[Failed to read ${item.label}]` } catch { injectedContent = `[Failed to read ${item.label}]` }
+      try { const result = await invoke<string>('fs:read-file', item.value); injectedContent = result ?? `[Failed to read ${item.label}]` } catch { injectedContent = `[Failed to read ${item.label}]` }
       setContext(prev => [...prev, { type: 'file', label: item.label, content: `\n// File: ${item.value}\n${injectedContent}\n` }])
     } else if (currentMode === 'story') { setContext(prev => [...prev, { type: 'story', label: item.label, content: injectedContent }]) }
     else if (currentMode === 'codebase') { setContext(prev => [...prev, { type: 'file', label: `@codebase: ${item.label}`, content: `\n// Semantic match: ${item.value}\n${injectedContent}\n` }]) }
@@ -236,12 +235,12 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const handleSaveToStory = async (content: string) => {
     if (!activeStoryId) return
     try {
-      const _rawContent = await invoke<any>('stories:hydrate', activeStoryId); const currentContent = unwrapIpc<any>(_rawContent) ?? ''
-      let updatedContent = currentContent; const implMarker = '## Implementation'
-      if (currentContent.includes(implMarker)) updatedContent = currentContent.split(implMarker)[0] + `${implMarker}\n${content}\n`
-      else updatedContent = `${currentContent}\n\n${implMarker}\n${content}\n`
-      await invoke('stories:update', { id: activeStoryId, content: updatedContent })
-      ipcRenderer.send('db:log-intent', `Architected ${activeStoryId} via Chat`, 'COMPLETED', 'chat')
+      const currentContent = await invoke<string>('stories:get-content', activeStoryId); 
+      let updatedContent = currentContent ?? ''; const implMarker = '## Implementation'
+      if (updatedContent.includes(implMarker)) updatedContent = updatedContent.split(implMarker)[0] + `${implMarker}\n${content}\n`
+      else updatedContent = `${updatedContent}\n\n${implMarker}\n${content}\n`
+      await invoke('stories:update-content', { id: activeStoryId, content: updatedContent })
+      window.ipcRenderer.send('db:log-intent', `Architected ${activeStoryId} via Chat`, 'COMPLETED', 'chat')
     } catch {}
   }
 

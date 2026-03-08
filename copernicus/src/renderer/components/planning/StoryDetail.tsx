@@ -200,12 +200,12 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     if (e.shiftKey) {
       if (document.activeElement === first) {
         e.preventDefault()
-        last.focus()
+        last?.focus()
       }
     } else {
       if (document.activeElement === last) {
         e.preventDefault()
-        first.focus()
+        first?.focus()
       }
     }
   }, [setDrawerStory, setSpotlight])

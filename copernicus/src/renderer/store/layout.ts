@@ -293,12 +293,15 @@ export const useLayoutStore = create<LayoutState>()(
 
       setCapexTimer: (timer) => set({ capexTimer: timer }),
 
-      updateAgentTelemetry: (agentId, data) => set((state) => ({
-        agentTelemetry: {
-          ...state.agentTelemetry,
-          [agentId]: { ...state.agentTelemetry[agentId], ...data }
+      updateAgentTelemetry: (agentId, data) => set((state) => {
+        const existing = state.agentTelemetry[agentId] || { tokensIn: 0, tokensOut: 0, cost: 0, limit: 1000000 }
+        return {
+          agentTelemetry: {
+            ...state.agentTelemetry,
+            [agentId]: { ...existing, ...data }
+          }
         }
-      })),
+      }),
 
       toggleLeftPanelMode: () => set((state) => ({
         leftPanelMode: state.leftPanelMode === 'explorer' ? 'command-deck' : 'explorer'

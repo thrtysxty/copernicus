@@ -7,7 +7,9 @@ import { handleIpc } from '../utils/handle-ipc'
 import { assertSafePath } from '../utils/path-guard'
 import { parseMakefile } from '../utils/makefile-parser'
 
-export function register(win: BrowserWindow, deps: any) {
+import { IpcHandlerDeps } from './deps'
+
+export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { fsManager, codebaseIndexer, stateLedger, applyAndVerifyPatch, reversePatch } = deps
 
   // Transactional File Ops (Story 220)
@@ -23,9 +25,10 @@ export function register(win: BrowserWindow, deps: any) {
       }
       await fsManager.commitTransaction(txId);
       return { ok: true, txId };
-    } catch (err: any) {
+    } catch (err: unknown) {
       await fsManager.rollbackTransaction(txId);
-      return { ok: false, error: err.message };
+      const message = err instanceof Error ? err.message : String(err);
+      return { ok: false, error: message };
     }
   }))
   ipcMain.handle('fs:undo-last-transaction', () => handleIpc('fs:undo-last-transaction', [], () => fsManager.undoLastTransaction()))
@@ -63,14 +66,14 @@ export function register(win: BrowserWindow, deps: any) {
   ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc('fs:list-dir', [dirPath], () => fsManager.listDir(dirPath)))
   ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc('fs:open-file', [filePath], () => fsManager.readFile(filePath)))
   ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc('fs:read-file', [filePath], () => fsManager.readFile(filePath)))
-  ipcMain.handle('fs:save-file', (_event, { filePath, content }: any) => handleIpc('fs:save-file', [{ filePath, content }], async () => {
+  ipcMain.handle('fs:save-file', (_event, { filePath, content }: { filePath: string; content: string }) => handleIpc('fs:save-file', [{ filePath, content }], async () => {
     await fsManager.writeFile(filePath, content)
     codebaseIndexer.indexFile(filePath).catch(log.error)
     return true
   }))
 
   // Project Billing (Story 211)
-  ipcMain.handle('project:save-billing', (_e, project: any) => handleIpc('project:save-billing', [project], async () => {
+  ipcMain.handle('project:save-billing', (_e, project: { id: string; path: string; billing_mode: 'fixed' | 'hourly' }) => handleIpc('project:save-billing', [project], async () => {
       let finalPath = project.path;
       if (!path.isAbsolute(finalPath)) {
         const root = fsManager.getRootPath();
@@ -107,7 +110,7 @@ export function register(win: BrowserWindow, deps: any) {
   }))
 
   // Canvas Handlers (Story 153)
-  ipcMain.handle('canvas:get-iframe-bounds', () => handleIpc('canvas:get-iframe-bounds', [], () => deps.getCanvasIframeBounds()))
+  ipcMain.handle('canvas:get-iframe-bounds', () => handleIpc('canvas:get-iframe-bounds', [], () => deps.getCanvasIframeBounds?.()))
 
   ipcMain.handle('canvas:capture-screenshot', (_event, options?: { x?: number; y?: number; width?: number; height?: number }) => handleIpc('canvas:capture-screenshot', [options], async () => {
     if (!win) throw new Error('NO_WINDOW')
@@ -120,7 +123,7 @@ export function register(win: BrowserWindow, deps: any) {
 
   ipcMain.handle('canvas:screenshot-preview', () => handleIpc('canvas:screenshot-preview', [], async () => {
     if (!win) throw new Error('NO_WINDOW')
-    const canvasIframeBounds = deps.getCanvasIframeBounds()
+    const canvasIframeBounds = deps.getCanvasIframeBounds?.()
     if (!canvasIframeBounds) throw new Error('IFRAME_BOUNDS_UNKNOWN')
     const image = await win.webContents.capturePage(canvasIframeBounds)
     const dataUrl = `data:image/png;base64,${image.toPNG().toString('base64')}`
@@ -134,7 +137,7 @@ export function register(win: BrowserWindow, deps: any) {
     return JSON.stringify(result)
   }))
 
-  ipcMain.handle('canvas:send-input', (_event, event: any) => handleIpc('canvas:send-input', [event], async () => {
+  ipcMain.handle('canvas:send-input', (_event, event: Electron.MouseInputEvent | Electron.KeyboardInputEvent) => handleIpc('canvas:send-input', [event], async () => {
     if (!win) throw new Error('NO_WINDOW')
     win.webContents.sendInputEvent(event)
     return true

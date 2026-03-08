@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { Github, Settings, HardDrive } from 'lucide-react'
+import { SettingsLoadResponse } from '../../../types/ipc'
 
 interface GitDefaults {
   defaultBranch: string
@@ -15,7 +16,7 @@ export const GitSection: React.FC = () => {
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
   
-  const [githubStatus, setGithubStatus] = useState<any>(null)
+  const [githubStatus, setGithubStatus] = useState<{ ok: boolean; login: string; avatar_url: string } | null>(null)
   const [githubToken, setGithubToken] = useState('')
   
   const [defaults, setDefaults] = useState<GitDefaults>({
@@ -27,21 +28,23 @@ export const GitSection: React.FC = () => {
   })
 
   const refreshGithubStatus = async () => {
-    const result = await invoke<any>('github:test-connection')
-    const data = (result as any).data || result
-    if (data?.ok) {
-      setGithubStatus(data)
-    } else {
+    try {
+      const result = await invoke<{ ok: boolean; login: string; avatar_url: string }>('github:test-connection')
+      if (result.ok) {
+        setGithubStatus(result)
+      } else {
+        setGithubStatus(null)
+      }
+    } catch {
       setGithubStatus(null)
     }
   }
 
   useEffect(() => {
     refreshGithubStatus()
-    invoke<any>('settings:load').then(result => {
-      const s = (result as any).data || result
-      if (s?.gitDefaults) setDefaults(s.gitDefaults)
-    })
+    invoke<SettingsLoadResponse>('settings:load').then(result => {
+      if (result?.gitDefaults) setDefaults(result.gitDefaults as GitDefaults)
+    }).catch(() => {})
   }, [invoke])
 
   const handleConnect = async () => {
@@ -51,8 +54,9 @@ export const GitSection: React.FC = () => {
       setGithubToken('')
       refreshGithubStatus()
       addToast('GitHub token saved', 'success')
-    } catch (e: any) {
-      addToast(`Save failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Save failed: ${message}`, 'error')
     }
   }
 
@@ -61,8 +65,9 @@ export const GitSection: React.FC = () => {
       await invoke('auth:revoke', 'github')
       setGithubStatus(null)
       addToast('GitHub disconnected', 'success')
-    } catch (e: any) {
-      addToast(`Revoke failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Revoke failed: ${message}`, 'error')
     }
   }
 
@@ -71,22 +76,23 @@ export const GitSection: React.FC = () => {
     setDefaults(newDefaults)
     try {
       await invoke('settings:save', { gitDefaults: newDefaults })
-    } catch (e: any) {
-      addToast(`Save failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Save failed: ${message}`, 'error')
     }
   }
 
   const handleInitWorkspace = async () => {
     try {
-      const result = await invoke<any>('git:init-workspace', defaults)
-      const data = (result as any).data || result
-      if (data?.ok) {
-        addToast(data.message || 'Workspace initialized', 'success')
+      const result = await invoke<{ ok: boolean; message?: string; error?: string }>('git:init-workspace', defaults)
+      if (result.ok) {
+        addToast(result.message || 'Workspace initialized', 'success')
       } else {
-        addToast(`Init failed: ${data?.error || 'Unknown error'}`, 'error')
+        addToast(`Init failed: ${result.error || 'Unknown error'}`, 'error')
       }
-    } catch (e: any) {
-      addToast(`Command failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Command failed: ${message}`, 'error')
     }
   }
 

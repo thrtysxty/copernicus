@@ -68,8 +68,8 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
     stateLedger.upsertJulesSession(record)
 
     return { ok: true, sessionId }
-  } catch (err: any) {
-    return { ok: false, error: err.message }
+  } catch (err: unknown) {
+    return { ok: false, error: (err as Error).message }
   }
 }
 

@@ -44,8 +44,7 @@ export const EnvironmentSection: React.FC = () => {
     setScanning(true)
     try {
       const result = await invoke<ScanResult>('env:scan')
-      const scanData = (result as any).data || result
-      setData(scanData)
+      setData(result)
     } catch (e) {
       log.error('Scan failed', e)
     } finally {
@@ -55,11 +54,10 @@ export const EnvironmentSection: React.FC = () => {
 
   useEffect(() => {
     scan()
-    invoke<EnvVersions>('env:get-versions').then(result => {
-      const v = (result as any).data || result
+    invoke<EnvVersions>('env:get-versions').then(v => {
       setVersions(v)
     }).catch(() => {})
-    const remove = (window as any).ipcRenderer.on('env:install-complete', () => {
+    const remove = window.ipcRenderer.on('env:install-complete', () => {
       addToast('Installation complete', 'success')
       setInstalling(null)
       scan()
@@ -72,8 +70,9 @@ export const EnvironmentSection: React.FC = () => {
     try {
       await invoke('env:install', { id, label, command })
       addToast(`Starting installation: ${label}`, 'info')
-    } catch (e: any) {
-      addToast(`Installation failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Installation failed: ${message}`, 'error')
       setInstalling(null)
     }
   }
@@ -197,7 +196,15 @@ export const EnvironmentSection: React.FC = () => {
   )
 }
 
-const ExtensionCard = ({ id, name, description, status, installCmd, busy, onInstall }: any) => (
+const ExtensionCard = ({ id, name, description, status, installCmd, busy, onInstall }: {
+  id: string;
+  name: string;
+  description: string;
+  status?: DepStatus;
+  installCmd: string;
+  busy: boolean;
+  onInstall: (id: string, name: string, cmd: string) => void;
+}) => (
   <div className="p-4 bg-[#0F0F0F] border border-zinc-800 rounded-lg flex items-center justify-between group hover:border-zinc-700 transition-all">
     <div className="flex items-center gap-4">
       <div className={`p-2 rounded bg-zinc-900 ${status?.installed ? 'text-copernicus-phosphor' : 'text-zinc-600'}`}>

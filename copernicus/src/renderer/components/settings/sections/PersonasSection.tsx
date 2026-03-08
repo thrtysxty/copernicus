@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { User, Plus, Trash2, Edit3, Lock } from 'lucide-react'
+import { SettingsLoadResponse } from '../../../types/ipc'
 
 interface Persona {
   id: string
@@ -33,11 +34,10 @@ export const PersonasSection: React.FC = () => {
   const [prompt, setPrompt] = useState('')
 
   useEffect(() => {
-    invoke<any>('settings:load').then(result => {
-      const s = (result as any).data || result
-      if (s?.personas) setPersonas(s.personas)
+    invoke<SettingsLoadResponse>('settings:load').then(s => {
+      if (s?.personas) setPersonas(s.personas as Persona[])
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }, [invoke])
 
   const handleSave = async (newPersonas: Persona[]) => {
@@ -45,8 +45,9 @@ export const PersonasSection: React.FC = () => {
       await invoke('settings:save', { personas: newPersonas })
       setPersonas(newPersonas)
       addToast('Personas updated', 'success')
-    } catch (e: any) {
-      addToast(`Save failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Save failed: ${message}`, 'error')
     }
   }
 

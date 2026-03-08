@@ -34,8 +34,9 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
       const result = await invoke<any>('fs:list-dir', PROJECTS_ROOT)
       const entries: FileNode[] = unwrapIpc<any>(result) ?? []
       setDirs(entries.filter(e => e.isDir))
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to list directories')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -53,8 +54,9 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
       await invoke<any>('app:set-root-path', dirPath)
       setWorkingDir(dirPath)
       onClose()
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to set project root')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      setError(message)
     }
   }
 
@@ -68,8 +70,9 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
       await invoke<any>('app:set-root-path', newPath)
       setWorkingDir(newPath)
       onClose()
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to create project')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      setError(message)
     } finally {
       setCreating(false)
     }

@@ -201,7 +201,7 @@ export default function WorkflowCanvas() {
 
   // Real-time status updates
   useEffect(() => {
-    const removeListener = (window as any).ipcRenderer.on('workflow:status-update', (_event: any, update: any) => {
+    const removeListener = window.ipcRenderer.on('workflow:status-update', (_event: any, update: any) => {
       setNodes(prev => prev.map(n => {
         if (n.id === update.nodeId) {
           return { ...n, status: update.status, error: update.error };

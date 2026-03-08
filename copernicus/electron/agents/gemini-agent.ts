@@ -122,7 +122,7 @@ export class GeminiAgent extends EventEmitter {
         this.pendingResolver = null
         this.pendingRejecter = null
         this.buffer = ''
-        resolver(response)
+        resolver?.(response)
       }
     }
   }
@@ -133,7 +133,8 @@ export class GeminiAgent extends EventEmitter {
     // Find last line matching the prompt pattern
     let promptIdx = -1
     for (let i = lines.length - 1; i >= 0; i--) {
-      if (/^[>❯]\s*$/.test(lines[i].trim())) { promptIdx = i; break }
+      const line = lines[i]
+      if (line && /^[>❯]\s*$/.test(line.trim())) { promptIdx = i; break }
     }
     const responseLines = lines.slice(1, promptIdx > 0 ? promptIdx : undefined)
     return responseLines.join('\n').trim()

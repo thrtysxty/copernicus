@@ -222,7 +222,9 @@ export class AuthManager {
             try {
                 const content = fs.readFileSync(ghConfigPath, 'utf-8');
                 const parsed = yaml.load(content) as any;
-                const host = Object.keys(parsed)[0];
+                const hosts = Object.keys(parsed);
+                const host = hosts[0];
+                if (!host) return null;
                 return parsed[host]?.oauth_token || null;
             } catch (e) {
                 log.error('Failed to parse gh hosts.yml:', e);

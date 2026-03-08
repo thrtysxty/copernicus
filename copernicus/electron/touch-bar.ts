@@ -86,7 +86,10 @@ export function createTouchBar(window: BrowserWindow, config: TouchBarConfig = D
   }) => {
     // Active view highlighting
     VIEWS.forEach((v, i) => {
-      viewBtns[i].backgroundColor = v.id === data.view ? '#4ADE80' : '#050505'
+      const btn = viewBtns[i]
+      if (btn) {
+        btn.backgroundColor = v.id === data.view ? '#4ADE80' : '#050505'
+      }
     })
 
     // Telemetry labels — mode-aware

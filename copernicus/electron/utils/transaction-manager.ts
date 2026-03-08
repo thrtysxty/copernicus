@@ -38,8 +38,8 @@ interface TransactionConfig {
 const ensureDir = async (dir: string) => {
   try {
     await fs.mkdir(dir, { recursive: true });
-  } catch (e: any) {
-    if (e.code !== 'EEXIST') throw e;
+  } catch (e: unknown) {
+    if ((e as any).code !== 'EEXIST') throw e;
   }
 };
 

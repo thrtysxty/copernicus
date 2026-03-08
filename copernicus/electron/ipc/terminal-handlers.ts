@@ -6,27 +6,29 @@ import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { GeminiAgent } from '../agents/gemini-agent'
 
-export function register(win: BrowserWindow, deps: any) {
+import { IpcHandlerDeps } from './deps'
+
+export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { ptyManager, browserSession, fsManager, getPlaywright } = deps
 
   // Terminal IPC
-  ipcMain.on('terminal-create', (_event, { id, cols, rows, cwd }) => {
+  ipcMain.on('terminal-create', (_event, { id, cols, rows, cwd }: { id: string; cols: number; rows: number; cwd?: string }) => {
     const resolvedCwd = path.resolve(cwd || os.homedir());
     const isSafe = resolvedCwd.startsWith(fsManager.getRootPath() + path.sep) || resolvedCwd === fsManager.getRootPath() || resolvedCwd.startsWith(os.homedir());
     if (win && isSafe) ptyManager.create(id, cols, rows, resolvedCwd, win);
   });
 
-  ipcMain.handle('terminal:resize', (_e, { id, cols, rows }) => handleIpc('terminal:resize', [{ id, cols, rows }], () => ptyManager.resize(id, cols, rows)));
+  ipcMain.handle('terminal:resize', (_e, { id, cols, rows }: { id: string; cols: number; rows: number }) => handleIpc('terminal:resize', [{ id, cols, rows }], () => ptyManager.resize(id, cols, rows)));
 
-  ipcMain.on('terminal-write', (_event, payload: any) => {
+  ipcMain.on('terminal-write', (_event, payload: { id: string; data: string }) => {
     if (payload?.id && payload?.data) ptyManager.write(payload.id, payload.data);
   });
 
-  ipcMain.on('terminal-kill', (_event, { id }) => ptyManager.kill(id));
+  ipcMain.on('terminal-kill', (_event, { id }: { id: string }) => ptyManager.kill(id));
 
-  ipcMain.handle('terminal:stop-agent', (_event, { id }) => handleIpc('terminal:stop-agent', [{ id }], () => ptyManager.kill(id)));
+  ipcMain.handle('terminal:stop-agent', (_event, { id }: { id: string }) => handleIpc('terminal:stop-agent', [{ id }], () => ptyManager.kill(id)));
 
-  ipcMain.on('terminal:spawn-agent', (_event, { agentId }: any) => {
+  ipcMain.on('terminal:spawn-agent', (_event, { agentId }: { agentId: string }) => {
     if (!/^[a-z0-9_-]+$/.test(agentId)) return;
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('terminal:activate-tab', { agentId }));
   })
@@ -41,11 +43,12 @@ export function register(win: BrowserWindow, deps: any) {
   ipcMain.handle('browser:launch', (_event, opts?: { headless?: boolean; executablePath?: string }) => handleIpc('browser:launch', [opts], async () => {
     const { chromium } = await getPlaywright()
     if (browserSession.browser) await browserSession.browser.close()
-    browserSession.browser = await chromium.launch({
+    const browser = await chromium.launch({
       headless: opts?.headless ?? true,
       executablePath: opts?.executablePath,
     })
-    const context = await browserSession.browser.newContext()
+    browserSession.browser = browser
+    const context = await browser.newContext()
     browserSession.page = await context.newPage()
     return true
   }))

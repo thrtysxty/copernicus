@@ -146,6 +146,7 @@ export class PTYAuditor {
       let idx = 0;
       while (totalSize > this.maxTotalSize && idx < remainingFiles.length) {
         const file = remainingFiles[idx];
+        if (!file) { idx++; continue; }
         // Close stream if open
         const stream = this.activeStreams.get(file.path);
         if (stream) {

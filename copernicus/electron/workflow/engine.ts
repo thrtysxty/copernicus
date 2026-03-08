@@ -135,7 +135,7 @@ export class WorkflowEngine {
       }
 
       this.transition('COMPLETE');
-    } catch (error: any) {
+    } catch (error: unknown) {
       log.error('[WorkflowEngine] Execution Failed:', error);
       this.transition('FAILED');
       // Optionally push a global error if needed, but per-node errors are more granular
@@ -232,8 +232,8 @@ export class WorkflowEngine {
       this.context.set(node.id, output);
       if (node.type !== 'decision') this.context.set('__lastOutput', output);
       this.updateNodeStatus(node.id, 'completed', undefined, callback);
-    } catch (err: any) {
-      const msg = err?.message ?? String(err);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       this.context.set(node.id, `ERROR:${msg}`);
       this.updateNodeStatus(node.id, 'error', msg, callback);
       throw err;
@@ -564,7 +564,7 @@ export class WorkflowEngine {
         (error: any, stdout: string, stderr: string) => {
           if (error) {
             this.context.set('__lastExitCode', String(error.code ?? 1));
-            reject(new Error(stderr.trim() || error.message));
+            reject(new Error(stderr.trim() || (error as Error).message));
           } else {
             this.context.set('__lastExitCode', '0');
             resolve(stdout.trim());

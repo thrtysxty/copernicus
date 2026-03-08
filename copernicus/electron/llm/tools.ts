@@ -148,8 +148,8 @@ ${r.content}
   private async readFile(filePath: string): Promise<string> {
     try {
       return fsManager.readFile(filePath)
-    } catch (err: any) {
-      return `Error reading file: ${err.message}`
+    } catch (err: unknown) {
+      return `Error reading file: ${(err as Error).message}`
     }
   }
 

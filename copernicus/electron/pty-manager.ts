@@ -46,7 +46,7 @@ export class PTYManager {
     let executable = shell;
     let args: string[] = [];
 
-    if (sandboxPrefix.length > 0) {
+    if (sandboxPrefix.length > 0 && sandboxPrefix[0]) {
         executable = sandboxPrefix[0];
         args = [...sandboxPrefix.slice(1), shell];
     }

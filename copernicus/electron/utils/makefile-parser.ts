@@ -15,7 +15,7 @@ export function parseMakefile(rootPath: string): string[] {
   let match
   while ((match = regex.exec(content)) !== null) {
     const target = match[1]
-    if (target !== '.PHONY' && target !== 'help') {
+    if (target && target !== '.PHONY' && target !== 'help') {
        targets.push(target)
     }
   }

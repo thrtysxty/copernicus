@@ -3,11 +3,13 @@ import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { WORKFLOW_TEMPLATES } from '../workflow/templates'
 
-export function register(_win: BrowserWindow, deps: any) {
+import { IpcHandlerDeps } from './deps'
+
+export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   const { workflowEngine, socketManager } = deps
 
   // Workflow Handlers
-  ipcMain.handle('workflow:update-node-data', (_e, { nodeId, field, value }: any) => handleIpc('workflow:update-node-data', [{ nodeId, field, value }], () => {
+  ipcMain.handle('workflow:update-node-data', (_e, { nodeId, field, value }: { nodeId: string; field: string; value: any }) => handleIpc('workflow:update-node-data', [{ nodeId, field, value }], () => {
     // This is primarily for external persistence if needed, 
     // but the renderer currently manages the graph state.
     log.info(`[Workflow] Update Node ${nodeId}: ${field} = ${value}`);
@@ -25,7 +27,7 @@ export function register(_win: BrowserWindow, deps: any) {
     }
   }));
 
-  ipcMain.handle('workflow:run', (_event, payload) => handleIpc('workflow:run', [payload], () => {
+  ipcMain.handle('workflow:run', (_event, payload: any) => handleIpc('workflow:run', [payload], () => {
     if (payload && payload.templateId) {
       const tpl = WORKFLOW_TEMPLATES.find(t => t.id === payload.templateId)
       if (!tpl) throw new Error('TEMPLATE_NOT_FOUND')

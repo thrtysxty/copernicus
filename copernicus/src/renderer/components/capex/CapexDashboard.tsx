@@ -242,8 +242,9 @@ export const CapexDashboard: React.FC = () => {
       const record = unwrapIpc<any>(res)
       setTestRuns(prev => [record, ...prev])
       addToast(`Tests complete: ${record.passed}/${record.total_tests} passed`, record.failed > 0 ? 'error' : 'success')
-    } catch (e: any) {
-      addToast(`Test run failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Test run failed: ${message}`, 'error')
     } finally { setTestRunning(false) }
   }
 

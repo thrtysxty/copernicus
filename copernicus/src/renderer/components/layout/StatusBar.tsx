@@ -45,15 +45,15 @@ export const StatusBar: React.FC = () => {
 
   // Load all-time cost on mount and listen for live ledger updates
   useEffect(() => {
-    if (!(window as any).ipcRenderer) return
+    if (!window.ipcRenderer) return
     invoke<number>('ledger:all-time-cost').then(result => {
       const cost = unwrapIpc<any>(result)
       if (typeof cost === 'number') setTelemetry({ capexTotal: cost })
     }).catch(() => {})
 
-    const removeLedger = (window as any).ipcRenderer.on(
+    const removeLedger = window.ipcRenderer.on(
       'ledger:stats-update',
-      (_e: any, stats: ModelCallStats) => {
+      (_e: Electron.IpcRendererEvent, stats: ModelCallStats) => {
         const telemetry: Record<string, any> = {}
         stats.by_model.forEach(m => {
           telemetry[m.model_id] = {
@@ -71,8 +71,8 @@ export const StatusBar: React.FC = () => {
 
   // Listen for critical errors
   useEffect(() => {
-    if (!(window as any).ipcRenderer) return
-    const removeListener = (window as any).ipcRenderer.on('app:critical-error', () => {
+    if (!window.ipcRenderer) return
+    const removeListener = window.ipcRenderer.on('app:critical-error', () => {
       setHasError(true)
     })
     return () => removeListener()

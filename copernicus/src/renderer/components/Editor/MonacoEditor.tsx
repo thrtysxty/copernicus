@@ -190,7 +190,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     // Diagnostics push → Monaco markers
     const removeDiag = window.ipcRenderer.on(
       'lsp:diagnostics-update',
-      (_e: any, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
+      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
         const model = monacoInstance.editor.getModels().find(m => m.uri.toString() === uri)
         if (!model) return
         monacoInstance.editor.setModelMarkers(model, 'lsp', diagnostics.map((d: any) => ({

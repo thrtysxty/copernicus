@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { Workflow, Shield, Clock, Save, Link } from 'lucide-react'
+import { SettingsLoadResponse } from '../../../types/ipc'
 import log from '../../../utils/logger'
 
 interface WorkflowSettings {
@@ -28,21 +29,19 @@ export const WorkflowSection: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const [tplResult, sResult] = await Promise.all([
+        const [tpls, s] = await Promise.all([
           invoke<any[]>('workflow:list-templates'),
-          invoke<any>('settings:load')
+          invoke<SettingsLoadResponse>('settings:load')
         ])
-        const tpls = (tplResult as any).data || tplResult
-        const s = (sResult as any).data || sResult
 
         if (Array.isArray(tpls)) setTemplates(tpls)
         if (s) {
           setWorkflowSettings({
-            reviewEnabled: s.reviewEnabled ?? false,
-            defaultWorkflowTemplate: s.defaultWorkflowTemplate ?? 'standard',
-            autoSaveWorkflow: s.autoSaveWorkflow ?? true,
-            maxExecutionTime: s.maxExecutionTime ?? 30,
-            storyAutoLink: s.storyAutoLink ?? true
+            reviewEnabled: (s.reviewEnabled as boolean) ?? false,
+            defaultWorkflowTemplate: (s.defaultWorkflowTemplate as string) ?? 'standard',
+            autoSaveWorkflow: (s.autoSaveWorkflow as boolean) ?? true,
+            maxExecutionTime: (s.maxExecutionTime as number) ?? 30,
+            storyAutoLink: (s.storyAutoLink as boolean) ?? true
           })
         }
       } catch (e) {
@@ -57,8 +56,9 @@ export const WorkflowSection: React.FC = () => {
     setWorkflowSettings(newSettings)
     try {
       await invoke('settings:save', newSettings)
-    } catch (e: any) {
-      addToast(`Save failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Save failed: ${message}`, 'error')
     }
   }
 
@@ -135,7 +135,13 @@ export const WorkflowSection: React.FC = () => {
   )
 }
 
-const WorkflowToggle = ({ label, description, icon: Icon, enabled, onToggle }: any) => (
+const WorkflowToggle = ({ label, description, icon: Icon, enabled, onToggle }: {
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  enabled: boolean;
+  onToggle: (v: boolean) => void;
+}) => (
   <div className="flex items-center justify-between gap-6 p-4 bg-[#0F0F0F] border border-zinc-800 rounded-lg group hover:border-zinc-700 transition-all">
     <div className="flex items-center gap-4">
       <div className={`p-2 rounded bg-zinc-900 ${enabled ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}>

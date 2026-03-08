@@ -7,7 +7,9 @@ import { handleIpc } from '../utils/handle-ipc'
 import { assertSafePath } from '../utils/path-guard'
 import { setupCommandHandlers as setupDispatcherHandlers } from '../commands/dispatcher'
 
-export function register(win: BrowserWindow, deps: any) {
+import { IpcHandlerDeps } from './deps'
+
+export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { 
     settingsStore, 
     LOG_DIR, 
@@ -47,7 +49,7 @@ export function register(win: BrowserWindow, deps: any) {
   ipcMain.handle('restart-app', () => handleIpc('restart-app', [], () => { app.relaunch(); app.exit(0); }));
 
   // Devtime Handlers
-  ipcMain.handle('devtime:start', (_event, data) => handleIpc('devtime:start', [data], () => {
+  ipcMain.handle('devtime:start', (_event, data: any) => handleIpc('devtime:start', [data], () => {
     if (data.repo_path) {
       storiesManager.setProjectRoot(data.repo_path)
     }
@@ -58,7 +60,7 @@ export function register(win: BrowserWindow, deps: any) {
     total: devtimeManager.getTotalMonthValue(),
     isRepoTargeted: storiesManager.isRepoTargeted()
   })));
-  ipcMain.handle('devtime:close', (_event, data) => handleIpc('devtime:close', [data], () => devtimeManager.closeSession(data)));
+  ipcMain.handle('devtime:close', (_event, data: any) => handleIpc('devtime:close', [data], () => devtimeManager.closeSession(data)));
   ipcMain.handle('devtime:defaults', () => handleIpc('devtime:defaults', [], () => devtimeManager.getDefaults()));
   ipcMain.handle('devtime:report', () => handleIpc('devtime:report', [], () => devtimeManager.getReport()));
   ipcMain.handle('devtime:list-stories', (_event, repoPath: string) => handleIpc('devtime:list-stories', [repoPath], () => devtimeManager.listStories(repoPath)));
@@ -84,7 +86,7 @@ export function register(win: BrowserWindow, deps: any) {
     return record
   }))
 
-  ipcMain.handle('devtime:run-playwright', (_e, { file } = {}) => handleIpc('devtime:run-playwright', [{ file }], async () => {
+  ipcMain.handle('devtime:run-playwright', (_e, { file } = {} as { file?: string }) => handleIpc('devtime:run-playwright', [{ file }], async () => {
     return new Promise((resolve, reject) => {
       const args = ['playwright', 'test', '--reporter=json']
       if (file) {
@@ -201,7 +203,7 @@ export function register(win: BrowserWindow, deps: any) {
   ipcMain.handle('db:get-intents', (_, limit) => handleIpc('db:get-intents', [limit], () => stateLedger.getRecentIntents(limit)));
   ipcMain.handle('db:log-event', (_, type, content, metadata, agentId) => handleIpc('db:log-event', [type, content, metadata, agentId], () => stateLedger.logEvent(type, content, metadata, agentId)));
   ipcMain.handle('db:get-events', (_, limit) => handleIpc('db:get-events', [limit], () => stateLedger.getRecentEvents(limit)));
-  ipcMain.handle('db:add-memory', (_, payload) => handleIpc('db:add-memory', [payload], () => {
+  ipcMain.handle('db:add-memory', (_, payload: string | { content: string; source: string }) => handleIpc('db:add-memory', [payload], () => {
     if (typeof payload === 'string') {
       stateLedger.addProjectMemory({ content: payload, source: 'manual' });
     } else {
@@ -215,7 +217,7 @@ export function register(win: BrowserWindow, deps: any) {
   }));
 
   // Context Snapshots & Project Memory (Stories 157 & 158)
-  ipcMain.handle('snapshot:save', (_e, payload) => handleIpc('snapshot:save', [payload], () => {
+  ipcMain.handle('snapshot:save', (_e, payload: any) => handleIpc('snapshot:save', [payload], () => {
     stateLedger.saveSnapshot(payload);
   }));
   ipcMain.handle('snapshot:restore', (_e, panelId: string) => handleIpc('snapshot:restore', [panelId], () =>
@@ -265,7 +267,7 @@ export function register(win: BrowserWindow, deps: any) {
         const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx']
         if (!ALLOWED_BINS.includes(bin)) throw new Error(`Disallowed binary: ${bin}`)
         const v = execFileSync(bin, ['--version'], { timeout: 3000, shell: false }).toString().trim()
-        return { found: true, version: v.split('\n')[0].trim() }
+        return { found: true, version: v.split('\n')[0]?.trim() ?? '' }
       } catch {
         return { found: false }
       }

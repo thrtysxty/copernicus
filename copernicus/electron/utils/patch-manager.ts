@@ -96,8 +96,8 @@ export async function applyAndVerifyPatch(
           dryRunWarnings.push(`Integrity check failed for ${change.path}`);
         }
       }
-    } catch (e: any) {
-      dryRunWarnings.push(`Error processing ${change.path}: ${e.message}`);
+    } catch (e: unknown) {
+      dryRunWarnings.push(`Error processing ${change.path}: ${(e as any).message}`);
     }
   }
 

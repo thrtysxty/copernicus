@@ -3,6 +3,7 @@ import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { FileText, Plus, Trash2, Edit3 } from 'lucide-react'
 import { TEMPLATE_MANIFEST } from '../../../templates'
+import { SettingsLoadResponse } from '../../../types/ipc'
 
 interface StoryTemplate {
   id: string
@@ -32,9 +33,8 @@ export const TemplatesSection: React.FC = () => {
   const [body, setBody] = useState('')
 
   useEffect(() => {
-    invoke<any>('settings:load').then(result => {
-      // Result is { ok: true, data: { ... } } due to handleIpc
-      const s = (result as any).data || result
+    invoke<SettingsLoadResponse>('settings:load').then(result => {
+      const s = result as any
       if (s?.storyTemplates && s.storyTemplates.length > 0) {
         setTemplates(s.storyTemplates)
       } else {
@@ -56,8 +56,9 @@ export const TemplatesSection: React.FC = () => {
       await invoke('settings:save', { storyTemplates: newTemplates })
       setTemplates(newTemplates)
       addToast('Templates updated', 'success')
-    } catch (e: any) {
-      addToast(`Save failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Save failed: ${message}`, 'error')
     }
   }
 

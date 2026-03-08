@@ -73,8 +73,8 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
       invoke<any>('devtime:list-stories', formData.repo_path).then((raw: any) => {
         const res: string[] = unwrapIpc<any>(raw) ?? [];
         setStories(res);
-        if (res.length > 0) {
-            setFormData(prev => ({ ...prev, story: res[0] }));
+        if (res.length > 0 && res[0]) {
+            setFormData(prev => ({ ...prev, story: res[0]! }));
         } else {
             setFormData(prev => ({ ...prev, story: '' }));
         }

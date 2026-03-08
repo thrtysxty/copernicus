@@ -14,8 +14,7 @@ export const SecuritySection: React.FC = () => {
   })
 
   useEffect(() => {
-    invoke<any>('settings:load').then(result => {
-      const s = (result as any).data || result
+    invoke<any>('settings:load').then((s) => {
       if (s) {
         setSettings({
           gitGuardEnabled: s.gitGuardEnabled ?? true,
@@ -32,8 +31,9 @@ export const SecuritySection: React.FC = () => {
     try {
       await invoke('settings:save', newSettings)
       addToast('Security policy updated', 'info')
-    } catch (e: any) {
-      addToast(`Save failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Save failed: ${message}`, 'error')
     }
   }
 
@@ -91,7 +91,13 @@ export const SecuritySection: React.FC = () => {
   )
 }
 
-const SecurityToggle = ({ label, description, icon: Icon, enabled, onToggle }: any) => (
+const SecurityToggle = ({ label, description, icon: Icon, enabled, onToggle }: {
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  enabled: boolean;
+  onToggle: (v: boolean) => void;
+}) => (
   <div className="flex items-center justify-between gap-6 p-4 bg-[#0F0F0F] border border-zinc-800 rounded-lg group hover:border-zinc-700 transition-all">
     <div className="flex items-center gap-4">
       <div className={`p-2 rounded bg-zinc-900 ${enabled ? 'text-copernicus-phosphor' : 'text-zinc-500'}`}>

@@ -159,7 +159,7 @@ export class LspManager {
       if (headerEnd === -1) break
       const header = this.buf.slice(0, headerEnd)
       const lenMatch = header.match(/Content-Length:\s*(\d+)/i)
-      if (!lenMatch) { this.buf = this.buf.slice(headerEnd + 4); continue }
+      if (!lenMatch || !lenMatch[1]) { this.buf = this.buf.slice(headerEnd + 4); continue }
       const len = parseInt(lenMatch[1], 10)
       const bodyStart = headerEnd + 4
       if (this.buf.length < bodyStart + len) break

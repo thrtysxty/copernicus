@@ -26,8 +26,8 @@ export const RAGSettings: React.FC = () => {
       } else {
         setError(res.error || 'Failed to run benchmark.')
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'An error occurred.')
     } finally {
       setIsRunning(false)
     }

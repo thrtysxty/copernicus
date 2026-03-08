@@ -4,9 +4,20 @@ import fs from 'fs';
 import os from 'os';
 import log from './utils/logger';
 
+export interface DevSession {
+  start_time: string;
+  duration_seconds: number;
+  value: number;
+  phase: 'PLANNING' | 'DEVELOPMENT' | 'BUG_FIXING' | 'MAINTENANCE';
+  financial_category: 'CAPEX' | 'OPEX' | 'NONE';
+  component: string;
+  description: string;
+  story_id?: string;
+}
+
 export class DevtimeManager {
   private db: Database.Database;
-  private activeSession: any = null;
+  private activeSession: DevSession | null = null;
   private timerInterval: NodeJS.Timeout | null = null;
   private readonly DB_DIR = path.join(os.homedir(), '.copernicus');
   private readonly DB_PATH = path.join(this.DB_DIR, 'devtime.db');
@@ -59,11 +70,15 @@ export class DevtimeManager {
 
   public startSession(data: any, isRecovery = false) {
     this.activeSession = {
+      phase: 'DEVELOPMENT',
+      financial_category: 'CAPEX',
+      component: 'platform_core',
+      description: '',
       ...data,
       start_time: data.start_time || new Date().toISOString(),
       duration_seconds: data.duration_seconds || 0,
       value: data.value || 0
-    };
+    } as DevSession;
 
     if (!isRecovery) {
       fs.writeFileSync(this.LOCK_PATH, JSON.stringify(this.activeSession));
@@ -80,7 +95,7 @@ export class DevtimeManager {
     return this.activeSession;
   }
 
-  public closeSession(data: any) {
+  public closeSession(data: { description: string }) {
     if (!this.activeSession) return;
 
     const durationHours = Math.max(0.25, Math.round((this.activeSession.duration_seconds / 3600) * 4) / 4);
@@ -125,7 +140,7 @@ export class DevtimeManager {
 
   public getTotalMonthValue() {
     const month = new Date().toISOString().slice(0, 7);
-    const row = this.db.prepare("SELECT SUM(value) as total FROM dev_sessions WHERE date LIKE ? AND capitalizable = 1").get(`${month}%`) as any;
+    const row = this.db.prepare("SELECT SUM(value) as total FROM dev_sessions WHERE date LIKE ? AND capitalizable = 1").get(`${month}%`) as { total?: number } | undefined;
     return row?.total || 0;
   }
 
@@ -152,7 +167,7 @@ export class DevtimeManager {
     };
   }
 
-  public getReport(): { ok: boolean; data?: any[]; error?: string } {
+  public getReport(): { ok: boolean; data?: unknown[]; error?: string } {
     try {
       const sql = `
         SELECT
@@ -169,9 +184,10 @@ export class DevtimeManager {
       `;
       const rows = this.db.prepare(sql).all();
       return { ok: true, data: rows };
-    } catch (err: any) {
-      log.error('[DevtimeManager] Report error:', err);
-      return { ok: false, error: err.message };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      log.error('[DevtimeManager] Report error:', message);
+      return { ok: false, error: message };
     }
   }
 }

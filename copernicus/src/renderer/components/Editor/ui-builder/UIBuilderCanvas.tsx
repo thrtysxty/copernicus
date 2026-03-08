@@ -143,8 +143,9 @@ export const UIBuilderCanvas: React.FC = () => {
       const filePath = `${srcDir}/GeneratedUI.tsx`
       await invoke('fs:save-file', { filePath, content: jsx })
       addToast(`Exported to ${filePath}`, 'success')
-    } catch (e: any) {
-      addToast(`Export failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Export failed: ${message}`, 'error')
     }
   }
 
@@ -155,8 +156,9 @@ export const UIBuilderCanvas: React.FC = () => {
       const filePath = `${rootPath}/preview.html`
       await invoke('fs:save-file', { filePath, content: html })
       addToast(`Exported to ${filePath}`, 'success')
-    } catch (e: any) {
-      addToast(`Export failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Export failed: ${message}`, 'error')
     }
   }
 

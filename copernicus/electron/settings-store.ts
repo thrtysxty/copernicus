@@ -4,9 +4,19 @@ import * as path from 'path';
 import * as os from 'os';
 import log from './utils/logger';
 
+export interface Settings {
+  workspace?: string;
+  googleOAuthClientId?: string;
+  mcp?: {
+    servers: any[];
+  };
+  touchBar?: any;
+  [key: string]: unknown;
+}
+
 export class SettingsStore {
   private configPath: string;
-  private data: Record<string, any> = {};
+  private data: Settings = {};
 
   constructor() {
     // Unify on copernicus-settings.json as the single source of truth
@@ -34,7 +44,7 @@ export class SettingsStore {
       const legacyMcpPath = path.join(COPERNICUS_HOME, 'mcp_config.json');
       const userDataMcpPath = path.join(app.getPath('userData'), 'claude_mcp_config.json');
 
-      let servers: any[] = [];
+      let servers: unknown[] = [];
 
       if (fs.existsSync(userDataMcpPath)) {
         try {
@@ -87,20 +97,20 @@ export class SettingsStore {
     }
   }
 
-  get(key: string, defaultValue: any = undefined): any {
-    return this.data[key] ?? defaultValue;
+  get<T>(key: string, defaultValue?: T): T {
+    return (this.data[key] as T) ?? (defaultValue as T);
   }
 
-  set(key: string, value: any) {
+  set(key: string, value: unknown) {
     this.data[key] = value;
     this.save();
   }
 
-  getAll(): Record<string, any> {
+  getAll(): Settings {
     return { ...this.data };
   }
 
-  setAll(data: Record<string, any>) {
+  setAll(data: Partial<Settings>) {
     this.data = { ...this.data, ...data };
     this.save();
   }

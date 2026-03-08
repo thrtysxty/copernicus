@@ -6,7 +6,9 @@ import os from 'node:os'
 import path from 'node:path'
 import { handleIpc } from '../utils/handle-ipc'
 
-export function register(win: BrowserWindow, deps: any) {
+import { IpcHandlerDeps } from './deps'
+
+export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { authManager, settingsStore, storiesManager, fsManager, ptyManager } = deps
 
   // ── Anthropic: API key only — no OAuth ────────
@@ -43,8 +45,8 @@ export function register(win: BrowserWindow, deps: any) {
           win?.webContents.send('oauth:callback', { provider: 'openrouter', ok: true, type: 'oauth' })
           if (win) { win.show(); win.focus(); }
           resolve({ ok: true })
-        } catch (err: any) {
-          const msg = err?.message ?? 'Unknown error'
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Unknown error'
           win?.webContents.send('oauth:callback', { provider: 'openrouter', ok: false, error: msg })
           resolve({ ok: false, error: msg })
         }
@@ -81,13 +83,13 @@ export function register(win: BrowserWindow, deps: any) {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
     })
-    const data = await res.json() as any
+    const data = await res.json() as { access_token?: string; error_description?: string }
     if (!data.access_token) throw new Error(data.error_description ?? 'Token exchange failed')
     const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${data.access_token}` },
     })
-    const user = await userRes.json() as any
-    return { access_token: data.access_token as string, email: (user.email ?? '') as string }
+    const user = await userRes.json() as { email?: string }
+    return { access_token: data.access_token, email: (user.email ?? '') }
   }
 
   ipcMain.handle('app:start-oauth-listener', () => handleIpc('app:start-oauth-listener', [], () => {
@@ -132,8 +134,8 @@ export function register(win: BrowserWindow, deps: any) {
           win?.webContents.send('oauth:google-complete', { ok: true, email })
           if (win) { win.show(); win.focus(); }
           resolve({ ok: true })
-        } catch (err: any) {
-          const msg = err?.message ?? 'Unknown error'
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Unknown error'
           win?.webContents.send('oauth:google-complete', { ok: false, error: msg })
           resolve({ ok: false })
         }
@@ -260,7 +262,7 @@ export function register(win: BrowserWindow, deps: any) {
       }
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json() as any
+    const data = await res.json() as { items: unknown[] }
     return data.items
   }))
 
@@ -281,7 +283,7 @@ export function register(win: BrowserWindow, deps: any) {
       headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'COPERNICUS-IDE' }
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const user = await res.json() as any
+    const user = await res.json() as { login: string; avatar_url: string }
     return { login: user.login, avatar_url: user.avatar_url }
   }))
 }

@@ -6,13 +6,13 @@ import {
   ShieldCheck, Loader2, GripVertical, Zap, Check
 } from 'lucide-react'
 import log from '../../../utils/logger'
-import { unwrapIpc } from '../../../types/ipc'
 
 interface AuthStatus {
   provider: string
   hasKey: boolean
   source: 'env' | 'storage' | 'file' | 'none'
   baseUrl?: string
+  type?: string
 }
 
 export const ProvidersSection: React.FC = () => {
@@ -37,12 +37,11 @@ export const ProvidersSection: React.FC = () => {
 
   const fetchStatus = async () => {
     try {
-      const result = await invoke<AuthStatus[]>('auth:status')
-      const data = (result as any).data || result
+      const data = await invoke<AuthStatus[]>('auth:status')
       if (Array.isArray(data)) {
         setStatus(data)
         const urls: Record<string, string> = {}
-        data.forEach((s: any) => {
+        data.forEach((s: AuthStatus) => {
           if (s.baseUrl) urls[s.provider] = s.baseUrl
           if (s.provider === 'anthropic' && s.type === 'cli') setAnthropicMethod('cli')
           else if (s.provider === 'anthropic' && s.hasKey) setAnthropicMethod('apikey')
@@ -51,12 +50,11 @@ export const ProvidersSection: React.FC = () => {
       }
 
       // Check Claude CLI availability
-      const cliResult = await invoke<any>('check-cli-tools')
-      const cliData = unwrapIpc<any>(cliResult)
-      setClaudeCliAvailable(!!cliData?.claude)
+      const cliData = await invoke<any>('check-cli-tools')
+      setClaudeCliAvailable(!!(cliData as any)?.claude)
 
       const settings = await invoke<any>('settings:load')
-      const savedOrder = (settings as any).data?.providerOrder || settings?.providerOrder
+      const savedOrder = (settings as any)?.providerOrder
       if (savedOrder && Array.isArray(savedOrder)) setProviders(savedOrder)
     } catch (e) {
       log.error('Failed to fetch auth status', e)
@@ -71,7 +69,10 @@ export const ProvidersSection: React.FC = () => {
       setAnthropicMethod('cli')
       addToast('Anthropic: using Claude Code CLI', 'success')
       fetchStatus()
-    } catch (e: any) { addToast(e.message, 'error') }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(message, 'error')
+    }
   }
 
   const saveKey = async (id: string) => {
@@ -82,8 +83,9 @@ export const ProvidersSection: React.FC = () => {
       setKeyDraft(prev => ({ ...prev, [id]: '' }))
       addToast(`${id} API key saved`, 'success')
       fetchStatus()
-    } catch (e: any) {
-      addToast(e.message, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(message, 'error')
     }
   }
 
@@ -94,15 +96,16 @@ export const ProvidersSection: React.FC = () => {
       await invoke('auth:store-api-key', id, keyDraft[id] || '', url)
       addToast(`${id} base URL updated`, 'success')
       fetchStatus()
-    } catch (e: any) {
-      addToast(e.message, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(message, 'error')
     }
   }
 
   useEffect(() => {
     fetchStatus()
     
-    const remove = (window as any).ipcRenderer.on('oauth:callback', (_e: any, data: any) => {
+    const remove = window.ipcRenderer.on('oauth:callback', (_e, data: { ok: boolean; provider: string; error?: string }) => {
       setAuthInProgress(null)
       if (data.ok) {
         setAuthFailed(prev => { const n = new Set(prev); n.delete(data.provider); return n })
@@ -120,15 +123,15 @@ export const ProvidersSection: React.FC = () => {
   const handleOAuth = async (provider: string) => {
     setAuthInProgress(provider)
     try {
-      const result = await invoke<any>(`oauth:start-${provider}`)
-      const data = (result as any).data || result
+      const data = await invoke<{ ok: boolean; error?: string }>(`oauth:start-${provider}`)
       if (!data.ok) {
         setAuthInProgress(null)
         addToast(data.error || 'Auth failed', 'error')
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
       setAuthInProgress(null)
-      addToast(e.message, 'error')
+      addToast(message, 'error')
     }
   }
 
@@ -139,8 +142,9 @@ export const ProvidersSection: React.FC = () => {
       setAuthFailed(prev => { const n = new Set(prev); n.delete(provider); return n })
       addToast('Provider access revoked', 'success')
       fetchStatus()
-    } catch (e: any) {
-      addToast(e.message, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(message, 'error')
     }
   }
 
@@ -154,7 +158,9 @@ export const ProvidersSection: React.FC = () => {
     
     const newProviders = [...providers]
     const item = newProviders.splice(draggedIdx, 1)[0]
-    newProviders.splice(idx, 0, item)
+    if (item) {
+      newProviders.splice(idx, 0, item)
+    }
     setProviders(newProviders)
     setDraggedIdx(idx)
   }
@@ -164,7 +170,7 @@ export const ProvidersSection: React.FC = () => {
     try {
       await invoke('settings:save', { providerOrder: providers })
       addToast('Provider priority updated', 'success')
-    } catch (e: any) {
+    } catch (e: unknown) {
       addToast('Failed to save provider order', 'error')
     }
   }
@@ -177,8 +183,9 @@ export const ProvidersSection: React.FC = () => {
       setCustomName(''); setCustomKey(''); setCustomUrl('')
       setShowAddCustom(false)
       fetchStatus()
-    } catch (e: any) {
-      addToast(e.message, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(message, 'error')
     }
   }
 
@@ -358,7 +365,7 @@ export const ProvidersSection: React.FC = () => {
                   {!claudeCliAvailable && (
                     <p className="text-[9px] text-zinc-600">
                       Install{' '}
-                      <button onClick={() => (window as any).ipcRenderer.invoke('app:open-external', 'https://claude.ai/download')} className="text-copernicus-phosphor hover:underline">
+                      <button onClick={() => window.ipcRenderer.invoke('app:open-external', 'https://claude.ai/download')} className="text-copernicus-phosphor hover:underline">
                         Claude Code
                       </button>
                       {' '}then run <code className="text-zinc-400">claude login</code> to enable CLI mode.

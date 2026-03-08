@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   Loader2, Maximize2, Minimize2, RotateCcw, Layout,
 } from 'lucide-react'
-import { useLayoutStore } from './store/layout'
+import { useLayoutStore, StoryboardView } from './store/layout'
 import { useToastStore } from './store/toastStore'
 import { ActivityBar } from './components/layout/ActivityBar'
 import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog'
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
-import { unwrapIpc } from './types/ipc'
+import { unwrapIpc, IpcResult, LspStatusResponse } from './types/ipc'
 import { FileTree } from './components/FileTree/FileTree'
 import { ChatPanel } from './components/chat/ChatPanel'
 import { StatusBar } from './components/layout/StatusBar'
@@ -45,16 +45,16 @@ const PanelHeader: React.FC<{
   const { activeFilePath } = useLayoutStore()
 
   useEffect(() => {
-    invoke<any>('lsp:status').then((res: any) => {
-      if (res?.ok && res.data) setLspRunning(res?.data?.running ?? false)
+    invoke<IpcResult<LspStatusResponse>>('lsp:status').then((res) => {
+      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
     }).catch(() => {})
 
     const removeDiag = window.ipcRenderer.on(
       'lsp:diagnostics-update',
-      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
+      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: { severity: number }[] }) => {
         if (!activeFilePath || `file://${activeFilePath}` !== uri) return
         let errors = 0, warnings = 0
-        diagnostics.forEach((d: any) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
+        diagnostics.forEach((d) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
         setErrorCount(errors)
         setWarnCount(warnings)
       }
@@ -170,50 +170,50 @@ export default function App() {
       setShowSplash(false)
     }
 
-    const removeWorkspaceChanged = (window as any).ipcRenderer.on('app:workspace-changed', (_e: any, { path }: any) => {
+    const removeWorkspaceChanged = window.ipcRenderer.on('app:workspace-changed', (_e, { path }: { path: string }) => {
       setWorkingDir(path)
     })
 
-    const removeActivateTab = (window as any).ipcRenderer.on('terminal:activate-tab', (_e: any, { agentId }: any) => {
+    const removeActivateTab = window.ipcRenderer.on('terminal:activate-tab', (_e, { agentId }: { agentId: string }) => {
       addTerminal(`terminal-${agentId}`, agentId.toUpperCase())
     })
 
-    const removeSpawnTerminal = (window as any).ipcRenderer.on('terminal:spawn', (_e: any, { id, label, ephemeral }: any) => {
+    const removeSpawnTerminal = window.ipcRenderer.on('terminal:spawn', (_e, { id, label, ephemeral }: { id: string; label: string; ephemeral?: boolean }) => {
       addTerminal(id, label, ephemeral ?? false)
     })
 
-    const removeBusyState = (window as any).ipcRenderer.on('terminal:set-busy', (_e: any, { id, busy }: any) => {
+    const removeBusyState = window.ipcRenderer.on('terminal:set-busy', (_e, { id, busy }: { id: string; busy: boolean }) => {
       setTerminalBusy(id, busy)
     })
 
-    const removeTerminalClosed = (window as any).ipcRenderer.on('terminal-closed', (_e: any, { id }: { id: string }) => {
+    const removeTerminalClosed = window.ipcRenderer.on('terminal-closed', (_e, { id }: { id: string }) => {
       removeTerminal(id)
     })
 
-    const removeTerminalRemove = (window as any).ipcRenderer.on('terminal:remove', (_e: any, { id }: { id: string }) => {
+    const removeTerminalRemove = window.ipcRenderer.on('terminal:remove', (_e, { id }: { id: string }) => {
       removeTerminal(id)
     })
 
-    const removeFlipListener = (window as any).ipcRenderer.on('layout:toggle-flip', () => {
+    const removeFlipListener = window.ipcRenderer.on('layout:toggle-flip', () => {
       const target = useLayoutStore.getState().spotlightPane ?? 'chat'
-      toggleFlip(target as any)
+      toggleFlip(target as 'editor' | 'chat')
     })
 
-    const removeSpotListener = (window as any).ipcRenderer.on('layout:toggle-spotlight', () => {
+    const removeSpotListener = window.ipcRenderer.on('layout:toggle-spotlight', () => {
       const current = useLayoutStore.getState().spotlightPane
       setSpotlight(current ? null : 'editor')
     })
 
-    const removeUiBuilderListener = (window as any).ipcRenderer.on('layout:toggle-ui-builder', () => {
+    const removeUiBuilderListener = window.ipcRenderer.on('layout:toggle-ui-builder', () => {
       toggleUIBuilder()
     })
 
-    const removePaletteListener = (window as any).ipcRenderer.on('layout:open-palette', () => {
+    const removePaletteListener = window.ipcRenderer.on('layout:open-palette', () => {
       setCommandPaletteOpen(true)
     })
 
-    const removeSetViewListener = (window as any).ipcRenderer.on('layout:set-view', (_e: any, viewId: any) => {
-      setView(viewId)
+    const removeSetViewListener = window.ipcRenderer.on('layout:set-view', (_e, viewId: string) => {
+      setView(viewId as StoryboardView)
     })
 
     const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory'] as const
@@ -232,22 +232,22 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown)
 
     // Fetch initial state
-    invoke<any>('app:get-root-path').then((r: any) => {
-      const root = unwrapIpc<any>(r)
+    invoke<IpcResult<string | null>>('app:get-root-path').then((r) => {
+      const root = unwrapIpc<string | null>(r)
       if (root) setWorkingDir(root)
       else setIsWizard(true)
     }).catch(() => setIsWizard(true))
-    invoke<any>('git:branch').then((r: any) => setGitBranch(unwrapIpc<string>(r))).catch(() => {})
-    invoke<any>('stories:list').then((r: any) => {
-      const list: any[] = unwrapIpc<any[]>(r) ?? []
-      setInProgressCount(list.filter((s: any) => s.status === 'IN PROGRESS').length)
+    invoke<IpcResult<string>>('git:branch').then((r) => setGitBranch(unwrapIpc<string>(r))).catch(() => {})
+    invoke<IpcResult<{ status: string }[]>>('stories:list').then((r) => {
+      const list = unwrapIpc<{ status: string }[]>(r) ?? []
+      setInProgressCount(list.filter((s) => s.status === 'IN PROGRESS').length)
     }).catch(() => {})
 
-    const removeStoriesUpdated = (window as any).ipcRenderer.on('stories:updated', (_e: any, stories: any[]) => {
-      setInProgressCount(stories.filter((s: any) => s.status === 'IN PROGRESS').length)
+    const removeStoriesUpdated = window.ipcRenderer.on('stories:updated', (_e, stories: { status: string }[]) => {
+      setInProgressCount(stories.filter((s) => s.status === 'IN PROGRESS').length)
     })
 
-    const removeCriticalError = (window as any).ipcRenderer.on('app:critical-error', (_e: any, payload: any) => {
+    const removeCriticalError = window.ipcRenderer.on('app:critical-error', (_e, payload) => {
       const p = payload as { type: string; message: string }
       useToastStore.getState().addToast(`[Main] ${p.type}: ${p.message}`, 'error')
     })
@@ -303,7 +303,7 @@ export default function App() {
   useEffect(() => {
     if (showSplash || isWizard) return
 
-    ;(window as any).ipcRenderer.send('telemetry:update-touchbar', {
+    ;window.ipcRenderer.send('telemetry:update-touchbar', {
       storyId: activeStoryId,
       timer: formatTime(capexSessionTime),
       view: activeView,

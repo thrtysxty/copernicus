@@ -34,8 +34,8 @@ export class JulesMonitor {
         if (update.status === 'completed' || update.status === 'failed') {
           this.stopWatching(sessionId)
         }
-      } catch (err: any) {
-        log.error(`[JulesMonitor] poll error for ${sessionId}:`, err.message)
+      } catch (err: unknown) {
+        log.error(`[JulesMonitor] poll error for ${sessionId}:`, (err as Error).message)
       }
     }
 

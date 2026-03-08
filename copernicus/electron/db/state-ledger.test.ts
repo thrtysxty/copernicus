@@ -40,8 +40,8 @@ describe('StateLedger', () => {
 
     const intents = ledger.getRecentIntents(1);
     expect(intents.length).toBe(1);
-    expect(intents[0].content).toBe(content);
-    expect(intents[0].agent_id).toBe(agentId);
+    expect(intents[0]!.content).toBe(content);
+    expect(intents[0]!.agent_id).toBe(agentId);
   });
 
   it('should log and retrieve events', () => {
@@ -53,8 +53,8 @@ describe('StateLedger', () => {
 
     const events = ledger.getRecentEvents(1);
     expect(events.length).toBe(1);
-    expect(events[0].type).toBe(type);
-    expect(events[0].content).toBe(content);
+    expect(events[0]!.type).toBe(type);
+    expect(events[0]!.content).toBe(content);
   });
 
   it('should add and search memories', () => {
@@ -64,7 +64,7 @@ describe('StateLedger', () => {
     const results = ledger.searchMemory('Pi 3B+');
 
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].content).toContain('Pi 3B+');
+    expect(results[0]!.content).toContain('Pi 3B+');
   });
 
   it('should register and find assets', () => {

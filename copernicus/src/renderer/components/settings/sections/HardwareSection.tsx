@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { TouchBarConfig, DEFAULT_TOUCH_BAR_CONFIG } from '../../../types/touch-bar'
+import { SettingsLoadResponse } from '../../../types/ipc'
 import log from '../../../utils/logger'
 
 const ALLOWED_TARGETS = ['dev','test','build','lint','backlog','deploy','commit','agent','dashboard']
@@ -11,10 +12,8 @@ export const HardwareSection: React.FC = () => {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    invoke<any>('settings:load').then(result => {
-      // Result is { ok: true, data: { ... } } due to handleIpc
-      const s = result.data || result
-      if (s?.touchBar) setConfig({ ...DEFAULT_TOUCH_BAR_CONFIG, ...s.touchBar })
+    invoke<SettingsLoadResponse>('settings:load').then(result => {
+      if (result?.touchBar) setConfig({ ...DEFAULT_TOUCH_BAR_CONFIG, ...(result.touchBar as any) })
     }).catch(err => log.error('Failed to load settings', err))
   }, [invoke])
 
@@ -31,7 +30,10 @@ export const HardwareSection: React.FC = () => {
   const updateCommand = (slot: number, patch: Partial<{ target: string; label: string }>) => {
     setConfig(prev => {
       const commands = [...prev.commands] as TouchBarConfig['commands']
-      commands[slot] = { ...commands[slot], ...patch }
+      const existing = commands[slot]
+      if (existing) {
+        commands[slot] = { ...existing, ...patch }
+      }
       return { ...prev, commands }
     })
   }

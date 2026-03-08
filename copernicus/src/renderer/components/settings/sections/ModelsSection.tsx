@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { MessageSquare, Code, Workflow, ChevronUp, ChevronDown } from 'lucide-react'
+import { SettingsLoadResponse } from '../../../types/ipc'
 import log from '../../../utils/logger'
 
 interface Model {
@@ -33,18 +34,16 @@ export const ModelsSection: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const [mResult, sResult] = await Promise.all([
+        const [m, s] = await Promise.all([
           invoke<Model[]>('models:list'),
-          invoke<any>('settings:load')
+          invoke<SettingsLoadResponse>('settings:load')
         ])
-        const m = (mResult as any).data || mResult
-        const s = (sResult as any).data || sResult
-        
+
         if (Array.isArray(m)) setModels(m)
         if (s?.panelDefaults) {
           setDefaults(prev => ({
             ...prev,
-            ...s.panelDefaults
+            ...(s.panelDefaults as any)
           }))
         }
       } catch (e) {
@@ -62,8 +61,9 @@ export const ModelsSection: React.FC = () => {
     try {
       await invoke('settings:save', { panelDefaults: newDefaults })
       addToast('Model defaults updated', 'success')
-    } catch (e: any) {
-      addToast(`Save failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Save failed: ${message}`, 'error')
     }
   }
 
@@ -73,15 +73,18 @@ export const ModelsSection: React.FC = () => {
     if (target < 0 || target >= newPriority.length) return
     
     const temp = newPriority[index]
-    newPriority[index] = newPriority[target]
-    newPriority[target] = temp
+    if (temp !== undefined && newPriority[target] !== undefined) {
+      newPriority[index] = newPriority[target]!
+      newPriority[target] = temp
+    }
     
     handleSave({ embeddingPriority: newPriority })
   }
 
   const groupedModels = models.reduce((acc, m) => {
-    if (!acc[m.provider]) acc[m.provider] = []
-    acc[m.provider].push(m)
+    const provider = m.provider
+    if (!acc[provider]) acc[provider] = []
+    acc[provider]!.push(m)
     return acc
   }, {} as Record<string, Model[]>)
 
@@ -154,7 +157,13 @@ export const ModelsSection: React.FC = () => {
   )
 }
 
-const ModelSelector = ({ label, icon: Icon, value, models, onChange }: any) => (
+const ModelSelector = ({ label, icon: Icon, value, models, onChange }: {
+  label: string;
+  icon: React.ElementType;
+  value: string;
+  models: Record<string, Model[]>;
+  onChange: (v: string) => void;
+}) => (
   <div className="flex items-center justify-between p-4 bg-[#0F0F0F] border border-zinc-800 rounded-lg">
     <div className="flex items-center gap-3">
       <div className="p-2 rounded bg-zinc-900 text-zinc-400">
@@ -168,9 +177,9 @@ const ModelSelector = ({ label, icon: Icon, value, models, onChange }: any) => (
       className="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded px-3 py-1.5 focus:outline-none focus:border-copernicus-phosphor transition-colors min-w-[200px]"
     >
       <option value="">Auto-detect (System Default)</option>
-      {Object.entries(models).map(([provider, providerModels]: [string, any]) => (
+      {Object.entries(models).map(([provider, providerModels]) => (
         <optgroup key={provider} label={provider.toUpperCase()}>
-          {providerModels.map((m: any) => (
+          {providerModels.map((m) => (
             <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </optgroup>

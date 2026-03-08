@@ -25,6 +25,7 @@ class CommandRegistry {
 
   execute(input: string, context: CommandContext): boolean {
     const [cmdName, ...rest] = input.trim().split(/\s+/)
+    if (!cmdName) return false
     const args = rest.join(' ')
     const cmd = this.commands.get(cmdName)
     if (!cmd) return false

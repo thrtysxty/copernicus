@@ -34,7 +34,7 @@ const commands: Command[] = [
     description: 'Delegate task to an agent (default: Jules)',
     execute: (args: string, ctx: CommandContext) => {
       const agentMatch = args.match(/agent=(\w+)/);
-      const targetAgent = agentMatch ? agentMatch[1] : 'jules';
+      const targetAgent = (agentMatch && agentMatch[1]) ? agentMatch[1] : 'jules';
       sendToTerminal(targetAgent, `/delegate ${args}`);
       ctx.appendMessage('assistant', `Delegated to ${targetAgent}: ${args}`);
     }

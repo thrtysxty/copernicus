@@ -2,7 +2,9 @@ import { ipcMain, BrowserWindow } from 'electron'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 
-export function register(_win: BrowserWindow, deps: any) {
+import { IpcHandlerDeps } from './deps'
+
+export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   const { modelRegistry, llmService, codebaseIndexer, hybridRetriever, runRAGBenchmark, lspManager } = deps
 
   // Registry Handlers
@@ -12,7 +14,7 @@ export function register(_win: BrowserWindow, deps: any) {
       const response = await fetch('http://localhost:5001/api/registry/personas');
       if (!response.ok) return [];
       return await response.json();
-    } catch (e) {
+    } catch {
       return [];
     }
   }))
@@ -44,11 +46,11 @@ export function register(_win: BrowserWindow, deps: any) {
   }));
 
   // LLM Chat
-  ipcMain.handle('chat:send', (_event, payload: any) => handleIpc('chat:send', [payload], async () => {
-    llmService.streamChat(payload).catch((err: any) => log.error('[LLM] streamChat error:', err))
+  ipcMain.handle('chat:send', (_event, payload: unknown) => handleIpc('chat:send', [payload], async () => {
+    llmService.streamChat(payload).catch((err: unknown) => log.error('[LLM] streamChat error:', err))
     return true
   }))
-  ipcMain.handle('chat:confirm-model-switch', (_e, payload) => handleIpc('chat:confirm-model-switch', [payload], async () => {
+  ipcMain.handle('chat:confirm-model-switch', (_e, payload: any) => handleIpc('chat:confirm-model-switch', [payload], async () => {
     // Notify all windows
     BrowserWindow.getAllWindows().forEach(w =>
       w.webContents.send('chat:model-switch-decision', payload))
@@ -69,7 +71,7 @@ export function register(_win: BrowserWindow, deps: any) {
   }))
 
   // Review
-  ipcMain.handle('review:log', (_event, { verdicts }: any) => handleIpc('review:log', [{ verdicts }], () => {
+  ipcMain.handle('review:log', (_event, { verdicts }: { verdicts: { claude: string; gemini: string } }) => handleIpc('review:log', [{ verdicts }], () => {
     deps.stateLedger.logIntent(`REVIEW: [Claude: ${verdicts.claude}] [Gemini: ${verdicts.gemini}]`, 'COMPLETED', 'sentinel')
     return true
   }))
@@ -82,8 +84,8 @@ export function register(_win: BrowserWindow, deps: any) {
 
   // LSP (Story 176)
   ipcMain.handle('lsp:status', () => handleIpc('lsp:status', [], () => lspManager.getStatus()))
-  ipcMain.handle('lsp:request', (_e, { method, params }: { method: string; params: any }) => handleIpc('lsp:request', [{ method, params }], () => lspManager.sendRequest(method, params)))
-  ipcMain.handle('lsp:notify', (_e, { method, params }: { method: string; params: any }) => handleIpc('lsp:notify', [{ method, params }], () => { lspManager.sendNotify(method, params) }))
+  ipcMain.handle('lsp:request', (_e, { method, params }: { method: string; params: unknown }) => handleIpc('lsp:request', [{ method, params }], () => lspManager.sendRequest(method, params)))
+  ipcMain.handle('lsp:notify', (_e, { method, params }: { method: string; params: unknown }) => handleIpc('lsp:notify', [{ method, params }], () => { lspManager.sendNotify(method, params) }))
   // LSP file lifecycle + diagnostics (Story 189)
   ipcMain.handle('lsp:open-file', (_e, { filePath, content }: { filePath: string; content: string }) => handleIpc('lsp:open-file', [{ filePath, content }], () => lspManager.openFile(filePath, content)))
   ipcMain.handle('lsp:close-file', (_e, filePath: string) => handleIpc('lsp:close-file', [filePath], () => lspManager.closeFile(filePath)))

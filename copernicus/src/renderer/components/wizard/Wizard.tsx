@@ -118,7 +118,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         await invoke('app:set-root-path', path);
         setStep(3); // Auto-advance to project selection
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Folder selection failed:', error);
     }
   };
@@ -126,8 +126,9 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const handleGoogleOAuth = async () => {
     try {
       await invoke<{ ok: boolean }>('app:start-oauth-listener');
-    } catch (e: any) {
-      console.error('OAuth start failed:', e.message);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? (e as any).message : String(e)
+      console.error('OAuth start failed:', message);
     }
   };
 
@@ -143,10 +144,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         } else {
           alert('GitHub PAT saved, but profile fetch failed.');
         }
-      } catch (e: any) {
-        alert('GitHub Connection Error: ' + e.message);
-      }
-    }
+      } catch (e: unknown) {
+        const message = e instanceof Error ? (e as any).message : String(e)
+        alert('GitHub Connection Error: ' + message);
+      }    }
   };
 
   useEffect(() => {
@@ -211,8 +212,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke('github:set-target-repo', `${githubUser?.login || 'local'}/${projectName}`);
       
       onWizardComplete();
-    } catch (error: any) {
-      alert(`Initialization failed: ${error.message}`);
+    } catch (error: unknown) {
+      alert(`Initialization failed: ${(error as Error).message}`);
     }
   };
 

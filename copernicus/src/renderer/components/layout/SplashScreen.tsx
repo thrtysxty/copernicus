@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import splashImg from '../../assets/splash.png';
 
 // Mock ipcRenderer for development if not in Electron context
-const ipcRenderer = (window as any).ipcRenderer || {
+const ipcRenderer = window.ipcRenderer || {
   on: () => {},
   off: () => {},
   send: () => {},

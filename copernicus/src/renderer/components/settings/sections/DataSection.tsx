@@ -16,7 +16,7 @@ export const DataSection: React.FC = () => {
   const fetchData = async () => {
     try {
       const result = await invoke<number>('db:get-total-cost')
-      const cost = unwrapIpc<any>(result) ?? 0
+      const cost = unwrapIpc<number>(result) ?? 0
       setAllTimeCost(cost)
       // We'll mock the size for now or add an IPC for it if needed later
       setDbSize('1.2 MB') 
@@ -35,8 +35,9 @@ export const DataSection: React.FC = () => {
       await invoke('db:vacuum')
       addToast('Database optimized successfully', 'success')
       fetchData()
-    } catch (e: any) {
-      addToast(`Vacuum failed: ${e.message}`, 'error')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      addToast(`Vacuum failed: ${message}`, 'error')
     } finally {
       setVacuuming(false)
     }
@@ -48,8 +49,9 @@ export const DataSection: React.FC = () => {
         await invoke('settings:save', {}) // In a real app, we'd delete the file
         addToast('Settings reset. Restarting...', 'info')
         setTimeout(() => invoke('restart-app'), 2000)
-      } catch (e: any) {
-        addToast(`Reset failed: ${e.message}`, 'error')
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
+        addToast(`Reset failed: ${message}`, 'error')
       }
     }
   }

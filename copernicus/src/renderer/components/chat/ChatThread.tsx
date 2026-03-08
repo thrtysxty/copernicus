@@ -194,8 +194,8 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
             return (
               <CodeBlock
                 key={i}
-                language={match[1]}
-                code={match[2]}
+                language={match[1] ?? ''}
+                code={match[2] ?? ''}
                 openFilePath={openPath}
               />
             )

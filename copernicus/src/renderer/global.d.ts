@@ -3,10 +3,10 @@ export {};
 declare global {
   interface Window {
     ipcRenderer: {
-      invoke(channel: string, ...args: any[]): Promise<any>;
-      send(channel: string, ...args: any[]): void;
-      on(channel: string, func: (event: any, ...args: any[]) => void): () => void;
-      off(channel: string, func: (event: any, ...args: any[]) => void): void;
+      invoke<T = unknown>(channel: string, ...args: unknown[]): Promise<T>;
+      send(channel: string, ...args: unknown[]): void;
+      on(channel: string, func: (event: Electron.IpcRendererEvent, ...args: any[]) => void): () => void;
+      off(channel: string, func: (event: Electron.IpcRendererEvent, ...args: any[]) => void): void;
     };
   }
 }

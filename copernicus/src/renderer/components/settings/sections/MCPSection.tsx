@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Trash2, AlertCircle, Plus, X, Server } from 'lucide-react'
 import { useIpcError } from '../../../hooks/useIpcError'
-import { unwrapIpc } from '../../../types/ipc'
+import { SettingsLoadResponse } from '../../../types/ipc'
 
 interface McpServer { 
   name: string; 
@@ -21,14 +21,14 @@ export const MCPSection: React.FC = () => {
 
   const loadSettings = async () => {
     try {
-      const r = await invoke<any>('settings:load')
-      const s = unwrapIpc<any>(r)
-      setMcpServers(s?.mcp?.servers ?? [])
+      const result = await invoke<SettingsLoadResponse>('settings:load')
+      setMcpServers((result?.mcp as any)?.servers ?? [])
       
-      const statusRes = await invoke<any>('mcp:get-status')
-      const statuses = unwrapIpc<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>(statusRes) ?? []
+      const statuses = await invoke<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>('mcp:get-status')
       const map: Record<string, 'connected' | 'disconnected' | 'error'> = {}
-      statuses.forEach(s => { map[s.name] = s.status })
+      if (Array.isArray(statuses)) {
+        statuses.forEach(s => { map[s.name] = s.status })
+      }
       setMcpStatus(map)
     } catch (err) {
       console.error('Failed to load MCP settings:', err)
@@ -42,15 +42,16 @@ export const MCPSection: React.FC = () => {
   }, [])
 
   const saveMcpServers = async (servers: McpServer[]) => {
-    const current = await invoke<any>('settings:load').then((r: any) => unwrapIpc<any>(r) ?? {})
+    const current = await invoke<SettingsLoadResponse>('settings:load')
     await invoke('settings:save', { ...current, mcp: { servers } })
     setMcpServers(servers)
     
     // Refresh status after save
-    const statusRes = await invoke<any>('mcp:get-status')
-    const statuses = unwrapIpc<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>(statusRes) ?? []
+    const statuses = await invoke<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>('mcp:get-status')
     const map: Record<string, 'connected' | 'disconnected' | 'error'> = {}
-    statuses.forEach(s => { map[s.name] = s.status })
+    if (Array.isArray(statuses)) {
+      statuses.forEach(s => { map[s.name] = s.status })
+    }
     setMcpStatus(map)
   }
 
@@ -171,7 +172,7 @@ export const MCPSection: React.FC = () => {
               <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Transport Type</label>
               <select 
                 value={newServer.transport} 
-                onChange={e => setNewServer(p => ({...p, transport: e.target.value as any}))} 
+                onChange={e => setNewServer(p => ({...p, transport: e.target.value as 'stdio' | 'sse' | 'http'}))} 
                 className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 appearance-none transition-colors cursor-pointer"
               >
                 <option value="stdio">stdio (Local Process)</option>

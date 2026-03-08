@@ -63,8 +63,8 @@ export class GitGuard {
       const auditScript = path.join(this.projectRoot, 'scripts/utils/security_audit.py');
       const output = execSync(`python3 "${auditScript}"`, { cwd: this.projectRoot }).toString();
       auditResult = output;
-    } catch (e: any) {
-      auditResult = e.stdout ? e.stdout.toString() : 'Audit REJECTED: Credential leak detected.';
+    } catch (e: unknown) {
+      auditResult = (e as any).stdout ? (e as any).stdout.toString() : 'Audit REJECTED: Credential leak detected.';
     }
 
     // Parse remote and branch for display
