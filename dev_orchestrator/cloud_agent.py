@@ -87,7 +87,6 @@ class StandaloneCloudAgent:
         # Attempt to load from Registry API (Story 226 AC-4)
         try:
             import urllib.request
-            import json
             with urllib.request.urlopen("http://localhost:5001/api/registry/personas", timeout=1) as response:
                 if response.status == 200:
                     personas = json.loads(response.read().decode())
