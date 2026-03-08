@@ -21,6 +21,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const txId = await fsManager.beginTransaction();
     try {
       for (const f of files) {
+        assertSafePath(f.filePath);
         await fsManager.stageFile(txId, f.filePath, f.content);
       }
       await fsManager.commitTransaction(txId);
@@ -65,8 +66,12 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   // File System
   ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc('fs:list-dir', [dirPath], () => fsManager.listDir(dirPath)))
   ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc('fs:open-file', [filePath], () => fsManager.readFile(filePath)))
-  ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc('fs:read-file', [filePath], () => fsManager.readFile(filePath)))
+  ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc('fs:read-file', [filePath], () => {
+    assertSafePath(filePath);
+    return fsManager.readFile(filePath);
+  }))
   ipcMain.handle('fs:save-file', (_event, { filePath, content }: { filePath: string; content: string }) => handleIpc('fs:save-file', [{ filePath, content }], async () => {
+    assertSafePath(filePath);
     await fsManager.writeFile(filePath, content)
     codebaseIndexer.indexFile(filePath).catch(log.error)
     return true
