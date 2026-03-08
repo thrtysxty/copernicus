@@ -38,6 +38,7 @@ Available Tools:
 3. search_codebase(query: string) - Perform a local RAG search.
 4. dispatch(model: string, prompt: string) - Request a specific model to handle a sub-task. Use model names from /models:capabilities.
 5. mcp_call(tool_name: string, arguments: object) - Call a local MCP tool.
+6. signal_completion() - Signal that the task is complete and ready for integration.
 
 STRICT EXECUTION PROTOCOL:
 1. You are an industrial sub-agent within the COPERNICUS IDE.
@@ -127,6 +128,10 @@ def execute_tool(tool_name, arguments):
     elif tool_name == "mcp_call":
         mcp_tool = arguments.get("tool_name")
         return f"MCP tool '{mcp_tool}' called successfully (Mock Output)."
+    
+    elif tool_name == "signal_completion":
+        print("[[signal_completion]]")
+        return "Task completion signaled."
         
     return f"Unknown tool: {tool_name}"
 
