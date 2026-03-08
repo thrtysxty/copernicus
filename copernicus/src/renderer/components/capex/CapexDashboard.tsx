@@ -95,7 +95,7 @@ function DashboardPanel({
           </button>
         </div>
       </header>
-      <div className={`p-4 overflow-hidden relative ${isSpotlit ? 'flex-1' : ''}`}>
+      <div className={`p-4 overflow-hidden relative flex-1 ${isSpotlit ? 'flex-1' : ''}`}>
         {children}
       </div>
     </div>
@@ -248,8 +248,7 @@ export const CapexDashboard: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-copernicus-bg font-mono text-zinc-300 overflow-hidden">
-
+    <div className="flex flex-col h-full w-full px-4 bg-copernicus-bg font-mono text-zinc-300 overflow-hidden">
       {/* Internal Sub-Header / Tab bar */}
       <div className="h-8 px-3 border-b border-zinc-800 shrink-0 flex items-center justify-between bg-black/20">
         <div className="flex h-full">
@@ -276,8 +275,8 @@ export const CapexDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
-        <div className={`space-y-4 w-full flex flex-col ${spotlightId ? 'space-y-0 h-full' : ''}`}>
+      <div className="flex-1 min-h-0 flex flex-col p-0 overflow-hidden custom-scrollbar">
+        <div className={`space-y-4 flex flex-col h-full ${spotlightId ? 'space-y-0' : ''}`}>
 
           {/* ── FINANCIAL ─────────────────────────────────────────────────── */}
           {activeTab === 'financial' && (
