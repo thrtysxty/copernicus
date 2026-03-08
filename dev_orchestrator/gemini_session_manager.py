@@ -108,6 +108,7 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
 
     print(f'SESSION_ID: {session_id}', flush=True)
     print(f'LOG: {log_path}', flush=True)
+    print('Launching gemini CLI... (startup may take 3-5 seconds before first output)', flush=True)
 
     start = time.time()
     try:
