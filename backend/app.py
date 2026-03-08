@@ -11,9 +11,12 @@ from backend.api.registry import registry_bp
 from backend.socket_manager import socketio
 
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:3000', 'app://copernicus'])
+def validate_origin(origin):
+    return origin in {'http://localhost:3000', 'http://localhost:5001', 'app://copernicus'}
 
-socketio.init_app(app)
+CORS(app, origins=validate_origin, supports_credentials=False)
+
+socketio.init_app(app, cors_allowed_origins=validate_origin)
 
 app.register_blueprint(stories_bp, url_prefix='/api/stories')
 app.register_blueprint(agents_bp, url_prefix='/api/agents')

@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-socketio = SocketIO(cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(cors_allowed_origins=None, async_mode='threading')
 
 class AgentsNamespace(Namespace):
     def on_connect(self):
