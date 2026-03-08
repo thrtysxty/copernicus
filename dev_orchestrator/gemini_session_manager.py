@@ -142,6 +142,7 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
             ['gemini', '--approval-mode', 'yolo', '-p', prompt],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
             text=True,
             bufsize=1,
             cwd=str(Path(__file__).parent.parent),
