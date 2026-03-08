@@ -149,6 +149,7 @@ export const SCHEMA = {
       pr_url          TEXT,
       pr_number       INTEGER,
       activities_json TEXT,                  -- latest raw activity payload
+      last_search_context TEXT,             -- Top 5 RAG chunks from last search
       started_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
       completed_at    DATETIME,
       error_message   TEXT
@@ -167,6 +168,7 @@ export const SCHEMA = {
       line_start INTEGER,
       line_end INTEGER,
       symbols TEXT,
+      symbol_uid TEXT,
       lsp_metadata TEXT,
       chunk_index INTEGER,
       content TEXT,
