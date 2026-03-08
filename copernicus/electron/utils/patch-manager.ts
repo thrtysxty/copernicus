@@ -3,6 +3,7 @@ import * as path from 'path';
 import crypto from 'crypto';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import log from 'electron-log'
 
 const execPromise = promisify(exec);
 
@@ -83,7 +84,7 @@ export async function applyAndVerifyPatch(
         }
       } else if (change.type === 'delete') {
         if (!dryRun) {
-          await fs.unlink(fullPath).catch(() => {});
+          await fs.unlink(fullPath).catch(err => log.error(err));
         }
         appliedFiles.push(change.path);
       }
@@ -181,7 +182,7 @@ export async function reversePatch(changes: FileChange[], baseCommit: string, wo
       await fs.writeFile(fullPath, stdout);
       appliedFiles.push(change.path);
     } catch {
-      await fs.unlink(fullPath).catch(() => {});
+      await fs.unlink(fullPath).catch(err => log.error(err));
     }
   }
   return { success: true, conflicts: [], appliedFiles };

@@ -1,8 +1,8 @@
 from flask_socketio import SocketIO, Namespace, emit, join_room, leave_room
 from flask import request
 import logging
-
 logger = logging.getLogger(__name__)
+
 
 socketio = SocketIO(cors_allowed_origins=None, async_mode='threading')
 

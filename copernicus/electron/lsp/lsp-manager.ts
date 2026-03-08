@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import { app, BrowserWindow } from 'electron'
 import log from '../utils/logger'
+import log from 'electron-log'
 
 interface PendingRequest {
   resolve: (result: any) => void
@@ -121,7 +122,7 @@ export class LspManager {
     if (!this.proc) return
     this.sendRequest('shutdown', {})
       .then(() => this.sendNotify('exit', {}))
-      .catch(() => {})
+      .catch(err => log.error(err))
     setTimeout(() => { this.proc?.kill(); this.proc = null }, 2000)
   }
 

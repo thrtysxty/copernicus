@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import logging
+logger = logging.getLogger(__name__)
 import os
 import sys
 
@@ -255,7 +257,7 @@ class AgentConsole:
                 print("\nExiting...")
                 break
             except Exception as e:
-                print(f"Error: {e}")
+                logger.error("Error occurred", exc_info=True)
 
 
 if __name__ == "__main__":

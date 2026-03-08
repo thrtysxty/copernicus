@@ -2,6 +2,7 @@ import sqlite3
 import datetime
 import json
 import logging
+logger = logging.getLogger(__name__)
 import subprocess
 from pathlib import Path
 from typing import Optional, List

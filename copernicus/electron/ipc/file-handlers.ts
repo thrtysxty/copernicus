@@ -11,11 +11,11 @@ export function register(win: BrowserWindow, deps: any) {
   const { fsManager, codebaseIndexer, stateLedger, applyAndVerifyPatch, reversePatch } = deps
 
   // Transactional File Ops (Story 220)
-  ipcMain.handle('fs:tx-begin', () => handleIpc(() => fsManager.beginTransaction()))
-  ipcMain.handle('fs:tx-commit', (_e, id) => handleIpc(() => fsManager.commitTransaction(id)))
-  ipcMain.handle('fs:tx-rollback', (_e, id) => handleIpc(() => fsManager.rollbackTransaction(id)))
-  ipcMain.handle('fs:tx-status', () => handleIpc(() => fsManager.tx?.getActiveTransactionId()))
-  ipcMain.handle('fs:save-multiple', (_e, files: { filePath: string, content: string }[]) => handleIpc(async () => {
+  ipcMain.handle('fs:tx-begin', () => handleIpc('fs:tx-begin', [], () => fsManager.beginTransaction()))
+  ipcMain.handle('fs:tx-commit', (_e, id) => handleIpc('fs:tx-commit', [id], () => fsManager.commitTransaction(id)))
+  ipcMain.handle('fs:tx-rollback', (_e, id) => handleIpc('fs:tx-rollback', [id], () => fsManager.rollbackTransaction(id)))
+  ipcMain.handle('fs:tx-status', () => handleIpc('fs:tx-status', [], () => fsManager.tx?.getActiveTransactionId()))
+  ipcMain.handle('fs:save-multiple', (_e, files: { filePath: string, content: string }[]) => handleIpc('fs:save-multiple', [files], async () => {
     const txId = await fsManager.beginTransaction();
     try {
       for (const f of files) {
@@ -28,16 +28,14 @@ export function register(win: BrowserWindow, deps: any) {
       return { ok: false, error: err.message };
     }
   }))
-  ipcMain.handle('fs:undo-last-transaction', () => handleIpc(() => fsManager.undoLastTransaction()))
+  ipcMain.handle('fs:undo-last-transaction', () => handleIpc('fs:undo-last-transaction', [], () => fsManager.undoLastTransaction()))
 
   // Agent Branch/Patch (Story 230)
-  ipcMain.handle('agent:patch-apply', (_e, { changes, baseCommit, workingTree, dryRun }) => 
-    handleIpc(() => applyAndVerifyPatch(changes, baseCommit, workingTree, dryRun)))
+  ipcMain.handle('agent:patch-apply', (_e, { changes, baseCommit, workingTree, dryRun }) => handleIpc('agent:patch-apply', [{ changes, baseCommit, workingTree, dryRun }], () => applyAndVerifyPatch(changes, baseCommit, workingTree, dryRun)))
   
-  ipcMain.handle('agent:patch-reverse', (_e, { changes, baseCommit, workingTree }) => 
-    handleIpc(() => reversePatch(changes, baseCommit, workingTree)))
+  ipcMain.handle('agent:patch-reverse', (_e, { changes, baseCommit, workingTree }) => handleIpc('agent:patch-reverse', [{ changes, baseCommit, workingTree }], () => reversePatch(changes, baseCommit, workingTree)))
 
-  ipcMain.handle('fs:select-file', () => handleIpc(async () => {
+  ipcMain.handle('fs:select-file', () => handleIpc('fs:select-file', [], async () => {
     if (!win) return null;
     const { canceled, filePaths } = await dialog.showOpenDialog(win, { 
       properties: ['openFile'],
@@ -50,30 +48,29 @@ export function register(win: BrowserWindow, deps: any) {
     return canceled ? null : filePaths[0];
   }));
 
-  ipcMain.handle('select-folder', () => handleIpc(async () => {
+  ipcMain.handle('select-folder', () => handleIpc('select-folder', [], async () => {
     if (!win) return null;
     const { canceled, filePaths } = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
     return canceled ? null : filePaths[0];
   }));
 
-  ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc(() => {
+  ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc('fs:make-dir', [dirPath], () => {
     assertSafePath(dirPath);
     fs.mkdirSync(dirPath, { recursive: true })
   }));
 
   // File System
-  ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc(() => fsManager.listDir(dirPath)))
-  ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc(() => fsManager.readFile(filePath)))
-  ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc(() => fsManager.readFile(filePath)))
-  ipcMain.handle('fs:save-file', (_event, { filePath, content }: any) => handleIpc(async () => {
+  ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc('fs:list-dir', [dirPath], () => fsManager.listDir(dirPath)))
+  ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc('fs:open-file', [filePath], () => fsManager.readFile(filePath)))
+  ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc('fs:read-file', [filePath], () => fsManager.readFile(filePath)))
+  ipcMain.handle('fs:save-file', (_event, { filePath, content }: any) => handleIpc('fs:save-file', [{ filePath, content }], async () => {
     await fsManager.writeFile(filePath, content)
     codebaseIndexer.indexFile(filePath).catch(log.error)
     return true
   }))
 
   // Project Billing (Story 211)
-  ipcMain.handle('project:save-billing', (_e, project: any) => 
-    handleIpc(async () => {
+  ipcMain.handle('project:save-billing', (_e, project: any) => handleIpc('project:save-billing', [project], async () => {
       let finalPath = project.path;
       if (!path.isAbsolute(finalPath)) {
         const root = fsManager.getRootPath();
@@ -95,12 +92,11 @@ export function register(win: BrowserWindow, deps: any) {
       return { ok: true, path: finalPath };
     }))
   
-  ipcMain.handle('project:get-billing', (_e, path: string) => 
-    handleIpc(() => stateLedger.getProjectByPath(path)))
+  ipcMain.handle('project:get-billing', (_e, path: string) => handleIpc('project:get-billing', [path], () => stateLedger.getProjectByPath(path)))
 
   // Makefile Handlers
-  ipcMain.handle('makefile:list', () => handleIpc(() => parseMakefile(fsManager.getRootPath())))
-  ipcMain.handle('makefile:run', (_event, target) => handleIpc(() => {
+  ipcMain.handle('makefile:list', () => handleIpc('makefile:list', [], () => parseMakefile(fsManager.getRootPath())))
+  ipcMain.handle('makefile:run', (_event, target) => handleIpc('makefile:run', [target], () => {
     const ALLOWED = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy'];
     if (!ALLOWED.includes(target)) return;
     const child = spawn('make', [target], { cwd: fsManager.getRootPath(), shell: false })
@@ -111,9 +107,9 @@ export function register(win: BrowserWindow, deps: any) {
   }))
 
   // Canvas Handlers (Story 153)
-  ipcMain.handle('canvas:get-iframe-bounds', () => handleIpc(() => deps.getCanvasIframeBounds()))
+  ipcMain.handle('canvas:get-iframe-bounds', () => handleIpc('canvas:get-iframe-bounds', [], () => deps.getCanvasIframeBounds()))
 
-  ipcMain.handle('canvas:capture-screenshot', (_event, options?: { x?: number; y?: number; width?: number; height?: number }) => handleIpc(async () => {
+  ipcMain.handle('canvas:capture-screenshot', (_event, options?: { x?: number; y?: number; width?: number; height?: number }) => handleIpc('canvas:capture-screenshot', [options], async () => {
     if (!win) throw new Error('NO_WINDOW')
     const rect = options?.width
       ? { x: options.x ?? 0, y: options.y ?? 0, width: options.width, height: options.height ?? 400 }
@@ -122,7 +118,7 @@ export function register(win: BrowserWindow, deps: any) {
     return `data:image/png;base64,${image.toPNG().toString('base64')}`
   }))
 
-  ipcMain.handle('canvas:screenshot-preview', () => handleIpc(async () => {
+  ipcMain.handle('canvas:screenshot-preview', () => handleIpc('canvas:screenshot-preview', [], async () => {
     if (!win) throw new Error('NO_WINDOW')
     const canvasIframeBounds = deps.getCanvasIframeBounds()
     if (!canvasIframeBounds) throw new Error('IFRAME_BOUNDS_UNKNOWN')
@@ -132,13 +128,13 @@ export function register(win: BrowserWindow, deps: any) {
     return dataUrl
   }))
 
-  ipcMain.handle('canvas:execute-js', (_event, script: string) => handleIpc(async () => {
+  ipcMain.handle('canvas:execute-js', (_event, script: string) => handleIpc('canvas:execute-js', [script], async () => {
     if (!win) throw new Error('NO_WINDOW')
     const result = await win.webContents.executeJavaScript(script, true)
     return JSON.stringify(result)
   }))
 
-  ipcMain.handle('canvas:send-input', (_event, event: any) => handleIpc(async () => {
+  ipcMain.handle('canvas:send-input', (_event, event: any) => handleIpc('canvas:send-input', [event], async () => {
     if (!win) throw new Error('NO_WINDOW')
     win.webContents.sendInputEvent(event)
     return true

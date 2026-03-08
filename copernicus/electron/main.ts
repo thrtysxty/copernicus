@@ -162,7 +162,7 @@ function registerIpcHandlers() {
 app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !== 'darwin') app.quit() })
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 app.on('will-quit', () => { globalShortcut.unregisterAll() })
-app.on('before-quit', async () => { lspManager.stop(); backendManager.stop(); socketManager.disconnect(); stateLedger.close(); if (browserSession.browser) await browserSession.browser.close().catch(() => {}) })
+app.on('before-quit', async () => { lspManager.stop(); backendManager.stop(); socketManager.disconnect(); stateLedger.close(); if (browserSession.browser) await browserSession.browser.close().catch(err => log.error(err)) })
 
 app.whenReady().then(() => {
   registerIpcHandlers(); backendManager.start(); socketManager.connect()

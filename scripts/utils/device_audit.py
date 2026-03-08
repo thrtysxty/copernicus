@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import logging
+logger = logging.getLogger(__name__)
 import ast
 import os
 import sys
@@ -44,7 +46,7 @@ def check_file(filepath):
         visitor = PiConstraintVisitor(filepath, source_lines)
         visitor.visit(tree)
     except Exception:
-        pass  # Skip non-python or unparseable files
+        logger.error("Unexpected error", exc_info=True)  # Skip non-python or unparseable files
 
 
 def main():

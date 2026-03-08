@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import logging
+logger = logging.getLogger(__name__)
 """
 Agent Git Worktree Harness for Concurrent Execution (Story 230)
 Creates an isolated Git Worktree for agent tasks, manages lifecycle, and integrates results.
@@ -17,7 +19,7 @@ def get_repo_root():
         # Get the absolute path to the repository root
         return subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
     except subprocess.CalledProcessError:
-        print("Error: Not a git repository.")
+        logger.error("Error occurred", exc_info=True)
         sys.exit(1)
 
 def run_git(args, cwd=None):

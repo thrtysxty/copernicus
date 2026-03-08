@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import logging
+logger = logging.getLogger(__name__)
 """
 COPERNICUS IDE - Agent TUI (Claude Code Style)
 A single-stream, chat-based interface for the agentic workflow.
@@ -486,7 +488,7 @@ class DevTimeModal(ModalScreen):
                         m = r // 60
                         elapsed = f"{h}h {m}m"
                     except:
-                        pass
+    logger.error("Unexpected error", exc_info=True)
 
                 info = f"{self.existing_session.get('financial_category')} · {self.existing_session.get('component')} · {elapsed} elapsed"
                 yield Static(info, classes="devtime-row")
@@ -683,7 +685,7 @@ class DevTimeCloseModal(ModalScreen):
                 if self.manager.LOCK_PATH.exists():
                     self.manager.LOCK_PATH.unlink()
             except:
-                pass
+    logger.error("Unexpected error", exc_info=True)
             self.dismiss("quit")
 
         elif event.button.id == "btn-save":
@@ -1603,7 +1605,7 @@ class AgentTui(App):
                         f"Cleaned up {stale_count} stale agent(s)", severity="warning"
                     )
             except Exception:
-                pass
+        logger.error("Unexpected error", exc_info=True)
             self.set_interval(2.0, self.refresh_subagent_count)
 
         # DevTime: Check for active session or start new one
@@ -1687,7 +1689,7 @@ class AgentTui(App):
                     SubagentActivity.SubagentStatus(running)
                 )
             except Exception:
-                pass  # Silently ignore telemetry errors
+        logger.error("Unexpected error", exc_info=True)  # Silently ignore telemetry errors
 
     @on(TextArea.Changed)
     def on_text_changed(self, event: TextArea.Changed) -> None:
@@ -2380,7 +2382,7 @@ class AgentTui(App):
                     "[dim]^d[/dim] quit  [dim]?[/dim] help  [dim]esc[/dim] cancel"
                 )
         except Exception:
-            pass
+        logger.error("Unexpected error", exc_info=True)
 
     def action_cancel_generation(self) -> None:
         """Cancel the current agent generation (Escape key)."""
@@ -2647,7 +2649,7 @@ class AgentTui(App):
             try:
                 agents = telemetry.get_running_agents()
             except Exception:
-                pass
+        logger.error("Unexpected error", exc_info=True)
         self.push_screen(SubagentStatusScreen(agents), self._on_subagent_screen_dismiss)
 
     def _on_subagent_screen_dismiss(self, result: str | None) -> None:

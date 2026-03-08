@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import logging
+logger = logging.getLogger(__name__)
 """
 Claude Ollama CLI Bridge
 
@@ -125,7 +127,7 @@ def main():
                 p_data = json.loads(response.read().decode())
                 model_to_run = p_data.get('defaultModel', persona)
     except Exception:
-        pass # FALLBACK — registry unreachable, use persona alias as model name
+        logger.error("Unexpected error", exc_info=True) # FALLBACK — registry unreachable, use persona alias as model name
 
     if not user_prompt.strip():
         # Interactive mode or just empty prompt?
