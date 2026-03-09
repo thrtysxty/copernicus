@@ -1,6 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import os from 'node:os'
-import path from 'node:path'
 import { execFile } from 'node:child_process'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'

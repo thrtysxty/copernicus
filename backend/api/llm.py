@@ -4,6 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 import subprocess
 from flask import Blueprint, request, Response, stream_with_context, jsonify
+from backend.middleware.auth import require_auth
 from backend.limiter import limiter
 from backend.providers.factory import get_provider
 from backend.utils.validate import validate
@@ -12,6 +13,7 @@ from backend.schemas.llm import ChatRequest
 llm_bp = Blueprint('llm', __name__)
 
 @llm_bp.route('/chat', methods=['POST'])
+@require_auth
 @limiter.limit("30 per minute")
 @validate(ChatRequest)
 def chat(request_data: ChatRequest):
@@ -56,6 +58,7 @@ def chat(request_data: ChatRequest):
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 @llm_bp.route('/context/git', methods=['GET'])
+@require_auth
 def get_git_context():
     """Returns repository context: git status and file list."""
     try:
