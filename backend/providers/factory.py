@@ -14,5 +14,7 @@ def get_provider(provider_name: str) -> BaseProvider:
         return OllamaProvider()
     elif provider_name == 'openai':
         return OpenAIProvider()
+    elif provider_name in ('openrouter', 'deepinfra'):
+        return OpenAIProvider()
     else:
         raise AppError(f"Unknown provider: {provider_name}")

@@ -27,7 +27,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       await fsManager.commitTransaction(txId);
       return { ok: true, txId };
     } catch (err: unknown) {
-      await fsManager.rollbackTransaction(txId);
+      try {
+        await fsManager.rollbackTransaction(txId);
+      } catch (rollbackErr) {
+        log.error('Rollback failed:', rollbackErr);
+      }
       const message = err instanceof Error ? err.message : String(err);
       return { ok: false, error: message };
     }

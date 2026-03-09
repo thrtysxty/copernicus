@@ -274,7 +274,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('env:scan', () => handleIpc('env:scan', [], async () => {
     const check = async (bin: string): Promise<{ found: boolean; version?: string }> => {
       try {
-        const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx']
+        const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx', 'make', 'bun', 'gh', 'curl']
         if (!ALLOWED_BINS.includes(bin)) throw new Error(`Disallowed binary: ${bin}`)
         const { stdout } = await execFileAsync(bin, ['--version'], { timeout: 3000, shell: false })
         const v = stdout.toString().trim()
