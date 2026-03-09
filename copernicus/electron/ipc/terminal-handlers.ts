@@ -157,8 +157,14 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const geminiAgents = new Map<string, GeminiAgent>()
 
   ipcMain.handle('gemini:spawn', (_e, opts: { cwd: string }) => handleIpc('gemini:spawn', [opts], async () => {
+      let spawnCwd: string
+      try {
+        spawnCwd = opts.cwd ? assertSafePath(opts.cwd) : fsManager.getRootPath()
+      } catch {
+        spawnCwd = fsManager.getRootPath()
+      }
       const agent = new GeminiAgent({
-        cwd: opts.cwd || fsManager.getRootPath(),
+        cwd: spawnCwd,
         onOutput: (chunk) => {
           win?.webContents.send('gemini:output', { sessionId: agent.sessionId, chunk })
         },
