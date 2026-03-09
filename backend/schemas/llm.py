@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, field_validator
-import re
+import re, unicodedata
 from backend.utils.validate import validate_no_paths
 
 
@@ -22,10 +22,11 @@ class ChatRequest(BaseModel):
     @field_validator('model')
     @classmethod
     def validate_model_name(cls, v: str) -> str:
+        normalized = unicodedata.normalize('NFKC', v)
         pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9_.:\-/]{0,99})$'
-        if not re.match(pattern, v):
+        if not re.match(pattern, normalized):
             raise ValueError('Invalid model name format')
-        return v
+        return normalized
 
     @field_validator('systemPrompt')
     @classmethod
