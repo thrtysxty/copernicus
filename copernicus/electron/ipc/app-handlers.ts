@@ -47,7 +47,14 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return shell.openPath(logFilePath)
   }))
 
-  ipcMain.handle('app:open-external', (_event, url: string) => handleIpc('app:open-external', [url], () => shell.openExternal(url)))
+  ipcMain.handle('app:open-external', (_event, url: string) => handleIpc('app:open-external', [url], async () => {
+    let parsed: URL
+    try { parsed = new URL(url) } catch { throw new Error(`Invalid URL: ${url}`) }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      throw new Error(`Blocked external URL with protocol: ${parsed.protocol}`)
+    }
+    return shell.openExternal(url)
+  }))
 
   ipcMain.handle('restart-app', () => handleIpc('restart-app', [], () => { app.relaunch(); app.exit(0); }));
 
