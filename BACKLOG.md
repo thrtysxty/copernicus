@@ -97,8 +97,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #279 | Dogfooding Harness Planning And Review Pipeline | DRAFT | Medium |
-| #280 | Release Retrospective And Agent Memory Reinforcement | DRAFT | Medium |
+| #281 | Review-6 Hotfixes — Column Header, Archive Filter, Type Safety | DRAFT | Medium |
+| #282 | New Story Form Column Target Fix | DRAFT | Medium |
+| #283 | Project Memory Persistence Layer | DRAFT | Medium |
 | #213 | Optimize Reports View Justification | APPROVED FOR IMPLEMENTATION | Low |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
@@ -153,6 +154,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #276 | Planner Visual Brightness And Panel Header Consistency | APPROVED FOR IMPLEMENTATION | P2 |
 | #277 | Planner Crud Archive And Epic Story Dual Action | APPROVED FOR IMPLEMENTATION | P1 |
 | #278 | App Header Terminal Header And Activity Bar Polish | APPROVED FOR IMPLEMENTATION | P2 |
+| #279 | Dogfooding Harness Planning And Review Pipeline | APPROVED FOR IMPLEMENTATION | P1 |
+| #280 | Release Retrospective And Agent Memory Reinforcement | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
