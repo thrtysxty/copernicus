@@ -121,7 +121,7 @@ const StoryCard = React.memo(({
   </motion.div>
 ))
 
-const ArchiveList: React.FC<{ invoke: any }> = ({ invoke }) => {
+const ArchiveList: React.FC<{ invoke: ReturnType<typeof useIpcError> }> = ({ invoke }) => {
   const [archived, setArchived] = React.useState<Story[]>([])
   React.useEffect(() => {
     invoke('stories:list', { status: 'ARCHIVED' })
@@ -316,7 +316,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
               ) : (
                 <>
                   {/* Column Header */}
-                  <div className="h-9 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
+                  <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
                     <span className="font-bold text-[9px] text-zinc-500 uppercase tracking-widest truncate">{col.label}</span>
                     <div className="flex items-center gap-2">
                       {col.id === 'planning' && (

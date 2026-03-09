@@ -111,8 +111,12 @@ export class StoriesManager {
     return count
   }
 
-  listStories(): Story[] {
-    return this.ledger.listStoriesFromDb().map(r => ({
+  listStories(filter?: { status?: string }): Story[] {
+    const all = this.ledger.listStoriesFromDb()
+    const rows = filter?.status
+      ? all.filter(r => r.status === filter.status)
+      : all
+    return rows.map(r => ({
       id:       r.id,
       title:    r.title,
       status:   r.status,

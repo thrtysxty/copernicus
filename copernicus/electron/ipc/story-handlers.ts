@@ -7,7 +7,9 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { storiesManager, stateLedger } = deps
 
   // Story Handlers
-  ipcMain.handle('stories:list', () => handleIpc('stories:list', [], () => storiesManager.listStories()))
+  ipcMain.handle('stories:list', (_e, filter?: { status?: string }) =>
+    handleIpc('stories:list', [filter], () => storiesManager.listStories(filter))
+  )
   ipcMain.handle('stories:sync', () => handleIpc('stories:sync', [], () => storiesManager.syncFromDisk()))
   ipcMain.handle('stories:is-repo-targeted', () => handleIpc('stories:is-repo-targeted', [], () => storiesManager.isRepoTargeted()))
   ipcMain.handle('stories:create', (_event, args: string | { title: string; type?: string; epic?: string; priority?: string }) => handleIpc('stories:create', [args], () => {

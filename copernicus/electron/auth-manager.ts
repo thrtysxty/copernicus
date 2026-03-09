@@ -288,16 +288,12 @@ export class AuthManager {
     if (res3) return { key: res3, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra' };
 
     const ollamaUrl = process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || 'http://localhost:11434'
-    if (ollamaUrl) {
-      return {
-        key: 'ollama',
-        baseUrl: ollamaUrl.replace(/\/$/, '') + '/v1',
-        provider: 'ollama',
-        headers: {},
-      }
+    return {
+      key: 'ollama',
+      baseUrl: ollamaUrl.replace(/\/$/, '') + '/v1',
+      provider: 'ollama',
+      headers: {},
     }
-
-    return null;
   }
 
   public resolveForProvider(provider: 'deepinfra' | 'openai' | 'openrouter' | 'ollama') {
