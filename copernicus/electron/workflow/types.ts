@@ -21,7 +21,8 @@ export interface AgentNodeData {
 export interface ToolNodeData {
   variant: 'shell-command' | 'makefile-run' | 'file-read' | 'file-write'
          | 'story-update' | 'log-event' | 'send-chat' | 'notify' | 'screenshot' | 'browser-action'
-         | 'jules-watch' | 'github-fetch-diff' | 'github-post-comment' | 'kanban-flag-card';
+         | 'jules-watch' | 'github-fetch-diff' | 'github-post-comment' | 'kanban-flag-card'
+         | 'db-query' | 'memory-write' | 'agents-md-append';
   command?: string;       // shell-command, makefile-run
   filePath?: string;      // file-read, file-write
   content?: string;       // file-write
@@ -32,6 +33,10 @@ export interface ToolNodeData {
   action?: 'launch' | 'navigate' | 'click' | 'fill' | 'screenshot' | 'evaluate' | 'close'; // browser-action
   url?: string;           // browser-action: navigate
   selector?: string;      // browser-action: click, fill, screenshot
+  contextKey?: string;    // db-query: key to store result in context
+  query?: string;         // db-query: SQL query
+  importance?: number;    // memory-write: memory importance (1-5)
+  source?: string;        // memory-write, agents-md-append: source info
 }
 
 export interface TriggerNodeData {
@@ -42,10 +47,11 @@ export interface TriggerNodeData {
 }
 
 export interface DecisionNodeData {
-  variant: 'exit-code-gate' | 'output-match' | 'human-approval' | 'story-status-check';
+  variant: 'exit-code-gate' | 'output-match' | 'story-status-check' | 'human-approval';
   pattern?: string;       // output-match: regex string
   expectedStatus?: string; // story-status-check
   storyId?: string;
+  message?: string;       // human-approval
 }
 
 export interface FlowNodeData {

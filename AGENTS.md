@@ -97,6 +97,8 @@ copernicus/
       templates.ts         ← WORKFLOW_TEMPLATES
     llm/
       service.ts           ← LLMService singleton
+    workflow/
+      engine.ts            ← WorkflowEngine singleton (workflowEngine)
     models/
       model-registry.ts    ← ModelRegistry singleton
     auth-manager.ts        ← AuthManager singleton
@@ -590,3 +592,13 @@ The Kanban board updates status via IPC on card move.
 - **Node version:** use whatever is default in the Jules environment
 - **electron-rebuild** not needed — no native addons beyond `better-sqlite3`
   (which ships with prebuilt binaries)
+
+---
+
+## Reinforcements (v0.1.0-initial)
+
+- IPC unwrap: always call `unwrapIpc()` before assigning IPC response to renderer state
+- Table rebuilds: wrap multi-statement DDL in `db.transaction(() => {...})()` — never raw `db.exec()` for DROP+RENAME
+- Layout toggles: `toggleFlip` and `setSpotlight` are Zustand store actions, not IPC channels — use `useLayoutStore`
+- Epic field: Story interface uses `epic: string | null` not `epic_id` — match DB column names exactly
+- Column headers: always `h-8` (UX_BIBLE standard) — never `h-9`

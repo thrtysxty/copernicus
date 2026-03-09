@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { Crown, Lock, ChevronDown, Archive } from 'lucide-react'
+import { Crown, Lock, ChevronDown, Archive, Brain } from 'lucide-react'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 
@@ -257,6 +257,13 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
         >
           <Archive size={10} />
           {showArchive ? 'Hide Archive' : 'View Archive'}
+        </button>
+        <button
+          onClick={() => invoke('workflow:run', { templateId: 'release-retrospective' })}
+          className="flex items-center gap-1.5 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-amber-400 rounded text-[8px] font-bold uppercase transition-colors ml-auto"
+        >
+          <Brain size={10} />
+          Run Retrospective
         </button>
       </div>
 

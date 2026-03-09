@@ -11,6 +11,7 @@ import type { JulesManager } from '../jules/jules-manager';
 import type { GithubManager } from '../github-manager';
 import type { StoriesManager } from '../stories';
 import log from '../utils/logger';
+import path from 'path';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -465,6 +466,46 @@ export class WorkflowEngine {
         await this.services.storiesManager.setField(storyId, 'flagged', true)
         this.services.win.webContents.send('stories:updated', this.services.storiesManager.listStories())
         return `kanban-flag-card:flagged:${storyId}`
+      }
+      case 'db-query': {
+        if (!d.query) throw new Error('db-query: query is required');
+        const key = d.contextKey ?? 'db_result';
+        const since = Date.now() - 14 * 24 * 60 * 60 * 1000; // 14-day window
+        let result: any;
+        if (d.query === 'model-calls-sprint') {
+          result = stateLedger.queryModelCallsSprint(since);
+        } else if (d.query === 'model-performance-sprint') {
+          result = stateLedger.queryModelPerformanceSprint(since);
+        } else {
+          throw new Error(`db-query: unknown query "${d.query}"`);
+        }
+        const json = JSON.stringify(result, null, 2);
+        this.context.set(key, json);
+        return `db-query:${key}:${json.length} bytes`;
+      }
+      case 'memory-write': {
+        const content = this.interpolate(d.content ?? '');
+        stateLedger.addProjectMemory({
+          content,
+          importance: d.importance ?? 3,
+          source: d.source ?? 'workflow'
+        });
+        return `memory-write:${content.substring(0, 30)}...`;
+      }
+      case 'agents-md-append': {
+        const content = this.interpolate(d.content ?? '');
+        if (!content.trim()) return 'agents-md-append:skipped:empty';
+        const repoPath = this.services!.fsManager.getRootPath();
+        const agentsMdPath = path.join(repoPath, 'AGENTS.md');
+        const fsm = this.services!.fsManager;
+        let existing = '';
+        try {
+          existing = fsm.readFile(agentsMdPath);
+        } catch {
+          // File might not exist, which is fine for append
+        }
+        await fsm.writeFile(agentsMdPath, existing + '\n' + content);
+        return `agents-md-append:ok`;
       }
       default:
         throw new Error(`Unknown tool variant: ${(d as any).variant}`);

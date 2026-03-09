@@ -315,6 +315,38 @@ export class StateLedger {
     return row?.total ?? 0
   }
 
+  queryModelCallsSprint(since: number): object[] {
+    return this.db.prepare(`
+      SELECT model_id, provider,
+             COUNT(*) as calls,
+             SUM(tokens_in) as tokens_in,
+             SUM(tokens_out) as tokens_out,
+             SUM(cost_usd) as cost_usd,
+             AVG(latency_ms) as avg_latency_ms
+      FROM model_calls
+      WHERE created_at > datetime(? / 1000, 'unixepoch')
+      GROUP BY model_id, provider
+      ORDER BY calls DESC
+    `).all(since) as object[];
+  }
+
+  queryModelPerformanceSprint(since: number): object[] {
+    return this.db.prepare(`
+      SELECT model_id, provider, task_type,
+             COUNT(*) as observations,
+             AVG(speed_score) as avg_speed,
+             AVG(cost_score) as avg_cost,
+             AVG(accuracy_score) as avg_accuracy,
+             AVG(adherence_score) as avg_adherence,
+             AVG(composite_qs) as avg_composite_qs,
+             MIN(adherence_score) as min_adherence
+      FROM model_performance
+      WHERE timestamp > datetime(? / 1000, 'unixepoch')
+      GROUP BY model_id, provider, task_type
+      ORDER BY avg_composite_qs DESC
+    `).all(since) as object[];
+  }
+
   // ── Jules Sessions (Story 161) ──────────────────────────────────────────
 
   upsertJulesSession(s: JulesSession): void {
