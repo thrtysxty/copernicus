@@ -14,9 +14,7 @@ Usage:
 import argparse, json, shutil, sqlite3, subprocess, sys, time, uuid
 from pathlib import Path
 
-GEMINI_BIN = shutil.which('gemini')
-if not GEMINI_BIN:
-    raise RuntimeError('gemini binary not found in PATH')
+GEMINI_BIN = shutil.which('gemini') or 'gemini'
 
 SESSIONS_DIR = Path.home() / '.copernicus' / 'gemini-sessions'
 SESSIONS_FILE = SESSIONS_DIR / 'sessions.json'
@@ -139,6 +137,9 @@ def load_persona(name: str) -> str:
 
 
 def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
+    if not shutil.which(GEMINI_BIN):
+        print('ERROR: gemini binary not found in PATH', file=sys.stderr)
+        sys.exit(127)
     session_id = str(uuid.uuid4())
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
     log_path = SESSIONS_DIR / f'{session_id}.log'
