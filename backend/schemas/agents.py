@@ -1,7 +1,7 @@
 from typing import Optional, Literal
 from pydantic import BaseModel, Field, model_validator, field_validator
 
-ALLOWED_PERSONAS = frozenset({'default', 'junior-dev', 'senior-dev', 'sentinel', 'architect', 'scribe', 'researcher', 'dev'})
+ALLOWED_PERSONAS = frozenset({'default', 'junior-dev', 'senior-dev', 'sentinel', 'architect', 'scribe', 'researcher', 'dev', 'code-reviewer'})
 
 class ContextHandoffRequest(BaseModel):
     session_id: Optional[str] = Field(default=None)
