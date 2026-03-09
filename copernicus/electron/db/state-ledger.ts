@@ -376,43 +376,46 @@ export class StateLedger {
 
     // Drop the FK constraint on epic (was epic_id FK to epics table — epic is free-text).
     // SQLite can't DROP CONSTRAINT, so rebuild the table if the FK still exists.
+    // PRAGMA must be set outside the transaction (SQLite limitation).
     try {
       const hasFk = (this.db.pragma('foreign_key_list(stories)') as any[]).some(
         (r: any) => r.table === 'epics'
       )
       if (hasFk) {
-        this.db.exec(`
-          PRAGMA foreign_keys = OFF;
-          CREATE TABLE stories_rebuilt (
-            id             TEXT PRIMARY KEY,
-            slug           TEXT UNIQUE,
-            title          TEXT NOT NULL,
-            status         TEXT NOT NULL DEFAULT 'DRAFT',
-            priority       TEXT,
-            type           TEXT,
-            epic           TEXT,
-            assigned_to    TEXT,
-            blocked_by     TEXT DEFAULT '[]',
-            blocks         TEXT DEFAULT '[]',
-            workflow_id    TEXT,
-            body_md        TEXT NOT NULL DEFAULT '',
-            file_path      TEXT NOT NULL DEFAULT '',
-            date           TEXT,
-            flagged        INTEGER DEFAULT 0,
-            updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP
-          );
-          INSERT INTO stories_rebuilt SELECT
-            id, slug, title, status, priority, type, epic, assigned_to,
-            blocked_by, blocks, workflow_id, body_md, file_path, date,
-            flagged, updated_at, last_synced_at
-          FROM stories;
-          DROP TABLE stories;
-          ALTER TABLE stories_rebuilt RENAME TO stories;
-          CREATE INDEX IF NOT EXISTS idx_stories_status ON stories(status);
-          CREATE INDEX IF NOT EXISTS idx_stories_priority ON stories(priority, status);
-          PRAGMA foreign_keys = ON;
-        `)
+        this.db.pragma('foreign_keys = OFF')
+        this.db.transaction(() => {
+          this.db.exec(`
+            CREATE TABLE stories_rebuilt (
+              id             TEXT PRIMARY KEY,
+              slug           TEXT UNIQUE,
+              title          TEXT NOT NULL,
+              status         TEXT NOT NULL DEFAULT 'DRAFT',
+              priority       TEXT,
+              type           TEXT,
+              epic           TEXT,
+              assigned_to    TEXT,
+              blocked_by     TEXT DEFAULT '[]',
+              blocks         TEXT DEFAULT '[]',
+              workflow_id    TEXT,
+              body_md        TEXT NOT NULL DEFAULT '',
+              file_path      TEXT NOT NULL DEFAULT '',
+              date           TEXT,
+              flagged        INTEGER DEFAULT 0,
+              updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+              last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            INSERT INTO stories_rebuilt SELECT
+              id, slug, title, status, priority, type, epic, assigned_to,
+              blocked_by, blocks, workflow_id, body_md, file_path, date,
+              flagged, updated_at, last_synced_at
+            FROM stories;
+            DROP TABLE stories;
+            ALTER TABLE stories_rebuilt RENAME TO stories;
+            CREATE INDEX IF NOT EXISTS idx_stories_status ON stories(status);
+            CREATE INDEX IF NOT EXISTS idx_stories_priority ON stories(priority, status);
+          `)
+        })()
+        this.db.pragma('foreign_keys = ON')
       }
     } catch { /* table already clean — ignore */ }
   }

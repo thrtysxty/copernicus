@@ -13,6 +13,9 @@ interface TerminalTabsProps {
 
 export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
   const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy, addTerminal } = useLayoutStore();
+  const toggleFlip = useLayoutStore(s => s.toggleFlip);
+  const setSpotlight = useLayoutStore(s => s.setSpotlight);
+  const spotlightPane = useLayoutStore(s => s.spotlightPane);
   const invoke = useIpcError();
 
   const getAgentBadge = (label: string) => {
@@ -110,14 +113,14 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
         {/* Panel Controls */}
         <div className="flex items-center gap-2 px-3 shrink-0">
           <button
-            onClick={() => window.ipcRenderer.send('layout:toggle-flip', 'terminal')}
+            onClick={() => toggleFlip('terminal')}
             className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
             title="Rotate panel"
           >
             <RotateCcw size={12} />
           </button>
           <button
-            onClick={() => window.ipcRenderer.send('layout:toggle-spotlight', 'terminal')}
+            onClick={() => setSpotlight(spotlightPane === 'terminal' ? null : 'terminal')}
             className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
             title="Spotlight"
           >

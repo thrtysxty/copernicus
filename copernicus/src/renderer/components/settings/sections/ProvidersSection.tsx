@@ -365,7 +365,7 @@ export const ProvidersSection: React.FC = () => {
                   {!claudeCliAvailable && (
                     <p className="text-[9px] text-zinc-600">
                       Install{' '}
-                      <button onClick={() => window.ipcRenderer.invoke('app:open-external', 'https://claude.ai/download')} className="text-copernicus-phosphor hover:underline">
+                      <button onClick={() => invoke('app:open-external', 'https://claude.ai/download')} className="text-copernicus-phosphor hover:underline">
                         Claude Code
                       </button>
                       {' '}then run <code className="text-zinc-400">claude login</code> to enable CLI mode.

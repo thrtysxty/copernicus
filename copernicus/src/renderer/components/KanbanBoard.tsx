@@ -14,7 +14,7 @@ interface Story {
   path: string
   priority: 'P0' | 'P1' | 'P2' | 'P3' | 'UNKNOWN'
   type: string
-  epic_id: string | null
+  epic: string | null
   model: string | null
   workflowId?: string | null
   flagged?: boolean

@@ -90,7 +90,7 @@ export const JulesPanel: React.FC = () => {
                   <td className="p-2">
                     {s.pr_url ? (
                       <button
-                        onClick={() => window.ipcRenderer.invoke('app:open-external', s.pr_url)}
+                        onClick={() => invoke('app:open-external', s.pr_url)}
                         className="text-copernicus-phosphor hover:underline flex items-center gap-1"
                       >
                         <ExternalLink size={9} />
