@@ -91,14 +91,14 @@ export const ActivityBar: React.FC = () => {
         />
         <NavItem id="orchestrator" icon={Workflow} label="Orchestrator" shortcut="⌘4" testId="nav-orchestrator" />
         <NavItem id="reporter" icon={BarChart2} label="Reporter" shortcut="⌘5" testId="nav-reporter" />
+        <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘6" testId="nav-telemetry" />
+        <NavItem id="memory" icon={Brain} label="Agent Memory" shortcut="⌘7" testId="nav-memory" />
       </div>
 
       <div className="flex-1" />
 
       {/* Bottom Tools */}
       <div className="flex flex-col items-center w-full pb-2">
-        <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘6" testId="nav-telemetry" />
-        <NavItem id="memory" icon={Brain} label="Agent Memory" shortcut="⌘7" testId="nav-memory" />
         <NavItem id="github" icon={Github} label="GitHub" testId="nav-github" />
         <NavItem
           icon={Settings}

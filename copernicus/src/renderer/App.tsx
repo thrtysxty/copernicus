@@ -346,21 +346,24 @@ export default function App() {
 
         {/* Main Content Area */}
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
-          <header className="h-8 flex items-center px-4 border-b border-copernicus-steel bg-[#050505] shrink-0 draggable">
-            <div className="w-20 shrink-0" />
-            <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.25em] mr-auto no-drag">
-              COPERNICUS_IDE
+          <header className="h-8 flex items-center px-4 border-b border-copernicus-steel bg-[#050505] shrink-0 draggable relative">
+            {/* Absolutely centered title — doesn't interact with flex children */}
+            <span className="absolute inset-x-0 flex justify-center pointer-events-none">
+              <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.25em] no-drag">
+                COPERNICUS_IDE
+              </span>
             </span>
-            <div className="flex items-center gap-2 no-drag text-[10px] font-mono">
+            {/* Right-side metadata — constrained so it never overflows */}
+            <div className="ml-auto flex items-center gap-2 no-drag text-[10px] font-mono min-w-0 max-w-[40%]">
               <button
                 onClick={() => setProjectSelectorOpen(true)}
-                className="text-zinc-400 hover:text-copernicus-phosphor transition-colors"
+                className="text-zinc-400 hover:text-copernicus-phosphor transition-colors truncate max-w-[120px]"
                 title="Select project"
               >
                 {workingDir.split('/').pop() || '—'}
               </button>
-              <span className="text-zinc-700">//</span>
-              <span className="text-zinc-600">{activeStoryId ?? '—'}</span>
+              <span className="text-zinc-700 shrink-0">//</span>
+              <span className="text-zinc-600 truncate max-w-[80px]">{activeStoryId ?? '—'}</span>
             </div>
           </header>
 

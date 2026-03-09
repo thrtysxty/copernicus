@@ -3,7 +3,7 @@ import { Terminal } from './Terminal';
 import { GeminiPanel } from './GeminiPanel';
 import { JulesPanel } from '../jules/JulesPanel';
 import { useLayoutStore } from '../../store/layout';
-import { X, Loader2, Square, Plus } from 'lucide-react';
+import { X, Loader2, Square, Plus, RotateCcw, Maximize2 } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { IpcResult } from '../../types/ipc';
 
@@ -40,75 +40,90 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
   return (
     <div className="flex flex-col h-full bg-copernicus-bg">
       {/* Standard h-8 Header */}
-      <div className="flex border-b border-copernicus-steel h-8 overflow-x-auto no-scrollbar bg-[#050505]">
-        {terminals.map((tab) => (
-          <div
-            key={tab.id}
-            className={`
-              flex items-center group px-3 text-[10px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative min-w-[100px]
-              ${activeTerminalId === tab.id ? 'text-copernicus-phosphor bg-copernicus-steel/10' : 'text-zinc-500'}
-            `}
-            onClick={() => setActiveTerminal(tab.id)}
-          >
-            {(() => {
-              const badge = getAgentBadge(tab.label);
-              if (badge) {
-                return (
-                  <span className={`mr-1.5 font-bold ${badge.color} ${tab.isBusy ? 'animate-pulse' : ''}`}>
-                    {badge.letter}
-                  </span>
-                );
-              }
-              if (tab.isBusy) {
-                return <Loader2 size={8} className="animate-spin mr-1.5 text-copernicus-phosphor" />;
-              }
-              return null;
-            })()}
+      <div className="flex border-b border-copernicus-steel h-8 bg-[#050505] items-center">
+        <div className="flex-grow flex overflow-x-auto no-scrollbar h-8">
+          {terminals.map((tab) => (
+            <div
+              key={tab.id}
+              className={`
+                flex items-center group px-3 text-[10px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative min-w-[100px] h-8
+                ${activeTerminalId === tab.id ? 'text-copernicus-phosphor bg-copernicus-steel/10' : 'text-zinc-500'}
+              `}
+              onClick={() => setActiveTerminal(tab.id)}
+            >
+              {(() => {
+                const badge = getAgentBadge(tab.label);
+                if (badge) {
+                  return (
+                    <span className={`mr-1.5 font-bold ${badge.color} ${tab.isBusy ? 'animate-pulse' : ''}`}>
+                      {badge.letter}
+                    </span>
+                  );
+                }
+                if (tab.isBusy) {
+                  return <Loader2 size={8} className="animate-spin mr-1.5 text-copernicus-phosphor" />;
+                }
+                return null;
+              })()}
 
-            <span className={`truncate ${tab.isBusy ? 'phosphor-glow font-bold' : ''}`}>
-              {tab.label}
-              {tab.ephemeral && (
-                <span className="ml-1 text-[8px] text-zinc-600" title="Auto-closes on completion">◌</span>
-              )}
-            </span>
+              <span className={`truncate ${tab.isBusy ? 'phosphor-glow font-bold' : ''}`}>
+                {tab.label}
+                {tab.ephemeral && (
+                  <span className="ml-1 text-[8px] text-zinc-600" title="Auto-closes on completion">◌</span>
+                )}
+              </span>
 
-            {terminals.length > 1 && (
-              <div className="flex items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity pl-2">
-                {getAgentBadge(tab.label) && tab.isBusy ? (
+              {terminals.length > 1 && (
+                <div className="flex items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity pl-2">
+                  {getAgentBadge(tab.label) && tab.isBusy ? (
+                    <button
+                      onClick={(e) => handleStopAgent(e, tab.id)}
+                      className="hover:text-red-400 transition-colors mr-1"
+                      title="Stop Agent"
+                    >
+                      <Square size={10} fill="currentColor" />
+                    </button>
+                  ) : null}
                   <button
-                    onClick={(e) => handleStopAgent(e, tab.id)}
-                    className="hover:text-red-400 transition-colors mr-1"
-                    title="Stop Agent"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeTerminal(tab.id);
+                    }}
+                    className="hover:text-red-400 transition-colors"
                   >
-                    <Square size={10} fill="currentColor" />
+                    <X size={10} />
                   </button>
-                ) : null}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeTerminal(tab.id);
-                  }}
-                  className="hover:text-red-400 transition-colors"
-                >
-                  <X size={10} />
-                </button>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+          ))}
+          
+          <button 
+            onClick={handleNewTerminal}
+            className="px-3 h-8 flex items-center justify-center text-zinc-600 hover:text-copernicus-phosphor transition-colors border-r border-copernicus-steel bg-[#080808] shrink-0"
+            title="New Terminal Session"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
 
-            {/* Busy Pulse Indicator (under-bar) */}
-            {tab.isBusy && (
-              <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-copernicus-phosphor animate-pulse" />
-            )}
-          </div>
-        ))}
-        
-        <button 
-          onClick={handleNewTerminal}
-          className="px-3 flex items-center justify-center text-zinc-600 hover:text-copernicus-phosphor transition-colors border-r border-copernicus-steel bg-[#080808]"
-          title="New Terminal Session"
-        >
-          <Plus size={14} />
-        </button>
+        {/* Panel Controls */}
+        <div className="flex items-center gap-2 px-3 shrink-0">
+          <button
+            onClick={() => window.ipcRenderer.send('layout:toggle-flip', 'terminal')}
+            className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
+            title="Rotate panel"
+          >
+            <RotateCcw size={12} />
+          </button>
+          <button
+            onClick={() => window.ipcRenderer.send('layout:toggle-spotlight', 'terminal')}
+            className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
+            title="Spotlight"
+          >
+            <Maximize2 size={12} />
+          </button>
+        </div>
       </div>
       <div className="flex-grow relative overflow-hidden">
         {terminals.map((tab) => (
