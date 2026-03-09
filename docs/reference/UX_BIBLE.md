@@ -111,16 +111,19 @@ Left column, `w-12`, full height. All icons are `size={18}`, `p-2` padding.
 FolderOpen    → sets view 'planner'
 Monitor       → sets view 'editor'
 Cpu           → sets view 'designer'
-GitBranch     → sets view 'orchestrator'
-BarChart2     → sets view 'reporter'
-Activity      → sets view 'command-center'
-Brain         → sets view 'memory' (Story 158)
+GitBranch     → sets view 'orchestrator' (label: Orchestrator, shortcut ⌘4)
+BarChart2     → sets view 'reporter'    (label: Reporter, shortcut ⌘5)
+Activity      → sets view 'command-center' (label: Telemetry, shortcut ⌘6)
+Brain         → sets view 'memory'      (label: Agent Memory, shortcut ⌘7)
 ```
 
 **Bottom group (pinned):**
 ```
+Github        → sets view 'github'
 Settings      → opens SettingsPanel modal (setSettingsOpen true)
 ```
+
+**Grouping rule:** All navigational views — including Telemetry and Agent Memory — belong in the top group. The bottom group is reserved for settings and external links only. Do not move Telemetry or Agent Memory to the bottom group.
 
 **Icon states (§1.4 VT selection block):**
 - Active view: `bg-copernicus-phosphor text-[#050505] rounded-none`
@@ -331,18 +334,20 @@ Every panel with a title MUST have a consistent header:
 
 ```
 ┌─────────────────────────────────────────────────┐
-│ [Icon] PANEL TITLE                [icon buttons] │  h-9, px-3
+│ [Icon] PANEL TITLE                [icon buttons] │  h-8, px-3
 └─────────────────────────────────────────────────┘
 ```
 
 **Spec:**
-- Height: `h-9` (36px)
+- Height: **`h-8` (32px)** — canonical across all panels. Do not use `h-9` or `h-10`.
 - Padding: `px-3`
 - Border: `border-b border-white/5`
 - Background: `bg-black/20`
 - Title: `text-[10px] font-bold uppercase tracking-widest text-zinc-400`
 - Icon buttons: `p-1 rounded hover:bg-white/10 text-zinc-500 hover:text-copernicus-phosphor transition-colors`
 - Icon size: `size={11}` for inline controls, `size={14}` for primary actions
+
+**Icon opacity:** All panel header icon buttons must be visible at rest at **60% opacity minimum** (`opacity-60`), transitioning to 100% on hover (`hover:opacity-100`). Do not use `opacity-0` with group-hover reveal — icons must always be discoverable.
 
 **All icon buttons must have `title` attributes** for accessibility.
 
@@ -356,15 +361,15 @@ Nine lanes in this exact order:
 
 | # | Label | Status ID | Color Token | Accent Token |
 |---|---|---|---|---|
-| 1 | Planning | `PLANNING` | `bg-slate-500/5 border-slate-500/20` | `bg-slate-500` |
-| 2 | Storyboarding | `STORYBOARDING` | `bg-purple-500/5 border-purple-500/20` | `bg-purple-500` |
-| 3 | Sprint Planning | `SPRINT_PLANNING` | `bg-indigo-500/5 border-indigo-500/20` | `bg-indigo-500` |
-| 4 | Development | `IN_PROGRESS` | `bg-yellow-500/5 border-yellow-500/20` | `bg-yellow-500` |
-| 5 | Testing | `TESTING` | `bg-orange-500/5 border-orange-500/20` | `bg-orange-500` |
-| 6 | QA | `QA` | `bg-amber-500/5 border-amber-500/20` | `bg-amber-500` |
-| 7 | Documenting | `DOCUMENTING` | `bg-cyan-500/5 border-cyan-500/20` | `bg-cyan-500` |
-| 8 | Ready to Build | `READY` | `bg-teal-500/5 border-teal-500/20` | `bg-teal-500` |
-| 9 | Done | `COMPLETE` | `bg-green-500/5 border-green-500/20` | `bg-green-500` |
+| 1 | Planning | `PLANNING` | `bg-slate-500/10 border-slate-500/30` | `bg-slate-500` |
+| 2 | Storyboarding | `STORYBOARDING` | `bg-purple-500/10 border-purple-500/30` | `bg-purple-500` |
+| 3 | Sprint Planning | `SPRINT_PLANNING` | `bg-indigo-500/10 border-indigo-500/30` | `bg-indigo-500` |
+| 4 | Development | `IN_PROGRESS` | `bg-yellow-500/10 border-yellow-500/30` | `bg-yellow-500` |
+| 5 | Testing | `TESTING` | `bg-orange-500/10 border-orange-500/30` | `bg-orange-500` |
+| 6 | QA | `QA` | `bg-amber-500/10 border-amber-500/30` | `bg-amber-500` |
+| 7 | Documenting | `DOCUMENTING` | `bg-cyan-500/10 border-cyan-500/30` | `bg-cyan-500` |
+| 8 | Ready to Build | `READY` | `bg-teal-500/10 border-teal-500/30` | `bg-teal-500` |
+| 9 | Done | `COMPLETE` | `bg-green-500/10 border-green-500/30` | `bg-green-500` |
 
 **These lane definitions are canonical and must not be changed without an
 architect decision.** They live in `DEFAULT_COLUMNS` in `layout.ts`.
@@ -383,19 +388,31 @@ architect decision.** They live in `DEFAULT_COLUMNS` in `layout.ts`.
 ### 4.2 Column Anatomy
 
 ```
-┌────────────────────────┐
-│ [accent bar h-0.5]      │
-├────────────────────────┤
-│ COLUMN ID        [N]   │  h-9 header — count only, no action buttons
-├────────────────────────┤
-│                        │
-│  [story card]          │  flex-1 scroll
-│  [story card]          │
-│                        │
-├────────────────────────┤
-│  [+ New Story] (READY) │  (only Ready to Build column)
-└────────────────────────┘
+┌────────────────────────────────────┐
+│ [Archive Toggle bar]                │  always visible above lanes (h-~28px)
+├────────────────────────────────────┤
+│ [Archive expand section — optional]│  conditional, max-h-48, scrollable
+├────────────────────────────────────┤
+│ [accent bar h-0.5]                  │
+├────────────────────────────────────┤  ← per column below
+│ COLUMN LABEL  [+ Story][+ Epic] [N]│  h-9 header — Planning column has dual-action buttons
+├────────────────────────────────────┤
+│                                    │
+│  [creation form — Planning only]   │  appears when form phase active
+│  [story card]                      │  flex-1 scroll
+│  [story card]                      │
+│                                    │
+├────────────────────────────────────┤
+│  [+ New Story]  (Ready to Build)   │  footer — only Ready to Build column
+└────────────────────────────────────┘
 ```
+
+**Archive bar:** Always rendered above the swim lane grid. Clicking toggles an inline archive section (in-memory state, not persisted). The archive section renders a read-only list of `ARCHIVED` stories via `stories:list` with status filter.
+
+**CRUD entry points:**
+- **New Story / New Epic:** Dual-action buttons in the Planning column header (`+ Story` / `+ Epic`). Clicking opens an inline creation form inside the Planning column. Form submits via `stories:create` IPC.
+- **New Story (Ready to Build):** Footer button in the Ready to Build column — legacy entry point, opens creation form in Planning column.
+- No modal dialogs — all creation is inline in the Planning column.
 
 **Column header:** Label + story count only. No rotate or minimize buttons.
 Columns do not have manual collapse controls — spotlight is card-driven (see §4.3).

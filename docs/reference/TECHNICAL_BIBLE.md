@@ -580,7 +580,7 @@ All stories live in `docs/stories/`. Scaffold with:
 python3 scripts/utils/scaffold_story.py "Story Title"
 ```
 
-Required sections:
+Required sections (enforced by `scaffold_story.py`):
 
 ```markdown
 # Story NNN: Title
@@ -601,6 +601,21 @@ As a [user], I want [feature], so that [value].
 [Background, root cause, what currently exists]
 
 ## Acceptance Criteria
+
+## IPC Channels Used
+- [ ] List any new or modified IPC channels here
+
+## DB Schema Changes
+- [ ] None / describe ALTER TABLE migrations required
+
+## Files in Scope
+- list files
+
+## Blocks
+- None
+
+## Blocked By
+- None
 
 ### AC-1 — [Short title]
 **File:** `exact/path/to/file.ts`
@@ -1096,7 +1111,69 @@ Required indexes (maintained in `schema.ts`):
 
 ---
 
-## 20. Updated Pre-Commit Checklist
+## 20. Ollama Two-URL Pattern
+
+The packaged Electron app cannot read shell environment variables. Ollama URLs are configured via two channels in priority order:
+
+**Priority chain (highest → lowest):**
+1. `settingsStore.get('ollama.localUrl')` — set in-app via Settings → Ollama panel
+2. `process.env.OLLAMA_LOCAL_URL` — local instance (dev/CLI use)
+3. `process.env.OLLAMA_BASE_URL` — legacy single-URL env var
+4. `process.env.OLLAMA_CLOUD_URL` — remote/cloud fallback
+5. `'http://localhost:11434'` — hard default
+
+**Variables:**
+| Variable | Purpose |
+|----------|---------|
+| `OLLAMA_LOCAL_URL` | Local Ollama instance (e.g. `http://localhost:11434`) — takes priority |
+| `OLLAMA_CLOUD_URL` | Remote/cloud instance (e.g. `http://192.168.1.185:11434`) — fallback for users without local |
+
+**Settings keys (persisted in `copernicus-settings.json`):**
+| Key | Type | Description |
+|-----|------|-------------|
+| `ollama.localUrl` | string | Local Ollama URL |
+| `ollama.cloudUrl` | string | Remote Ollama URL |
+| `ollama.apiKey` | string (encrypted) | API key — stored via `safeStorage` |
+
+**Rule:** All `AuthManager.getBaseUrl('ollama')` and `resolveForProvider('ollama')` calls must check settingsStore first, then env vars. Never hardcode `http://localhost:11434` as the first check — it bypasses user configuration.
+
+---
+
+## 21. Dogfooding Harness (Story 279)
+
+The following scripts enforce SDLC discipline on every story implemented in Copernicus:
+
+### Review Gate
+```bash
+bash scripts/utils/review_gate.sh
+```
+Runs after any implementation, before merge. **Must pass before any PR is merged.** Checks:
+1. `npx tsc --noEmit` — zero TypeScript errors
+2. No `window.ipcRenderer.invoke` in renderer (use `useIpcError` hook)
+3. No `if (!win) return` stale closure pattern in IPC handlers
+
+**Rule:** If the review gate fails, fix the violation before merging. Never skip with `--no-verify` or by disabling the gate.
+
+### Findings → Stories Pipeline
+```bash
+python3 scripts/utils/findings_to_stories.py <review_file.md> [--dry-run]
+```
+Parses a code review markdown file and scaffolds story stubs for each finding. Use after every code review session to ensure findings don't get lost.
+
+### Prompt Library
+Canonical dispatch prompt templates live in `docs/prompts/`:
+| Template | Use for |
+|----------|---------|
+| `feature.md` | New feature stories |
+| `bug-fix.md` | Bug fix stories |
+| `schema-migration.md` | SQLite schema change stories |
+| `ipc-handler.md` | New IPC channel stories |
+
+All Gemini/Jules dispatch prompts should be derived from these templates, parameterised with `{{story_id}}`, `{{files}}`, `{{ac}}`.
+
+---
+
+## 22. Updated Pre-Commit Checklist
 
 **All items from §12 apply, plus:**
 
