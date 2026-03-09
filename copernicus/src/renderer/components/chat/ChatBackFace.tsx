@@ -1,5 +1,5 @@
-import React from 'react'
-import { RotateCcw } from 'lucide-react'
+import React, { useState } from 'react'
+import { RotateCcw, Brain } from 'lucide-react'
 import { GuideCopernicus } from './GuideCopernicus'
 import { Message, ContextItem, ModelInfo, AuthStatus, SavedPrompt } from './useChatPanel'
 
@@ -79,6 +79,24 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
     { id: 'history', label: 'History' },
     { id: 'guide', label: 'Guide' }
   ]
+
+  const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant' || m.role === 'copernicus')
+  const [showSaved, setShowSaved] = useState(false)
+
+  const handleSaveToMemory = async () => {
+    if (!lastAssistantMsg) return
+    try {
+      await invoke('db:add-memory', { 
+        content: lastAssistantMsg.content, 
+        importance: 7, 
+        source: 'chat-manual' 
+      })
+      setShowSaved(true)
+      setTimeout(() => setShowSaved(false), 2000)
+    } catch (err) {
+      console.error('Failed to save memory', err)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
@@ -285,12 +303,23 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
         {/* AC-5 History Tab */}
         {activeBackTab === 'history' && (
           <div className="space-y-4 flex flex-col h-full overflow-hidden">
-            <button
-              onClick={exportChat}
-              className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider"
-            >
-              Export Chat (.txt)
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={exportChat}
+                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider"
+              >
+                Export Chat (.txt)
+              </button>
+              
+              <button
+                onClick={handleSaveToMemory}
+                disabled={!lastAssistantMsg}
+                className={`w-full bg-zinc-900 border border-copernicus-steel text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider ${!lastAssistantMsg ? 'opacity-40 cursor-not-allowed' : 'hover:bg-copernicus-phosphor/10 hover:border-copernicus-phosphor'}`}
+              >
+                <Brain size={12} className={lastAssistantMsg ? 'text-copernicus-phosphor' : ''} />
+                {showSaved ? 'Saved ✓' : 'Save to Memory'}
+              </button>
+            </div>
 
             <div className="flex-1 space-y-2 overflow-y-auto pr-1">
               {messages.length === 0 ? (

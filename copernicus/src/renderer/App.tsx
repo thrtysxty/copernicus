@@ -25,6 +25,7 @@ import { GithubDashboard } from './components/github/GithubDashboard'
 import Wizard from './components/wizard/Wizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
+import { MemoryBrowser } from './components/memory/MemoryBrowser'
 
 const TERMINAL_HEIGHT = 200
 
@@ -374,11 +375,7 @@ export default function App() {
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && <WorkflowCanvas />}
             {activeView === 'github' && <GithubDashboard />}
-            {activeView === 'memory' && (
-              <div className="h-full w-full flex items-center justify-center bg-[#050505] text-copernicus-phosphor/50 font-mono text-sm uppercase tracking-widest">
-                Memory Browser — coming in a future release.
-              </div>
-            )}
+            {activeView === 'memory' && <MemoryBrowser />}
 
             {(activeView === 'designer' || activeView === 'editor') && (
               <>

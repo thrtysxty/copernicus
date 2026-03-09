@@ -595,17 +595,15 @@ export class StateLedger {
   }
 
   addProjectMemory(payload: { content: string, importance?: number, source: string }): void {
+    const fingerprint = payload.content.trim().slice(0, 120)
+    const existing = this.db.prepare(
+      "SELECT id FROM project_memory WHERE substr(content, 1, 120) = ?"
+    ).get(fingerprint)
+    if (existing) return
     this.db.prepare(`
       INSERT INTO project_memory (id, content, importance, source, created_at, last_accessed)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      crypto.randomUUID(),
-      payload.content,
-      payload.importance ?? 3,
-      payload.source,
-      Date.now(),
-      Date.now()
-    );
+    `).run(crypto.randomUUID(), payload.content, payload.importance ?? 3, payload.source, Date.now(), Date.now())
   }
 
   searchProjectMemory(limit: number = 5): any[] {

@@ -213,14 +213,14 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('db:get-intents', (_, limit) => handleIpc('db:get-intents', [limit], () => stateLedger.getRecentIntents(limit)));
   ipcMain.handle('db:log-event', (_, type, content, metadata, agentId) => handleIpc('db:log-event', [type, content, metadata, agentId], () => stateLedger.logEvent(type, content, metadata, agentId)));
   ipcMain.handle('db:get-events', (_, limit) => handleIpc('db:get-events', [limit], () => stateLedger.getRecentEvents(limit)));
-  ipcMain.handle('db:add-memory', (_, payload: string | { content: string; source: string }) => handleIpc('db:add-memory', [payload], () => {
-    if (typeof payload === 'string') {
-      stateLedger.addProjectMemory({ content: payload, source: 'manual' });
-    } else {
-      stateLedger.addProjectMemory(payload);
-    }
-  }));
-  ipcMain.handle('db:search-memory', (_, limit) => handleIpc('db:search-memory', [limit], () => stateLedger.searchProjectMemory(limit)));
+
+  ipcMain.handle('db:add-memory', (_e, payload: { content: string, importance?: number, source: string }) =>
+    handleIpc('db:add-memory', [payload], () => stateLedger.addProjectMemory(payload))
+  )
+  ipcMain.handle('db:search-memory', (_e, limit?: number) =>
+    handleIpc('db:search-memory', [limit], () => stateLedger.searchProjectMemory(limit ?? 5))
+  )
+
   ipcMain.handle('db:vacuum', () => handleIpc('db:vacuum', [], () => {
     stateLedger.vacuum();
     return true;
