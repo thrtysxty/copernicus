@@ -22,11 +22,12 @@ class AgentRunRequest(BaseModel):
     @field_validator('model')
     @classmethod
     def validate_model_name(cls, v: str) -> str:
-        import re
+        import re, unicodedata
+        normalized = unicodedata.normalize('NFKC', v)
         pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9_.:\-/]{0,99})$'
-        if not re.match(pattern, v):
+        if not re.match(pattern, normalized):
             raise ValueError('Invalid model name format')
-        return v
+        return normalized
 
 
 class ResetContextRequest(BaseModel):
@@ -43,11 +44,12 @@ class ResearchRequest(BaseModel):
     @field_validator('model')
     @classmethod
     def validate_model_name(cls, v: str) -> str:
-        import re
+        import re, unicodedata
+        normalized = unicodedata.normalize('NFKC', v)
         pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9_.:\-/]{0,99})$'
-        if not re.match(pattern, v):
+        if not re.match(pattern, normalized):
             raise ValueError('Invalid model name format')
-        return v
+        return normalized
 
     @field_validator('prompt')
     @classmethod

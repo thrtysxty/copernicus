@@ -2,7 +2,7 @@ from functools import wraps
 from typing import Type, Any
 from flask import request, jsonify
 from pydantic import BaseModel, ValidationError
-import re
+import re, unicodedata
 
 
 # Reusable path-rejection utility
@@ -10,6 +10,8 @@ def _is_path_violating(value: Any) -> bool:
     """Check if a string value violates path restrictions (absolute, .., hidden, etc.)."""
     if not isinstance(value, str):
         return False
+
+    value = unicodedata.normalize('NFKC', value)
 
     # Absolute path: starts with '/' (Unix) or '[A-Za-z]:\\' (Windows)
     if value.startswith('/') or re.match(r'^[A-Za-z]:\\', value):
