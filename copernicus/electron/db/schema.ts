@@ -7,7 +7,7 @@ export const SCHEMA = {
       status        TEXT NOT NULL DEFAULT 'DRAFT',
       priority      TEXT,
       type          TEXT,
-      epic_id       TEXT,                   -- reference to epics table
+      epic          TEXT,                   -- free-text epic label
       assigned_to   TEXT,                   -- model/agent
       blocked_by    TEXT DEFAULT '[]',      -- JSON array e.g. '["story_157"]'
       blocks        TEXT DEFAULT '[]',      -- JSON array e.g. '["story_160"]'
@@ -16,8 +16,7 @@ export const SCHEMA = {
       file_path     TEXT NOT NULL DEFAULT '',
       date          TEXT,
       updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-      last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(epic_id) REFERENCES epics(id)
+      last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     CREATE INDEX IF NOT EXISTS idx_stories_status
       ON stories(status);

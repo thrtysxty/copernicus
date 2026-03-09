@@ -1,4 +1,4 @@
-.PHONY: help dev test test-e2e backlog deploy db-deploy db-migrate clean
+.PHONY: help dev test test-e2e backlog deploy db-deploy db-migrate clean reset reset-db
 
 # Infrastructure Config
 CORE_SERVER_IP ?= 192.168.1.185  # Dell R210ii
@@ -21,6 +21,8 @@ help:
 	@echo "make db-deploy - Deploy database schema to Core"
 	@echo "make db-migrate - Run pending database migrations on Core"
 	@echo "  clean        - Clean build artifacts"
+	@echo "  reset        - Wipe all app state (DB, settings, logs) - triggers setup wizard on next launch"
+	@echo "  reset-db     - Wipe DB only (preserves settings and first-run state)"
 
 dev:
 	(trap 'kill 0' SIGINT; source .venv/bin/activate && python backend/app.py & cd copernicus && npm run dev)
@@ -82,6 +84,17 @@ db-migrate:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true # nosec
 	find . -type f -name "*.pyc" -delete
+
+reset:
+	@echo "Wiping COPERNICUS app state (DB, settings, logs)..."
+	rm -rf ~/Library/Application\ Support/COPERNICUS/
+	rm -rf ~/.copernicus/logs/
+	@echo "Done. App will show setup wizard on next launch."
+
+reset-db:
+	@echo "Wiping COPERNICUS database only..."
+	rm -f ~/Library/Application\ Support/COPERNICUS/copernicus.db
+	@echo "Done."
 
 ## ── Ollama Inference Server (Dell R210ii Core) ────────────────────────
 ollama-deploy:

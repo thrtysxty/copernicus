@@ -145,7 +145,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   }
 
   useEffect(() => {
-    invoke<ModelInfo[]>('models:list').then(models => setAvailableModels(models ?? [])).catch(log.error)
+    invoke<IpcResult<ModelInfo[]>>('models:list').then(res => setAvailableModels(unwrapIpc<ModelInfo[]>(res) ?? [])).catch(log.error)
     invoke<any>('devtime:status').then(res => { setIsRepoActive(!!(res && res.session)) })
   }, [invoke])
 

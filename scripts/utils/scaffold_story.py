@@ -28,6 +28,21 @@ STORY_TEMPLATE = """# User Story {number}: {title}
 1.  **Criteria 1:** ...
 2.  **Criteria 2:** ...
 
+## IPC Channels Used
+- [ ] List any new or modified IPC channels here
+
+## DB Schema Changes
+- [ ] None / describe ALTER TABLE migrations required
+
+## Files in Scope
+- list files
+
+## Blocks
+- None
+
+## Blocked By
+- None
+
 ## Technical Constraints
 - **Constraint 1:** ...
 

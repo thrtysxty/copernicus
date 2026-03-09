@@ -157,7 +157,8 @@ export class AuthManager {
 
     // Fallbacks
     if (provider === 'ollama-cloud') return process.env.OLLAMA_CLOUD_HOST || process.env.OLLAMA_CLOUD_URL || 'https://ollama.com';
-    if (provider === 'ollama') return process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    // Local takes priority if set; cloud URL is the fallback for users without a local instance
+    if (provider === 'ollama') return process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || 'http://localhost:11434';
     if (provider === 'openrouter') return 'https://openrouter.ai/api/v1';
     if (provider === 'openai') return 'https://api.openai.com/v1';
     if (provider === 'deepinfra') return 'https://api.deepinfra.com/v1/openai';
@@ -286,7 +287,7 @@ export class AuthManager {
     const res3 = this.getApiKey('deepinfra');
     if (res3) return { key: res3, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra' };
 
-    const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
+    const ollamaUrl = process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || 'http://localhost:11434'
     if (ollamaUrl) {
       return {
         key: 'ollama',
@@ -317,7 +318,7 @@ export class AuthManager {
         return { key, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra', headers: {} };
       }
       case 'ollama': {
-        const url = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+        const url = process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || 'http://localhost:11434';
         return { key: 'ollama', baseUrl: url.replace(/\/$/, '') + '/v1', provider: 'ollama', headers: {} };
       }
       default:

@@ -28,12 +28,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   useEffect(() => {
     // CRT Warm-up Sequence
     const sequence = [
+      { t: 150, s: 'igniting' },
+      { t: 300, s: 'off' },
       { t: 500, s: 'igniting' },
-      { t: 800, s: 'off' },
-      { t: 1200, s: 'igniting' },
-      { t: 1500, s: 'off' },
-      { t: 2000, s: 'igniting' },
-      { t: 2800, s: 'on' },
+      { t: 650, s: 'off' },
+      { t: 850, s: 'igniting' },
+      { t: 1200, s: 'on' },
     ];
 
     const timeouts: NodeJS.Timeout[] = [];
@@ -49,7 +49,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
     const readyTimeout = setTimeout(() => {
         ipcRenderer.send('splash-ready');
         if (onComplete) onComplete();
-    }, 4500);
+    }, 2200);
     timeouts.push(readyTimeout);
 
     return () => {

@@ -248,7 +248,7 @@ export const useLayoutStore = create<LayoutState>()(
       chatPanelTab: 'chat',
       chatPanelOpen: true,
 
-      workingDir: '~/Projects/agentic-platform',
+      workingDir: '',
       gitBranch: 'main',
       isGitDirty: true,
       capexTotal: 0,

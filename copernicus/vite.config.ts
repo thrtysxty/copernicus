@@ -9,12 +9,12 @@ export default defineConfig({
     react(),
     electron([
       {
-        // Main process — native addons must be external (never bundled by Rollup)
+        // Main process — native addons + chokidar (has native fsevents dep) must be external
         entry: 'electron/main.ts',
         vite: {
           build: {
             rollupOptions: {
-              external: ['better-sqlite3', 'node-pty', 'sqlite-vec'],
+              external: ['better-sqlite3', 'node-pty', 'sqlite-vec', 'chokidar', 'fsevents'],
             },
           },
         },

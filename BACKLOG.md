@@ -23,7 +23,16 @@ This file is auto-generated. Run `make backlog` to update.
 | #112 | Llm Streaming Service | COMPLETE | CRITICAL |
 | #113 | Filesystem Integration | COMPLETE | CRITICAL |
 | #223 | Python Shim To Service | COMPLETE | CRITICAL |
-| #214 | Ollama Cloud Authentication And Dynamic Routing | APPROVED FOR IMPLEMENTATION | High |
+| #211 | Resolve Explorer Folder Listing Failure | APPROVED FOR IMPLEMENTATION | High |
+| #225 | Websocket Streaming Bus | APPROVED FOR IMPLEMENTATION | HIGH |
+| #227 | Automated Documentation Lifecycle | APPROVED FOR IMPLEMENTATION | HIGH |
+| #265 | Open External Url Validation | APPROVED FOR IMPLEMENTATION | HIGH |
+| #266 | Unicode Normalization Model Validation | APPROVED FOR IMPLEMENTATION | HIGH |
+| #268 | Persona Provider Allowlist | APPROVED FOR IMPLEMENTATION | HIGH |
+| #269 | Terminal Cwd Gemini Path Tempfile | APPROVED FOR IMPLEMENTATION | HIGH |
+| #270 | Allowed Personas Code Reviewer | APPROVED FOR IMPLEMENTATION | HIGH |
+| #271 | Gemini Spawn Cwd Guard | APPROVED FOR IMPLEMENTATION | HIGH |
+| #273 | Llm Auth Webview Disable | APPROVED FOR IMPLEMENTATION | HIGH |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -45,6 +54,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #156 | Model Call Ledger | COMPLETE | HIGH |
 | #205 | Auto-Trigger Onboarding Wizard | COMPLETE | High |
 | #207 | Fix Editor Canvas Logic Regression | COMPLETE | High |
+| #214 | Ollama Cloud Authentication And Dynamic Routing | COMPLETE | High |
 | #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
 | #217 | Nodeinspector Focus And Stability | COMPLETE | High |
 | #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
@@ -64,10 +74,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #165 | Terminal Split And Productivity Features | COMPLETED | HIGH |
 | #166 | Touch Bar Hardening And Configuration | COMPLETED | HIGH |
 | #050 | Implement Agent Tool Use | DONE | High |
-| #211 | Resolve Explorer Folder Listing Failure | DRAFT | High |
 | #224 | Claude Gemini Python Migration | PENDING | HIGH |
-| #225 | Websocket Streaming Bus | PENDING | HIGH |
-| #227 | Automated Documentation Lifecycle | PENDING | HIGH |
+| #209 | Designer Explorer Collapse By Default | APPROVED FOR IMPLEMENTATION | Medium |
+| #210 | Restore Control Buttons To Canvas Preview | APPROVED FOR IMPLEMENTATION | Medium |
+| #212 | Fix Orchestrator Modal Centering And Canvas Edge | APPROVED FOR IMPLEMENTATION | Medium |
+| #267 | Rate Limiter Key Fix | APPROVED FOR IMPLEMENTATION | MEDIUM |
+| #272 | Electron Ipc Audit Fixes | APPROVED FOR IMPLEMENTATION | MEDIUM |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -85,14 +97,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #209 | Designer Explorer Collapse By Default | DRAFT | Medium |
-| #210 | Restore Control Buttons To Canvas Preview | DRAFT | Medium |
-| #212 | Fix Orchestrator Modal Centering And Canvas Edge | DRAFT | Medium |
-| #244 | Security Fix — Command Injection In Electron Ipc Subprocess Calls | DRAFT | Medium |
-| #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | DRAFT | Medium |
-| #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | COMPLETE | Medium |
+| #279 | Dogfooding Harness Planning And Review Pipeline | DRAFT | Medium |
+| #280 | Release Retrospective And Agent Memory Reinforcement | DRAFT | Medium |
+| #213 | Optimize Reports View Justification | APPROVED FOR IMPLEMENTATION | Low |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
-| #213 | Optimize Reports View Justification | DRAFT | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -106,30 +114,45 @@ This file is auto-generated. Run `make backlog` to update.
 | #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
 | #183 | Chat Tools Back Face | APPROVED FOR IMPLEMENTATION | P1 |
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
+| #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
 | #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
+| #220 | Atomic Multi File Edits | APPROVED FOR IMPLEMENTATION | P0 |
+| #221 | Intelligent Context Management | APPROVED FOR IMPLEMENTATION | P0 |
+| #222 | Native Diff Visualization | APPROVED FOR IMPLEMENTATION | P1 |
+| #226 | Deterministic Agent Registry | APPROVED FOR IMPLEMENTATION | P1 |
+| #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | APPROVED FOR IMPLEMENTATION | P0 |
+| #230 | Agent Branch And Patch Workflow | APPROVED FOR IMPLEMENTATION | P1 |
 | #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #235 | Container Runtime Viewer — Docker And Vm Integration | APPROVED FOR IMPLEMENTATION | P1 |
+| #236 | Comprehensive E2E Testing With Playwright | APPROVED FOR IMPLEMENTATION | P1 |
 | #238 | Lsp Metadata Augmentation & Hybrid Schema | APPROVED FOR IMPLEMENTATION | P1 |
 | #239 | Type-Aware Weighted Embeddings | APPROVED FOR IMPLEMENTATION | P1 |
 | #240 | Hybrid Retrieval Engine & Mode Selection | APPROVED FOR IMPLEMENTATION | P1 |
 | #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
 | #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
-| #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
-| #183 | Chat Tools Back Face | APPROVED FOR IMPLEMENTATION | P1 |
-| #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
-| #187 | Jules Pr Manager Workflow | APPROVED FOR IMPLEMENTATION | P1 |
-| #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
-| #190 | Mcp Settings Tab | COMPLETE | P2 |
-| #193 | Accessibility Pass | APPROVED FOR IMPLEMENTATION | P2 |
-| #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
-| #228 | Orchestrator-Led Dynamic Model Selection | APPROVED FOR IMPLEMENTATION | P1 |
-| #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | APPROVED FOR IMPLEMENTATION | P0 |
-| #230 | Agent Branch And Patch Workflow | APPROVED FOR IMPLEMENTATION | P1 |
-| #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
-| #233 | Generic Handoff Signal And Centralized Comms Bus | APPROVED FOR IMPLEMENTATION | P1 |
-| #236 | Comprehensive E2E Testing With Playwright | APPROVED FOR IMPLEMENTATION | P1 |
-| #237 | Gemini Cli Session Manager — Background Terminal Tracking | APPROVED FOR IMPLEMENTATION | P1 |
-| #243 | Dev Orchestrator Bug Fix — Model Routing, Error Handling, And Atomic Writes | APPROVED FOR IMPLEMENTATION | P1 |
+| #247 | Sql Injection Remediation | APPROVED FOR IMPLEMENTATION | P0 |
+| #248 | Path Traversal Command Injection | APPROVED FOR IMPLEMENTATION | P0 |
+| #249 | Cors Env Sanitizer Hardening | APPROVED FOR IMPLEMENTATION | P0 |
+| #250 | Backend Input Validation Middleware | APPROVED FOR IMPLEMENTATION | P1 |
+| #251 | Decompose Main Ts | APPROVED FOR IMPLEMENTATION | P1 |
+| #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
+| #253 | Sqlite Hardening | APPROVED FOR IMPLEMENTATION | P1 |
+| #254 | Typescript Strict Any Audit | APPROVED FOR IMPLEMENTATION | P1 |
+| #255 | Error Handling Infrastructure | APPROVED FOR IMPLEMENTATION | P1 |
+| #256 | Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P2 |
+| #257 | Memory Leak Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
+| #258 | Async Blocking Ops | APPROVED FOR IMPLEMENTATION | P2 |
+| #259 | Provider Base Class Retry | APPROVED FOR IMPLEMENTATION | P2 |
+| #260 | Subprocess Arg Injection | APPROVED FOR IMPLEMENTATION | P0 |
+| #261 | Context Manager Thread Safety | APPROVED FOR IMPLEMENTATION | P1 |
+| #262 | Fs Save Multiple Path Validation | APPROVED FOR IMPLEMENTATION | P1 |
+| #263 | Flask Rate Limiting | APPROVED FOR IMPLEMENTATION | P2 |
+| #264 | Cors Null Origin Model Allowlist | APPROVED FOR IMPLEMENTATION | P2 |
+| #274 | Ollama Url Settings Panel | APPROVED FOR IMPLEMENTATION | P2 |
+| #275 | Chat Panel Flip Render Error | APPROVED FOR IMPLEMENTATION | P1 |
+| #276 | Planner Visual Brightness And Panel Header Consistency | APPROVED FOR IMPLEMENTATION | P2 |
+| #277 | Planner Crud Archive And Epic Story Dual Action | APPROVED FOR IMPLEMENTATION | P1 |
+| #278 | App Header Terminal Header And Activity Bar Polish | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -145,15 +168,25 @@ This file is auto-generated. Run `make backlog` to update.
 | #182 | Flippablepanel Mode Prop | COMPLETE | P1 |
 | #184 | Command Center View | COMPLETE | P1 |
 | #185 | Designer Canvas Unification | COMPLETE | P1 |
+| #187 | Jules Pr Manager Workflow | COMPLETE | P1 |
 | #189 | Lsp Monaco Chatpanel Wiring | COMPLETE | P1 |
+| #190 | Mcp Settings Tab | COMPLETE | P2 |
 | #191 | Context Snapshots Project Memory | COMPLETE | P1 |
 | #192 | Console Log Cleanup | COMPLETE | P2 |
+| #193 | Accessibility Pass | COMPLETE | P2 |
 | #194 | Flask Backend Scaffold | COMPLETE | P1 |
 | #195 | Gemini Cli Pty Agent | COMPLETE | P1 |
 | #201 | Agent Terminal Rework | COMPLETE | P2 |
 | #219 | Enhanced Rag System | COMPLETE | P0 |
+| #228 | Orchestrator-Led Dynamic Model Selection | COMPLETE | P1 |
 | #231 | Activity Bar Vt Compliance | COMPLETE | P1 |
+| #233 | Generic Handoff Signal And Centralized Comms Bus | COMPLETE | P1 |
 | #234 | Application Shell Hardening — Header, Activitybar, Session Dialog | COMPLETE | P1 |
+| #237 | Gemini Cli Session Manager — Background Terminal Tracking | COMPLETE | P1 |
+| #243 | Dev Orchestrator Bug Fix — Model Routing, Error Handling, And Atomic Writes | COMPLETE | P1 |
+| #244 | Security Fix — Command Injection In Electron Ipc Subprocess Calls | COMPLETE | P0 — SECURITY |
+| #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | COMPLETE | P1 |
+| #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -173,7 +206,4 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #220 | Atomic Multi File Edits | PENDING | P0 |
-| #221 | Intelligent Context Management | PENDING | P0 |
-| #222 | Native Diff Visualization | PENDING | P1 |
 

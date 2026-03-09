@@ -34,6 +34,17 @@ If you hit any of these, output `[[SIGNAL_ORCHESTRATOR]]` and stop:
 
 ---
 
+## Pre-Dispatch Checklist
+Before dispatching any story to an agent, confirm:
+- [ ] All IPC invocations use `handleIpc()` wrapper (main) and `unwrapIpc()` (renderer)
+- [ ] New channels registered in `preload.ts` SEND_CHANNELS
+- [ ] Schema changes have a corresponding `ALTER TABLE` migration in `migrateStories()` or equivalent
+- [ ] No `window.ipcRenderer.invoke` called directly
+- [ ] No stale closure captures of `win` — use `BrowserWindow.getAllWindows()[0]` in handlers
+- [ ] `npx tsc --noEmit` passes with zero errors
+
+---
+
 ## Context Handoff (Story 229)
 
 **Handoff Context** allows an agent to inherit the research and context of a previous agent during a model switch.

@@ -44,8 +44,9 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('agent:patch-reverse', (_e, { changes, baseCommit, workingTree }) => handleIpc('agent:patch-reverse', [{ changes, baseCommit, workingTree }], () => reversePatch(changes, baseCommit, workingTree)))
 
   ipcMain.handle('fs:select-file', () => handleIpc('fs:select-file', [], async () => {
-    if (!win) return null;
-    const { canceled, filePaths } = await dialog.showOpenDialog(win, { 
+    const w = BrowserWindow.getAllWindows()[0];
+    if (!w) return null;
+    const { canceled, filePaths } = await dialog.showOpenDialog(w, {
       properties: ['openFile'],
       filters: [
         { name: 'All Files', extensions: ['*'] },
@@ -57,8 +58,9 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }));
 
   ipcMain.handle('select-folder', () => handleIpc('select-folder', [], async () => {
-    if (!win) return null;
-    const { canceled, filePaths } = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+    const w = BrowserWindow.getAllWindows()[0];
+    if (!w) return null;
+    const { canceled, filePaths } = await dialog.showOpenDialog(w, { properties: ['openDirectory'] });
     return canceled ? null : filePaths[0];
   }));
 

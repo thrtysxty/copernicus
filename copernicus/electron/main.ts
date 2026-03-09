@@ -172,7 +172,7 @@ app.whenReady().then(() => {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': ["default-src 'self'; script-src 'self' 'unsafe-eval' blob: file:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com; worker-src 'self' blob: file:;"] } })
   })
-  let workspaceRoot = (settingsStore.getAll().workspace as string) || path.join(app.getPath('documents'), 'Copernicus');
+  let workspaceRoot = (settingsStore.getAll().workspace as string) || path.join(os.homedir(), 'Copernicus');
   if (!fs.existsSync(workspaceRoot)) try { fs.mkdirSync(workspaceRoot, { recursive: true }); } catch (e) { log.error(e); workspaceRoot = os.homedir(); }
   fsManager.setRootPath(workspaceRoot); storiesManager.setProjectRoot(workspaceRoot);
   ensureCopernicusDirectory(); createWindow();
