@@ -288,16 +288,23 @@ def main():
             name = tool_match.group(1)
             remaining = tool_match.group(2)
             
+            # Find the matching closing brace for the JSON arguments
+            # Simple brace counter
+            brace_count = 0
+            json_str = ""
+            for i, char in enumerate(remaining):
+                if char == '{': brace_count += 1
+                elif char == '}': brace_count -= 1
+                json_str += char
+                if brace_count == 0:
+                    break
+            
             try:
-                decoder = json.JSONDecoder()
-                args, index = decoder.raw_decode(remaining)
+                args = json.loads(json_str)
                 result = execute_tool(name, args)
                 print(f"✅ Tool result received. Re-prompting {model}...")
                 
-                # Consume the processed part of content for the next search
-                content = remaining[index:]
-                
-                messages.append({'role': 'assistant', 'content': f"[TOOL: {name} arguments: {json.dumps(args)}]"})
+                messages.append({'role': 'assistant', 'content': content})
                 follow_up = f"Tool '{name}' result:\n\n{result}\n\nApply the strict execution protocol to this result. Ensure you provide [MODEL REASONING] before any further tool calls or final output."
                 messages.append({'role': 'user', 'content': follow_up})
                 
