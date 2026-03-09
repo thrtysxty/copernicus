@@ -195,11 +195,11 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
             outputChannel: 'context'
           } as any },
         { id: 'routing-weight-updater', type: 'tool', label: 'Routing Weight Updater', x: 1250, y: 150,
-          data: { variant: 'memory-write', content: '{{learning-extractor}}', importance: 9, source: 'retrospective-routing' } as any },
+          data: { variant: 'memory-write', content: '[ROUTING] {{learning-extractor}}', importance: 9, source: 'retrospective-routing' } as any },
         { id: 'memory-writer', type: 'tool', label: 'Memory Writer', x: 1450, y: 150,
           data: { variant: 'memory-write', content: '{{learning-extractor}}', importance: 8, source: 'retrospective' } as any },
         { id: 'agents-md-updater', type: 'tool', label: 'Agents MD Updater', x: 1650, y: 150,
-          data: { variant: 'agents-md-append', content: '\n## Reinforcements ({{learning-extractor}})\n' } as any },
+          data: { variant: 'agents-md-append', content: '\n## Reinforcements (sprint-auto)\n\n{{learning-extractor}}\n' } as any },
       ],
       edges: [
         { id: 'e1', source: 'git-log-reader', target: 'model-calls-summary' },
