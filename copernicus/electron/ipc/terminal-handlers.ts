@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { GeminiAgent } from '../agents/gemini-agent'
+import { assertSafePath } from '../utils/path-guard'
 
 import { IpcHandlerDeps } from './deps'
 
@@ -13,9 +14,14 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   // Terminal IPC
   ipcMain.on('terminal-create', (_event, { id, cols, rows, cwd }: { id: string; cols: number; rows: number; cwd?: string }) => {
-    const resolvedCwd = path.resolve(cwd || os.homedir());
-    const isSafe = resolvedCwd.startsWith(fsManager.getRootPath() + path.sep) || resolvedCwd === fsManager.getRootPath() || resolvedCwd.startsWith(os.homedir());
-    if (win && isSafe) ptyManager.create(id, cols, rows, resolvedCwd, win);
+    const cwdOrHome = cwd || os.homedir();
+    let resolvedCwd: string;
+    try {
+      resolvedCwd = assertSafePath(cwdOrHome);
+    } catch {
+      resolvedCwd = os.homedir();
+    }
+    if (win) ptyManager.create(id, cols, rows, resolvedCwd, win);
   });
 
   ipcMain.handle('terminal:resize', (_e, { id, cols, rows }: { id: string; cols: number; rows: number }) => handleIpc('terminal:resize', [{ id, cols, rows }], () => ptyManager.resize(id, cols, rows)));
