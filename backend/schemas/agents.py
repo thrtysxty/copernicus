@@ -1,6 +1,7 @@
 from typing import Optional, Literal
 from pydantic import BaseModel, Field, model_validator, field_validator
 
+ALLOWED_PERSONAS = frozenset({'default', 'junior-dev', 'senior-dev', 'sentinel', 'architect', 'scribe', 'researcher', 'dev'})
 
 class ContextHandoffRequest(BaseModel):
     session_id: Optional[str] = Field(default=None)
@@ -15,9 +16,16 @@ class ContextHandoffRequest(BaseModel):
 
 class AgentRunRequest(BaseModel):
     prompt: str
-    persona: str = Field(default='junior-dev', pattern=r'^[a-zA-Z0-9._-]{1,50}$')
+    persona: str = Field(default='junior-dev')
     session_id: Optional[str] = Field(default=None)
     model: str = Field(...)
+
+    @field_validator('persona')
+    @classmethod
+    def validate_persona(cls, v: str) -> str:
+        if v not in ALLOWED_PERSONAS:
+            raise ValueError(f"Persona must be one of {ALLOWED_PERSONAS}")
+        return v
 
     @field_validator('model')
     @classmethod
@@ -36,10 +44,17 @@ class ResetContextRequest(BaseModel):
 
 class ResearchRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=32000)
-    persona: str = Field(default='scribe', pattern=r'^[a-zA-Z0-9._-]{1,50}$')
+    persona: str = Field(default='scribe')
     role: Optional[Literal['researcher', 'coder', 'thinker', 'fast']] = Field(default=None)
     session_id: Optional[str] = Field(default=None)
     model: str = Field(...)
+
+    @field_validator('persona')
+    @classmethod
+    def validate_persona(cls, v: str) -> str:
+        if v not in ALLOWED_PERSONAS:
+            raise ValueError(f"Persona must be one of {ALLOWED_PERSONAS}")
+        return v
 
     @field_validator('model')
     @classmethod

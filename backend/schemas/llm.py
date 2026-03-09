@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 import re, unicodedata
 from backend.utils.validate import validate_no_paths
 
+ALLOWED_PROVIDERS = frozenset({'anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'})
 
 class Message(BaseModel):
     role: str = Field(..., pattern=r'^(user|assistant|system|tool)$')
@@ -13,11 +14,18 @@ class ChatRequest(BaseModel):
     messages: List[Message]
     model: str = Field(...)
     sessionId: Optional[str] = Field(default=None, pattern=r'^[a-zA-Z0-9._:-]{1,100}$')
-    provider: Optional[str] = Field(default=None, pattern=r'^[a-zA-Z0-9._-]{1,50}$')
+    provider: Optional[str] = Field(default=None)
     systemPrompt: Optional[str] = None
     apiKey: Optional[str] = None
     baseUrl: Optional[str] = None
     tools: Optional[List[Dict[str, Any]]] = None
+
+    @field_validator('provider')
+    @classmethod
+    def validate_provider(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ALLOWED_PROVIDERS:
+            raise ValueError(f"Provider must be one of {ALLOWED_PROVIDERS}")
+        return v
 
     @field_validator('model')
     @classmethod
