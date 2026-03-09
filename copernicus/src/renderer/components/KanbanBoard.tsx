@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { Plus, Crown, Lock, ChevronDown, Archive } from 'lucide-react'
+import { Crown, Lock, ChevronDown, Archive } from 'lucide-react'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 
@@ -384,19 +384,6 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                     ))}
                   </div>
 
-                  {/* Footer */}
-                  <div className="h-8 border-t border-white/5 bg-black/10 flex items-center px-3 justify-end">
-                    {col.id === 'ready-to-build' && (
-                      <button
-                        onClick={() => setCreation({ phase: 'form', type: 'Story' })}
-                        data-testid="add-story-button"
-                        className="flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-                      >
-                        <Plus size={10} />
-                        New Story
-                      </button>
-                    )}
-                  </div>
                 </>
               )}
             </div>
