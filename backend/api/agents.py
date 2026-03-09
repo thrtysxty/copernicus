@@ -455,6 +455,7 @@ def research(request_data: ResearchRequest):
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as f:
         json.dump(payload, f)
         history_path = f.name
+    os.chmod(history_path, 0o600)
 
     try:
         # Clean command-line args: prompt moved into history JSON, so omit it from args

@@ -11,8 +11,12 @@ Usage:
   python3 dev_orchestrator/gemini_session_manager.py tail <session_id>
   python3 dev_orchestrator/gemini_session_manager.py kill <session_id>
 """
-import argparse, json, sqlite3, subprocess, sys, time, uuid
+import argparse, json, shutil, sqlite3, subprocess, sys, time, uuid
 from pathlib import Path
+
+GEMINI_BIN = shutil.which('gemini')
+if not GEMINI_BIN:
+    raise RuntimeError('gemini binary not found in PATH')
 
 SESSIONS_DIR = Path.home() / '.copernicus' / 'gemini-sessions'
 SESSIONS_FILE = SESSIONS_DIR / 'sessions.json'
@@ -162,7 +166,7 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
     start = time.time()
     try:
         proc = subprocess.Popen(
-            ['gemini', '--approval-mode', 'yolo', '-p', prompt],
+            [GEMINI_BIN, '--approval-mode', 'yolo', '-p', prompt],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             stdin=subprocess.DEVNULL,
