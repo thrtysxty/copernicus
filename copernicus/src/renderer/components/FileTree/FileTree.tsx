@@ -170,7 +170,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
           />
         </div>
         
-        <div className="flex items-center gap-1 opacity-0 group-hover/tree:opacity-100 transition-all">
+        <div className="flex items-center gap-1 opacity-60 group-hover/tree:opacity-100 transition-all">
           <button
             onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
             className={`p-1 rounded hover:bg-white/5 ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}

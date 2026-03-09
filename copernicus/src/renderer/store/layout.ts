@@ -6,15 +6,15 @@ export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'o
 export type PaneId = 'explorer' | 'editor' | 'inspector' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
-  { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/5 border-slate-500/20',   accent: 'bg-slate-500' },
-  { id: 'storyboarding',  status: 'STORYBOARDING',  label: 'Storyboarding',   color: 'bg-purple-500/5 border-purple-500/20', accent: 'bg-purple-500' },
-  { id: 'sprint-planning',status: 'SPRINT_PLANNING', label: 'Sprint Planning', color: 'bg-indigo-500/5 border-indigo-500/20', accent: 'bg-indigo-500' },
-  { id: 'development',    status: 'IN_PROGRESS',     label: 'Development',     color: 'bg-yellow-500/5 border-yellow-500/20', accent: 'bg-yellow-500' },
-  { id: 'testing',        status: 'TESTING',         label: 'Testing',         color: 'bg-orange-500/5 border-orange-500/20', accent: 'bg-orange-500' },
-  { id: 'qa',             status: 'QA',              label: 'QA',              color: 'bg-amber-500/5 border-amber-500/20',   accent: 'bg-amber-500' },
-  { id: 'documenting',    status: 'DOCUMENTING',     label: 'Documenting',     color: 'bg-cyan-500/5 border-cyan-500/20',     accent: 'bg-cyan-500' },
-  { id: 'ready-to-build', status: 'READY',           label: 'Ready to Build',  color: 'bg-teal-500/5 border-teal-500/20',     accent: 'bg-teal-500' },
-  { id: 'done',           status: 'COMPLETE',        label: 'Done',            color: 'bg-green-500/5 border-green-500/20',   accent: 'bg-green-500' },
+  { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/10 border-slate-500/30',   accent: 'bg-slate-500' },
+  { id: 'storyboarding',  status: 'STORYBOARDING',  label: 'Storyboarding',   color: 'bg-purple-500/10 border-purple-500/30', accent: 'bg-purple-500' },
+  { id: 'sprint-planning',status: 'SPRINT_PLANNING', label: 'Sprint Planning', color: 'bg-indigo-500/10 border-indigo-500/30', accent: 'bg-indigo-500' },
+  { id: 'development',    status: 'IN_PROGRESS',     label: 'Development',     color: 'bg-yellow-500/10 border-yellow-500/30', accent: 'bg-yellow-500' },
+  { id: 'testing',        status: 'TESTING',         label: 'Testing',         color: 'bg-orange-500/10 border-orange-500/30', accent: 'bg-orange-500' },
+  { id: 'qa',             status: 'QA',              label: 'QA',              color: 'bg-amber-500/10 border-amber-500/30',   accent: 'bg-amber-500' },
+  { id: 'documenting',    status: 'DOCUMENTING',     label: 'Documenting',     color: 'bg-cyan-500/10 border-cyan-500/30',     accent: 'bg-cyan-500' },
+  { id: 'ready-to-build', status: 'READY',           label: 'Ready to Build',  color: 'bg-teal-500/10 border-teal-500/30',     accent: 'bg-teal-500' },
+  { id: 'done',           status: 'COMPLETE',        label: 'Done',            color: 'bg-green-500/10 border-green-500/30',   accent: 'bg-green-500' },
 ]
 
 export const PHOSPHOR_PRESETS = {

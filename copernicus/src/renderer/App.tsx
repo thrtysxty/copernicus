@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Loader2, Maximize2, Minimize2, RotateCcw, Layout,
+  Loader2, Maximize2, Minimize2, RotateCcw,
 } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { useLayoutStore, StoryboardView } from './store/layout'
@@ -34,11 +34,9 @@ const PanelHeader: React.FC<{
   onSpotlight: () => void;
   onFlip: () => void;
   isSpotlightActive: boolean;
-  onBuilder: () => void;
-  isBuilderActive: boolean;
   onCommandPalette?: () => void;
   showLspStatus?: boolean;
-}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onBuilder, isBuilderActive, onCommandPalette, showLspStatus }) => {
+}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onCommandPalette, showLspStatus }) => {
   const [lspRunning, setLspRunning] = useState(false)
   const [errorCount, setErrorCount] = useState(0)
   const [warnCount, setWarnCount] = useState(0)
@@ -64,7 +62,7 @@ const PanelHeader: React.FC<{
   }, [invoke, activeFilePath])
 
   return (
-    <div className="h-10 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
+    <div className="h-8 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-3">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
         {showLspStatus && (
@@ -81,15 +79,6 @@ const PanelHeader: React.FC<{
         )}
       </div>
       <div className="flex items-center gap-2">
-        <button
-          onClick={onBuilder}
-          aria-pressed={isBuilderActive}
-          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isBuilderActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
-          title="UI Builder"
-          aria-label="UI Builder"
-        >
-          <Layout size={14} />
-        </button>
         <button
           onClick={onFlip}
           className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
@@ -125,7 +114,6 @@ export default function App() {
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
   const capexSessionTime = useLayoutStore(s => s.capexSessionTime)
   const capexTotal = useLayoutStore(s => s.capexTotal)
-  const uiBuilderOpen = useLayoutStore(s => s.uiBuilderOpen)
   const activeFilePath = useLayoutStore(s => s.activeFilePath)
   const activeFileContent = useLayoutStore(s => s.activeFileContent)
   const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
@@ -417,8 +405,6 @@ export default function App() {
                       onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
                       onFlip={() => toggleFlip('center-panel')}
                       isSpotlightActive={spotlightPane === 'editor'}
-                      onBuilder={toggleUIBuilder}
-                      isBuilderActive={uiBuilderOpen}
                       onCommandPalette={() => setCommandPaletteOpen(true)}
                       showLspStatus={activeView === 'designer' || activeView === 'editor'}
                     />
