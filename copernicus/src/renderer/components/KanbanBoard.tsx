@@ -121,6 +121,30 @@ const StoryCard = React.memo(({
   </motion.div>
 ))
 
+const ArchiveList: React.FC<{ invoke: any }> = ({ invoke }) => {
+  const [archived, setArchived] = React.useState<Story[]>([])
+  React.useEffect(() => {
+    invoke('stories:list', { status: 'ARCHIVED' })
+      .then((res: any) => {
+        const list = unwrapIpc<Story[]>(res)
+        if (Array.isArray(list)) setArchived(list)
+      })
+      .catch(() => {})
+  }, [invoke])
+  if (!archived.length) return <p className="text-[9px] text-zinc-700 italic px-3 py-1">No archived stories.</p>
+  return (
+    <div className="space-y-1 px-3 py-1">
+      {archived.map(s => (
+        <div key={s.id} className="flex items-center gap-2 text-[9px] font-mono text-zinc-600">
+          <span className="text-zinc-700">{s.id}</span>
+          <span className="truncate text-zinc-500">{s.title}</span>
+          <span className="ml-auto text-zinc-700 shrink-0">{s.date ?? ''}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 interface KanbanBoardProps {
   onStartSession?: () => void
 }
@@ -134,11 +158,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
   const spotlightLane = useLayoutStore(s => s.spotlightLane)
   const columns = useLayoutStore(useShallow(s => s.columns))
+  const showArchive = useLayoutStore(s => s.showArchive)
+  const toggleArchive = useLayoutStore(s => s.toggleArchive)
   
   const setActiveStoryId = useLayoutStore(s => s.setActiveStoryId)
   const setSpotlight = useLayoutStore(s => s.setSpotlight)
   const setSpotlightLane = useLayoutStore(s => s.setSpotlightLane)
-  const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen)
 
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
   const [newTitle, setNewTitle] = useState('')
@@ -224,6 +249,22 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
+      {/* Archive bar */}
+      <div className="flex items-center px-3 py-1.5 border-b border-white/5 shrink-0">
+        <button
+          onClick={toggleArchive}
+          className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+        >
+          <Archive size={10} />
+          {showArchive ? 'Hide Archive' : 'View Archive'}
+        </button>
+      </div>
+
+      {showArchive && (
+        <div className="border-b border-white/5 bg-black/20 px-3 py-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 shrink-0">
+          <ArchiveList invoke={invoke} />
+        </div>
+      )}
 
       {/* Target Repo Warning Overlay */}
       {!isRepoTargeted && (
@@ -277,12 +318,28 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                   {/* Column Header */}
                   <div className="h-9 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
                     <span className="font-bold text-[9px] text-zinc-500 uppercase tracking-widest truncate">{col.label}</span>
-                    <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
+                    <div className="flex items-center gap-2">
+                      {col.id === 'planning' && (
+                        <div className="relative">
+                          <div className="flex">
+                            <button
+                              onClick={() => setCreation({ phase: 'form', type: 'Story' })}
+                              className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors px-1"
+                            >+ Story</button>
+                            <button
+                              onClick={() => setCreation({ phase: 'form', type: 'Epic' })}
+                              className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-amber-400 transition-colors px-1"
+                            >+ Epic</button>
+                          </div>
+                        </div>
+                      )}
+                      <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
+                    </div>
                   </div>
 
                   <div className="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-none">
-                    {/* Creation Form (available from ready-to-build) */}
-                    {col.id === 'ready-to-build' && creation.phase === 'form' && (
+                    {/* Creation Form (available from planning) */}
+                    {col.id === 'planning' && creation.phase === 'form' && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-zinc-900 border border-copernicus-phosphor/30 rounded shadow-xl space-y-2 mb-4">
                         <div className="flex justify-between items-center">
                           <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">New {creation.type}</span>
@@ -328,15 +385,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                   </div>
 
                   {/* Footer */}
-                  <div className="h-8 border-t border-white/5 bg-black/10 flex items-center px-3 justify-between">
-                    <button
-                      onClick={() => setTerminalOpen(true)}
-                      className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-                    >
-                      <Archive size={10} />
-                      View Archive
-                    </button>
-
+                  <div className="h-8 border-t border-white/5 bg-black/10 flex items-center px-3 justify-end">
                     {col.id === 'ready-to-build' && (
                       <button
                         onClick={() => setCreation({ phase: 'form', type: 'Story' })}

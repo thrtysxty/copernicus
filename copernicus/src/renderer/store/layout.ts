@@ -185,6 +185,10 @@ interface LayoutState {
   inProgressCount: number
   setInProgressCount: (count: number) => void
 
+  // Archive
+  showArchive: boolean
+  toggleArchive: () => void
+
   // Diff Review
   reviewMode: boolean
   pendingDiff: { files: { path: string, original: string, modified: string, status: 'added' | 'modified' | 'deleted' }[] } | null
@@ -372,6 +376,9 @@ export const useLayoutStore = create<LayoutState>()(
 
       inProgressCount: 0,
       setInProgressCount: (count) => set({ inProgressCount: count }),
+
+      showArchive: false,
+      toggleArchive: () => set((state) => ({ showArchive: !state.showArchive })),
 
       reviewMode: false,
       pendingDiff: null,
