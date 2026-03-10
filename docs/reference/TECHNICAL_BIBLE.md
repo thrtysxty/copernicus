@@ -153,7 +153,25 @@ export function unwrapIpc<T>(result: unknown): T {
 }
 ```
 
-### 2.4 Channel Registry
+### 2.4 IPC Array Safety — ENFORCED
+
+`?? []` is NOT a safe fallback for array method calls on IPC-sourced data.
+`unwrapIpc<T[]>(result) ?? []` passes through any non-null non-array value (objects, strings) unchanged.
+
+#### Required pattern
+```typescript
+// ✅ Correct
+const rows = Array.isArray(unwrapIpc<T[]>(res)) ? unwrapIpc<T[]>(res)! : []
+
+// ❌ Wrong — ?? [] does not protect against objects/strings
+const rows = unwrapIpc<T[]>(res) ?? []
+rows.reduce(...)  // throws if res was {ok:true, data:[...]}
+```
+
+Never call `.reduce()`, `.map()`, `.filter()`, or `.length` on IPC-sourced state
+without an `Array.isArray()` guard at the setter or call site.
+
+### 2.5 Channel Registry
 
 All channels must be registered in `preload.ts` before they can be used.
 

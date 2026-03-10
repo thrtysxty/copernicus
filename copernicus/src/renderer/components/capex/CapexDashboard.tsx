@@ -157,8 +157,8 @@ export const CapexDashboard: React.FC = () => {
           invoke<any>('devtime:report'),
           invoke<any>('devtime:weekly-velocity'),
         ])
-        setReport(unwrapIpc<CapexReportRow[]>(rep) ?? [])
-        setWeeklyVelocity(unwrapIpc<WeeklyVelocity[]>(vel) ?? [])
+        setReport(Array.isArray(unwrapIpc<CapexReportRow[]>(rep)) ? unwrapIpc<CapexReportRow[]>(rep)! : [])
+        setWeeklyVelocity(Array.isArray(unwrapIpc<WeeklyVelocity[]>(vel)) ? unwrapIpc<WeeklyVelocity[]>(vel)! : [])
       } finally { setFinLoading(false) }
     }
     if (tab === 'quality') {
@@ -166,8 +166,8 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('devtime:test-history'),
         invoke<any>('stories:bugs-by-assignee'),
       ])
-      setTestRuns(unwrapIpc<TestRunRecord[]>(hist) ?? [])
-      setBugs(unwrapIpc<BugsByAssignee[]>(b) ?? [])
+      setTestRuns(Array.isArray(unwrapIpc<TestRunRecord[]>(hist)) ? unwrapIpc<TestRunRecord[]>(hist)! : [])
+      setBugs(Array.isArray(unwrapIpc<BugsByAssignee[]>(b)) ? unwrapIpc<BugsByAssignee[]>(b)! : [])
     }
     if (tab === 'llm') {
       const [daily, byModel, byStory] = await Promise.all([
@@ -175,9 +175,9 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('ledger:cost-by-model'),
         invoke<any>('ledger:cost-by-story'),
       ])
-      const dc = unwrapIpc<DailyCost[]>(daily) ?? []
-      const bm = unwrapIpc<CostByModel[]>(byModel) ?? []
-      const bs = unwrapIpc<CostByStory[]>(byStory) ?? []
+      const dc = Array.isArray(unwrapIpc<DailyCost[]>(daily)) ? unwrapIpc<DailyCost[]>(daily)! : []
+      const bm = Array.isArray(unwrapIpc<CostByModel[]>(byModel)) ? unwrapIpc<CostByModel[]>(byModel)! : []
+      const bs = Array.isArray(unwrapIpc<CostByStory[]>(byStory)) ? unwrapIpc<CostByStory[]>(byStory)! : []
       setDailyCosts(dc)
       setCostByModel(bm)
       setCostByStory(bs)
@@ -192,8 +192,8 @@ export const CapexDashboard: React.FC = () => {
         invoke<any>('stories:throughput'),
         invoke<any>('stories:status-distribution'),
       ])
-      setThroughput(unwrapIpc<Throughput[]>(tp) ?? [])
-      setStatusDist(unwrapIpc<StatusDist[]>(sd) ?? [])
+      setThroughput(Array.isArray(unwrapIpc<Throughput[]>(tp)) ? unwrapIpc<Throughput[]>(tp)! : [])
+      setStatusDist(Array.isArray(unwrapIpc<StatusDist[]>(sd)) ? unwrapIpc<StatusDist[]>(sd)! : [])
     }
   }
 
@@ -216,12 +216,14 @@ export const CapexDashboard: React.FC = () => {
     fetchTabData('financial')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const stats = report.reduce((acc, row) => {
-    if (row.financial_category === 'CAPEX') acc.capexHours += row.total_hours
-    else acc.opexHours += row.total_hours
-    acc.totalSessions += row.session_count
-    return acc
-  }, { capexHours: 0, opexHours: 0, totalSessions: 0 })
+  const stats = Array.isArray(report)
+    ? report.reduce((acc, row) => {
+        if (row.financial_category === 'CAPEX') acc.capexHours += row.total_hours
+        else acc.opexHours += row.total_hours
+        acc.totalSessions += row.session_count
+        return acc
+      }, { capexHours: 0, opexHours: 0, totalSessions: 0 })
+    : { capexHours: 0, opexHours: 0, totalSessions: 0 }
 
   const totalHours = stats.capexHours + stats.opexHours
   const capPct = totalHours > 0 ? (stats.capexHours / totalHours) * 100 : 0
@@ -454,11 +456,11 @@ export const CapexDashboard: React.FC = () => {
           {activeTab === 'llm' && (
             <>
               {!spotlightId && (
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <SummaryCard title="Total LLM Burn" value={`$${totalCost.toFixed(6)}`} accent />
-                  <SummaryCard title="Active Models"    value={String(costByModel.length)} />
-                  <SummaryCard title="Total Calls"    value={String(costByModel.reduce((s, r) => s + r.call_count, 0))} />
-                </div>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <SummaryCard title="Total LLM Burn" value={`$${totalCost.toFixed(6)}`} accent />
+                    <SummaryCard title="Active Models"    value={String(costByModel.length)} />
+                    <SummaryCard title="Total Calls"    value={String(Array.isArray(costByModel) ? costByModel.reduce((s, r) => s + r.call_count, 0) : 0)} />
+                  </div>
               )}
 
               <DashboardPanel title="Daily Burn Rate (30d)" id="llm-burn" spotlightId={spotlightId} setSpotlightId={setSpotlightId}>

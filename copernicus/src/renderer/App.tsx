@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Loader2, Maximize2, Minimize2, RotateCcw,
+  Maximize2, Minimize2, RotateCcw, ChevronDown, ChevronUp,
 } from 'lucide-react'
-import { useShallow } from 'zustand/react/shallow'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useToastStore } from './store/toastStore'
 import { ActivityBar } from './components/layout/ActivityBar'
@@ -143,9 +142,6 @@ export default function App() {
   const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
 
-  // Subscriptions for arrays/objects with useShallow
-  const terminals = useLayoutStore(useShallow(s => s.terminals))
-
   const previousSidebarOpenRef = useRef<boolean>(sidebarOpen)
   const prevViewRef = useRef<string>(activeView)
 
@@ -154,7 +150,6 @@ export default function App() {
   const [isWizard, setIsWizard] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
 
-  const anyTerminalBusy = terminals.some(t => t.isBusy)
 
   // Initial setup and IPC listeners
   useEffect(() => {
@@ -446,10 +441,10 @@ export default function App() {
             aria-label="Toggle terminal"
           >
             <div className="flex items-center gap-2 flex-1 pointer-events-none">
-              <span className={`text-[10px] font-mono uppercase tracking-widest ${anyTerminalBusy ? 'text-copernicus-phosphor phosphor-glow animate-pulse' : 'text-zinc-500'}`}>
-                {terminalOpen ? '▼' : '▲'} TERMINAL_PULSE
-              </span>
-              {anyTerminalBusy && <Loader2 size={10} className="animate-spin text-copernicus-phosphor" />}
+              {terminalOpen
+                ? <ChevronDown size={12} className="text-zinc-500 hover:text-zinc-300" />
+                : <ChevronUp size={12} className="text-zinc-500 hover:text-zinc-300" />
+              }
             </div>
           </button>
 

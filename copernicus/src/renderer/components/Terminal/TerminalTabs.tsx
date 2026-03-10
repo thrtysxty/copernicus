@@ -113,6 +113,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
         {/* Panel Controls */}
         <div className="flex items-center gap-2 px-3 shrink-0">
           <button
+            data-testid="terminal-flip-btn"
             onClick={() => toggleFlip('terminal')}
             className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
             title="Rotate panel"
@@ -120,6 +121,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             <RotateCcw size={12} />
           </button>
           <button
+            data-testid="terminal-spotlight-btn"
             onClick={() => setSpotlight(spotlightPane === 'terminal' ? null : 'terminal')}
             className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
             title="Spotlight"
