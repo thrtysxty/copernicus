@@ -161,6 +161,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const columns = useLayoutStore(useShallow(s => s.columns))
   const showArchive = useLayoutStore(s => s.showArchive)
   const toggleArchive = useLayoutStore(s => s.toggleArchive)
+  const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen)
   
   const setActiveStoryId = useLayoutStore(s => s.setActiveStoryId)
   const setSpotlight = useLayoutStore(s => s.setSpotlight)
@@ -251,9 +252,9 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
       {/* Archive bar */}
-      <div className="flex items-center px-3 py-1.5 border-b border-white/5 shrink-0">
+      <div className="flex items-center gap-3 px-3 py-1.5 border-b border-white/5 shrink-0">
         <button
-          onClick={toggleArchive}
+          onClick={() => { if (!showArchive) setTerminalOpen(true); toggleArchive() }}
           className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
         >
           <Archive size={10} />
@@ -261,7 +262,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
         </button>
         <button
           onClick={() => invoke('workflow:run', { templateId: 'release-retrospective' })}
-          className="flex items-center gap-1.5 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-amber-400 rounded text-[8px] font-bold uppercase transition-colors ml-auto"
+          className="flex items-center gap-1.5 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-amber-400 rounded text-[8px] font-bold uppercase transition-colors"
         >
           <Brain size={10} />
           Run Retrospective
