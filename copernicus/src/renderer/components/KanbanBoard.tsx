@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { Crown, Lock, ChevronDown, Archive, Brain, Bug } from 'lucide-react'
+import { Crown, Lock, ChevronDown, Archive, Brain, Bug, Plus } from 'lucide-react'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 
@@ -174,6 +174,18 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const [showCreateDropdown, setShowCreateDropdown] = useState(false)
   const [workflowStatus, setWorkflowStatus] = useState<{ storyId: string | null; state: string } | null>(null)
 
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!showCreateDropdown) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowCreateDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showCreateDropdown])
+
   const fetchJulesSessions = useCallback(async () => {
     try {
       await invoke<any>('jules:list-sessions')
@@ -328,32 +340,37 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                   <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
                     <span className="font-bold text-[9px] text-zinc-500 uppercase tracking-widest truncate">{col.label}</span>
                     <div className="flex items-center gap-2">
-                      {col.id === 'planning' && (
-                        <div className="relative">
-                          <div className="flex">
-                            <button
-                              onClick={() => setCreation({ phase: 'form', type: 'Story' })}
-                              className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors px-1"
-                            >+ Story</button>
-                            <button
-                              onClick={() => setCreation({ phase: 'form', type: 'Epic' })}
-                              className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-amber-400 transition-colors px-1"
-                            >+ Epic</button>
-                            <button
-                              onClick={() => setCreation({ phase: 'form', type: 'Bug' })}
-                              className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-red-400 transition-colors px-1 flex items-center gap-1"
-                            >
-                              <Bug size={10} />
-                              + Bug
-                            </button>
-                          </div>
-                        </div>
-                      )}
                       <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
                     </div>
                   </div>
 
                   <div className="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-none">
+                    {col.id === 'planning' && (
+                      <div ref={dropdownRef} className="relative mb-2">
+                        <button
+                          onClick={() => setShowCreateDropdown(v => !v)}
+                          className="w-full flex items-center justify-center gap-1 py-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor border border-dashed border-zinc-800 hover:border-copernicus-phosphor/40 rounded transition-colors"
+                        >
+                          <Plus size={10} /> New
+                        </button>
+                        {showCreateDropdown && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded shadow-xl z-20 overflow-hidden">
+                            {(['Story', 'Epic', 'Bug'] as const).map(type => (
+                              <button
+                                key={type}
+                                onClick={() => { setCreation({ phase: 'form', type }); setShowCreateDropdown(false) }}
+                                className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 flex items-center gap-2"
+                              >
+                                {type === 'Epic' && <Crown size={10} className="text-amber-400" />}
+                                {type === 'Bug' && <Bug size={10} className="text-red-400" />}
+                                {type === 'Story' && <span className="w-[10px]" />}
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {/* Creation Form (available from planning) */}
                     {col.id === 'planning' && creation.phase === 'form' && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-zinc-900 border border-copernicus-phosphor/30 rounded shadow-xl space-y-2 mb-4">
