@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { Crown, Lock, ChevronDown, Archive, Brain } from 'lucide-react'
+import { Crown, Lock, ChevronDown, Archive, Brain, Bug } from 'lucide-react'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 
@@ -24,7 +24,7 @@ interface Story {
 
 type CreationPhase =
   | { phase: 'idle' }
-  | { phase: 'form'; type: 'Epic' | 'Story' }
+  | { phase: 'form'; type: 'Epic' | 'Story' | 'Bug' }
 
 const PRIORITY_COLORS: Record<string, string> = {
   P0: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -92,6 +92,7 @@ const StoryCard = React.memo(({
   >
     <div className="flex items-start gap-2">
       {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
+      {story.type === 'Bug' && <Bug size={10} className="text-red-400 mt-0.5" />}
       <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
     </div>
 
@@ -232,7 +233,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
   const handleCreate = async () => {
     if (!newTitle.trim() || creation.phase !== 'form') return
-    const type = creation.type === 'Epic' ? 'Epic' : 'Feature'
+    const type = creation.type === 'Epic' ? 'Epic' : creation.type === 'Bug' ? 'Bug' : 'Feature'
     try {
       const _rawCreate = await invoke<any>('stories:create', {
         title: newTitle.trim(),
@@ -337,6 +338,13 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                               onClick={() => setCreation({ phase: 'form', type: 'Epic' })}
                               className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-amber-400 transition-colors px-1"
                             >+ Epic</button>
+                            <button
+                              onClick={() => setCreation({ phase: 'form', type: 'Bug' })}
+                              className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-red-400 transition-colors px-1 flex items-center gap-1"
+                            >
+                              <Bug size={10} />
+                              + Bug
+                            </button>
                           </div>
                         </div>
                       )}
