@@ -200,6 +200,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     try {
       await invoke('save-preferences', preferences);
       
+      // Target the resolved project path so StoriesManager syncs existing stories
+      const resolvedProject = isCreatingNew ? newProjectName.trim() : selectedProject
+      if (resolvedProject && workspacePath) {
+        const fullPath = `${workspacePath}/${resolvedProject}`
+        await invoke('stories:target-project', fullPath).catch(() => {})
+      }
+
       // 4. Project Initialization
       // We pass the projectName; the backend resolves it against the workspace root.
       

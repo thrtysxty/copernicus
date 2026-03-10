@@ -44,6 +44,20 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return storiesManager.archiveStory(id)
   }))
 
+  ipcMain.handle('stories:target-project', (_e, projectPath: string) =>
+    handleIpc('stories:target-project', [projectPath], () => {
+      const imported = storiesManager.targetProject(projectPath)
+      return { imported }
+    })
+  )
+
+  ipcMain.handle('stories:import-from-path', (_e, importPath: string) =>
+    handleIpc('stories:import-from-path', [importPath], () => {
+      const imported = storiesManager.targetProject(importPath)
+      return { imported }
+    })
+  )
+
   ipcMain.handle('stories:throughput', () => handleIpc('stories:throughput', [], () =>
     stateLedger.db.prepare(`
       SELECT strftime('%Y-W%W', updated_at) as week, COUNT(*) as completed

@@ -51,7 +51,7 @@ export class StoriesManager {
     }
   }
 
-  targetProject(projectPath: string) {
+  targetProject(projectPath: string): number {
     this.storiesPath = path.join(projectPath, 'docs/stories')
     log.info(`[StoriesManager] Project stories targeted: ${this.storiesPath}`)
 
@@ -60,13 +60,15 @@ export class StoriesManager {
       this.watcher = null
     }
 
+    let imported = 0
     if (fs.existsSync(this.storiesPath)) {
       this.watch()
-      this.syncFromDisk()
+      imported = this.syncFromDisk()
     } else {
       log.warn(`Stories path not found in project: ${this.storiesPath}`)
     }
     this.broadcastUpdate()
+    return imported
   }
 
   setWindow(win: BrowserWindow) {

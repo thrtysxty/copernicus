@@ -17,7 +17,7 @@ const SEND_CHANNELS = new Set([
   // Stories
   'stories:list', 'stories:create', 'stories:get-content', 'stories:update-content',
   'stories:update', 'stories:is-repo-targeted', 'stories:hydrate', 'story:scaffold', 'stories:set-field',
-  'stories:sync',
+  'stories:sync', 'stories:target-project', 'stories:import-from-path',
   // Makefile
   'makefile:list', 'makefile:run', 'system:make',
   // Terminal
