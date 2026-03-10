@@ -34,6 +34,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   
   // GitHub
   const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string } | null>(null);
+  const [showPatInput, setShowPatInput] = useState(false);
+  const [patInput, setPatInput] = useState('');
 
   // Fetch CLI status in background
   useEffect(() => {
@@ -132,22 +134,23 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     }
   };
 
-  const handleGithubAuth = async () => {
-    const pat = prompt('Enter your GitHub Personal Access Token (PAT):');
-    if (pat) {
-      try {
-        await invoke('auth:store-api-key', 'github', pat);
-        const res = await invoke<any>('github:test-connection');
-        const user = unwrapIpc<any>(res);
-        if (user) {
-          setGithubUser(user);
-        } else {
-          alert('GitHub PAT saved, but profile fetch failed.');
-        }
-      } catch (e: unknown) {
-        const message = e instanceof Error ? (e as any).message : String(e)
-        alert('GitHub Connection Error: ' + message);
-      }    }
+  const handlePatSubmit = async () => {
+    if (!patInput.trim()) return;
+    try {
+      await invoke('auth:store-api-key', 'github', patInput.trim());
+      const res = await invoke<any>('github:test-connection');
+      const user = unwrapIpc<any>(res);
+      if (user) {
+        setGithubUser(user);
+        setShowPatInput(false);
+        setPatInput('');
+      } else {
+        alert('GitHub PAT saved, but profile fetch failed.');
+      }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? (e as any).message : String(e);
+      alert('GitHub Connection Error: ' + message);
+    }
   };
 
   useEffect(() => {
@@ -299,11 +302,34 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         {githubUser && <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> {githubUser.login}</span>}
                       </div>
                       <button
-                        onClick={handleGithubAuth}
+                        onClick={() => setShowPatInput(true)}
                         className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all"
                       >
                         {githubUser ? 'Swap GitHub Identity' : 'Connect via PAT'}
                       </button>
+                      {showPatInput && (
+                        <div className="mt-2 space-y-2">
+                          <input
+                            type="password"
+                            autoFocus
+                            className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                            placeholder="ghp_..."
+                            value={patInput}
+                            onChange={e => setPatInput(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handlePatSubmit()}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handlePatSubmit}
+                              className="flex-1 py-1.5 bg-copernicus-phosphor/10 text-copernicus-phosphor border border-copernicus-phosphor/30 rounded text-[11px] font-bold uppercase"
+                            >Connect</button>
+                            <button
+                              onClick={() => { setShowPatInput(false); setPatInput(''); }}
+                              className="px-3 py-1.5 text-zinc-500 hover:text-zinc-300 text-[11px] uppercase"
+                            >Cancel</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Ollama Cloud */}
