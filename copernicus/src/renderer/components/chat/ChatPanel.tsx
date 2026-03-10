@@ -5,6 +5,7 @@ import { ChatInput } from './ChatInput'
 import { ChatBackFace } from './ChatBackFace'
 import { useChatPanel } from './useChatPanel'
 import { commandRegistry } from '../../commands/registry'
+import { ErrorBoundary } from '../layout/ErrorBoundary'
 
 interface ChatPanelProps {
   openFilePath?: string | null
@@ -51,24 +52,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         </div>
       }
       back={
-        <ChatBackFace
-          input={chat.input}
-          activeBackTab={chat.activeBackTab} setActiveBackTab={chat.setActiveBackTab}
-          toggleFlip={chat.toggleFlip} model={chat.model} setModel={chat.setModel}
-          availableModels={chat.availableModels} totalTokens={chat.messages.reduce((acc, m) => acc + (m.tokens || 0), 0)}
-          contextMaxTokens={chat.availableModels.find(m => m.id === chat.model)?.contextWindow || 0}
-          context={chat.context} setContext={chat.setContext} handleClearContext={chat.handleClearContext}
-          authStatus={chat.authStatus} isSavingPrompt={chat.isSavingPrompt}
-          setIsSavingPrompt={chat.setIsSavingPrompt} newPromptName={chat.newPromptName}
-          setNewPromptName={chat.setNewPromptName} confirmSavePrompt={chat.confirmSavePrompt}
-          savedPrompts={chat.savedPrompts} usePrompt={chat.usePrompt} deletePrompt={chat.deletePrompt}
-          messages={chat.messages} exportChat={chat.exportChat}
-          guideMessages={chat.guideMessages} guideInput={chat.guideInput}
-          setGuideInput={chat.setGuideInput} handleGuideSubmit={chat.handleGuideSubmit}
-          showClaudeFallback={chat.showClaudeFallback} handleAskClaude={chat.handleAskClaude}
-          setShowClaudeFallback={chat.setShowClaudeFallback} guideScrollRef={chat.guideScrollRef}
-          invoke={chat.invoke}
-        />
+        <ErrorBoundary fallback={<div className="p-4 text-xs text-red-400 font-mono">PANEL_ERROR — check console</div>}>
+          <ChatBackFace
+            input={chat.input}
+            activeBackTab={chat.activeBackTab} setActiveBackTab={chat.setActiveBackTab}
+            toggleFlip={chat.toggleFlip} model={chat.model} setModel={chat.setModel}
+            availableModels={chat.availableModels} totalTokens={chat.messages.reduce((acc, m) => acc + (m.tokens || 0), 0)}
+            contextMaxTokens={chat.availableModels.find(m => m.id === chat.model)?.contextWindow || 0}
+            context={chat.context} setContext={chat.setContext} handleClearContext={chat.handleClearContext}
+            authStatus={chat.authStatus} isSavingPrompt={chat.isSavingPrompt}
+            setIsSavingPrompt={chat.setIsSavingPrompt} newPromptName={chat.newPromptName}
+            setNewPromptName={chat.setNewPromptName} confirmSavePrompt={chat.confirmSavePrompt}
+            savedPrompts={chat.savedPrompts} usePrompt={chat.usePrompt} deletePrompt={chat.deletePrompt}
+            messages={chat.messages} exportChat={chat.exportChat}
+            guideMessages={chat.guideMessages} guideInput={chat.guideInput}
+            setGuideInput={chat.setGuideInput} handleGuideSubmit={chat.handleGuideSubmit}
+            showClaudeFallback={chat.showClaudeFallback} handleAskClaude={chat.handleAskClaude}
+            setShowClaudeFallback={chat.setShowClaudeFallback} guideScrollRef={chat.guideScrollRef}
+            invoke={chat.invoke}
+          />
+        </ErrorBoundary>
       }
     />
   )

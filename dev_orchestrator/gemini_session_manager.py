@@ -136,7 +136,7 @@ def load_persona(name: str) -> str:
     return ''
 
 
-def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
+def cmd_spawn(prompt: str, stories: list, persona: str = 'dev', direct: bool = False) -> None:
     if not shutil.which(GEMINI_BIN):
         print('ERROR: gemini binary not found in PATH', file=sys.stderr)
         sys.exit(127)
@@ -147,7 +147,11 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev') -> None:
     persona_text = load_persona(persona)
     if persona_text:
         print(f'PERSONA: {persona}', flush=True)
-    prompt = persona_text + prompt + DEV_ORCHESTRATOR_FOOTER
+    if direct:
+        print('MODE: direct (no orchestrator footer)', flush=True)
+        prompt = persona_text + prompt
+    else:
+        prompt = persona_text + prompt + DEV_ORCHESTRATOR_FOOTER
 
     sessions = load_sessions()
     sessions.append({
@@ -281,6 +285,7 @@ if __name__ == '__main__':
     sp.add_argument('--prompt-file', help='Path to file containing the prompt (avoids shell quoting issues)')
     sp.add_argument('--stories', nargs='+', default=[], help='Story IDs being worked on')
     sp.add_argument('--persona', default='dev', help='Persona to inject (default: dev). File: .gemini/personas/<name>.md')
+    sp.add_argument('--direct', action='store_true', help='Skip orchestrator footer — use for focused 1-3 file stories where Gemini should use its own file tools directly')
 
     sub.add_parser('list', help='List recent sessions')
 
@@ -299,7 +304,7 @@ if __name__ == '__main__':
             prompt = args.prompt
         else:
             parser.error('spawn requires either a prompt argument or --prompt-file')
-        cmd_spawn(prompt, args.stories, persona=args.persona)
+        cmd_spawn(prompt, args.stories, persona=args.persona, direct=args.direct)
     elif args.cmd == 'list':
         cmd_list()
     elif args.cmd == 'tail':

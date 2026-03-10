@@ -1,13 +1,17 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import log from '../../utils/logger'
+
+interface ErrorBoundaryProps extends React.PropsWithChildren {
+  fallback?: ReactNode
+}
 
 interface State { hasError: boolean; message: string }
 
 export class ErrorBoundary extends React.Component<
-  React.PropsWithChildren,
+  ErrorBoundaryProps,
   State
 > {
-  constructor(props: React.PropsWithChildren) {
+  constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { hasError: false, message: '' }
   }
@@ -22,6 +26,7 @@ export class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback
       return (
         <div className="flex flex-col items-center justify-center h-screen bg-black text-copernicus-phosphor font-mono">
           <p className="text-lg mb-2 phosphor-glow">⚠ Renderer Error</p>
