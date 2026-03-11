@@ -162,6 +162,11 @@ export class PTYManager {
     session.ptyProcess.write(data);
   }
 
+  getPty(id: string): pty.IPty | undefined {
+    const session = this.sessions.get(id);
+    return session?.ptyProcess;
+  }
+
   kill(id: string) {
     const session = this.sessions.get(id);
     if (session) {

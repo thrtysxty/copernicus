@@ -22,6 +22,7 @@ const SEND_CHANNELS = new Set([
   'makefile:list', 'makefile:run', 'system:make',
   // Terminal
   'terminal-create', 'terminal:resize', 'terminal-write', 'terminal-kill',
+  'terminal:input',
   'terminal:spawn-agent',
   'terminal:stop-agent',
   // State Ledger

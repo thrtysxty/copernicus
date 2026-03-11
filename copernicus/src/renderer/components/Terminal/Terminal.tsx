@@ -68,7 +68,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
     // Handle user input
     term.onData((data) => {
-      ipcRenderer.send('terminal-write', { id, data });
+      invoke('terminal:input', { tabId: id, data }).catch(() => {});
     });
 
     // Use ResizeObserver for more granular resizing during animations
