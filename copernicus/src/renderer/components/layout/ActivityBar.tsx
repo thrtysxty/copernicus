@@ -46,7 +46,7 @@ export const ActivityBar: React.FC = () => {
             'focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none relative',
             active
               ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
-              : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-900/50 rounded',
+              : 'text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900/50 rounded',
             highlight && tourHighlight === highlight ? 'ring-2 ring-copernicus-phosphor animate-pulse z-50' : '',
           ].join(' ')}
         >

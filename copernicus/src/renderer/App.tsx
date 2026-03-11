@@ -68,7 +68,7 @@ const PanelHeader: React.FC<{
   return (
     <div className="h-8 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0 relative">
       <div className="flex items-center gap-3">
-        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
+        <span className="text-[10px] font-mono text-zinc-300 uppercase tracking-widest">{title}</span>
         {showLspStatus && (
           <div className="relative">
             <button
@@ -98,7 +98,7 @@ const PanelHeader: React.FC<{
       <div className="flex items-center gap-2">
         <button
           onClick={onFlip}
-          className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
+          className="p-1.5 text-zinc-400 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
           title="Flip Panel"
           aria-label="Flip Panel"
         >
@@ -107,7 +107,7 @@ const PanelHeader: React.FC<{
         <button
           onClick={onSpotlight}
           aria-pressed={isSpotlightActive}
-          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-400 hover:text-zinc-300'}`}
           title="Spotlight"
           aria-label={isSpotlightActive ? "Minimize Spotlight" : "Maximize Spotlight"}
         >
@@ -158,6 +158,7 @@ export default function App() {
   const setChatPanelTab = useLayoutStore(s => s.setChatPanelTab)
   const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
   const setPendingReview = useLayoutStore(s => s.setPendingReview)
+  const setPendingReviewSummary = useLayoutStore(s => s.setPendingReviewSummary)
   const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
   const showGenesis = useLayoutStore(s => s.showGenesis)
@@ -236,6 +237,13 @@ export default function App() {
 
     const removeReviewSession = window.ipcRenderer.on('review:session-complete', (_e, data: any) => {
       setPendingReview(data)
+      setPendingReviewSummary(data)
+      
+      const stories = data.stories.map((n: number) => `#${n}`).join(', ')
+      const files = data.changedFiles.map((f: string) => `• ${f.split('/').pop()}`).join('\n')
+      const message = `✓ Session complete — ${stories}\n\nChanged files (${data.changedFiles.length}):\n${files}\n\nExit code: ${data.exitCode === 0 ? '✓ 0 (clean)' : `✗ ${data.exitCode}`}`
+      
+      window.ipcRenderer.invoke('chat:send-system', message)
     })
 
     const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory', 'review'] as const
