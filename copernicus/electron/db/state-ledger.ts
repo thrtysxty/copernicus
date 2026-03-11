@@ -84,6 +84,7 @@ export interface ModelCallRecord {
   panel_id: string;
   model_id: string;
   provider: string;
+  persona_role?: string;
   tokens_in: number;
   tokens_out: number;
   cost_usd: number;
@@ -156,6 +157,11 @@ export class StateLedger {
 
     // Model Call Ledger (Story 156)
     this.db.exec(SCHEMA.model_calls);
+    try {
+      this.db.exec("ALTER TABLE model_calls ADD COLUMN persona_role TEXT DEFAULT 'unknown'");
+    } catch (e) {
+      // Column already exists
+    }
 
     // Projects & Epics (Story 211)
     this.db.exec(SCHEMA.projects);
@@ -258,11 +264,12 @@ export class StateLedger {
   logModelCall(record: Omit<ModelCallRecord, 'id' | 'created_at'>): number {
     const info = this.db.prepare(`
       INSERT INTO model_calls
-        (session_id, panel_id, model_id, provider, tokens_in, tokens_out,
+        (session_id, panel_id, model_id, provider, persona_role, tokens_in, tokens_out,
          cost_usd, latency_ms, reasoning, workflow_run_id, parent_call_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       record.session_id, record.panel_id, record.model_id, record.provider,
+      record.persona_role ?? 'unknown',
       record.tokens_in, record.tokens_out, record.cost_usd,
       record.latency_ms ?? null, record.reasoning ?? null,
       record.workflow_run_id ?? null,
@@ -313,6 +320,23 @@ export class StateLedger {
   getAllTimeCost(): number {
     const row = this.db.prepare('SELECT SUM(cost_usd) as total FROM model_calls').get() as any
     return row?.total ?? 0
+  }
+
+  getSessionStatsByRole(sessionId: string): { role: string, tokens: number, cost: number }[] {
+    return this.db.prepare(`
+      SELECT COALESCE(persona_role, 'unknown') as role,
+             SUM(tokens_in + tokens_out) as tokens, SUM(cost_usd) as cost
+      FROM model_calls WHERE session_id = ?
+      GROUP BY role ORDER BY cost DESC
+    `).all(sessionId) as any[]
+  }
+
+  getAllTimeStatsByRole(): { role: string, tokens: number, cost: number }[] {
+    return this.db.prepare(`
+      SELECT COALESCE(persona_role, 'unknown') as role,
+             SUM(tokens_in + tokens_out) as tokens, SUM(cost_usd) as cost
+      FROM model_calls GROUP BY role ORDER BY cost DESC
+    `).all() as any[]
   }
 
   queryModelCallsSprint(since: number): object[] {

@@ -99,4 +99,12 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('lsp:close-file', (_e, filePath: string) => handleIpc('lsp:close-file', [filePath], () => lspManager.closeFile(filePath)))
   ipcMain.handle('lsp:get-diagnostics', (_e, filePath: string) => handleIpc('lsp:get-diagnostics', [filePath], () => lspManager.getDiagnostics(filePath)))
   ipcMain.handle('lsp:check-file', (_e, filePath: string) => handleIpc('lsp:check-file', [filePath], () => lspManager.getDiagnostics(filePath)))
+
+  // Ledger Stats (Story 324)
+  ipcMain.handle('ledger:stats-by-role-session', (_e, sessionId: string) =>
+    handleIpc('ledger:stats-by-role-session', [sessionId], () => deps.stateLedger.getSessionStatsByRole(sessionId))
+  )
+  ipcMain.handle('ledger:stats-by-role-alltime', () =>
+    handleIpc('ledger:stats-by-role-alltime', [], () => deps.stateLedger.getAllTimeStatsByRole())
+  )
 }

@@ -221,6 +221,10 @@ interface LayoutState {
   setReviewMode: (files: { path: string, original: string, modified: string, status: 'added' | 'modified' | 'deleted' }[]) => void
   clearReviewMode: () => void
 
+  // Session
+  isSessionEnded: boolean
+  setSessionEnded: (v: boolean) => void
+
   // Workspace Switch
   resetForWorkspaceSwitch: () => void
 }
@@ -449,10 +453,14 @@ export const useLayoutStore = create<LayoutState>()(
       setReviewMode: (files) => set({ reviewMode: true, pendingDiff: { files } }),
       clearReviewMode: () => set({ reviewMode: false, pendingDiff: null }),
 
+      isSessionEnded: false,
+      setSessionEnded: (v) => set({ isSessionEnded: v }),
+
       resetForWorkspaceSwitch: () => set({
         openFiles: [],
         activeFilePath: null,
-        activeView: 'planner'
+        activeView: 'planner',
+        isSessionEnded: false
       })
     }),
     {

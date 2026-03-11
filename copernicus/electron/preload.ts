@@ -64,6 +64,7 @@ const SEND_CHANNELS = new Set([
   'stories:throughput', 'stories:status-distribution', 'stories:bugs-by-assignee',
   // Ledger analytics (Story 162)
   'ledger:daily-costs', 'ledger:cost-by-model', 'ledger:cost-by-story',
+  'ledger:stats-by-role-session', 'ledger:stats-by-role-alltime',
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
   'workflow:update-node-data',

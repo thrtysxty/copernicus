@@ -129,6 +129,7 @@ export default function App() {
   const sidebarOpen = useLayoutStore(s => s.sidebarOpen)
   const terminalOpen = useLayoutStore(s => s.terminalOpen)
   const spotlightPane = useLayoutStore(s => s.spotlightPane)
+  const isSessionEnded = useLayoutStore(s => s.isSessionEnded)
   const workingDir = useLayoutStore(s => s.workingDir)
   const gitBranch = useLayoutStore(s => s.gitBranch)
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
@@ -506,6 +507,15 @@ export default function App() {
                       <ChatPanel />
                     )}
                   </div>
+
+                  {isSessionEnded && (activeView === 'editor' || activeView === 'designer') && (
+                    <div className="absolute inset-0 z-50 pointer-events-auto bg-black/60 flex items-center justify-center">
+                      <div className="text-center font-mono">
+                        <div className="text-zinc-300 text-sm mb-1">Session ended</div>
+                        <div className="text-zinc-600 text-[11px]">Planning and reports are still accessible</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}
