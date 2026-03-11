@@ -71,6 +71,32 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   // File System
   ipcMain.handle('fs:list-dir', (_event, dirPath: string) => handleIpc('fs:list-dir', [dirPath], () => fsManager.listDir(dirPath)))
+
+  ipcMain.handle('fs:list-files-recursive', (_e, dirPath: string) => handleIpc('fs:list-files-recursive', [dirPath], () => {
+    const root = dirPath || fsManager.getRootPath()
+    if (!root) throw new Error('NO_ROOT')
+    const results: { path: string, size: number }[] = []
+    
+    const walk = (dir: string) => {
+      const entries = fs.readdirSync(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name)
+        if (entry.isDirectory()) {
+          if (['node_modules', '.git', 'dist', 'release'].includes(entry.name)) continue
+          walk(fullPath)
+        } else {
+          if (/\.(ts|tsx|py)$/.test(entry.name)) {
+            const stats = fs.statSync(fullPath)
+            results.push({ path: fullPath, size: stats.size })
+          }
+        }
+      }
+    }
+    
+    walk(root)
+    return results
+  }))
+
   ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc('fs:open-file', [filePath], () => fsManager.readFile(filePath)))
   ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc('fs:read-file', [filePath], () => {
     assertSafePath(filePath);

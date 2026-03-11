@@ -6,6 +6,7 @@ export interface ModelConfig {
   contextWindow: number;
   costPer1kIn?: number;  // USD per 1k input tokens
   costPer1kOut?: number; // USD per 1k output tokens
+  supportsVision?: boolean;
 }
 
 export class ModelRegistry {
@@ -18,14 +19,14 @@ export class ModelRegistry {
 
     // Register default models with pricing (USD per 1k tokens)
     this.registerModel({ id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'openai', contextWindow: 16385, costPer1kIn: 0.0005, costPer1kOut: 0.0015 });
-    this.registerModel({ id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'openai', contextWindow: 128000, costPer1kIn: 0.010, costPer1kOut: 0.030 });
-    this.registerModel({ id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet', provider: 'anthropic', contextWindow: 200000, costPer1kIn: 0.003, costPer1kOut: 0.015 });
-    this.registerModel({ id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', provider: 'anthropic', contextWindow: 200000, costPer1kIn: 0.015, costPer1kOut: 0.075 });
-    this.registerModel({ id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', provider: 'anthropic', contextWindow: 200000, costPer1kIn: 0.003, costPer1kOut: 0.015 });
+    this.registerModel({ id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'openai', contextWindow: 128000, costPer1kIn: 0.010, costPer1kOut: 0.030, supportsVision: true });
+    this.registerModel({ id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet', provider: 'anthropic', contextWindow: 200000, costPer1kIn: 0.003, costPer1kOut: 0.015, supportsVision: true });
+    this.registerModel({ id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', provider: 'anthropic', contextWindow: 200000, costPer1kIn: 0.015, costPer1kOut: 0.075, supportsVision: true });
+    this.registerModel({ id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', provider: 'anthropic', contextWindow: 200000, costPer1kIn: 0.003, costPer1kOut: 0.015, supportsVision: true });
 
     // Google / Gemini
-    this.registerModel({ id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'google', contextWindow: 1000000, costPer1kIn: 0.0035, costPer1kOut: 0.0105 });
-    this.registerModel({ id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'google', contextWindow: 1000000, costPer1kIn: 0.000075, costPer1kOut: 0.0003 });
+    this.registerModel({ id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'google', contextWindow: 1000000, costPer1kIn: 0.0035, costPer1kOut: 0.0105, supportsVision: true });
+    this.registerModel({ id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'google', contextWindow: 1000000, costPer1kIn: 0.000075, costPer1kOut: 0.0003, supportsVision: true });
 
     // OpenRouter examples (free tier pricing; actual cost varies by underlying model)
     this.registerModel({ id: 'openrouter/google/gemini-pro', name: 'Gemini Pro (OpenRouter)', provider: 'openrouter', contextWindow: 32000 });

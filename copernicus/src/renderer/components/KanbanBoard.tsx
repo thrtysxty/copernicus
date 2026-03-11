@@ -3,7 +3,8 @@ import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { Crown, Lock, ChevronDown, Archive, Brain, Bug, Plus } from 'lucide-react'
+import { useQueueStore } from '../store/queueStore'
+import { Crown, Lock, ChevronDown, Archive, Brain, Bug, Plus, Zap, Play } from 'lucide-react'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 
@@ -56,71 +57,112 @@ const StoryCard = React.memo(({
   setSpotlightLane: (lane: string | null) => void;
   setSpotlight: (view: any) => void;
   workflowStatus: { storyId: string | null; state: string } | null;
-}) => (
-  <motion.div
-    data-story-id={story.id}
-    data-testid={`story-card-${story.id}`}
-    role="button"
-    tabIndex={activeStoryId === story.id || (idx === 0 && !colStories.some(s => s.id === activeStoryId)) ? 0 : -1}
-    aria-label={`${story.title} — ${story.status}`}
-    draggable
-    onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
-    className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
-    onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(colId); }}
-    onDoubleClick={() => setSpotlight('inspector')}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        setActiveStoryId(story.id);
-        setSpotlightLane(colId);
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        const next = colStories[idx + 1];
-        if (next) {
-          (e.currentTarget.nextElementSibling as HTMLElement)?.focus();
-          setActiveStoryId(next.id);
-        }
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        const prev = colStories[idx - 1];
-        if (prev) {
-          (e.currentTarget.previousElementSibling as HTMLElement)?.focus();
-          setActiveStoryId(prev.id);
-        }
+  }) => {
+  const invoke = useIpcError()
+  const dispatchGuard = useQueueStore(s => s.dispatchGuard)
+  const markRunning = useQueueStore(s => s.markRunning)
+
+  const handleDispatch = (type: 'gemini' | 'jules') => {
+    const num = parseInt(story.id.replace('story_', ''), 10)
+    const { blocked, deps } = dispatchGuard(num)
+    if (blocked) {
+      if (!window.confirm(`Story ${num} depends on stories [${deps.join(', ')}] which are not complete. Dispatch anyway?`)) {
+        return
       }
-    }}
-  >
-    <div className="flex items-start gap-2">
-      {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
-      {story.type === 'Bug' && <Bug size={10} className="text-red-400 mt-0.5" />}
-      <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
-    </div>
+    }
 
-    {story.flagged && (
-      <div className="mt-1">
-        <span className="px-1 py-0.5 rounded-[2px] text-[7px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">⚑ Review</span>
-      </div>
-    )}
+    markRunning(num)
+    if (type === 'jules') {
+      invoke('jules:dispatch-session', story.id)
+    } else {
+      // Gemini dispatch logic - hydrate story and start watching
+      invoke('stories:hydrate', story.id)
+    }
+  }
 
-    {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && story.status !== 'COMPLETE' && (
-      <div className={`mt-1 flex items-center gap-1 text-[8px] font-mono ${
-        workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
-        workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
-      }`}>
-        <span className={workflowStatus.state === 'RUNNING' ? 'animate-pulse' : ''}>●</span>
-        {workflowStatus.state === 'RUNNING' ? 'RUNNING' :
-         workflowStatus.state === 'COMPLETE' ? 'DONE' : 'FAILED'}
+  return (
+    <motion.div
+      data-story-id={story.id}
+      data-testid={`story-card-${story.id}`}
+      role="button"
+      tabIndex={activeStoryId === story.id || (idx === 0 && !colStories.some(s => s.id === activeStoryId)) ? 0 : -1}
+      aria-label={`${story.title} — ${story.status}`}
+      draggable
+      onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
+      className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
+      onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(colId); }}
+      onDoubleClick={() => setSpotlight('inspector')}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setActiveStoryId(story.id);
+          setSpotlightLane(colId);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const next = colStories[idx + 1];
+          if (next) {
+            (e.currentTarget.nextElementSibling as HTMLElement)?.focus();
+            setActiveStoryId(next.id);
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prev = colStories[idx - 1];
+          if (prev) {
+            (e.currentTarget.previousElementSibling as HTMLElement)?.focus();
+            setActiveStoryId(prev.id);
+          }
+        }
+      }}
+    >
+      <div className="flex items-start gap-2">
+        {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
+        {story.type === 'Bug' && <Bug size={10} className="text-red-400 mt-0.5" />}
+        <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
       </div>
-    )}
 
-    <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
-      <span className="text-[8px] font-mono text-zinc-300">{story.id}</span>
-      <div className="flex gap-1">
-        <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
+      {story.flagged && (
+        <div className="mt-1">
+          <span className="px-1 py-0.5 rounded-[2px] text-[7px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">⚑ Review</span>
+        </div>
+      )}
+
+      {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && story.status !== 'COMPLETE' && (
+        <div className={`mt-1 flex items-center gap-1 text-[8px] font-mono ${
+          workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
+          workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
+        }`}>
+          <span className={workflowStatus.state === 'RUNNING' ? 'animate-pulse' : ''}>●</span>
+          {workflowStatus.state === 'RUNNING' ? 'RUNNING' :
+           workflowStatus.state === 'COMPLETE' ? 'DONE' : 'FAILED'}
+        </div>
+      )}
+
+      <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
+        <span className="text-[8px] font-mono text-zinc-300">{story.id}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-2">
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleDispatch('gemini') }}
+              className="flex items-center gap-1 text-[7px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+              title="Dispatch to Gemini"
+            >
+              <Zap size={8} /> Gemini
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleDispatch('jules') }}
+              className="flex items-center gap-1 text-[7px] font-bold uppercase tracking-widest text-zinc-600 hover:text-blue-400 transition-colors"
+              title="Dispatch to Jules"
+            >
+              <Play size={8} /> Jules
+            </button>
+          </div>
+          <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
+        </div>
       </div>
-    </div>
-  </motion.div>
-))
+    </motion.div>
+  )
+  }
+)
 
 const ArchiveList: React.FC<{ invoke: ReturnType<typeof useIpcError> }> = ({ invoke }) => {
   const [archived, setArchived] = React.useState<Story[]>([])

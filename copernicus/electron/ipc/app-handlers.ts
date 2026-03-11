@@ -206,6 +206,36 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('ledger:all-time-cost', () => handleIpc('ledger:all-time-cost', [], () => stateLedger.getAllTimeCost())
   )
 
+  ipcMain.handle('ledger:heatmap-data', () => handleIpc('ledger:heatmap-data', [], () => {
+    const churn = stateLedger.db.prepare('SELECT changed_files FROM review_sessions').all() as any[]
+    const churnMap: Record<string, number> = {}
+    churn.forEach(s => {
+      try {
+        const files = JSON.parse(s.changed_files) as string[]
+        if (Array.isArray(files)) files.forEach(f => churnMap[f] = (churnMap[f] || 0) + 1)
+      } catch {}
+    })
+
+    const costs = stateLedger.db.prepare(`
+      SELECT mc.cost_usd, rs.changed_files
+      FROM model_calls mc
+      JOIN review_sessions rs ON mc.session_id = rs.session_id
+    `).all() as any[]
+    
+    const costMap: Record<string, number> = {}
+    costs.forEach(c => {
+      try {
+        const files = JSON.parse(c.changed_files) as string[]
+        if (Array.isArray(files)) {
+          const splitCost = c.cost_usd / files.length
+          files.forEach(f => costMap[f] = (costMap[f] || 0) + splitCost)
+        }
+      } catch {}
+    })
+
+    return { churnMap, costMap }
+  }))
+
   // Splash ready — renderer signals splash/wizard complete
   ipcMain.handle('splash-ready', (_e) => handleIpc('splash-ready', [], () => ({ ready: true })))
 

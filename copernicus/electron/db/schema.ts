@@ -160,6 +160,15 @@ export const SCHEMA = {
     CREATE INDEX IF NOT EXISTS idx_jules_sessions_status
       ON jules_sessions(status);
   `,
+  review_sessions: `CREATE TABLE IF NOT EXISTS review_sessions (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    stories TEXT, -- JSON array
+    changed_files TEXT, -- JSON array
+    exit_code INTEGER,
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`,
   // Note: actual table creation is deferred to CodebaseIndexer after the
   // sqlite-vec extension is loaded. This entry documents the schema only.
   codebase_vec: `
@@ -245,4 +254,11 @@ export const SCHEMA = {
     );
     CREATE INDEX IF NOT EXISTS idx_file_tx_entries_tx ON file_transaction_entries(transaction_id);
   `,
+  dispatch_queue: `CREATE TABLE IF NOT EXISTS dispatch_queue (
+    story_number INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    blocked_by TEXT DEFAULT '[]',
+    status TEXT DEFAULT 'waiting',
+    added_at TEXT DEFAULT (datetime('now'))
+  )`,
 };

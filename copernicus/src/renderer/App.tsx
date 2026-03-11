@@ -31,6 +31,7 @@ import { ReviewPanel } from './components/review/ReviewPanel'
 import { GitPanel } from './components/git/GitPanel'
 import { SearchPanel } from './components/search/SearchPanel'
 import { ProblemsPanel } from './components/diagnostics/ProblemsPanel'
+import { QueuePanel } from './components/planning/QueuePanel'
 
 const TERMINAL_HEIGHT = 200
 
@@ -175,6 +176,7 @@ export default function App() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [isWizard, setIsWizard] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
+  const [plannerTab, setPlannerTab] = useState<'board' | 'queue'>('board')
 
 
   // Initial setup and IPC listeners
@@ -415,7 +417,29 @@ export default function App() {
           <div className="flex-1 flex overflow-hidden">
             {/* Solo full-screen views */}
             {activeView === 'command-center' && <CommandCenter />}
-            {activeView === 'planner' && <KanbanBoard onStartSession={() => setProjectSelectorOpen(true)} />}
+            {activeView === 'planner' && (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex bg-[#050505] border-b border-white/5 px-4 h-8 items-center gap-6 shrink-0">
+                  <button 
+                    onClick={() => setPlannerTab('board')}
+                    className={`text-[9px] font-bold uppercase tracking-widest h-full transition-colors border-b-2 ${plannerTab === 'board' ? 'text-copernicus-phosphor border-copernicus-phosphor' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                  >
+                    Board
+                  </button>
+                  <button 
+                    onClick={() => setPlannerTab('queue')}
+                    className={`text-[9px] font-bold uppercase tracking-widest h-full transition-colors border-b-2 ${plannerTab === 'queue' ? 'text-copernicus-phosphor border-copernicus-phosphor' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                  >
+                    Queue
+                  </button>
+                </div>
+                {plannerTab === 'board' ? (
+                  <KanbanBoard onStartSession={() => setProjectSelectorOpen(true)} />
+                ) : (
+                  <QueuePanel />
+                )}
+              </div>
+            )}
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && <WorkflowCanvas />}
             {activeView === 'github' && <GithubDashboard />}

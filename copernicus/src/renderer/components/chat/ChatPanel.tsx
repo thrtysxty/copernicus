@@ -62,6 +62,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             pickerMode={chat.pickerMode} setPickerMode={chat.setPickerMode}
             pickerResults={chat.pickerResults} setPickerResults={chat.setPickerResults}
             rootPath={rootPath} commandRegistry={commandRegistry}
+            pendingImage={chat.pendingImage} setPendingImage={chat.setPendingImage}
           />
         </div>
       }

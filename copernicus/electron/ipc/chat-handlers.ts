@@ -1,0 +1,56 @@
+import { ipcMain, BrowserWindow } from 'electron'
+import log from 'electron-log'
+import { handleIpc } from '../utils/handle-ipc'
+import { IpcHandlerDeps } from './deps'
+
+export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
+  const { modelRegistry, llmService } = deps
+
+  // LLM Chat
+  ipcMain.handle('chat:send', (_event, payload: any) => handleIpc('chat:send', [payload], async () => {
+    const { model, imageBase64 } = payload
+    
+    // AC3: Vision model check
+    if (imageBase64) {
+      const modelConfig = modelRegistry.getModels().find(m => m.id === model)
+      if (!modelConfig?.supportsVision) {
+        return { 
+          error: 'VISION_NOT_SUPPORTED', 
+          message: 'Switch to a vision-capable model (Claude 3, GPT-4o, Gemini 1.5+) to send images.' 
+        }
+      }
+    }
+
+    llmService.streamChat(payload).catch((err: unknown) => log.error('[LLM] streamChat error:', err))
+    return { ok: true }
+  }))
+
+  ipcMain.handle('chat:confirm-model-switch', (_e, payload: any) => handleIpc('chat:confirm-model-switch', [payload], async () => {
+    // Notify all windows
+    BrowserWindow.getAllWindows().forEach(w =>
+      w.webContents.send('chat:model-switch-decision', payload))
+    
+    // Notify Python backend (Story 228 AC-3)
+    try {
+      await fetch('http://localhost:5001/api/orchestration/resolve-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_id: payload.request_id || payload.sessionId, // accommodate both naming conventions
+          approved: payload.accepted
+        })
+      })
+    } catch (err) {
+      log.error('[Main] Failed to notify backend of model switch decision:', err)
+    }
+    return { ok: true }
+  }))
+
+  // Story 343 AC4: Ghost Implementation
+  ipcMain.handle('agent:send-code-stream', (_e, payload: { sessionId: string, filePath: string, proposedDiff: string }) =>
+    handleIpc('agent:send-code-stream', [payload], () => {
+      win.webContents.send('agent:code-stream', payload)
+      return { ok: true }
+    })
+  )
+}

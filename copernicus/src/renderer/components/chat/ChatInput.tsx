@@ -1,5 +1,5 @@
-import React from 'react'
-import { Send, Paperclip, FileText } from 'lucide-react'
+import React, { useState } from 'react'
+import { Send, Paperclip, FileText, X } from 'lucide-react'
 import { ContextChip } from './ContextChip'
 import { Command } from '../../commands/registry'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -35,6 +35,8 @@ interface ChatInputProps {
   setPickerResults: (v: Array<{ label: string; value: string; payload: string }>) => void
   rootPath: string
   commandRegistry: any
+  pendingImage: any
+  setPendingImage: (v: any) => void
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -57,8 +59,43 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   setPickerResults,
   rootPath,
   commandRegistry,
+  pendingImage,
+  setPendingImage,
 }) => {
   const invoke = useIpcError()
+  const [imageError, setImageError] = useState('')
+
+  const handleImageCapture = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setImageError('Image too large (max 10MB)')
+      setTimeout(() => setImageError(''), 3000)
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      const base64 = result.split(',')[1];
+      const mimeType = file.type;
+      const previewUrl = URL.createObjectURL(file);
+      setPendingImage({ base64, mimeType, previewUrl });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageCapture(file);
+  };
+
+  const onPaste = (e: React.ClipboardEvent) => {
+    const item = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
+    if (item) {
+      const file = item.getAsFile();
+      if (file) handleImageCapture(file);
+    }
+  };
 
   return (
     <>
@@ -75,7 +112,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
-        <div className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5 shadow-sm">
+        {imageError && (
+          <div className="text-[10px] text-red-400 mb-1 px-1 font-mono">{imageError}</div>
+        )}
+        <div 
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDrop}
+          className="relative flex flex-col bg-zinc-900 border border-copernicus-steel focus-within:border-copernicus-phosphor transition-all rounded p-1.5 shadow-sm"
+        >
           
           {/* Suggestion Popover */}
           {showSuggestions && slashSuggestions.length > 0 && (
@@ -115,11 +159,30 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             </div>
           )}
 
+          {pendingImage && (
+            <div className="relative mb-2 w-fit group px-1 pt-1">
+              <img 
+                src={pendingImage.previewUrl} 
+                className="max-h-20 max-w-32 rounded border border-zinc-700 object-contain bg-black shadow-lg" 
+              />
+              <button
+                onClick={() => {
+                  URL.revokeObjectURL(pendingImage.previewUrl);
+                  setPendingImage(null);
+                }}
+                className="absolute top-0 right-0 p-0.5 bg-zinc-800 border border-zinc-700 rounded-full text-zinc-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-xl"
+              >
+                <X size={10} />
+              </button>
+            </div>
+          )}
+
           <textarea
             value={input}
             aria-label="Chat with Claude"
             data-chat-input
             data-testid="chat-input"
+            onPaste={onPaste}
             onChange={(e) => {
               const newValue = e.target.value
               setInput(newValue)

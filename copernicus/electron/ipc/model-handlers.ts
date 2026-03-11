@@ -1,11 +1,10 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 
 import { IpcHandlerDeps } from './deps'
 
 export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
-  const { modelRegistry, llmService, codebaseIndexer, hybridRetriever, runRAGBenchmark, lspManager, settingsStore } = deps
+  const { modelRegistry, codebaseIndexer, hybridRetriever, runRAGBenchmark, lspManager, settingsStore } = deps
 
   // Registry Handlers
   ipcMain.handle('registry:list-models', () => handleIpc('registry:list-models', [], () => modelRegistry.getModels()))
@@ -51,35 +50,11 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
     } catch {
       return { ok: false, error: 'OLLAMA_NOT_RUNNING', models: [] };
     }
-  }));
+    }));
 
-  // LLM Chat
-  ipcMain.handle('chat:send', (_event, payload: unknown) => handleIpc('chat:send', [payload], async () => {
-    llmService.streamChat(payload).catch((err: unknown) => log.error('[LLM] streamChat error:', err))
-    return true
-  }))
-  ipcMain.handle('chat:confirm-model-switch', (_e, payload: any) => handleIpc('chat:confirm-model-switch', [payload], async () => {
-    // Notify all windows
-    BrowserWindow.getAllWindows().forEach(w =>
-      w.webContents.send('chat:model-switch-decision', payload))
-    
-    // Notify Python backend (Story 228 AC-3)
-    try {
-      await fetch('http://localhost:5001/api/orchestration/resolve-confirmation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          request_id: payload.request_id || payload.sessionId, // accommodate both naming conventions
-          approved: payload.accepted
-        })
-      })
-    } catch (err) {
-      log.error('[Main] Failed to notify backend of model switch decision:', err)
-    }
-  }))
-
-  // Review
-  ipcMain.handle('review:log', (_event, { verdicts }: { verdicts: { claude: string; gemini: string } }) => handleIpc('review:log', [{ verdicts }], () => {
+    // Review
+    ipcMain.handle('review:log'
+, (_event, { verdicts }: { verdicts: { claude: string; gemini: string } }) => handleIpc('review:log', [{ verdicts }], () => {
     deps.stateLedger.logIntent(`REVIEW: [Claude: ${verdicts.claude}] [Gemini: ${verdicts.gemini}]`, 'COMPLETED', 'sentinel')
     return true
   }))

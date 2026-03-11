@@ -9,6 +9,7 @@ import { useIpcError } from '../../hooks/useIpcError'
 import { useToastStore } from '../../store/toastStore'
 import { CHART_THEME } from './chart-theme'
 import { unwrapIpc } from '../../types/ipc'
+import { HeatmapView } from './HeatmapView'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -28,12 +29,13 @@ interface Throughput     { week: string; completed: number }
 interface StatusDist     { status: string; count: number }
 interface BugsByAssignee { assignee: string; bug_count: number }
 
-type DashTab = 'financial' | 'quality' | 'llm' | 'velocity'
+type DashTab = 'financial' | 'quality' | 'llm' | 'velocity' | 'heatmap'
 const TABS: { id: DashTab; label: string }[] = [
   { id: 'financial', label: 'FINANCIAL' },
   { id: 'quality',   label: 'QUALITY'   },
   { id: 'llm',       label: 'LLM'       },
   { id: 'velocity',  label: 'VELOCITY'  },
+  { id: 'heatmap',   label: 'HEATMAP'   },
 ]
 
 // ── Components ─────────────────────────────────────────────────────────────
@@ -601,6 +603,9 @@ export const CapexDashboard: React.FC = () => {
               </div>
             </>
           )}
+
+          {/* ── HEATMAP ───────────────────────────────────────────────────── */}
+          {activeTab === 'heatmap' && <HeatmapView />}
 
         </div>
       </div>

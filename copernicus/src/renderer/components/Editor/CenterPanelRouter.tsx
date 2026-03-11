@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { X } from 'lucide-react'
-import { MonacoEditor } from './MonacoEditor'
+import { EditorPanel } from './EditorPanel'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
 import { UICanvas } from './UICanvas'
@@ -193,11 +193,11 @@ export function CenterPanelRouter({
 
       case 'svg':
         return centerMode === 'code'
-          ? <MonacoEditor key={filePath} value={content} language="xml" filePath={filePath} onChange={onChange} />
+          ? <EditorPanel key={filePath} content={content} language="xml" filePath={filePath} onChange={onChange} />
           : <ImageViewer filePath={filePath} isSvg onEditSource={() => setCenterMode('code')} />
 
       default:
-        return <MonacoEditor key={filePath} value={content} language={language} filePath={filePath} onChange={onChange} />
+        return <EditorPanel key={filePath} content={content} language={language} filePath={filePath} onChange={onChange} />
     }
   }, [reviewMode, activeFilePath, propFilePath, activeFileContent, propContent, activeFileLanguage, propLanguage, centerMode, browserSessionActive, canvasContent, canvasUrl, setActiveFileContent, propOnChange, setCenterMode])
 

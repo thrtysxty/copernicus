@@ -35,6 +35,7 @@ import { addRecentProject } from './utils/recent-projects'
 import * as fileHandlers from './ipc/file-handlers'
 import * as authHandlers from './ipc/auth-handlers'
 import * as modelHandlers from './ipc/model-handlers'
+import * as chatHandlers from './ipc/chat-handlers'
 import * as storyHandlers from './ipc/story-handlers'
 import * as workflowHandlers from './ipc/workflow-handlers'
 import * as terminalHandlers from './ipc/terminal-handlers'
@@ -170,6 +171,7 @@ function registerIpcHandlers() {
   fileHandlers.register(win!, deps)
   authHandlers.register(win!, deps)
   modelHandlers.register(win!, deps)
+  chatHandlers.register(win!, deps)
   storyHandlers.register(win!, deps)
   workflowHandlers.register(win!, deps)
   terminalHandlers.register(win!, deps)

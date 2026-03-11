@@ -152,6 +152,9 @@ export class StateLedger {
     // Jules Sessions (Story 161)
     this.db.exec(SCHEMA.jules_sessions);
 
+    // Review Sessions (Story 333)
+    this.db.exec(SCHEMA.review_sessions);
+
     // Test Runs (Story 162)
     this.db.exec(SCHEMA.test_runs);
 
@@ -173,6 +176,9 @@ export class StateLedger {
     // File Transactions (Story 220)
     this.db.exec(SCHEMA.file_transactions);
     this.db.exec(SCHEMA.file_transaction_entries);
+
+    // Agent Queue (Story 340)
+    this.db.exec(SCHEMA.dispatch_queue);
   }
 
   // ── File Transactions (Story 220) ──────────────────────────────────────────

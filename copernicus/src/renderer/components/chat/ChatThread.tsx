@@ -220,6 +220,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
   invoke,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const { 
     activeStoryId, 
     retakeTour, 
@@ -246,6 +247,15 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
 
     return (
       <>
+        {msg?.imageBase64 && (
+          <div className="mb-2">
+            <img 
+              src={`data:${msg.imageMimeType};base64,${msg.imageBase64}`} 
+              className="max-w-[200px] rounded mt-1 cursor-pointer border border-copernicus-steel hover:border-copernicus-phosphor transition-colors shadow-lg" 
+              onClick={() => setLightboxSrc(`data:${msg.imageMimeType};base64,${msg.imageBase64}`)}
+            />
+          </div>
+        )}
         {parts.map((part, i) => {
           const match = part.match(/^```([\w]*)\n([\s\S]*?)```$/)
           if (match) {
@@ -282,6 +292,19 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
 
   return (
     <>
+      {/* Lightbox Overlay */}
+      {lightboxSrc && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-8 cursor-pointer"
+          onClick={() => setLightboxSrc(null)}
+        >
+          <img 
+            src={lightboxSrc} 
+            className="max-w-full max-h-full object-contain rounded shadow-2xl" 
+          />
+        </div>
+      )}
+
       {/* Unified Chat Header */}
       <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 select-none group/chat">
         <div className="flex items-center gap-2">

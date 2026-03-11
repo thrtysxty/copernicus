@@ -15,6 +15,14 @@ export interface Message {
   content: string
   tokens?: number
   showTourButton?: boolean
+  imageBase64?: string
+  imageMimeType?: string
+}
+
+export interface PendingImage {
+  base64: string
+  mimeType: string
+  previewUrl: string
 }
 
 export interface ContextItem {
@@ -59,6 +67,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [context, setContext] = useState<ContextItem[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [isRepoActive, setIsRepoActive] = useState(false)
+  const [pendingImage, setPendingImage] = useState<PendingImage | null>(null)
   
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
   const toggleFlip = useLayoutStore(s => s.toggleFlip)
@@ -219,7 +228,13 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       flip: () => toggleFlip('chat')
     }
     if (currentInput.startsWith('/')) { if (commandRegistry.execute(currentInput, cmdContext)) { setInput(''); setShowSuggestions(false); return } }
-    setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: input }])
+    setMessages(prev => [...prev, { 
+      id: Date.now().toString(), 
+      role: 'user', 
+      content: input,
+      imageBase64: pendingImage?.base64,
+      imageMimeType: pendingImage?.mimeType
+    }])
     let enrichedContent = currentInput
     if (context.length > 0) enrichedContent = context.map(c => `[CONTEXT: ${c.type.toUpperCase()} - ${c.label}]\n${c.content}`).join('\n\n') + `\n\n---\n\nUSER_INPUT: ${currentInput}`
     if (isFirstCallAfterSwitch.current) {
@@ -227,12 +242,45 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       if (snapData?.messages) { try { const m = typeof snapData.messages === 'string' ? JSON.parse(snapData.messages) : snapData.messages; enrichedContent = `[CONTEXT HANDOFF]\nPrevious session context:\n${m.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}\n\n${enrichedContent}` } catch {} }
     }
     if (centerMode === 'builder' && uiComponents.length > 0) enrichedContent += `\n\n<ui-canvas-context>\n${JSON.stringify(uiComponents, null, 2)}\n</ui-canvas-context>`
-    setInput(''); setContext([])
+    
+    const currentImage = pendingImage
+    setInput(''); setContext([]); setPendingImage(null)
+    
     if (currentInput.includes('@help')) { try { const result = await invoke<any>('fs:read-file', 'docs/help/USER_GUIDE.md'); const data = unwrapIpc<string>(result); if (data) enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${data}\n`) } catch {} }
     const sessionId = `chat-${Date.now()}`; streamingIdRef.current = sessionId; setIsStreaming(true)
     if (openFilePath) { try { const diagRes = await invoke<any>('lsp:get-diagnostics', openFilePath); const diags = unwrapIpc<any[]>(diagRes) ?? []; if (diags.length > 0) enrichedContent = `[LSP diagnostics for ${openFilePath.split(/[/\\]/).pop()}]\n${diags.slice(0, 10).map((d: any) => `[${d.severity === 1 ? 'ERROR' : 'WARN'}] L${(d.range?.start?.line ?? 0) + 1}: ${d.message}`).join('\n')}\n\n---\n\n${enrichedContent}` } catch {} }
     setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: 'assistant', content: '' }])
-    invoke('chat:send', { sessionId, messages: [...messages.filter(m => m.role !== 'copernicus').map(m => ({ role: m.role, content: m.content })), { role: 'user', content: enrichedContent }], model }).catch(() => setIsStreaming(false))
+    
+    invoke('chat:send', { 
+      sessionId, 
+      messages: [
+        ...messages.filter(m => m.role !== 'copernicus').map(m => ({ 
+          role: m.role, 
+          content: m.content,
+          imageBase64: m.imageBase64,
+          imageMimeType: m.imageMimeType
+        })), 
+        { 
+          role: 'user', 
+          content: enrichedContent,
+          imageBase64: currentImage?.base64,
+          imageMimeType: currentImage?.mimeType
+        }
+      ], 
+      model
+    }).catch((err) => {
+      setIsStreaming(false)
+      if (err?.error === 'VISION_NOT_SUPPORTED') {
+         setMessages(prev => {
+           const updated = [...prev];
+           const last = updated[updated.length - 1];
+           if (last?.role === 'assistant') {
+             updated[updated.length - 1] = { ...last, content: `⚠ ${err.message}` };
+           }
+           return updated;
+         });
+      }
+    })
   }
 
   const handleSaveToStory = async (content: string) => {
@@ -305,6 +353,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     acceptModelSwitch,
     rejectModelSwitch,
     invoke,
-    isFlipped
+    isFlipped,
+    pendingImage,
+    setPendingImage
   }
 }

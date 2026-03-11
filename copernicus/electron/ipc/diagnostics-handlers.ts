@@ -4,8 +4,14 @@ import path from 'node:path'
 import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
 
+let cachedDiagnostics: any[] = []
+
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const cwd = () => deps.settingsStore.get<string>('workspace', process.cwd())
+
+  ipcMain.handle('diagnostics:get-all', () => handleIpc('diagnostics:get-all', [], () => {
+    return cachedDiagnostics
+  }))
 
   ipcMain.handle('diagnostics:run-tsc', () => handleIpc('diagnostics:run-tsc', [], () => {
     return new Promise<any[]>((resolve) => {
@@ -28,6 +34,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
             })
           }
         }
+        cachedDiagnostics = diags
         // Stream progress to renderer
         win.webContents.send('diagnostics:tsc-complete', diags)
         resolve(diags)

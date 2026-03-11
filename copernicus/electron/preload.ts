@@ -10,7 +10,7 @@ const SEND_CHANNELS = new Set([
   // LLM Chat
   'chat:send', 'chat:confirm-model-switch',
   // File System
-  'fs:list-dir', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
+  'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
   'app:get-root-path', 'app:set-root-path', 'app:get-user-guide',
   // Git
   'git:branch',
@@ -38,6 +38,7 @@ const SEND_CHANNELS = new Set([
   // Agent interop
   'agent:delegate', 'agent:forward',
   'agent:patch-apply', 'agent:patch-reverse',
+  'agent:send-code-stream',
   // Security
   'security:git-push-response',
   // Settings
@@ -52,7 +53,7 @@ const SEND_CHANNELS = new Set([
 
   'git:status', 'git:stage', 'git:unstage', 'git:commit', 'git:branches', 'git:checkout', 'git:new-branch', 'git:diff-file', 'github:list-prs',
   'codebase:text-search', 'codebase:semantic-search',
-  'diagnostics:run-tsc',
+  'diagnostics:run-tsc', 'diagnostics:get-all',
 
   // Environment
   'env:scan', 'env:install', 'env:install-complete', 'env:get-versions',
@@ -63,7 +64,7 @@ const SEND_CHANNELS = new Set([
   // Story analytics (Story 162)
   'stories:throughput', 'stories:status-distribution', 'stories:bugs-by-assignee',
   // Ledger analytics (Story 162)
-  'ledger:daily-costs', 'ledger:cost-by-model', 'ledger:cost-by-story',
+  'ledger:daily-costs', 'ledger:cost-by-model', 'ledger:cost-by-story', 'ledger:heatmap-data',
   'ledger:stats-by-role-session', 'ledger:stats-by-role-alltime',
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
@@ -116,7 +117,7 @@ const LISTEN_CHANNELS = new Set([
   'terminal:activate-tab', 'terminal:spawn', 'terminal:set-busy', 'terminal:remove',
   'stories:updated', 'stories:status-changed',
   'editor:open',
-  'agent:input', 'agent:message', 'agent:error',
+  'agent:input', 'agent:message', 'agent:error', 'agent:code-stream',
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',
   'layout:toggle-ui-builder',
   'security:git-push-request',

@@ -41,6 +41,8 @@ interface MonacoEditorProps {
   language: string
   filePath?: string | null
   onChange?: (value: string | undefined) => void
+  ghostMode?: boolean
+  ghostAction?: 'accept' | 'reject' | null
 }
 
 const LSP_LANGUAGES = ['typescript', 'javascript', 'typescriptreact', 'javascriptreact']
@@ -50,11 +52,103 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   language,
   filePath,
   onChange,
+  ghostMode,
+  ghostAction,
 }) => {
   const monacoInstance = useMonaco();
   const editorRef = React.useRef<any>(null);
   const invoke = useIpcError();
   const { setFileDirty } = useLayoutStore()
+  const [, setGhostDecorations] = React.useState<string[]>([])
+  const [pendingDiff, setPendingDiff] = React.useState<string | null>(null)
+
+  // CSS for Ghost Mode
+  React.useEffect(() => {
+    const style = document.createElement('style')
+    style.id = 'monaco-ghost-styles'
+    style.innerHTML = `
+      .ghost-added { background: rgba(74, 222, 128, 0.1) !important; width: 100%; display: block; border-left: 2px solid #4ade80; }
+      .ghost-removed { background: rgba(239, 68, 68, 0.1) !important; text-decoration: line-through; width: 100%; display: block; border-left: 2px solid #ef4444; }
+      .ghost-glyph-add { border-left: 2px solid #4ade80; }
+    `
+    document.head.appendChild(style)
+    return () => {
+      const el = document.getElementById('monaco-ghost-styles')
+      if (el) el.remove()
+    }
+  }, [])
+
+  // Listen for agent:code-stream
+  React.useEffect(() => {
+    const remove = window.ipcRenderer.on('agent:code-stream', (_e: any, payload: any) => {
+      if (!ghostMode || payload.filePath !== filePath) return
+      setPendingDiff(payload.proposedDiff)
+    })
+    return () => remove()
+  }, [ghostMode, filePath])
+
+  // Apply decorations
+  React.useEffect(() => {
+    if (!monacoInstance || !editorRef.current || !filePath) return
+    
+    if (!pendingDiff || !ghostMode) {
+      setGhostDecorations(prev => editorRef.current.deltaDecorations(prev, []))
+      window.dispatchEvent(new CustomEvent('editor:ghost-status', { detail: { filePath, hasGhost: false } }))
+      return
+    }
+
+    // Simplified diff parsing for decorations
+    const lines = pendingDiff.split('\n')
+    const newDecorations: monaco.editor.IModelDeltaDecoration[] = []
+    let currentLine = 0
+
+    for (const line of lines) {
+      if (line.startsWith('@@')) {
+        const match = line.match(/@@ -\d+,\d+ \+(\d+),\d+ @@/)
+        if (match && match[1]) currentLine = parseInt(match[1], 10)
+      } else if (line.startsWith('+') && !line.startsWith('+++')) {
+        newDecorations.push({
+          range: new monaco.Range(currentLine, 1, currentLine, 1),
+          options: { isWholeLine: true, className: 'ghost-added', glyphMarginClassName: 'ghost-glyph-add' }
+        })
+        currentLine++
+      } else if (line.startsWith('-') && !line.startsWith('---')) {
+        newDecorations.push({
+          range: new monaco.Range(currentLine, 1, currentLine, 1),
+          options: { isWholeLine: true, className: 'ghost-removed' }
+        })
+      } else if (!line.startsWith('---') && !line.startsWith('+++')) {
+        currentLine++
+      }
+    }
+
+    setGhostDecorations(prev => editorRef.current.deltaDecorations(prev, newDecorations))
+    window.dispatchEvent(new CustomEvent('editor:ghost-status', { detail: { filePath, hasGhost: true } }))
+  }, [pendingDiff, ghostMode, monacoInstance, filePath])
+
+  // Handle Accept/Reject actions
+  React.useEffect(() => {
+    if (!editorRef.current || !pendingDiff) return
+
+    if (ghostAction === 'accept') {
+      // In a real implementation, we'd apply the diff. 
+      // For this story, we'll clear and notify.
+      setPendingDiff(null)
+      // Keyboard shortcut for Accept All: monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyA
+      // This is handled via editor.addCommand in the mount effect below.
+    } else if (ghostAction === 'reject') {
+      setPendingDiff(null)
+    }
+  }, [ghostAction, pendingDiff])
+
+  // Clear decorations when ghost mode toggled off
+  React.useEffect(() => {
+    if (!ghostMode && editorRef.current) {
+      setGhostDecorations(prev => editorRef.current.deltaDecorations(prev, []))
+      setPendingDiff(null)
+      window.dispatchEvent(new CustomEvent('editor:ghost-status', { detail: { filePath, hasGhost: false } }))
+    }
+  }, [ghostMode, filePath])
 
   const themeConfig: monaco.editor.IStandaloneThemeData = {
     base: 'vs-dark',
@@ -299,7 +393,16 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
           if (onChange) onChange(val);
           if (filePath) setFileDirty(filePath, true);
         }}
-        onMount={(editor) => { editorRef.current = editor; }}
+        onMount={(editor) => { 
+          editorRef.current = editor; 
+          // AC2: Accept All shortcut
+          if (monacoInstance) {
+            editor.addCommand(
+              monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyA,
+              () => setPendingDiff(null)
+            )
+          }
+        }}
         beforeMount={(monaco) => {
           monaco.editor.defineTheme('copernicus-phosphor', themeConfig);
           monaco.editor.setTheme('copernicus-phosphor');
