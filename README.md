@@ -43,7 +43,22 @@ Any workflow node, chat panel, or agent persona can be routed to any of these:
 | **Google** | Gemini 1.5 Pro, Gemini 1.5 Flash | Vision support on both |
 | **OpenRouter** | Gemini Pro, Mistral 7B, + any model on the OpenRouter catalogue | Single key, 200+ models |
 | **DeepInfra** | Llama 2 70B, + hosted open-source models | Cost-efficient open-weight inference |
-| **Ollama** | Any locally installed model — `qwen3-embedding:0.6b`, Gemma, Mistral, DeepSeek… | Zero cloud cost, fully offline |
+| **Ollama (local)** | Any locally installed model — `qwen3-embedding:0.6b`, Gemma, Mistral, DeepSeek… | Zero cloud cost, fully offline — also the embedding provider |
+| **Ollama (sovereign)** | Kimi, Qwen3-Coder, Qwen3-VL, DeepSeek-V3, Gemini-Flash via `cloud_agent.py` | R620 sovereign brain — 120B–400B quantized models over 10GbE, treated as private cloud |
+
+`cloud_agent.py` exposes five named roles that route through the sovereign Ollama instance:
+
+| Role | Model | Use |
+|------|-------|-----|
+| `thinker` | Kimi | Deep reasoning, long-context planning |
+| `coder` | Qwen3-Coder | Implementation, refactoring |
+| `vision` | Qwen3-VL | Image analysis, wireframe-to-component |
+| `researcher` | DeepSeek-V3 | Research, summarisation, literature review |
+| `fast` | Gemini-Flash | Parsing, classification, quick lookups |
+
+```bash
+python3 dev_orchestrator/cloud_agent.py coder "Refactor auth module" --worktree feature-auth
+```
 
 Agents are not hardcoded to roles. Any node in the workflow engine can be wired to any provider + model + persona combination. The routing is yours to define.
 
