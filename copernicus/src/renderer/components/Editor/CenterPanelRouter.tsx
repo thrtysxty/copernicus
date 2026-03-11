@@ -38,6 +38,13 @@ const LANGUAGE_MAP: Record<string, string> = {
   log: 'plaintext', txt: 'plaintext', csv: 'plaintext',
 }
 
+const UI_EXTENSIONS = new Set(['.tsx', '.jsx', '.html', '.svg', '.css', '.scss'])
+const isUIFile = (path: string | null) => {
+  if (!path) return false
+  const ext = '.' + path.split('.').pop()?.toLowerCase()
+  return UI_EXTENSIONS.has(ext)
+}
+
 function getLanguage(filePath: string): string {
   const ext = filePath.split('.').pop()?.toLowerCase() ?? ''
   return LANGUAGE_MAP[ext] ?? 'plaintext'
@@ -123,13 +130,20 @@ export function CenterPanelRouter({
     reviewMode
   } = useLayoutStore()
 
+  const filePath = activeFilePath ?? propFilePath ?? null
+  const language = activeFilePath ? activeFileLanguage : (propLanguage ?? 'typescript')
+
+  useEffect(() => {
+    if (centerMode === 'builder' && !isUIFile(filePath)) {
+      setCenterMode('code')
+    }
+  }, [filePath, centerMode, setCenterMode])
+
   const renderedContent = useMemo(() => {
     if (reviewMode) {
       return <DiffPanel />
     }
 
-    const filePath = activeFilePath ?? propFilePath ?? null
-    
     // Memoize these to avoid redundant re-renders of Monaco
     const content = activeFilePath ? activeFileContent : (propContent ?? '')
     const language = activeFilePath ? activeFileLanguage : (propLanguage ?? 'typescript')
@@ -155,6 +169,13 @@ export function CenterPanelRouter({
     }
 
     if (centerMode === 'builder') {
+      if (!isUIFile(filePath)) {
+        return (
+          <div className="h-full flex items-center justify-center bg-[#050505]">
+            <span className="text-[11px] font-mono text-zinc-600">Designer only available for UI files (.tsx, .jsx, .html, .svg, .css)</span>
+          </div>
+        )
+      }
       return <UIBuilderCanvas />
     }
 
@@ -179,9 +200,6 @@ export function CenterPanelRouter({
         return <MonacoEditor key={filePath} value={content} language={language} filePath={filePath} onChange={onChange} />
     }
   }, [reviewMode, activeFilePath, propFilePath, activeFileContent, propContent, activeFileLanguage, propLanguage, centerMode, browserSessionActive, canvasContent, canvasUrl, setActiveFileContent, propOnChange, setCenterMode])
-
-  const filePath = activeFilePath ?? propFilePath ?? null
-  const language = activeFilePath ? activeFileLanguage : (propLanguage ?? 'typescript')
 
   // FIX: When switching from Designer/other to Editor view, ensure centerMode is reset correctly
   useEffect(() => {
