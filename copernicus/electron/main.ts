@@ -38,6 +38,10 @@ import * as storyHandlers from './ipc/story-handlers'
 import * as workflowHandlers from './ipc/workflow-handlers'
 import * as terminalHandlers from './ipc/terminal-handlers'
 import * as appHandlers from './ipc/app-handlers'
+import * as genesisHandlers from './ipc/genesis-handlers'
+
+import { GenesisRunner } from './genesis/genesis-runner'
+import { ScaffoldRunner } from './genesis/scaffold'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -141,10 +145,20 @@ function createWindow() {
 }
 
 function registerIpcHandlers() {
+  const scaffoldRunner = new ScaffoldRunner();
+  const genesisRunner = new GenesisRunner({
+    modelRegistry,
+    authManager,
+    storiesManager,
+    settingsStore,
+    scaffoldRunner
+  });
+
   const deps = {
     authManager, githubManager, modelRegistry, settingsStore, storiesManager, devtimeManager,
     fsManager, workflowEngine, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
     socketManager, stateLedger, llmService, lspManager, backendManager, julesMonitor, julesManager,
+    genesisRunner,
     applyAndVerifyPatch, reversePatch, runRAGBenchmark, getPlaywright, computeCoveragePct,
     LOG_DIR, dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG, touchBarCleanup,
     isFirstRun, spawn
@@ -156,6 +170,7 @@ function registerIpcHandlers() {
   workflowHandlers.register(win!, deps)
   terminalHandlers.register(win!, deps)
   appHandlers.register(win!, deps)
+  genesisHandlers.register(win!, deps)
   registerSecurityHandlers(ipcMain, settingsStore)
 }
 

@@ -16,6 +16,7 @@ import { JulesManager } from '../jules/jules-manager'
 import { LspManager } from '../lsp/lsp-manager'
 import { BackendManager } from '../backend-manager'
 import { SocketManager } from '../socket-manager'
+import { GenesisRunner } from '../genesis/genesis-runner'
 
 export interface IpcHandlerDeps {
   authManager: AuthManager;
@@ -37,6 +38,7 @@ export interface IpcHandlerDeps {
   backendManager: BackendManager;
   julesMonitor: JulesMonitor;
   julesManager: JulesManager;
+  genesisRunner: GenesisRunner;
   applyAndVerifyPatch: any;
   reversePatch: any;
   runRAGBenchmark: any;
