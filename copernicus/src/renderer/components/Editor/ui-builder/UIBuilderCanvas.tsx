@@ -225,9 +225,19 @@ export const UIBuilderCanvas: React.FC = () => {
                   bottom: true,
                   right: true
                 }}
-                className={`pointer-events-auto border-2 transition-colors ${selectedId === comp.id ? 'border-copernicus-phosphor/60' : 'border-transparent hover:border-zinc-700'}`}
+                className={`pointer-events-auto border-2 transition-colors ${
+                  selectedId === comp.id
+                    ? 'border-solid border-copernicus-phosphor/60 bg-indigo-500/5'
+                    : 'border-dashed border-zinc-400/30 hover:border-zinc-400/60'
+                }`}
                 style={{ zIndex: selectedId === comp.id ? 20 : 10 }}
-              />
+              >
+                <div className="absolute top-0 left-0 z-30 pointer-events-none">
+                  <span className="text-[9px] font-mono text-zinc-500 bg-[#0a0a0a]/80 px-1 py-0.5 rounded-br uppercase tracking-wider leading-none">
+                    {comp.type}
+                  </span>
+                </div>
+              </Rnd>
             ))}
           </div>
 

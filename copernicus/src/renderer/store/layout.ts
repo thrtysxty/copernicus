@@ -204,6 +204,8 @@ interface LayoutState {
   // Review
   pendingReview: ReviewSession | null
   setPendingReview: (review: ReviewSession | null) => void
+  pendingReviewSummary: ReviewSession | null
+  setPendingReviewSummary: (review: ReviewSession | null) => void
 
   // Archive
   showArchive: boolean
@@ -428,6 +430,9 @@ export const useLayoutStore = create<LayoutState>()(
 
       pendingReview: null,
       setPendingReview: (review) => set({ pendingReview: review }),
+
+      pendingReviewSummary: null,
+      setPendingReviewSummary: (review) => set({ pendingReviewSummary: review }),
 
       showArchive: false,
       toggleArchive: () => set((state) => ({ showArchive: !state.showArchive })),

@@ -540,4 +540,14 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     win.webContents.send('review:session-complete', data)
     return { ok: true, session: lastReviewSession }
   }))
+
+  ipcMain.handle('chat:send-system', (_e, message: string) => handleIpc('chat:send-system', [message], () => {
+    win.webContents.send('chat:receive-system', {
+      id: `sys-${Date.now()}`,
+      role: 'copernicus',
+      content: message,
+      created_at: new Date().toISOString()
+    })
+    return true
+  }))
 }

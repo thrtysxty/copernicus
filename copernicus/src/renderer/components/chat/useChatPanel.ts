@@ -189,7 +189,10 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       })
     })
     const removeModelSwitch = ipcRenderer.on('chat:confirm-model-switch', (_e, payload) => setPendingModelSwitch(payload))
-    return () => { removeToken(); removeDone(); removeError(); removeModelSwitch() }
+    const removeSystemMessage = ipcRenderer.on('chat:receive-system', (_e, sysMsg: any) => {
+      setMessages(prev => [...prev, { id: sysMsg.id, role: 'copernicus', content: sysMsg.content }])
+    })
+    return () => { removeToken(); removeDone(); removeError(); removeModelSwitch(); removeSystemMessage() }
   }, [])
 
   const handlePickerSelect = useCallback(async (item: PickerResult) => {
