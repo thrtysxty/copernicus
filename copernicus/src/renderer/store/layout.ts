@@ -66,6 +66,7 @@ interface LayoutState {
   activeFilePath: string | null
   activeFileContent: string
   activeFileLanguage: string
+  openFiles: { path: string; isDirty: boolean }[]
 
   // Appearance
   uiDensity: 'compact' | 'normal' | 'comfortable'
@@ -137,6 +138,10 @@ interface LayoutState {
   setActiveFilePath: (path: string | null) => void
   setActiveFileContent: (content: string) => void
   setActiveFileLanguage: (language: string) => void
+  openFile: (path: string) => void
+  closeFile: (path: string) => void
+  setActiveFile: (path: string) => void
+  setFileDirty: (path: string, dirty: boolean) => void
   setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean }>) => void
   toggleUIBuilder: () => void
   setPaletteOpen: (open: boolean) => void
@@ -222,6 +227,7 @@ export const useLayoutStore = create<LayoutState>()(
       activeFilePath: null,
       activeFileContent: '',
       activeFileLanguage: 'typescript',
+      openFiles: [],
 
       uiDensity: 'normal',
       fontSize: 12,
@@ -327,6 +333,28 @@ export const useLayoutStore = create<LayoutState>()(
       setActiveFilePath: (path) => set({ activeFilePath: path }),
       setActiveFileContent: (content) => set({ activeFileContent: content }),
       setActiveFileLanguage: (language) => set({ activeFileLanguage: language }),
+      openFile: (path) => set((state) => {
+        const alreadyOpen = state.openFiles.some(f => f.path === path)
+        const nextFiles = alreadyOpen ? state.openFiles : [...state.openFiles, { path, isDirty: false }]
+        return { openFiles: nextFiles, activeFilePath: path }
+      }),
+      closeFile: (path) => set((state) => {
+        const nextFiles = state.openFiles.filter(f => f.path !== path)
+        let nextActive = state.activeFilePath
+        if (state.activeFilePath === path) {
+          const idx = state.openFiles.findIndex(f => f.path === path)
+          const nextIdx = Math.min(idx, nextFiles.length - 1)
+          nextActive = nextFiles[nextIdx]?.path || null
+        }
+        return { openFiles: nextFiles, activeFilePath: nextActive }
+      }),
+      setActiveFile: (path) => set((state) => {
+        if (!state.openFiles.some(f => f.path === path)) return state
+        return { activeFilePath: path }
+      }),
+      setFileDirty: (path, dirty) => set((state) => ({
+        openFiles: state.openFiles.map(f => f.path === path ? { ...f, isDirty: dirty } : f)
+      })),
       setAppearance: (patch) => set((state) => ({ ...state, ...patch })),
       toggleUIBuilder: () => set((state) => ({ uiBuilderOpen: !state.uiBuilderOpen })),
       setPaletteOpen: (open) => set({ paletteOpen: open }),

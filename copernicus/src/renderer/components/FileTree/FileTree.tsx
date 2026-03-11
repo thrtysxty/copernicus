@@ -46,7 +46,7 @@ interface FileTreeNodeProps {
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
   const invoke = useIpcError()
-  const { setCenterMode, setActiveFilePath, setActiveFileContent, setActiveFileLanguage } = useLayoutStore()
+  const { setCenterMode, openFile, setActiveFileContent, setActiveFileLanguage } = useLayoutStore()
   const [expanded, setExpanded] = useState(false)
   const [children, setChildren] = useState<FileNode[]>([])
   const classification = node.isDir ? 'code' : classifyFile(node.path)
@@ -61,7 +61,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth }) => {
       setExpanded(prev => !prev)
       return
     }
-    setActiveFilePath(node.path)
+    openFile(node.path)
 
     if (classification === 'canvas' || classification === 'svg') {
       const { setView } = useLayoutStore.getState()

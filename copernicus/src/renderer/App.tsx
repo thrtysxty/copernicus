@@ -133,10 +133,10 @@ export default function App() {
   const removeTerminal = useLayoutStore(s => s.removeTerminal)
   const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy)
   const toggleUIBuilder = useLayoutStore(s => s.toggleUIBuilder)
-  const setActiveFilePath = useLayoutStore(s => s.setActiveFilePath)
   const setActiveFileContent = useLayoutStore(s => s.setActiveFileContent)
   const setActiveFileLanguage = useLayoutStore(s => s.setActiveFileLanguage)
   const setCenterMode = useLayoutStore(s => s.setCenterMode)
+  const openFile = useLayoutStore(s => s.openFile)
   const setTourHighlight = useLayoutStore(s => s.setTourHighlight)
   const setChatPanelTab = useLayoutStore(s => s.setChatPanelTab)
   const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
@@ -466,7 +466,7 @@ export default function App() {
           mode="all"
           onClose={() => setCommandPaletteOpen(false)}
           onFileOpen={(path, content, language) => {
-            setActiveFilePath(path)
+            openFile(path)
             setActiveFileContent(content)
             setActiveFileLanguage(language)
             setCenterMode('code')

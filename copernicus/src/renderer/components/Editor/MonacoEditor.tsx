@@ -2,6 +2,7 @@ import React from 'react';
 import Editor, { useMonaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useIpcError } from '../../hooks/useIpcError';
+import { useLayoutStore } from '../../store/layout';
 import log from '../../utils/logger'
 
 // Import workers using Vite's ?worker syntax
@@ -53,6 +54,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const monacoInstance = useMonaco();
   const editorRef = React.useRef<any>(null);
   const invoke = useIpcError();
+  const { setFileDirty } = useLayoutStore()
 
   React.useEffect(() => {
     if (monacoInstance) {
@@ -250,6 +252,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
           const data = result.data || result;
           if (data.ok) {
             log.info(`[Monaco] Saved: ${filePath}`);
+            if (filePath) setFileDirty(filePath, false);
           } else {
             log.error('[Monaco] Save failed:', data.error);
           }
@@ -260,7 +263,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     );
 
     return () => disposable?.dispose();
-  }, [filePath, monacoInstance, invoke]);
+  }, [filePath, monacoInstance, invoke, setFileDirty]);
 
   return (
     <div 
@@ -272,7 +275,10 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
         path={filePath ?? undefined}
         language={language}
         value={value}
-        onChange={onChange}
+        onChange={(val) => {
+          if (onChange) onChange(val);
+          if (filePath) setFileDirty(filePath, true);
+        }}
         onMount={(editor) => { editorRef.current = editor; }}
         options={{
           minimap: { enabled: false },
