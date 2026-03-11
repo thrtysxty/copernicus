@@ -30,8 +30,8 @@ const PRIORITY_COLORS: Record<string, string> = {
   P0: 'bg-red-500/20 text-red-400 border-red-500/30',
   P1: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   P2: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  P3: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
-  UNKNOWN: 'bg-zinc-800 text-zinc-600 border-zinc-700',
+  P3: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/30',
+  UNKNOWN: 'bg-zinc-800 text-zinc-300 border-zinc-700',
 }
 
 const PRIORITY_ORDER: Record<string, number> = { P0: 0, P1: 1, P2: 2, P3: 3, UNKNOWN: 4 }
@@ -114,7 +114,7 @@ const StoryCard = React.memo(({
     )}
 
     <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
-      <span className="text-[8px] font-mono text-zinc-600">{story.id}</span>
+      <span className="text-[8px] font-mono text-zinc-300">{story.id}</span>
       <div className="flex gap-1">
         <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
       </div>
@@ -226,9 +226,16 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       setStories(newStories)
       invoke<any>('stories:is-repo-targeted').then((r: any) => setIsRepoTargeted(unwrapIpc<any>(r) ?? false))
     })
+
+    const removeStatusChanged = window.ipcRenderer.on('stories:status-changed', (_e: any, { storyNumber, status }: any) => {
+      const id = `story_${String(storyNumber).padStart(3, '0')}`
+      setStories(prev => prev.map(s => s.id === id ? { ...s, status } : s))
+    })
+
     return () => {
       removeWorkflowStatus()
       removeStoriesUpdate()
+      removeStatusChanged()
     }
   }, [invoke, fetchJulesSessions, refreshData])
 
@@ -338,7 +345,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                 <>
                   {/* Column Header */}
                   <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
-                    <span className="font-bold text-[9px] text-zinc-500 uppercase tracking-widest truncate">{col.label}</span>
+                    <span className="font-bold text-[9px] text-zinc-100 uppercase tracking-widest truncate">{col.label}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
                     </div>
@@ -352,6 +359,11 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                           className="w-full flex items-center justify-center gap-1 py-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor border border-dashed border-zinc-800 hover:border-copernicus-phosphor/40 rounded transition-colors"
                         >
                           <Plus size={10} /> New
+                          {colStories.length > 0 && (
+                            <span className="bg-indigo-600 text-white text-[10px] font-mono rounded-full px-1.5 min-w-[18px] text-center leading-4 ml-1">
+                              {colStories.length}
+                            </span>
+                          )}
                         </button>
                         {showCreateDropdown && (
                           <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded shadow-xl z-20 overflow-hidden">
