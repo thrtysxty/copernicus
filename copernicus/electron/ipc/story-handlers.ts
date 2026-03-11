@@ -79,6 +79,14 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     `).all()
   ))
 
+  ipcMain.handle('stories:set-status', (_e, { storyNumber, status }: { storyNumber: number, status: string }) =>
+    handleIpc('stories:set-status', [storyNumber, status], async () => {
+      await storiesManager.setStoryStatus(storyNumber, status)
+      win.webContents.send('stories:status-changed', { storyNumber, status })
+      return { ok: true }
+    })
+  )
+
   // Story scaffold — invoked from command palette
   ipcMain.handle('story:scaffold', (_e, title: string, type = 'Feature') => handleIpc('story:scaffold', [title, type], () => storiesManager.createStory({ title: title?.trim() || 'New Story', type, epic: '', priority: 'P2' }))
   )

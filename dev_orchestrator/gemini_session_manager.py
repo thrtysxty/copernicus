@@ -164,6 +164,15 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev', direct: bool = F
     })
     save_sessions(sessions)
 
+    # Story 335: Signal story IN PROGRESS
+    for s_id in stories:
+        try:
+            num = ''.join(filter(str.isdigit, s_id))
+            if num:
+                status_file = Path(f'/tmp/copernicus_story_{num}_status.txt')
+                status_file.write_text('IN PROGRESS')
+        except Exception: pass
+
     print(f'SESSION_ID: {session_id}', flush=True)
     print(f'LOG: {log_path}', flush=True)
     print('Launching gemini CLI... (startup may take 3-5 seconds before first output)', flush=True)
@@ -224,6 +233,18 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev', direct: bool = F
     save_sessions(sessions)
 
     write_db_event(session_id, stories, exit_code, log_path, duration)
+
+    # Story 335: Signal story completion status
+    for s_id in stories:
+        try:
+            num = ''.join(filter(str.isdigit, s_id))
+            if num:
+                status_file = Path(f'/tmp/copernicus_story_{num}_status.txt')
+                if exit_code == 0:
+                    status_file.write_text('REVIEW')
+                else:
+                    status_file.write_text('READY FOR IMPLEMENTATION')
+        except Exception: pass
 
     print(f'\nDONE: exit={exit_code}, stories={",".join(stories)}, duration={duration}s', flush=True)
     sys.exit(exit_code)

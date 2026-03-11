@@ -16,7 +16,7 @@ const SEND_CHANNELS = new Set([
   'git:branch',
   // Stories
   'stories:list', 'stories:create', 'stories:get-content', 'stories:update-content',
-  'stories:update', 'stories:is-repo-targeted', 'stories:hydrate', 'story:scaffold', 'stories:set-field',
+  'stories:update', 'stories:set-status', 'stories:is-repo-targeted', 'stories:hydrate', 'story:scaffold', 'stories:set-field',
   'stories:sync', 'stories:target-project', 'stories:import-from-path',
   // Makefile
   'makefile:list', 'makefile:run', 'system:make',
@@ -109,7 +109,7 @@ const LISTEN_CHANNELS = new Set([
   'chat:token', 'chat:done', 'chat:error', 'chat:confirm-model-switch', 'chat:model-switch-decision',
   'terminal-incoming', 'terminal-closed', 'terminal:data', 'terminal-blocked',
   'terminal:activate-tab', 'terminal:spawn', 'terminal:set-busy', 'terminal:remove',
-  'stories:updated',
+  'stories:updated', 'stories:status-changed',
   'editor:open',
   'agent:input', 'agent:message', 'agent:error',
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',

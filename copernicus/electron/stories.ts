@@ -201,6 +201,27 @@ export class StoriesManager {
     }
   }
 
+  async setStoryStatus(storyNumber: number, status: string) {
+    const id = `story_${String(storyNumber).padStart(3, '0')}`
+    const record = this.ledger.getStoryById(id)
+    if (!record) {
+      log.warn(`[StoriesManager] setStoryStatus: story ${id} not found in DB.`)
+      return
+    }
+
+    const verboseStatus = status === 'READY' ? 'READY FOR IMPLEMENTATION'
+                        : status === 'REVIEW' ? 'READY FOR REVIEW'
+                        : status
+
+    const updatedBody = record.body_md.replace(
+      /(\*\*Status:\*\*).+$/m, `$1 ${verboseStatus}`
+    )
+
+    this.ledger.updateStoryFields(id, { status, body_md: updatedBody })
+    writeFileAtomic(record.file_path, updatedBody)
+    this.broadcastUpdate()
+  }
+
   updateStoryStatus(id: string, newStatus: string) {
     const record = this.ledger.getStoryById(id)
     if (!record) return

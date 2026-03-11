@@ -201,6 +201,25 @@ app.whenReady().then(() => {
   codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(log.error)
   lspManager.start(fsManager.getRootPath())
   if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify();
+
+  // Story 335: Watch for story status files from Python orchestrator
+  setInterval(() => {
+    try {
+      const files = fs.readdirSync('/tmp').filter(f => f.startsWith('copernicus_story_') && f.endsWith('_status.txt'))
+      for (const file of files) {
+        const match = file.match(/copernicus_story_(\d+)_status\.txt/)
+        if (match && match[1]) {
+          const num = parseInt(match[1], 10)
+          const filePath = path.join('/tmp', file)
+          const status = fs.readFileSync(filePath, 'utf-8').trim()
+          storiesManager.setStoryStatus(num, status).then(() => {
+            win?.webContents.send('stories:status-changed', { storyNumber: num, status })
+          }).catch(err => log.error('[Main] Failed to set story status from watcher:', err))
+          fs.unlinkSync(filePath)
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }, 2000)
 })
 
 app.on('browser-window-focus', () => {
