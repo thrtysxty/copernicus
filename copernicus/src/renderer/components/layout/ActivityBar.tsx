@@ -1,7 +1,7 @@
 import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
-  Activity, Brain, Github, Settings,
+  Activity, Brain, Github, Settings, FolderPlus
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
 
@@ -103,6 +103,12 @@ export const ActivityBar: React.FC = () => {
       {/* Bottom Tools */}
       <div className="flex flex-col items-center w-full pb-2">
         <NavItem id="github" icon={Github} label="GitHub" testId="nav-github" />
+        <NavItem 
+          icon={FolderPlus} 
+          label="New Project" 
+          testId="nav-genesis" 
+          onClick={() => useLayoutStore.getState().setShowGenesis(true)} 
+        />
         <NavItem
           icon={Settings}
           label="Settings"

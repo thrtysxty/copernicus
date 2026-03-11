@@ -22,6 +22,7 @@ import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
 import { GithubDashboard } from './components/github/GithubDashboard'
 import Wizard from './components/wizard/Wizard'
+import GenesisWizard from './components/genesis/GenesisWizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
 import { MemoryBrowser } from './components/memory/MemoryBrowser'
@@ -141,6 +142,8 @@ export default function App() {
   const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
   const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
+  const showGenesis = useLayoutStore(s => s.showGenesis)
+  const setShowGenesis = useLayoutStore(s => s.setShowGenesis)
 
   const previousSidebarOpenRef = useRef<boolean>(sidebarOpen)
   const prevViewRef = useRef<string>(activeView)
@@ -223,9 +226,12 @@ export default function App() {
     // Fetch initial state
     invoke<IpcResult<string | null>>('app:get-root-path').then((r) => {
       const root = unwrapIpc<string | null>(r)
-      if (root) setWorkingDir(root)
-      else setIsWizard(true)
-    }).catch(() => setIsWizard(true))
+      if (root) {
+        setWorkingDir(root)
+      } else {
+        setShowGenesis(true)
+      }
+    }).catch(() => setShowGenesis(true))
     invoke<IpcResult<string>>('git:branch').then((r) => setGitBranch(unwrapIpc<string>(r))).catch(() => {})
     invoke<IpcResult<{ status: string }[]>>('stories:list').then((r) => {
       const list = unwrapIpc<{ status: string }[]>(r) ?? []
@@ -473,6 +479,18 @@ export default function App() {
         open={projectSelectorOpen}
         onClose={() => setProjectSelectorOpen(false)}
       />
+      {showGenesis && (
+        <GenesisWizard 
+          onComplete={() => {
+            setShowGenesis(false);
+            // After genesis, we might want to refresh the working dir
+            invoke<IpcResult<string | null>>('app:get-root-path').then((r) => {
+              const root = unwrapIpc<string | null>(r);
+              if (root) setWorkingDir(root);
+            }).catch(() => {});
+          }} 
+        />
+      )}
     </div>
   )
 }

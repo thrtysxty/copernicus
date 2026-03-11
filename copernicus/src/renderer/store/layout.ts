@@ -177,6 +177,10 @@ interface LayoutState {
   activityBarCollapsed: boolean
   setActivityBarCollapsed: (collapsed: boolean) => void
 
+  // Genesis Wizard
+  showGenesis: boolean
+  setShowGenesis: (show: boolean) => void
+
   // Basement Archive
   basementOpen: boolean
   setBasementOpen: (open: boolean) => void
@@ -370,6 +374,9 @@ export const useLayoutStore = create<LayoutState>()(
 
       activityBarCollapsed: false,
       setActivityBarCollapsed: (collapsed) => set({ activityBarCollapsed: collapsed }),
+
+      showGenesis: false,
+      setShowGenesis: (show) => set({ showGenesis: show }),
 
       basementOpen: false,
       setBasementOpen: (open) => set({ basementOpen: open }),
