@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Maximize2, Minimize2, RotateCcw, ChevronDown, ChevronUp,
+  Maximize2, Minimize2, RotateCcw, ChevronDown, ChevronUp, ChevronLeft,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useToastStore } from './store/toastStore'
@@ -345,6 +345,25 @@ export default function App() {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
+  const sidebarClass = (() => {
+    if (spotlightPane === 'explorer') return 'flex-1'
+    if (spotlightPane === 'editor' || spotlightPane === 'chat') return 'w-10 flex-shrink-0'
+    return sidebarOpen ? 'w-64 flex-shrink-0' : 'w-0 flex-shrink-0'
+  })()
+
+  const centerClass = (() => {
+    if (spotlightPane === 'editor') return 'flex-[3]'
+    if (spotlightPane === 'chat') return 'w-0 opacity-0 pointer-events-none'
+    if (spotlightPane === 'explorer') return 'w-10 flex-shrink-0'
+    return 'flex-1'
+  })()
+
+  const chatClass = (() => {
+    if (spotlightPane === 'chat') return 'flex-1'
+    if (spotlightPane === 'editor' || spotlightPane === 'explorer') return 'w-10 flex-shrink-0'
+    return 'w-80 flex-shrink-0'
+  })()
+
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />
   }
@@ -394,56 +413,84 @@ export default function App() {
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
                 {/* Sidebar */}
-                <div className={`${sidebarOpen ? 'w-64' : 'w-0'} flex-shrink-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] overflow-hidden relative`}>
-                  <div className="absolute top-2 right-2 z-10 flex gap-1">
-                     <button
-                        onClick={() => toggleFlip('sidebar')}
-                        className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors bg-[#080808] rounded border border-copernicus-steel"
-                        title="Flip Sidebar"
-                     >
-                        <RotateCcw size={12} />
-                     </button>
-                  </div>
-                  <FlippablePanel
-                    id="sidebar"
-                    front={<FileTree rootPath={workingDir} />}
-                    back={<ContainerViewer />}
-                  />
+                <div className={`${sidebarClass} transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] relative flex flex-col overflow-hidden`}>
+                  {(spotlightPane === 'editor' || spotlightPane === 'chat') ? (
+                    <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5" onClick={() => setSpotlight(null)}>
+                      <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Explorer</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="h-8 flex items-center justify-between px-2 border-b border-copernicus-steel shrink-0 bg-[#080808]">
+                        <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">Explorer</span>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => setSidebarOpen(false)} className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors" title="Collapse Explorer">
+                            <ChevronLeft size={12} />
+                          </button>
+                          <button onClick={() => toggleFlip('sidebar')} className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors" title="Flip Sidebar">
+                            <RotateCcw size={12} />
+                          </button>
+                          <button onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')} className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors" title="Spotlight Explorer">
+                            <Maximize2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                      <FlippablePanel
+                        id="sidebar"
+                        className="flex-1 overflow-hidden"
+                        front={<FileTree rootPath={workingDir} />}
+                        back={<ContainerViewer />}
+                      />
+                    </>
+                  )}
                 </div>
 
                 {/* Center Panel & Chat */}
                 <div className="flex-1 flex overflow-hidden relative">
-                  <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : spotlightPane === 'chat' ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
-                    <PanelHeader
-                      title={(() => {
-                        if (!activeFilePath) return activeStoryId ? `STORY // ${activeStoryId}` : 'EDITOR'
-                        const file = openFiles.find(f => f.path === activeFilePath)
-                        const name = activeFilePath.split('/').pop() ?? activeFilePath
-                        return file?.isDirty ? `${name} •` : name
-                      })()}
-                      onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-                      onFlip={() => toggleFlip('center-panel')}
-                      isSpotlightActive={spotlightPane === 'editor'}
-                      onCommandPalette={() => setCommandPaletteOpen(true)}
-                      showLspStatus={activeView === 'designer' || activeView === 'editor'}
-                    />
-                    <FlippablePanel
-                      id="center-panel"
-                      className="flex-1"
-                      front={
-                        <CenterPanelRouter
-                          filePath={activeFilePath}
-                          content={activeFileContent}
-                          language={activeFileLanguage}
-                          onChange={(v) => setActiveFileContent(v ?? '')}
+                  <div className={`${centerClass} transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}>
+                    {spotlightPane === 'explorer' ? (
+                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5" onClick={() => setSpotlight(null)}>
+                          <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Editor</span>
+                       </div>
+                    ) : (
+                      <>
+                        <PanelHeader
+                          title={(() => {
+                            if (!activeFilePath) return activeStoryId ? `STORY // ${activeStoryId}` : 'EDITOR'
+                            const file = openFiles.find(f => f.path === activeFilePath)
+                            const name = activeFilePath.split('/').pop() ?? activeFilePath
+                            return file?.isDirty ? `${name} •` : name
+                          })()}
+                          onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
+                          onFlip={() => toggleFlip('center-panel')}
+                          isSpotlightActive={spotlightPane === 'editor'}
+                          onCommandPalette={() => setCommandPaletteOpen(true)}
+                          showLspStatus={activeView === 'designer' || activeView === 'editor'}
                         />
-                      }
-                      back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
-                    />
+                        <FlippablePanel
+                          id="center-panel"
+                          className="flex-1"
+                          front={
+                            <CenterPanelRouter
+                              filePath={activeFilePath}
+                              content={activeFileContent}
+                              language={activeFileLanguage}
+                              onChange={(v) => setActiveFileContent(v ?? '')}
+                            />
+                          }
+                          back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
+                        />
+                      </>
+                    )}
                   </div>
 
-                  <div className={`w-80 flex-shrink-0 border-l border-copernicus-steel transition-all duration-500 ${spotlightPane === 'chat' ? 'flex-1' : spotlightPane === 'editor' ? 'w-0 opacity-0 pointer-events-none' : 'w-80'}`}>
-                    <ChatPanel />
+                  <div className={`${chatClass} transition-all duration-300 ease-in-out border-l border-copernicus-steel flex flex-col overflow-hidden`}>
+                    {(spotlightPane === 'editor' || spotlightPane === 'explorer') ? (
+                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-l border-copernicus-steel cursor-pointer hover:bg-white/5" onClick={() => setSpotlight(null)}>
+                          <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Chat</span>
+                       </div>
+                    ) : (
+                      <ChatPanel />
+                    )}
                   </div>
                 </div>
               </>
