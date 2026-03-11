@@ -40,6 +40,16 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('terminal:stop-agent', (_event, { id }: { id: string }) => handleIpc('terminal:stop-agent', [{ id }], () => ptyManager.kill(id)));
 
+  ipcMain.handle('terminal:spawn', (_e, { command, cwd, label, id }: { command: string; cwd: string; label: string; id?: string }) => handleIpc('terminal:spawn', [{ command, cwd, label, id }], async () => {
+    const termId = id || `term-${Date.now()}`
+    const resolvedCwd = assertSafePath(cwd)
+    if (win) {
+      win.webContents.send('terminal:spawn', { id: termId, label, ephemeral: true })
+      ptyManager.createEphemeral(termId, command, resolvedCwd, win)
+    }
+    return termId
+  }))
+
   ipcMain.on('terminal:spawn-agent', (_event, { agentId }: { agentId: string }) => {
     if (!/^[a-z0-9_-]+$/.test(agentId)) return;
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('terminal:activate-tab', { agentId }));

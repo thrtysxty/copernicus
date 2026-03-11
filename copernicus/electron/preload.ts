@@ -22,13 +22,15 @@ const SEND_CHANNELS = new Set([
   'makefile:list', 'makefile:run', 'system:make',
   // Terminal
   'terminal-create', 'terminal:resize', 'terminal-write', 'terminal-kill',
-  'terminal:input',
+  'terminal:input', 'terminal:spawn',
   'terminal:spawn-agent',
   'terminal:stop-agent',
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
   'db:add-memory', 'db:search-memory', 'db:vacuum',
   'snapshot:save', 'snapshot:restore', // Context Snapshots (Story 157)
+  // Recent projects & workspace switching
+  'app:get-recent-projects', 'app:switch-workspace', 'app:open-folder-dialog',
   // Model Call Ledger (Story 156)
   'ledger:session-stats', 'ledger:recent-calls', 'ledger:all-time-cost',
   // Layout / telemetry
@@ -62,7 +64,7 @@ const SEND_CHANNELS = new Set([
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
   'workflow:update-node-data',
   // Review gate
-  'review:log',
+  'review:log', 'review:session-complete',
   // Codebase semantic index
   'codebase:search-deep', 'codebase:search-fast', 'codebase:index-status', 'codebase:run-benchmark',
   // LSP (Story 176 + 189)
@@ -130,6 +132,7 @@ const LISTEN_CHANNELS = new Set([
   'command:telemetry-update',
   // Workflow engine state push (Story 186)
   'workflow:status-update',
+  'review:session-complete',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

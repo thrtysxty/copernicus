@@ -6,6 +6,7 @@ import log from './utils/logger';
 
 export interface Settings {
   workspace?: string;
+  recentProjects?: { name: string; path: string; lastOpened: string }[];
   googleOAuthClientId?: string;
   mcp?: {
     servers: any[];

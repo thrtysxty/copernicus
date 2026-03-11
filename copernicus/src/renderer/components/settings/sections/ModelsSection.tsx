@@ -177,7 +177,7 @@ const ModelSelector = ({ label, icon: Icon, value, models, onChange }: {
       className="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded px-3 py-1.5 focus:outline-none focus:border-copernicus-phosphor transition-colors min-w-[200px]"
     >
       <option value="">Auto-detect (System Default)</option>
-      {Object.entries(models).map(([provider, providerModels]) => (
+      {Object.entries(models ?? {}).map(([provider, providerModels]) => (
         <optgroup key={provider} label={provider.toUpperCase()}>
           {providerModels.map((m) => (
             <option key={m.id} value={m.id}>{m.name}</option>

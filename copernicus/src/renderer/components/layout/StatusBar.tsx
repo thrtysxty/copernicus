@@ -13,7 +13,6 @@ export const StatusBar: React.FC = () => {
     agentTelemetry,
     capexTotal,
     capexSessionTime,
-    activeStoryId,
     setTelemetry
   } = useLayoutStore()
 
@@ -111,7 +110,7 @@ export const StatusBar: React.FC = () => {
 
         {/* Agent Telemetry */}
         <div className="flex items-center gap-4 px-3 overflow-hidden">
-          {Object.entries(agentTelemetry).map(([agent, data]) => (
+          {Object.entries(agentTelemetry ?? {}).map(([agent, data]) => (
             <div key={agent} className="flex items-center gap-1.5 shrink-0">
               <span className="uppercase font-bold text-zinc-500">{agent}:</span>
               <span className="text-zinc-400">
@@ -161,15 +160,6 @@ export const StatusBar: React.FC = () => {
             )}
           </div>
         )}
-
-        {/* Story ID & Status */}
-        <div className="flex items-center gap-3 pl-3">
-          <span className="italic underline underline-offset-2 text-zinc-500">{activeStoryId || 'NO_STORY'}</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-copernicus-phosphor phosphor-glow text-[8px] animate-pulse">●</span>
-            <span className="uppercase text-zinc-500 tracking-tighter">Technical_Pulse_Online</span>
-          </div>
-        </div>
       </div>
     </footer>
   )

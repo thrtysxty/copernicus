@@ -401,7 +401,7 @@ export default function WorkflowCanvas() {
   }, [invoke, nodes, edges, rootPath, activeStoryId]);
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-white overflow-hidden relative pt-1">
+    <div className="flex flex-col w-full h-full flex-1 bg-[#050505] text-white overflow-hidden relative pt-1">
       {/* AC1: Modal Centering using 'absolute inset-0 flex items-center justify-center' */}
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[100]">

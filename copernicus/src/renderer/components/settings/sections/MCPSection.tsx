@@ -69,7 +69,7 @@ export const MCPSection: React.FC = () => {
     await saveMcpServers(mcpServers.filter((_, i) => i !== idx))
   }
 
-  const allDisconnected = mcpServers.length > 0 && Object.values(mcpStatus).every(s => s === 'disconnected')
+  const allDisconnected = mcpServers.length > 0 && Object.values(mcpStatus ?? {}).every(s => s === 'disconnected')
 
   if (isLoading) {
     return <div className="text-[10px] text-zinc-500 font-mono animate-pulse">Initializing MCP Configuration...</div>

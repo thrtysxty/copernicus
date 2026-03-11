@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, shell, app } from 'electron'
+import { ipcMain, BrowserWindow, shell, app, dialog } from 'electron'
 import path from 'node:path'
 import { spawn, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -7,13 +7,14 @@ import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { assertSafePath } from '../utils/path-guard'
 import { setupCommandHandlers as setupDispatcherHandlers } from '../commands/dispatcher'
+import { addRecentProject } from '../utils/recent-projects'
 
 import { IpcHandlerDeps } from './deps'
 
 const execFileAsync = promisify(execFile)
 
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
-  const { 
+  const {
     settingsStore, 
     LOG_DIR, 
     devtimeManager, 
@@ -235,6 +236,47 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ));
 
   ipcMain.handle('app:quit', () => handleIpc('app:quit', [], () => { app.quit(); }));
+
+  ipcMain.handle('app:get-recent-projects', () => handleIpc('app:get-recent-projects', [], () => {
+    return settingsStore.get('recentProjects', [])
+  }))
+
+  ipcMain.handle('app:open-folder-dialog', () => handleIpc('app:open-folder-dialog', [], async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      properties: ['openDirectory']
+    })
+    if (canceled || filePaths.length === 0) return null
+    return { path: filePaths[0] }
+  }))
+
+  ipcMain.handle('app:switch-workspace', (_e, { path: dirPath }: { path: string }) => handleIpc('app:switch-workspace', [dirPath], async () => {
+    if (!fs.existsSync(dirPath)) throw new Error('Path does not exist')
+    
+    assertSafePath(dirPath);
+    
+    // Check for .git dir - log warning but don't block
+    if (!fs.existsSync(path.join(dirPath, '.git'))) {
+      log.warn(`No .git directory found in workspace: ${dirPath}`);
+    }
+
+    addRecentProject(dirPath, settingsStore);
+    settingsStore.set('workspace', dirPath);
+    settingsStore.set('workingDir', dirPath);
+    fsManager.setRootPath(dirPath);
+    storiesManager.setProjectRoot(dirPath);
+    
+    // Derived from app:set-root-path
+    codebaseIndexer.startIndexing(dirPath).catch(log.error)
+    lspManager.stop()
+    lspManager.start(dirPath)
+    
+    const name = path.basename(dirPath) || dirPath
+    win.setTitle(name)
+    
+    // Notify renderer so workingDir stays in sync
+    win.webContents.send('app:workspace-changed', { path: dirPath, name })
+    return true
+  }))
 
   // Command Center (Story 184)
   ipcMain.handle('command:request-telemetry', () => handleIpc('command:request-telemetry', [], () => {
@@ -491,4 +533,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     githubManager,
     storiesManager,
   });
+
+  let lastReviewSession: any = null
+  ipcMain.handle('review:session-complete', (_e, data: any) => handleIpc('review:session-complete', [data], () => {
+    lastReviewSession = data
+    win.webContents.send('review:session-complete', data)
+    return { ok: true, session: lastReviewSession }
+  }))
 }

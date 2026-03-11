@@ -132,7 +132,7 @@ export const EnvironmentSection: React.FC = () => {
           <h3 className="text-[10px] uppercase font-bold tracking-wider">Core Toolchain</h3>
         </div>
         <div className="grid grid-cols-1 gap-2">
-          {data && Object.entries(data.toolchain).map(([bin, status]) => (
+          {data && Object.entries(data.toolchain ?? {}).map(([bin, status]) => (
             <div key={bin} className="flex items-center justify-between p-3 bg-zinc-900/30 border border-zinc-800 rounded-lg">
               <div className="flex items-center gap-3">
                 <div className={`p-1.5 rounded bg-zinc-950 ${status.found ? 'text-green-500' : 'text-red-500'}`}>

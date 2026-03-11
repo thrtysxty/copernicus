@@ -2,8 +2,15 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UIComponent } from '../components/Editor/ui-builder/types'
 
-export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github'
+export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github' | 'review'
 export type PaneId = 'explorer' | 'editor' | 'inspector' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
+
+export interface ReviewSession {
+  sessionId: string
+  stories: number[]
+  changedFiles: string[]
+  exitCode: number
+}
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/10 border-slate-500/30',   accent: 'bg-slate-500' },
@@ -194,6 +201,10 @@ interface LayoutState {
   inProgressCount: number
   setInProgressCount: (count: number) => void
 
+  // Review
+  pendingReview: ReviewSession | null
+  setPendingReview: (review: ReviewSession | null) => void
+
   // Archive
   showArchive: boolean
   toggleArchive: () => void
@@ -203,6 +214,9 @@ interface LayoutState {
   pendingDiff: { files: { path: string, original: string, modified: string, status: 'added' | 'modified' | 'deleted' }[] } | null
   setReviewMode: (files: { path: string, original: string, modified: string, status: 'added' | 'modified' | 'deleted' }[]) => void
   clearReviewMode: () => void
+
+  // Workspace Switch
+  resetForWorkspaceSwitch: () => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -412,6 +426,9 @@ export const useLayoutStore = create<LayoutState>()(
       inProgressCount: 0,
       setInProgressCount: (count) => set({ inProgressCount: count }),
 
+      pendingReview: null,
+      setPendingReview: (review) => set({ pendingReview: review }),
+
       showArchive: false,
       toggleArchive: () => set((state) => ({ showArchive: !state.showArchive })),
 
@@ -419,6 +436,12 @@ export const useLayoutStore = create<LayoutState>()(
       pendingDiff: null,
       setReviewMode: (files) => set({ reviewMode: true, pendingDiff: { files } }),
       clearReviewMode: () => set({ reviewMode: false, pendingDiff: null }),
+
+      resetForWorkspaceSwitch: () => set({
+        openFiles: [],
+        activeFilePath: null,
+        activeView: 'planner'
+      })
     }),
     {
       name: 'copernicus-layout-storage',

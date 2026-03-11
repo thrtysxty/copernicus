@@ -11,7 +11,7 @@ export const TelemetryPanel: React.FC = () => {
         <Activity size={12} />
         <span>Agent Telemetry</span>
       </div>
-      {Object.entries(agentTelemetry).map(([id, t]) => (
+      {Object.entries(agentTelemetry ?? {}).map(([id, t]) => (
         <div key={id} className="p-3 bg-zinc-900/50 border border-zinc-800 rounded space-y-1.5">
           <div className="text-zinc-300 font-bold uppercase">{id}</div>
           <div className="flex justify-between text-zinc-500">

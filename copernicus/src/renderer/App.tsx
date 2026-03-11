@@ -5,6 +5,7 @@ import {
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useToastStore } from './store/toastStore'
 import { ActivityBar } from './components/layout/ActivityBar'
+import { ApplicationHeader } from './components/layout/ApplicationHeader'
 import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog'
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
@@ -26,6 +27,7 @@ import GenesisWizard from './components/genesis/GenesisWizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
 import { MemoryBrowser } from './components/memory/MemoryBrowser'
+import { ReviewPanel } from './components/review/ReviewPanel'
 
 const TERMINAL_HEIGHT = 200
 
@@ -37,8 +39,9 @@ const PanelHeader: React.FC<{
   isSpotlightActive: boolean;
   onCommandPalette?: () => void;
   showLspStatus?: boolean;
-}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onCommandPalette, showLspStatus }) => {
+}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onCommandPalette: _, showLspStatus }) => {
   const [lspRunning, setLspRunning] = useState(false)
+  const [lspPopoverOpen, setLspPopoverOpen] = useState(false)
   const [errorCount, setErrorCount] = useState(0)
   const [warnCount, setWarnCount] = useState(0)
   const invoke = useIpcError()
@@ -63,20 +66,33 @@ const PanelHeader: React.FC<{
   }, [invoke, activeFilePath])
 
   return (
-    <div className="h-8 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0">
+    <div className="h-8 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0 relative">
       <div className="flex items-center gap-3">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{title}</span>
         {showLspStatus && (
-          <button
-            aria-label="Toggle command palette"
-            className="flex items-center gap-2 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
-            onClick={onCommandPalette}
-          >
-            <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
-            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-              LSP {errorCount}E {warnCount}W
-            </span>
-          </button>
+          <div className="relative">
+            <button
+              aria-label="LSP status"
+              className="flex items-center gap-2 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
+              onClick={() => setLspPopoverOpen(v => !v)}
+            >
+              <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
+              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                LSP {errorCount}E {warnCount}W
+              </span>
+            </button>
+            {lspPopoverOpen && (
+              <div className="absolute top-8 left-0 z-50 bg-[#0d0d0d] border border-copernicus-steel/40 rounded shadow-2xl p-3 w-56 font-mono"
+                onMouseLeave={() => setLspPopoverOpen(false)}>
+                <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-2">Language Server</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`w-2 h-2 rounded-full ${lspRunning ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-[10px] text-zinc-300">{lspRunning ? 'Connected' : 'Disconnected'}</span>
+                </div>
+                <div className="text-[9px] text-zinc-600 mt-2">{errorCount}E · {warnCount}W in active file</div>
+              </div>
+            )}
+          </div>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -118,6 +134,7 @@ export default function App() {
   const activeFilePath = useLayoutStore(s => s.activeFilePath)
   const activeFileContent = useLayoutStore(s => s.activeFileContent)
   const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
+  const openFiles = useLayoutStore(s => s.openFiles)
   const hasCompletedTour = useLayoutStore(s => s.hasCompletedTour)
   const tourHighlight = useLayoutStore(s => s.tourHighlight)
   const settingsOpen = useLayoutStore(s => s.settingsOpen)
@@ -140,6 +157,7 @@ export default function App() {
   const setTourHighlight = useLayoutStore(s => s.setTourHighlight)
   const setChatPanelTab = useLayoutStore(s => s.setChatPanelTab)
   const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
+  const setPendingReview = useLayoutStore(s => s.setPendingReview)
   const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
   const showGenesis = useLayoutStore(s => s.showGenesis)
@@ -164,6 +182,14 @@ export default function App() {
 
     const removeWorkspaceChanged = window.ipcRenderer.on('app:workspace-changed', (_e, { path }: { path: string }) => {
       setWorkingDir(path)
+      // AC4: Context reset on switch
+      useLayoutStore.getState().resetForWorkspaceSwitch()
+      
+      // Re-fetch stories for new workspace
+      invoke<IpcResult<{ status: string }[]>>('stories:list').then((r) => {
+        const list = unwrapIpc<{ status: string }[]>(r) ?? []
+        setInProgressCount(list.filter((s) => s.status === 'IN PROGRESS').length)
+      }).catch(() => {})
     })
 
     const removeActivateTab = window.ipcRenderer.on('terminal:activate-tab', (_e, { agentId }: { agentId: string }) => {
@@ -208,10 +234,14 @@ export default function App() {
       setView(viewId as StoryboardView)
     })
 
-    const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory'] as const
+    const removeReviewSession = window.ipcRenderer.on('review:session-complete', (_e, data: any) => {
+      setPendingReview(data)
+    })
+
+    const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory', 'review'] as const
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); setCommandPaletteOpen(true) }
-      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '7') {
+      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '8') {
         e.preventDefault()
         const v = views[parseInt(e.key) - 1]
         if (v) {
@@ -261,9 +291,10 @@ export default function App() {
       removeUiBuilderListener()
       removePaletteListener()
       removeSetViewListener()
+      removeReviewSession()
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView])
+  }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView, setPendingReview])
 
   // Story 209: Auto-collapse explorer on designer view entry
   useEffect(() => {
@@ -343,32 +374,13 @@ export default function App() {
         Skip to main content
       </a>
 
-      <div className="flex h-full w-full overflow-hidden">
+      <ApplicationHeader />
+
+      <div className="flex flex-1 w-full overflow-hidden">
         <ActivityBar />
 
         {/* Main Content Area */}
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
-          <header className="h-8 flex items-center px-4 border-b border-copernicus-steel bg-[#050505] shrink-0 draggable relative">
-            {/* Absolutely centered title — doesn't interact with flex children */}
-            <span className="absolute inset-x-0 flex justify-center pointer-events-none">
-              <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.25em] no-drag">
-                COPERNICUS_IDE
-              </span>
-            </span>
-            {/* Right-side metadata — constrained so it never overflows */}
-            <div className="ml-auto flex items-center gap-2 no-drag text-[10px] font-mono min-w-0 max-w-[40%]">
-              <button
-                onClick={() => setProjectSelectorOpen(true)}
-                className="text-zinc-400 hover:text-copernicus-phosphor transition-colors truncate max-w-[120px]"
-                title="Select project"
-              >
-                {workingDir.split('/').pop() || '—'}
-              </button>
-              <span className="text-zinc-700 shrink-0">//</span>
-              <span className="text-zinc-600 truncate max-w-[80px]">{activeStoryId ?? '—'}</span>
-            </div>
-          </header>
-
           <div className="flex-1 flex overflow-hidden">
             {/* Solo full-screen views */}
             {activeView === 'command-center' && <CommandCenter />}
@@ -377,6 +389,7 @@ export default function App() {
             {activeView === 'orchestrator' && <WorkflowCanvas />}
             {activeView === 'github' && <GithubDashboard />}
             {activeView === 'memory' && <MemoryBrowser />}
+            {activeView === 'review' && <ReviewPanel />}
 
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
@@ -402,7 +415,12 @@ export default function App() {
                 <div className="flex-1 flex overflow-hidden relative">
                   <div className={`flex-1 flex flex-col transition-all duration-500 ${spotlightPane === 'editor' ? 'flex-[3]' : spotlightPane === 'chat' ? 'flex-0 w-0 opacity-0 pointer-events-none' : 'flex-1'}`}>
                     <PanelHeader
-                      title={activeStoryId ? `STORY // ${activeStoryId}` : 'DEVELOPMENT_CORE'}
+                      title={(() => {
+                        if (!activeFilePath) return activeStoryId ? `STORY // ${activeStoryId}` : 'EDITOR'
+                        const file = openFiles.find(f => f.path === activeFilePath)
+                        const name = activeFilePath.split('/').pop() ?? activeFilePath
+                        return file?.isDirty ? `${name} •` : name
+                      })()}
                       onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
                       onFlip={() => toggleFlip('center-panel')}
                       isSpotlightActive={spotlightPane === 'editor'}

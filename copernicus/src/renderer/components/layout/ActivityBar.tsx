@@ -1,7 +1,8 @@
 import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
-  Activity, Brain, Github, Settings, FolderPlus
+  Activity, Brain, Github, Settings, FolderPlus,
+  Diff
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
 
@@ -13,6 +14,7 @@ interface NavItemProps {
   shortcut?: string
   isActive?: boolean
   badge?: number
+  hasDot?: boolean
   highlightId?: string
   testId?: string
 }
@@ -22,11 +24,12 @@ export const ActivityBar: React.FC = () => {
     activeView, setView, setCenterMode,
     tourHighlight,
     inProgressCount,
+    pendingReview,
     settingsOpen, setSettingsOpen,
   } = useLayoutStore()
 
   const NavItem: React.FC<NavItemProps> = ({
-    id, icon: Icon, label, onClick, shortcut, isActive, badge, highlightId, testId,
+    id, icon: Icon, label, onClick, shortcut, isActive, badge, hasDot, highlightId, testId,
   }) => {
     const active = isActive !== undefined ? isActive : (id ? activeView === id : false)
     const handleClick = onClick ?? (id ? () => setView(id) : undefined)
@@ -53,6 +56,9 @@ export const ActivityBar: React.FC = () => {
               {badge > 9 ? '9+' : badge}
             </span>
           )}
+          {hasDot && (
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-copernicus-phosphor" />
+          )}
         </button>
         <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
           {label}{shortcut && <span className="text-zinc-500 ml-1">{shortcut}</span>}
@@ -63,9 +69,6 @@ export const ActivityBar: React.FC = () => {
 
   return (
     <aside className="w-12 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center z-50 h-full">
-      {/* Titlebar clearance — matches h-8 app header, prevents overlap with macOS traffic lights */}
-      <div className="h-8 w-full shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
-
       {/* C Logo */}
       <div className="w-12 h-12 flex items-center justify-center border-b border-white/5 bg-zinc-950/30 shrink-0">
         <div className="w-6 h-6 bg-copernicus-phosphor/20 rounded-sm flex items-center justify-center phosphor-glow-border">
@@ -94,6 +97,7 @@ export const ActivityBar: React.FC = () => {
         />
         <NavItem id="orchestrator" icon={Workflow} label="Orchestrator" shortcut="⌘4" testId="nav-orchestrator" />
         <NavItem id="reporter" icon={BarChart2} label="Reporter" shortcut="⌘5" testId="nav-reporter" />
+        <NavItem id="review" icon={Diff} label="Review" shortcut="⌘8" hasDot={!!pendingReview} testId="nav-review" />
         <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘6" testId="nav-telemetry" />
         <NavItem id="memory" icon={Brain} label="Agent Memory" shortcut="⌘7" testId="nav-memory" />
       </div>

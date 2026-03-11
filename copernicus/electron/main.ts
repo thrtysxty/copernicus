@@ -30,6 +30,7 @@ import { backendManager } from './backend-manager'
 import { socketManager } from './socket-manager'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
+import { addRecentProject } from './utils/recent-projects'
 
 import * as fileHandlers from './ipc/file-handlers'
 import * as authHandlers from './ipc/auth-handlers'
@@ -126,7 +127,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1200, height: 800, show: true, frame: false, backgroundColor: '#050505',
     titleBarStyle: 'hiddenInset', title: isFirstRun ? (isDebug ? 'COPERNICUS SETUP [DEBUG]' : 'COPERNICUS SETUP') : (isDebug ? 'COPERNICUS IDE [DEBUG]' : 'COPERNICUS'),
-    trafficLightPosition: { x: 12, y: 3 }, vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
+    trafficLightPosition: { x: 12, y: 8 }, vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
     visualEffectState: process.platform === 'darwin' ? 'active' : undefined,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false },
   })
@@ -187,9 +188,13 @@ app.whenReady().then(() => {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': ["default-src 'self'; script-src 'self' 'unsafe-eval' blob: file:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com; worker-src 'self' blob: file:;"] } })
   })
-  let workspaceRoot = (settingsStore.getAll().workspace as string) || path.join(os.homedir(), 'Copernicus');
+  let workspaceRoot = (settingsStore.getAll().workspace as string) || (settingsStore.getAll().workingDir as string) || path.join(os.homedir(), 'Copernicus');
   if (!fs.existsSync(workspaceRoot)) try { fs.mkdirSync(workspaceRoot, { recursive: true }); } catch (e) { log.error(e); workspaceRoot = os.homedir(); }
+  
+  settingsStore.set('workspace', workspaceRoot);
+  settingsStore.set('workingDir', workspaceRoot);
   fsManager.setRootPath(workspaceRoot); storiesManager.setProjectRoot(workspaceRoot);
+  addRecentProject(workspaceRoot, settingsStore);
   ensureCopernicusDirectory(); createWindow();
   globalShortcut.register('CommandOrControl+P', () => win?.webContents.send('layout:open-palette', { mode: 'all' }))
   globalShortcut.register('CommandOrControl+Shift+P', () => win?.webContents.send('layout:open-palette', { mode: 'commands' }))
