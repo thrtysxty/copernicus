@@ -5,7 +5,7 @@ import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
 
 export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
-  const { modelRegistry, llmService, codebaseIndexer, hybridRetriever, runRAGBenchmark, lspManager } = deps
+  const { modelRegistry, llmService, codebaseIndexer, hybridRetriever, runRAGBenchmark, lspManager, settingsStore } = deps
 
   // Registry Handlers
   ipcMain.handle('registry:list-models', () => handleIpc('registry:list-models', [], () => modelRegistry.getModels()))
@@ -23,6 +23,14 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('models:list', () => handleIpc('models:list', [], () => modelRegistry.getModels()));
   ipcMain.handle('models:active', () => handleIpc('models:active', [], () => modelRegistry.getActiveModel()));
   ipcMain.handle('models:set-active', (_, modelId: string) => handleIpc('models:set-active', [modelId], () => modelRegistry.setActiveModel(modelId)));
+  ipcMain.handle('models:set-default', (_e, { role, value }: { role: string, value: string }) =>
+    handleIpc('models:set-default', [role, value], () => {
+      const defaults = settingsStore.get<Record<string, string>>('modelDefaults', {})
+      defaults[role] = value
+      settingsStore.set('modelDefaults', defaults)
+      return { ok: true }
+    })
+  )
   ipcMain.handle('models:list-ollama', () => handleIpc('models:list-ollama', [], async () => {
     try {
       const response = await fetch('http://localhost:11434/api/tags', {

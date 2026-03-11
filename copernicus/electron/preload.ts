@@ -6,7 +6,7 @@ const SEND_CHANNELS = new Set([
   'auth:status', 'auth:store-api-key', 'auth:get-api-key',
   'auth:resolve-openai-config',
   // Models
-  'models:list', 'models:active', 'models:set-active', 'models:list-ollama',
+  'models:list', 'models:active', 'models:set-active', 'models:list-ollama', 'models:set-default',
   // LLM Chat
   'chat:send', 'chat:confirm-model-switch',
   // File System

@@ -3,9 +3,26 @@ import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
-  ShieldCheck, Loader2, GripVertical, Zap, Check
+  ShieldCheck, Loader2, GripVertical, Zap, Check,
+  Brain, Bot, HardDrive, ArrowLeftRight, GitPullRequest, Plug
 } from 'lucide-react'
 import log from '../../../utils/logger'
+
+const PROVIDER_ICONS: Record<string, React.FC<any>> = {
+  anthropic:   Brain,
+  openai:      Bot,
+  google:      Globe,
+  ollama:      HardDrive,
+  'ollama-cloud': HardDrive,
+  openrouter:  ArrowLeftRight,
+  deepinfra:   Cpu,
+  jules:       GitPullRequest,
+}
+
+const ProviderIcon: React.FC<{ provider: string }> = ({ provider }) => {
+  const Icon = PROVIDER_ICONS[provider] ?? Plug
+  return <Icon size={16} className="shrink-0" />
+}
 
 interface AuthStatus {
   provider: string
@@ -23,6 +40,7 @@ export const ProvidersSection: React.FC = () => {
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
   const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'jules', 'openrouter', 'deepinfra', 'ollama', 'ollama-cloud'])
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [keyDraft, setKeyDraft] = useState<Record<string, string>>({})
   const [baseUrlDraft, setBaseUrlDraft] = useState<Record<string, string>>({})
   const [authFailed, setAuthFailed] = useState<Set<string>>(new Set())
@@ -152,27 +170,27 @@ export const ProvidersSection: React.FC = () => {
     setDraggedIdx(idx)
   }
 
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault()
-    if (draggedIdx === null || draggedIdx === idx) return
+  const handleDrop = async (idx: number) => {
+    if (draggedIdx === null || draggedIdx === idx) {
+      setDraggedIdx(null)
+      setHoveredIdx(null)
+      return
+    }
     
-    const newProviders = [...providers]
-    const item = newProviders.splice(draggedIdx, 1)[0]
+    const next = [...providers]
+    const [item] = next.splice(draggedIdx, 1)
     if (item) {
-      newProviders.splice(idx, 0, item)
+      next.splice(idx, 0, item)
+      setProviders(next)
+      try {
+        await invoke('settings:save', { providerOrder: next })
+        addToast('Provider priority updated', 'success')
+      } catch (e: unknown) {
+        addToast('Failed to save provider order', 'error')
+      }
     }
-    setProviders(newProviders)
-    setDraggedIdx(idx)
-  }
-
-  const handleDragEnd = async () => {
     setDraggedIdx(null)
-    try {
-      await invoke('settings:save', { providerOrder: providers })
-      addToast('Provider priority updated', 'success')
-    } catch (e: unknown) {
-      addToast('Failed to save provider order', 'error')
-    }
+    setHoveredIdx(null)
   }
 
   const handleAddCustom = async () => {
@@ -265,9 +283,12 @@ export const ProvidersSection: React.FC = () => {
               key={id}
               draggable
               onDragStart={() => handleDragStart(idx)}
-              onDragOver={(e) => handleDragOver(e, idx)}
-              onDragEnd={handleDragEnd}
-              className={`bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 group hover:border-zinc-700 transition-colors cursor-default ${draggedIdx === idx ? 'opacity-50 border-copernicus-phosphor' : ''}`}
+              onDragOver={(e) => { e.preventDefault(); setHoveredIdx(idx) }}
+              onDragLeave={() => setHoveredIdx(null)}
+              onDrop={() => handleDrop(idx)}
+              className={`bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 group hover:border-zinc-700 transition-colors cursor-default 
+                ${draggedIdx === idx ? 'opacity-50' : ''} 
+                ${hoveredIdx === idx && draggedIdx !== idx ? 'border-t-2 border-copernicus-phosphor' : ''}`}
             >
               {/* Top row: grip + status + name + buttons */}
               <div className="flex items-center justify-between">
@@ -282,7 +303,7 @@ export const ProvidersSection: React.FC = () => {
                     'bg-amber-400'
                   }`} title={authFailed.has(id) ? 'Auth failed' : s?.hasKey ? 'Authenticated' : 'No key'} />
                   <div className={`p-2 rounded ${isOllama || isOllamaCloud ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600'}`}>
-                    {isOllama || isOllamaCloud ? <Globe size={16} /> : <Key size={16} />}
+                    <ProviderIcon provider={id} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">

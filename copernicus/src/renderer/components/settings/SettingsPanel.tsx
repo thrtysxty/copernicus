@@ -62,8 +62,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-12">
-      <div className="bg-[#0A0A0A] border border-zinc-800 w-full max-w-5xl h-[700px] flex flex-col shadow-2xl rounded-xl overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center bg-black/60 backdrop-blur-md overflow-y-auto py-4 px-12">
+      <div className="bg-[#0A0A0A] border border-zinc-800 w-full max-w-5xl h-[700px] max-h-[calc(100vh-2rem)] flex flex-col shadow-2xl rounded-xl overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/20">
