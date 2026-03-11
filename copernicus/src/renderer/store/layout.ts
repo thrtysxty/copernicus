@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UIComponent } from '../components/Editor/ui-builder/types'
 
-export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github' | 'review'
+export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github' | 'review' | 'git' | 'search' | 'diagnostics'
 export type PaneId = 'explorer' | 'editor' | 'inspector' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
 
 export interface ReviewSession {
@@ -200,6 +200,10 @@ interface LayoutState {
   // Story stats
   inProgressCount: number
   setInProgressCount: (count: number) => void
+
+  // Diagnostics
+  diagnosticErrorCount: number
+  setDiagnosticErrorCount: (count: number) => void
 
   // Review
   pendingReview: ReviewSession | null
@@ -427,6 +431,9 @@ export const useLayoutStore = create<LayoutState>()(
 
       inProgressCount: 0,
       setInProgressCount: (count) => set({ inProgressCount: count }),
+
+      diagnosticErrorCount: 0,
+      setDiagnosticErrorCount: (count) => set({ diagnosticErrorCount: count }),
 
       pendingReview: null,
       setPendingReview: (review) => set({ pendingReview: review }),

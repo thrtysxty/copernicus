@@ -28,6 +28,9 @@ import SplashScreen from './components/layout/SplashScreen'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
 import { MemoryBrowser } from './components/memory/MemoryBrowser'
 import { ReviewPanel } from './components/review/ReviewPanel'
+import { GitPanel } from './components/git/GitPanel'
+import { SearchPanel } from './components/search/SearchPanel'
+import { ProblemsPanel } from './components/diagnostics/ProblemsPanel'
 
 const TERMINAL_HEIGHT = 200
 
@@ -246,10 +249,10 @@ export default function App() {
       window.ipcRenderer.invoke('chat:send-system', message)
     })
 
-    const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory', 'review'] as const
+    const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory', 'review', 'git'] as const
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); setCommandPaletteOpen(true) }
-      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '8') {
+      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '9') {
         e.preventDefault()
         const v = views[parseInt(e.key) - 1]
         if (v) {
@@ -417,6 +420,9 @@ export default function App() {
             {activeView === 'github' && <GithubDashboard />}
             {activeView === 'memory' && <MemoryBrowser />}
             {activeView === 'review' && <ReviewPanel />}
+            {activeView === 'git' && <GitPanel />}
+            {activeView === 'search' && <SearchPanel />}
+            {activeView === 'diagnostics' && <ProblemsPanel />}
 
             {(activeView === 'designer' || activeView === 'editor') && (
               <>

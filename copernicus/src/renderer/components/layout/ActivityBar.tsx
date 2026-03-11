@@ -2,7 +2,7 @@ import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
   Activity, Brain, Github, Settings, FolderPlus,
-  Diff
+  Diff, GitBranch, Search, AlertTriangle
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
 
@@ -26,6 +26,7 @@ export const ActivityBar: React.FC = () => {
     inProgressCount,
     pendingReview,
     settingsOpen, setSettingsOpen,
+    diagnosticErrorCount,
   } = useLayoutStore()
 
   const NavItem: React.FC<NavItemProps> = ({
@@ -100,6 +101,9 @@ export const ActivityBar: React.FC = () => {
         <NavItem id="review" icon={Diff} label="Review" shortcut="⌘8" hasDot={!!pendingReview} testId="nav-review" />
         <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘6" testId="nav-telemetry" />
         <NavItem id="memory" icon={Brain} label="Agent Memory" shortcut="⌘7" testId="nav-memory" />
+        <NavItem id="git" icon={GitBranch} label="Git" shortcut="⌘9" testId="nav-git" />
+        <NavItem id="search" icon={Search} label="Search" shortcut="⌘F2" testId="nav-search" />
+        <NavItem id="diagnostics" icon={AlertTriangle} label="Problems" shortcut="⌘Shift+M" badge={diagnosticErrorCount} hasDot={diagnosticErrorCount > 0} testId="nav-diagnostics" />
       </div>
 
       <div className="flex-1" />

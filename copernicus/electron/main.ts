@@ -40,6 +40,9 @@ import * as workflowHandlers from './ipc/workflow-handlers'
 import * as terminalHandlers from './ipc/terminal-handlers'
 import * as appHandlers from './ipc/app-handlers'
 import * as genesisHandlers from './ipc/genesis-handlers'
+import * as gitHandlers from './ipc/git-handlers'
+import * as searchHandlers from './ipc/search-handlers'
+import * as diagnosticsHandlers from './ipc/diagnostics-handlers'
 
 import { GenesisRunner } from './genesis/genesis-runner'
 import { ScaffoldRunner } from './genesis/scaffold'
@@ -172,6 +175,9 @@ function registerIpcHandlers() {
   terminalHandlers.register(win!, deps)
   appHandlers.register(win!, deps)
   genesisHandlers.register(win!, deps)
+  gitHandlers.register(win!, deps)
+  searchHandlers.register(win!, deps)
+  diagnosticsHandlers.register(win!, deps)
   registerSecurityHandlers(ipcMain, settingsStore)
 }
 

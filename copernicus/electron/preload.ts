@@ -50,6 +50,10 @@ const SEND_CHANNELS = new Set([
   // MCP
   'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server', 'mcp:get-status',
 
+  'git:status', 'git:stage', 'git:unstage', 'git:commit', 'git:branches', 'git:checkout', 'git:new-branch', 'git:diff-file', 'github:list-prs',
+  'codebase:text-search', 'codebase:semantic-search',
+  'diagnostics:run-tsc',
+
   // Environment
   'env:scan', 'env:install', 'env:install-complete', 'env:get-versions',
   // Devtime
@@ -133,6 +137,7 @@ const LISTEN_CHANNELS = new Set([
   // Workflow engine state push (Story 186)
   'workflow:status-update',
   'review:session-complete',
+  'diagnostics:tsc-complete', 'diagnostics:tsc-progress',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

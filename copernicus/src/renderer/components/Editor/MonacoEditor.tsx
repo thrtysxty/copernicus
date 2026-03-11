@@ -218,6 +218,24 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     }
   }, [monacoInstance]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Handle goto-line events (Story 338)
+  React.useEffect(() => {
+    if (!monacoInstance) return
+    const removeGotoLine = window.ipcRenderer.on(
+      'layout:goto-line',
+      (_e: Electron.IpcRendererEvent, { file, line, col }: { file: string; line: number; col: number }) => {
+        if (!filePath || filePath !== file) return
+        const editor = editorRef.current
+        if (editor) {
+          editor.revealLineInCenter(line)
+          editor.setPosition({ lineNumber: line, column: col })
+          editor.focus()
+        }
+      }
+    )
+    return () => removeGotoLine()
+  }, [monacoInstance, filePath])
+
   // LSP open/close via lsp-manager file lifecycle (Story 189)
   React.useEffect(() => {
     if (!filePath) return
