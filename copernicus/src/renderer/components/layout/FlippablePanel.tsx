@@ -42,7 +42,7 @@ export const FlippablePanel: React.FC<FlippablePanelProps> = ({
   // mode === 'flip' (default)
   return (
     <div
-      className={`relative w-full h-full ${className}`}
+      className={`relative w-full h-full min-w-0 ${className}`}
       style={{ perspective: 1000 }}
     >
       <motion.div

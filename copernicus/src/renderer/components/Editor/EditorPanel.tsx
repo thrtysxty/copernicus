@@ -41,7 +41,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#050505]">
+    <div className="flex flex-col h-full w-full bg-[#050505] min-w-0 overflow-hidden">
       {/* Editor Sub-header */}
       <div className="h-7 flex items-center justify-between px-2 bg-[#0A0A0A] border-b border-copernicus-steel shrink-0">
         <div className="flex items-center gap-4">

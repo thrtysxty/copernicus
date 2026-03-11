@@ -21,10 +21,12 @@ import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
+import { commandRegistry } from './store/commandRegistry'
 import { GithubDashboard } from './components/github/GithubDashboard'
 import Wizard from './components/wizard/Wizard'
 import GenesisWizard from './components/genesis/GenesisWizard'
 import SplashScreen from './components/layout/SplashScreen'
+import { CRTOverlay } from './components/effects/CRTOverlay'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
 import { MemoryBrowser } from './components/memory/MemoryBrowser'
 import { ReviewPanel } from './components/review/ReviewPanel'
@@ -156,9 +158,7 @@ export default function App() {
   const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy)
   const toggleUIBuilder = useLayoutStore(s => s.toggleUIBuilder)
   const setActiveFileContent = useLayoutStore(s => s.setActiveFileContent)
-  const setActiveFileLanguage = useLayoutStore(s => s.setActiveFileLanguage)
   const setCenterMode = useLayoutStore(s => s.setCenterMode)
-  const openFile = useLayoutStore(s => s.openFile)
   const setTourHighlight = useLayoutStore(s => s.setTourHighlight)
   const setChatPanelTab = useLayoutStore(s => s.setChatPanelTab)
   const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
@@ -181,6 +181,13 @@ export default function App() {
 
   // Initial setup and IPC listeners
   useEffect(() => {
+    commandRegistry.registerCommand({ id: 'open-settings', label: 'Open Settings', shortcut: '⌘,', action: () => setSettingsOpen(true) })
+    commandRegistry.registerCommand({ id: 'open-planner', label: 'Open Planner', shortcut: '', action: () => setView('planner') })
+    commandRegistry.registerCommand({ id: 'open-terminal', label: 'Open Terminal', shortcut: '', action: () => setTerminalOpen(true) })
+    commandRegistry.registerCommand({ id: 'toggle-spotlight', label: 'Toggle Explorer Spotlight', shortcut: '', action: () => setSpotlight(spotlightPane ? null : 'explorer') })
+    commandRegistry.registerCommand({ id: 'new-story', label: 'New Story', shortcut: '', action: () => { /* open story form */ } })
+    commandRegistry.registerCommand({ id: 'switch-model', label: 'Switch Model', shortcut: '', action: () => setSettingsOpen(true) })
+
     const params = new URLSearchParams(window.location.search)
     if (params.get('window') === 'wizard') {
       setIsWizard(true)
@@ -378,6 +385,11 @@ export default function App() {
     return 'w-80 flex-shrink-0'
   })()
 
+  const agentTelemetry = useLayoutStore(s => s.agentTelemetry)
+  const crtMode = useLayoutStore(s => s.crtMode)
+  const anyAgentActive = Object.keys(agentTelemetry ?? {}).length > 0
+  const heavyLoad = Object.keys(agentTelemetry ?? {}).length >= 3
+
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />
   }
@@ -452,9 +464,9 @@ export default function App() {
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
                 {/* Sidebar */}
-                <div className={`${sidebarClass} transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] relative flex flex-col overflow-hidden`}>
+                <div className={`${sidebarClass} min-w-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] relative flex flex-col overflow-hidden`}>
                   {(spotlightPane === 'editor' || spotlightPane === 'chat') ? (
-                    <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5" onClick={() => setSpotlight(null)}>
+                    <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5 shrink-0" onClick={() => setSpotlight(null)}>
                       <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Explorer</span>
                     </div>
                   ) : (
@@ -484,10 +496,10 @@ export default function App() {
                 </div>
 
                 {/* Center Panel & Chat */}
-                <div className="flex-1 flex overflow-hidden relative">
-                  <div className={`${centerClass} transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}>
+                <div className="flex-1 flex min-w-0 overflow-hidden relative">
+                  <div className={`${centerClass} min-w-0 transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}>
                     {spotlightPane === 'explorer' ? (
-                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5" onClick={() => setSpotlight(null)}>
+                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5 shrink-0" onClick={() => setSpotlight(null)}>
                           <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Editor</span>
                        </div>
                     ) : (
@@ -522,9 +534,9 @@ export default function App() {
                     )}
                   </div>
 
-                  <div className={`${chatClass} transition-all duration-300 ease-in-out border-l border-copernicus-steel flex flex-col overflow-hidden`}>
+                  <div className={`${chatClass} min-w-0 transition-all duration-300 ease-in-out border-l border-copernicus-steel flex flex-col overflow-hidden`}>
                     {(spotlightPane === 'editor' || spotlightPane === 'explorer') ? (
-                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-l border-copernicus-steel cursor-pointer hover:bg-white/5" onClick={() => setSpotlight(null)}>
+                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-l border-copernicus-steel cursor-pointer hover:bg-white/5 shrink-0" onClick={() => setSpotlight(null)}>
                           <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Chat</span>
                        </div>
                     ) : (
@@ -574,20 +586,10 @@ export default function App() {
 
       {/* Overlays */}
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
-      {commandPaletteOpen && (
-        <CommandPalette
-          mode="all"
-          onClose={() => setCommandPaletteOpen(false)}
-          onFileOpen={(path, content, language) => {
-            openFile(path)
-            setActiveFileContent(content)
-            setActiveFileLanguage(language)
-            setCenterMode('code')
-            setCommandPaletteOpen(false)
-          }}
-          rootPath={workingDir}
-        />
-      )}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
       <ProjectSelectorDialog
         open={projectSelectorOpen}
         onClose={() => setProjectSelectorOpen(false)}
@@ -604,6 +606,7 @@ export default function App() {
           }} 
         />
       )}
+      <CRTOverlay enabled={crtMode} anyAgentActive={anyAgentActive} heavyLoad={heavyLoad} />
     </div>
   )
 }

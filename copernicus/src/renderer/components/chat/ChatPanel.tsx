@@ -23,7 +23,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
     <FlippablePanel
       id="chat"
       front={
-        <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono">
+        <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono min-w-0 overflow-hidden">
           <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel shrink-0 bg-[#0A0A0A]">
             <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Chat</span>
             <button

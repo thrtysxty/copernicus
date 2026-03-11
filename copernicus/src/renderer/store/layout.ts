@@ -79,6 +79,7 @@ interface LayoutState {
   uiDensity: 'compact' | 'normal' | 'comfortable'
   fontSize: number
   animationsEnabled: boolean
+  crtMode: boolean
 
   // Sidebar
   sidebarOpen: boolean
@@ -149,7 +150,7 @@ interface LayoutState {
   closeFile: (path: string) => void
   setActiveFile: (path: string) => void
   setFileDirty: (path: string, dirty: boolean) => void
-  setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean }>) => void
+  setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean, crtMode: boolean }>) => void
   toggleUIBuilder: () => void
   setPaletteOpen: (open: boolean) => void
   setInspectorOpen: (open: boolean) => void
@@ -256,6 +257,7 @@ export const useLayoutStore = create<LayoutState>()(
       uiDensity: 'normal',
       fontSize: 12,
       animationsEnabled: true,
+      crtMode: false,
 
       sidebarOpen: true,
 

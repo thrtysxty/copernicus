@@ -160,7 +160,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-copernicus-bg">
+    <div className="flex flex-col h-full bg-copernicus-bg min-w-0 overflow-hidden">
       <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/tree">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>

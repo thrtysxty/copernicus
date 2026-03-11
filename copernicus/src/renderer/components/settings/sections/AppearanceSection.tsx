@@ -1,15 +1,17 @@
 import React from 'react'
 import { useLayoutStore, PHOSPHOR_PRESETS, PhosphorColor } from '../../../store/layout'
-import { Palette, Maximize, Type, Zap } from 'lucide-react'
+import { Palette, Maximize, Type, Zap, Monitor } from 'lucide-react'
 
 const PRESET_ENTRIES = Object.entries(PHOSPHOR_PRESETS) as [PhosphorColor, { label: string; hex: string }][]
 
 export const AppearanceSection: React.FC = () => {
   const { 
-    phosphorColor, setPhosphorColor,
-    uiDensity, fontSize, animationsEnabled,
+    uiDensity, fontSize, animationsEnabled, crtMode,
     setAppearance
   } = useLayoutStore()
+
+  const phosphorColor = useLayoutStore(s => s.phosphorColor)
+  const setPhosphorColor = useLayoutStore(s => s.setPhosphorColor)
 
   return (
     <div className="space-y-8">
@@ -119,6 +121,32 @@ export const AppearanceSection: React.FC = () => {
             <div
               className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
                 animationsEnabled ? 'left-6' : 'left-1'
+              }`}
+            />
+          </button>
+        </section>
+
+        <section className="flex items-center justify-between p-4 bg-zinc-900/30 rounded-lg border border-zinc-800/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded bg-zinc-900 text-zinc-400">
+              <Monitor size={14} />
+            </div>
+            <div>
+              <div className="text-[10px] text-zinc-200 uppercase font-bold tracking-wider">CRT Pulse Shaders</div>
+              <div className="text-[9px] text-zinc-500 font-mono">Enable scanlines and retro phosphor effects</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setAppearance({ crtMode: !crtMode })}
+            aria-label="Toggle CRT Mode"
+            aria-pressed={crtMode}
+            className={`w-10 h-5 rounded-full transition-colors relative focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${
+              crtMode ? 'bg-copernicus-phosphor' : 'bg-zinc-700'
+            }`}
+          >
+            <div
+              className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                crtMode ? 'left-6' : 'left-1'
               }`}
             />
           </button>

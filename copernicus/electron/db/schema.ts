@@ -261,4 +261,9 @@ export const SCHEMA = {
     status TEXT DEFAULT 'waiting',
     added_at TEXT DEFAULT (datetime('now'))
   )`,
+  template_overrides: `CREATE TABLE IF NOT EXISTS template_overrides (
+    template_id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+  )`,
 };

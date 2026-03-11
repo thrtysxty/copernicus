@@ -78,6 +78,8 @@ const SEND_CHANNELS = new Set([
   'lsp:open-file', 'lsp:close-file', 'lsp:get-diagnostics', 'lsp:check-file', 'lsp:workspace-check',
   // Canvas
   'canvas:iframe-bounds',
+  // Templates (Story 330)
+  'templates:list', 'templates:save', 'templates:reset',
   // Browser (Story 155)
   'browser:launch', 'browser:navigate', 'browser:screenshot',
   'browser:click', 'browser:fill', 'browser:evaluate', 'browser:close',

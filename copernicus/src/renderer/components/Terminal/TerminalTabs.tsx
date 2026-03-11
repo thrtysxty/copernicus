@@ -41,9 +41,9 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-copernicus-bg">
+    <div className="flex flex-col h-full bg-copernicus-bg min-w-0 overflow-hidden">
       {/* Standard h-8 Header */}
-      <div className="flex border-t border-zinc-700 border-b border-copernicus-steel h-8 bg-[#050505] items-center">
+      <div className="flex border-t border-zinc-700 border-b border-copernicus-steel h-8 bg-[#050505] items-center shrink-0">
         <div className="flex-grow flex overflow-x-auto no-scrollbar h-8">
           {terminals.map((tab) => (
             <div

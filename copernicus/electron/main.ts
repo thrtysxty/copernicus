@@ -129,7 +129,7 @@ function ensureCopernicusDirectory() {
 function createWindow() {
   const isDebug = process.env.COPERNICUS_DEBUG === 'true';
   win = new BrowserWindow({
-    width: 1200, height: 800, show: true, frame: false, backgroundColor: '#050505',
+    width: 1200, height: 800, minWidth: 1024, minHeight: 640, show: true, frame: false, backgroundColor: '#050505',
     titleBarStyle: 'hiddenInset', title: isFirstRun ? (isDebug ? 'COPERNICUS SETUP [DEBUG]' : 'COPERNICUS SETUP') : (isDebug ? 'COPERNICUS IDE [DEBUG]' : 'COPERNICUS'),
     trafficLightPosition: { x: 12, y: 8 }, vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
     visualEffectState: process.platform === 'darwin' ? 'active' : undefined,
@@ -148,6 +148,9 @@ function createWindow() {
     VITE_DEV_SERVER_URL ? win.loadURL(VITE_DEV_SERVER_URL) : win.loadFile(path.join(process.env.DIST!, 'index.html'))
   }
 }
+
+import { handleIpc } from './utils/handle-ipc'
+import { WORKFLOW_TEMPLATES } from './workflow/templates'
 
 function registerIpcHandlers() {
   const scaffoldRunner = new ScaffoldRunner();
@@ -181,6 +184,27 @@ function registerIpcHandlers() {
   searchHandlers.register(win!, deps)
   diagnosticsHandlers.register(win!, deps)
   registerSecurityHandlers(ipcMain, settingsStore)
+
+  ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {
+    return WORKFLOW_TEMPLATES.map(t => {
+      const override = deps.stateLedger.getTemplateOverride(t.id)
+      return { 
+        id: t.id, 
+        name: t.name, 
+        type: 'Workflow', 
+        content: override?.content ?? JSON.stringify(t, null, 2), 
+        isOverridden: !!override 
+      }
+    })
+  }))
+
+  ipcMain.handle('templates:save', (_e, id: string, content: string) =>
+    handleIpc('templates:save', [id, content], () => deps.stateLedger.saveTemplateOverride(id, content))
+  )
+
+  ipcMain.handle('templates:reset', (_e, id: string) =>
+    handleIpc('templates:reset', [id], () => deps.stateLedger.deleteTemplateOverride(id))
+  )
 }
 
 app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !== 'darwin') app.quit() })
