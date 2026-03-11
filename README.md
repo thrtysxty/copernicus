@@ -122,6 +122,8 @@ A visual SVG node canvas for building multi-step agent pipelines:
 | **Hotfix Pipeline** | Implementer → Test suite → Exit-code gate → Commit or escalate to architect |
 | **Release Retrospective** | Git log + model call metrics → performance analysis → user reflection (human node) → learning extraction → `project_memory` write (importance 9) → `AGENTS.md` reinforcement |
 
+**Parallel Agent Review Gate** — a toggle in Settings → Workflow Engine. When enabled, code changes require consensus from multiple models before they are applied. Two independent agents review the same diff; disagreement blocks the merge. Configurable in combination with the **Code Review Gate** workflow template for a fully automated multi-model verdict loop.
+
 **Time-Travel Orchestration** — after each successful node, `SnapshotManager` captures the current git SHA and workflow state. Completed nodes show a `⟳ Rewind` button; rewinding calls `git checkout <sha>` and resets downstream nodes to idle. A detached HEAD warning banner guides the next step.
 
 ### Agent Review Panel
@@ -238,6 +240,7 @@ browser:close     → Session cleanup
 - **Providers** — Correct icon set, drag-to-reorder priority tiles, embedding provider priority list.
 - **Personas** — View, disable, or create custom personas with name, description, system prompt, model affinity, and role. Persisted to DB.
 - **Templates** — All system workflow templates listed; click to open inline Monaco editor; Save / Reset to Default; user overrides in `template_overrides` table.
+- **Workflow Engine** — Parallel Agent Review Gate (multi-model consensus before merge), default workflow template, max execution time, auto-save workflow state, contextual story auto-linking.
 - **Appearance** — Phosphor color presets (green / amber / white / blue), UI density, **CRT Mode** (scanline + vignette overlay, intensity scales with agent load — off by default).
 - **Hardware** — macOS Touch Bar configuration: view navigation buttons, command tray slots, telemetry display mode (Story+Timer or Branch+Cost).
 
