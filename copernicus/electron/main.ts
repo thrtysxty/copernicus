@@ -31,6 +31,7 @@ import { socketManager } from './socket-manager'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
 import { addRecentProject } from './utils/recent-projects'
+import { SnapshotManager } from './workflow/snapshot-manager'
 
 import * as fileHandlers from './ipc/file-handlers'
 import * as authHandlers from './ipc/auth-handlers'
@@ -162,9 +163,12 @@ function registerIpcHandlers() {
     scaffoldRunner
   });
 
+  const snapshotManager = new SnapshotManager(stateLedger.db, fsManager.getRootPath());
+  workflowEngine.setSnapshotManager(snapshotManager);
+
   const deps = {
     authManager, githubManager, modelRegistry, settingsStore, storiesManager, devtimeManager,
-    fsManager, workflowEngine, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
+    fsManager, workflowEngine, snapshotManager, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
     socketManager, stateLedger, llmService, lspManager, backendManager, julesMonitor, julesManager,
     genesisRunner,
     applyAndVerifyPatch, reversePatch, runRAGBenchmark, getPlaywright, computeCoveragePct,

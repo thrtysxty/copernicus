@@ -17,6 +17,7 @@ import { LspManager } from '../lsp/lsp-manager'
 import { BackendManager } from '../backend-manager'
 import { SocketManager } from '../socket-manager'
 import { GenesisRunner } from '../genesis/genesis-runner'
+import { SnapshotManager } from '../workflow/snapshot-manager'
 
 export interface IpcHandlerDeps {
   authManager: AuthManager;
@@ -27,6 +28,7 @@ export interface IpcHandlerDeps {
   devtimeManager: DevtimeManager;
   fsManager: FSManager;
   workflowEngine: WorkflowEngine;
+  snapshotManager?: SnapshotManager;
   codebaseIndexer: CodebaseIndexer;
   hybridRetriever: HybridRetriever;
   browserSession: BrowserSession;

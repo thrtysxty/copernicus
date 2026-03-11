@@ -266,4 +266,5 @@ export const SCHEMA = {
     content TEXT NOT NULL,
     updated_at TEXT DEFAULT (datetime('now'))
   )`,
+  workflow_snapshots: `CREATE TABLE IF NOT EXISTS workflow_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workflow_id TEXT NOT NULL, node_id TEXT NOT NULL, git_sha TEXT NOT NULL, workflow_state TEXT NOT NULL DEFAULT '{}', captured_at TEXT DEFAULT (datetime('now')))`
 };

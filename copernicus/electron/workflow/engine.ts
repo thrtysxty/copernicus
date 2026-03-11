@@ -12,6 +12,7 @@ import type { GithubManager } from '../github-manager';
 import type { StoriesManager } from '../stories';
 import log from '../utils/logger';
 import path from 'path';
+import { SnapshotManager } from './snapshot-manager';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -35,12 +36,16 @@ export class WorkflowEngine {
   private context: Map<string, string> = new Map();
   private services: EngineServices | null = null;
 
-  constructor() {
+  constructor(private snapshotManager?: SnapshotManager) {
     log.info('[SYSTEM] WorkflowEngine Initialized in IDLE state.');
   }
 
   public setServices(services: EngineServices): void {
     this.services = services;
+  }
+
+  public setSnapshotManager(manager: SnapshotManager): void {
+    this.snapshotManager = manager;
   }
 
   public getState(): WorkflowState {
@@ -105,6 +110,7 @@ export class WorkflowEngine {
 
     this.nodeStatuses.clear();
     this.context.clear();
+    this.context.set('__workflowId', graph.id);
     graph.nodes.forEach(n => this.nodeStatuses.set(n.id, { status: 'idle' }));
 
     const triggerNode = graph.nodes.find(n => n.type === 'trigger');
@@ -631,6 +637,12 @@ export class WorkflowEngine {
         error
       });
     }
+
+    if (status === 'completed') {
+      const workflowId = this.context.get('__workflowId') ?? 'unknown';
+      this.snapshotManager?.capture(workflowId, nodeId, Object.fromEntries(this.context ?? new Map()));
+    }
+
     // Also push to renderer if possible
     if (this.services?.win) {
       this.services.win.webContents.send('workflow:status-update', {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
+import { unwrapIpc } from '../../types/ipc';
 import { useLayoutStore } from '../../store/layout';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
 import { NodeInspector } from './NodeInspector';
@@ -104,6 +105,7 @@ export default function WorkflowCanvas() {
   const {
     activeStoryId,
     setActiveWorkflowTemplate,
+    activeWorkflowTemplate,
     tourStep,
     setTourStep,
     setTourHighlight,
@@ -113,6 +115,8 @@ export default function WorkflowCanvas() {
   const [nodes, setNodes] = useState<WFNode[]>([]);
   const [edges, setEdges] = useState<WFEdge[]>([]);
   const [templates, setTemplates] = useState<{id:string;name:string;description:string}[]>([]);
+  const [snapshots, setSnapshots] = useState<Map<string, number>>(new Map());
+  const [detachedHead, setDetachedHead] = useState(false);
 
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null);
@@ -151,6 +155,22 @@ export default function WorkflowCanvas() {
 
     invoke<any[]>('models:list').then((result: any) => setAvailableModels(result.data || result)).catch(log.error);
   }, [invoke]);
+
+  useEffect(() => {
+    if (activeWorkflowTemplate) {
+      invoke('workflow:get-snapshots', activeWorkflowTemplate).then(res => {
+        const list = (unwrapIpc<any[]>(res) ?? []) as any[];
+        setSnapshots(new Map(list.map(s => [s.node_id, s.id])));
+      });
+    }
+  }, [invoke, activeWorkflowTemplate]);
+
+  useEffect(() => {
+    const remove = window.ipcRenderer.on('workflow:status', (_e, payload: any) => {
+      if (payload?.detachedHead) setDetachedHead(true);
+    });
+    return () => remove();
+  }, []);
 
   // Keyboard delete
   useEffect(() => {
@@ -402,6 +422,11 @@ export default function WorkflowCanvas() {
 
   return (
     <div className="flex flex-col w-full h-full flex-1 bg-[#050505] text-white overflow-hidden relative pt-1">
+      {detachedHead && (
+        <div className="bg-yellow-900/40 border-b border-yellow-600/40 text-yellow-300 text-[10px] font-mono px-3 py-1.5 flex-shrink-0 z-50">
+          ⚠ Detached HEAD — create a branch before committing: git checkout -b my-branch
+        </div>
+      )}
       {/* AC1: Modal Centering using 'absolute inset-0 flex items-center justify-center' */}
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[100]">
@@ -543,8 +568,23 @@ export default function WorkflowCanvas() {
                   transform={`translate(${node.x}, ${node.y})`}
                   onMouseDown={(e) => handleMouseDown(e, node.id)}
                   onMouseUp={(e) => handleNodeMouseUp(e, node.id)}
-                  className="cursor-pointer select-none"
+                  className="cursor-pointer select-none group"
                 >
+                  {node.status === 'completed' && snapshots.has(node.id) && (
+                    <foreignObject x="102" y="2" width="16" height="16" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Rewind to after node ${node.id}? This resets all subsequent nodes.`)) {
+                            invoke('workflow:rewind', snapshots.get(node.id));
+                          }
+                        }}
+                        className="w-4 h-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded flex items-center justify-center text-[10px]"
+                      >
+                        ⟳
+                      </button>
+                    </foreignObject>
+                  )}
                   {isError && (
                     <title>{errorMsg ?? 'Execution failed'}</title>
                   )}

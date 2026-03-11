@@ -58,6 +58,19 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
     return true
   }))
 
+  ipcMain.handle('workflow:get-snapshots', (_e, workflowId: string) =>
+    handleIpc('workflow:get-snapshots', [workflowId], () => deps.snapshotManager?.getForWorkflow(workflowId) ?? [])
+  )
+
+  ipcMain.handle('workflow:rewind', (_e, snapshotId: number) =>
+    handleIpc('workflow:rewind', [snapshotId], () => {
+      const result = deps.snapshotManager?.rewind(snapshotId)
+      if (!result) throw new Error('SnapshotManager not initialized')
+      _win.webContents.send('workflow:status', { rewoundTo: snapshotId, detachedHead: true })
+      return { ...result, detachedHead: true }
+    })
+  )
+
   // WebSocket Handlers
   ipcMain.handle('ws:subscribe-session', (_e, sessionId: string) => handleIpc('ws:subscribe-session', [sessionId], () => socketManager.subscribeSession(sessionId)))
   ipcMain.handle('ws:unsubscribe-session', (_e, sessionId: string) => handleIpc('ws:unsubscribe-session', [sessionId], () => socketManager.unsubscribeSession(sessionId)))

@@ -68,7 +68,7 @@ const SEND_CHANNELS = new Set([
   'ledger:stats-by-role-session', 'ledger:stats-by-role-alltime',
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
-  'workflow:update-node-data',
+  'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind',
   // Review gate
   'review:log', 'review:session-complete',
   // Codebase semantic index
@@ -139,7 +139,7 @@ const LISTEN_CHANNELS = new Set([
   // Command Center (Story 184)
   'command:telemetry-update',
   // Workflow engine state push (Story 186)
-  'workflow:status-update',
+  'workflow:status', 'workflow:status-update',
   'review:session-complete',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',
 ])
