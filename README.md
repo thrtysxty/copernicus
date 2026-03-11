@@ -56,9 +56,17 @@ Any workflow node, chat panel, or agent persona can be routed to any of these:
 | `researcher` | DeepSeek-V3 | Research, summarisation, literature review |
 | `fast` | Gemini-Flash | Parsing, classification, quick lookups |
 
+**`--worktree` enables dual-agent review.** When a cloud agent is given a worktree branch, it works in a fully isolated git worktree — the main working directory is never touched. When it finishes, Claude diffs the branch against main, reviews in the IDE's Review Panel, and either merges or requests rework. Two independent agents; one owns implementation, one owns review.
+
 ```bash
+# Cloud agent implements in isolation — main branch untouched
 python3 dev_orchestrator/cloud_agent.py coder "Refactor auth module" --worktree feature-auth
+
+# Claude reviews the diff, runs tsc, approves or rejects
+# git merge feature-auth  ← only if Claude approves
 ```
+
+Without `--worktree`, the cloud agent writes directly to the working directory — acceptable for research and analysis tasks, never for code that needs review gating.
 
 Agents are not hardcoded to roles. Any node in the workflow engine can be wired to any provider + model + persona combination. The routing is yours to define.
 
