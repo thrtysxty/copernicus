@@ -24,12 +24,26 @@ Copernicus solves this with three principles:
 
 ## Agent Roster
 
+### Orchestration Agents
+
 | Agent | How it runs | Primary use |
 |-------|-------------|-------------|
 | **Claude** | Anthropic streaming API, in-process | Architecture, review, chat, context Q&A |
 | **Gemini CLI** | PTY session via `node-pty`, `--direct` mode | Multi-file implementation, LSP-fed diagnostics, parallel sprints |
 | **Jules** | REST API → GitHub branch + PR (async) | Story implementation at scale, PR creation |
-| **Ollama** | Local HTTP (`localhost:11434`) | Fast lookups, RAG, security scans, embedding generation — zero cloud cost |
+
+### Inference Providers
+
+Any workflow node, chat panel, or agent persona can be routed to any of these:
+
+| Provider | Models | Notes |
+|----------|--------|-------|
+| **Anthropic** | Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Sonnet | Vision support on all claude-3 variants |
+| **OpenAI** | GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo | Vision support on GPT-4o |
+| **Google** | Gemini 1.5 Pro, Gemini 1.5 Flash | Vision support on both |
+| **OpenRouter** | Gemini Pro, Mistral 7B, + any model on the OpenRouter catalogue | Single key, 200+ models |
+| **DeepInfra** | Llama 2 70B, + hosted open-source models | Cost-efficient open-weight inference |
+| **Ollama** | Any locally installed model — `qwen3-embedding:0.6b`, Gemma, Mistral, DeepSeek… | Zero cloud cost, fully offline |
 
 Agents are not hardcoded to roles. Any node in the workflow engine can be wired to any provider + model + persona combination. The routing is yours to define.
 
@@ -196,7 +210,7 @@ browser:close     → Session cleanup
 
 ### Settings
 
-- **Auth** — All keys via Electron `safeStorage` encryption. Anthropic, OpenAI, Google, OpenRouter, DeepInfra, GitHub, Jules.
+- **Auth** — All keys via Electron `safeStorage` encryption. Providers: Anthropic, OpenAI, Google, OpenRouter, DeepInfra, GitHub, Jules. Ollama uses reachability-as-auth (no key — if the daemon answers, it's connected).
 - **Models** — Active model selector. Ollama models discovered live. Default model per view (chat vs workflow node vs agent).
 - **Providers** — Correct icon set, drag-to-reorder priority tiles, embedding provider priority list.
 - **Personas** — View, disable, or create custom personas with name, description, system prompt, model affinity, and role. Persisted to DB.
@@ -220,7 +234,7 @@ browser:close     → Session cleanup
 | Charts | Recharts |
 | Backend | Python 3.11, Flask |
 | Orchestration | `gemini_session_manager.py` (spawn, monitor, tail) |
-| Inference | Anthropic, OpenAI, Google, OpenRouter, DeepInfra, Ollama |
+| Inference | Anthropic · OpenAI · Google · OpenRouter · DeepInfra · Ollama (local) |
 | Infrastructure | Docker, PostgreSQL 16 |
 
 ---
