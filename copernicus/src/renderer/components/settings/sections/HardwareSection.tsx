@@ -77,7 +77,7 @@ export const HardwareSection: React.FC = () => {
         {/* Command tray */}
         <div className="mb-6">
           <span className="text-[10px] uppercase text-zinc-500 tracking-widest block mb-2">Command Tray (3 slots)</span>
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto max-h-[180px] min-h-[40px]">
             {config.commands.map((cmd, i) => (
               <div key={i} className="flex items-center gap-2">
                 <span className="text-zinc-600 w-4">{i + 1}.</span>
