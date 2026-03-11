@@ -185,6 +185,7 @@ export class StateLedger {
 
     // Workflow Snapshots (Story 345)
     this.db.exec(SCHEMA.workflow_snapshots);
+    this.db.exec(SCHEMA.workflow_snapshots_idx)
   }
 
   // ── Template Overrides (Story 330) ────────────────────────────────────────

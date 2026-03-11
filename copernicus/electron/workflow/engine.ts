@@ -111,6 +111,7 @@ export class WorkflowEngine {
     this.nodeStatuses.clear();
     this.context.clear();
     this.context.set('__workflowId', graph.id);
+    this.snapshotManager?.beginRun()
     graph.nodes.forEach(n => this.nodeStatuses.set(n.id, { status: 'idle' }));
 
     const triggerNode = graph.nodes.find(n => n.type === 'trigger');
@@ -146,6 +147,8 @@ export class WorkflowEngine {
       log.error('[WorkflowEngine] Execution Failed:', error);
       this.transition('FAILED');
       // Optionally push a global error if needed, but per-node errors are more granular
+    } finally {
+      this.snapshotManager?.endRun()
     }
   }
 
@@ -640,7 +643,7 @@ export class WorkflowEngine {
 
     if (status === 'completed') {
       const workflowId = this.context.get('__workflowId') ?? 'unknown';
-      this.snapshotManager?.capture(workflowId, nodeId, Object.fromEntries(this.context ?? new Map()));
+      this.snapshotManager?.capture(workflowId, nodeId, Object.fromEntries(this.context));
     }
 
     // Also push to renderer if possible

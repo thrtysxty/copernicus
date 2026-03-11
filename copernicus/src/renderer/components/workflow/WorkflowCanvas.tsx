@@ -70,6 +70,11 @@ const PALETTE_FLOW: PaletteTile[] = [
     defaultData: { variant: 'delay', durationMs: 2000 } as any },
 ];
 
+interface WorkflowStatusPush {
+  rewoundTo?: number
+  detachedHead?: boolean
+}
+
 function NodePaletteSection({
   title, nodes, onDragStart
 }: {
@@ -117,6 +122,7 @@ export default function WorkflowCanvas() {
   const [templates, setTemplates] = useState<{id:string;name:string;description:string}[]>([]);
   const [snapshots, setSnapshots] = useState<Map<string, number>>(new Map());
   const [detachedHead, setDetachedHead] = useState(false);
+  const [rewindError, setRewindError] = useState<string | null>(null);
 
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null);
@@ -166,8 +172,8 @@ export default function WorkflowCanvas() {
   }, [invoke, activeWorkflowTemplate]);
 
   useEffect(() => {
-    const remove = window.ipcRenderer.on('workflow:status', (_e, payload: any) => {
-      if (payload?.detachedHead) setDetachedHead(true);
+    const remove = window.ipcRenderer.on('workflow:status', (_e, payload: WorkflowStatusPush) => {
+      setDetachedHead(payload?.detachedHead === true);
     });
     return () => remove();
   }, []);
@@ -332,6 +338,8 @@ export default function WorkflowCanvas() {
 
   const runWorkflow = async () => {
     setIsRunning(true);
+    setDetachedHead(false);
+    setRewindError(null);
     setNodes(prev => prev.map(n => ({ ...n, status: 'idle', error: undefined })));
 
     const graph: WorkflowGraph = {
@@ -423,8 +431,15 @@ export default function WorkflowCanvas() {
   return (
     <div className="flex flex-col w-full h-full flex-1 bg-[#050505] text-white overflow-hidden relative pt-1">
       {detachedHead && (
-        <div className="bg-yellow-900/40 border-b border-yellow-600/40 text-yellow-300 text-[10px] font-mono px-3 py-1.5 flex-shrink-0 z-50">
-          ⚠ Detached HEAD — create a branch before committing: git checkout -b my-branch
+        <div className="bg-yellow-900/40 border-b border-yellow-600/40 text-yellow-300 text-[10px] font-mono px-3 py-1.5 flex-shrink-0 z-50 flex items-center gap-2">
+          <span>⚠ Detached HEAD — create a branch before committing: git checkout -b my-branch</span>
+          <button onClick={() => setDetachedHead(false)} className="ml-auto text-yellow-400 hover:text-white leading-none">×</button>
+        </div>
+      )}
+      {rewindError && (
+        <div className="bg-red-900/40 border-b border-red-600/40 text-red-400 text-[10px] font-mono px-3 py-1.5 flex-shrink-0 z-50 flex items-center gap-2">
+          <span>{rewindError}</span>
+          <button onClick={() => setRewindError(null)} className="ml-auto text-red-400 hover:text-white leading-none">×</button>
         </div>
       )}
       {/* AC1: Modal Centering using 'absolute inset-0 flex items-center justify-center' */}
@@ -573,10 +588,15 @@ export default function WorkflowCanvas() {
                   {node.status === 'completed' && snapshots.has(node.id) && (
                     <foreignObject x="102" y="2" width="16" height="16" className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
                           if (window.confirm(`Rewind to after node ${node.id}? This resets all subsequent nodes.`)) {
-                            invoke('workflow:rewind', snapshots.get(node.id));
+                            try {
+                              setRewindError(null);
+                              await invoke('workflow:rewind', snapshots.get(node.id));
+                            } catch (err: any) {
+                              setRewindError(err?.message ?? 'Rewind failed');
+                            }
                           }
                         }}
                         className="w-4 h-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded flex items-center justify-center text-[10px]"
