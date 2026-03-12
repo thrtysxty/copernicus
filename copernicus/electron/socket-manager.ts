@@ -5,7 +5,6 @@ import log from 'electron-log';
 export class SocketManager {
   private agentsSocket: Socket | null = null;
   private telemetrySocket: Socket | null = null;
-  private readonly maxReconnectAttempts = 5;
   private readonly backendUrl = 'http://localhost:5001';
 
   constructor() {}
@@ -18,15 +17,17 @@ export class SocketManager {
     // Agents Namespace
     this.agentsSocket = io(`${this.backendUrl}/agents`, {
       reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
     });
 
     // Telemetry Namespace
     this.telemetrySocket = io(`${this.backendUrl}/telemetry`, {
       reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
     });
 
     this.setupHandlers();

@@ -141,13 +141,17 @@ export class StoriesManager {
     title = title.replace(/^Story \d+[:\s—]+\s*/, '')
 
     const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)$/m)
-    const statusRaw = statusMatch ? statusMatch[1]!.trim() : 'UNKNOWN'
-    let status = 'UNKNOWN'
-    if (statusRaw.includes('READY')) status = 'READY'
-    else if (statusRaw.includes('IN PROGRESS')) status = 'IN PROGRESS'
+    const statusRaw = statusMatch ? statusMatch[1]!.trim().toUpperCase() : ''
+    const BOARD_STATUSES = ['PLANNING', 'STORYBOARDING', 'SPRINT_PLANNING', 'IN_PROGRESS', 'TESTING', 'QA', 'DOCUMENTING', 'READY', 'COMPLETE']
+    let status = 'PLANNING'
+    if (BOARD_STATUSES.includes(statusRaw)) status = statusRaw
+    else if (statusRaw.includes('SPRINT')) status = 'SPRINT_PLANNING'
+    else if (statusRaw.includes('STORYBOARD')) status = 'STORYBOARDING'
+    else if (statusRaw.includes('PROGRESS')) status = 'IN_PROGRESS'
     else if (statusRaw.includes('TESTING')) status = 'TESTING'
-    else if (statusRaw.includes('REVIEW')) status = 'REVIEW'
-    else if (statusRaw.includes('DOCUMENTING')) status = 'DOCUMENTING'
+    else if (statusRaw.includes('QA')) status = 'QA'
+    else if (statusRaw.includes('DOC')) status = 'DOCUMENTING'
+    else if (statusRaw.includes('READY')) status = 'READY'
     else if (statusRaw.includes('COMPLETE') || statusRaw.includes('DONE')) status = 'COMPLETE'
 
     const priorityMatch = content.match(/\*\*Priority:\*\*\s*(P\d|UNKNOWN)/m)
@@ -292,9 +296,10 @@ export class StoriesManager {
     const dateStr = new Date().toISOString().split('T')[0]
     const filepath = path.join(this.storiesPath, `${id}.md`)
 
+    const status = type === 'Epic' ? 'EPIC' : 'PLANNING'
     const body = `# Story ${String(nextNum).padStart(3, '0')}: ${title}
 
-**Status:** READY
+**Status:** ${status}
 **Type:** ${type}
 **Priority:** ${priority}
 **Epic:** ${epic}
@@ -323,7 +328,7 @@ ${title}
 `
 
     this.ledger.upsertStory({
-      id, slug, title, status: 'READY', priority, type, epic,
+      id, slug, title, status: type === 'Epic' ? 'EPIC' : 'PLANNING', priority, type, epic,
       workflow_id: null,
       blocked_by: [], blocks: [], body_md: body, file_path: filepath, date: dateStr,
       flagged: false,
@@ -353,7 +358,8 @@ ${title}
     if (!record) return
 
     const fresh = this._parseStoryRecord(path.basename(record.file_path), content)
-    this.ledger.upsertStory({ ...fresh, id, file_path: record.file_path })
+    // Preserve the existing DB status — content edits don't change workflow state
+    this.ledger.upsertStory({ ...fresh, id, file_path: record.file_path, status: record.status })
     writeFileAtomic(record.file_path, content)
     this.broadcastUpdate()
   }
@@ -431,7 +437,11 @@ ${title}
     this.ledger.deleteStory(id)
     try {
       if (fs.existsSync(record.file_path)) {
-        fs.unlinkSync(record.file_path)
+        try {
+          execSync(`git rm -f "${record.file_path}"`, { cwd: this.projectRoot })
+        } catch {
+          fs.unlinkSync(record.file_path)
+        }
       }
     } catch (e) {
       log.warn(`[StoriesManager] Failed to delete file for story ${id}`, e)

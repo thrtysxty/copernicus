@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Maximize2, Minimize2, RotateCcw, ChevronDown, ChevronUp, ChevronLeft,
+  Maximize2, Minimize2, RotateCcw, ChevronLeft, ChevronDown, Archive,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useToastStore } from './store/toastStore'
@@ -33,9 +33,72 @@ import { ReviewPanel } from './components/review/ReviewPanel'
 import { GitPanel } from './components/git/GitPanel'
 import { SearchPanel } from './components/search/SearchPanel'
 import { ProblemsPanel } from './components/diagnostics/ProblemsPanel'
-import { QueuePanel } from './components/planning/QueuePanel'
 
 const TERMINAL_HEIGHT = 200
+
+const ArchiveDrawer: React.FC = () => {
+  const invoke = useIpcError()
+  const [archived, setArchived] = useState<{ id: string; title: string; date?: string }[]>([])
+  const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen)
+  const toggleArchive = useLayoutStore(s => s.toggleArchive)
+  const setSpotlight = useLayoutStore(s => s.setSpotlight)
+  const spotlightPane = useLayoutStore(s => s.spotlightPane)
+
+  useEffect(() => {
+    invoke('stories:list', { status: 'ARCHIVED' })
+      .then((res: any) => {
+        const list = res?.data ?? res ?? []
+        if (Array.isArray(list)) setArchived(list)
+      })
+      .catch(() => {})
+  }, [invoke])
+
+  return (
+    <div className="h-full flex flex-col bg-[#050505]">
+      <div className="h-8 flex items-center border-t border-zinc-700 border-b border-copernicus-steel px-0 shrink-0 bg-[#080808]">
+        <div className="flex-1 flex items-center px-3">
+          <Archive size={10} className="text-copernicus-phosphor mr-2" />
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Archive</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 shrink-0">
+          <button
+            onClick={() => { toggleArchive() }}
+            className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
+            title="Switch to Terminal"
+          >
+            <RotateCcw size={12} />
+          </button>
+          <button
+            onClick={() => setSpotlight(spotlightPane === 'terminal' ? null : 'terminal')}
+            className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
+            title="Spotlight"
+          >
+            <Maximize2 size={12} />
+          </button>
+          <button
+            onClick={() => setTerminalOpen(false)}
+            className="text-copernicus-phosphor hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
+            title="Close Archive"
+          >
+            <ChevronDown size={12} />
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
+        {!archived.length && (
+          <p className="text-[9px] text-zinc-700 italic mt-2">No archived stories.</p>
+        )}
+        {archived.map(s => (
+          <div key={s.id} className="flex items-center gap-3 text-[9px] font-mono text-zinc-600">
+            <span className="text-zinc-700">{s.id}</span>
+            <span className="truncate text-zinc-500">{s.title}</span>
+            <span className="ml-auto text-zinc-700 shrink-0">{s.date ?? ''}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // Inline PanelHeader to replace missing file
 const PanelHeader: React.FC<{
@@ -131,6 +194,7 @@ export default function App() {
   const activeView = useLayoutStore(s => s.activeView)
   const sidebarOpen = useLayoutStore(s => s.sidebarOpen)
   const terminalOpen = useLayoutStore(s => s.terminalOpen)
+  const showArchive = useLayoutStore(s => s.showArchive)
   const spotlightPane = useLayoutStore(s => s.spotlightPane)
   const isSessionEnded = useLayoutStore(s => s.isSessionEnded)
   const workingDir = useLayoutStore(s => s.workingDir)
@@ -176,7 +240,6 @@ export default function App() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [isWizard, setIsWizard] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
-  const [plannerTab, setPlannerTab] = useState<'board' | 'queue'>('board')
 
 
   // Initial setup and IPC listeners
@@ -430,27 +493,7 @@ export default function App() {
             {/* Solo full-screen views */}
             {activeView === 'command-center' && <CommandCenter />}
             {activeView === 'planner' && (
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex bg-[#050505] border-b border-white/5 px-4 h-8 items-center gap-6 shrink-0">
-                  <button 
-                    onClick={() => setPlannerTab('board')}
-                    className={`text-[9px] font-bold uppercase tracking-widest h-full transition-colors border-b-2 ${plannerTab === 'board' ? 'text-copernicus-phosphor border-copernicus-phosphor' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
-                  >
-                    Board
-                  </button>
-                  <button 
-                    onClick={() => setPlannerTab('queue')}
-                    className={`text-[9px] font-bold uppercase tracking-widest h-full transition-colors border-b-2 ${plannerTab === 'queue' ? 'text-copernicus-phosphor border-copernicus-phosphor' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
-                  >
-                    Queue
-                  </button>
-                </div>
-                {plannerTab === 'board' ? (
-                  <KanbanBoard onStartSession={() => setProjectSelectorOpen(true)} />
-                ) : (
-                  <QueuePanel />
-                )}
-              </div>
+              <KanbanBoard onStartSession={() => setProjectSelectorOpen(true)} />
             )}
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && <WorkflowCanvas />}
@@ -557,27 +600,14 @@ export default function App() {
             )}
           </div>
 
-          {/* Terminal Drawer */}
+          {/* Terminal / Archive Drawer */}
           <div
-            className="bg-[#050505] transition-all duration-300 ease-in-out"
-            style={{ height: terminalOpen ? `${TERMINAL_HEIGHT}px` : '0px' }}
+            className={`bg-[#050505] transition-all duration-300 ease-in-out overflow-hidden${!terminalOpen ? ' cursor-pointer' : ''}`}
+            style={{ height: !terminalOpen ? '32px' : spotlightPane === 'terminal' ? '60vh' : `${TERMINAL_HEIGHT}px` }}
+            onClick={!terminalOpen ? () => setTerminalOpen(true) : undefined}
           >
-            <TerminalTabs />
+            {showArchive ? <ArchiveDrawer /> : <TerminalTabs />}
           </div>
-
-          <button
-            className="h-6 w-full flex items-center px-3 gap-2 border-t border-copernicus-steel bg-[#0A0A0A] cursor-pointer hover:bg-zinc-900 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
-            onClick={() => setTerminalOpen(!terminalOpen)}
-            aria-expanded={terminalOpen}
-            aria-label="Toggle terminal"
-          >
-            <div className="flex items-center gap-2 flex-1 pointer-events-none">
-              {terminalOpen
-                ? <ChevronDown size={12} className="text-zinc-500 hover:text-zinc-300" />
-                : <ChevronUp size={12} className="text-zinc-500 hover:text-zinc-300" />
-              }
-            </div>
-          </button>
 
           <StatusBar />
 

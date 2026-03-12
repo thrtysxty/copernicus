@@ -31,9 +31,9 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       cursorBlink: true,
       cursorStyle: 'block',
       theme: {
-        background: '#050505', // copernicus-bg
-        foreground: '#D4D4D8', // zinc-300
-        cursor: '#4ADE80',     // copernicus-phosphor
+        background: '#050505',
+        foreground: '#D4D4D8',
+        cursor: '#4ADE80',
         selectionBackground: 'rgba(74, 222, 128, 0.3)',
       },
       allowProposedApi: true,
@@ -41,51 +41,63 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    term.open(terminalRef.current);
-
-    // Initial fit
-    setTimeout(() => fitAddon.fit(), 0);
 
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
 
-    // Connect to backend
-    ipcRenderer.send('terminal-create', { id, cols: term.cols, rows: term.rows, cwd });
+    let opened = false;
+
+    // Open only once the container has real pixel dimensions.
+    // This prevents the xterm "container has no height" crash AND ensures
+    // terminal-create is sent with accurate cols/rows so input works immediately.
+    const tryOpen = () => {
+      if (opened || !terminalRef.current) return;
+      const { offsetWidth, offsetHeight } = terminalRef.current;
+      if (offsetWidth === 0 || offsetHeight === 0) return;
+
+      opened = true;
+      term.open(terminalRef.current);
+      fitAddon.fit();
+
+      // Create backend PTY with real dimensions
+      ipcRenderer.send('terminal-create', { id, cols: term.cols, rows: term.rows, cwd });
+
+      // Register input handler after open — ensures all keystrokes are captured
+      term.onData((data) => {
+        invoke('terminal:input', { tabId: id, data }).catch(() => {});
+      });
+    };
 
     // Handle data from backend
     const removeDataListener = ipcRenderer.on('terminal-incoming', (_event: any, { id: terminalId, data }: { id: string, data: string }) => {
       if (terminalId === id) {
         term.write(data);
-
-        // Activity pulse logic
         setTerminalBusy(id, true);
         if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
-        busyTimeoutRef.current = setTimeout(() => {
-          setTerminalBusy(id, false);
-        }, 2000);
+        busyTimeoutRef.current = setTimeout(() => setTerminalBusy(id, false), 2000);
       }
     });
 
-    // Handle user input
-    term.onData((data) => {
-      invoke('terminal:input', { tabId: id, data }).catch(() => {});
-    });
-
-    // Use ResizeObserver for more granular resizing during animations
+    // ResizeObserver handles both initial open (when dimensions first appear)
+    // and subsequent resize events during panel animations
     const resizeObserver = new ResizeObserver(() => {
-      if (fitAddonRef.current) {
+      tryOpen();
+      if (opened && fitAddonRef.current) {
         fitAddonRef.current.fit();
         invoke('terminal:resize', { id, cols: term.cols, rows: term.rows });
       }
     });
     resizeObserver.observe(terminalRef.current);
 
+    // Try immediately in case the container already has dimensions
+    tryOpen();
+
     return () => {
       resizeObserver.disconnect();
       removeDataListener();
       if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
       setTerminalBusy(id, false);
-      ipcRenderer.send('terminal-kill', { id });
+      if (opened) ipcRenderer.send('terminal-kill', { id });
       term.dispose();
     };
   }, [id, setTerminalBusy, invoke]);

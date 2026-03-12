@@ -3,7 +3,7 @@ import { Terminal } from './Terminal';
 import { GeminiPanel } from './GeminiPanel';
 import { JulesPanel } from '../jules/JulesPanel';
 import { useLayoutStore } from '../../store/layout';
-import { X, Loader2, Square, Plus, RotateCcw, Maximize2 } from 'lucide-react';
+import { X, Loader2, Square, Plus, RotateCcw, Maximize2, ChevronDown } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { IpcResult } from '../../types/ipc';
 
@@ -13,9 +13,10 @@ interface TerminalTabsProps {
 
 export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
   const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy, addTerminal } = useLayoutStore();
-  const toggleFlip = useLayoutStore(s => s.toggleFlip);
   const setSpotlight = useLayoutStore(s => s.setSpotlight);
   const spotlightPane = useLayoutStore(s => s.spotlightPane);
+  const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen);
+  const toggleArchive = useLayoutStore(s => s.toggleArchive);
   const invoke = useIpcError();
 
   const getAgentBadge = (label: string) => {
@@ -114,9 +115,9 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
         <div className="flex items-center gap-2 px-3 shrink-0">
           <button
             data-testid="terminal-flip-btn"
-            onClick={() => toggleFlip('terminal')}
+            onClick={() => toggleArchive()}
             className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
-            title="Rotate panel"
+            title="View Archive"
           >
             <RotateCcw size={12} />
           </button>
@@ -127,6 +128,14 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             title="Spotlight"
           >
             <Maximize2 size={12} />
+          </button>
+          <button
+            data-testid="terminal-collapse-btn"
+            onClick={() => setTerminalOpen(false)}
+            className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
+            title="Collapse panel"
+          >
+            <ChevronDown size={12} />
           </button>
         </div>
       </div>

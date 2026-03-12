@@ -3,10 +3,10 @@ import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
 import { useLayoutStore } from '../store/layout'
-import { useQueueStore } from '../store/queueStore'
-import { Crown, Lock, ChevronDown, Archive, Brain, Bug, Plus, Zap, Play } from 'lucide-react'
+import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap } from 'lucide-react'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
+import { StoryDetail } from './planning/StoryDetail'
 
 interface Story {
   id: string
@@ -27,6 +27,7 @@ type CreationPhase =
   | { phase: 'idle' }
   | { phase: 'form'; type: 'Epic' | 'Story' | 'Bug' }
 
+
 const PRIORITY_COLORS: Record<string, string> = {
   P0: 'bg-red-500/20 text-red-400 border-red-500/30',
   P1: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
@@ -37,47 +38,35 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 const PRIORITY_ORDER: Record<string, number> = { P0: 0, P1: 1, P2: 2, P3: 3, UNKNOWN: 4 }
 
-const StoryCard = React.memo(({ 
-  story, 
-  idx, 
+const StoryCard = React.memo(({
+  story,
+  idx,
   colId,
   colStories,
-  activeStoryId, 
-  setActiveStoryId, 
-  setSpotlightLane, 
+  activeStoryId,
+  spotlightLane,
+  setActiveStoryId,
+  setSpotlightLane,
+  setDrawerStory,
   setSpotlight,
-  workflowStatus 
-}: { 
-  story: Story; 
-  idx: number; 
+  workflowStatus
+}: {
+  story: Story;
+  idx: number;
   colId: string;
   colStories: Story[];
-  activeStoryId: string | null; 
+  activeStoryId: string | null;
+  spotlightLane: string | null;
   setActiveStoryId: (id: string | null) => void;
   setSpotlightLane: (lane: string | null) => void;
-  setSpotlight: (view: any) => void;
+  setDrawerStory: (id: string | null) => void;
+  setSpotlight: (pane: any) => void;
   workflowStatus: { storyId: string | null; state: string } | null;
   }) => {
-  const invoke = useIpcError()
-  const dispatchGuard = useQueueStore(s => s.dispatchGuard)
-  const markRunning = useQueueStore(s => s.markRunning)
-
-  const handleDispatch = (type: 'gemini' | 'jules') => {
-    const num = parseInt(story.id.replace('story_', ''), 10)
-    const { blocked, deps } = dispatchGuard(num)
-    if (blocked) {
-      if (!window.confirm(`Story ${num} depends on stories [${deps.join(', ')}] which are not complete. Dispatch anyway?`)) {
-        return
-      }
-    }
-
-    markRunning(num)
-    if (type === 'jules') {
-      invoke('jules:dispatch-session', story.id)
-    } else {
-      // Gemini dispatch logic - hydrate story and start watching
-      invoke('stories:hydrate', story.id)
-    }
+  const handleOpen = () => {
+    setActiveStoryId(story.id)
+    setDrawerStory(story.id)
+    setSpotlight('inspector')
   }
 
   return (
@@ -89,14 +78,13 @@ const StoryCard = React.memo(({
       aria-label={`${story.title} — ${story.status}`}
       draggable
       onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
-      className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
-      onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(colId); }}
-      onDoubleClick={() => setSpotlight('inspector')}
+      className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor overflow-hidden ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
+      onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(spotlightLane === colId ? null : colId); }}
+      onDoubleClick={() => handleOpen()}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          setActiveStoryId(story.id);
-          setSpotlightLane(colId);
+          handleOpen();
         } else if (e.key === 'ArrowDown') {
           e.preventDefault();
           const next = colStories[idx + 1];
@@ -117,7 +105,7 @@ const StoryCard = React.memo(({
       <div className="flex items-start gap-2">
         {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
         {story.type === 'Bug' && <Bug size={10} className="text-red-400 mt-0.5" />}
-        <span className={`text-[11px] font-medium leading-tight transition-colors ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title}</span>
+        <span className={`text-[11px] font-medium leading-tight transition-colors line-clamp-2 ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title.replace(/^User Story\s+#?\d+[:\s]*/i, '').trim() || story.title}</span>
       </div>
 
       {story.flagged && (
@@ -137,56 +125,21 @@ const StoryCard = React.memo(({
         </div>
       )}
 
-      <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
-        <span className="text-[8px] font-mono text-zinc-300">{story.id}</span>
-        <div className="flex items-center gap-3">
-          <div className="flex gap-2">
-            <button 
-              onClick={(e) => { e.stopPropagation(); handleDispatch('gemini') }}
-              className="flex items-center gap-1 text-[7px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
-              title="Dispatch to Gemini"
-            >
-              <Zap size={8} /> Gemini
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); handleDispatch('jules') }}
-              className="flex items-center gap-1 text-[7px] font-bold uppercase tracking-widest text-zinc-600 hover:text-blue-400 transition-colors"
-              title="Dispatch to Jules"
-            >
-              <Play size={8} /> Jules
-            </button>
-          </div>
-          <span className={`px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
-        </div>
+      <div className="mt-2 flex items-center gap-1.5 border-t border-white/5 pt-2 overflow-hidden">
+        <span className="text-[8px] font-mono text-zinc-500 shrink-0">#{story.id.match(/\d+/)?.[0] ?? story.id}</span>
+        {story.workflowId && story.workflowId !== '— none —' && (
+          <span className="text-[7px] font-mono text-zinc-600 truncate">{story.workflowId}</span>
+        )}
+        {story.model && story.model !== '(unassigned)' && (
+          <span className="text-[7px] font-mono text-zinc-600 truncate">{story.model}</span>
+        )}
+        <span className={`ml-auto shrink-0 px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
       </div>
     </motion.div>
   )
   }
 )
 
-const ArchiveList: React.FC<{ invoke: ReturnType<typeof useIpcError> }> = ({ invoke }) => {
-  const [archived, setArchived] = React.useState<Story[]>([])
-  React.useEffect(() => {
-    invoke('stories:list', { status: 'ARCHIVED' })
-      .then((res: any) => {
-        const list = unwrapIpc<Story[]>(res)
-        if (Array.isArray(list)) setArchived(list)
-      })
-      .catch(() => {})
-  }, [invoke])
-  if (!archived.length) return <p className="text-[9px] text-zinc-700 italic px-3 py-1">No archived stories.</p>
-  return (
-    <div className="space-y-1 px-3 py-1">
-      {archived.map(s => (
-        <div key={s.id} className="flex items-center gap-2 text-[9px] font-mono text-zinc-600">
-          <span className="text-zinc-700">{s.id}</span>
-          <span className="truncate text-zinc-500">{s.title}</span>
-          <span className="ml-auto text-zinc-700 shrink-0">{s.date ?? ''}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 interface KanbanBoardProps {
   onStartSession?: () => void
@@ -206,9 +159,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen)
   
   const setActiveStoryId = useLayoutStore(s => s.setActiveStoryId)
-  const setSpotlight = useLayoutStore(s => s.setSpotlight)
   const setSpotlightLane = useLayoutStore(s => s.setSpotlightLane)
+  const drawerStoryId = useLayoutStore(s => s.drawerStoryId)
+  const setDrawerStory = useLayoutStore(s => s.setDrawerStory)
+  const setSpotlight = useLayoutStore(s => s.setSpotlight)
 
+  const [showEpics, setShowEpics] = useState(false)
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
   const [newTitle, setNewTitle] = useState('')
   const [newEpic, setNewEpic] = useState('')
@@ -310,29 +266,77 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
     } catch (e) { log.error('Failed to create story', e) }
   }
 
+  const epics = stories.filter(s => s.type === 'Epic')
+
+  if (drawerStoryId) {
+    return <StoryDetail storyId={drawerStoryId} stories={stories as any} />
+  }
+
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
-      {/* Archive bar */}
-      <div className="flex items-center gap-3 px-3 py-1.5 border-b border-white/5 shrink-0">
+    <div className="flex-1 flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
+      {/* Action bar */}
+      <div className="flex items-center px-3 py-1.5 border-b border-white/5 shrink-0">
+        {/* Left: Epics toggle */}
         <button
-          onClick={() => { if (!showArchive) setTerminalOpen(true); toggleArchive() }}
-          className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+          onClick={() => setShowEpics(v => !v)}
+          className={`flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest transition-colors ${showEpics ? 'text-amber-400' : 'text-zinc-600 hover:text-amber-400'}`}
         >
-          <Archive size={10} />
-          {showArchive ? 'Hide Archive' : 'View Archive'}
+          <Crown size={10} />
+          Epics
+          {showEpics ? <ChevronUp size={8} /> : <ChevronDown size={8} />}
         </button>
-        <button
-          onClick={() => invoke('workflow:run', { templateId: 'release-retrospective' })}
-          className="flex items-center gap-1.5 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-amber-400 rounded text-[8px] font-bold uppercase transition-colors"
-        >
-          <Brain size={10} />
-          Run Retrospective
-        </button>
+
+        {/* Right: Archive + Retro */}
+        <div className="flex items-center gap-3 ml-auto">
+          <button
+            onClick={() => { if (showArchive) { setTerminalOpen(false); toggleArchive() } else { setTerminalOpen(true); toggleArchive() } }}
+            className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+          >
+            <Archive size={10} />
+            {showArchive ? 'Hide Archive' : 'View Archive'}
+          </button>
+          <button
+            onClick={() => invoke('workflow:run', { templateId: 'release-retrospective' })}
+            className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+          >
+            <Brain size={10} />
+            Run Retrospective
+          </button>
+        </div>
       </div>
 
-      {showArchive && (
-        <div className="border-b border-white/5 bg-black/20 px-3 py-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 shrink-0">
-          <ArchiveList invoke={invoke} />
+      {/* Epics Drawer */}
+      {showEpics && (
+        <div className="border-b border-amber-500/20 bg-amber-950/10 shrink-0 overflow-x-auto scrollbar-thin scrollbar-thumb-amber-900/40">
+          {epics.length === 0 ? (
+            <p className="text-[9px] text-zinc-700 italic px-4 py-3">No epics yet — create one from the Planning lane.</p>
+          ) : (
+            <div className="flex gap-2 px-3 py-2">
+              {epics.map(epic => {
+                const isActive = activeStoryId === epic.id
+                const epicStoryCount = stories.filter(s => s.epic === epic.id && s.type !== 'Epic').length
+                return (
+                  <button
+                    key={epic.id}
+                    onClick={() => setActiveStoryId(epic.id)}
+                    onDoubleClick={() => { setDrawerStory(epic.id); setSpotlight('inspector') }}
+                    className={`flex flex-col gap-0.5 px-3 rounded border shrink-0 transition-all duration-150 cursor-pointer text-left
+                      ${isActive
+                        ? 'py-2 border-amber-400/70 bg-amber-500/20 shadow-[0_0_8px_rgba(251,191,36,0.15)]'
+                        : 'py-1.5 border-amber-500/20 bg-amber-950/20 hover:border-amber-400/40'}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Crown size={9} className={`shrink-0 ${isActive ? 'text-amber-300' : 'text-amber-600'}`} />
+                      <span className={`text-[9px] font-mono font-bold uppercase tracking-wide max-w-[140px] truncate ${isActive ? 'text-amber-200' : 'text-amber-500'}`}>{epic.title.replace(/^User Story\s+#?\d+[:\s]*/i, '').trim() || epic.title}</span>
+                    </div>
+                    {isActive && (
+                      <span className="text-[7px] font-mono text-amber-600 pl-[17px]">#{epic.id.match(/\d+/)?.[0] ?? epic.id} · {epicStoryCount} {epicStoryCount === 1 ? 'story' : 'stories'} · dbl-click to open</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -359,7 +363,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       {/* Main Board Area */}
       <div className="flex-1 flex overflow-x-auto gap-3 p-3 select-none scrollbar-thin scrollbar-thumb-copernicus-steel">
         {(columns || []).map(col => {
-          const colStories = (stories || []).filter(s => s.status === col.status)
+          const colStories = (stories || []).filter(s => s.status === col.status && s.type !== 'Epic')
             .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 4) - (PRIORITY_ORDER[b.priority] ?? 4))
 
           const isSpotlit = spotlightLane === col.id
@@ -401,23 +405,18 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                           className="w-full flex items-center justify-center gap-1 py-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor border border-dashed border-zinc-800 hover:border-copernicus-phosphor/40 rounded transition-colors"
                         >
                           <Plus size={10} /> New
-                          {colStories.length > 0 && (
-                            <span className="bg-indigo-600 text-white text-[10px] font-mono rounded-full px-1.5 min-w-[18px] text-center leading-4 ml-1">
-                              {colStories.length}
-                            </span>
-                          )}
                         </button>
                         {showCreateDropdown && (
                           <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded shadow-xl z-20 overflow-hidden">
                             {(['Story', 'Epic', 'Bug'] as const).map(type => (
                               <button
                                 key={type}
-                                onClick={() => { setCreation({ phase: 'form', type }); setShowCreateDropdown(false) }}
+                                onClick={() => { setNewTitle(''); setNewEpic(''); setCreation({ phase: 'form', type }); setShowCreateDropdown(false) }}
                                 className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 flex items-center gap-2"
                               >
                                 {type === 'Epic' && <Crown size={10} className="text-amber-400" />}
                                 {type === 'Bug' && <Bug size={10} className="text-red-400" />}
-                                {type === 'Story' && <span className="w-[10px]" />}
+                                {type === 'Story' && <Zap size={10} className="text-copernicus-phosphor" />}
                                 {type}
                               </button>
                             ))}
@@ -463,8 +462,10 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                         colId={col.id}
                         colStories={colStories}
                         activeStoryId={activeStoryId}
+                        spotlightLane={spotlightLane}
                         setActiveStoryId={setActiveStoryId}
                         setSpotlightLane={setSpotlightLane}
+                        setDrawerStory={setDrawerStory}
                         setSpotlight={setSpotlight}
                         workflowStatus={workflowStatus}
                       />

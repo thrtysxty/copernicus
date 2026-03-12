@@ -99,6 +99,10 @@ const VITE_DEV_SERVER_URL = process.env.NODE_ENV === 'development' ? process.env
 if (process.env.NODE_ENV === 'production' && process.env['VITE_DEV_SERVER_URL']) {
   throw new Error('Security violation: VITE_DEV_SERVER_URL exposed in production');
 }
+// Suppress expected CSP warnings in dev (unsafe-eval required by Vite HMR)
+if (process.env.NODE_ENV === 'development') {
+  process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
+}
 
 const authManager = new AuthManager()
 const githubManager = new GithubManager(authManager)
@@ -217,12 +221,19 @@ app.on('will-quit', () => { globalShortcut.unregisterAll() })
 app.on('before-quit', async () => { lspManager.stop(); backendManager.stop(); socketManager.disconnect(); stateLedger.close(); if (browserSession.browser) await browserSession.browser.close().catch(err => log.error(err)) })
 
 app.whenReady().then(() => {
-  registerIpcHandlers(); backendManager.start(); socketManager.connect()
+  registerIpcHandlers(); backendManager.start(); setTimeout(() => socketManager.connect(), 3000)
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({ applicationName: 'COPERNICUS', applicationVersion: '0.1.0', copyright: '© 2026 COPERNICUS IDE Team', credits: 'Professional Phosphor Edition' });
   }
+  const isDev = !!VITE_DEV_SERVER_URL
+  const scriptSrc = isDev
+    ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: file: http://localhost:5173"
+    : "script-src 'self' blob: file:"
+  const connectSrc = isDev
+    ? "connect-src 'self' http://localhost:5001 ws://localhost:5173 http://localhost:5173 https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com"
+    : "connect-src 'self' https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com"
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': ["default-src 'self'; script-src 'self' 'unsafe-eval' blob: file:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com; worker-src 'self' blob: file:;"] } })
+    callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [`default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; ${connectSrc}; worker-src 'self' blob: file:;`] } })
   })
   let workspaceRoot = (settingsStore.getAll().workspace as string) || (settingsStore.getAll().workingDir as string) || path.join(os.homedir(), 'Copernicus');
   if (!fs.existsSync(workspaceRoot)) try { fs.mkdirSync(workspaceRoot, { recursive: true }); } catch (e) { log.error(e); workspaceRoot = os.homedir(); }

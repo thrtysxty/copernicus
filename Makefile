@@ -24,23 +24,25 @@ help:
 	@echo "  reset        - Wipe all app state (DB, settings, logs) - triggers setup wizard on next launch"
 	@echo "  reset-db     - Wipe DB only (preserves settings and first-run state)"
 
+PYTHON := /opt/homebrew/bin/python3
+
 dev:
-	(trap 'kill 0' SIGINT; source .venv/bin/activate && python backend/app.py & cd copernicus && npm run dev)
+	(trap 'kill 0' SIGINT; $(PYTHON) backend/app.py & cd copernicus && npm run dev)
 
 dev-backend:
-	source .venv/bin/activate && python backend/app.py
+	$(PYTHON) backend/app.py
 
 dev-frontend:
 	cd copernicus && npm run dev
 
 test:
-	source .venv/bin/activate && pytest tests/ -v
+	$(PYTHON) -m pytest tests/ -v
 
 test-e2e:
 	cd copernicus && npx playwright test
 
 backlog:
-	source .venv/bin/activate && python scripts/utils/generate_backlog.py
+	$(PYTHON) scripts/utils/generate_backlog.py
 
 ## ── Jules / Agent Dispatch ────────────────────────────────────────────────────
 # Dispatch a story to Jules CLI:  make jules STORY=docs/stories/story_182_*.md
@@ -68,7 +70,7 @@ tsc:
 	@cd copernicus && npx tsc --noEmit
 
 import-data:
-	source .venv/bin/activate && python scripts/utils/import_data.py --type $(TYPE)
+	$(PYTHON) scripts/utils/import_data.py --type $(TYPE)
 
 deploy:
 	git push origin main

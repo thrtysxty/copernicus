@@ -114,7 +114,7 @@ const SEND_CHANNELS = new Set([
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
 const LISTEN_CHANNELS = new Set([
   'main-process-message',
-  'chat:token', 'chat:done', 'chat:error', 'chat:confirm-model-switch', 'chat:model-switch-decision',
+  'chat:token', 'chat:done', 'chat:error', 'chat:confirm-model-switch', 'chat:model-switch-decision', 'chat:receive-system',
   'terminal-incoming', 'terminal-closed', 'terminal:data', 'terminal-blocked',
   'terminal:activate-tab', 'terminal:spawn', 'terminal:set-busy', 'terminal:remove',
   'stories:updated', 'stories:status-changed',

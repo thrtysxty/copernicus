@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useLayoutStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import type { ModelCallStats } from '../../../../electron/db/state-ledger'
@@ -6,6 +6,8 @@ import { unwrapIpc } from '../../types/ipc'
 import { StatusBarOverlay } from './StatusBarOverlay'
 import { useSessionStore, formatElapsed } from '../../store/sessionStore'
 import { AgentTelemetryOverlay } from './AgentTelemetryOverlay'
+
+interface ModelConfig { id: string; name: string; provider: string } // telemetry model picker
 
 const Tooltip: React.FC<{ content: string; children: React.ReactNode }> = ({ content, children }) => (
   <div className="relative group/tip">
@@ -27,13 +29,29 @@ export const StatusBar: React.FC = () => {
     setSessionEnded
   } = useLayoutStore()
 
+  // agentTelemetry still drives the token counter and capex — kept in store subscription
+
   const { timerState, elapsedSeconds, startTimer, stopTimer, endSession } = useSessionStore()
 
   const [hasError, setHasError] = useState(false)
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
 
-  const agentAnchorRef = useRef<HTMLDivElement>(null)
-  const [agentOverlayOpen, setAgentOverlayOpen] = useState(false)
+  const modelAnchorRef = useRef<HTMLDivElement>(null)
+  const [modelOverlayOpen, setModelOverlayOpen] = useState(false)
+  const [activeModel, setActiveModel] = useState<ModelConfig | null>(null)
+
+  const handleModelSelected = useCallback((model: ModelConfig) => {
+    setActiveModel(model)
+    setModelOverlayOpen(false)
+  }, [])
+
+  // Fetch active model on mount
+  useEffect(() => {
+    invoke<ModelConfig>('models:active').then(r => {
+      const m = unwrapIpc<ModelConfig>(r as any)
+      if (m) setActiveModel(m)
+    }).catch(() => {})
+  }, [invoke])
 
   // Poll codebase index status every 5s
   useEffect(() => {
@@ -115,29 +133,10 @@ export const StatusBar: React.FC = () => {
           </div>
         </Tooltip>
 
-        {/* Agent Telemetry */}
-        <div ref={agentAnchorRef}>
-          <Tooltip content="Active agents — click for details">
-            <div 
-              className="flex items-center gap-4 px-3 overflow-hidden cursor-pointer"
-              onClick={() => setAgentOverlayOpen(v => !v)}
-            >
-              {Object.entries(agentTelemetry ?? {}).map(([agent, data]) => (
-                <div key={agent} className="flex items-center gap-1.5 shrink-0">
-                  <span className="uppercase font-bold text-zinc-500">{agent}:</span>
-                  <span className="text-zinc-400">
-                    {formatTokens(data.tokensIn + data.tokensOut)}
-                  </span>
-                  <span className="text-zinc-500">${data.cost.toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-          </Tooltip>
-        </div>
       </div>
 
-      <StatusBarOverlay anchorRef={agentAnchorRef} open={agentOverlayOpen} onClose={() => setAgentOverlayOpen(false)}>
-        <AgentTelemetryOverlay />
+      <StatusBarOverlay anchorRef={modelAnchorRef} open={modelOverlayOpen} onClose={() => setModelOverlayOpen(false)} width={320}>
+        <AgentTelemetryOverlay onModelSelected={handleModelSelected} activeModelId={activeModel?.id} />
       </StatusBarOverlay>
 
       <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30 flex-shrink-0">
@@ -170,10 +169,16 @@ export const StatusBar: React.FC = () => {
           </button>
         )}
 
-        {/* Model Badge */}
-        <Tooltip content="Active model">
-          <div className="flex items-center gap-1.5 px-3">
-            <span className="text-zinc-500 uppercase font-bold text-[9px]">Claude 3.7 Sonnet</span>
+        {/* Model Badge — click to open model picker */}
+        <Tooltip content="Active model — click to switch">
+          <div
+            ref={modelAnchorRef}
+            className="flex items-center gap-1.5 px-3 cursor-pointer hover:text-zinc-400 transition-colors"
+            onClick={() => setModelOverlayOpen(v => !v)}
+          >
+            <span className="text-copernicus-phosphor/70 uppercase font-bold text-[9px]">
+              {activeModel ? activeModel.name : '—'}
+            </span>
           </div>
         </Tooltip>
 

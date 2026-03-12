@@ -44,7 +44,7 @@ Any workflow node, chat panel, or agent persona can be routed to any of these:
 | **OpenRouter** | Gemini Pro, Mistral 7B, + any model on the OpenRouter catalogue | Single key, 200+ models |
 | **DeepInfra** | Llama 2 70B, + hosted open-source models | Cost-efficient open-weight inference |
 | **Ollama (local)** | Any locally installed model — `qwen3-embedding:0.6b`, Gemma, Mistral, DeepSeek… | Zero cloud cost, fully offline — also the embedding provider |
-| **Ollama (sovereign)** | Kimi, Qwen3-Coder, Qwen3-VL, DeepSeek-V3, Gemini-Flash via `cloud_agent.py` | R620 sovereign brain — 120B–400B quantized models over 10GbE, treated as private cloud |
+| **Ollama (sovereign)** | Kimi, Qwen3-Coder, Qwen3-VL, DeepSeek-V3, Gemini-Flash via `cloud_agent.py` | 
 
 `cloud_agent.py` exposes five named roles that route through the sovereign Ollama instance:
 
@@ -56,17 +56,9 @@ Any workflow node, chat panel, or agent persona can be routed to any of these:
 | `researcher` | DeepSeek-V3 | Research, summarisation, literature review |
 | `fast` | Gemini-Flash | Parsing, classification, quick lookups |
 
-**`--worktree` enables dual-agent review.** When a cloud agent is given a worktree branch, it works in a fully isolated git worktree — the main working directory is never touched. When it finishes, Claude diffs the branch against main, reviews in the IDE's Review Panel, and either merges or requests rework. Two independent agents; one owns implementation, one owns review.
-
 ```bash
-# Cloud agent implements in isolation — main branch untouched
 python3 dev_orchestrator/cloud_agent.py coder "Refactor auth module" --worktree feature-auth
-
-# Claude reviews the diff, runs tsc, approves or rejects
-# git merge feature-auth  ← only if Claude approves
 ```
-
-Without `--worktree`, the cloud agent writes directly to the working directory — acceptable for research and analysis tasks, never for code that needs review gating.
 
 Agents are not hardcoded to roles. Any node in the workflow engine can be wired to any provider + model + persona combination. The routing is yours to define.
 
@@ -121,8 +113,6 @@ A visual SVG node canvas for building multi-step agent pipelines:
 | **Code Review Gate** | PR trigger → Reviewer agent → Human approval gate → Merge or request revisions |
 | **Hotfix Pipeline** | Implementer → Test suite → Exit-code gate → Commit or escalate to architect |
 | **Release Retrospective** | Git log + model call metrics → performance analysis → user reflection (human node) → learning extraction → `project_memory` write (importance 9) → `AGENTS.md` reinforcement |
-
-**Parallel Agent Review Gate** — a toggle in Settings → Workflow Engine. When enabled, code changes require consensus from multiple models before they are applied. Two independent agents review the same diff; disagreement blocks the merge. Configurable in combination with the **Code Review Gate** workflow template for a fully automated multi-model verdict loop.
 
 **Time-Travel Orchestration** — after each successful node, `SnapshotManager` captures the current git SHA and workflow state. Completed nodes show a `⟳ Rewind` button; rewinding calls `git checkout <sha>` and resets downstream nodes to idle. A detached HEAD warning banner guides the next step.
 
@@ -240,7 +230,6 @@ browser:close     → Session cleanup
 - **Providers** — Correct icon set, drag-to-reorder priority tiles, embedding provider priority list.
 - **Personas** — View, disable, or create custom personas with name, description, system prompt, model affinity, and role. Persisted to DB.
 - **Templates** — All system workflow templates listed; click to open inline Monaco editor; Save / Reset to Default; user overrides in `template_overrides` table.
-- **Workflow Engine** — Parallel Agent Review Gate (multi-model consensus before merge), default workflow template, max execution time, auto-save workflow state, contextual story auto-linking.
 - **Appearance** — Phosphor color presets (green / amber / white / blue), UI density, **CRT Mode** (scanline + vignette overlay, intensity scales with agent load — off by default).
 - **Hardware** — macOS Touch Bar configuration: view navigation buttons, command tray slots, telemetry display mode (Story+Timer or Branch+Cost).
 

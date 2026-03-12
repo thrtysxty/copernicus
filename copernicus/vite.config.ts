@@ -14,7 +14,7 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
-              external: ['better-sqlite3', 'node-pty', 'sqlite-vec', 'chokidar', 'fsevents'],
+              external: ['better-sqlite3', 'node-pty', 'sqlite-vec', 'chokidar', 'fsevents', 'bufferutil', 'utf-8-validate'],
             },
           },
         },
