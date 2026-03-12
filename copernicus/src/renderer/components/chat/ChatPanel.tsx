@@ -1,5 +1,4 @@
 import React from 'react'
-import { ChevronRight } from 'lucide-react'
 import { FlippablePanel } from '../layout/FlippablePanel'
 import { ChatThread } from './ChatThread'
 import { ChatInput } from './ChatInput'
@@ -7,7 +6,6 @@ import { ChatBackFace } from './ChatBackFace'
 import { useChatPanel } from './useChatPanel'
 import { commandRegistry } from '../../commands/registry'
 import { ErrorBoundary } from '../layout/ErrorBoundary'
-import { useLayoutStore } from '../../store/layout'
 
 interface ChatPanelProps {
   openFilePath?: string | null
@@ -16,24 +14,12 @@ interface ChatPanelProps {
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootPath = '' }) => {
   const chat = useChatPanel(openFilePath, rootPath)
-  const { spotlightPane, setSpotlight } = useLayoutStore()
-  const collapsed = spotlightPane === 'editor'
 
   return (
     <FlippablePanel
       id="chat"
       front={
         <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono min-w-0 overflow-hidden">
-          <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel shrink-0 bg-[#0A0A0A]">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Chat</span>
-            <button
-              onClick={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-              className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors"
-              title={collapsed ? 'Expand chat' : 'Collapse chat'}
-            >
-              <ChevronRight size={14} className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
           <ChatThread
             messages={chat.messages}
             openFilePath={openFilePath}

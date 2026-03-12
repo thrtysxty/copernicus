@@ -14,7 +14,7 @@ interface Story {
   path: string
   priority: 'P0' | 'P1' | 'P2' | 'P3' | 'UNKNOWN'
   type: string
-  epic_id: string | null
+  epic: string | null
   model: string | null
   workflowId: string | null
   date: string
@@ -331,8 +331,8 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           <div>
             <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Epic Context</p>
             <select
-              defaultValue={story.epic_id ?? ''}
-              onChange={e => handleSetField('epic_id', e.target.value || '(none)')}
+              defaultValue={story.epic ?? ''}
+              onChange={e => handleSetField('epic', e.target.value || '(none)')}
               className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
             >
               <option value="">(No Epic)</option>

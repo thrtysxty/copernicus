@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react'
-import { X } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { X, RotateCcw, Maximize2, Minimize2 } from 'lucide-react'
 import { EditorPanel } from './EditorPanel'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
@@ -9,7 +9,7 @@ import DiffPanel from './DiffPanel'
 import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
 import { useIpcError } from '../../hooks/useIpcError'
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc, IpcResult, LspStatusResponse } from '../../types/ipc'
 
 interface CenterPanelRouterProps {
   filePath?: string | null
@@ -50,67 +50,133 @@ function getLanguage(filePath: string): string {
   return LANGUAGE_MAP[ext] ?? 'plaintext'
 }
 
-function TabBar() {
-  const { openFiles, activeFilePath, setActiveFile, closeFile, setActiveFileContent, setActiveFileLanguage, setCenterMode } = useLayoutStore()
+function CenterPanelHeader() {
+  const {
+    openFiles, activeFilePath, setActiveFile, closeFile,
+    setActiveFileContent, setActiveFileLanguage, setCenterMode,
+    spotlightPane, setSpotlight, toggleFlip, activeView, activeStoryId
+  } = useLayoutStore()
   const invoke = useIpcError()
-  
-  if (openFiles.length === 0) return null
+  const [lspRunning, setLspRunning] = useState(false)
+  const [lspPopoverOpen, setLspPopoverOpen] = useState(false)
+  const [errorCount, setErrorCount] = useState(0)
+  const [warnCount, setWarnCount] = useState(0)
 
-  const handleTabClick = async (path: string) => {
-    if (path === activeFilePath) return
-    setActiveFile(path)
-    
-    // Load content when switching tabs
-    try {
-      const result = await invoke<any>('fs:read-file', path)
-      const content = unwrapIpc<string>(result) || ''
-      setActiveFileContent(content)
-      const lang = getLanguage(path)
-      setActiveFileLanguage(lang)
-      
-      const classification = classifyFile(path)
-      if (classification === 'canvas' || classification === 'svg') {
-        // Designer mode handled by CenterPanelRouter effects, but let's be explicit if needed
-      } else if (classification === 'binary') {
-        setCenterMode('binary')
-      } else {
-        setCenterMode('code')
+  useEffect(() => {
+    invoke<IpcResult<LspStatusResponse>>('lsp:status').then((res) => {
+      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
+    }).catch(() => {})
+    const removeDiag = window.ipcRenderer.on(
+      'lsp:diagnostics-update',
+      (_e: any, { uri, diagnostics }: { uri: string; diagnostics: { severity: number }[] }) => {
+        if (!activeFilePath || `file://${activeFilePath}` !== uri) return
+        let errors = 0, warnings = 0
+        diagnostics.forEach((d) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
+        setErrorCount(errors)
+        setWarnCount(warnings)
       }
-    } catch (err) {
-      console.error('[TabBar] Failed to load file:', err)
-    }
-  }
+    )
+    return () => removeDiag()
+  }, [invoke, activeFilePath])
+
+  const isSpotlightActive = spotlightPane === 'editor'
+  const showLsp = activeView === 'editor' || activeView === 'designer'
+
+  const emptyTitle = (() => {
+    if (!activeFilePath) return activeStoryId ? `STORY // ${activeStoryId.match(/\d+/)?.[0] ?? activeStoryId}` : 'EDITOR'
+    const file = openFiles.find(f => f.path === activeFilePath)
+    const name = activeFilePath.split('/').pop() ?? activeFilePath
+    return file?.isDirty ? `${name} •` : name
+  })()
 
   return (
-    <div className="flex overflow-x-auto bg-[#050505] border-b border-copernicus-steel h-8 no-scrollbar scroll-smooth shrink-0">
-      {openFiles.map(file => {
-        const isActive = activeFilePath === file.path
-        const fileName = file.path.split('/').pop() ?? file.path
-        
-        return (
-          <div
-            key={file.path}
-            onClick={() => handleTabClick(file.path)}
-            className={`
-              flex items-center gap-2 px-3 py-1 border-r border-copernicus-steel cursor-pointer transition-all shrink-0 select-none group
-              ${isActive ? 'bg-zinc-800 text-zinc-100 border-b-2 border-indigo-500' : 'bg-[#0A0A0A] text-zinc-500 hover:text-zinc-300'}
-            `}
-          >
-            <span className="text-[10px] font-mono truncate max-w-[150px]">
-              {fileName}{file.isDirty ? ' •' : ''}
-            </span>
+    <div className="h-8 flex items-center border-b border-copernicus-steel bg-[#0A0A0A] shrink-0">
+      {/* Left: tabs or empty title */}
+      <div className="flex-1 flex items-center overflow-x-auto no-scrollbar min-w-0 h-full">
+        {openFiles.length > 0 ? (
+          openFiles.map(file => {
+            const isActive = activeFilePath === file.path
+            const fileName = file.path.split('/').pop() ?? file.path
+            return (
+              <div
+                key={file.path}
+                onClick={async () => {
+                  if (file.path === activeFilePath) return
+                  setActiveFile(file.path)
+                  try {
+                    const result = await invoke<any>('fs:read-file', file.path)
+                    const content = unwrapIpc<string>(result) || ''
+                    setActiveFileContent(content)
+                    setActiveFileLanguage(getLanguage(file.path))
+                    const cl = classifyFile(file.path)
+                    if (cl === 'binary') setCenterMode('binary')
+                    else setCenterMode('code')
+                  } catch {}
+                }}
+                className={`flex items-center gap-2 px-3 h-full border-r border-copernicus-steel cursor-pointer transition-all shrink-0 select-none group ${isActive ? 'bg-zinc-800 text-zinc-100 border-b-2 border-indigo-500' : 'bg-[#0A0A0A] text-zinc-500 hover:text-zinc-300'}`}
+              >
+                <span className="text-[10px] font-mono truncate max-w-[150px]">
+                  {fileName}{file.isDirty ? ' •' : ''}
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); closeFile(file.path) }}
+                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-zinc-700 transition-all text-zinc-500 hover:text-zinc-100"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            )
+          })
+        ) : (
+          <span className="px-4 text-[10px] font-mono text-zinc-400 uppercase tracking-widest">{emptyTitle}</span>
+        )}
+      </div>
+
+      {/* Right: LSP status + panel controls */}
+      <div className="flex items-center gap-1 px-2 shrink-0">
+        {showLsp && (
+          <div className="relative">
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                closeFile(file.path)
-              }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-zinc-700 transition-all text-zinc-500 hover:text-zinc-100"
+              aria-label="LSP status"
+              className="flex items-center gap-1.5 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
+              onClick={() => setLspPopoverOpen(v => !v)}
             >
-              <X size={10} />
+              <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
+              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">LSP {errorCount}E {warnCount}W</span>
             </button>
+            {lspPopoverOpen && (
+              <div
+                className="absolute top-8 right-0 z-50 bg-[#0d0d0d] border border-copernicus-steel/40 rounded shadow-2xl p-3 w-56 font-mono"
+                onMouseLeave={() => setLspPopoverOpen(false)}
+              >
+                <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-2">Language Server</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`w-2 h-2 rounded-full ${lspRunning ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-[10px] text-zinc-300">{lspRunning ? 'Connected' : 'Disconnected'}</span>
+                </div>
+                <div className="text-[9px] text-zinc-600 mt-2">{errorCount}E · {warnCount}W in active file</div>
+              </div>
+            )}
           </div>
-        )
-      })}
+        )}
+        <button
+          onClick={() => toggleFlip('center-panel')}
+          className="p-1.5 text-zinc-400 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
+          title="Flip Panel"
+          aria-label="Flip Panel"
+        >
+          <RotateCcw size={12} />
+        </button>
+        <button
+          onClick={() => setSpotlight(isSpotlightActive ? null : 'editor')}
+          aria-pressed={isSpotlightActive}
+          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-400 hover:text-zinc-300'}`}
+          title="Spotlight"
+          aria-label={isSpotlightActive ? 'Minimize Spotlight' : 'Maximize Spotlight'}
+        >
+          {isSpotlightActive ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+        </button>
+      </div>
     </div>
   )
 }
@@ -226,7 +292,7 @@ export function CenterPanelRouter({
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      <TabBar />
+      <CenterPanelHeader />
       <div className="flex-1 overflow-hidden">
         {renderedContent}
       </div>

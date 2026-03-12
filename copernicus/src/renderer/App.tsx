@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Maximize2, Minimize2, RotateCcw, ChevronLeft, ChevronDown, Archive,
+  Maximize2, RotateCcw, ChevronDown, Archive,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from './store/layout'
 import { useToastStore } from './store/toastStore'
@@ -9,7 +9,7 @@ import { ApplicationHeader } from './components/layout/ApplicationHeader'
 import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog'
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
-import { unwrapIpc, IpcResult, LspStatusResponse } from './types/ipc'
+import { unwrapIpc, IpcResult } from './types/ipc'
 import { FileTree } from './components/FileTree/FileTree'
 import { ChatPanel } from './components/chat/ChatPanel'
 import { StatusBar } from './components/layout/StatusBar'
@@ -100,93 +100,6 @@ const ArchiveDrawer: React.FC = () => {
   )
 }
 
-// Inline PanelHeader to replace missing file
-const PanelHeader: React.FC<{
-  title: string;
-  onSpotlight: () => void;
-  onFlip: () => void;
-  isSpotlightActive: boolean;
-  onCommandPalette?: () => void;
-  showLspStatus?: boolean;
-}> = ({ title, onSpotlight, onFlip, isSpotlightActive, onCommandPalette: _, showLspStatus }) => {
-  const [lspRunning, setLspRunning] = useState(false)
-  const [lspPopoverOpen, setLspPopoverOpen] = useState(false)
-  const [errorCount, setErrorCount] = useState(0)
-  const [warnCount, setWarnCount] = useState(0)
-  const invoke = useIpcError()
-  const activeFilePath = useLayoutStore(s => s.activeFilePath)
-
-  useEffect(() => {
-    invoke<IpcResult<LspStatusResponse>>('lsp:status').then((res) => {
-      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
-    }).catch(() => {})
-
-    const removeDiag = window.ipcRenderer.on(
-      'lsp:diagnostics-update',
-      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: { severity: number }[] }) => {
-        if (!activeFilePath || `file://${activeFilePath}` !== uri) return
-        let errors = 0, warnings = 0
-        diagnostics.forEach((d) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
-        setErrorCount(errors)
-        setWarnCount(warnings)
-      }
-    )
-    return () => removeDiag()
-  }, [invoke, activeFilePath])
-
-  return (
-    <div className="h-8 border-b border-copernicus-steel bg-[#0A0A0A] flex items-center justify-between px-4 shrink-0 relative">
-      <div className="flex items-center gap-3">
-        <span className="text-[10px] font-mono text-zinc-300 uppercase tracking-widest">{title}</span>
-        {showLspStatus && (
-          <div className="relative">
-            <button
-              aria-label="LSP status"
-              className="flex items-center gap-2 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
-              onClick={() => setLspPopoverOpen(v => !v)}
-            >
-              <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                LSP {errorCount}E {warnCount}W
-              </span>
-            </button>
-            {lspPopoverOpen && (
-              <div className="absolute top-8 left-0 z-50 bg-[#0d0d0d] border border-copernicus-steel/40 rounded shadow-2xl p-3 w-56 font-mono"
-                onMouseLeave={() => setLspPopoverOpen(false)}>
-                <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-2">Language Server</div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`w-2 h-2 rounded-full ${lspRunning ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-[10px] text-zinc-300">{lspRunning ? 'Connected' : 'Disconnected'}</span>
-                </div>
-                <div className="text-[9px] text-zinc-600 mt-2">{errorCount}E · {warnCount}W in active file</div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onFlip}
-          className="p-1.5 text-zinc-400 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
-          title="Flip Panel"
-          aria-label="Flip Panel"
-        >
-          <RotateCcw size={14} />
-        </button>
-        <button
-          onClick={onSpotlight}
-          aria-pressed={isSpotlightActive}
-          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-400 hover:text-zinc-300'}`}
-          title="Spotlight"
-          aria-label={isSpotlightActive ? "Minimize Spotlight" : "Maximize Spotlight"}
-        >
-          {isSpotlightActive ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-        </button>
-      </div>
-    </div>
-  )
-}
-
 export default function App() {
   const invoke = useIpcError()
   
@@ -205,7 +118,7 @@ export default function App() {
   const activeFilePath = useLayoutStore(s => s.activeFilePath)
   const activeFileContent = useLayoutStore(s => s.activeFileContent)
   const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
-  const openFiles = useLayoutStore(s => s.openFiles)
+  const chatPanelOpen = useLayoutStore(s => s.chatPanelOpen)
   const hasCompletedTour = useLayoutStore(s => s.hasCompletedTour)
   const tourHighlight = useLayoutStore(s => s.tourHighlight)
   const settingsOpen = useLayoutStore(s => s.settingsOpen)
@@ -230,6 +143,7 @@ export default function App() {
   const setPendingReviewSummary = useLayoutStore(s => s.setPendingReviewSummary)
   const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
+  const setChatPanelOpen = useLayoutStore(s => s.setChatPanelOpen)
   const showGenesis = useLayoutStore(s => s.showGenesis)
   const setShowGenesis = useLayoutStore(s => s.setShowGenesis)
 
@@ -432,7 +346,8 @@ export default function App() {
   const sidebarClass = (() => {
     if (spotlightPane === 'explorer') return 'flex-1'
     if (spotlightPane === 'editor' || spotlightPane === 'chat') return 'w-10 flex-shrink-0'
-    return sidebarOpen ? 'w-64 flex-shrink-0' : 'w-0 flex-shrink-0'
+    if (!sidebarOpen) return 'w-10 flex-shrink-0'
+    return 'w-64 flex-shrink-0'
   })()
 
   const centerClass = (() => {
@@ -443,6 +358,7 @@ export default function App() {
   })()
 
   const chatClass = (() => {
+    if (!chatPanelOpen) return 'w-10 flex-shrink-0'
     if (spotlightPane === 'chat') return 'flex-1'
     if (spotlightPane === 'editor' || spotlightPane === 'explorer') return 'w-10 flex-shrink-0'
     return 'w-80 flex-shrink-0'
@@ -508,33 +424,17 @@ export default function App() {
               <>
                 {/* Sidebar */}
                 <div className={`${sidebarClass} min-w-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] relative flex flex-col overflow-hidden`}>
-                  {(spotlightPane === 'editor' || spotlightPane === 'chat') ? (
-                    <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5 shrink-0" onClick={() => setSpotlight(null)}>
+                  {(!sidebarOpen || spotlightPane === 'editor' || spotlightPane === 'chat') ? (
+                    <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-r border-copernicus-steel cursor-pointer hover:bg-white/5 shrink-0" onClick={() => !sidebarOpen ? setSidebarOpen(true) : setSpotlight(null)}>
                       <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Explorer</span>
                     </div>
                   ) : (
-                    <>
-                      <div className="h-8 flex items-center justify-between px-2 border-b border-copernicus-steel shrink-0 bg-[#080808]">
-                        <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">Explorer</span>
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => setSidebarOpen(false)} className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors" title="Collapse Explorer">
-                            <ChevronLeft size={12} />
-                          </button>
-                          <button onClick={() => toggleFlip('sidebar')} className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors" title="Flip Sidebar">
-                            <RotateCcw size={12} />
-                          </button>
-                          <button onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')} className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors" title="Spotlight Explorer">
-                            <Maximize2 size={12} />
-                          </button>
-                        </div>
-                      </div>
-                      <FlippablePanel
-                        id="sidebar"
-                        className="flex-1 overflow-hidden"
-                        front={<FileTree rootPath={workingDir} />}
-                        back={<ContainerViewer />}
-                      />
-                    </>
+                    <FlippablePanel
+                      id="sidebar"
+                      className="flex-1 overflow-hidden"
+                      front={<FileTree rootPath={workingDir} />}
+                      back={<ContainerViewer />}
+                    />
                   )}
                 </div>
 
@@ -546,40 +446,25 @@ export default function App() {
                           <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Editor</span>
                        </div>
                     ) : (
-                      <>
-                        <PanelHeader
-                          title={(() => {
-                            if (!activeFilePath) return activeStoryId ? `STORY // ${activeStoryId}` : 'EDITOR'
-                            const file = openFiles.find(f => f.path === activeFilePath)
-                            const name = activeFilePath.split('/').pop() ?? activeFilePath
-                            return file?.isDirty ? `${name} •` : name
-                          })()}
-                          onSpotlight={() => setSpotlight(spotlightPane === 'editor' ? null : 'editor')}
-                          onFlip={() => toggleFlip('center-panel')}
-                          isSpotlightActive={spotlightPane === 'editor'}
-                          onCommandPalette={() => setCommandPaletteOpen(true)}
-                          showLspStatus={activeView === 'designer' || activeView === 'editor'}
-                        />
-                        <FlippablePanel
-                          id="center-panel"
-                          className="flex-1"
-                          front={
-                            <CenterPanelRouter
-                              filePath={activeFilePath}
-                              content={activeFileContent}
-                              language={activeFileLanguage}
-                              onChange={(v) => setActiveFileContent(v ?? '')}
-                            />
-                          }
-                          back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
-                        />
-                      </>
+                      <FlippablePanel
+                        id="center-panel"
+                        className="flex-1"
+                        front={
+                          <CenterPanelRouter
+                            filePath={activeFilePath}
+                            content={activeFileContent}
+                            language={activeFileLanguage}
+                            onChange={(v) => setActiveFileContent(v ?? '')}
+                          />
+                        }
+                        back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
+                      />
                     )}
                   </div>
 
                   <div className={`${chatClass} min-w-0 transition-all duration-300 ease-in-out border-l border-copernicus-steel flex flex-col overflow-hidden`}>
-                    {(spotlightPane === 'editor' || spotlightPane === 'explorer') ? (
-                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-l border-copernicus-steel cursor-pointer hover:bg-white/5 shrink-0" onClick={() => setSpotlight(null)}>
+                    {(!chatPanelOpen || spotlightPane === 'editor' || spotlightPane === 'explorer') ? (
+                       <div className="h-full w-10 flex flex-col items-center justify-center bg-[#080808] border-l border-copernicus-steel cursor-pointer hover:bg-white/5 shrink-0" onClick={() => !chatPanelOpen ? setChatPanelOpen(true) : setSpotlight(null)}>
                           <span className="text-[9px] font-mono text-zinc-600 uppercase" style={{ writingMode: 'vertical-rl' }}>Chat</span>
                        </div>
                     ) : (

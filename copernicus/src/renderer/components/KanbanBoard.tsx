@@ -156,6 +156,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const columns = useLayoutStore(useShallow(s => s.columns))
   const showArchive = useLayoutStore(s => s.showArchive)
   const toggleArchive = useLayoutStore(s => s.toggleArchive)
+  const terminalOpen = useLayoutStore(s => s.terminalOpen)
   const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen)
   
   const setActiveStoryId = useLayoutStore(s => s.setActiveStoryId)
@@ -289,11 +290,19 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
         {/* Right: Archive + Retro */}
         <div className="flex items-center gap-3 ml-auto">
           <button
-            onClick={() => { if (showArchive) { setTerminalOpen(false); toggleArchive() } else { setTerminalOpen(true); toggleArchive() } }}
+            onClick={() => {
+              const archiveVisible = showArchive && terminalOpen
+              if (archiveVisible) {
+                setTerminalOpen(false)
+              } else {
+                if (!showArchive) toggleArchive()
+                setTerminalOpen(true)
+              }
+            }}
             className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
           >
             <Archive size={10} />
-            {showArchive ? 'Hide Archive' : 'View Archive'}
+            {showArchive && terminalOpen ? 'Hide Archive' : 'View Archive'}
           </button>
           <button
             onClick={() => invoke('workflow:run', { templateId: 'release-retrospective' })}

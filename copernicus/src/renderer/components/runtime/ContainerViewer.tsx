@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
-import { Play, Square, FileText, RefreshCw } from 'lucide-react';
+import { useLayoutStore } from '../../store/layout';
+import { Play, Square, FileText, RefreshCw, RotateCcw } from 'lucide-react';
 
 export interface Container {
   ID: string;
@@ -16,6 +17,7 @@ export const ContainerViewer: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const invoke = useIpcError();
+  const toggleFlip = useLayoutStore(s => s.toggleFlip);
 
   const fetchContainers = async () => {
     setLoading(true);
@@ -50,15 +52,24 @@ export const ContainerViewer: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#080808] text-zinc-300 font-mono text-xs">
-      <div className="flex items-center justify-between p-3 border-b border-copernicus-steel shrink-0">
+      <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel shrink-0">
         <span className="text-[10px] text-zinc-500 uppercase tracking-widest">CONTAINERS</span>
-        <button
-          onClick={fetchContainers}
-          className={`p-1 text-zinc-500 hover:text-copernicus-phosphor transition-colors ${loading ? 'animate-spin' : ''}`}
-          title="Refresh"
-        >
-          <RefreshCw size={12} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={fetchContainers}
+            className={`p-1 text-zinc-500 hover:text-copernicus-phosphor transition-colors ${loading ? 'animate-spin' : ''}`}
+            title="Refresh"
+          >
+            <RefreshCw size={12} />
+          </button>
+          <button
+            onClick={() => toggleFlip('sidebar')}
+            className="p-1 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+            title="Back to Explorer"
+          >
+            <RotateCcw size={12} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
