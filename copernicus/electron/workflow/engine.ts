@@ -269,7 +269,7 @@ export class WorkflowEngine {
     const d = node.data as import('./types').AgentNodeData;
 
     const apiKey = authManager.getApiKey(d.provider);
-    if (!apiKey && d.provider !== 'ollama') {
+    if (!apiKey && d.provider !== 'ollama' && d.provider !== 'ollama-anthropic') {
       throw new Error(`AUTH_MISSING:${d.provider}`);
     }
 
@@ -295,6 +295,17 @@ export class WorkflowEngine {
       if (!res.ok) throw new Error(`Anthropic error ${res.status}`);
       const json = await res.json() as any;
       return json.content?.[0]?.text ?? '';
+    }
+
+    if (d.provider === 'ollama-anthropic') {
+      const { dispatchOllamaAnthropic } = await import('../llm/providers/ollama-anthropic');
+      return await dispatchOllamaAnthropic({
+        modelId: d.modelId,
+        systemPrompt,
+        task,
+        maxTokens: d.maxTokens,
+        baseUrl: process.env.OLLAMA_BASE_URL,
+      });
     }
 
     // All other providers use OpenAI-compatible /chat/completions
@@ -594,7 +605,8 @@ export class WorkflowEngine {
       case 'google':     return 'https://generativelanguage.googleapis.com/v1beta/openai';
       case 'openrouter': return 'https://openrouter.ai/api/v1';
       case 'deepinfra':  return 'https://api.deepinfra.com/v1/openai';
-      case 'ollama':     return 'http://localhost:11434/v1';
+      case 'ollama':
+      case 'ollama-anthropic': return 'http://localhost:11434/v1';
       default:
         return this.services?.authManager.getBaseUrl(provider)
                ?? 'https://api.openai.com/v1';

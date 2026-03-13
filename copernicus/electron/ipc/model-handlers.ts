@@ -38,12 +38,21 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
       if (!response.ok) return { ok: false, error: 'OLLAMA_NOT_RUNNING', models: [] };
 
       const json = await response.json() as { models: Array<{ name: string }> };
-      const models = json.models.map(m => ({
-        id: m.name,
-        name: m.name,
-        provider: 'ollama' as const,
-        contextWindow: 0,
-      }));
+      const models: any[] = [];
+      json.models.forEach(m => {
+        models.push({
+          id: m.name,
+          name: m.name,
+          provider: 'ollama',
+          contextWindow: 0,
+        });
+        models.push({
+          id: m.name,
+          name: `${m.name} (Anthropic API)`,
+          provider: 'ollama-anthropic',
+          contextWindow: 0,
+        });
+      });
 
       models.forEach(m => modelRegistry.registerModel(m));
       return { ok: true, models };
