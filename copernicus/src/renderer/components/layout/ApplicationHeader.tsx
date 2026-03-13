@@ -10,7 +10,10 @@ export const ApplicationHeader: React.FC = () => {
   const repoName = workingDir.split('/').pop() || 'NO_REPO'
 
   return (
-    <header className="h-10 flex items-center justify-between pl-20 pr-4 bg-[#050505] shrink-0 draggable z-[110] border-b border-zinc-800 select-none">
+    <header 
+      className="h-10 flex items-center justify-between pl-20 pr-4 bg-[#050505] shrink-0 draggable z-[110] border-b border-zinc-800 select-none"
+      style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+    >
       {/* Left: stoplights occupy pl-20, nothing else needed here */}
       <div className="w-20" />
 
@@ -22,7 +25,7 @@ export const ApplicationHeader: React.FC = () => {
       </div>
 
       {/* Right: repo_name // story_id — no labels */}
-      <div className="flex items-center relative">
+      <div className="flex items-center relative" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
         <button
           onClick={() => setShowSwitcher(!showSwitcher)}
           className="text-[10px] font-mono text-copernicus-phosphor font-bold uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity outline-none"

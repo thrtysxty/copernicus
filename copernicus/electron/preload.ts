@@ -99,7 +99,7 @@ const SEND_CHANNELS = new Set([
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
   // App Control
-  'app:open-log', 'app:open-external',
+  'app:open-log', 'app:open-external', 'window:exit-fullscreen',
   // Runtime
   'runtime:list-containers', 'runtime:manage-container',
   // OAuth
@@ -143,6 +143,7 @@ const LISTEN_CHANNELS = new Set([
   'workflow:status', 'workflow:status-update',
   'review:session-complete',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',
+  'window:fullscreen-state',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

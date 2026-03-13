@@ -146,6 +146,11 @@ function createWindow() {
     const tbConfig = { ...DEFAULT_TOUCH_BAR_CONFIG, ...(settingsStore.getAll()?.touchBar as any ?? {}) }
     touchBarCleanup = createTouchBar(win, tbConfig)
   }
+
+  // Story 380: Sync fullscreen state to renderer for ESC handling
+  win.on('enter-full-screen', () => win?.webContents.send('window:fullscreen-state', true))
+  win.on('leave-full-screen', () => win?.webContents.send('window:fullscreen-state', false))
+
   win.webContents.on('did-finish-load', () => win?.webContents.send('main-process-message', (new Date).toLocaleString()))
   if (isFirstRun) {
     VITE_DEV_SERVER_URL ? win.loadURL(`${VITE_DEV_SERVER_URL}?window=wizard`) : win.loadFile(path.join(process.env.DIST!, 'index.html'), { query: { window: 'wizard' } })
@@ -213,6 +218,13 @@ function registerIpcHandlers() {
   ipcMain.handle('templates:reset', (_e, id: string) =>
     handleIpc('templates:reset', [id], () => deps.stateLedger.deleteTemplateOverride(id))
   )
+
+  ipcMain.handle('window:exit-fullscreen', () => handleIpc('window:exit-fullscreen', [], () => {
+    const w = BrowserWindow.getAllWindows()[0]
+    if (w?.isFullScreen()) {
+      w.setFullScreen(false)
+    }
+  }))
 }
 
 app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !== 'darwin') app.quit() })

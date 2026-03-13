@@ -156,6 +156,26 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true)
 
 
+  // Story 380: Sync fullscreen state from main process
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  useEffect(() => {
+    return window.ipcRenderer.on('window:fullscreen-state', (_e, state) => {
+      setIsFullscreen(state as boolean)
+    })
+  }, [])
+
+  // Story 380: ESC exits native fullscreen safely
+  useEffect(() => {
+    if (!isFullscreen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !e.defaultPrevented) {
+        invoke('window:exit-fullscreen')
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isFullscreen, invoke])
+
   // Initial setup and IPC listeners
   useEffect(() => {
     commandRegistry.registerCommand({ id: 'open-settings', label: 'Open Settings', shortcut: '⌘,', action: () => setSettingsOpen(true) })
