@@ -562,6 +562,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     julesManager,
     githubManager,
     storiesManager,
+    lspManager,
   });
 
   let lastReviewSession: any = null

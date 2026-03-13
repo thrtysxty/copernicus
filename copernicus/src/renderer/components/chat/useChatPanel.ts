@@ -90,6 +90,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [newPromptName, setNewPromptName] = useState('')
   const [authStatus, setAuthStatus] = useState<AuthStatus[]>([])
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([])
+  const [lspWarning, setLspWarning] = useState<string | null>(null)
+  const [isLspWarningDismissed, setIsLspWarningDismissed] = useState(false)
 
   const streamingIdRef = useRef<string | null>(null)
   const isFirstCallAfterSwitch = useRef(false)
@@ -140,6 +142,11 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const handleAskClaude = () => {
     toggleFlip('chat'); setInput(lastGuideQuestion); setShowClaudeFallback(false); setGuideMessages([])
     setTimeout(() => { (document.querySelector('textarea[data-chat-input]') as any)?.focus() }, 100)
+  }
+
+  const dismissLspWarning = () => {
+    setIsLspWarningDismissed(true)
+    setLspWarning(null)
   }
 
   const handleGuideSubmit = () => {
@@ -235,6 +242,16 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   const handleSendMessage = async () => {
     if ((!input.trim() && context.length === 0) || isStreaming) return
+
+    // Pre-flight LSP check
+    if (!isLspWarningDismissed) {
+      const res = await invoke<any>('lsp:workspace-check')
+      if (res && res.errorCount > 0) {
+        setLspWarning(`${res.errorCount} TypeScript error(s) in workspace — agent may produce incorrect fixes.`)
+        return
+      }
+    }
+
     const currentInput = input.trim()
     const cmdContext = {
       appendMessage: (role: any, content: any) => setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role, content }]),
@@ -373,6 +390,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     invoke,
     isFlipped,
     pendingImage,
-    setPendingImage
+    setPendingImage,
+    lspWarning,
+    dismissLspWarning
   }
 }

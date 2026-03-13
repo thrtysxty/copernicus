@@ -45,6 +45,7 @@ import * as genesisHandlers from './ipc/genesis-handlers'
 import * as gitHandlers from './ipc/git-handlers'
 import * as searchHandlers from './ipc/search-handlers'
 import * as diagnosticsHandlers from './ipc/diagnostics-handlers'
+import * as lspHandlers from './ipc/lsp-handlers'
 
 import { GenesisRunner } from './genesis/genesis-runner'
 import { ScaffoldRunner } from './genesis/scaffold'
@@ -196,6 +197,7 @@ function registerIpcHandlers() {
   gitHandlers.register(win!, deps)
   searchHandlers.register(win!, deps)
   diagnosticsHandlers.register(win!, deps)
+  lspHandlers.register(win!, deps)
   registerSecurityHandlers(ipcMain, settingsStore)
 
   ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {

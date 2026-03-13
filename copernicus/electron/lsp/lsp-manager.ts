@@ -184,7 +184,13 @@ export class LspManager {
       const uri = msg.params.uri
       const diagnostics = msg.params.diagnostics
       this.diagnosticsCache.set(uri, diagnostics)
-      this.win.webContents.send('lsp:diagnostics-update', { uri, diagnostics })
+      
+      let errorCount = 0
+      for (const diags of this.diagnosticsCache.values()) {
+        errorCount += diags.filter(d => d.severity === 1).length
+      }
+      
+      this.win.webContents.send('lsp:diagnostics-update', { uri, diagnostics, errorCount })
     }
   }
 }

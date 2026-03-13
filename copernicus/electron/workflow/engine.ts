@@ -28,6 +28,7 @@ export interface EngineServices {
   julesManager: JulesManager;
   githubManager: GithubManager;
   storiesManager: StoriesManager;
+  lspManager: import('../lsp/lsp-manager').LspManager;
 }
 
 export class WorkflowEngine {
@@ -110,6 +111,17 @@ export class WorkflowEngine {
 
     this.nodeStatuses.clear();
     this.context.clear();
+
+    // Inject LSP state into context bag for agent awareness
+    try {
+      const allDiags = [...(this.services?.lspManager as any)?.diagnosticsCache?.values() ?? []]
+      const errors = allDiags.flat().filter((d: any) => d.severity === 1) // LSP: 1=error
+      const errorCount = errors.length
+      if (errorCount > 0) {
+        this.context.set('__lspErrors', JSON.stringify({ errorCount, summary: `${errorCount} TypeScript error(s) in workspace` }))
+      }
+    } catch { /* lspManager not yet available — safe to ignore */ }
+
     this.context.set('__workflowId', graph.id);
     this.snapshotManager?.beginRun()
     graph.nodes.forEach(n => this.nodeStatuses.set(n.id, { status: 'idle' }));

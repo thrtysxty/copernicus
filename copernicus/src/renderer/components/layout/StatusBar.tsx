@@ -35,6 +35,7 @@ export const StatusBar: React.FC = () => {
 
   const [hasError, setHasError] = useState(false)
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
+  const [lspErrorCount, setLspErrorCount] = useState(0)
 
   const modelAnchorRef = useRef<HTMLDivElement>(null)
   const [modelOverlayOpen, setModelOverlayOpen] = useState(false)
@@ -129,6 +130,22 @@ export const StatusBar: React.FC = () => {
     return () => removeListener()
   }, [])
 
+  useEffect(() => {
+    if (!window.ipcRenderer) return
+    const removeLsp = window.ipcRenderer.on('lsp:diagnostics-update', (_e, data: any) => {
+      setLspErrorCount(data?.errorCount ?? 0)
+    })
+
+    // Fetch initial count
+    invoke<any>('lsp:workspace-check').then(res => {
+      if (res && typeof res.errorCount === 'number') {
+        setLspErrorCount(res.errorCount)
+      }
+    }).catch(() => {})
+
+    return () => removeLsp()
+  }, [invoke])
+
   const formatTokens = (tokens: number) => {
     if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`
     if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}k`
@@ -191,6 +208,16 @@ export const StatusBar: React.FC = () => {
           >
             ● ERROR
           </button>
+        )}
+
+        {/* LSP Error Badge */}
+        {lspErrorCount > 0 && (
+          <div 
+            title={`${lspErrorCount} TypeScript error(s) in workspace`} 
+            className="flex items-center gap-1.5 px-3 text-yellow-400 font-mono text-[9px] animate-pulse cursor-help"
+          >
+            ⚠ {lspErrorCount}
+          </div>
         )}
 
         {/* Model Badge — click to open model picker */}

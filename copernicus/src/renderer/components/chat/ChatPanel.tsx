@@ -38,6 +38,28 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             isStreaming={chat.isStreaming}
             invoke={chat.invoke}
           />
+          {chat.lspWarning && (
+            <div className="mx-2 mb-2 p-2 bg-yellow-900/20 border border-yellow-700/50 rounded flex flex-col gap-2">
+              <div className="flex items-start gap-2 text-yellow-400 text-[10px] uppercase font-bold tracking-wider leading-relaxed">
+                <span className="flex-shrink-0 mt-0.5">⚠️</span>
+                <span>{chat.lspWarning}</span>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button 
+                  onClick={chat.dismissLspWarning}
+                  className="px-2 py-0.5 text-[9px] font-mono text-zinc-400 hover:text-zinc-300 transition-colors uppercase border border-zinc-700 hover:border-zinc-600 rounded"
+                >
+                  Dismiss
+                </button>
+                <button 
+                  onClick={() => { chat.dismissLspWarning(); setTimeout(() => chat.handleSendMessage(), 0) }}
+                  className="px-2 py-0.5 text-[9px] font-mono bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60 transition-colors uppercase border border-yellow-700/50 rounded"
+                >
+                  Send anyway
+                </button>
+              </div>
+            </div>
+          )}
           <ChatInput
             input={chat.input} setInput={chat.setInput}
             context={chat.context} setContext={chat.setContext}
