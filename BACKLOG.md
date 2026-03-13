@@ -34,8 +34,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #271 | Gemini Spawn Cwd Guard | APPROVED FOR IMPLEMENTATION | HIGH |
 | #273 | Llm Auth Webview Disable | APPROVED FOR IMPLEMENTATION | HIGH |
 | #352 | Ollama Anthropic Provider | APPROVED FOR IMPLEMENTATION | High |
-| #353 | Lsp Guardrail Enforcement | APPROVED FOR IMPLEMENTATION | High |
-| #355 | Webhook Hmac Verification | APPROVED FOR IMPLEMENTATION | High |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -61,6 +59,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
 | #217 | Nodeinspector Focus And Stability | COMPLETE | High |
 | #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
+| #353 | Lsp Guardrail Enforcement | COMPLETE | High |
+| #355 | Webhook Hmac Verification | COMPLETE | High |
 | #121 | Parallel Agent Review Gate | COMPLETED | HIGH |
 | #122 | Local Codebase Semantic Index | COMPLETED | HIGH |
 | #125 | R210Ii Ollama Inference Service | COMPLETED | HIGH |
@@ -181,7 +181,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #357 | Security Posture Score | APPROVED FOR IMPLEMENTATION | P1 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
-| #360 | Tdd Enforcement | APPROVED FOR IMPLEMENTATION | P1 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #362 | Zero Config Onboarding | APPROVED FOR IMPLEMENTATION | P1 |
 | #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
@@ -232,6 +231,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #349 | Snapshot Ipc Standard Compliance | COMPLETE | P2 |
 | #350 | Detached Head Banner Reset | COMPLETE | P2 |
 | #351 | Snapshot Manager Hardening | COMPLETE | P3 |
+| #360 | Tdd Enforcement | COMPLETE | P1 |
 | #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
 | #366 | Planner Title Normalization | COMPLETE | P1 |
 | #376 | Model Selection System Wide | COMPLETE | P1 |
