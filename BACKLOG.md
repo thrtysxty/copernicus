@@ -83,7 +83,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | APPROVED FOR IMPLEMENTATION | Medium |
 | #267 | Rate Limiter Key Fix | APPROVED FOR IMPLEMENTATION | MEDIUM |
 | #272 | Electron Ipc Audit Fixes | APPROVED FOR IMPLEMENTATION | MEDIUM |
-| #354 | Lsp Mcp Server | APPROVED FOR IMPLEMENTATION | Medium |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -97,6 +96,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #206 | Remove Redundant Cmd+P Button | COMPLETE | Medium |
 | #208 | Implement Single Header Row Initiative | COMPLETE | Medium |
 | #216 | Chat Utility Breadcrumb Navigation | COMPLETE | Medium |
+| #354 | Lsp Mcp Server | COMPLETE | Medium |
 | #148 | Ollama Dynamic Model Discovery | COMPLETED | MEDIUM |
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
