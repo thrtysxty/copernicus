@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Save, Trash2, Archive } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
+import { useToastStore } from '../../store/toastStore'
 import log from '../../utils/logger'
 import { unwrapIpc } from '../../types/ipc'
 import { ChatPanel } from '../chat/ChatPanel'
@@ -37,6 +38,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const invoke = useIpcError()
   const { setDrawerStory, spotlightPane, setSpotlight } = useLayoutStore()
+  const addToast = useToastStore(s => s.addToast)
   const isSpotlit = spotlightPane === 'inspector'
 
   const story = stories.find(s => s.id === storyId)
@@ -168,6 +170,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       await invoke('stories:archive', storyId)
       setDrawerStory(null)
       setSpotlight(null)
+      addToast('Story archived', 'success')
     } catch (e) {
       log.error('Failed to archive story', e)
     }

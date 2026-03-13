@@ -36,11 +36,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return true
   }))
   ipcMain.handle('stories:delete', (_event, id: string) => handleIpc('stories:delete', [id], () => {
-    if (!/^story_\d+$/.test(id)) return;
+    if (!/^story_\d+/.test(id)) return;
     return storiesManager.deleteStory(id)
   }))
   ipcMain.handle('stories:archive', (_event, id: string) => handleIpc('stories:archive', [id], () => {
-    if (!/^story_\d+$/.test(id)) return;
+    if (!/^story_\d+/.test(id)) return;
     return storiesManager.archiveStory(id)
   }))
 

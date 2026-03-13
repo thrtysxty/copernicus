@@ -406,7 +406,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                     </div>
                   </div>
 
-                  <div className="flex-1 p-2 space-y-2 overflow-y-auto scrollbar-none">
+                  <div className="flex-1 p-2 space-y-2 overflow-y-auto overflow-x-hidden scrollbar-none">
                     {col.id === 'planning' && (
                       <div ref={dropdownRef} className="relative mb-2">
                         <button
