@@ -33,6 +33,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #270 | Allowed Personas Code Reviewer | APPROVED FOR IMPLEMENTATION | HIGH |
 | #271 | Gemini Spawn Cwd Guard | APPROVED FOR IMPLEMENTATION | HIGH |
 | #273 | Llm Auth Webview Disable | APPROVED FOR IMPLEMENTATION | HIGH |
+| #352 | Ollama Anthropic Provider | APPROVED FOR IMPLEMENTATION | High |
+| #353 | Lsp Guardrail Enforcement | APPROVED FOR IMPLEMENTATION | High |
+| #355 | Webhook Hmac Verification | APPROVED FOR IMPLEMENTATION | High |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -80,6 +83,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | APPROVED FOR IMPLEMENTATION | Medium |
 | #267 | Rate Limiter Key Fix | APPROVED FOR IMPLEMENTATION | MEDIUM |
 | #272 | Electron Ipc Audit Fixes | APPROVED FOR IMPLEMENTATION | MEDIUM |
+| #354 | Lsp Mcp Server | APPROVED FOR IMPLEMENTATION | Medium |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -97,9 +101,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #286 | Genesis Wizard Ui | DRAFT | Medium |
-| #287 | Genesis Llm Epic And Story Synthesis | DRAFT | Medium |
-| #288 | Genesis Repo Scaffold And Agent Config Generation | DRAFT | Medium |
 | #213 | Optimize Reports View Justification | APPROVED FOR IMPLEMENTATION | Low |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
@@ -161,6 +162,36 @@ This file is auto-generated. Run `make backlog` to update.
 | #283 | Project Memory Persistence Layer | APPROVED FOR IMPLEMENTATION | P1 |
 | #284 | Bug Card Type In Planning Column | APPROVED FOR IMPLEMENTATION | P2 |
 | #285 | Project Genesis Onboarding Wizard | APPROVED FOR IMPLEMENTATION | P1 |
+| #286 | Genesis Wizard Ui | APPROVED FOR IMPLEMENTATION | P1 |
+| #287 | Genesis Llm Epic And Story Synthesis | APPROVED FOR IMPLEMENTATION | P1 |
+| #288 | Genesis Repo Scaffold And Agent Config Generation | APPROVED FOR IMPLEMENTATION | P1 |
+| #289 | Planner Archive Retro Bar Layout | APPROVED FOR IMPLEMENTATION | P1 |
+| #290 | Planning Lane Creation Dropdown | APPROVED FOR IMPLEMENTATION | P1 |
+| #291 | Activity Bar Header Overflow Fix | APPROVED FOR IMPLEMENTATION | P1 |
+| #292 | Terminal Pulse Removal And Header Buttons | APPROVED FOR IMPLEMENTATION | P1 |
+| #293 | Wizard Github Pat Inline Input | APPROVED FOR IMPLEMENTATION | P1 |
+| #294 | Post Wizard Existing Repo Story Import | APPROVED FOR IMPLEMENTATION | P1 |
+| #295 | Reporter Reduce Regression | APPROVED FOR IMPLEMENTATION | P1 |
+| #296 | Chat Panel Flip React Error 31 | APPROVED FOR IMPLEMENTATION | P1 |
+| #303 | Editor Multi File Tabs | APPROVED FOR IMPLEMENTATION | P1 |
+| #312 | Terminal Keyboard Input | APPROVED FOR IMPLEMENTATION | P1 |
+| #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
+| #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
+| #346 | Snapshot Shell Injection Fix | APPROVED FOR IMPLEMENTATION | P0 |
+| #347 | Rewind Safety And Error Surface | APPROVED FOR IMPLEMENTATION | P1 |
+| #348 | Snapshot Map Ordering Fix | APPROVED FOR IMPLEMENTATION | P1 |
+| #349 | Snapshot Ipc Standard Compliance | APPROVED FOR IMPLEMENTATION | P2 |
+| #350 | Detached Head Banner Reset | APPROVED FOR IMPLEMENTATION | P2 |
+| #351 | Snapshot Manager Hardening | APPROVED FOR IMPLEMENTATION | P3 |
+| #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
+| #357 | Security Posture Score | APPROVED FOR IMPLEMENTATION | P1 |
+| #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
+| #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
+| #360 | Tdd Enforcement | APPROVED FOR IMPLEMENTATION | P1 |
+| #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
+| #362 | Zero Config Onboarding | APPROVED FOR IMPLEMENTATION | P1 |
+| #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
+| #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -195,6 +226,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #244 | Security Fix — Command Injection In Electron Ipc Subprocess Calls | COMPLETE | P0 — SECURITY |
 | #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | COMPLETE | P1 |
 | #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | COMPLETE | P1 |
+| #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
+| #366 | Planner Title Normalization | COMPLETE | P1 |
+| #377 | Chat Panel Polish | COMPLETE | P1 |
+| #378 | Settings Panel Fixes | COMPLETE | P1 |
+| #380 | Application Window Controls | COMPLETE | P1 |
+| #382 | Git Branch Ux | COMPLETE | P1 |
+| #376 | Model Selection System Wide | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -214,4 +252,58 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
+| #297 | Global Window Responsiveness | DRAFT | P1 |
+| #298 | Global Visibility Brightness | DRAFT | P1 |
+| #299 | Stoplight Buttons Vertical Center | DRAFT | P1 |
+| #300 | App Header Full Width Divider | DRAFT | P1 |
+| #301 | Spotlight Panel Expand Collapse | DRAFT | P1 |
+| #302 | Editor File Load White Flash | DRAFT | P1 |
+| #304 | Editor Header Active Filename | DRAFT | P1 |
+| #305 | Lsp Indicator Fix | DRAFT | P2 |
+| #306 | Editor Spotlight Behavior | DRAFT | P1 |
+| #307 | Designer Ui Files Only | DRAFT | P2 |
+| #308 | Designer Element Visual Cues | DRAFT | P2 |
+| #309 | Explorer Header Button Set | DRAFT | P1 |
+| #310 | Explorer Spotlight Functional | DRAFT | P1 |
+| #311 | Chat Header Chevron Collapse | DRAFT | P1 |
+| #313 | Terminal Header Top Divider | DRAFT | P2 |
+| #314 | Planning Lane Pinned Badge | DRAFT | P2 |
+| #315 | Settings Providers Phosphor Icons | DRAFT | P2 |
+| #316 | Settings Model Defaults Empty Lists | DRAFT | P1 |
+| #317 | Settings Embedding Provider List | DRAFT | P2 |
+| #318 | Settings Provider Tiles Drag Order | DRAFT | P2 |
+| #319 | Settings Personas Management | DRAFT | P2 |
+| #320 | Settings Window Resize Clipping | DRAFT | P1 |
+| #321 | Status Bar Item Breakdown | DRAFT | P2 |
+| #322 | Status Bar Stacked List Overlays | DRAFT | P2 |
+| #323 | Agent Telemetry List | DRAFT | P2 |
+| #324 | Telemetry Alltime Session Totals | DRAFT | P2 |
+| #325 | Session Timer Capex Gate | DRAFT | P2 |
+| #326 | Technical Pulse Stacked List | DRAFT | P2 |
+| #327 | Status Bar Remove Story Id | DRAFT | P1 |
+| #328 | Command Palette Vscode Style | DRAFT | P2 |
+| #329 | Orchestrator View Cutoff | DRAFT | P1 |
+| #330 | System Templates Editable | DRAFT | P2 |
+| #331 | Hardware Command Tray Scrollable | DRAFT | P2 |
+| #332 | Renderer Null To Object Error | DRAFT | P1 |
+| #334 | Semantic Diff Summaries | DRAFT | P1 |
+| #335 | Story Status Automation | DRAFT | P2 |
+| #336 | Git Panel | DRAFT | P1 |
+| #337 | Codebase Search Panel | DRAFT | P2 |
+| #338 | Diagnostics Problems Panel | DRAFT | P1 |
+| #340 | Agent Queue Scheduler | DRAFT | P2 |
+| #341 | Wireframe Image Upload Chat | DRAFT | P2 |
+| #342 | Technical Debt Heatmap | DRAFT | P2 |
+| #343 | Ghost Implementation Shadow Coding | DRAFT | P2 |
+| #344 | Crt Pulse Shaders | DRAFT | P3 |
+| #345 | Time Travel Orchestration | DRAFT | P3 |
+| #374 | Genesis Repo Browser | DRAFT | P1 |
+| #375 | Terminal Cwd Indicator | DRAFT | P2 |
+| #379 | Settings Personas And Templates | DRAFT | P1 |
+| #381 | File Explorer Context Menu | DRAFT | P1 |
+| #383 | Dap Debug Adapter Protocol | DRAFT | P2 |
+| #384 | Integrated Test Runner | DRAFT | P2 |
+| #385 | Agent Replay Debugging | DRAFT | P2 |
+| #386 | Integrated Log Viewer | DRAFT | P2 |
+| #387 | Unified Health View | DRAFT | P2 |
 
