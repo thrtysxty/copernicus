@@ -19,6 +19,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy);
+  const setTerminalCwd = useLayoutStore(s => s.setTerminalCwd);
   const busyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const invoke = useIpcError();
 
@@ -45,6 +46,20 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
 
+    // Track OSC 7 cwd updates
+    term.parser.registerOscHandler(7, (data) => {
+      try {
+        if (data.startsWith('file://')) {
+          const url = new URL(data);
+          const path = decodeURIComponent(url.pathname);
+          setTerminalCwd(id, path);
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+      return true;
+    });
+
     let opened = false;
 
     // Open only once the container has real pixel dimensions.
@@ -61,6 +76,9 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
       // Create backend PTY with real dimensions
       ipcRenderer.send('terminal-create', { id, cols: term.cols, rows: term.rows, cwd });
+
+      // If cwd is provided, set it initially
+      if (cwd) setTerminalCwd(id, cwd);
 
       // Register input handler after open — ensures all keystrokes are captured
       term.onData((data) => {

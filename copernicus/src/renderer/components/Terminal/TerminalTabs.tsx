@@ -19,6 +19,16 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
   const toggleArchive = useLayoutStore(s => s.toggleArchive);
   const invoke = useIpcError();
 
+  const activeTerminal = terminals.find((t) => t.id === activeTerminalId);
+  const activeCwd = activeTerminal?.cwd || cwd || 'Unknown Workspace';
+
+  const formatCwd = (pathStr: string) => {
+    // Truncate to the last 2 path segments
+    const segments = pathStr.split('/').filter(Boolean);
+    if (segments.length <= 2) return pathStr;
+    return `.../${segments.slice(-2).join('/')}`;
+  };
+
   const getAgentBadge = (label: string) => {
     const l = label.toLowerCase();
     if (l.includes('claude')) return { letter: 'C', color: 'text-[#4ADE80]' };
@@ -111,8 +121,15 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
           </button>
         </div>
 
-        {/* Panel Controls */}
+        {/* Panel Controls & CWD */}
         <div className="flex items-center gap-2 px-3 shrink-0">
+          <div
+            className="text-[10px] font-mono text-zinc-500 mr-2 cursor-help hidden sm:block"
+            title={activeCwd}
+          >
+            {formatCwd(activeCwd)}
+          </div>
+          <div className="h-4 w-px bg-copernicus-steel/50 mx-1 hidden sm:block"></div>
           <button
             data-testid="terminal-flip-btn"
             onClick={() => toggleArchive()}

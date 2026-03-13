@@ -55,6 +55,7 @@ export interface TerminalSession {
   label: string
   isBusy: boolean
   ephemeral?: boolean
+  cwd?: string
 }
 
 interface LayoutState {
@@ -168,6 +169,7 @@ interface LayoutState {
   addTerminal: (id: string, label: string, ephemeral?: boolean) => void
   removeTerminal: (id: string) => void
   setTerminalBusy: (id: string, busy: boolean) => void
+  setTerminalCwd: (id: string, cwd: string) => void
   setChatPanelTab: (tab: 'chat' | 'guide') => void
 
   // Canvas Actions
@@ -410,6 +412,9 @@ export const useLayoutStore = create<LayoutState>()(
       }),
       setTerminalBusy: (id, busy) => set((state) => ({
         terminals: state.terminals.map(t => t.id === id ? { ...t, isBusy: busy } : t)
+      })),
+      setTerminalCwd: (id, cwd) => set((state) => ({
+        terminals: state.terminals.map(t => t.id === id ? { ...t, cwd } : t)
       })),
       setChatPanelTab: (tab) => set({ chatPanelTab: tab }),
 
