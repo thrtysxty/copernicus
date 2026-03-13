@@ -57,6 +57,20 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return canceled ? null : filePaths[0];
   }));
 
+  ipcMain.handle('dialog:open-file', () => handleIpc('dialog:open-file', [], async () => {
+    const w = BrowserWindow.getAllWindows()[0];
+    if (!w) return null;
+    const { canceled, filePaths } = await dialog.showOpenDialog(w, {
+      properties: ['openFile'],
+      filters: [
+        { name: 'All Files', extensions: ['*'] },
+        { name: 'Text Files', extensions: ['txt', 'md', 'ts', 'tsx', 'js', 'jsx', 'py', 'json'] },
+        { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'] }
+      ]
+    });
+    return canceled ? null : filePaths[0];
+  }));
+
   ipcMain.handle('select-folder', () => handleIpc('select-folder', [], async () => {
     const w = BrowserWindow.getAllWindows()[0];
     if (!w) return null;

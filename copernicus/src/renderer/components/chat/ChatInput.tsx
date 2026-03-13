@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Send, Paperclip, FileText, X } from 'lucide-react'
 import { ContextChip } from './ContextChip'
 import { Command } from '../../commands/registry'
@@ -64,6 +64,32 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const invoke = useIpcError()
   const [imageError, setImageError] = useState('')
+  const pickerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerMode('none')
+        setPickerResults([])
+      }
+    }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPickerMode('none')
+        setPickerResults([])
+      }
+    }
+
+    if (pickerMode !== 'none') {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleEsc)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEsc)
+    }
+  }, [pickerMode, setPickerMode, setPickerResults])
 
   const handleImageCapture = (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -142,9 +168,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
           {/* Context Picker Popover */}
           {pickerMode !== 'none' && pickerResults.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
-              <div className="px-3 py-1 text-[9px] text-zinc-500 uppercase tracking-widest border-b border-copernicus-steel bg-black/40">
-                {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
+            <div ref={pickerRef} className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
+              <div className="flex justify-between items-center px-3 py-1 border-b border-copernicus-steel bg-black/40">
+                <span className="text-[9px] text-zinc-500 uppercase tracking-widest">
+                  {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
+                </span>
+                <button
+                  onClick={() => {
+                    setPickerMode('none')
+                    setPickerResults([])
+                  }}
+                  className="text-zinc-500 hover:text-white transition-colors"
+                >
+                  <X size={10} />
+                </button>
               </div>
               {pickerResults.map(item => (
                 <button

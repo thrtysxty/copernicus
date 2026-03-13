@@ -29,8 +29,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, tokens 
           role === 'user' ? 'text-zinc-500' : 
           role === 'copernicus' ? 'text-copernicus-phosphor' : 'text-blue-400'
         )}>
-          {role === 'user' ? 'DEVELOPER' : 
-           role === 'copernicus' ? 'COPERNICUS' : 'STRATEGIC_CORE'}
+          {role === 'user' ? 'DEVELOPER' : 'COPERNICUS'}
         </span>
       </div>
 

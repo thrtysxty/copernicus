@@ -362,9 +362,11 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-1 flex-none" title={isRepoActive ? "Repo Context Active" : "No Repo Context"}>
-             <div className={`w-1.5 h-1.5 rounded-full ${isRepoActive ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500 animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.5)]'}`} />
-          </div>
+          {isRepoActive && (
+            <div className="flex items-center gap-1 flex-none" title="Repo Context Active">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover/chat:opacity-100 transition-opacity">

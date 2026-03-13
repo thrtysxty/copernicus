@@ -314,7 +314,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   const handleFileAttach = async () => {
     try {
-      const filePath = await invoke<string | null>('fs:open-file')
+      const filePathResult = await invoke<string | null>('dialog:open-file')
+      const filePath = unwrapIpc<string | null>(filePathResult)
       if (!filePath) return
       const result = await invoke<any>('fs:read-file', filePath); const content = unwrapIpc<string>(result)
       if (typeof content === 'string') setContext(prev => [...prev, { type: 'file', label: filePath.split(/[/\\]/).pop() ?? filePath, content: `\n// File: ${filePath}\n${content}\n` }])
