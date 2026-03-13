@@ -104,7 +104,7 @@ fi
 
 STORY_CONTENT=$(cat "$STORY_PATH")
 STORY_NUMBER=$(basename "$STORY_PATH" | grep -oE '^story_[0-9]+' | grep -oE '[0-9]+' || echo "???")
-STORY_TITLE=$(grep -m1 "^# Story" "$STORY_PATH" | sed 's/^# //')
+STORY_TITLE=$(grep -m1 "^# \(User \)\?Story" "$STORY_PATH" | sed 's/^# //')
 
 # Read AGENTS.md (Jules reads this from repo root automatically, but including
 # it inline ensures she sees it even if her session working dir differs)
