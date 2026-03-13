@@ -5,6 +5,7 @@ import { FileText, Plus, Trash2, Edit3 } from 'lucide-react'
 import { TEMPLATE_MANIFEST } from '../../../templates'
 import { SettingsLoadResponse } from '../../../types/ipc'
 import { SystemTemplatesSection } from './SystemTemplatesSection'
+import { DEFAULT_TEMPLATES } from '../../../../../electron/data/default-templates'
 
 interface StoryTemplate {
   id: string
@@ -39,12 +40,15 @@ export const TemplatesSection: React.FC = () => {
       if (s?.storyTemplates && s.storyTemplates.length > 0) {
         setTemplates(s.storyTemplates)
       } else {
-        // Seed from TEMPLATE_MANIFEST so all types are present
-        const initial: StoryTemplate[] = TEMPLATE_MANIFEST.map(t => ({
-          id: t.id,
-          name: t.label,
-          body: DEFAULT_TEMPLATE,
-        }))
+        // Seed from DEFAULT_TEMPLATES so all types are present
+        const initial: StoryTemplate[] = TEMPLATE_MANIFEST.map(t => {
+          const defaultTpl = DEFAULT_TEMPLATES.find(dt => dt.id === t.id)
+          return {
+            id: t.id,
+            name: t.label,
+            body: defaultTpl ? defaultTpl.body : DEFAULT_TEMPLATE,
+          }
+        })
         setTemplates(initial)
         invoke('settings:save', { storyTemplates: initial })
       }

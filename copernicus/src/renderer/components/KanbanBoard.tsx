@@ -8,6 +8,7 @@ import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 import { StoryDetail } from './planning/StoryDetail'
 import { stripStoryPrefix } from '../utils/storyTitle'
+import { TEMPLATE_MANIFEST } from '../templates'
 
 interface Story {
   id: string
@@ -26,7 +27,7 @@ interface Story {
 
 type CreationPhase =
   | { phase: 'idle' }
-  | { phase: 'form'; type: 'Epic' | 'Story' | 'Bug' }
+  | { phase: 'form'; type: string }
 
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -253,12 +254,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
   const handleCreate = async () => {
     if (!newTitle.trim() || creation.phase !== 'form') return
-    const type = creation.type === 'Epic' ? 'Epic' : creation.type === 'Bug' ? 'Bug' : 'Feature'
+    const type = creation.type
     try {
       const _rawCreate = await invoke<any>('stories:create', {
         title: newTitle.trim(),
         type,
-        epic: creation.type === 'Story' && newEpic ? newEpic : '(none)',
+        epic: (creation.type !== 'Epic') && newEpic ? newEpic : '(none)',
         priority: newPriority,
       })
       const storyId: string = unwrapIpc<any>(_rawCreate)
@@ -418,16 +419,16 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                         </button>
                         {showCreateDropdown && (
                           <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded shadow-xl z-20 overflow-hidden">
-                            {(['Story', 'Epic', 'Bug'] as const).map(type => (
+                            {TEMPLATE_MANIFEST.map(t => (
                               <button
-                                key={type}
-                                onClick={() => { setNewTitle(''); setNewEpic(''); setCreation({ phase: 'form', type }); setShowCreateDropdown(false) }}
+                                key={t.id}
+                                onClick={() => { setNewTitle(''); setNewEpic(''); setCreation({ phase: 'form', type: t.label }); setShowCreateDropdown(false) }}
                                 className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 flex items-center gap-2"
                               >
-                                {type === 'Epic' && <Crown size={10} className="text-amber-400" />}
-                                {type === 'Bug' && <Bug size={10} className="text-red-400" />}
-                                {type === 'Story' && <Zap size={10} className="text-copernicus-phosphor" />}
-                                {type}
+                                {t.label === 'Epic' ? <Crown size={10} className="text-amber-400" /> :
+                                 t.label === 'Bug' ? <Bug size={10} className="text-red-400" /> :
+                                 <Zap size={10} className="text-copernicus-phosphor" />}
+                                {t.label}
                               </button>
                             ))}
                           </div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { User, Plus, Trash2, Edit3, Lock } from 'lucide-react'
+import { User, Plus, Trash2, Edit3, Lock, Copy } from 'lucide-react'
 import { SettingsLoadResponse } from '../../../types/ipc'
+import { DEFAULT_PERSONAS } from '../../../../../electron/data/default-personas'
 
 interface Persona {
   id: string
@@ -16,14 +17,7 @@ interface Persona {
   system?: boolean
 }
 
-const SYSTEM_PERSONAS: Persona[] = [
-  { id: 'architect',     name: 'Architect',      description: 'High-level system design and planning', systemPrompt: 'System design, planning, and schema management',    system: true, role: 'Architect' },
-  { id: 'senior-dev',    name: 'Senior Dev',     description: 'Complex implementation and code review', systemPrompt: 'Task breakdown, code review, and agent management',  system: true, role: 'Developer' },
-  { id: 'junior-dev',    name: 'Junior Dev',     description: 'Focused task implementation', systemPrompt: 'Focused task implementation using TDD',             system: true, role: 'Developer' },
-  { id: 'product-owner', name: 'Product Owner',  description: 'Requirement analysis and story management', systemPrompt: 'MVP strategy and user story management',            system: true, role: 'Reviewer' },
-  { id: 'deployer',      name: 'Deployer',       description: 'Cloud and infrastructure automation', systemPrompt: 'Pi operations, Docker, and deployment tasks',       system: true, role: 'Custom' },
-  { id: 'sentinel',      name: 'Sentinel',       description: 'Security and vulnerability scanning', systemPrompt: 'Autonomous hardening and secret detection',         system: true, role: 'Custom' },
-]
+const SYSTEM_PERSONAS: Persona[] = DEFAULT_PERSONAS as Persona[]
 
 export const PersonasSection: React.FC = () => {
   const invoke = useIpcError()
@@ -114,6 +108,15 @@ export const PersonasSection: React.FC = () => {
   const startEdit = (p: Persona) => {
     setEditingId(p.id)
     setName(p.name)
+    setDescription(p.description || '')
+    setPrompt(p.systemPrompt)
+    setRole(p.role || 'Custom')
+    setModelAffinity(p.modelAffinity || '')
+  }
+
+  const startDuplicate = (p: Persona) => {
+    setEditingId('new')
+    setName(`${p.name} (Copy)`)
     setDescription(p.description || '')
     setPrompt(p.systemPrompt)
     setRole(p.role || 'Custom')
@@ -225,7 +228,7 @@ export const PersonasSection: React.FC = () => {
         {SYSTEM_PERSONAS.map(p => {
           const enabled = !disabledPersonas.includes(p.id)
           return (
-            <div key={p.id} className={`bg-[#0A0A0A] border rounded-lg transition-colors ${enabled ? 'border-zinc-800/50' : 'border-zinc-900 opacity-50'}`}>
+            <div key={p.id} className={`group bg-[#0A0A0A] border rounded-lg transition-colors ${enabled ? 'border-zinc-800/50' : 'border-zinc-900 opacity-50'}`}>
               <div className="p-3 flex items-center gap-3">
                 <div className={`p-1.5 rounded bg-zinc-900 ${enabled ? 'text-zinc-400' : 'text-zinc-700'}`}>
                   <User size={13} />
@@ -240,6 +243,15 @@ export const PersonasSection: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => startDuplicate(p)}
+                      className="p-1.5 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+                      title="Duplicate Persona"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
                   <Toggle enabled={enabled} onClick={() => togglePersona(p.id)} />
                 </div>
               </div>
@@ -272,6 +284,13 @@ export const PersonasSection: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => startDuplicate(p)}
+                      className="p-2 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+                      title="Duplicate Persona"
+                    >
+                      <Copy size={14} />
+                    </button>
                     <button
                       onClick={() => startEdit(p)}
                       className="p-2 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
