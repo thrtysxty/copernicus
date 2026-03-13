@@ -1,8 +1,8 @@
 import type { ProviderType } from '../auth-manager';
 
-export type NodeType = 'agent' | 'tool' | 'decision' | 'trigger' | 'flow';
+export type NodeType = 'agent' | 'tool' | 'decision' | 'trigger' | 'flow' | 'verification';
 
-export type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'error' | 'skipped';
+export type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'error' | 'skipped' | 'paused';
 
 export interface AgentNodeData {
   variant: 'agent';
@@ -59,12 +59,18 @@ export interface FlowNodeData {
   durationMs: number;
 }
 
+export interface VerificationNodeData {
+  variant: 'verification';
+  checklist: string[];
+}
+
 export type WorkflowNodeData =
   | AgentNodeData
   | ToolNodeData
   | TriggerNodeData
   | DecisionNodeData
-  | FlowNodeData;
+  | FlowNodeData
+  | VerificationNodeData;
 
 export interface WFNode {
   id: string;

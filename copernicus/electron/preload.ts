@@ -71,7 +71,7 @@ const SEND_CHANNELS = new Set([
   'ledger:stats-by-role-session', 'ledger:stats-by-role-alltime',
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
-  'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind',
+  'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind', 'workflow:get-context', 'workflow:set-context', 'workflow:resume-node',
   // Review gate
   'review:log', 'review:session-complete',
   // Codebase semantic index

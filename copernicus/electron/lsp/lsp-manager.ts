@@ -129,6 +129,27 @@ export class LspManager {
     return { running: !!this.proc, pid: this.proc?.pid ?? null }
   }
 
+  async workspaceCheck(): Promise<{ errorCount: number; diagnostics: any[] }> {
+    if (!this.proc) throw new Error('LSP not running');
+    // For workspace diagnostics, we may need to pull from cache or wait if it's not supported by TS server in this way
+    // For now we will return aggregated diagnostics from the cache or request them if needed
+    let errorCount = 0;
+    const allDiagnostics: any[] = [];
+
+    // In a real implementation this might send a 'workspace/diagnostic' request if supported
+    // For now, we'll aggregate what's in the cache
+    for (const [uri, diags] of this.diagnosticsCache.entries()) {
+      for (const diag of diags) {
+        if (diag.severity === 1) { // 1 = Error in LSP spec
+          errorCount++;
+        }
+        allDiagnostics.push({ uri, ...diag });
+      }
+    }
+
+    return { errorCount, diagnostics: allDiagnostics };
+  }
+
   sendRequest(method: string, params: any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.proc) return reject(new Error('LSP not running'))

@@ -62,6 +62,31 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
     handleIpc('workflow:get-snapshots', [workflowId], () => deps.snapshotManager?.getForWorkflow(workflowId) ?? [])
   )
 
+  ipcMain.handle('workflow:get-context', (_e, key: string) =>
+    handleIpc('workflow:get-context', [key], () => {
+      const context = workflowEngine.getContext()
+      return context[key]
+    })
+  )
+
+  ipcMain.handle('workflow:set-context', (_e, key: string, value: string) =>
+    handleIpc('workflow:set-context', [key, value], () => {
+      workflowEngine.updateContext({ [key]: value })
+      return true
+    })
+  )
+
+  ipcMain.handle('workflow:resume-node', (_e, nodeId: string) =>
+    handleIpc('workflow:resume-node', [nodeId], () => {
+      // In this prototype, resuming implies resetting the node's state so the loop or retry can proceed
+      // Since WorkflowEngine doesn't have a direct "resume" for a specific node yet, we transition it.
+      if (workflowEngine.getState() === 'PAUSED') {
+        workflowEngine.transition('RUNNING');
+      }
+      return true
+    })
+  )
+
   ipcMain.handle('workflow:rewind', (_e, snapshotId: number) =>
     handleIpc('workflow:rewind', [snapshotId], () => {
       const result = deps.snapshotManager?.rewind(snapshotId)

@@ -70,6 +70,11 @@ const PALETTE_FLOW: PaletteTile[] = [
     defaultData: { variant: 'delay', durationMs: 2000 } as any },
 ];
 
+const PALETTE_QUALITY: PaletteTile[] = [
+  { type: 'verification', label: 'Verification Gate', color: '#10B981',
+    defaultData: { variant: 'verification', checklist: [] } as any },
+];
+
 interface WorkflowStatusPush {
   rewoundTo?: number
   detachedHead?: boolean
@@ -391,6 +396,7 @@ export default function WorkflowCanvas() {
       case 'decision': return '#FBBF24';
       case 'trigger': return '#A78BFA';
       case 'flow': return '#71717A';
+      case 'verification': return '#10B981';
       default: return '#ccc';
     }
   };
@@ -402,6 +408,7 @@ export default function WorkflowCanvas() {
           case 'failed':
           case 'error': return '#EF4444';
           case 'skipped': return '#71717A';
+          case 'paused': return '#F59E0B';
           default: return 'transparent';
       }
   };
@@ -496,6 +503,7 @@ export default function WorkflowCanvas() {
           <NodePaletteSection title="TOOLS"     nodes={PALETTE_TOOLS}     onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="DECISIONS" nodes={PALETTE_DECISIONS} onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="FLOW"      nodes={PALETTE_FLOW}      onDragStart={handlePaletteDragStart} />
+          <NodePaletteSection title="QUALITY"   nodes={PALETTE_QUALITY}   onDragStart={handlePaletteDragStart} />
         </div>
 
         {/* SVG Canvas - Full width expansion */}
@@ -641,6 +649,14 @@ export default function WorkflowCanvas() {
                     stroke={isError ? '#EF4444' : getNodeColor(node.type)}
                     strokeWidth={node.type === 'agent' ? 2 : 1}
                   />
+
+                  {/* Verification specific visual indicators */}
+                  {node.type === 'verification' && node.status === 'paused' && errorMsg && (
+                    <>
+                      <circle cx="110" cy="10" r="4" fill="#EF4444" />
+                      <title>{errorMsg}</title>
+                    </>
+                  )}
 
                   {/* Label */}
                   <text

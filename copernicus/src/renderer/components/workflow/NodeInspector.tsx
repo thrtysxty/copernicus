@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WFNode } from '../../../../electron/workflow/types';
 import log from '../../utils/logger'
+import { unwrapIpc } from '../../types/ipc';
 
 const PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'] as const;
 
@@ -45,6 +46,15 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
     ? localModels
     : availableModels.filter(m => node.data.variant === 'agent' && m.provider === node.data.provider);
 
+  const resumeNode = async () => {
+    try {
+      const res = await invoke<any>('workflow:resume-node', node.id);
+      if (!res.ok) log.error('Failed to resume node:', res.error);
+    } catch (err) {
+      log.error('Failed to resume node:', err);
+    }
+  };
+
   return (
     <div className="w-72 bg-zinc-950 border-l border-copernicus-steel overflow-y-auto shrink-0 flex flex-col">
       {/* Header */}
@@ -54,6 +64,21 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
         </span>
         <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 text-xs">✕</button>
       </div>
+
+      {node.status === 'paused' && (
+        <div className="p-3 bg-red-900/20 border-b border-red-900/40">
+          <p className="text-xs text-red-500 mb-2 font-bold uppercase tracking-wider">Verification Failed</p>
+          <p className="text-[10px] text-red-400 mb-3 font-mono break-words whitespace-pre-wrap">{(node as any).error}</p>
+          <button
+            onClick={resumeNode}
+            className="w-full py-1.5 rounded text-[10px] font-mono uppercase tracking-wider
+                       bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/30
+                       hover:bg-copernicus-phosphor/40 transition-colors"
+          >
+            Re-check & Resume
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 p-3">
         {/* Label — all types */}
@@ -71,6 +96,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
         {node.type === 'trigger' && <TriggerFields node={node} stories={stories} onUpdate={updateData} onStoryChange={handleStoryChange} />}
         {node.type === 'decision' && <DecisionFields node={node} onUpdate={updateData} />}
         {node.type === 'flow' && <FlowFields node={node} onUpdate={updateData} />}
+        {node.type === 'verification' && <VerificationFields node={node} onUpdate={updateData} />}
       </div>
 
       {/* Delete */}
@@ -89,6 +115,33 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
 }
 
 // ── Components ─────────────────────────────────────────────────────────────
+
+function ChecklistCheckbox({ nodeId, index, onUpdate, invoke }: { nodeId: string, index: number, onUpdate: () => void, invoke: any }) {
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    invoke('workflow:get-context', `__check_${nodeId}_${index}`).then((res: any) => {
+      if (res.ok) {
+        const val = unwrapIpc<string>(res);
+        setChecked(val === 'true');
+      }
+    }).catch(log.error);
+  }, [invoke, nodeId, index]);
+
+  return (
+    <input
+      type="checkbox"
+      className="rounded border-zinc-700 bg-zinc-900 text-copernicus-phosphor focus:ring-0"
+      checked={checked}
+      onChange={async (e) => {
+        const isChecked = e.target.checked;
+        setChecked(isChecked);
+        await invoke('workflow:set-context', `__check_${nodeId}_${index}`, isChecked ? 'true' : 'false');
+        onUpdate();
+      }}
+    />
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -200,6 +253,60 @@ function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onProvider
       </Field>
       <Field label="Max Tokens">
         <DebouncedInput type="number" className="inspector-input" initialValue={data.maxTokens ?? 2048} onCommit={(v: number) => onUpdate({ maxTokens: v })} />
+      </Field>
+    </>
+  );
+}
+
+function VerificationFields({ node, onUpdate, invoke }: any) {
+  const data = node.data;
+  const checklist: string[] = data.checklist ?? [];
+
+  return (
+    <>
+      <Field label="Variant">
+        <select className="inspector-input" value={data.variant} onChange={e => onUpdate({ variant: e.target.value })}>
+          <option value="verification">verification</option>
+        </select>
+      </Field>
+      <Field label="Checklist Items">
+        <div className="flex flex-col gap-2">
+          {checklist.map((item, i) => (
+            <div key={i} className="flex flex-col gap-1 border border-zinc-800 p-2 rounded">
+              <div className="flex items-center gap-2">
+                <DebouncedInput
+                  className="inspector-input flex-1"
+                  initialValue={item}
+                  onCommit={(v: string) => {
+                    const copy = [...checklist];
+                    copy[i] = v;
+                    onUpdate({ checklist: copy });
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const copy = [...checklist];
+                    copy.splice(i, 1);
+                    onUpdate({ checklist: copy });
+                  }}
+                  className="text-zinc-500 hover:text-red-400 font-mono text-xs px-1"
+                >
+                  ✕
+                </button>
+              </div>
+              <label className="flex items-center gap-2 text-[10px] text-zinc-400 mt-1 cursor-pointer">
+                <ChecklistCheckbox nodeId={node.id} index={i} onUpdate={() => onUpdate({ checklist: [...checklist] })} invoke={invoke} />
+                Completed
+              </label>
+            </div>
+          ))}
+          <button
+            onClick={() => onUpdate({ checklist: [...checklist, ''] })}
+            className="text-left text-[10px] text-zinc-500 hover:text-copernicus-phosphor mt-1"
+          >
+            + Add item
+          </button>
+        </div>
       </Field>
     </>
   );

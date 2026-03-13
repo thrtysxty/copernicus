@@ -247,6 +247,9 @@ export class WorkflowEngine {
         case 'flow':
           output = await this.dispatchFlow(node);
           break;
+        case 'verification':
+          output = await this.dispatchVerification(node);
+          break;
         default:
           output = `unknown:${node.type}`;
       }
@@ -596,6 +599,52 @@ export class WorkflowEngine {
       default:
         return 'pass';
     }
+  }
+
+  private async dispatchVerification(node: WFNode): Promise<string> {
+    if (!this.services) throw new Error('ENGINE_SERVICES_NOT_INJECTED');
+    const d = node.data as import('./types').VerificationNodeData;
+
+    const failures: string[] = [];
+
+    // TSC check
+    try {
+      await this.runShell('npx tsc --noEmit');
+    } catch {
+      failures.push('TSC failed');
+    }
+
+    // LSP check
+    const lspManager = this.services.lspManager;
+    if (!lspManager) {
+      failures.push('LSPManager not available');
+    } else {
+      try {
+        const status = await lspManager.workspaceCheck();
+        if (status.errorCount > 0) {
+          failures.push(`LSP check failed (${status.errorCount} errors)`);
+        }
+      } catch {
+        failures.push('LSP check failed');
+      }
+    }
+
+    // AC Checklist check
+    if (d.checklist && d.checklist.length > 0) {
+      const allChecked = d.checklist.every((_, i) => this.context.get(`__check_${node.id}_${i}`) === 'true');
+      if (!allChecked) {
+        failures.push('Checklist incomplete');
+      }
+    }
+
+    if (failures.length > 0) {
+      this.transition('PAUSED');
+      const msg = failures.join('\n');
+      this.updateNodeStatus(node.id, 'paused', msg);
+      throw new Error(`Verification failed:\n${msg}`);
+    }
+
+    return 'verification:passed';
   }
 
   private resolveBaseUrl(provider: string): string {
