@@ -297,6 +297,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #343 | Ghost Implementation Shadow Coding | DRAFT | P2 |
 | #344 | Crt Pulse Shaders | DRAFT | P3 |
 | #345 | Time Travel Orchestration | DRAFT | P3 |
+| #367 | Planner Inspector Polish | DRAFT | P1 |
+| #368 | Editor Header Button Reflow | DRAFT | P2 |
+| #369 | Search Slide Up Drawer | DRAFT | P2 |
+| #370 | Designer View Header Fix | DRAFT | P1 |
+| #371 | Designer Canvas Objects | DRAFT | P2 |
+| #372 | Orchestrator Tile Library | DRAFT | P2 |
+| #373 | Orchestrator Tile Inspector | DRAFT | P2 |
 | #374 | Genesis Repo Browser | DRAFT | P1 |
 | #375 | Terminal Cwd Indicator | DRAFT | P2 |
 | #379 | Settings Personas And Templates | DRAFT | P1 |
