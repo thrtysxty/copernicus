@@ -56,6 +56,7 @@ const SEND_CHANNELS = new Set([
   'git:current-branch', 'git:list-branches',
   'codebase:text-search', 'codebase:semantic-search',
   'diagnostics:run-tsc', 'diagnostics:get-all',
+  'security:score',
 
   // Environment
   'env:scan', 'env:install', 'env:install-complete', 'env:get-versions',

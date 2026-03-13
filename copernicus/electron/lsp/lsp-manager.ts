@@ -40,7 +40,7 @@ export class LspManager {
   private buf = ''
   private win: BrowserWindow | null = null
   private fileVersions = new Map<string, number>()
-  private diagnosticsCache = new Map<string, any[]>()
+  public diagnosticsCache = new Map<string, any[]>()
 
   setWindow(win: BrowserWindow) {
     this.win = win

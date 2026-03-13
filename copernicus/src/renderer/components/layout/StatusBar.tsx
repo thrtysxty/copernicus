@@ -36,6 +36,7 @@ export const StatusBar: React.FC = () => {
   const [hasError, setHasError] = useState(false)
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
   const [lspErrorCount, setLspErrorCount] = useState(0)
+  const [securityScore, setSecurityScore] = useState<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number } | null>(null)
 
   const modelAnchorRef = useRef<HTMLDivElement>(null)
   const [modelOverlayOpen, setModelOverlayOpen] = useState(false)
@@ -146,6 +147,19 @@ export const StatusBar: React.FC = () => {
     return () => removeLsp()
   }, [invoke])
 
+  // Poll security score every 5 seconds
+  useEffect(() => {
+    const pollScore = async () => {
+      try {
+        const res = await invoke<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number }>('security:score')
+        if (res) setSecurityScore(res)
+      } catch { /* ignore polling errors */ }
+    }
+    pollScore()
+    const interval = setInterval(pollScore, 5000)
+    return () => clearInterval(interval)
+  }, [invoke])
+
   const formatTokens = (tokens: number) => {
     if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`
     if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}k`
@@ -218,6 +232,20 @@ export const StatusBar: React.FC = () => {
           >
             ⚠ {lspErrorCount}
           </div>
+        )}
+
+        {/* Security Posture Score */}
+        {securityScore && (
+          <Tooltip content={`${securityScore.lspErrors} LSP errors · ${securityScore.sentinelHits} Sentinel hits · ${securityScore.npmAuditIssues} npm audit issues`}>
+            <div
+              className="flex items-center gap-1.5 px-3 cursor-pointer hover:text-zinc-400 transition-colors"
+              onClick={() => useLayoutStore.getState().setView('reporter')}
+            >
+              <span className={`text-[9px] font-mono font-bold ${securityScore.grade === 'A' ? 'text-green-400' : securityScore.grade === 'B' ? 'text-yellow-400' : 'text-red-400'}`}>
+                {securityScore.grade}
+              </span>
+            </div>
+          </Tooltip>
         )}
 
         {/* Model Badge — click to open model picker */}
