@@ -28,6 +28,11 @@ STORY_TEMPLATE = """# User Story {number}: {title}
 1.  **Criteria 1:** ...
 2.  **Criteria 2:** ...
 
+## Test Cases
+*Note: Tests must be written before implementation (RED phase).*
+- [ ] Test Case 1: ...
+- [ ] Test Case 2: ...
+
 ## IPC Channels Used
 - [ ] List any new or modified IPC channels here
 
@@ -45,6 +50,12 @@ STORY_TEMPLATE = """# User Story {number}: {title}
 
 ## Technical Constraints
 - **Constraint 1:** ...
+
+## Definition of Done
+- [ ] Tests written (RED phase) before implementation
+- [ ] All tests pass (GREEN phase)
+- [ ] All acceptance criteria met
+- [ ] No type check errors (`npx tsc --noEmit`)
 
 ## Documentation Impact
 - **New Files:**

@@ -34,6 +34,20 @@ If you hit any of these, output `[[SIGNAL_ORCHESTRATOR]]` and stop:
 
 ---
 
+## TDD Protocol — MANDATORY
+
+**Test-Driven Development (TDD) is non-negotiable.** All feature implementations and bug fixes must follow the Red-Green-Refactor cycle. No implementation code may be committed without a corresponding test.
+
+1. **RED Phase:** Write a failing test that clearly describes the expected behaviour from the story's Acceptance Criteria or Test Cases section. Run the test to confirm it fails (proves the test is valid).
+2. **GREEN Phase:** Implement the minimum required code to make the test pass. Run the test to confirm it passes.
+3. **REFACTOR Phase:** Clean up the implementation and test code without breaking the tests. Ensure code quality, naming conventions, and adherence to architecture rules.
+
+### TDD Rules
+- You must commit your failing tests (RED) and your passing implementation (GREEN) according to the story.
+- If a story lacks test cases, you must define them based on the Acceptance Criteria before writing any code.
+
+---
+
 ## Pre-Dispatch Checklist
 Before dispatching any story to an agent, confirm:
 - [ ] All IPC invocations use `handleIpc()` wrapper (main) and `unwrapIpc()` (renderer)
@@ -527,6 +541,8 @@ result.data?.forEach(...)  // ← correct
 
 Run ALL of these before submitting your pull request:
 
+- [ ] Tests written (RED phase) before implementation
+- [ ] All tests pass (GREEN phase)
 - [ ] `cd copernicus && npx tsc --noEmit` — **zero errors** (not warnings — zero)
 - [ ] Every new `ipcMain.handle()` in `main.ts` uses `handleIpc()` wrapper
 - [ ] Every new channel in `main.ts` is also in `preload.ts SEND_CHANNELS`
@@ -543,12 +559,14 @@ Run ALL of these before submitting your pull request:
 
 ## Definition of Done (applies to every story)
 
-1. `cd copernicus && npx tsc --noEmit` — **zero errors**
-2. All new `ipcMain.handle()` channels present in `preload.ts SEND_CHANNELS`
-3. No forbidden patterns introduced
-4. Files changed match story scope (Key Files section)
-5. Story-specific Definition of Done items all satisfied
-6. No existing functionality regressed (Kanban loads, Chat works, Editor works)
+1. Tests written (RED phase) before implementation
+2. All tests pass (GREEN phase)
+3. `cd copernicus && npx tsc --noEmit` — **zero errors**
+4. All new `ipcMain.handle()` channels present in `preload.ts SEND_CHANNELS`
+5. No forbidden patterns introduced
+6. Files changed match story scope (Key Files section)
+7. Story-specific Definition of Done items all satisfied
+8. No existing functionality regressed (Kanban loads, Chat works, Editor works)
 
 ---
 
