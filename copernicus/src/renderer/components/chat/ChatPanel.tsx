@@ -21,6 +21,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       front={
         <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono min-w-0 overflow-hidden">
           <ChatThread
+            authStatus={chat.authStatus}
             messages={chat.messages}
             openFilePath={openFilePath}
             pendingModelSwitch={chat.pendingModelSwitch}

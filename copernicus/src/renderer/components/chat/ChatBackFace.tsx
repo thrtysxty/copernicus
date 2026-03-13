@@ -16,7 +16,7 @@ interface ChatBackFaceProps {
   context: ContextItem[]
   setContext: React.Dispatch<React.SetStateAction<ContextItem[]>>
   handleClearContext: () => void
-  authStatus: AuthStatus | null
+  authStatus: AuthStatus[]
   isSavingPrompt: boolean
   setIsSavingPrompt: (v: boolean) => void
   newPromptName: string
@@ -194,8 +194,8 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
                   </span>
                 </div>
                 <div 
-                  className={`w-2 h-2 rounded-full ${authStatus?.isActive ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} 
-                  title={authStatus?.isActive ? 'Authenticated' : 'Not Authenticated'}
+                  className={`w-2 h-2 rounded-full ${authStatus?.length > 0 ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} 
+                  title={authStatus?.length > 0 ? 'Authenticated' : 'Not Authenticated'}
                 />
 
               </div>

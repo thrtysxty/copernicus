@@ -39,7 +39,8 @@ export interface ModelInfo {
 }
 
 export interface AuthStatus {
-  isActive: boolean
+  provider: string
+  hasKey: boolean
   user?: any
 }
 
@@ -87,7 +88,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [lastGuideQuestion, setLastGuideQuestion] = useState('')
   const [isSavingPrompt, setIsSavingPrompt] = useState(false)
   const [newPromptName, setNewPromptName] = useState('')
-  const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null)
+  const [authStatus, setAuthStatus] = useState<AuthStatus[]>([])
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([])
 
   const streamingIdRef = useRef<string | null>(null)
@@ -108,7 +109,10 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   }, [isFlipped, invoke])
 
   useEffect(() => {
-    invoke<AuthStatus>('auth:status').then(status => setAuthStatus(status)).catch(() => {})
+    invoke<IpcResult<AuthStatus[]>>('auth:status').then(res => {
+      const data = unwrapIpc<AuthStatus[]>(res);
+      if (Array.isArray(data)) setAuthStatus(data);
+    }).catch(() => {})
   }, [invoke, isFlipped])
 
   useEffect(() => {
@@ -154,7 +158,20 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   }
 
   useEffect(() => {
-    invoke<IpcResult<ModelInfo[]>>('models:list').then(res => setAvailableModels(unwrapIpc<ModelInfo[]>(res) ?? [])).catch(log.error)
+    Promise.all([
+      invoke<IpcResult<ModelInfo[]>>('models:list'),
+      invoke<IpcResult<{ ok: boolean, models: ModelInfo[] }>>('models:list-ollama').catch(() => null)
+    ]).then(([res, ollamaRes]) => {
+      const allModels = unwrapIpc<ModelInfo[]>(res) ?? [];
+      if (ollamaRes) {
+        const ollamaData = unwrapIpc<{ ok: boolean, models: ModelInfo[] }>(ollamaRes);
+        if (ollamaData?.ok && Array.isArray(ollamaData.models)) {
+          allModels.push(...ollamaData.models);
+        }
+      }
+      setAvailableModels(allModels);
+    }).catch(log.error)
+
     invoke<any>('devtime:status').then(res => { setIsRepoActive(!!(res && res.session)) })
   }, [invoke])
 

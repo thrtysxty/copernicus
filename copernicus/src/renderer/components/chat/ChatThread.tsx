@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { unwrapIpc } from '../../types/ipc'
-import { Message, ModelInfo } from './useChatPanel'
+import { Message, ModelInfo, AuthStatus } from './useChatPanel'
 import { CheckCircle2, Play, Eye, Save, Hash, ChevronDown, Minimize2, Maximize2, RotateCcw, ChevronRight } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { UIUpdateChip } from './UIUpdateChip'
@@ -75,6 +75,7 @@ interface ChatThreadProps {
   model: string
   setModel: (v: string) => void
   availableModels: ModelInfo[]
+  authStatus: AuthStatus[]
   showModelPicker: boolean
   setShowModelPicker: (v: boolean) => void
   isRepoActive: boolean
@@ -213,6 +214,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
   model,
   setModel,
   availableModels,
+  authStatus,
   showModelPicker,
   setShowModelPicker,
   isRepoActive,
@@ -320,22 +322,42 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
 
             {showModelPicker && (
                 <div className="absolute top-full left-0 mt-1 w-48 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 py-1 overflow-hidden">
-                {availableModels.map(m => (
-                    <button
-                    key={m.id}
-                    className={`w-full text-left px-3 py-2 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor/5 border-l-2 border-copernicus-phosphor' : ''}`}
-                    onClick={() => {
-                        if (model !== m.id) {
-                          invoke('snapshot:save', { panel_id: 'chat', model_id: model, provider: availableModels.find((x: any) => x.id === model)?.provider || 'unknown', messages: messages.filter(m => m.role !== 'copernicus') }).catch(() => {})
-                        }
-                        setModel(m.id)
-                        setShowModelPicker(false)
-                    }}
-                    >
-                    <span className={model === m.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}>{m.name}</span>
-                    <span className="text-[8px] text-zinc-600 uppercase">{m.provider} {m.contextWindow > 0 ? `• ${m.contextWindow.toLocaleString()} tokens` : ''}</span>
-                    </button>
-                ))}
+                {['openai', 'anthropic', 'google', 'ollama', 'openrouter', 'deepinfra'].map(provider => {
+                  const s = authStatus.find(a => a.provider === provider)
+                  const isActive = s?.hasKey || provider === 'ollama' // ollama might be active without key if running locally
+                  const pModels = availableModels.filter(m => m.provider === provider)
+                  if (pModels.length === 0 && isActive) return null // Hide if no models fetched
+                  
+                  return (
+                    <div key={provider}>
+                      <div className="px-3 py-1 text-[8px] uppercase tracking-widest text-zinc-500 bg-black/40 border-y border-copernicus-steel/50 mt-1 first:mt-0">
+                        {provider}
+                      </div>
+                      {!isActive ? (
+                        <div className="px-3 py-1 text-[9px] text-zinc-600 italic">
+                          Configure in Settings
+                        </div>
+                      ) : (
+                        pModels.map(m => (
+                          <button
+                            key={m.id}
+                            className={`w-full text-left px-3 py-1.5 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor/5 border-l-2 border-copernicus-phosphor' : ''}`}
+                            onClick={() => {
+                                if (model !== m.id) {
+                                  invoke('snapshot:save', { panel_id: 'chat', model_id: m.id, provider: m.provider, messages: messages.filter(msg => msg.role !== 'copernicus') }).catch(() => {})
+                                }
+                                setModel(m.id)
+                                setShowModelPicker(false)
+                            }}
+                          >
+                            <span className={model === m.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}>{m.name}</span>
+                            <span className="text-[8px] text-zinc-600 uppercase">{m.contextWindow > 0 ? `${m.contextWindow.toLocaleString()} tokens` : '—'}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )
+                })}
                 </div>
             )}
           </div>
