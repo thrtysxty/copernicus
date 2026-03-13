@@ -19,6 +19,15 @@
       ],
       "description": "Fetch External Open API specs and Pytest documentation",
       "disabled": false
+    },
+    "lsp-diagnostics": {
+      "command": "python3",
+      "args": [
+        "backend/mcp/lsp_diagnostics_tool.py"
+      ],
+      "env": {
+        "COPERNICUS_WORKSPACE": "${workspaceFolder}"
+      }
     }
   },
   "lifecycle_hooks": {

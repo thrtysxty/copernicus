@@ -12,6 +12,7 @@ Gemini's role is **Implement exactly what the story says**. Not plan. Not archit
 - Reads the assigned story file completely before touching any code
 - Implements the AC items listed — no more, no fewer
 - Runs `cd copernicus && npx tsc --noEmit` before every commit
+- Before committing any implementation story, call the lsp-diagnostics MCP tool and confirm errorCount === 0.
 - Commits with the exact format: `feat(story-NNN): description` — no `Co-Authored-By` or authoring trailers
 - Pushes on completion and exits
 
