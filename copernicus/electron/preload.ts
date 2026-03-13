@@ -11,7 +11,7 @@ const SEND_CHANNELS = new Set([
   'chat:send', 'chat:confirm-model-switch',
   // File System
   'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
-  'dialog:open-file',
+  'dialog:open-file', 'dialog:open-folder',
   'app:get-root-path', 'app:set-root-path', 'app:get-user-guide',
   // Git
   'git:branch',

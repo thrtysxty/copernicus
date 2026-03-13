@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
-         ShieldCheck, Key, Zap, Github, Plus, Layout } from 'lucide-react';
+         ShieldCheck, Key, Zap, Github, Layout } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc'
 
@@ -17,11 +17,12 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [hourlyRate, setHourlyRate] = useState('65');
 
   // Step 3 State
-  const [availableProjects, setAvailableProjects] = useState<string[]>([]);
+  const [, setAvailableProjects] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [billingMode, setBillingMode] = useState<'CAPEX' | 'OPEX' | 'NONE'>('CAPEX');
+  const [invalidGitRepoWarning, setInvalidGitRepoWarning] = useState<string | null>(null);
 
   // Anthropic
   const [anthropicMethod, setAnthropicMethod] = useState<'cli' | 'apikey' | null>(null);
@@ -100,6 +101,31 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       });
     }
   }, [step, workspacePath, invoke]);
+
+  const handleBrowseProject = async () => {
+    try {
+      const result = await invoke<any>('dialog:open-folder');
+      const path = unwrapIpc<string | null>(result);
+      if (path) {
+        if (isCreatingNew) {
+          setNewProjectName(path);
+        } else {
+          setSelectedProject(path);
+          // Check if valid git repo
+          invoke<any>('fs:list-dir', path).then((res) => {
+             const nodes = unwrapIpc<any[]>(res) ?? [];
+             if (!nodes.some(n => n.name === '.git' && n.isDir)) {
+                 setInvalidGitRepoWarning('Warning: The selected folder is not a valid git repository.');
+             } else {
+                 setInvalidGitRepoWarning(null);
+             }
+          }).catch(() => setInvalidGitRepoWarning(null));
+        }
+      }
+    } catch (error: unknown) {
+      console.error('Folder selection failed:', error);
+    }
+  };
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
@@ -201,9 +227,12 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke('save-preferences', preferences);
       
       // Target the resolved project path so StoriesManager syncs existing stories
+      // For browsed paths (absolute), use directly; otherwise combine with workspacePath
       const resolvedProject = isCreatingNew ? newProjectName.trim() : selectedProject
-      if (resolvedProject && workspacePath) {
-        const fullPath = `${workspacePath}/${resolvedProject}`
+      const isAbsolutePath = resolvedProject.startsWith('/')
+      const fullPath = isAbsolutePath ? resolvedProject : (workspacePath ? `${workspacePath}/${resolvedProject}` : resolvedProject)
+      if (fullPath) {
+        await invoke('app:set-root-path', fullPath).catch(() => {})
         await invoke('stories:target-project', fullPath).catch(() => {})
       }
 
@@ -454,36 +483,42 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
                         {isCreatingNew ? (
                           <div className="space-y-2">
-                            <input
-                              type="text"
-                              autoFocus
-                              className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors"
-                              placeholder="new-project-name"
-                              value={newProjectName}
-                              onChange={(e) => setNewProjectName(e.target.value)}
-                            />
-                            <p className="text-[9px] text-zinc-600 italic">Will be created in your Repository Store.</p>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                readOnly
+                                className="flex-1 bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors truncate"
+                                placeholder="Select empty folder..."
+                                value={newProjectName}
+                              />
+                              <button 
+                                onClick={handleBrowseProject}
+                                className="bg-copernicus-phosphor/20 hover:bg-copernicus-phosphor/30 text-copernicus-phosphor border border-copernicus-phosphor/30 px-4 py-2 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-all"
+                              >
+                                Browse
+                              </button>
+                            </div>
+                            <p className="text-[9px] text-zinc-600 italic">Select an empty folder for the new repository.</p>
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <select
-                              className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor appearance-none cursor-pointer"
-                              value={selectedProject}
-                              onChange={(e) => setSelectedProject(e.target.value)}
-                            >
-                              {availableProjects.length > 0 ? (
-                                availableProjects.map(p => <option key={p} value={p}>{p}</option>)
-                              ) : (
-                                <option value="" disabled>No projects found in store</option>
-                              )}
-                            </select>
-                            {availableProjects.length === 0 && (
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                readOnly
+                                className="flex-1 bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors truncate"
+                                placeholder="Select existing repo..."
+                                value={selectedProject}
+                              />
                               <button 
-                                onClick={() => setIsCreatingNew(true)}
-                                className="w-full py-2 border border-dashed border-zinc-800 rounded-lg text-[9px] text-zinc-500 hover:text-zinc-300 transition-colors uppercase font-bold"
+                                onClick={handleBrowseProject}
+                                className="bg-copernicus-phosphor/20 hover:bg-copernicus-phosphor/30 text-copernicus-phosphor border border-copernicus-phosphor/30 px-4 py-2 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-all"
                               >
-                                <Plus size={10} className="inline mr-1" /> Create First Project
+                                Browse
                               </button>
+                            </div>
+                            {invalidGitRepoWarning && (
+                              <p className="text-[9px] text-amber-500 italic mt-1">{invalidGitRepoWarning}</p>
                             )}
                           </div>
                         )}

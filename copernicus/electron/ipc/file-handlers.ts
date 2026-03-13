@@ -78,6 +78,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return canceled ? null : filePaths[0];
   }));
 
+  ipcMain.handle('dialog:open-folder', () => handleIpc('dialog:open-folder', [], async () => {
+    const w = BrowserWindow.getAllWindows()[0];
+    if (!w) return null;
+    const { canceled, filePaths } = await dialog.showOpenDialog(w, { properties: ['openDirectory'] });
+    return canceled ? null : filePaths[0];
+  }));
+
   ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc('fs:make-dir', [dirPath], async () => {
     assertSafePath(dirPath);
     await fs.promises.mkdir(dirPath, { recursive: true })
