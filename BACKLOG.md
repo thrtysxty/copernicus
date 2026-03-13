@@ -177,12 +177,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #312 | Terminal Keyboard Input | APPROVED FOR IMPLEMENTATION | P1 |
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
-| #346 | Snapshot Shell Injection Fix | APPROVED FOR IMPLEMENTATION | P0 |
-| #347 | Rewind Safety And Error Surface | APPROVED FOR IMPLEMENTATION | P1 |
-| #348 | Snapshot Map Ordering Fix | APPROVED FOR IMPLEMENTATION | P1 |
-| #349 | Snapshot Ipc Standard Compliance | APPROVED FOR IMPLEMENTATION | P2 |
-| #350 | Detached Head Banner Reset | APPROVED FOR IMPLEMENTATION | P2 |
-| #351 | Snapshot Manager Hardening | APPROVED FOR IMPLEMENTATION | P3 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
 | #357 | Security Posture Score | APPROVED FOR IMPLEMENTATION | P1 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
@@ -226,13 +220,19 @@ This file is auto-generated. Run `make backlog` to update.
 | #244 | Security Fix — Command Injection In Electron Ipc Subprocess Calls | COMPLETE | P0 — SECURITY |
 | #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | COMPLETE | P1 |
 | #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | COMPLETE | P1 |
+| #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
+| #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
+| #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
+| #349 | Snapshot Ipc Standard Compliance | COMPLETE | P2 |
+| #350 | Detached Head Banner Reset | COMPLETE | P2 |
+| #351 | Snapshot Manager Hardening | COMPLETE | P3 |
 | #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
 | #366 | Planner Title Normalization | COMPLETE | P1 |
+| #376 | Model Selection System Wide | COMPLETE | P1 |
 | #377 | Chat Panel Polish | COMPLETE | P1 |
 | #378 | Settings Panel Fixes | COMPLETE | P1 |
 | #380 | Application Window Controls | COMPLETE | P1 |
 | #382 | Git Branch Ux | COMPLETE | P1 |
-| #376 | Model Selection System Wide | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
