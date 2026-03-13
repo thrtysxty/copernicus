@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { MessageSquare, Code, Workflow, ChevronUp, ChevronDown, Info, Search } from 'lucide-react'
+import { MessageSquare, Code, Workflow, GripVertical, Info, Search } from 'lucide-react'
 import { SettingsLoadResponse } from '../../../types/ipc'
 import log from '../../../utils/logger'
 
@@ -52,6 +52,8 @@ export const ModelsSection: React.FC = () => {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
   const loadData = async () => {
     setLoading(true)
@@ -105,18 +107,24 @@ export const ModelsSection: React.FC = () => {
     }
   }
 
-  const movePriority = async (index: number, direction: 'up' | 'down') => {
-    const newPriority = [...defaults.embeddingPriority]
-    const target = direction === 'up' ? index - 1 : index + 1
-    if (target < 0 || target >= newPriority.length) return
-    
-    const temp = newPriority[index]
-    if (temp !== undefined && newPriority[target] !== undefined) {
-      newPriority[index] = newPriority[target]!
-      newPriority[target] = temp
+  const handleDragStart = (idx: number) => setDraggedIdx(idx)
+  const handleDrop = async (idx: number) => {
+    if (draggedIdx === null || draggedIdx === idx) {
+      setDraggedIdx(null)
+      setHoveredIdx(null)
+      return
     }
-    
+
+    const newPriority = [...defaults.embeddingPriority]
+    const [moved] = newPriority.splice(draggedIdx, 1)
+    if (moved) {
+      newPriority.splice(idx, 0, moved)
+    }
+
     setDefaults(prev => ({ ...prev, embeddingPriority: newPriority }))
+    setDraggedIdx(null)
+    setHoveredIdx(null)
+
     try {
       await invoke('settings:save', { modelDefaults: { ...defaults, embeddingPriority: newPriority } })
       addToast('Embedding priority updated', 'success')
@@ -228,26 +236,22 @@ export const ModelsSection: React.FC = () => {
         </div>
         <div className="space-y-2">
           {defaults.embeddingPriority.map((p, i) => (
-            <div key={p} className="flex items-center justify-between p-3 bg-zinc-900/30 border border-zinc-800 rounded-lg group">
+            <div 
+              key={p} 
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={(e) => { e.preventDefault(); setHoveredIdx(i) }}
+              onDragLeave={() => setHoveredIdx(null)}
+              onDrop={() => handleDrop(i)}
+              className={`flex items-center justify-between p-3 bg-zinc-900/30 border rounded-lg group transition-colors cursor-default ${
+                draggedIdx === i ? 'opacity-50 border-zinc-700' : 'border-zinc-800'
+              } ${hoveredIdx === i && draggedIdx !== i ? 'border-t-2 border-t-copernicus-phosphor' : ''}`}
+            >
               <div className="flex items-center gap-3">
-                <span className="text-[10px] font-mono text-zinc-600">{i + 1}.</span>
+                <div className="text-zinc-700 group-hover:text-zinc-500 cursor-grab active:cursor-grabbing">
+                  <GripVertical size={14} />
+                </div>
                 <span className="text-xs font-bold text-zinc-300 uppercase tracking-tighter">{p}</span>
-              </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => movePriority(i, 'up')}
-                  disabled={i === 0}
-                  className="p-1.5 hover:text-copernicus-phosphor disabled:text-zinc-800 transition-colors"
-                >
-                  <ChevronUp size={14} />
-                </button>
-                <button 
-                  onClick={() => movePriority(i, 'down')}
-                  disabled={i === defaults.embeddingPriority.length - 1}
-                  className="p-1.5 hover:text-copernicus-phosphor disabled:text-zinc-800 transition-colors"
-                >
-                  <ChevronDown size={14} />
-                </button>
               </div>
             </div>
           ))}

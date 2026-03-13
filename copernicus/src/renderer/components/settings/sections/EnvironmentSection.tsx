@@ -167,7 +167,7 @@ export const EnvironmentSection: React.FC = () => {
             id="playwright"
             name="Browser Automation"
             description="Playwright drivers for web scraping and agent testing."
-            status={data?.ideDeps['playwright-core']}
+            status={data?.ideDeps?.['playwright-core']}
             installCmd="npx playwright install chromium"
             busy={installing === 'playwright'}
             onInstall={handleInstall}
@@ -176,7 +176,7 @@ export const EnvironmentSection: React.FC = () => {
             id="eslint"
             name="Linter Engine"
             description="ESLint support for automated code quality checks."
-            status={data?.ideDeps['eslint']}
+            status={data?.ideDeps?.['eslint']}
             installCmd="npm install -g eslint"
             busy={installing === 'eslint'}
             onInstall={handleInstall}
@@ -185,7 +185,7 @@ export const EnvironmentSection: React.FC = () => {
             id="vitest"
             name="Test Framework"
             description="Unit testing engine for autonomous verification."
-            status={data?.ideDeps['vitest']}
+            status={data?.ideDeps?.['vitest']}
             installCmd="npm install -g vitest"
             busy={installing === 'vitest'}
             onInstall={handleInstall}

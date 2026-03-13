@@ -6,6 +6,10 @@ const ipcRenderer = window.ipcRenderer
 
 export function useThemeManager() {
   const phosphorColor = useLayoutStore((state) => state.phosphorColor)
+  const uiDensity = useLayoutStore((state) => state.uiDensity)
+  const fontSize = useLayoutStore((state) => state.fontSize)
+  const animationsEnabled = useLayoutStore((state) => state.animationsEnabled)
+  const crtMode = useLayoutStore((state) => state.crtMode)
 
   useEffect(() => {
     const root = document.documentElement
@@ -14,10 +18,32 @@ export function useThemeManager() {
       root.style.setProperty('--copernicus-phosphor-rgb', preset.rgb)
       root.style.setProperty('--phosphor', preset.hex)
 
+      // Apply other appearance settings
+      root.style.setProperty('--editor-font-size', `${fontSize}px`)
+      
+      if (!animationsEnabled) {
+        root.classList.add('disable-animations')
+      } else {
+        root.classList.remove('disable-animations')
+      }
+
+      if (crtMode) {
+        root.classList.add('crt-mode')
+      } else {
+        root.classList.remove('crt-mode')
+      }
+
+      // Handle UI density classes
+      root.classList.remove('ui-density-compact', 'ui-density-normal', 'ui-density-comfortable')
+      root.classList.add(`ui-density-${uiDensity}`)
+
       // Persist to settings.json via main process so splash screen can read it on next launch
       if (ipcRenderer) {
-        ipcRenderer.invoke('settings:save', { phosphorColor: preset.hex }).catch(log.error)
+        ipcRenderer.invoke('settings:save', { 
+          phosphorColor: preset.hex,
+          appearance: { uiDensity, fontSize, animationsEnabled, crtMode }
+        }).catch(log.error)
       }
     }
-  }, [phosphorColor])
+  }, [phosphorColor, uiDensity, fontSize, animationsEnabled, crtMode])
 }

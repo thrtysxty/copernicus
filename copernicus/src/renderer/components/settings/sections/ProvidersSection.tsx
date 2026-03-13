@@ -401,6 +401,14 @@ export const ProvidersSection: React.FC = () => {
                     type="password"
                     value={keyDraft[id] ?? ''}
                     onChange={e => setKeyDraft(prev => ({ ...prev, [id]: e.target.value }))}
+                    onPaste={e => {
+                      const text = e.clipboardData.getData('text')
+                      if (text) {
+                        e.stopPropagation()
+                        setKeyDraft(prev => ({ ...prev, [id]: text }))
+                        saveKey(id) // Attempting to save immediately just in case
+                      }
+                    }}
                     onBlur={() => saveKey(id)}
                     placeholder={s?.hasKey ? 'API key stored — paste to replace' : (isOllamaCloud ? 'Bearer Token…' : 'Paste API key…')}
                     className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[10px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
