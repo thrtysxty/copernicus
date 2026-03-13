@@ -7,6 +7,7 @@ import { useToastStore } from '../../store/toastStore'
 import log from '../../utils/logger'
 import { unwrapIpc } from '../../types/ipc'
 import { ChatPanel } from '../chat/ChatPanel'
+import { stripStoryPrefix } from '../../utils/storyTitle'
 
 interface Story {
   id: string
@@ -340,7 +341,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
             >
               <option value="">(No Epic)</option>
               {epics.map(ep => (
-                <option key={ep.id} value={ep.id}>{ep.title.replace(/^User Story\s+#?\d+[:\s]*/i, '').trim() || ep.id}</option>
+                <option key={ep.id} value={ep.id}>{stripStoryPrefix(ep.title)}</option>
               ))}
             </select>
           </div>
@@ -415,7 +416,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
             data-testid="story-detail-title"
             className="text-base font-bold text-white mb-3 border-b border-copernicus-phosphor/20 pb-3"
           >
-            {story.title.replace(/^User Story\s+#?\d+[:\s]*/i, '').trim() || story.title}
+            {stripStoryPrefix(story.title)}
           </h1>
           {isEditing ? (
             <textarea

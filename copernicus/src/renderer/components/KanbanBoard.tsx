@@ -7,6 +7,7 @@ import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap } f
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 import { StoryDetail } from './planning/StoryDetail'
+import { stripStoryPrefix } from '../utils/storyTitle'
 
 interface Story {
   id: string
@@ -105,7 +106,7 @@ const StoryCard = React.memo(({
       <div className="flex items-start gap-2">
         {story.type === 'Epic' && <Crown size={10} className="text-amber-400 mt-0.5" />}
         {story.type === 'Bug' && <Bug size={10} className="text-red-400 mt-0.5" />}
-        <span className={`text-[11px] font-medium leading-tight transition-colors line-clamp-2 ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{story.title.replace(/^User Story\s+#?\d+[:\s]*/i, '').trim() || story.title}</span>
+        <span className={`text-[11px] font-medium leading-tight transition-colors line-clamp-2 ${activeStoryId === story.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}`}>{stripStoryPrefix(story.title)}</span>
       </div>
 
       {story.flagged && (
@@ -336,7 +337,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                   >
                     <div className="flex items-center gap-2">
                       <Crown size={9} className={`shrink-0 ${isActive ? 'text-amber-300' : 'text-amber-600'}`} />
-                      <span className={`text-[9px] font-mono font-bold uppercase tracking-wide max-w-[140px] truncate ${isActive ? 'text-amber-200' : 'text-amber-500'}`}>{epic.title.replace(/^User Story\s+#?\d+[:\s]*/i, '').trim() || epic.title}</span>
+                      <span className={`text-[9px] font-mono font-bold uppercase tracking-wide max-w-[140px] truncate ${isActive ? 'text-amber-200' : 'text-amber-500'}`}>{stripStoryPrefix(epic.title)}</span>
                     </div>
                     {isActive && (
                       <span className="text-[7px] font-mono text-amber-600 pl-[17px]">#{epic.id.match(/\d+/)?.[0] ?? epic.id} · {epicStoryCount} {epicStoryCount === 1 ? 'story' : 'stories'} · dbl-click to open</span>
