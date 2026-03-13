@@ -33,7 +33,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #270 | Allowed Personas Code Reviewer | APPROVED FOR IMPLEMENTATION | HIGH |
 | #271 | Gemini Spawn Cwd Guard | APPROVED FOR IMPLEMENTATION | HIGH |
 | #273 | Llm Auth Webview Disable | APPROVED FOR IMPLEMENTATION | HIGH |
-| #352 | Ollama Anthropic Provider | APPROVED FOR IMPLEMENTATION | High |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -59,6 +58,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
 | #217 | Nodeinspector Focus And Stability | COMPLETE | High |
 | #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
+| #352 | Ollama Anthropic Provider | COMPLETE | High |
 | #353 | Lsp Guardrail Enforcement | COMPLETE | High |
 | #355 | Webhook Hmac Verification | COMPLETE | High |
 | #121 | Parallel Agent Review Gate | COMPLETED | HIGH |
@@ -178,7 +178,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
-| #357 | Security Posture Score | APPROVED FOR IMPLEMENTATION | P1 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
@@ -188,7 +187,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #367 | Planner Inspector Polish | APPROVED FOR IMPLEMENTATION | P1 |
 | #368 | Editor Header Button Reflow | APPROVED FOR IMPLEMENTATION | P2 |
 | #374 | Genesis Repo Browser | APPROVED FOR IMPLEMENTATION | P1 |
-| #375 | Terminal Cwd Indicator | APPROVED FOR IMPLEMENTATION | P2 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #381 | File Explorer Context Menu | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -231,9 +229,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #349 | Snapshot Ipc Standard Compliance | COMPLETE | P2 |
 | #350 | Detached Head Banner Reset | COMPLETE | P2 |
 | #351 | Snapshot Manager Hardening | COMPLETE | P3 |
+| #357 | Security Posture Score | COMPLETE | P1 |
 | #360 | Tdd Enforcement | COMPLETE | P1 |
 | #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
 | #366 | Planner Title Normalization | COMPLETE | P1 |
+| #375 | Terminal Cwd Indicator | COMPLETE | P2 |
 | #376 | Model Selection System Wide | COMPLETE | P1 |
 | #377 | Chat Panel Polish | COMPLETE | P1 |
 | #378 | Settings Panel Fixes | COMPLETE | P1 |
