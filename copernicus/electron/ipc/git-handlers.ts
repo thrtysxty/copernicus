@@ -29,6 +29,23 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
     return { ok: true }
   }))
 
+  ipcMain.handle('git:current-branch', () => handleIpc('git:current-branch', [], () => {
+    try {
+      const out = execSync('git rev-parse --abbrev-ref HEAD', { cwd: cwd(), encoding: 'utf8' })
+      return out.trim()
+    } catch {
+      return 'unknown'
+    }
+  }))
+
+  ipcMain.handle('git:list-branches', () => handleIpc('git:list-branches', [], () => {
+    const out = execSync('git branch', { cwd: cwd(), encoding: 'utf8' })
+    return out.trim().split('\n').map(b => ({
+      name: b.replace(/^\*?\s+/, ''),
+      active: b.startsWith('*')
+    }))
+  }))
+
   ipcMain.handle('git:branches', () => handleIpc('git:branches', [], () => {
     const out = execSync('git branch', { cwd: cwd(), encoding: 'utf8' })
     return out.trim().split('\n').map(b => ({
@@ -38,6 +55,10 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('git:checkout', (_e, { branch }: { branch: string }) => handleIpc('git:checkout', [branch], () => {
+    // Basic validation to prevent shell injection, though execSync child_process needs it when passing directly into shell without an array
+    if (/[^a-zA-Z0-9_\-./]/.test(branch)) {
+      throw new Error('Invalid branch name')
+    }
     execSync(`git checkout ${branch}`, { cwd: cwd() })
     return { ok: true }
   }))

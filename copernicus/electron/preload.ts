@@ -53,6 +53,7 @@ const SEND_CHANNELS = new Set([
   'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server', 'mcp:get-status',
 
   'git:status', 'git:stage', 'git:unstage', 'git:commit', 'git:branches', 'git:checkout', 'git:new-branch', 'git:diff-file', 'github:list-prs',
+  'git:current-branch', 'git:list-branches',
   'codebase:text-search', 'codebase:semantic-search',
   'diagnostics:run-tsc', 'diagnostics:get-all',
 

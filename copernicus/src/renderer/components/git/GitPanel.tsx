@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { GitBranch, Check, ExternalLink } from 'lucide-react'
+import { Check, ExternalLink } from 'lucide-react'
 import { useLayoutStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { IpcResult, unwrapIpc } from '../../types/ipc'
+import { BranchSelector } from './BranchSelector'
 
 interface GitFile {
   status: string
   file: string
-}
-
-interface Branch {
-  name: string
-  active: boolean
 }
 
 interface PullRequest {
@@ -24,7 +20,6 @@ interface PullRequest {
 
 export const GitPanel: React.FC = () => {
   const [status, setStatus] = useState<GitFile[]>([])
-  const [branches, setBranches] = useState<Branch[]>([])
   const [prs, setPrs] = useState<PullRequest[]>([])
   const [commitMessage, setCommitMessage] = useState('')
   const [diff, setDiff] = useState<string>('')
@@ -38,10 +33,9 @@ export const GitPanel: React.FC = () => {
     setLoading(true)
     try {
       const s = await invoke<IpcResult<GitFile[]>>('git:status')
-      setStatus(unwrapIpc(s) ?? [])
-      
-      const b = await invoke<IpcResult<Branch[]>>('git:branches')
-      setBranches(unwrapIpc(b) ?? [])
+      const statusFiles = unwrapIpc(s) as GitFile[] ?? []
+      setStatus(statusFiles)
+      useLayoutStore.getState().setGitDirty(statusFiles.length > 0)
       
       const p = await invoke<IpcResult<PullRequest[]>>('github:list-prs')
       setPrs(unwrapIpc(p) ?? [])
@@ -53,8 +47,6 @@ export const GitPanel: React.FC = () => {
   useEffect(() => {
     refresh()
   }, [])
-
-  const currentBranch = branches.find(b => b.active)?.name || 'unknown'
 
   const handleStage = async (file: string) => {
     await invoke('git:stage', { file })
@@ -95,8 +87,7 @@ export const GitPanel: React.FC = () => {
     <div className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
       <div className="p-4 border-b border-copernicus-steel/20 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <GitBranch size={14} className="text-copernicus-phosphor" />
-          <span className="font-bold">{currentBranch}</span>
+          <BranchSelector onBranchChange={refresh} />
         </div>
         <button onClick={refresh} className="text-zinc-500 hover:text-zinc-300">
           {loading ? '...' : 'REFRESH'}

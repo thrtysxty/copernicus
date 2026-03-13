@@ -53,6 +53,30 @@ export const StatusBar: React.FC = () => {
     }).catch(() => {})
   }, [invoke])
 
+  // Poll git branch and status every 5 seconds
+  useEffect(() => {
+    const pollGit = async () => {
+      try {
+        const branchRes = await invoke('git:current-branch')
+        const branch = unwrapIpc<string>(branchRes as any) ?? 'unknown'
+        
+        const statusRes = await invoke('git:status')
+        const status = unwrapIpc<any[]>(statusRes as any) ?? []
+        
+        const isDirty = status.length > 0
+        
+        useLayoutStore.getState().setGitBranch(branch)
+        useLayoutStore.getState().setGitDirty(isDirty)
+      } catch (e) {
+        // Ignore polling errors
+      }
+    }
+    
+    pollGit()
+    const interval = setInterval(pollGit, 5000)
+    return () => clearInterval(interval)
+  }, [invoke])
+
   // Poll codebase index status every 5s
   useEffect(() => {
     const poll = () => {
