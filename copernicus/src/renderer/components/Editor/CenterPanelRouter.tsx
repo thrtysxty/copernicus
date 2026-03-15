@@ -7,6 +7,8 @@ import { UICanvas } from './UICanvas'
 import { UIBuilderCanvas } from './ui-builder/UIBuilderCanvas'
 import DiffPanel from './DiffPanel'
 import { useLayoutStore } from '../../store/layout'
+import { SearchDrawer } from '../search/SearchDrawer'
+import { Search } from 'lucide-react'
 import { classifyFile } from '../../utils/fileUtils'
 import { useIpcError } from '../../hooks/useIpcError'
 import { SharedPanelHeader } from '../layout/SharedPanelHeader'
@@ -296,7 +298,9 @@ export function CenterPanelRouter({
     canvasContent, canvasUrl,
     activeFilePath, activeFileContent, activeFileLanguage,
     setActiveFileContent, browserSessionActive,
-    reviewMode
+    reviewMode,
+    searchDrawerOpen,
+    setSearchDrawerOpen
   } = useLayoutStore()
 
   const filePath = activeFilePath ?? propFilePath ?? null
@@ -405,7 +409,7 @@ export function CenterPanelRouter({
   }, [language, filePath, setCenterMode, centerMode])
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden">
+    <div className="flex flex-col h-full w-full overflow-hidden relative">
       <CenterPanelHeader 
         ghostMode={ghostMode}
         setGhostMode={setGhostMode}
@@ -413,8 +417,23 @@ export function CenterPanelRouter({
         handleAcceptAll={handleAcceptAll}
         handleRejectAll={handleRejectAll}
       />
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
         {renderedContent}
+        <SearchDrawer />
+      </div>
+
+      {/* Editor-Terminal Divider Bar */}
+      <div className="h-6 bg-[#050505] border-t border-copernicus-steel flex items-center justify-end px-4 shrink-0 shadow-sm relative z-40">
+        <button 
+          onClick={() => setSearchDrawerOpen(!searchDrawerOpen)}
+          className={`p-1 rounded transition-colors focus-visible:ring-1 focus-visible:ring-copernicus-phosphor focus-visible:outline-none flex items-center gap-1.5 ${searchDrawerOpen ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
+          title="Search Codebase (Cmd+Shift+F)"
+          aria-label="Toggle Search Drawer"
+          aria-expanded={searchDrawerOpen}
+        >
+          <Search size={10} />
+          <span className="text-[9px] uppercase tracking-widest font-mono">Search</span>
+        </button>
       </div>
     </div>
   )

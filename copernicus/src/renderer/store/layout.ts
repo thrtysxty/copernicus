@@ -59,6 +59,9 @@ export interface TerminalSession {
 }
 
 interface LayoutState {
+  searchDrawerOpen: boolean
+  setSearchDrawerOpen: (v: boolean) => void
+
   activeView: StoryboardView
   isFlipped: Record<string, boolean>
   spotlightPane: PaneId | null
@@ -235,6 +238,7 @@ interface LayoutState {
 export const useLayoutStore = create<LayoutState>()(
   persist(
     (set) => ({
+      searchDrawerOpen: false,
       activeView: 'editor',
       isFlipped: {
         sidebar: false,
@@ -302,7 +306,12 @@ export const useLayoutStore = create<LayoutState>()(
         jules: { tokensIn: 0, tokensOut: 0, limit: 128000, cost: 0 },
       },
 
-      setView: (view) => set({ activeView: view }),
+      setSearchDrawerOpen: (v) => set({ searchDrawerOpen: v }),
+
+      setView: (view) => set((state) => {
+        if (view === 'search') return { ...state, searchDrawerOpen: true }
+        return { ...state, activeView: view }
+      }),
 
       toggleFlip: (paneId) => set((state) => {
         const newFlipped = [...state.flippedPanes]
