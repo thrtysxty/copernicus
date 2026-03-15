@@ -13,54 +13,51 @@ from scripts.utils import generate_backlog
 STORY_TEMPLATE = """# User Story {number}: {title}
 
 **Status:** DRAFT
-**Priority:** Medium
-**Phase:** Phase X - TBD
+**Priority:** P1
+**Phase:** Phase X — TBD
+**Assigned To:** TBD
 
 ## Narrative
 **As a** [Role],
-**I want to** [Action],
+**I want** [Action],
 **So that** [Benefit].
 
 ## Context
-[Link to PLAN_OF_RECORD or Architecture constraints]
+[What problem this solves. Link to user test feedback, UX Bible section, or architecture constraint if relevant.]
 
 ## Acceptance Criteria
-1.  **Criteria 1:** ...
-2.  **Criteria 2:** ...
+1. **Criteria 1:** ...
+2. **Criteria 2:** ...
 
 ## Test Cases
-*Note: Tests must be written before implementation (RED phase).*
-- [ ] Test Case 1: ...
-- [ ] Test Case 2: ...
+*Write these before implementation (RED phase). Base on AC if not explicit.*
+- [ ] Test 1: ...
+- [ ] Test 2: ...
 
 ## IPC Channels Used
-- [ ] List any new or modified IPC channels here
+- [ ] `namespace:verb` (new/existing)
 
 ## DB Schema Changes
-- [ ] None / describe ALTER TABLE migrations required
+- [ ] None / describe ALTER TABLE migrations if needed
 
 ## Files in Scope
-- list files
+- `path/to/file.ts`
 
-## Blocks
+## Blocks:
 - None
 
-## Blocked By
+## Blocked By:
 - None
-
-## Technical Constraints
-- **Constraint 1:** ...
 
 ## Definition of Done
-- [ ] Tests written (RED phase) before implementation
-- [ ] All tests pass (GREEN phase)
-- [ ] All acceptance criteria met
-- [ ] No type check errors (`npx tsc --noEmit`)
+- [ ] All AC items implemented
+- [ ] Test cases written before implementation (RED phase)
+- [ ] `cd copernicus && npx tsc --noEmit` passes with zero errors
+- [ ] New IPC channels registered in `preload.ts SEND_CHANNELS`
 
 ## Documentation Impact
 - **New Files:**
 - **Updated Files:**
-- **Process Change:**
 """
 
 

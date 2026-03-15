@@ -2,12 +2,13 @@ import React, { useState } from 'react'
 import { 
   X, Shield, Key, Layout, Cpu, 
   Settings, GitBranch, Workflow, FileText, 
-  Terminal, Database, User, Layers, Search
+  Terminal, Database, User, Layers, Search, Zap
 } from 'lucide-react'
 
 // Import Sections
 import { ProvidersSection } from './sections/ProvidersSection'
 import { ModelsSection } from './sections/ModelsSection'
+import { ContextSection } from './sections/ContextSection'
 import { PersonasSection } from './sections/PersonasSection'
 import { AppearanceSection } from './sections/AppearanceSection'
 import { GitSection } from './sections/GitSection'
@@ -19,11 +20,15 @@ import { TemplatesSection } from './sections/TemplatesSection'
 import { EnvironmentSection } from './sections/EnvironmentSection'
 import { DataSection } from './sections/DataSection'
 import { HardwareSection } from './sections/HardwareSection'
+import { LocalModelSection } from './sections/LocalModelSection'
 
-type TabId = 
-  | 'providers' 
-  | 'models' 
-  | 'personas' 
+type TabId =
+  | 'providers'
+  | 'models'
+  | 'context'
+  | 'local-ai'
+  | 'personas'
+ 
   | 'appearance' 
   | 'git' 
   | 'workflow' 
@@ -46,6 +51,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
     switch (activeTab) {
       case 'providers':   return <ProvidersSection />
       case 'models':      return <ModelsSection />
+      case 'context':     return <ContextSection />
+      case 'local-ai':    return <LocalModelSection />
       case 'personas':    return <PersonasSection />
       case 'appearance':  return <AppearanceSection />
       case 'git':         return <GitSection />
@@ -86,6 +93,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <div className="px-4 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Intelligence</div>
             <TabButton id="providers" label="Providers" icon={<Key size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="models" label="Model Defaults" icon={<Cpu size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="context" label="Context" icon={<Zap size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="local-ai" label="Local AI" icon={<Zap size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="personas" label="Personas" icon={<User size={14} />} active={activeTab} onClick={setActiveTab} />
 
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Workspace</div>

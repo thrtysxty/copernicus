@@ -47,9 +47,11 @@ import * as searchHandlers from './ipc/search-handlers'
 import * as diagnosticsHandlers from './ipc/diagnostics-handlers'
 import * as lspHandlers from './ipc/lsp-handlers'
 import * as securityScoreHandlers from './ipc/security-handlers'
+import * as localModelHandlers from './ipc/local-model-handlers'
 
 import { GenesisRunner } from './genesis/genesis-runner'
 import { ScaffoldRunner } from './genesis/scaffold'
+import { localModelManager } from './local-model/LocalModelManager'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -200,6 +202,7 @@ function registerIpcHandlers() {
   diagnosticsHandlers.register(win!, deps)
   lspHandlers.register(win!, deps)
   securityScoreHandlers.register()
+  localModelHandlers.register()
   registerSecurityHandlers(ipcMain, settingsStore)
 
   ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {
@@ -234,7 +237,14 @@ function registerIpcHandlers() {
 app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !== 'darwin') app.quit() })
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 app.on('will-quit', () => { globalShortcut.unregisterAll() })
-app.on('before-quit', async () => { lspManager.stop(); backendManager.stop(); socketManager.disconnect(); stateLedger.close(); if (browserSession.browser) await browserSession.browser.close().catch(err => log.error(err)) })
+app.on('before-quit', async () => { 
+  localModelManager.stop();
+  lspManager.stop(); 
+  backendManager.stop(); 
+  socketManager.disconnect(); 
+  stateLedger.close(); 
+  if (browserSession.browser) await browserSession.browser.close().catch(err => log.error(err)) 
+})
 
 app.whenReady().then(() => {
   registerIpcHandlers(); backendManager.start(); setTimeout(() => socketManager.connect(), 3000)
@@ -264,6 +274,15 @@ app.whenReady().then(() => {
   codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(log.error)
   lspManager.start(fsManager.getRootPath())
   if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify();
+
+  // Story 361: Auto-start local model if Ollama is not detected
+  fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) })
+    .then(res => {
+      if (!res.ok) localModelManager.start().catch(log.error);
+    })
+    .catch(() => {
+      localModelManager.start().catch(log.error);
+    });
 
   // Story 335: Watch for story status files from Python orchestrator
   setInterval(() => {

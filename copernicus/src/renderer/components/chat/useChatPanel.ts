@@ -92,6 +92,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([])
   const [lspWarning, setLspWarning] = useState<string | null>(null)
   const [isLspWarningDismissed, setIsLspWarningDismissed] = useState(false)
+  const [contextUpdate, setContextUpdate] = useState<{ usedTokens: number; maxTokens: number; percentage: number } | null>(null)
+  const [showCompactionBanner, setShowCompactionBanner] = useState(false)
 
   const streamingIdRef = useRef<string | null>(null)
   const isFirstCallAfterSwitch = useRef(false)
@@ -225,8 +227,16 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     const removeSystemMessage = ipcRenderer.on('chat:receive-system', (_e, sysMsg: any) => {
       setMessages(prev => [...prev, { id: sysMsg.id, role: 'copernicus', content: sysMsg.content }])
     })
-    return () => { removeToken(); removeDone(); removeError(); removeModelSwitch(); removeSystemMessage() }
+    const removeContextUpdate = ipcRenderer.on('chat:context-update', (_e, { usedTokens, maxTokens, percentage }) => {
+      setContextUpdate({ usedTokens, maxTokens, percentage })
+      if (percentage > 0.90) setShowCompactionBanner(true)
+    })
+    return () => { 
+      removeToken(); removeDone(); removeError(); removeModelSwitch(); removeSystemMessage(); removeContextUpdate() 
+    }
   }, [])
+
+  const dismissCompactionBanner = () => setShowCompactionBanner(false)
 
   const handlePickerSelect = useCallback(async (item: PickerResult) => {
     const currentMode = pickerMode; setPickerMode('none'); setPickerResults([])
@@ -392,6 +402,9 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     pendingImage,
     setPendingImage,
     lspWarning,
-    dismissLspWarning
+    dismissLspWarning,
+    contextUpdate,
+    showCompactionBanner,
+    dismissCompactionBanner
   }
 }

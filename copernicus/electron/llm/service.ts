@@ -2,8 +2,10 @@ import { BrowserWindow } from 'electron'
 import { authManager } from '../auth-manager'
 import { modelRegistry } from '../models/model-registry'
 import { stateLedger } from '../db/state-ledger'
+import { SettingsStore } from '../settings-store'
 import log from '../utils/logger'
 import { TOOLS, ToolExecutor } from './tools'
+import { contextManager } from './ContextManager'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -42,6 +44,23 @@ CORE PROTOCOLS:
     const system = systemPrompt ?? DEFAULT_SYSTEM_PROMPT
     const callStart = Date.now()
 
+    // STORY 363: Context Management
+    const usedTokens = contextManager.calculateContextSize(messages, system)
+    const maxContext = contextManager.getMaxContextForModel(model)
+    this.broadcast('chat:context-update', { 
+      sessionId, 
+      usedTokens, 
+      maxTokens: maxContext, 
+      percentage: usedTokens / maxContext 
+    })
+
+    let finalMessages = messages
+    if (contextManager.shouldCompact(usedTokens, maxContext)) {
+      finalMessages = contextManager.compact(messages)
+    }
+
+    const maxOutputTokens = contextManager.getMaxOutputTokensForModel(model)
+
     const modelConfig = modelRegistry.getModels().find(m => m.id === model)
     const provider = modelConfig?.provider ?? 'anthropic'
 
@@ -77,13 +96,14 @@ CORE PROTOCOLS:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId,
-          messages,
+          messages: finalMessages,
           model,
           provider,
           systemPrompt: system,
           apiKey,
           baseUrl,
-          tools: TOOLS
+          tools: TOOLS,
+          max_tokens: maxOutputTokens
         })
       })
 

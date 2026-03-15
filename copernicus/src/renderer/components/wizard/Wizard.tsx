@@ -4,6 +4,7 @@ import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
          ShieldCheck, Key, Zap, Github, Layout } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc'
+import { LocalAIStep } from './LocalAIStep';
 
 interface WizardProps {
   onComplete: () => void;
@@ -12,6 +13,7 @@ interface WizardProps {
 const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const invoke = useIpcError();
   const [step, setStep] = useState(1);
+  const [hasAnyKey, setHasAnyKey] = useState(false);
   const [cliStatus, setCliStatus] = useState<Record<string, boolean> | null>(null);
   const [workspacePath, setWorkspacePath] = useState('');
   const [hourlyRate, setHourlyRate] = useState('65');
@@ -57,6 +59,9 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     // 2. Check Auth Status (API Keys)
     invoke<any>('auth:status').then((raw) => {
       const status: any[] = unwrapIpc<any>(raw) ?? []
+      const active = status.filter(p => p.isActive && p.hasKey);
+      setHasAnyKey(active.length > 0);
+      
       status.forEach(p => {
         if (p.hasKey) {
           if (p.provider === 'anthropic') {
@@ -128,12 +133,24 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   };
 
   const handleNext = () => {
-    if (step < 3) setStep(step + 1);
-    else handleFinish();
+    if (step === 1) {
+      // If we have keys, skip local AI step
+      if (hasAnyKey) setStep(3);
+      else setStep(2);
+    } else if (step < 4) {
+      setStep(step + 1);
+    } else {
+      handleFinish();
+    }
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (step === 3) {
+      if (hasAnyKey) setStep(1);
+      else setStep(2);
+    } else if (step > 1) {
+      setStep(step - 1);
+    }
   };
 
   const handleSelectFolder = async () => {
@@ -144,7 +161,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         setWorkspacePath(path);
         // AC-1: Immediately sync path to system root
         await invoke('app:set-root-path', path);
-        setStep(3); // Auto-advance to project selection
+        setStep(4); // Auto-advance to project selection
       }
     } catch (error: unknown) {
       console.error('Folder selection failed:', error);
@@ -219,7 +236,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     
     if (!workspacePath) {
       alert('A repository store directory is required to initialize COPERNICUS.');
-      setStep(2);
+      setStep(3);
       return;
     }
     
@@ -268,7 +285,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
             <div className="w-3 h-3 bg-copernicus-phosphor rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
             <h1 className="text-xl font-bold tracking-widest text-copernicus-phosphor uppercase">COPERNICUS SETUP</h1>
           </div>
-          <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-[0.2em]">Step {step} of 3</div>
+          <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-[0.2em]">
+            Step {step === 1 ? 1 : (step === 2 ? 2 : (step === 3 ? (hasAnyKey ? 2 : 3) : (hasAnyKey ? 3 : 4)))} 
+            of {hasAnyKey ? 3 : 4}
+          </div>
         </header>
 
         <div className="flex-1 relative overflow-hidden">
@@ -401,8 +421,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                 </div>
               )}
 
-              {/* ── Phase 2: File System ────────────────────────────────────── */}
+              {/* ── Phase 1.5: Local AI Fallback ───────────────────────────── */}
               {step === 2 && (
+                <LocalAIStep onNext={handleNext} />
+              )}
+
+              {/* ── Phase 2: File System ────────────────────────────────────── */}
+              {step === 3 && (
                 <div className="space-y-6 max-w-2xl mx-auto w-full py-12">
                   <div className="flex flex-col gap-1 mb-6 text-center">
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
@@ -453,7 +478,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
               )}
 
               {/* ── Phase 3: Economics & Initial Project ─────────────────────── */}
-              {step === 3 && (
+              {step === 4 && (
                 <div className="space-y-8 max-w-2xl mx-auto w-full py-6">
                   <div className="flex flex-col gap-1 mb-2 text-center">
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">

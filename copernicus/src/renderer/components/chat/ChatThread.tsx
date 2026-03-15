@@ -82,6 +82,7 @@ interface ChatThreadProps {
   isFlipped: boolean
   isStreaming: boolean
   invoke: any
+  contextUpdate?: { usedTokens: number; maxTokens: number; percentage: number } | null
 }
 
 // ── CodeBlock Sub-component ────────────────────────────────────────────────
@@ -220,6 +221,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
   isRepoActive,
   isFlipped,
   invoke,
+  contextUpdate,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
@@ -361,6 +363,12 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
                 </div>
             )}
           </div>
+
+          {contextUpdate && (
+            <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-500 uppercase tracking-tight">
+              <span>{contextUpdate.usedTokens.toLocaleString()} / {contextUpdate.maxTokens.toLocaleString()} tokens</span>
+            </div>
+          )}
 
           {isRepoActive && (
             <div className="flex items-center gap-1 flex-none" title="Repo Context Active">

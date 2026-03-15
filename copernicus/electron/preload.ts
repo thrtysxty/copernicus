@@ -11,6 +11,7 @@ const SEND_CHANNELS = new Set([
   'chat:send', 'chat:confirm-model-switch',
   // File System
   'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
+  'fs:create-file', 'fs:create-dir', 'fs:rename', 'fs:trash', 'fs:reveal',
   'dialog:open-file', 'dialog:open-folder',
   'app:get-root-path', 'app:set-root-path', 'app:get-user-guide',
   // Git
@@ -88,6 +89,8 @@ const SEND_CHANNELS = new Set([
   'browser:click', 'browser:fill', 'browser:evaluate', 'browser:close',
   // Jules (Story 161)
   'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session',
+  // Local Model (Story 361)
+  'localmodel:start', 'localmodel:stop', 'localmodel:status',
   // Gemini PTY agent (Story 195)
   'gemini:spawn', 'gemini:send-prompt', 'gemini:close', 'gemini:status',
   // Touch Bar
@@ -118,6 +121,7 @@ const SEND_CHANNELS = new Set([
 const LISTEN_CHANNELS = new Set([
   'main-process-message',
   'chat:token', 'chat:done', 'chat:error', 'chat:confirm-model-switch', 'chat:model-switch-decision', 'chat:receive-system',
+  'chat:context-update',
   'terminal-incoming', 'terminal-closed', 'terminal:data', 'terminal-blocked',
   'terminal:activate-tab', 'terminal:spawn', 'terminal:set-busy', 'terminal:remove',
   'stories:updated', 'stories:status-changed',

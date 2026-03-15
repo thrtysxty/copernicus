@@ -118,6 +118,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return results
   }))
 
+  
+  ipcMain.handle('fs:create-file', (_e, filePath: string) => handleIpc('fs:create-file', [filePath], () => fsManager.createFile(filePath)))
+  ipcMain.handle('fs:create-dir', (_e, dirPath: string) => handleIpc('fs:create-dir', [dirPath], () => fsManager.createDir(dirPath)))
+  ipcMain.handle('fs:rename', (_e, { oldPath, newPath }: { oldPath: string, newPath: string }) => handleIpc('fs:rename', [{oldPath, newPath}], () => fsManager.rename(oldPath, newPath)))
+  ipcMain.handle('fs:trash', (_e, filePath: string) => handleIpc('fs:trash', [filePath], () => fsManager.trash(filePath)))
+  ipcMain.handle('fs:reveal', (_e, filePath: string) => handleIpc('fs:reveal', [filePath], () => fsManager.reveal(filePath)))
+
   ipcMain.handle('fs:open-file', (_event, filePath: string) => handleIpc('fs:open-file', [filePath], () => fsManager.readFile(filePath)))
   ipcMain.handle('fs:read-file', (_event, filePath: string) => handleIpc('fs:read-file', [filePath], () => {
     assertSafePath(filePath);

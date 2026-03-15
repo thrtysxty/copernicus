@@ -177,17 +177,17 @@ This file is auto-generated. Run `make backlog` to update.
 | #312 | Terminal Keyboard Input | APPROVED FOR IMPLEMENTATION | P1 |
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
+| #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
+| #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
-| #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #362 | Zero Config Onboarding | APPROVED FOR IMPLEMENTATION | P1 |
 | #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
 | #367 | Planner Inspector Polish | APPROVED FOR IMPLEMENTATION | P1 |
 | #368 | Editor Header Button Reflow | APPROVED FOR IMPLEMENTATION | P2 |
-| #374 | Genesis Repo Browser | APPROVED FOR IMPLEMENTATION | P1 |
-| #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
+| #370 | Designer View Header Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #381 | File Explorer Context Menu | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -233,6 +233,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #360 | Tdd Enforcement | COMPLETE | P1 |
 | #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
 | #366 | Planner Title Normalization | COMPLETE | P1 |
+| #374 | Genesis Repo Browser | COMPLETE | P1 |
 | #375 | Terminal Cwd Indicator | COMPLETE | P2 |
 | #376 | Model Selection System Wide | COMPLETE | P1 |
 | #377 | Chat Panel Polish | COMPLETE | P1 |
@@ -304,7 +305,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #344 | Crt Pulse Shaders | DRAFT | P3 |
 | #345 | Time Travel Orchestration | DRAFT | P3 |
 | #369 | Search Slide Up Drawer | DRAFT | P2 |
-| #370 | Designer View Header Fix | DRAFT | P1 |
 | #371 | Designer Canvas Objects | DRAFT | P2 |
 | #372 | Orchestrator Tile Library | DRAFT | P2 |
 | #373 | Orchestrator Tile Inspector | DRAFT | P2 |
@@ -313,4 +313,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #385 | Agent Replay Debugging | DRAFT | P2 |
 | #386 | Integrated Log Viewer | DRAFT | P2 |
 | #387 | Unified Health View | DRAFT | P2 |
+| #388 | Ipc Lint Violations — Handleipc Wrappers, Useipcerror Hook, Ghost Tint Active States | DRAFT | P1 |
 

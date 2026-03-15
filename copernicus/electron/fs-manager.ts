@@ -177,6 +177,41 @@ export class FSManager {
     fs.writeFileSync(expandedPath, content, 'utf-8')
   }
 
+  
+  createFile(filePath: string): void {
+    const expandedPath = this.expandHome(filePath)
+    this.assertSafe(expandedPath, 'write')
+    fs.writeFileSync(expandedPath, '', 'utf-8')
+  }
+
+  createDir(dirPath: string): void {
+    const expandedPath = this.expandHome(dirPath)
+    this.assertSafe(expandedPath, 'write')
+    fs.mkdirSync(expandedPath, { recursive: true })
+  }
+
+  rename(oldPath: string, newPath: string): void {
+    const expandedOld = this.expandHome(oldPath)
+    const expandedNew = this.expandHome(newPath)
+    this.assertSafe(expandedOld, 'write')
+    this.assertSafe(expandedNew, 'write')
+    fs.renameSync(expandedOld, expandedNew)
+  }
+
+  async trash(filePath: string): Promise<void> {
+    const expandedPath = this.expandHome(filePath)
+    this.assertSafe(expandedPath, 'write')
+    const { shell } = require('electron')
+    await shell.trashItem(expandedPath)
+  }
+
+  reveal(filePath: string): void {
+    const expandedPath = this.expandHome(filePath)
+    this.assertSafe(expandedPath, 'read')
+    const { shell } = require('electron')
+    shell.showItemInFolder(expandedPath)
+  }
+
   getRootPath(): string {
     return this.rootPath
   }
