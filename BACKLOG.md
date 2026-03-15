@@ -181,7 +181,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
-| #381 | File Explorer Context Menu | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
@@ -240,6 +239,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #377 | Chat Panel Polish | COMPLETE | P1 |
 | #378 | Settings Panel Fixes | COMPLETE | P1 |
 | #380 | Application Window Controls | COMPLETE | P1 |
+| #381 | File Explorer Context Menu | COMPLETE | P1 |
 | #382 | Git Branch Ux | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
