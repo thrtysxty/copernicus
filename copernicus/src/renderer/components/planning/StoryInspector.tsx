@@ -151,14 +151,14 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
     setIsSaving(true)
     try {
       const updates: Promise<any>[] = [
-        invoke('stories:set-field', { id: storyId, field: 'priority', value: localPriority }),
-        invoke('stories:set-field', { id: storyId, field: 'type', value: localType }),
-        invoke('stories:set-field', { id: storyId, field: 'model', value: localModel }),
-        invoke('stories:set-field', { id: storyId, field: 'workflowId', value: localWorkflowId }),
+        invoke('stories:set-field', { id: storyId, field: 'priority', value: localPriority }).then(unwrapIpc),
+        invoke('stories:set-field', { id: storyId, field: 'type', value: localType }).then(unwrapIpc),
+        invoke('stories:set-field', { id: storyId, field: 'model', value: localModel }).then(unwrapIpc),
+        invoke('stories:set-field', { id: storyId, field: 'workflowId', value: localWorkflowId }).then(unwrapIpc),
       ]
 
       if (textareaRef.current) {
-        updates.push(invoke('stories:update-content', { id: storyId, content: textareaRef.current.value }))
+        updates.push(invoke('stories:update-content', { id: storyId, content: textareaRef.current.value }).then(unwrapIpc))
         setContent(textareaRef.current.value)
       }
 
@@ -191,7 +191,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   const handleDelete = async () => {
     if (!confirm(`Permanently delete ${storyId}? This will remove the markdown file and database record.`)) return
     try {
-      await invoke('stories:delete', storyId)
+      await invoke('stories:delete', storyId).then(unwrapIpc)
       setDrawerStory(null)
       setSpotlight(null)
     } catch (e) {
@@ -201,7 +201,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
 
   const handleArchive = async () => {
     try {
-      await invoke('stories:archive', storyId)
+      await invoke('stories:archive', storyId).then(unwrapIpc)
       setDrawerStory(null)
       setSpotlight(null)
       addToast('Story archived', 'success')
