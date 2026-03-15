@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { WFNode } from '../../../../electron/workflow/types';
 import log from '../../utils/logger'
 import { unwrapIpc } from '../../types/ipc';
+import { ScheduleInput } from './ScheduleInput';
 
 const PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'] as const;
 
@@ -366,11 +367,17 @@ function TriggerFields({ node, stories, onUpdate, onStoryChange }: any) {
     <>
       <Field label="Variant">
         <select className="inspector-input" value={data.variant} onChange={e => onUpdate({ variant: e.target.value })}>
-          {['manual', 'story-activated', 'story-status-change', 'terminal-exit'].map(v => (
+          {['manual', 'story-activated', 'story-status-change', 'terminal-exit', 'cron'].map(v => (
             <option key={v} value={v}>{v}</option>
           ))}
         </select>
       </Field>
+      {data.variant === 'cron' && (
+        <ScheduleInput
+          value={data.scheduleNl ?? ''}
+          onChange={(nl, cron) => onUpdate({ scheduleNl: nl, scheduleCron: cron })}
+        />
+      )}
       {data.variant === 'story-activated' && (
         <Field label="Bound to Story">
           <select 

@@ -16,6 +16,12 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
     return true;
   }));
 
+  ipcMain.handle('workflow:save-schedule', (_e, { nodeId, scheduleNl, scheduleCron }: { nodeId: string; scheduleNl: string; scheduleCron: string }) => handleIpc('workflow:save-schedule', [{ nodeId, scheduleNl, scheduleCron }], () => {
+    log.info(`[Workflow] Save Schedule for Node ${nodeId}: ${scheduleNl} -> ${scheduleCron}`);
+    // Persistence is handled by graph save, but we could also store in stateLedger here if needed
+    return true;
+  }));
+
   ipcMain.handle('workflow:ollama-status', () => handleIpc('workflow:ollama-status', [], async () => {
     try {
       const res = await fetch('http://localhost:11434/api/tags', {

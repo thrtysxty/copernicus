@@ -4,6 +4,7 @@ import { unwrapIpc } from '../../types/ipc';
 import { useLayoutStore } from '../../store/layout';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
 import { NodeInspector } from './NodeInspector';
+import { DispatchQueue } from './DispatchQueue';
 import log from '../../utils/logger'
 
 const GRID_SIZE = 20;
@@ -18,6 +19,8 @@ interface PaletteTile {
 const PALETTE_TRIGGERS: PaletteTile[] = [
   { type: 'trigger', label: 'Manual Start',    color: '#A78BFA',
     defaultData: { variant: 'manual' } as any },
+  { type: 'trigger', label: 'Cron Schedule',   color: '#A78BFA',
+    defaultData: { variant: 'cron', scheduleNl: 'every day at 9am', scheduleCron: '0 9 * * *' } as any },
   { type: 'trigger', label: 'Story Activated', color: '#A78BFA',
     defaultData: { variant: 'story-activated' } as any },
   { type: 'trigger', label: 'Status Change',   color: '#A78BFA',
@@ -137,6 +140,7 @@ export default function WorkflowCanvas() {
   const [rootPath, setRootPath] = useState<string>('');
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [showQueue, setShowQueue] = useState(false);
   const [authStatus, setAuthStatus] = useState<Record<string, boolean>>({});
   const [availableModels, setAvailableModels] = useState<{id:string;name:string;provider:string}[]>([]);
   const [draggingTile, setDraggingTile] = useState<PaletteTile | null>(null);
@@ -504,6 +508,19 @@ export default function WorkflowCanvas() {
           <NodePaletteSection title="DECISIONS" nodes={PALETTE_DECISIONS} onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="FLOW"      nodes={PALETTE_FLOW}      onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="QUALITY"   nodes={PALETTE_QUALITY}   onDragStart={handlePaletteDragStart} />
+          
+          <div className="mt-auto pt-4 border-t border-zinc-800">
+            <button 
+              onClick={() => setShowQueue(!showQueue)}
+              className={`w-full py-2 text-[10px] font-mono uppercase tracking-widest rounded border transition-all ${
+                showQueue 
+                  ? 'bg-copernicus-phosphor text-[#050505] border-copernicus-phosphor' 
+                  : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700'
+              }`}
+            >
+              Dispatch Queue
+            </button>
+          </div>
         </div>
 
         {/* SVG Canvas - Full width expansion */}
@@ -724,6 +741,8 @@ export default function WorkflowCanvas() {
             />
           );
         })()}
+
+        {showQueue && <DispatchQueue />}
       </div>
 
       <div className="absolute bottom-4 left-44 text-[10px] text-zinc-600 font-mono uppercase tracking-widest">

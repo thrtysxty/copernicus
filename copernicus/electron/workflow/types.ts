@@ -40,10 +40,12 @@ export interface ToolNodeData {
 }
 
 export interface TriggerNodeData {
-  variant: 'manual' | 'story-activated' | 'story-status-change' | 'terminal-exit';
+  variant: 'manual' | 'story-activated' | 'story-status-change' | 'terminal-exit' | 'cron';
   storyId?: string;
   expectedStatus?: string;
   terminalId?: string;
+  scheduleNl?: string;
+  scheduleCron?: string;
 }
 
 export interface DecisionNodeData {
