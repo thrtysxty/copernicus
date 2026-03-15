@@ -189,6 +189,16 @@ This file is auto-generated. Run `make backlog` to update.
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
+| #369 | Search Slide Up Drawer | APPROVED FOR IMPLEMENTATION | P2 |
+| #371 | Designer Canvas Objects | APPROVED FOR IMPLEMENTATION | P2 |
+| #372 | Orchestrator Tile Library | APPROVED FOR IMPLEMENTATION | P2 |
+| #373 | Orchestrator Tile Inspector | APPROVED FOR IMPLEMENTATION | P2 |
+| #383 | Dap Debug Adapter Protocol | APPROVED FOR IMPLEMENTATION | P2 |
+| #384 | Integrated Test Runner | APPROVED FOR IMPLEMENTATION | P2 |
+| #385 | Agent Replay Debugging | APPROVED FOR IMPLEMENTATION | P2 |
+| #386 | Integrated Log Viewer | APPROVED FOR IMPLEMENTATION | P2 |
+| #387 | Unified Health View | APPROVED FOR IMPLEMENTATION | P2 |
+| #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -305,15 +315,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #343 | Ghost Implementation Shadow Coding | DRAFT | P2 |
 | #344 | Crt Pulse Shaders | DRAFT | P3 |
 | #345 | Time Travel Orchestration | DRAFT | P3 |
-| #369 | Search Slide Up Drawer | DRAFT | P2 |
-| #371 | Designer Canvas Objects | DRAFT | P2 |
-| #372 | Orchestrator Tile Library | DRAFT | P2 |
-| #373 | Orchestrator Tile Inspector | DRAFT | P2 |
-| #383 | Dap Debug Adapter Protocol | DRAFT | P2 |
-| #384 | Integrated Test Runner | DRAFT | P2 |
-| #385 | Agent Replay Debugging | DRAFT | P2 |
-| #386 | Integrated Log Viewer | DRAFT | P2 |
-| #387 | Unified Health View | DRAFT | P2 |
-| #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | DRAFT | P1 |
 | #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
 
