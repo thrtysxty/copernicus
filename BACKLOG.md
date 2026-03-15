@@ -188,6 +188,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #370 | Designer View Header Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
+| #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #369 | Search Slide Up Drawer | APPROVED FOR IMPLEMENTATION | P2 |
 | #371 | Designer Canvas Objects | APPROVED FOR IMPLEMENTATION | P2 |
@@ -198,7 +199,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #385 | Agent Replay Debugging | APPROVED FOR IMPLEMENTATION | P2 |
 | #386 | Integrated Log Viewer | APPROVED FOR IMPLEMENTATION | P2 |
 | #387 | Unified Health View | APPROVED FOR IMPLEMENTATION | P2 |
-| #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
