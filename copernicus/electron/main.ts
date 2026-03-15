@@ -46,6 +46,8 @@ import * as genesisHandlers from './ipc/genesis-handlers'
 import * as gitHandlers from './ipc/git-handlers'
 import * as searchHandlers from './ipc/search-handlers'
 import * as diagnosticsHandlers from './ipc/diagnostics-handlers'
+import * as diagHandlers from './ipc/diag-handlers'
+import * as logHandlers from './ipc/log-handlers'
 import * as lspHandlers from './ipc/lsp-handlers'
 import * as securityScoreHandlers from './ipc/security-handlers'
 import * as localModelHandlers from './ipc/local-model-handlers'
@@ -202,6 +204,8 @@ function registerIpcHandlers() {
   gitHandlers.register(win!, deps)
   searchHandlers.register(win!, deps)
   diagnosticsHandlers.register(win!, deps)
+  diagHandlers.register(win!, deps)
+  logHandlers.register(win!)
   lspHandlers.register(win!, deps)
   securityScoreHandlers.register()
   localModelHandlers.register()
@@ -229,6 +233,10 @@ function registerIpcHandlers() {
     if (w?.isFullScreen()) {
       w.setFullScreen(false)
     }
+  }))
+
+  ipcMain.handle('layout:goto-line', (_e, { file, line, col }) => handleIpc('layout:goto-line', [{ file, line, col }], () => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send('layout:goto-line', { file, line, col })
   }))
 }
 

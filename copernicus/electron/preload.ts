@@ -57,6 +57,8 @@ const SEND_CHANNELS = new Set([
   'git:current-branch', 'git:list-branches',
   'codebase:text-search', 'codebase:semantic-search',
   'diagnostics:run-tsc', 'diagnostics:get-all',
+  'diag:run-eslint', 'diag:run-ruff', 'diag:run-audit', 'diag:get-all',
+  'log:get-history', 'log:list-sources',
   'security:score',
 
   // Environment
@@ -115,6 +117,7 @@ const SEND_CHANNELS = new Set([
   // Canvas interaction (Story 153)
   'canvas:get-iframe-bounds', 'canvas:capture-screenshot', 'canvas:screenshot-preview',
   'canvas:execute-js', 'canvas:send-input',
+  'layout:goto-line',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -148,7 +151,10 @@ const LISTEN_CHANNELS = new Set([
   // Workflow engine state push (Story 186)
   'workflow:status', 'workflow:status-update',
   'review:session-complete',
+  'layout:goto-line',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',
+  'diag:results',
+  'log:new-line',
   'window:fullscreen-state',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {

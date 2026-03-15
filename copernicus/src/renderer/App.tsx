@@ -32,7 +32,8 @@ import { MemoryBrowser } from './components/memory/MemoryBrowser'
 import { ReviewPanel } from './components/review/ReviewPanel'
 import { GitPanel } from './components/git/GitPanel'
 import { SearchPanel } from './components/search/SearchPanel'
-import { ProblemsPanel } from './components/diagnostics/ProblemsPanel'
+import { DiagnosticsPanel } from './components/debug/DiagnosticsPanel'
+import { LogViewer } from './components/debug/LogViewer'
 
 const TERMINAL_HEIGHT = 200
 
@@ -438,8 +439,8 @@ export default function App() {
             {activeView === 'review' && <ReviewPanel />}
             {activeView === 'git' && <GitPanel />}
             {activeView === 'search' && <SearchPanel />}
-            {activeView === 'diagnostics' && <ProblemsPanel />}
-
+            {activeView === 'diagnostics' && <DiagnosticsPanel />}
+            {activeView === 'logs' && <LogViewer />}
             {(activeView === 'designer' || activeView === 'editor') && (
               <>
                 {/* Sidebar */}

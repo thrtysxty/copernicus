@@ -2,7 +2,7 @@ import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
   Activity, Brain, Github, Settings, FolderPlus,
-  Diff, GitBranch, Search, AlertTriangle
+  Diff, GitBranch, Search, AlertTriangle, ScrollText
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
 
@@ -104,6 +104,7 @@ export const ActivityBar: React.FC = () => {
         <NavItem id="git" icon={GitBranch} label="Git" shortcut="⌘9" testId="nav-git" />
         <NavItem id="search" icon={Search} label="Search" shortcut="⌘F2" testId="nav-search" />
         <NavItem id="diagnostics" icon={AlertTriangle} label="Problems" shortcut="⌘Shift+M" badge={diagnosticErrorCount} hasDot={diagnosticErrorCount > 0} testId="nav-diagnostics" />
+        <NavItem id="logs" icon={ScrollText} label="Logs" shortcut="⌘Shift+L" testId="nav-logs" />
       </div>
 
       <div className="flex-1" />
