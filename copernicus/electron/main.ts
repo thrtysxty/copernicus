@@ -41,6 +41,7 @@ import * as storyHandlers from './ipc/story-handlers'
 import * as workflowHandlers from './ipc/workflow-handlers'
 import * as terminalHandlers from './ipc/terminal-handlers'
 import * as appHandlers from './ipc/app-handlers'
+import * as capexHandlers from './ipc/capex-handlers'
 import * as genesisHandlers from './ipc/genesis-handlers'
 import * as gitHandlers from './ipc/git-handlers'
 import * as searchHandlers from './ipc/search-handlers'
@@ -196,6 +197,7 @@ function registerIpcHandlers() {
   workflowHandlers.register(win!, deps)
   terminalHandlers.register(win!, deps)
   appHandlers.register(win!, deps)
+  capexHandlers.registerCapexHandlers()
   genesisHandlers.register(win!, deps)
   gitHandlers.register(win!, deps)
   searchHandlers.register(win!, deps)

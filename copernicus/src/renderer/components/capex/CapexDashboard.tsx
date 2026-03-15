@@ -10,6 +10,7 @@ import { useToastStore } from '../../store/toastStore'
 import { CHART_THEME } from './chart-theme'
 import { unwrapIpc } from '../../types/ipc'
 import { HeatmapView } from './HeatmapView'
+import { ModelLeaderboard } from './ModelLeaderboard'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -29,13 +30,14 @@ interface Throughput     { week: string; completed: number }
 interface StatusDist     { status: string; count: number }
 interface BugsByAssignee { assignee: string; bug_count: number }
 
-type DashTab = 'financial' | 'quality' | 'llm' | 'velocity' | 'heatmap'
+type DashTab = 'financial' | 'quality' | 'llm' | 'velocity' | 'heatmap' | 'leaderboard'
 const TABS: { id: DashTab; label: string }[] = [
   { id: 'financial', label: 'FINANCIAL' },
   { id: 'quality',   label: 'QUALITY'   },
   { id: 'llm',       label: 'LLM'       },
   { id: 'velocity',  label: 'VELOCITY'  },
   { id: 'heatmap',   label: 'HEATMAP'   },
+  { id: 'leaderboard', label: 'LEADERBOARD' },
 ]
 
 // ── Components ─────────────────────────────────────────────────────────────
@@ -129,6 +131,7 @@ export const CapexDashboard: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<DashTab>('financial')
   const [rate, setRate] = useState(65)
+  const [days, setDays] = useState<number | 'all'>(30)
   const [spotlightId, setSpotlightId] = useState<string | null>(null)
 
   // Financial
@@ -269,6 +272,18 @@ export const CapexDashboard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4 pr-2">
+          <div className="flex items-center gap-2 bg-black border border-zinc-800 rounded px-1.5 py-0.5">
+            <span className="text-[10px] text-zinc-500 font-mono">Range:</span>
+            <select
+              value={days}
+              onChange={e => setDays(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="bg-transparent text-copernicus-phosphor text-[10px] uppercase font-bold tracking-widest outline-none border-none appearance-none cursor-pointer pr-1"
+            >
+              <option value={7}>7_DAYS</option>
+              <option value={30}>30_DAYS</option>
+              <option value={'all'}>ALL_TIME</option>
+            </select>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-[9px] uppercase text-zinc-600 font-bold tracking-tighter">Rate_$/hr //</span>
             <input
@@ -606,6 +621,9 @@ export const CapexDashboard: React.FC = () => {
 
           {/* ── HEATMAP ───────────────────────────────────────────────────── */}
           {activeTab === 'heatmap' && <HeatmapView />}
+
+          {/* ── LEADERBOARD ───────────────────────────────────────────────── */}
+          {activeTab === 'leaderboard' && <ModelLeaderboard days={days} />}
 
         </div>
       </div>
