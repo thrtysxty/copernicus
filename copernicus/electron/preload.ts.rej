@@ -1,9 +1,0 @@
-diff a/copernicus/electron/preload.ts b/copernicus/electron/preload.ts	(rejected hunks)
-@@ -11,6 +11,7 @@ const SEND_CHANNELS = new Set([
-   'chat:send', 'chat:confirm-model-switch',
-   // File System
-   'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
-+  'fs:create-file', 'fs:create-dir', 'fs:rename', 'fs:trash', 'fs:reveal',
-   'dialog:open-file',
-   'app:get-root-path', 'app:set-root-path', 'app:get-user-guide',
-   // Git
