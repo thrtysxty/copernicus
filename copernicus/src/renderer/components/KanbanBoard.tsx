@@ -6,7 +6,7 @@ import { useLayoutStore } from '../store/layout'
 import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap } from 'lucide-react'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
-import { StoryDetail } from './planning/StoryDetail'
+import { StoryInspector } from './planning/StoryInspector'
 import { stripStoryPrefix } from '../utils/storyTitle'
 import { TEMPLATE_MANIFEST } from '../templates'
 
@@ -272,7 +272,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const epics = stories.filter(s => s.type === 'Epic')
 
   if (drawerStoryId) {
-    return <StoryDetail storyId={drawerStoryId} stories={stories as any} />
+    return <StoryInspector storyId={drawerStoryId} stories={stories as any} />
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Save, Trash2, Archive } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
@@ -23,7 +23,7 @@ interface Story {
   blocked: boolean
 }
 
-interface StoryDetailProps {
+interface StoryInspectorProps {
   storyId: string
   stories: Story[]
 }
@@ -36,7 +36,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   UNKNOWN: 'bg-zinc-800 text-zinc-600 border-zinc-700',
 }
 
-export function StoryDetail({ storyId, stories }: StoryDetailProps) {
+export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   const invoke = useIpcError()
   const { setDrawerStory, spotlightPane, setSpotlight } = useLayoutStore()
   const addToast = useToastStore(s => s.addToast)
@@ -45,18 +45,36 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
   const story = stories.find(s => s.id === storyId)
   const epics = stories.filter(s => s.type === 'Epic')
 
+  // Core field states
   const [content, setContent] = useState('')
+  const [localPriority, setLocalPriority] = useState<string>(story?.priority ?? 'UNKNOWN')
+  const [localType, setLocalType] = useState<string>(story?.type ?? 'Feature')
+  const [localModel, setLocalModel] = useState<string>(story?.model ?? '(unassigned)')
+  const [localWorkflowId, setLocalWorkflowId] = useState<string>(story?.workflowId ?? '— none —')
+
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false)
+  
   const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
   const [workflowTemplates, setWorkflowTemplates] = useState<{ id: string, name: string }[]>([])
-  const [localWorkflowId, setLocalWorkflowId] = useState(story?.workflowId ?? '— none —')
   const [workflowStatus, setWorkflowStatus] = useState<string | null>(null)
   const [workflowStartTime, setWorkflowStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState<string | null>(null)
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeBtnRef = useRef<HTMLButtonElement>(null)
+
+  // Sync local state when story or storyId changes
+  useEffect(() => {
+    if (story) {
+      setLocalPriority(story.priority)
+      setLocalType(story.type)
+      setLocalModel(story.model ?? '(unassigned)')
+      setLocalWorkflowId(story.workflowId ?? '— none —')
+    }
+  }, [storyId, story])
 
   useEffect(() => {
     invoke<any>('models:list').then(result => {
@@ -73,10 +91,6 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       }
     }).catch(() => {})
   }, [invoke])
-
-  useEffect(() => {
-    setLocalWorkflowId(story?.workflowId ?? '— none —')
-  }, [storyId, story?.workflowId])
 
   useEffect(() => {
     invoke<any>('stories:get-content', storyId)
@@ -133,25 +147,44 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     return () => { if (timer) clearInterval(timer) }
   }, [workflowStatus, workflowStartTime])
 
-  const handleSetField = async (field: string, value: string) => {
-    try {
-      await invoke('stories:set-field', { id: storyId, field, value })
-    } catch (e) {
-      log.error('Failed to set field', e)
-    }
-  }
-
   const handleSave = async () => {
-    if (!textareaRef.current) return
     setIsSaving(true)
     try {
-      await invoke('stories:update-content', { id: storyId, content: textareaRef.current.value })
-      setContent(textareaRef.current.value)
+      const updates: Promise<any>[] = [
+        invoke('stories:set-field', { id: storyId, field: 'priority', value: localPriority }),
+        invoke('stories:set-field', { id: storyId, field: 'type', value: localType }),
+        invoke('stories:set-field', { id: storyId, field: 'model', value: localModel }),
+        invoke('stories:set-field', { id: storyId, field: 'workflowId', value: localWorkflowId }),
+      ]
+
+      if (textareaRef.current) {
+        updates.push(invoke('stories:update-content', { id: storyId, content: textareaRef.current.value }))
+        setContent(textareaRef.current.value)
+      }
+
+      await Promise.all(updates)
+      
+      setShowSavedIndicator(true)
+      setTimeout(() => setShowSavedIndicator(false), 2000)
       setIsEditing(false)
     } catch (e) {
       log.error('Failed to save', e)
+      addToast('Failed to save changes', 'error')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    if (story) {
+      setLocalPriority(story.priority)
+      setLocalType(story.type)
+      setLocalModel(story.model ?? '(unassigned)')
+      setLocalWorkflowId(story.workflowId ?? '— none —')
+      if (textareaRef.current) {
+        textareaRef.current.value = content
+      }
+      setIsEditing(false)
     }
   }
 
@@ -177,17 +210,18 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
     }
   }
 
-  // AC-3: Focus first interactive element on drawer open
+  // Focus first interactive element on drawer open
   useEffect(() => {
     if (closeBtnRef.current) {
       closeBtnRef.current.focus()
     }
   }, [storyId])
 
-  // AC-3: Focus trap + Escape key handler
+  // Focus trap + Escape key handler
   const handleDrawerKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault()
+      handleCancel()
       setDrawerStory(null)
       setSpotlight(null)
       // Return focus to the triggering card if available
@@ -218,7 +252,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
         first?.focus()
       }
     }
-  }, [setDrawerStory, setSpotlight])
+  }, [setDrawerStory, setSpotlight, storyId, handleCancel])
 
   // Auto-activate edit mode when spotlit
   useEffect(() => {
@@ -243,61 +277,54 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
       style={{ display: 'grid', gridTemplateColumns: '220px 1fr 280px' }}
     >
       {/* ── Column 1: Inspector sidebar ─────────────────────────── */}
-      <div className="p-4 space-y-3 overflow-y-auto border-r border-white/5 bg-black/10">
-        {/* Nav row */}
-        <div className="flex items-center justify-between mb-1">
-          <button
-            ref={closeBtnRef}
-            onClick={() => {
-              setDrawerStory(null)
-              setSpotlight(null)
-              setTimeout(() => {
-                const activeCard = document.querySelector<HTMLElement>(`[data-story-id="${storyId}"]`)
-                activeCard?.focus()
-              }, 0)
-            }}
-            aria-label="Close story drawer"
-            className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
-          >
-            <ArrowLeft size={11} /> Board
-          </button>
-          <div className="flex items-center gap-1">
+      <div className="flex flex-col border-r border-white/5 bg-black/10 min-h-0">
+        <div className="p-4 space-y-3 overflow-y-auto flex-1">
+          {/* Nav row */}
+          <div className="flex items-center justify-between mb-1">
             <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="p-1 text-zinc-700 hover:text-copernicus-phosphor transition-colors"
-              title="Save"
+              ref={closeBtnRef}
+              onClick={() => {
+                setDrawerStory(null)
+                setSpotlight(null)
+                setTimeout(() => {
+                  const activeCard = document.querySelector<HTMLElement>(`[data-story-id="${storyId}"]`)
+                  activeCard?.focus()
+                }, 0)
+              }}
+              aria-label="Close story drawer"
+              className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
             >
-              <Save size={11} />
+              <ArrowLeft size={11} /> Board
             </button>
-            <button
-              onClick={handleArchive}
-              className="p-1 text-zinc-700 hover:text-blue-400 transition-colors"
-              title="Archive"
-            >
-              <Archive size={11} />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-1 text-zinc-700 hover:text-red-400 transition-colors"
-              title="Delete"
-            >
-              <Trash2 size={11} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleArchive}
+                className="p-1 text-zinc-700 hover:text-blue-400 transition-colors"
+                title="Archive"
+              >
+                <Archive size={11} />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-1 text-zinc-700 hover:text-red-400 transition-colors"
+                title="Delete"
+              >
+                <Trash2 size={11} />
+              </button>
+            </div>
           </div>
-        </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">Story Identifier</p>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">Story Identifier</p>
             <p className="text-[10px] font-mono text-copernicus-phosphor font-bold">#{story.id.match(/\d+/)?.[0] ?? story.id}</p>
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Priority</p>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Priority</p>
             <select
-              defaultValue={story.priority}
-              onChange={e => handleSetField('priority', e.target.value)}
-              className={`text-[10px] font-bold border rounded px-1.5 py-0.5 focus:outline-none bg-transparent w-full ${PRIORITY_COLORS[story.priority] ?? PRIORITY_COLORS.UNKNOWN}`}
+              value={localPriority}
+              onChange={e => setLocalPriority(e.target.value)}
+              className={`text-[10px] font-bold border rounded px-1.5 py-0.5 focus:outline-none bg-transparent w-full ${PRIORITY_COLORS[localPriority] ?? PRIORITY_COLORS.UNKNOWN}`}
             >
               <option value="P0">P0 — Critical</option>
               <option value="P1">P1 — High</option>
@@ -307,10 +334,10 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Type</p>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Type</p>
             <select
-              defaultValue={story.type}
-              onChange={e => handleSetField('type', e.target.value)}
+              value={localType}
+              onChange={e => setLocalType(e.target.value)}
               className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
             >
               {['Feature', 'Bug Fix', 'Epic', 'Chore', 'Security', 'Infrastructure'].map(t => (
@@ -320,10 +347,10 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Assignee</p>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Assignee</p>
             <select
-              defaultValue={story.model ?? '(unassigned)'}
-              onChange={e => handleSetField('model', e.target.value)}
+              value={localModel}
+              onChange={e => setLocalModel(e.target.value)}
               className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
             >
               {modelOptions.map(m => (
@@ -333,22 +360,22 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-1">Epic Context</p>
-            <select
-              defaultValue={story.epic ?? ''}
-              onChange={e => handleSetField('epic', e.target.value || '(none)')}
-              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
-            >
-              <option value="">(No Epic)</option>
-              {epics.map(ep => (
-                <option key={ep.id} value={ep.id}>{stripStoryPrefix(ep.title)}</option>
-              ))}
-            </select>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Epic Context</p>
+            {story.epic ? (
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-mono text-blue-400 font-bold text-left">#{story.epic.match(/\d+/)?.[0] ?? story.epic}</span>
+                <span className="text-[10px] text-zinc-300 truncate text-left" title={epics.find(e => e.id === story.epic)?.title ?? story.epic}>
+                  {epics.find(e => e.id === story.epic) ? stripStoryPrefix(epics.find(e => e.id === story.epic)!.title) : story.epic}
+                </span>
+              </div>
+            ) : (
+              <span className="text-[10px] text-zinc-500 italic text-left block">(No Epic)</span>
+            )}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-0.5">
-              <p className="text-[8px] text-zinc-600 uppercase tracking-widest">Workflow</p>
+              <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full">Workflow</p>
               <button
                 onClick={() => {
                   if (workflowStatus === 'RUNNING') {
@@ -376,7 +403,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
             </div>
             <select
               value={localWorkflowId}
-              onChange={e => { setLocalWorkflowId(e.target.value); handleSetField('workflowId', e.target.value) }}
+              onChange={e => setLocalWorkflowId(e.target.value)}
               className="w-full text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
             >
               <option value="— none —">— none —</option>
@@ -386,7 +413,7 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
             </select>
 
             {workflowStatus && workflowStatus !== 'IDLE' && (
-              <div className={`flex items-center justify-center gap-1.5 text-[9px] font-mono px-2 py-1 rounded border ${
+              <div className={`mt-2 flex items-center justify-center gap-1.5 text-[9px] font-mono px-2 py-1 rounded border ${
                 workflowStatus === 'RUNNING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' : 
                 workflowStatus === 'COMPLETE' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
                 'bg-red-500/10 text-red-400 border-red-500/20'
@@ -398,45 +425,83 @@ export function StoryDetail({ storyId, stories }: StoryDetailProps) {
           </div>
 
           <div className="pt-2 border-t border-white/5">
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">Deployment Date</p>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">Deployment Date</p>
             <p className="text-[10px] text-zinc-500 font-mono">{story.date || '—'}</p>
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest mb-0.5">System Status</p>
+            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">System Status</p>
             <span className="text-[9px] font-bold text-zinc-400 border border-zinc-700 rounded px-2 py-0.5 inline-block uppercase tracking-tighter">
               {story.status}
             </span>
           </div>
         </div>
 
-        {/* ── Column 2: Body content ──────────────────────────────── */}
-        <div className="overflow-y-auto pt-2 px-6 pb-6 bg-copernicus-bg/50 min-w-0">
-          <h1
-            data-testid="story-detail-title"
-            className="text-base font-bold text-white mb-3 border-b border-copernicus-phosphor/20 pb-3"
-          >
-            {stripStoryPrefix(story.title)}
-          </h1>
-          {isEditing ? (
-            <textarea
-              ref={textareaRef}
-              data-testid="story-detail-content"
-              defaultValue={content}
-              className="w-full h-full min-h-[500px] bg-black/40 border border-zinc-800 rounded p-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 resize-none leading-relaxed shadow-inner"
-              spellCheck={false}
-            />
-          ) : (
-            <pre className="text-xs font-mono text-zinc-400 whitespace-pre-wrap leading-relaxed">
-              {content}
-            </pre>
-          )}
+        {/* Footer actions */}
+        <div className="p-4 border-t border-white/5 bg-black/20 flex flex-col gap-2 shrink-0">
+          <div className="flex items-center justify-between">
+            {/* AC2: Saved indicator */}
+            <div className="h-4 flex items-center overflow-hidden w-16">
+               <AnimatePresence>
+                 {showSavedIndicator && (
+                   <motion.span 
+                     initial={{ opacity: 0, y: 5 }} 
+                     animate={{ opacity: 1, y: 0 }} 
+                     exit={{ opacity: 0 }} 
+                     className="text-[9px] text-green-400 font-mono tracking-widest uppercase"
+                   >
+                     ● SAVED
+                   </motion.span>
+                 )}
+               </AnimatePresence>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleCancel}
+                className="text-[10px] font-bold px-3 py-1.5 rounded hover:bg-white/5 text-zinc-400 transition-colors uppercase tracking-widest"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="text-[10px] font-bold px-3 py-1.5 rounded bg-copernicus-phosphor text-[#050505] hover:bg-copernicus-phosphor/90 transition-colors uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Save size={12} />
+                {isSaving ? 'Saving' : 'Save'}
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* ── Column 3: Chat ──────────────────────────────────────── */}
-        <div className="border-l border-white/5 flex flex-col overflow-hidden min-w-0">
-          <ChatPanel />
-        </div>
+      {/* ── Column 2: Body content ──────────────────────────────── */}
+      <div className="overflow-y-auto pt-2 px-6 pb-6 bg-copernicus-bg/50 min-w-0">
+        <h1
+          data-testid="story-detail-title"
+          className="text-base font-bold text-white mb-3 border-b border-copernicus-phosphor/20 pb-3"
+        >
+          {stripStoryPrefix(story.title)}
+        </h1>
+        {isEditing ? (
+          <textarea
+            ref={textareaRef}
+            data-testid="story-detail-content"
+            defaultValue={content}
+            className="w-full h-full min-h-[500px] bg-black/40 border border-zinc-800 rounded p-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 resize-none leading-relaxed shadow-inner"
+            spellCheck={false}
+          />
+        ) : (
+          <pre className="text-xs font-mono text-zinc-400 whitespace-pre-wrap leading-relaxed">
+            {content}
+          </pre>
+        )}
+      </div>
+
+      {/* ── Column 3: Chat ──────────────────────────────────────── */}
+      <div className="border-l border-white/5 flex flex-col overflow-hidden min-w-0">
+        <ChatPanel />
+      </div>
     </motion.div>
   )
 }
