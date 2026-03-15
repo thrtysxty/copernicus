@@ -52,3 +52,4 @@ copernicus/release/
 # Playwright e2e output (screenshots committed separately to docs/help/screenshots/)
 copernicus/e2e/test-results/
 copernicus/e2e/report/
+.gitnexus

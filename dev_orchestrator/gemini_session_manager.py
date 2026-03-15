@@ -136,6 +136,77 @@ def load_persona(name: str) -> str:
     return ''
 
 
+def _get_files_in_scope(story_ids: list[str]) -> dict[str, list[str]]:
+    """Return dict mapping file_path -> [story_id, ...] for all files in scope across stories."""
+    files_map = {}
+    docs_dir = REPO_ROOT / 'docs' / 'stories'
+    for s_id in story_ids:
+        try:
+            # story_ids might be '389' or 'story_389'
+            num = ''.join(filter(str.isdigit, s_id))
+            if not num: continue
+            matches = list(docs_dir.glob(f'story_{num}_*.md'))
+            if not matches: continue
+            
+            content = matches[0].read_text()
+            # Find "## Files in Scope" section
+            if "## Files in Scope" in content:
+                lines = content.split("## Files in Scope")[1].split("##")[0].splitlines()
+                for line in lines:
+                    line = line.strip()
+                    # extract text between backticks if present
+                    if "`" in line:
+                        # find content between first pair of backticks
+                        file_path = line.split("`")[1]
+                        if file_path not in files_map:
+                            files_map[file_path] = []
+                        files_map[file_path].append(s_id)
+        except Exception:
+            pass
+    return files_map
+
+
+def _get_impact_context(story_ids: list[str]) -> str:
+    files_map = _get_files_in_scope(story_ids)
+    if not files_map:
+        return ""
+    
+    impact_sections = []
+    impact_sections.append("## Blast Radius (GitNexus)")
+    
+    found_any = False
+    for file_path in files_map:
+        try:
+            # check if gitnexus is available
+            if not shutil.which('gitnexus'):
+                continue
+            
+            # run gitnexus impact
+            proc = subprocess.run(
+                ['gitnexus', 'impact', file_path],
+                capture_output=True,
+                text=True,
+                cwd=str(REPO_ROOT)
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                impact_sections.append(f"### {file_path}")
+                impact_sections.append(proc.stdout.strip())
+                found_any = True
+        except Exception:
+            pass
+            
+    return "\n\n".join(impact_sections) if found_any else ""
+
+
+def _check_collisions(story_ids: list[str]) -> list[str]:
+    files_map = _get_files_in_scope(story_ids)
+    warnings = []
+    for file_path, s_ids in files_map.items():
+        if len(s_ids) > 1:
+            warnings.append(f"{file_path} is touched by multiple stories: {', '.join(s_ids)}")
+    return warnings
+
+
 def cmd_spawn(prompt: str, stories: list, persona: str = 'dev', direct: bool = False) -> None:
     if not shutil.which(GEMINI_BIN):
         print('ERROR: gemini binary not found in PATH', file=sys.stderr)
@@ -154,6 +225,21 @@ def cmd_spawn(prompt: str, stories: list, persona: str = 'dev', direct: bool = F
         prompt = persona_text + prompt + DEV_ORCHESTRATOR_FOOTER
 
     sessions = load_sessions()
+
+    # GitNexus blast-radius injection
+    if stories:
+        try:
+            impact_ctx = _get_impact_context(stories)
+            if impact_ctx:
+                prompt = prompt + '\n\n' + impact_ctx
+            collisions = _check_collisions(stories)
+            if collisions:
+                print('WARNING: File collision detected across stories:')
+                for w in collisions:
+                    print(f'  ⚠️  {w}')
+        except Exception as e:
+            print(f'GitNexus context skipped: {e}')
+
     sessions.append({
         'id': session_id,
         'stories': stories,

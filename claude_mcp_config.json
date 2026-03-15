@@ -28,6 +28,11 @@
       "env": {
         "COPERNICUS_WORKSPACE": "${workspaceFolder}"
       }
+    },
+    "gitnexus": {
+      "command": "gitnexus",
+      "args": ["mcp"],
+      "description": "Codebase intelligence — blast-radius impact queries and dependency graphs"
     }
   },
   "lifecycle_hooks": {
