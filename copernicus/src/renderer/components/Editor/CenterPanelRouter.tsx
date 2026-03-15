@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X, RotateCcw, Maximize2, Minimize2 } from 'lucide-react'
+import { X, RotateCcw, Maximize2, Minimize2, Ghost, Check, X as CloseIcon } from 'lucide-react'
 import { EditorPanel } from './EditorPanel'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
@@ -50,7 +50,19 @@ function getLanguage(filePath: string): string {
   return LANGUAGE_MAP[ext] ?? 'plaintext'
 }
 
-function CenterPanelHeader() {
+function CenterPanelHeader({
+  ghostMode,
+  setGhostMode,
+  hasGhost,
+  handleAcceptAll,
+  handleRejectAll
+}: {
+  ghostMode?: boolean
+  setGhostMode?: (val: boolean) => void
+  hasGhost?: boolean
+  handleAcceptAll?: () => void
+  handleRejectAll?: () => void
+}) {
   const {
     openFiles, activeFilePath, setActiveFile, closeFile,
     setActiveFileContent, setActiveFileLanguage, setCenterMode,
@@ -134,6 +146,40 @@ function CenterPanelHeader() {
 
       {/* Right: LSP status + panel controls */}
       <div className="flex items-center gap-1 px-2 shrink-0">
+        {showLsp && setGhostMode && (
+          <div className="flex items-center gap-1 border-r border-zinc-800 pr-2 mr-1">
+            <button
+              onClick={() => setGhostMode(!ghostMode)}
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors ${
+                ghostMode ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-600 hover:text-zinc-400'
+              }`}
+              title="Toggle Ghost Mode (Shadow Coding)"
+            >
+              <Ghost size={12} />
+              <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline-block">Ghost</span>
+            </button>
+            
+            {ghostMode && hasGhost && (
+              <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2">
+                <button
+                  onClick={handleAcceptAll}
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-copernicus-phosphor text-[#050505] rounded text-[9px] font-bold uppercase hover:opacity-90 transition-opacity"
+                  title="Accept All Changes"
+                >
+                  <Check size={10} /> <span className="hidden md:inline-block">Accept</span>
+                </button>
+                <button
+                  onClick={handleRejectAll}
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-zinc-800 text-zinc-400 rounded text-[9px] font-bold uppercase hover:bg-zinc-700 transition-colors"
+                  title="Reject All Changes"
+                >
+                  <CloseIcon size={10} /> <span className="hidden md:inline-block">Reject</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {showLsp && (
           <div className="relative">
             <button
@@ -187,6 +233,26 @@ export function CenterPanelRouter({
   language: propLanguage, 
   onChange: propOnChange 
 }: CenterPanelRouterProps) {
+  const [ghostMode, setGhostMode] = useState(false)
+  const [hasGhost, setHasGhost] = useState(false)
+  const [ghostAction, setGhostAction] = useState<'accept' | 'reject' | null>(null)
+
+  useEffect(() => {
+    setGhostMode(false)
+    setHasGhost(false)
+    setGhostAction(null)
+  }, [propFilePath, useLayoutStore.getState().activeFilePath])
+
+  const handleAcceptAll = () => {
+    setGhostAction('accept')
+    setTimeout(() => setGhostAction(null), 100)
+  }
+
+  const handleRejectAll = () => {
+    setGhostAction('reject')
+    setTimeout(() => setGhostAction(null), 100)
+  }
+
   const { 
     centerMode, setCenterMode, 
     activeView,
@@ -263,9 +329,20 @@ export function CenterPanelRouter({
           : <ImageViewer filePath={filePath} isSvg onEditSource={() => setCenterMode('code')} />
 
       default:
-        return <EditorPanel key={filePath} content={content} language={language} filePath={filePath} onChange={onChange} />
+        return (
+          <EditorPanel 
+            key={filePath} 
+            content={content} 
+            language={language} 
+            filePath={filePath} 
+            onChange={onChange}
+            ghostMode={ghostMode}
+            ghostAction={ghostAction}
+            onGhostStatusChange={setHasGhost}
+          />
+        )
     }
-  }, [reviewMode, activeFilePath, propFilePath, activeFileContent, propContent, activeFileLanguage, propLanguage, centerMode, browserSessionActive, canvasContent, canvasUrl, setActiveFileContent, propOnChange, setCenterMode])
+  }, [reviewMode, activeFilePath, propFilePath, activeFileContent, propContent, activeFileLanguage, propLanguage, centerMode, browserSessionActive, canvasContent, canvasUrl, setActiveFileContent, propOnChange, setCenterMode, ghostMode, ghostAction])
 
   // FIX: When switching from Designer/other to Editor view, ensure centerMode is reset correctly
   useEffect(() => {
@@ -292,7 +369,13 @@ export function CenterPanelRouter({
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      <CenterPanelHeader />
+      <CenterPanelHeader 
+        ghostMode={ghostMode}
+        setGhostMode={setGhostMode}
+        hasGhost={hasGhost}
+        handleAcceptAll={handleAcceptAll}
+        handleRejectAll={handleRejectAll}
+      />
       <div className="flex-1 overflow-hidden">
         {renderedContent}
       </div>
