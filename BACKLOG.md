@@ -314,4 +314,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #385 | Agent Replay Debugging | DRAFT | P2 |
 | #386 | Integrated Log Viewer | DRAFT | P2 |
 | #387 | Unified Health View | DRAFT | P2 |
+| #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | DRAFT | P1 |
+| #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
 

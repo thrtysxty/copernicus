@@ -36,3 +36,24 @@ A token-optimized CLI proxy used throughout the Copernicus development workflow.
 **https://github.com/vectorize-io/hindsight** — MIT *(planned integration — post-launch)*
 
 A self-hosted long-term memory engine for AI agents. `retain` / `recall` / `reflect` operations backed by PostgreSQL and vector search. SOTA on LongMemEval. Earmarked to replace the hand-rolled `project_memory` layer after the first Copernicus launch — see `docs/epics/epic_009_hindsight_long_term_memory.md`.
+
+---
+
+## everything-claude-code
+**https://github.com/affaan-m/everything-claude-code** *(planned integration — P1)*
+
+A comprehensive Claude Code optimization system built over 10+ months of production use, originating from an Anthropic hackathon. 16 specialized subagents, 65+ skill modules, and a hooks architecture (session persistence, strategic compaction, pattern extraction) with runtime profile control via `ECC_HOOK_PROFILE`. The hooks architecture and agent persona library are direct references for Copernicus skill and hook patterns.
+
+---
+
+## GitNexus
+**https://github.com/abhigyanpatwari/GitNexus** *(planned integration — Story 389)*
+
+Zero-server codebase intelligence via Tree-sitter AST knowledge graphs. Exposes MCP tools (`query`, `impact`, `context`, `detect_changes`, `cypher`) that provide precomputed blast-radius and dependency context for any file in the repo. Earmarked to replace hand-rolled RAG in the Copernicus agent dispatch pipeline and provide pre-dispatch collision detection — see `docs/stories/story_389_gitnexus_mcp_—_codebase_intelligence_context_injection.md`.
+
+---
+
+## Cred
+**https://www.cred.ninja** *(under evaluation — Story 390)*
+
+OAuth token delegation middleware for AI agents. Short-lived scoped tokens, AES-256-GCM vault, Ed25519-signed audit receipts per issuance, and instant revocation. MCP SDK available. Earmarked as the endgame for `AuthManager` when Copernicus agents need to call external APIs (GitHub, Linear, Slack) without holding raw long-lived keys. Pending self-host feasibility evaluation (R620 vault, no AWS KMS dependency) — see `docs/stories/story_390_cred_agent_oauth_delegation_—_research_spike.md`.
