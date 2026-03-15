@@ -9,6 +9,7 @@ import DiffPanel from './DiffPanel'
 import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
 import { useIpcError } from '../../hooks/useIpcError'
+import { SharedPanelHeader } from '../layout/SharedPanelHeader'
 import { unwrapIpc, IpcResult, LspStatusResponse } from '../../types/ipc'
 
 interface CenterPanelRouterProps {
@@ -100,6 +101,42 @@ function CenterPanelHeader({
     const name = activeFilePath.split('/').pop() ?? activeFilePath
     return file?.isDirty ? `${name} •` : name
   })()
+
+  if (activeView === 'designer') {
+    return (
+      <SharedPanelHeader
+        id="editor"
+        name="DESIGNER"
+        onRotate={() => toggleFlip('center-panel')}
+      >
+        {showLsp && (
+          <div className="relative">
+            <button
+              aria-label="LSP status"
+              className="flex items-center gap-1.5 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
+              onClick={() => setLspPopoverOpen(v => !v)}
+            >
+              <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
+              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">LSP {errorCount}E {warnCount}W</span>
+            </button>
+            {lspPopoverOpen && (
+              <div
+                className="absolute top-8 right-0 z-50 bg-[#0d0d0d] border border-copernicus-steel/40 rounded shadow-2xl p-3 w-56 font-mono"
+                onMouseLeave={() => setLspPopoverOpen(false)}
+              >
+                <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-2">Language Server</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`w-2 h-2 rounded-full ${lspRunning ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-[10px] text-zinc-300">{lspRunning ? 'Connected' : 'Disconnected'}</span>
+                </div>
+                <div className="text-[9px] text-zinc-600 mt-2">{errorCount}E · {warnCount}W in active file</div>
+              </div>
+            )}
+          </div>
+        )}
+      </SharedPanelHeader>
+    )
+  }
 
   return (
     <div className="h-8 flex items-center border-b border-copernicus-steel bg-[#0A0A0A] shrink-0">
