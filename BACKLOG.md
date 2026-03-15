@@ -186,12 +186,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
 | #367 | Planner Inspector Polish | APPROVED FOR IMPLEMENTATION | P1 |
 | #368 | Editor Header Button Reflow | APPROVED FOR IMPLEMENTATION | P2 |
+| #369 | Search Slide Up Drawer | APPROVED FOR IMPLEMENTATION | P2 |
 | #370 | Designer View Header Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #371 | Designer Canvas Objects | APPROVED FOR IMPLEMENTATION | P2 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
-| #369 | Search Slide Up Drawer | APPROVED FOR IMPLEMENTATION | P2 |
 | #372 | Orchestrator Tile Library | APPROVED FOR IMPLEMENTATION | P2 |
 | #373 | Orchestrator Tile Inspector | APPROVED FOR IMPLEMENTATION | P2 |
 | #383 | Dap Debug Adapter Protocol | APPROVED FOR IMPLEMENTATION | P2 |
