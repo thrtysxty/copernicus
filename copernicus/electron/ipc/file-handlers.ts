@@ -25,6 +25,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         await fsManager.stageFile(txId, f.filePath, f.content);
       }
       await fsManager.commitTransaction(txId);
+
+      // Auto-run linting for saved files
+      const { runDiagnosticsOnFile } = await import('./diag-handlers')
+      for (const f of files) {
+        runDiagnosticsOnFile(f.filePath, fsManager.getRootPath()).catch(log.error)
+      }
+
       return { ok: true, txId };
     } catch (err: unknown) {
       try {
@@ -134,6 +141,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     assertSafePath(filePath);
     await fsManager.writeFile(filePath, content)
     codebaseIndexer.indexFile(filePath).catch(log.error)
+    
+    // Auto-run linting based on file type
+    const { runDiagnosticsOnFile } = await import('./diag-handlers')
+    runDiagnosticsOnFile(filePath, fsManager.getRootPath()).catch(log.error)
+
     return true
   }))
 
