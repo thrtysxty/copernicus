@@ -538,6 +538,38 @@ result.data?.forEach(...)  // ← correct
 
 ---
 
+## Jules Review Protocol (Gemini — how to apply a completed Jules session)
+
+When Claude dispatches you to review a Jules session, follow these exact steps:
+
+```bash
+# 1. Extract session ID from the jules.google.com URL
+#    e.g. https://jules.google.com/session/15402831178179457511 → ID = 15402831178179457511
+
+# 2. Apply the Jules patch to the current working tree
+jules remote pull --session <SESSION_ID> --apply
+
+# 3. Verify type safety
+cd copernicus && npx tsc --noEmit
+# Fix any Jules-introduced type errors before committing.
+
+# 4. Verify ACs — read the story file and confirm each AC is implemented
+
+# 5. Commit (only after zero tsc errors + ACs met)
+git add -A
+git commit -m "feat(story-NNN): <short description>"
+
+# 6. Move story to completed and regen backlog
+mv docs/stories/story_NNN_*.md docs/stories/completed/
+git add -A && git commit -m "docs: move story NNN to completed"
+python3 scripts/utils/generate_backlog.py
+git add BACKLOG.md && git commit -m "docs: regen backlog"
+```
+
+**Never push.** Never skip the tsc check. Fix all type errors before committing.
+
+---
+
 ## Pre-PR Checklist
 
 Run ALL of these before submitting your pull request:
