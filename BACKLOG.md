@@ -178,14 +178,14 @@ This file is auto-generated. Run `make backlog` to update.
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
 | #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
+| #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
+| #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #381 | File Explorer Context Menu | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #362 | Zero Config Onboarding | APPROVED FOR IMPLEMENTATION | P1 |
-| #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
-| #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
 | #367 | Planner Inspector Polish | APPROVED FOR IMPLEMENTATION | P1 |
 | #368 | Editor Header Button Reflow | APPROVED FOR IMPLEMENTATION | P2 |
 | #370 | Designer View Header Fix | APPROVED FOR IMPLEMENTATION | P1 |
