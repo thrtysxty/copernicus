@@ -178,6 +178,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
+| #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #362 | Zero Config Onboarding | APPROVED FOR IMPLEMENTATION | P1 |
@@ -190,7 +191,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
-| #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #369 | Search Slide Up Drawer | APPROVED FOR IMPLEMENTATION | P2 |
 | #372 | Orchestrator Tile Library | APPROVED FOR IMPLEMENTATION | P2 |
 | #373 | Orchestrator Tile Inspector | APPROVED FOR IMPLEMENTATION | P2 |
