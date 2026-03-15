@@ -179,6 +179,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
 | #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
+| #381 | File Explorer Context Menu | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
 | #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
@@ -188,7 +189,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #367 | Planner Inspector Polish | APPROVED FOR IMPLEMENTATION | P1 |
 | #368 | Editor Header Button Reflow | APPROVED FOR IMPLEMENTATION | P2 |
 | #370 | Designer View Header Fix | APPROVED FOR IMPLEMENTATION | P1 |
-| #381 | File Explorer Context Menu | APPROVED FOR IMPLEMENTATION | P1 |
+| #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -313,5 +314,4 @@ This file is auto-generated. Run `make backlog` to update.
 | #385 | Agent Replay Debugging | DRAFT | P2 |
 | #386 | Integrated Log Viewer | DRAFT | P2 |
 | #387 | Unified Health View | DRAFT | P2 |
-| #388 | Ipc Lint Violations — Handleipc Wrappers, Useipcerror Hook, Ghost Tint Active States | DRAFT | P1 |
 
