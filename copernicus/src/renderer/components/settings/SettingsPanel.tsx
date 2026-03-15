@@ -15,7 +15,7 @@ import { GitSection } from './sections/GitSection'
 import { WorkflowSection } from './sections/WorkflowSection'
 import { MCPSection } from './sections/MCPSection'
 import { SecuritySection } from './sections/SecuritySection'
-import { RAGSettings } from './RAGSettings'
+import { RagSection } from './sections/RagSection'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { EnvironmentSection } from './sections/EnvironmentSection'
 import { DataSection } from './sections/DataSection'
@@ -58,7 +58,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'git':         return <GitSection />
       case 'workflow':    return <WorkflowSection />
       case 'mcp':         return <MCPSection />
-      case 'rag':         return <RAGSettings />
+      case 'rag':         return <RagSection />
       case 'security':    return <SecuritySection />
       case 'templates':   return <TemplatesSection />
       case 'environment': return <EnvironmentSection />

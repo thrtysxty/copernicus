@@ -45,6 +45,9 @@ CORE PROTOCOLS:
     const callStart = Date.now()
 
     // STORY 363: Context Management
+    const settings = new SettingsStore().getAll()
+    contextManager.updateFromSettings(settings)
+
     const usedTokens = contextManager.calculateContextSize(messages, system)
     const maxContext = contextManager.getMaxContextForModel(model)
     this.broadcast('chat:context-update', { 

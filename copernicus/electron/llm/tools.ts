@@ -4,6 +4,9 @@ import { codebaseIndexer } from '../codebase-indexer'
 import { hybridRetriever } from './hybrid-retrieval'
 import { fsManager } from '../fs-manager'
 import { authManager } from '../auth-manager'
+import { ragInjector, RagChunk } from './RagInjector'
+import { modelRegistry } from '../models/model-registry'
+import { SettingsStore } from '../settings-store'
 
 const execAsync = promisify(exec)
 const execFileAsync = promisify(execFile)
@@ -131,18 +134,28 @@ export class ToolExecutor {
   private async searchCodebase(query: string, mode: 'fast' | 'deep' = 'fast'): Promise<string> {
     let results;
     if (mode === 'deep') {
-      results = await hybridRetriever.search(query, 5)
+      results = await hybridRetriever.search(query, 20)
     } else {
-      results = await codebaseIndexer.search(query, 5)
+      results = await codebaseIndexer.search(query, 20)
     }
 
     if (results.length === 0) return 'No relevant snippets found.'
     
-    return results.map(r => 
-      `--- File: ${r.path} (Similarity: ${Math.round(r.similarity * 100)}%) ---
-${r.content}
-`
-    ).join('\n')
+    const chunks: RagChunk[] = results.map(r => ({
+      content: r.content,
+      filePath: r.path,
+      startLine: r.lineStart || 0,
+      endLine: r.lineEnd || 0,
+      score: r.similarity
+    }))
+
+    const settings = new SettingsStore().getAll()
+    ragInjector.updateFromSettings(settings)
+
+    const activeModelId = modelRegistry.getActiveModel()?.id || 'claude-3-5-sonnet-20240620'
+    const injected = await ragInjector.inject(chunks, activeModelId)
+    
+    return injected.content
   }
 
   private async readFile(filePath: string): Promise<string> {
