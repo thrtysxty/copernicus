@@ -253,7 +253,7 @@ export default function App() {
       const files = data.changedFiles.map((f: string) => `• ${f.split('/').pop()}`).join('\n')
       const message = `✓ Session complete — ${stories}\n\nChanged files (${data.changedFiles.length}):\n${files}\n\nExit code: ${data.exitCode === 0 ? '✓ 0 (clean)' : `✗ ${data.exitCode}`}`
       
-      window.ipcRenderer.invoke('chat:send-system', message)
+      invoke('chat:send-system', message)
     })
 
     const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory', 'review', 'git'] as const

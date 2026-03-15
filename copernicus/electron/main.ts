@@ -220,13 +220,9 @@ function registerIpcHandlers() {
     })
   }))
 
-  ipcMain.handle('templates:save', (_e, id: string, content: string) =>
-    handleIpc('templates:save', [id, content], () => deps.stateLedger.saveTemplateOverride(id, content))
-  )
+  ipcMain.handle('templates:save', (_e, id: string, content: string) => handleIpc(() => deps.stateLedger.saveTemplateOverride(id, content)))
 
-  ipcMain.handle('templates:reset', (_e, id: string) =>
-    handleIpc('templates:reset', [id], () => deps.stateLedger.deleteTemplateOverride(id))
-  )
+  ipcMain.handle('templates:reset', (_e, id: string) => handleIpc(() => deps.stateLedger.deleteTemplateOverride(id)))
 
   ipcMain.handle('window:exit-fullscreen', () => handleIpc('window:exit-fullscreen', [], () => {
     const w = BrowserWindow.getAllWindows()[0]

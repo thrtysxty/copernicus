@@ -302,7 +302,7 @@ export const ProvidersSection: React.FC = () => {
                     s?.hasKey ? 'bg-green-400' :
                     'bg-amber-400'
                   }`} title={authFailed.has(id) ? 'Auth failed' : s?.hasKey ? 'Authenticated' : 'No key'} />
-                  <div className={`p-2 rounded ${isOllama || isOllamaCloud ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600'}`}>
+                  <div className={`p-2 ${isOllama || isOllamaCloud ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'bg-zinc-900 text-zinc-600 rounded'}`}>
                     <ProviderIcon provider={id} />
                   </div>
                   <div>
@@ -356,12 +356,12 @@ export const ProvidersSection: React.FC = () => {
                     <button
                       onClick={setAnthropicCli}
                       disabled={!claudeCliAvailable}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-[9px] font-bold uppercase border transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase border transition-all ${
                         anthropicMethod === 'cli'
-                          ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-copernicus-phosphor'
+                          ? 'border-copernicus-phosphor bg-copernicus-phosphor text-[#050505] rounded-none'
                           : claudeCliAvailable
-                            ? 'border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                            : 'border-zinc-800 text-zinc-700 cursor-not-allowed'
+                            ? 'border-zinc-700 text-zinc-400 hover:border-zinc-500 rounded'
+                            : 'border-zinc-800 text-zinc-700 cursor-not-allowed rounded'
                       }`}
                       title={claudeCliAvailable ? 'Use Claude Code CLI session' : 'Claude CLI not found'}
                     >
@@ -372,10 +372,10 @@ export const ProvidersSection: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setAnthropicMethod('apikey')}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-[9px] font-bold uppercase border transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase border transition-all ${
                         anthropicMethod === 'apikey'
-                          ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-copernicus-phosphor'
-                          : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                          ? 'border-copernicus-phosphor bg-copernicus-phosphor text-[#050505] rounded-none'
+                          : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 rounded'
                       }`}
                     >
                       <Key size={9} />

@@ -34,7 +34,7 @@ const ReviewSummaryCard: React.FC = () => {
         </button>
         <button
           onClick={() => {
-             window.ipcRenderer.invoke('terminal:spawn', { 
+            invoke('terminal:spawn', { 
                id: `tsc-${Date.now()}`,
                label: 'TSC CHECK',
                command: 'npx tsc --noEmit', 

@@ -152,7 +152,7 @@ export const GitPanel: React.FC = () => {
               <div 
                 key={pr.number} 
                 className="p-2 border border-zinc-800 rounded hover:border-zinc-700 cursor-pointer"
-                onClick={() => window.ipcRenderer.invoke('app:open-external', pr.url)}
+                onClick={() => invoke('app:open-external', pr.url)}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-copernicus-phosphor">#{pr.number}</span>
