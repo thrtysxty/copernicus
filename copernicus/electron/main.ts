@@ -51,6 +51,7 @@ import * as logHandlers from './ipc/log-handlers'
 import * as lspHandlers from './ipc/lsp-handlers'
 import * as securityScoreHandlers from './ipc/security-handlers'
 import * as localModelHandlers from './ipc/local-model-handlers'
+import { registerReplayHandlers } from './ipc/replay-handlers'
 
 import { GenesisRunner } from './genesis/genesis-runner'
 import { ScaffoldRunner } from './genesis/scaffold'
@@ -209,6 +210,7 @@ function registerIpcHandlers() {
   lspHandlers.register(win!, deps)
   securityScoreHandlers.register()
   localModelHandlers.register()
+  registerReplayHandlers()
   registerSecurityHandlers(ipcMain, settingsStore)
 
   ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {

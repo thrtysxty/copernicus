@@ -59,6 +59,7 @@ const SEND_CHANNELS = new Set([
   'diagnostics:run-tsc', 'diagnostics:get-all',
   'diag:run', 'diag:run-eslint', 'diag:run-ruff', 'diag:run-audit', 'diag:get-all',
   'log:get-history', 'log:list-sources',
+  'replay:list-runs', 'replay:get-steps', 'replay:get-step-detail',
   'security:score',
 
   // Environment

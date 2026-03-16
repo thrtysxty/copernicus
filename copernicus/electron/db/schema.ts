@@ -130,7 +130,10 @@ export const SCHEMA = {
       reasoning       TEXT,
       workflow_run_id TEXT,
       parent_call_id  INTEGER REFERENCES model_calls(id),
-      created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+      prompt_text     TEXT,
+      response_text   TEXT,
+      context_json    TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_model_calls_session
       ON model_calls(session_id, created_at DESC);

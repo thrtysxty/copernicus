@@ -33,6 +33,7 @@ import { ReviewPanel } from './components/review/ReviewPanel'
 import { GitPanel } from './components/git/GitPanel'
 import { SearchPanel } from './components/search/SearchPanel'
 import { DiagnosticsPanel } from './components/debug/DiagnosticsPanel'
+import { ReplayPanel } from './components/debug/ReplayPanel'
 import { LogViewer } from './components/debug/LogViewer'
 
 const TERMINAL_HEIGHT = 200
@@ -441,7 +442,9 @@ export default function App() {
             {activeView === 'search' && <SearchPanel />}
             {activeView === 'diagnostics' && <DiagnosticsPanel />}
             {activeView === 'logs' && <LogViewer />}
+            {activeView === 'replay' && <ReplayPanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
+
               <>
                 {/* Sidebar */}
                 <div className={`${sidebarClass} min-w-0 transition-all duration-300 ease-in-out border-r border-copernicus-steel bg-[#080808] relative flex flex-col overflow-hidden`}>

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UIComponent } from '../components/Editor/ui-builder/types'
 
-export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github' | 'review' | 'git' | 'search' | 'diagnostics' | 'logs'
+export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github' | 'review' | 'git' | 'search' | 'diagnostics' | 'logs' | 'replay'
 export type PaneId = 'explorer' | 'editor' | 'inspector' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
 
 export interface ReviewSession {

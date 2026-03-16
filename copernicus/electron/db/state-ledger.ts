@@ -93,6 +93,9 @@ export interface ModelCallRecord {
   workflow_run_id?: string;
   parent_call_id?: number;
   created_at?: string;
+  prompt_text?: string | null;
+  response_text?: string | null;
+  context_json?: string | null;
 }
 
 export interface ModelCallStats {
@@ -162,9 +165,12 @@ export class StateLedger {
     this.db.exec(SCHEMA.model_calls);
     try {
       this.db.exec("ALTER TABLE model_calls ADD COLUMN persona_role TEXT DEFAULT 'unknown'");
-    } catch (e) {
-      // Column already exists
-    }
+    } catch (e) { /* Column already exists */ }
+
+    // Replay Debugging Migrations (Story 385)
+    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN prompt_text TEXT`) } catch (e) {}
+    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN response_text TEXT`) } catch (e) {}
+    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN context_json TEXT`) } catch (e) {}
 
     // Projects & Epics (Story 211)
     this.db.exec(SCHEMA.projects);
@@ -299,15 +305,19 @@ export class StateLedger {
     const info = this.db.prepare(`
       INSERT INTO model_calls
         (session_id, panel_id, model_id, provider, persona_role, tokens_in, tokens_out,
-         cost_usd, latency_ms, reasoning, workflow_run_id, parent_call_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         cost_usd, latency_ms, reasoning, workflow_run_id, parent_call_id,
+         prompt_text, response_text, context_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       record.session_id, record.panel_id, record.model_id, record.provider,
       record.persona_role ?? 'unknown',
       record.tokens_in, record.tokens_out, record.cost_usd,
       record.latency_ms ?? null, record.reasoning ?? null,
       record.workflow_run_id ?? null,
-      record.parent_call_id ?? null
+      record.parent_call_id ?? null,
+      record.prompt_text ?? null,
+      record.response_text ?? null,
+      record.context_json ?? null
     )
     return info.lastInsertRowid as number
   }
