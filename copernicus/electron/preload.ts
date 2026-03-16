@@ -57,7 +57,7 @@ const SEND_CHANNELS = new Set([
   'git:current-branch', 'git:list-branches',
   'codebase:text-search', 'codebase:semantic-search',
   'diagnostics:run-tsc', 'diagnostics:get-all',
-  'diag:run-eslint', 'diag:run-ruff', 'diag:run-audit', 'diag:get-all',
+  'diag:run', 'diag:run-eslint', 'diag:run-ruff', 'diag:run-audit', 'diag:get-all',
   'log:get-history', 'log:list-sources',
   'security:score',
 
@@ -154,6 +154,7 @@ const LISTEN_CHANNELS = new Set([
   'layout:goto-line',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',
   'diag:results',
+  'log:line',
   'log:new-line',
   'window:fullscreen-state',
 ])

@@ -1,38 +1,39 @@
 import { create } from 'zustand'
-import { LogLine } from '../../../electron/debug/LogTailer'
+import { LogEntry } from '../../../electron/debug/LogTailer'
 
 interface LogViewerState {
-  logs: LogLine[]
+  entries: LogEntry[]
   sources: string[]
   enabledSources: Set<string>
-  minLevel: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR'
-  searchQuery: string
-  isPaused: boolean
+  level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | null
+  search: string
+  paused: boolean
   
-  addLog: (line: LogLine) => void
-  setLogs: (logs: LogLine[]) => void
+  addLog: (entry: LogEntry) => void
+  setEntries: (entries: LogEntry[]) => void
   setSources: (sources: string[]) => void
   toggleSource: (source: string) => void
-  setMinLevel: (level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR') => void
-  setSearchQuery: (query: string) => void
+  setLevel: (level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | null) => void
+  setSearch: (query: string) => void
   setPaused: (paused: boolean) => void
   clearLogs: () => void
 }
 
 export const useLogViewerStore = create<LogViewerState>((set) => ({
-  logs: [],
+  entries: [],
   sources: ['copernicus', 'language-server', 'backend'],
   enabledSources: new Set(['copernicus', 'language-server', 'backend']),
-  minLevel: 'INFO',
-  searchQuery: '',
-  isPaused: false,
+  level: 'INFO',
+  search: '',
+  paused: false,
 
-  addLog: (line) => set((state) => {
-    if (state.isPaused) return state
-    return { logs: [...state.logs.slice(-999), line] }
+  addLog: (entry) => set((state) => {
+    if (state.paused) return state
+    // Slice last 1000 for performance
+    return { entries: [entry, ...state.entries].slice(0, 1000) }
   }),
   
-  setLogs: (logs) => set({ logs }),
+  setEntries: (entries) => set({ entries }),
   setSources: (sources) => set({ sources }),
   
   toggleSource: (source) => set((state) => {
@@ -42,8 +43,8 @@ export const useLogViewerStore = create<LogViewerState>((set) => ({
     return { enabledSources: next }
   }),
   
-  setMinLevel: (minLevel) => set({ minLevel }),
-  setSearchQuery: (searchQuery) => set({ searchQuery }),
-  setPaused: (isPaused) => set({ isPaused }),
-  clearLogs: () => set({ logs: [] }),
+  setLevel: (level) => set({ level }),
+  setSearch: (search) => set({ search }),
+  setPaused: (paused) => set({ paused }),
+  clearLogs: () => set({ entries: [] }),
 }))

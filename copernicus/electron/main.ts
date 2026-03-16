@@ -205,7 +205,7 @@ function registerIpcHandlers() {
   searchHandlers.register(win!, deps)
   diagnosticsHandlers.register(win!, deps)
   diagHandlers.register(win!, deps)
-  logHandlers.register(win!)
+  logHandlers.registerLogHandlers(win!)
   lspHandlers.register(win!, deps)
   securityScoreHandlers.register()
   localModelHandlers.register()

@@ -1,27 +1,19 @@
-import { ipcMain, BrowserWindow } from 'electron'
-import { LogTailer, LogLine } from '../debug/LogTailer'
+import { ipcMain, BrowserWindow, app } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
-import path from 'node:path'
-import os from 'node:os'
+import { LogTailer } from '../debug/LogTailer'
 
-let logTailer: LogTailer | null = null
+let tailer: LogTailer | null = null
 
-export function register(win: BrowserWindow) {
-  const COPERNICUS_HOME = process.env.COPERNICUS_E2E_HOME ?? path.join(os.homedir(), '.copernicus')
-  const LOG_DIR = path.join(COPERNICUS_HOME, 'logs')
-
-  if (!logTailer) {
-    logTailer = new LogTailer(LOG_DIR)
-    logTailer.on('line', (line: LogLine) => {
-      win.webContents.send('log:new-line', line)
+export function registerLogHandlers(win: BrowserWindow) {
+  if (!tailer) {
+    tailer = new LogTailer(app.getPath('logs'))
+    tailer.startTailing((entry) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('log:line', entry)
+      }
     })
   }
 
-  ipcMain.handle('log:get-history', () => handleIpc('log:get-history', [], () => {
-    return logTailer?.getHistory() ?? []
-  }))
-
-  ipcMain.handle('log:list-sources', () => handleIpc('log:list-sources', [], () => {
-    return logTailer?.listSources() ?? []
-  }))
+  ipcMain.handle('log:list-sources', () => handleIpc(() => tailer!.listSources()))
+  ipcMain.handle('log:get-history', (_e, limit: number) => handleIpc(() => tailer!.getHistory(limit)))
 }

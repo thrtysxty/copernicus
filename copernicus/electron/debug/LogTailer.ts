@@ -1,48 +1,96 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { EventEmitter } from 'node:events'
+import { randomUUID } from 'node:crypto'
+import chokidar from 'chokidar'
 import log from '../utils/logger'
 
-export interface LogLine {
-  timestamp: string
-  level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR'
-  source: string
+export interface LogEntry {
+  id: string          // uuid
+  timestamp: string   // ISO string
+  level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG'
+  source: 'copernicus' | 'language-server' | 'backend'
   message: string
 }
 
 export class LogTailer extends EventEmitter {
   private logDir: string
-  private watchers: Map<string, fs.FSWatcher> = new Map()
+  private watchers: Map<string, chokidar.FSWatcher> = new Map()
   private positions: Map<string, number> = new Map()
+  private onLineCallback: ((entry: LogEntry) => void) | null = null
 
   constructor(logDir: string) {
     super()
     this.logDir = logDir
-    this.startTailing()
   }
 
   public listSources(): string[] {
     return ['copernicus', 'language-server', 'backend']
   }
 
-  public getHistory(limit: number = 1000): LogLine[] {
-    const allLogs: LogLine[] = []
-    for (const source of this.listSources()) {
+  public getHistory(limit: number = 200): LogEntry[] {
+    const allLogs: LogEntry[] = []
+    const sources = this.listSources() as Array<'copernicus' | 'language-server' | 'backend'>
+    
+    for (const source of sources) {
       const logPath = path.join(this.logDir, `${source}.log`)
       if (fs.existsSync(logPath)) {
-        const content = fs.readFileSync(logPath, 'utf-8')
-        const lines = content.split('\n')
-        for (const line of lines) {
-          if (line.trim()) {
-            allLogs.push(this.parseLine(line, source))
+        try {
+          const content = fs.readFileSync(logPath, 'utf-8')
+          const lines = content.split('\n')
+          for (const line of lines) {
+            if (line.trim()) {
+              allLogs.push(this.parseLine(line, source))
+            }
           }
+        } catch (e) {
+          log.error(`Failed to read log file: ${logPath}`, e)
         }
       }
     }
-    // Sort by timestamp and limit
+
+    // Sort by timestamp DESCENDING and limit
     return allLogs
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      .slice(-limit)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit)
+  }
+
+  public startTailing(onLine: (entry: LogEntry) => void): void {
+    this.onLineCallback = onLine
+    const sources = this.listSources() as Array<'copernicus' | 'language-server' | 'backend'>
+    
+    for (const source of sources) {
+      const logPath = path.join(this.logDir, `${source}.log`)
+      
+      // Ensure directory exists
+      const dir = path.dirname(logPath)
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+      }
+
+      // Ensure file exists
+      if (!fs.existsSync(logPath)) {
+        fs.writeFileSync(logPath, '')
+      }
+
+      this.positions.set(source, fs.statSync(logPath).size)
+
+      if (this.watchers.has(source)) {
+        this.watchers.get(source)?.close()
+      }
+
+      const watcher = chokidar.watch(logPath, {
+        persistent: true,
+        usePolling: process.platform === 'win32', // Polling is often better on Windows
+        interval: 100,
+      })
+
+      watcher.on('change', () => {
+        this.handleFileChange(source, logPath)
+      })
+
+      this.watchers.set(source, watcher)
+    }
   }
 
   public stopTailing(): void {
@@ -50,35 +98,10 @@ export class LogTailer extends EventEmitter {
       watcher.close()
     }
     this.watchers.clear()
+    this.onLineCallback = null
   }
 
-  private startTailing(): void {
-    for (const source of this.listSources()) {
-      const logPath = path.join(this.logDir, `${source}.log`)
-      
-      // Ensure file exists
-      if (!fs.existsSync(logPath)) {
-        try {
-          fs.mkdirSync(path.dirname(logPath), { recursive: true })
-          fs.writeFileSync(logPath, '')
-        } catch (e) {
-          log.error(`Failed to create log file: ${logPath}`, e)
-          continue
-        }
-      }
-
-      this.positions.set(source, fs.statSync(logPath).size)
-
-      const watcher = fs.watch(logPath, (event) => {
-        if (event === 'change') {
-          this.handleFileChange(source, logPath)
-        }
-      })
-      this.watchers.set(source, watcher)
-    }
-  }
-
-  private handleFileChange(source: string, logPath: string): void {
+  private handleFileChange(source: 'copernicus' | 'language-server' | 'backend', logPath: string): void {
     try {
       const stats = fs.statSync(logPath)
       const oldPos = this.positions.get(source) || 0
@@ -92,9 +115,15 @@ export class LogTailer extends EventEmitter {
 
       if (newPos === oldPos) return
 
-      const buffer = Buffer.alloc(newPos - oldPos)
+      const bufferSize = newPos - oldPos
+      if (bufferSize > 1024 * 1024) { // Safety: don't read more than 1MB at once
+        this.positions.set(source, newPos)
+        return
+      }
+
+      const buffer = Buffer.alloc(bufferSize)
       const fd = fs.openSync(logPath, 'r')
-      fs.readSync(fd, buffer, 0, newPos - oldPos, oldPos)
+      fs.readSync(fd, buffer, 0, bufferSize, oldPos)
       fs.closeSync(fd)
 
       const content = buffer.toString('utf-8')
@@ -102,6 +131,9 @@ export class LogTailer extends EventEmitter {
       for (const line of lines) {
         if (line.trim()) {
           const parsed = this.parseLine(line, source)
+          if (this.onLineCallback) {
+            this.onLineCallback(parsed)
+          }
           this.emit('line', parsed)
         }
       }
@@ -112,18 +144,27 @@ export class LogTailer extends EventEmitter {
     }
   }
 
-  private parseLine(line: string, source: string): LogLine {
-    // Expected format: [2025-03-15 21:52:00.000] [info] Message
+  private parseLine(line: string, source: 'copernicus' | 'language-server' | 'backend'): LogEntry {
+    // Expected format: [YYYY-MM-DD HH:mm:ss.SSS] [level] message
     const match = line.match(/^\[(.*?)\]\s+\[(.*?)\]\s+(.*)$/)
     if (match && match[1] && match[2] && match[3]) {
+      let level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG' = 'INFO'
+      const rawLevel = match[2].toUpperCase()
+      if (['INFO', 'WARN', 'ERROR', 'DEBUG'].includes(rawLevel)) {
+        level = rawLevel as any
+      }
+
       return {
+        id: randomUUID(),
         timestamp: match[1],
-        level: match[2].toUpperCase() as any,
+        level,
         source,
         message: match[3]
       }
     }
+
     return {
+      id: randomUUID(),
       timestamp: new Date().toISOString(),
       level: 'INFO',
       source,
