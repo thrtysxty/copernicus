@@ -118,6 +118,8 @@ const SEND_CHANNELS = new Set([
   // Canvas interaction (Story 153)
   'canvas:get-iframe-bounds', 'canvas:capture-screenshot', 'canvas:screenshot-preview',
   'canvas:execute-js', 'canvas:send-input',
+  // Testing (Story 384)
+  'test:discover', 'test:run', 'test:stop', 'test:coverage',
   'layout:goto-line',
 ])
 
@@ -158,6 +160,8 @@ const LISTEN_CHANNELS = new Set([
   'log:line',
   'log:new-line',
   'window:fullscreen-state',
+  // Testing (Story 384)
+  'test:results',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

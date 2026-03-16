@@ -46,6 +46,7 @@ import * as genesisHandlers from './ipc/genesis-handlers'
 import * as gitHandlers from './ipc/git-handlers'
 import * as searchHandlers from './ipc/search-handlers'
 import * as diagnosticsHandlers from './ipc/diagnostics-handlers'
+import * as testHandlers from './ipc/test-handlers'
 import * as diagHandlers from './ipc/diag-handlers'
 import * as logHandlers from './ipc/log-handlers'
 import * as lspHandlers from './ipc/lsp-handlers'
@@ -205,6 +206,7 @@ function registerIpcHandlers() {
   gitHandlers.register(win!, deps)
   searchHandlers.register(win!, deps)
   diagnosticsHandlers.register(win!, deps)
+  testHandlers.register(win!, deps)
   diagHandlers.register(win!, deps)
   logHandlers.registerLogHandlers(win!)
   lspHandlers.register(win!, deps)

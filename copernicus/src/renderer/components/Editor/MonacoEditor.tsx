@@ -3,6 +3,7 @@ import Editor, { useMonaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useLayoutStore } from '../../store/layout';
+import { useTestRunnerStore } from '../../store/testRunner';
 import log from '../../utils/logger'
 
 // Import workers using Vite's ?worker syntax
@@ -60,6 +61,8 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const invoke = useIpcError();
   const { setFileDirty } = useLayoutStore()
   const [, setGhostDecorations] = React.useState<string[]>([])
+  const [, setCoverageDecorations] = React.useState<string[]>([])
+  const coverageData = useTestRunnerStore(s => s.coverage)
   const [pendingDiff, setPendingDiff] = React.useState<string | null>(null)
 
   // CSS for Ghost Mode
@@ -149,6 +152,40 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
       window.dispatchEvent(new CustomEvent('editor:ghost-status', { detail: { filePath, hasGhost: false } }))
     }
   }, [ghostMode, filePath])
+
+  // Apply coverage decorations
+  React.useEffect(() => {
+    if (!monacoInstance || !editorRef.current || !filePath) return
+
+    const fileCoverage = coverageData[filePath]
+    if (!fileCoverage) {
+      setCoverageDecorations(prev => editorRef.current.deltaDecorations(prev, []))
+      return
+    }
+
+    const newDecorations: monaco.editor.IModelDeltaDecoration[] = []
+
+    Object.entries(fileCoverage.lines).forEach(([lineStr, status]) => {
+      const line = parseInt(lineStr, 10)
+
+      let colorClass = ''
+      if (status === 'covered') colorClass = 'coverage-covered'
+      else if (status === 'uncovered') colorClass = 'coverage-uncovered'
+      else if (status === 'partial') colorClass = 'coverage-partial'
+
+      if (colorClass) {
+        newDecorations.push({
+          range: new monacoInstance.Range(line, 1, line, 1),
+          options: {
+            isWholeLine: false,
+            linesDecorationsClassName: colorClass,
+          }
+        })
+      }
+    })
+
+    setCoverageDecorations(prev => editorRef.current.deltaDecorations(prev, newDecorations))
+  }, [coverageData, filePath, monacoInstance])
 
   const themeConfig: monaco.editor.IStandaloneThemeData = {
     base: 'vs-dark',

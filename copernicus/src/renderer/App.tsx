@@ -33,6 +33,7 @@ import { ReviewPanel } from './components/review/ReviewPanel'
 import { GitPanel } from './components/git/GitPanel'
 import { SearchPanel } from './components/search/SearchPanel'
 import { DiagnosticsPanel } from './components/debug/DiagnosticsPanel'
+import { TestExplorer } from './components/debug/TestExplorer'
 import { ReplayPanel } from './components/debug/ReplayPanel'
 import { LogViewer } from './components/debug/LogViewer'
 
@@ -441,6 +442,7 @@ export default function App() {
             {activeView === 'git' && <GitPanel />}
             {activeView === 'search' && <SearchPanel />}
             {activeView === 'diagnostics' && <DiagnosticsPanel />}
+            {activeView === 'test-explorer' && <TestExplorer />}
             {activeView === 'logs' && <LogViewer />}
             {activeView === 'replay' && <ReplayPanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
