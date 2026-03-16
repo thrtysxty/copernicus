@@ -1,14 +1,14 @@
 import { spawn } from 'child_process'
 import log from 'electron-log'
 
-export interface DiagnosticResult {
+export interface DiagnosticsIssue {
   file: string
   line: number
   col: number
   severity: 'error' | 'warning' | 'info'
   code: string
   message: string
-  source: 'ESLint' | 'Ruff' | 'Audit'
+  source: 'ESLint' | 'Ruff' | 'Audit' | 'LSP'
 }
 
 export class DiagnosticsRunner {
@@ -18,13 +18,22 @@ export class DiagnosticsRunner {
     this.cwd = cwd
   }
 
-  async runEslint(targetPath?: string): Promise<DiagnosticResult[]> {
+  async run(file: string): Promise<DiagnosticsIssue[]> {
+    if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || file.endsWith('.jsx')) {
+      return this.runEslint(file)
+    } else if (file.endsWith('.py')) {
+      return this.runRuff(file)
+    }
+    return []
+  }
+
+  async runEslint(targetPath?: string): Promise<DiagnosticsIssue[]> {
     return new Promise((resolve) => {
       const args = ['eslint', '--format', 'json']
       if (targetPath) {
         args.push(targetPath)
       } else {
-        args.push('.') // Or specific folders
+        args.push('.') 
       }
 
       const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx'
@@ -36,10 +45,10 @@ export class DiagnosticsRunner {
 
       proc.on('close', () => {
         try {
-          const results: DiagnosticResult[] = []
+          const results: DiagnosticsIssue[] = []
           const startIdx = output.indexOf('[')
           if (startIdx === -1) {
-            log.info('[DiagnosticsRunner] ESLint returned no JSON array. Output:', output.substring(0, 200))
+            log.info('[DiagnosticsRunner] ESLint returned no JSON array.')
             return resolve([])
           }
           const jsonStr = output.substring(startIdx)
@@ -67,7 +76,7 @@ export class DiagnosticsRunner {
     })
   }
 
-  async runRuff(targetPath?: string): Promise<DiagnosticResult[]> {
+  async runRuff(targetPath?: string): Promise<DiagnosticsIssue[]> {
     return new Promise((resolve) => {
       const args = ['check', '--output-format', 'json']
       if (targetPath) {
@@ -85,10 +94,10 @@ export class DiagnosticsRunner {
 
       proc.on('close', () => {
         try {
-          const results: DiagnosticResult[] = []
+          const results: DiagnosticsIssue[] = []
           const startIdx = output.indexOf('[')
           if (startIdx === -1) {
-            log.info('[DiagnosticsRunner] Ruff returned no JSON array. Output:', output.substring(0, 200))
+            log.info('[DiagnosticsRunner] Ruff returned no JSON array.')
             return resolve([])
           }
           const jsonStr = output.substring(startIdx)
@@ -99,7 +108,7 @@ export class DiagnosticsRunner {
               file: msg.filename,
               line: msg.location.row || 1,
               col: msg.location.column || 1,
-              severity: 'error', // ruff generally reports errors unless configured otherwise
+              severity: 'error', 
               code: msg.code || 'ruff',
               message: msg.message,
               source: 'Ruff'
@@ -114,7 +123,7 @@ export class DiagnosticsRunner {
     })
   }
 
-  async runAudit(type: 'npm' | 'pip' = 'npm'): Promise<DiagnosticResult[]> {
+  async runAudit(type: 'npm' | 'pip' = 'npm'): Promise<DiagnosticsIssue[]> {
     return new Promise((resolve) => {
       let proc
       if (type === 'npm') {
@@ -131,7 +140,7 @@ export class DiagnosticsRunner {
 
       proc.on('close', () => {
         try {
-          const results: DiagnosticResult[] = []
+          const results: DiagnosticsIssue[] = []
           
           if (type === 'npm') {
             const startIdx = output.indexOf('{')
@@ -168,10 +177,10 @@ export class DiagnosticsRunner {
               if (item.vulns && item.vulns.length > 0) {
                 for (const vuln of item.vulns) {
                   results.push({
-                    file: 'requirements.txt',
+                    file: item.filename || 'requirements.txt',
                     line: 1,
                     col: 1,
-                    severity: 'error', // pip-audit doesn't always provide severity, default to error
+                    severity: 'error',
                     code: vuln.id || `pip-audit:${item.name}`,
                     message: `${item.name}: ${vuln.fix_versions ? 'Fixed in ' + vuln.fix_versions.join(', ') : 'No fix'}`,
                     source: 'Audit'

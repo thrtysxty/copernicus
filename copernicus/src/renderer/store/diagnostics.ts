@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 export type DiagnosticSource = 'LSP' | 'ESLint' | 'Ruff' | 'Audit'
 
-export interface Diagnostic {
+export interface DiagnosticsIssue {
   file: string
   line: number
   col: number
@@ -13,9 +13,9 @@ export interface Diagnostic {
 }
 
 interface DiagnosticsState {
-  diagnostics: Diagnostic[]
-  setDiagnostics: (diags: Diagnostic[]) => void
-  addDiagnostics: (diags: Diagnostic[]) => void
+  diagnostics: DiagnosticsIssue[]
+  setDiagnostics: (diags: DiagnosticsIssue[]) => void
+  addDiagnostics: (diags: DiagnosticsIssue[]) => void
   clearDiagnostics: (source?: DiagnosticSource) => void
   removeDiagnosticsForFile: (file: string, source?: DiagnosticSource) => void
 }
