@@ -4,6 +4,7 @@ import * as monaco from 'monaco-editor';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useLayoutStore } from '../../store/layout';
 import { useTestRunnerStore } from '../../store/testRunner';
+import { useDebugStore } from '../../store/debug';
 import log from '../../utils/logger'
 
 // Import workers using Vite's ?worker syntax
@@ -64,6 +65,10 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const [, setCoverageDecorations] = React.useState<string[]>([])
   const coverageData = useTestRunnerStore(s => s.coverage)
   const [pendingDiff, setPendingDiff] = React.useState<string | null>(null)
+  const [, setBpDecorations] = React.useState<string[]>([])
+
+  const toggleBreakpoint = useDebugStore(s => s.toggleBreakpoint)
+  const breakpoints = useDebugStore(s => s.breakpoints)
 
   // CSS for Ghost Mode
   React.useEffect(() => {
@@ -186,6 +191,49 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
     setCoverageDecorations(prev => editorRef.current.deltaDecorations(prev, newDecorations))
   }, [coverageData, filePath, monacoInstance])
+
+  // Sync breakpoints to editor decorations
+  React.useEffect(() => {
+    if (!editorRef.current || !monacoInstance || !filePath) return;
+
+    const fileBps = breakpoints[filePath] || [];
+
+    const newDecorations = fileBps.map(bp => ({
+      range: new monacoInstance.Range(bp.line, 1, bp.line, 1),
+      options: {
+        isWholeLine: false,
+        glyphMarginClassName: 'breakpoint-glyph',
+      }
+    }));
+
+    setBpDecorations(prev => {
+      // @ts-ignore - deltaDecorations exists
+      return editorRef.current!.deltaDecorations(prev, newDecorations)
+    });
+
+    // Send to DAP
+    invoke('debug:set-breakpoints', { sourcePath: filePath, breakpoints: fileBps });
+
+  }, [breakpoints, filePath, monacoInstance]);
+
+  // CSS for breakpoints
+  React.useEffect(() => {
+    if (!document.getElementById('breakpoint-styles')) {
+      const style = document.createElement('style')
+      style.id = 'breakpoint-styles'
+      style.textContent = `
+        .breakpoint-glyph {
+          background-color: #ef4444;
+          border-radius: 50%;
+          width: 12px !important;
+          height: 12px !important;
+          margin-top: 4px;
+          margin-left: 4px;
+        }
+      `
+      document.head.appendChild(style)
+    }
+  }, [])
 
   const themeConfig: monaco.editor.IStandaloneThemeData = {
     base: 'vs-dark',
@@ -430,8 +478,8 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
           if (onChange) onChange(val);
           if (filePath) setFileDirty(filePath, true);
         }}
-        onMount={(editor) => { 
-          editorRef.current = editor; 
+        onMount={(editor) => {
+          editorRef.current = editor;
           // AC2: Accept All shortcut
           if (monacoInstance) {
             editor.addCommand(
@@ -439,12 +487,22 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
               () => setPendingDiff(null)
             )
           }
+
+          editor.onMouseDown((e) => {
+            if (e.target.type === monacoInstance?.editor.MouseTargetType.GUTTER_GLYPH_MARGIN || e.target.type === monacoInstance?.editor.MouseTargetType.GUTTER_LINE_NUMBERS) {
+              const line = e.target.position?.lineNumber;
+              if (line && filePath) {
+                toggleBreakpoint(filePath, line);
+              }
+            }
+          });
         }}
         beforeMount={(monaco) => {
           monaco.editor.defineTheme('copernicus-phosphor', themeConfig);
           monaco.editor.setTheme('copernicus-phosphor');
         }}
         options={{
+          glyphMargin: true,
           minimap: { enabled: false },
           fontSize: 13,
           fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace',

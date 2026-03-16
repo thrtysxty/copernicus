@@ -36,6 +36,7 @@ import { DiagnosticsPanel } from './components/debug/DiagnosticsPanel'
 import { TestExplorer } from './components/debug/TestExplorer'
 import { ReplayPanel } from './components/debug/ReplayPanel'
 import { LogViewer } from './components/debug/LogViewer'
+import { DebugPanel } from './components/debug/DebugPanel'
 
 const TERMINAL_HEIGHT = 200
 
@@ -445,6 +446,7 @@ export default function App() {
             {activeView === 'test-explorer' && <TestExplorer />}
             {activeView === 'logs' && <LogViewer />}
             {activeView === 'replay' && <ReplayPanel />}
+            {activeView === 'debug' && <DebugPanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
 
               <>

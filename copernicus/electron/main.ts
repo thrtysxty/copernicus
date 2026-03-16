@@ -46,6 +46,7 @@ import * as genesisHandlers from './ipc/genesis-handlers'
 import * as gitHandlers from './ipc/git-handlers'
 import * as searchHandlers from './ipc/search-handlers'
 import * as diagnosticsHandlers from './ipc/diagnostics-handlers'
+import * as debugHandlers from './ipc/debug-handlers'
 import * as testHandlers from './ipc/test-handlers'
 import * as diagHandlers from './ipc/diag-handlers'
 import * as logHandlers from './ipc/log-handlers'
@@ -213,6 +214,7 @@ function registerIpcHandlers() {
   securityScoreHandlers.register()
   localModelHandlers.register()
   registerReplayHandlers()
+  debugHandlers.registerDebugHandlers()
   registerSecurityHandlers(ipcMain, settingsStore)
 
   ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {

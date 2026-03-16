@@ -121,6 +121,11 @@ const SEND_CHANNELS = new Set([
   // Testing (Story 384)
   'test:discover', 'test:run', 'test:stop', 'test:coverage',
   'layout:goto-line',
+  // DAP
+  'debug:launch', 'debug:stop', 'debug:pause', 'debug:resume',
+  'debug:step-over', 'debug:step-into', 'debug:step-out',
+  'debug:set-breakpoints', 'debug:get-call-stack', 'debug:get-scopes', 'debug:get-variables',
+  'debug:evaluate',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -162,6 +167,8 @@ const LISTEN_CHANNELS = new Set([
   'window:fullscreen-state',
   // Testing (Story 384)
   'test:results',
+  // DAP
+  'debug:event',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

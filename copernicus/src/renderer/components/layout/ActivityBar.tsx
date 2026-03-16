@@ -107,6 +107,7 @@ export const ActivityBar: React.FC = () => {
         <NavItem id="test-explorer" icon={Bug} label="Test Explorer" shortcut="⌘Shift+T" testId="nav-tests" />
         <NavItem id="logs" icon={ScrollText} label="Logs" shortcut="⌘Shift+L" testId="nav-logs" />
         <NavItem id="replay" icon={History} label="Replay" shortcut="⌘Shift+R" testId="nav-replay" />
+        <NavItem id="debug" icon={Bug} label="Debug" shortcut="⌘D" testId="nav-debug" />
       </div>
 
       <div className="flex-1" />
