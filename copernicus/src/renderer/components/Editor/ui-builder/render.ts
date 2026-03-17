@@ -53,7 +53,7 @@ function renderComponent(comp: UIComponent, isTopLevel: boolean = false): string
       return `<label class="text-xs font-medium uppercase tracking-wider ${commonClasses}" style="${style}">${props.text || 'Label'}</label>`
 
     case 'button':
-      const variantClasses = props.variant === 'primary' ? 'bg-green-500 text-black hover:bg-green-400' :
+      const variantClasses = props.variant === 'primary' ? 'bg-[#7ee787] text-[#050505] font-bold font-mono uppercase tracking-wider hover:bg-[#6ee576]' :
                             props.variant === 'secondary' ? 'bg-zinc-800 text-white hover:bg-zinc-700' :
                             props.variant === 'danger' ? 'bg-red-600 text-white hover:bg-red-500' :
                             'bg-transparent border border-zinc-700 text-zinc-300 hover:bg-zinc-800'
@@ -72,7 +72,8 @@ function renderComponent(comp: UIComponent, isTopLevel: boolean = false): string
       return `<select class="bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 w-full focus:border-green-500 focus:outline-none transition-colors ${commonClasses}" style="${style}"><option>Option 1</option></select>`
 
     case 'image':
-      return `<img src="${props.src || 'https://via.placeholder.com/150'}" class="object-cover ${commonClasses}" style="${style}" alt="UI element" />`
+      const svgPlaceholder = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23222'/%3E%3Cline x1='0' y1='0' x2='150' y2='150' stroke='%23444' stroke-width='1'/%3E%3Cline x1='150' y1='0' x2='0' y2='150' stroke='%23444' stroke-width='1'/%3E%3C/svg%3E`
+      return `<img src="${props.src || svgPlaceholder}" class="object-cover ${commonClasses}" style="${style}" alt="UI element" />`
     
     case 'icon':
       return `<div class="w-6 h-6 flex items-center justify-center ${commonClasses}" style="${style}">★</div>`

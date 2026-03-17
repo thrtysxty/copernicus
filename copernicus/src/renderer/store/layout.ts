@@ -13,15 +13,15 @@ export interface ReviewSession {
 }
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
-  { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-slate-500/10 border-slate-500/30',   accent: 'bg-slate-500' },
-  { id: 'storyboarding',  status: 'STORYBOARDING',  label: 'Storyboarding',   color: 'bg-purple-500/10 border-purple-500/30', accent: 'bg-purple-500' },
-  { id: 'sprint-planning',status: 'SPRINT_PLANNING', label: 'Sprint Planning', color: 'bg-indigo-500/10 border-indigo-500/30', accent: 'bg-indigo-500' },
-  { id: 'development',    status: 'IN_PROGRESS',     label: 'Development',     color: 'bg-yellow-500/10 border-yellow-500/30', accent: 'bg-yellow-500' },
-  { id: 'testing',        status: 'TESTING',         label: 'Testing',         color: 'bg-orange-500/10 border-orange-500/30', accent: 'bg-orange-500' },
-  { id: 'qa',             status: 'QA',              label: 'QA',              color: 'bg-amber-500/10 border-amber-500/30',   accent: 'bg-amber-500' },
-  { id: 'documenting',    status: 'DOCUMENTING',     label: 'Documenting',     color: 'bg-cyan-500/10 border-cyan-500/30',     accent: 'bg-cyan-500' },
-  { id: 'ready-to-build', status: 'READY',           label: 'Ready to Build',  color: 'bg-teal-500/10 border-teal-500/30',     accent: 'bg-teal-500' },
-  { id: 'done',           status: 'COMPLETE',        label: 'Done',            color: 'bg-green-500/10 border-green-500/30',   accent: 'bg-green-500' },
+  { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'storyboarding',  status: 'STORYBOARDING',  label: 'Storyboarding',   color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'sprint-planning',status: 'SPRINT_PLANNING', label: 'Sprint Planning', color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'development',    status: 'IN_PROGRESS',     label: 'Development',     color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'testing',        status: 'TESTING',         label: 'Testing',         color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'qa',             status: 'QA',              label: 'QA',              color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'documenting',    status: 'DOCUMENTING',     label: 'Documenting',     color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'ready-to-build', status: 'READY',           label: 'Ready to Build',  color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
+  { id: 'done',           status: 'COMPLETE',        label: 'Done',            color: 'bg-copernicus-phosphor/5 border-copernicus-phosphor/20', accent: 'bg-copernicus-phosphor' },
 ]
 
 export const PHOSPHOR_PRESETS = {
@@ -66,7 +66,6 @@ interface LayoutState {
   isFlipped: Record<string, boolean>
   spotlightPane: PaneId | null
   spotlightLane: string | null
-  collapsedPanes: PaneId[]
   activeStoryId: string | null
   drawerStoryId: string | null
   phosphorColor: PhosphorColor
@@ -114,8 +113,6 @@ interface LayoutState {
   browserSessionActive: boolean
 
   // Panel Modes
-  leftPanelMode: 'explorer' | 'command-deck'
-  rightPanelMode: 'telemetry' | 'kanban'
   flippedPanes: string[]
   chatPanelTab: 'chat' | 'guide'
   chatPanelOpen: boolean
@@ -134,14 +131,11 @@ interface LayoutState {
   toggleFlip: (paneId: string) => void
   setSpotlight: (paneId: PaneId | null) => void
   setSpotlightLane: (id: string | null) => void
-  setPaneCollapsed: (paneId: PaneId, collapsed: boolean) => void
   setActiveStoryId: (id: string | null) => void
   setDrawerStory: (id: string | null) => void
   setTelemetry: (data: Partial<LayoutState>) => void
   setCapexTimer: (timer: string) => void
   updateAgentTelemetry: (agentId: string, data: Partial<AgentTelemetry>) => void
-  toggleLeftPanelMode: () => void
-  toggleRightPanelMode: () => void
   setPhosphorColor: (color: PhosphorColor) => void
   setReviewEnabled: (enabled: boolean) => void
   setColumns: (columns: KanbanColumn[]) => void
@@ -247,7 +241,6 @@ export const useLayoutStore = create<LayoutState>()(
       },
       spotlightPane: null,
       spotlightLane: null,
-      collapsedPanes: [],
       activeStoryId: null,
       drawerStoryId: null,
       phosphorColor: 'green',
@@ -288,8 +281,6 @@ export const useLayoutStore = create<LayoutState>()(
       uiComponents: [],
       browserSessionActive: false,
 
-      leftPanelMode: 'explorer',
-      rightPanelMode: 'telemetry',
       flippedPanes: [],
       chatPanelTab: 'chat',
       chatPanelOpen: true,
@@ -328,14 +319,6 @@ export const useLayoutStore = create<LayoutState>()(
 
       setSpotlightLane: (id) => set({ spotlightLane: id }),
 
-      setPaneCollapsed: (paneId, collapsed) => set((state) => {
-        const newCollapsed = [...state.collapsedPanes]
-        const idx = newCollapsed.indexOf(paneId)
-        if (collapsed && idx === -1) newCollapsed.push(paneId)
-        if (!collapsed && idx > -1) newCollapsed.splice(idx, 1)
-        return { collapsedPanes: newCollapsed }
-      }),
-
       setActiveStoryId: (id) => set({ activeStoryId: id }),
 
       setDrawerStory: (id) => set({ drawerStoryId: id }),
@@ -353,14 +336,6 @@ export const useLayoutStore = create<LayoutState>()(
           }
         }
       }),
-
-      toggleLeftPanelMode: () => set((state) => ({
-        leftPanelMode: state.leftPanelMode === 'explorer' ? 'command-deck' : 'explorer'
-      })),
-
-      toggleRightPanelMode: () => set((state) => ({
-        rightPanelMode: state.rightPanelMode === 'telemetry' ? 'kanban' : 'telemetry'
-      })),
 
       setPhosphorColor: (color) => set({ phosphorColor: color }),
       setReviewEnabled: (enabled) => set({ reviewEnabled: enabled }),

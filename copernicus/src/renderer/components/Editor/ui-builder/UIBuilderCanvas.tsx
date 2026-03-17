@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { useLayoutStore } from '../../../store/layout'
 import { UIComponent, UIComponentType } from './types'
 import { renderComponentTree } from './render'
@@ -54,44 +54,16 @@ export const UIBuilderCanvas: React.FC = () => {
     paletteOpen, inspectorOpen
   } = useLayoutStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+
   const containerRef = useRef<HTMLDivElement>(null)
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
 
   const selectedComponent = uiComponents.find(c => c.id === selectedId)
 
-  // AC-4: Report iframe bounds to main process
-  useEffect(() => {
-    const report = () => {
-      if (!iframeRef.current) return
-      const rect = iframeRef.current.getBoundingClientRect()
-      window.ipcRenderer.send('canvas:iframe-bounds', {
-        x: Math.round(rect.x), y: Math.round(rect.y),
-        width: Math.round(rect.width), height: Math.round(rect.height),
-      })
-    }
-    report()
-    window.addEventListener('resize', report)
-    // Also report when palette or inspector toggles
-    const timeout = setTimeout(report, 250) 
-    return () => {
-      window.removeEventListener('resize', report)
-      clearTimeout(timeout)
-    }
-  }, [paletteOpen, inspectorOpen])
 
-  // Update preview iframe
-  useEffect(() => {
-    if (!iframeRef.current) return
-    const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document
-    if (!doc) return
 
-    const html = renderComponentTree(uiComponents)
-    doc.open()
-    doc.write(html)
-    doc.close()
-  }, [uiComponents])
+
 
   const addComponent = (type: UIComponentType, x: number, y: number) => {
     const id = `ui-${type}-${Date.now()}`
@@ -166,6 +138,43 @@ export const UIBuilderCanvas: React.FC = () => {
   ;(window as any)._ui_export_jsx = handleExportJSX
   ;(window as any)._ui_export_html = handleExportHTML
 
+  const renderPreview = (comp: UIComponent) => {
+    const { type, props } = comp
+    const base = 'w-full h-full flex items-center justify-center overflow-hidden pointer-events-none select-none'
+    switch (type) {
+      case 'button':
+        return <div className={`${base}`}><span className="bg-copernicus-phosphor/90 text-[#050505] font-mono font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-none">{props.text || 'BUTTON'}</span></div>
+      case 'input':
+        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1">{props.placeholder || 'Input...'}</div></div>
+      case 'textarea':
+        return <div className={`${base} px-2`}><div className="w-full h-4/5 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1">{props.placeholder || 'Textarea...'}</div></div>
+      case 'select':
+        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 flex items-center justify-between"><span>Select...</span><span>▾</span></div></div>
+      case 'heading':
+        return <div className={`${base} px-2`}><span className="font-mono font-bold text-zinc-200 text-sm">{props.text || 'Heading'}</span></div>
+      case 'paragraph':
+      case 'label':
+        return <div className={`${base} px-2`}><span className="font-mono text-zinc-400 text-[10px]">{props.text || type}</span></div>
+      case 'container':
+      case 'row':
+      case 'column':
+      case 'card':
+        return <div className="w-full h-full border-2 border-dashed border-zinc-700/50 bg-zinc-900/20" />
+      case 'badge':
+        return <div className={`${base}`}><span className="bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[9px] px-2 py-0.5 rounded-full">{props.text || 'Badge'}</span></div>
+      case 'alert':
+        return <div className="w-full h-full border-l-2 border-copernicus-phosphor/60 bg-zinc-900/40 flex items-center px-3"><span className="font-mono text-[10px] text-zinc-300">{props.text || 'Alert'}</span></div>
+      case 'divider':
+        return <div className={`${base}`}><div className="w-full border-t border-zinc-700" /></div>
+      case 'spacer':
+        return <div className="w-full h-full border border-dashed border-zinc-800/50" />
+      case 'image':
+        return <div className={`${base} bg-zinc-900/60`}><ImageIcon size={24} className="text-zinc-700" /></div>
+      default:
+        return <div className={`${base}`}><span className="font-mono text-zinc-600 text-[9px] uppercase">{type}</span></div>
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505] overflow-hidden" ref={containerRef}>
       <div className="flex-1 flex overflow-hidden relative">
@@ -237,15 +246,12 @@ export const UIBuilderCanvas: React.FC = () => {
                     {comp.type}
                   </span>
                 </div>
+                {renderPreview(comp)}
               </Rnd>
             ))}
           </div>
 
-          <iframe 
-            ref={iframeRef}
-            className="w-full h-full border-none pointer-events-none"
-            title="UI Preview"
-          />
+
         </div>
 
         {/* Inspector */}
