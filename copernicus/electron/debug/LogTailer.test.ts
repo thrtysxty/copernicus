@@ -44,9 +44,9 @@ describe('LogTailer', () => {
 
   it('should tail log files and notify callback', async () => {
     const onLine = vi.fn()
-    logTailer.startTailing(onLine)
+    await logTailer.startTailing(onLine)
 
-    // Append to a log file
+    // Append to a log file — watchers are ready, no race
     const newLine = '[2025-03-15 10:00:03.000] [ERROR] Critical failure\n'
     fs.appendFileSync(path.join(testLogDir, 'copernicus.log'), newLine)
 

@@ -55,13 +55,14 @@ export class LogTailer extends EventEmitter {
       .slice(0, limit)
   }
 
-  public startTailing(onLine: (entry: LogEntry) => void): void {
+  public startTailing(onLine: (entry: LogEntry) => void): Promise<void> {
     this.onLineCallback = onLine
     const sources = this.listSources() as Array<'copernicus' | 'language-server' | 'backend'>
-    
+    const readyPromises: Promise<void>[] = []
+
     for (const source of sources) {
       const logPath = path.join(this.logDir, `${source}.log`)
-      
+
       // Ensure directory exists
       const dir = path.dirname(logPath)
       if (!fs.existsSync(dir)) {
@@ -90,7 +91,10 @@ export class LogTailer extends EventEmitter {
       })
 
       this.watchers.set(source, watcher)
+      readyPromises.push(new Promise<void>(resolve => watcher.on('ready', resolve)))
     }
+
+    return Promise.all(readyPromises).then(() => undefined)
   }
 
   public stopTailing(): void {

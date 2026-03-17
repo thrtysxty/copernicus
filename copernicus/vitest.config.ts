@@ -21,6 +21,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Stub Electron APIs for main-process unit tests (jsdom has no Electron runtime)
+      'electron': path.resolve(__dirname, './src/renderer/test/mocks/electron.ts'),
+      // better-sqlite3 is compiled for Electron's Node ABI and cannot load under system Node
+      'better-sqlite3': path.resolve(__dirname, './src/renderer/test/mocks/better-sqlite3.ts'),
     },
   },
 })
