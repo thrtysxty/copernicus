@@ -1,5 +1,3 @@
-import { WorktreeManager } from './worktree/WorktreeManager'
-import { registerWorktreeHandlers } from './ipc/worktree-handlers'
 import { app, BrowserWindow, ipcMain, session, globalShortcut } from 'electron'
 
 import path from 'node:path'
@@ -8,9 +6,10 @@ import fs from 'node:fs'
 import os from 'node:os'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
+
 import { AuthManager } from './auth-manager'
 import { ModelRegistry } from './models/model-registry'
-import { registerSecurityHandlers, initializeSecurityManager, GitGuardDecision, GitPushRequest } from './security'
+import { initializeSecurityManager, GitGuardDecision, GitPushRequest } from './security'
 import { SettingsStore } from './settings-store'
 import { createTouchBar } from './touch-bar'
 import { DEFAULT_TOUCH_BAR_CONFIG } from './touch-bar-types'
@@ -35,55 +34,14 @@ import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
 import { addRecentProject } from './utils/recent-projects'
 import { SnapshotManager } from './workflow/snapshot-manager'
-
-import * as fileHandlers from './ipc/file-handlers'
-import * as authHandlers from './ipc/auth-handlers'
-import * as modelHandlers from './ipc/model-handlers'
-import * as chatHandlers from './ipc/chat-handlers'
-import * as storyHandlers from './ipc/story-handlers'
-import * as workflowHandlers from './ipc/workflow-handlers'
-import * as terminalHandlers from './ipc/terminal-handlers'
-import * as appHandlers from './ipc/app-handlers'
-import * as capexHandlers from './ipc/capex-handlers'
-import * as genesisHandlers from './ipc/genesis-handlers'
-import * as gitHandlers from './ipc/git-handlers'
-import * as searchHandlers from './ipc/search-handlers'
-import * as diagnosticsHandlers from './ipc/diagnostics-handlers'
-import * as debugHandlers from './ipc/debug-handlers'
-import * as testHandlers from './ipc/test-handlers'
-import * as diagHandlers from './ipc/diag-handlers'
-import * as logHandlers from './ipc/log-handlers'
-import * as lspHandlers from './ipc/lsp-handlers'
-import * as securityScoreHandlers from './ipc/security-handlers'
-import * as localModelHandlers from './ipc/local-model-handlers'
-import { registerReplayHandlers } from './ipc/replay-handlers'
-
-import { GenesisRunner } from './genesis/genesis-runner'
-import { ScaffoldRunner } from './genesis/scaffold'
 import { localModelManager } from './local-model/LocalModelManager'
+import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
+
+import { registerAllIpcHandlers } from './ipc/register-all-handlers'
+import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
-
-const COPERNICUS_HOME = process.env.COPERNICUS_E2E_HOME ?? path.join(os.homedir(), '.copernicus')
-const LOG_DIR = path.join(COPERNICUS_HOME, 'logs')
-log.transports.file.resolvePathFn = () => path.join(LOG_DIR, 'copernicus.log')
-Object.assign(console, log.functions)
-
-function computeCoveragePct(coverageMap: Record<string, any>): number {
-  const files = Object.values(coverageMap)
-  if (!files.length) return 0
-  const total   = files.reduce((acc: number, f: any) => acc + (f.s?.total   ?? 0), 0)
-  const covered = files.reduce((acc: number, f: any) => acc + (f.s?.covered ?? 0), 0)
-  return total > 0 ? Math.round((covered / total) * 100 * 10) / 10 : 0
-}
-
-let pw: typeof import('playwright-core') | null = null
-async function getPlaywright() {
-  if (!pw) pw = await import('playwright-core')
-  return pw
-}
-
 process.on('uncaughtException', (error: Error) => {
   log.error('[Main] uncaughtException:', error.stack ?? error.message)
   BrowserWindow.getAllWindows().forEach(w => {
@@ -136,15 +94,6 @@ initializeSecurityManager({
   }
 });
 
-function ensureCopernicusDirectory() {
-  try {
-    if (!fs.existsSync(COPERNICUS_HOME)) fs.mkdirSync(COPERNICUS_HOME, { recursive: true });
-    if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
-    const settingsPath = path.join(app.getPath('userData'), 'copernicus-settings.json');
-    if (!fs.existsSync(settingsPath) || !settingsStore.get('workspace')) isFirstRun = true;
-  } catch (error) { log.error('Failed to initialize .copernicus directory:', error); }
-}
-
 function createWindow() {
   const isDebug = process.env.COPERNICUS_DEBUG === 'true';
   win = new BrowserWindow({
@@ -173,71 +122,21 @@ function createWindow() {
   }
 }
 
-import { ExtensionRegistry } from './extensions/ExtensionRegistry'
-import { ExtensionLoader } from './extensions/ExtensionLoader'
-import { registerExtensionHandlers } from './ipc/extension-handlers'
-import { handleIpc } from './utils/handle-ipc'
-import { WORKFLOW_TEMPLATES } from './workflow/templates'
-
 async function registerIpcHandlers() {
-  // Extensions
-  const extensionDir = path.join(app.getPath('home'), '.copernicus', 'extensions')
-  const extensionRegistry = ExtensionRegistry.getInstance()
-  const extensionLoader = new ExtensionLoader(extensionDir, extensionRegistry)
-  await extensionLoader.loadAll()
-  registerExtensionHandlers(extensionRegistry, extensionLoader)
-
-  const scaffoldRunner = new ScaffoldRunner();
-  const genesisRunner = new GenesisRunner({
-    modelRegistry,
-    authManager,
-    storiesManager,
-    settingsStore,
-    scaffoldRunner
-  });
-
-  const snapshotManager = new SnapshotManager(stateLedger.db, fsManager.getRootPath());
-  workflowEngine.setSnapshotManager(snapshotManager);
-
-  worktreeManager = new WorktreeManager(stateLedger.db, fsManager.getRootPath());
-
-  const deps = {
+  const globalDeps = {
     authManager, githubManager, modelRegistry, settingsStore, storiesManager, devtimeManager,
-    fsManager, workflowEngine, snapshotManager, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
+    fsManager, workflowEngine, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
     socketManager, stateLedger, llmService, lspManager, backendManager, julesMonitor, julesManager,
-    genesisRunner,
-    applyAndVerifyPatch, reversePatch, runRAGBenchmark, getPlaywright, computeCoveragePct,
-    LOG_DIR, dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG, touchBarCleanup,
-    isFirstRun, spawn,
-    worktreeManager: worktreeManager!,
-    win: win!, // Added win to deps
-    extensionRegistry,
+    applyAndVerifyPatch, reversePatch, runRAGBenchmark,
+    getPlaywright: async () => await import('playwright-core'), // utility function not a manager
+    LOG_DIR, dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG,
+    isFirstRun, spawn, SnapshotManager
   }
 
-  workflowEngine.setServices(deps);
-  fileHandlers.register(win!, deps)
-  authHandlers.register(win!, deps)
-  modelHandlers.register(win!, deps)
-  chatHandlers.register(win!, deps)
-  storyHandlers.register(win!, deps)
-  workflowHandlers.register(win!, deps)
-  terminalHandlers.register(win!, deps)
-  appHandlers.register(win!, deps)
-  capexHandlers.registerCapexHandlers()
-  genesisHandlers.register(win!, deps)
-  gitHandlers.register(win!, deps)
-  searchHandlers.register(win!, deps)
-  diagnosticsHandlers.register(win!, deps)
-  const cleanupTestHandlers = testHandlers.register(win!, deps)
-  diagHandlers.register(win!, deps)
-  logHandlers.registerLogHandlers(win!)
-  lspHandlers.register(win!, deps)
-  securityScoreHandlers.register()
-  localModelHandlers.register()
-  const cleanupReplayHandlers = registerReplayHandlers()
-  const cleanupDebugHandlers = debugHandlers.registerDebugHandlers()
-  const cleanupWorktreeHandlers = registerWorktreeHandlers(worktreeManager)
-  registerSecurityHandlers(ipcMain, settingsStore)
+  const { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager: registeredWorktreeManager } =
+    await registerAllIpcHandlers(win!, globalDeps, touchBarCleanup)
+
+  worktreeManager = registeredWorktreeManager
 
   win!.webContents.on('did-navigate', () => {
     cleanupTestHandlers()
@@ -245,35 +144,8 @@ async function registerIpcHandlers() {
     cleanupDebugHandlers()
     cleanupWorktreeHandlers()
   })
-
-  ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {
-    return WORKFLOW_TEMPLATES.map(t => {
-      const override = deps.stateLedger.getTemplateOverride(t.id)
-      return {
-        id: t.id,
-        name: t.name,
-        type: 'Workflow',
-        content: override?.content ?? JSON.stringify(t, null, 2),
-        isOverridden: !!override
-      }
-    })
-  }))
-
-  ipcMain.handle('templates:save', (_e, id: string, content: string) => handleIpc(() => deps.stateLedger.saveTemplateOverride(id, content)))
-
-  ipcMain.handle('templates:reset', (_e, id: string) => handleIpc(() => deps.stateLedger.deleteTemplateOverride(id)))
-
-  ipcMain.handle('window:exit-fullscreen', () => handleIpc('window:exit-fullscreen', [], () => {
-    const w = BrowserWindow.getAllWindows()[0]
-    if (w?.isFullScreen()) {
-      w.setFullScreen(false)
-    }
-  }))
-
-  ipcMain.handle('layout:goto-line', (_e, { file, line, col }) => handleIpc('layout:goto-line', [{ file, line, col }], () => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('layout:goto-line', { file, line, col })
-  }))
 }
+
 app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !== 'darwin') app.quit() })
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 app.on('will-quit', () => { globalShortcut.unregisterAll() })
@@ -308,7 +180,7 @@ app.whenReady().then(async () => {
   settingsStore.set('workingDir', workspaceRoot);
   fsManager.setRootPath(workspaceRoot); storiesManager.setProjectRoot(workspaceRoot);
   addRecentProject(workspaceRoot, settingsStore);
-  ensureCopernicusDirectory(); createWindow();
+  ensureCopernicusDirectory(settingsStore, { current: isFirstRun }); createWindow();
   if (worktreeManager && win) {
     worktreeManager.startPolling(win);
   }

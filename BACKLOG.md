@@ -132,7 +132,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
 | #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
 | #250 | Backend Input Validation Middleware | APPROVED FOR IMPLEMENTATION | P1 |
-| #251 | Decompose Main Ts | APPROVED FOR IMPLEMENTATION | P1 |
 | #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
 | #253 | Sqlite Hardening | APPROVED FOR IMPLEMENTATION | P1 |
 | #254 | Typescript Strict Any Audit | APPROVED FOR IMPLEMENTATION | P1 |
@@ -182,8 +181,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #369 | Search Slide Up Drawer | APPROVED FOR IMPLEMENTATION | P2 |
 | #370 | Designer View Header Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #371 | Designer Canvas Objects | APPROVED FOR IMPLEMENTATION | P2 |
-| #372 | Orchestrator Tile Library | APPROVED FOR IMPLEMENTATION | P2 |
-| #373 | Orchestrator Tile Inspector | APPROVED FOR IMPLEMENTATION | P2 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #383 | Dap Debug Adapter Protocol | APPROVED FOR IMPLEMENTATION | P2 |
 | #384 | Integrated Test Runner | APPROVED FOR IMPLEMENTATION | P2 |
@@ -235,6 +232,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #247 | Sql Injection Remediation | COMPLETE | P0 |
 | #248 | Path Traversal Command Injection | COMPLETE | P0 |
 | #249 | Cors Env Sanitizer Hardening | COMPLETE | P0 |
+| #251 | Decompose Main Ts | COMPLETE | P1 |
 | #260 | Subprocess Arg Injection | COMPLETE | P0 |
 | #263 | Flask Rate Limiting | COMPLETE | P2 |
 | #264 | Cors Null Origin Model Allowlist | COMPLETE | P2 |
@@ -248,6 +246,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #360 | Tdd Enforcement | COMPLETE | P1 |
 | #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
 | #366 | Planner Title Normalization | COMPLETE | P1 |
+| #372 | Orchestrator Tile Library | COMPLETE | P2 |
+| #373 | Orchestrator Tile Inspector | COMPLETE | P2 |
 | #374 | Genesis Repo Browser | COMPLETE | P1 |
 | #375 | Terminal Cwd Indicator | COMPLETE | P2 |
 | #376 | Model Selection System Wide | COMPLETE | P1 |
