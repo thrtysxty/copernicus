@@ -3,9 +3,9 @@ import { X, RotateCcw, Maximize2, Minimize2, Ghost, Check, X as CloseIcon } from
 import { EditorPanel } from './EditorPanel'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
-import { UICanvas } from './UICanvas'
 import { UIBuilderCanvas } from './ui-builder/UIBuilderCanvas'
 import DiffPanel from './DiffPanel'
+import { ContentPreview } from './ContentPreview'
 import { useLayoutStore } from '../../store/layout'
 import { SearchDrawer } from '../search/SearchDrawer'
 import { Search } from 'lucide-react'
@@ -164,7 +164,7 @@ function CenterPanelHeader({
                     else setCenterMode('code')
                   } catch {}
                 }}
-                className={`flex items-center gap-2 px-3 h-full border-r border-copernicus-steel cursor-pointer transition-all shrink-0 select-none group ${isActive ? 'bg-zinc-800 text-zinc-100 border-b-2 border-indigo-500' : 'bg-[#0A0A0A] text-zinc-500 hover:text-zinc-300'}`}
+                className={`flex items-center gap-2 px-3 h-full border-r border-copernicus-steel cursor-pointer transition-all shrink-0 select-none group ${isActive ? 'bg-zinc-800 text-zinc-100 border-b border-copernicus-phosphor/70' : 'bg-[#0A0A0A] text-zinc-500 hover:text-zinc-300'}`}
               >
                 <span className="text-[10px] font-mono truncate max-w-[150px]">
                   {fileName}{file.isDirty ? ' •' : ''}
@@ -335,7 +335,7 @@ export function CenterPanelRouter({
       }
 
       if (canvasContent || canvasUrl) {
-        return <UICanvas />
+        return <ContentPreview />
       }
 
       return <UIBuilderCanvas />
