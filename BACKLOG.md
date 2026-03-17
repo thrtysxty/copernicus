@@ -204,9 +204,14 @@ This file is auto-generated. Run `make backlog` to update.
 | #394 | Uibuildercanvas Visible Component Overlay | APPROVED FOR IMPLEMENTATION | P1 |
 | #395 | Uibuildercanvas Iframe Colour Tokens And Offline Image | APPROVED FOR IMPLEMENTATION | P2 |
 | #396 | Editor Tab Active Border Phosphor | APPROVED FOR IMPLEMENTATION | P2 |
+| #397 | Designer Canvas Consolidation Audit | APPROVED FOR IMPLEMENTATION | P1 |
 | #398 | Kanban Column Colours Design System | APPROVED FOR IMPLEMENTATION | P1 |
 | #399 | Remove Orphaned Contextstore | APPROVED FOR IMPLEMENTATION | P1 |
 | #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
+| #403 | Extension Loader And Registry | APPROVED FOR IMPLEMENTATION | P1 |
+| #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
+| #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
+| #406 | Orchestrator Tile And Provider Contribution Points | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -324,7 +329,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #344 | Crt Pulse Shaders | DRAFT | P3 |
 | #345 | Time Travel Orchestration | DRAFT | P3 |
 | #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
-| #397 | Designer Canvas Consolidation Audit | DRAFT | P1 |
 | #401 | Layoutstore Split Ui Builder State | DRAFT | P2 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 | #400 | Uicanvas Remove Hardcoded Cdn | SUPERSEDED — by story 397 (System A files deleted) | P2 |
