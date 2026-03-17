@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { ORCHESTRATOR_TILES } from './tiles'
 import { OrchestratorTile } from '../../store/orchestrator'
+import { useExtensionStore } from '../../store/extensionStore'
 
 const ICON_MAP: Record<string, any> = {
   'GitBranch': GitBranch,
@@ -74,6 +75,8 @@ const CategorySection: React.FC<{
 
 export const TileLibrary: React.FC = () => {
   const [collapsed, setCollapsed] = React.useState(false)
+  const extensionTiles = useExtensionStore(s => s.tiles)
+
   const tilesByCategory = React.useMemo(() => {
     const groups: Record<string, OrchestratorTile[]> = {}
     ORCHESTRATOR_TILES.forEach(tile => {
@@ -81,8 +84,15 @@ export const TileLibrary: React.FC = () => {
       if (!groups[cat]) groups[cat] = []
       groups[cat].push(tile)
     })
+
+    extensionTiles.forEach(tile => {
+      const cat = tile.category ?? 'extensions'
+      if (!groups[cat]) groups[cat] = []
+      groups[cat].push(tile as OrchestratorTile)
+    })
+
     return groups
-  }, [])
+  }, [extensionTiles])
 
   return (
     <aside className={`${collapsed ? 'w-8' : 'w-[220px]'} flex-shrink-0 bg-[#050505] border-r border-copernicus-steel flex flex-col h-full overflow-hidden select-none transition-all duration-200`}>

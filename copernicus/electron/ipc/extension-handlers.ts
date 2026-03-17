@@ -8,7 +8,11 @@ export function registerExtensionHandlers(registry: ExtensionRegistry, loader: E
   ipcMain.handle('extensions:workflow-nodes', () => handleIpc(() => registry.getWorkflowNodes()))
   ipcMain.handle('extensions:tiles',         () => handleIpc(() => registry.getTiles()))
   ipcMain.handle('extensions:providers',     () => handleIpc(() => registry.getProviders()))
-  ipcMain.handle('extensions:reload',        () => handleIpc(() => loader.loadAll()))
+  ipcMain.handle('extensions:reload',        () => handleIpc(async () => {
+    registry.clear()
+    await loader.loadAll()
+    return registry.getExtensions()
+  }))
 
   return () => {
     ;[

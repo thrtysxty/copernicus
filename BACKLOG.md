@@ -110,9 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
-| #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
-| #406 | Orchestrator Tile And Provider Contribution Points | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -309,6 +306,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #400 | Uicanvas Remove Hardcoded Cdn | COMPLETE | P2 |
 | #402 | Copernicus Worktree Manager — Full System | COMPLETE | P1 |
 | #403 | Extension Loader And Registry | COMPLETE | P1 |
+| #404 | Extension Store And Renderer Integration | COMPLETE | P1 |
+| #405 | Workflow Node Contribution Point | COMPLETE | P1 |
+| #406 | Orchestrator Tile And Provider Contribution Points | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |

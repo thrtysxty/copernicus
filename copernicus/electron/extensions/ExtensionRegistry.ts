@@ -67,4 +67,12 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
   getNodeExecutor(type: string): NodeExecutor | undefined {
     return this.nodeExecutors.get(type)
   }
+
+  clear(): void {
+    this.extensions.clear()
+    this.workflowNodes.clear()
+    this.tiles.clear()
+    this.providers.clear()
+    this.nodeExecutors.clear()
+  }
 }

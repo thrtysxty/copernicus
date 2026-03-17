@@ -1,6 +1,6 @@
 import type { ProviderType } from '../auth-manager';
 
-export type NodeType = 'agent' | 'tool' | 'decision' | 'trigger' | 'flow' | 'verification';
+export type NodeType = 'agent' | 'tool' | 'decision' | 'trigger' | 'flow' | 'verification' | 'extension';
 
 export type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'error' | 'skipped' | 'paused';
 
@@ -68,13 +68,20 @@ export interface VerificationNodeData {
   checklist: string[];
 }
 
+export interface ExtensionNodeData {
+  extensionType: string; // The registered node type key from ExtensionRegistry
+  label?: string;
+  config?: Record<string, unknown>;
+}
+
 export type WorkflowNodeData =
   | AgentNodeData
   | ToolNodeData
   | TriggerNodeData
   | DecisionNodeData
   | FlowNodeData
-  | VerificationNodeData;
+  | VerificationNodeData
+  | { type: 'extension'; data: ExtensionNodeData };
 
 export interface WFNode {
   id: string;

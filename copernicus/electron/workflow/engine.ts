@@ -10,7 +10,7 @@ import type { BrowserWindow } from 'electron';
 import type { JulesManager } from '../jules/jules-manager';
 import type { GithubManager } from '../github-manager';
 import type { StoriesManager } from '../stories';
-import type { ExtensionRegistry } from '../extensions/ExtensionRegistry';
+import { ExtensionRegistry } from '../extensions/ExtensionRegistry'; // Import as a concrete class
 import log from '../utils/logger';
 import path from 'path';
 import { SnapshotManager } from './snapshot-manager';
@@ -32,7 +32,7 @@ export interface EngineServices {
   lspManager: import('../lsp/lsp-manager').LspManager;
   worktreeManager?: import('../worktree/WorktreeManager').WorktreeManager;
   snapshotManager: SnapshotManager;
-  extensionRegistry?: ExtensionRegistry;
+  extensionRegistry: ExtensionRegistry;
 }
 
 export class WorkflowEngine {
@@ -234,10 +234,11 @@ export class WorkflowEngine {
 
       switch (node.type) {
         case 'trigger':
-          if (node.data?.variant === 'story-activated' && (node.data as any).storyId) {
-            this.context.set('__storyId', (node.data as any).storyId);
+          const triggerNodeData = node.data as TriggerNodeData;
+          if (triggerNodeData?.variant === 'story-activated' && triggerNodeData.storyId) {
+            this.context.set('__storyId', triggerNodeData.storyId);
           }
-          output = `trigger:${node.data?.variant ?? 'manual'}`;
+          output = `trigger:${triggerNodeData?.variant ?? 'manual'}`;
           break;
         case 'agent':
           output = await this.dispatchAgent(node);
@@ -253,6 +254,9 @@ export class WorkflowEngine {
           break;
         case 'verification':
           output = await this.dispatchVerification(node);
+          break;
+        case 'extension':
+          output = await this.dispatchExtension(node);
           break;
         default:
           output = `unknown:${node.type}`;
@@ -661,6 +665,17 @@ export class WorkflowEngine {
     }
 
     return 'verification:passed';
+  }
+
+  private async dispatchExtension(node: WFNode): Promise<string> {
+    if (!this.services) throw new Error('ENGINE_SERVICES_NOT_INJECTED');
+    const extensionData = (node.data as { type: 'extension'; data: import('./types').ExtensionNodeData }).data;
+    const registry = this.services.extensionRegistry;
+    const executor = registry.getNodeExecutor(extensionData.extensionType);
+    if (!executor) throw new Error(`No executor registered for extension node type: ${extensionData.extensionType}`);
+    const result = await executor(extensionData.config as Record<string, string> ?? {}, this.getContext());
+    if (result) this.updateContext({ __lastOutput: result });
+    return `extension:${extensionData.extensionType}:executed`;
   }
 
   private resolveBaseUrl(provider: string): string {

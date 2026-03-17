@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { WFNode } from '../../../../electron/workflow/types';
+import { AgentNodeData } from '../../../../electron/workflow/types';
+import { ExtensionProvider } from '../../store/extensionStore';
 import log from '../../utils/logger'
 import { unwrapIpc } from '../../types/ipc';
+import { useExtensionStore } from '../../store/extensionStore'
 import { ScheduleInput } from './ScheduleInput';
 
 const PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'] as const;
@@ -19,6 +22,7 @@ interface NodeInspectorProps {
 export function NodeInspector({ node, authStatus, availableModels, onChange, onClose, onDelete, invoke }: NodeInspectorProps) {
   const [localModels, setLocalModels] = useState<{id:string;name:string}[]>([]);
   const [stories, setStories] = useState<any[]>([]);
+  const extensionProviders = useExtensionStore(s => s.providers)
 
   useEffect(() => {
     invoke<any[]>('stories:list').then(res => {
@@ -43,9 +47,9 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
     await invoke('workflow:update-node-data', { nodeId: node.id, field: 'boundToStoryId', value: storyId });
   };
 
-  const modelsForProvider = node.data.variant === 'agent' && node.data.provider === 'ollama'
+  const modelsForProvider = node.type === 'agent' && (node.data as AgentNodeData).provider === 'ollama'
     ? localModels
-    : availableModels.filter(m => node.data.variant === 'agent' && m.provider === node.data.provider);
+    : availableModels.filter(m => node.type === 'agent' && (node.data as AgentNodeData).provider === m.provider);
 
   const resumeNode = async () => {
     try {
@@ -92,12 +96,18 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
           />
         </Field>
 
-        {node.type === 'agent' && <AgentFields node={node} modelsForProvider={modelsForProvider} authStatus={authStatus} onUpdate={updateData} onProviderChange={handleProviderChange} />}
+        {node.type === 'agent' && <AgentFields node={node} modelsForProvider={modelsForProvider} authStatus={authStatus} onUpdate={updateData} onProviderChange={handleProviderChange} extensionProviders={extensionProviders} />}
         {node.type === 'tool' && <ToolFields node={node} onUpdate={updateData} />}
         {node.type === 'trigger' && <TriggerFields node={node} stories={stories} onUpdate={updateData} onStoryChange={handleStoryChange} />}
         {node.type === 'decision' && <DecisionFields node={node} onUpdate={updateData} />}
         {node.type === 'flow' && <FlowFields node={node} onUpdate={updateData} />}
         {node.type === 'verification' && <VerificationFields node={node} onUpdate={updateData} />}
+        {node.type === 'extension' && (
+          <div className="space-y-2">
+            <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Extension Config</p>
+            <p className="text-[10px] text-zinc-400">Type: {(node.data as any).extensionType ?? '—'}</p>
+          </div>
+        )}
       </div>
 
       {/* Delete */}
@@ -197,7 +207,7 @@ function DebouncedTextarea({ initialValue, onCommit, className, placeholder, row
   );
 }
 
-function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onProviderChange }: any) {
+function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onProviderChange, extensionProviders }: any) {
   const data = node.data;
   return (
     <>
@@ -207,7 +217,7 @@ function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onProvider
       <Field label="Provider">
         <select className="inspector-input" value={data.provider ?? ''} onChange={e => onProviderChange(e.target.value)}>
           <option value="">— select —</option>
-          {PROVIDERS.map(p => (
+          {([...(PROVIDERS as readonly string[]), ...extensionProviders.map((p: ExtensionProvider) => p.id)]).map(p => (
             <option key={p} value={p} disabled={p !== 'ollama' && !authStatus[p]}>
               {p !== 'ollama' && !authStatus[p] ? `🔒 ${p}` : p}
             </option>

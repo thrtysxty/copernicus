@@ -7,6 +7,7 @@ import { NodeInspector } from './NodeInspector';
 import { DispatchQueue } from './DispatchQueue';
 import { ORCHESTRATOR_TILES } from '../orchestrator/tiles';
 import { useOrchestratorStore } from '../../store/orchestrator';
+import { useExtensionStore } from '../../store/extensionStore';
 import log from '../../utils/logger'
 
 const GRID_SIZE = 20;
@@ -164,6 +165,8 @@ export default function WorkflowCanvas() {
   const [availableModels, setAvailableModels] = useState<{id:string;name:string;provider:string}[]>([]);
   const [draggingTile, setDraggingTile] = useState<PaletteTile | null>(null);
   const [context, setContext] = useState<Record<string, string>>({});
+
+  const extensionWorkflowNodes = useExtensionStore(s => s.workflowNodes);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const wasNodeClickHandled = useRef<boolean>(false);
@@ -609,6 +612,14 @@ export default function WorkflowCanvas() {
           <NodePaletteSection title="DECISIONS" nodes={PALETTE_DECISIONS} onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="FLOW"      nodes={PALETTE_FLOW}      onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="QUALITY"   nodes={PALETTE_QUALITY}   onDragStart={handlePaletteDragStart} />
+          {extensionWorkflowNodes.length > 0 && (
+            <NodePaletteSection title="EXTENSIONS" nodes={extensionWorkflowNodes.map(n => ({
+              type: 'extension',
+              label: n.label,
+              defaultData: { extensionType: n.type, ...n.defaultData } as any,
+              color: '#8B5CF6' // A distinct color for extension nodes
+            }))} onDragStart={handlePaletteDragStart} />
+          )}
           
           <div className="mt-auto pt-4 border-t border-zinc-800">
             <button 

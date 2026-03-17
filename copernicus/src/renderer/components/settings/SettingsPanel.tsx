@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { 
   X, Shield, Key, Layout, Cpu, 
   Settings, GitBranch, Workflow, FileText, 
-  Terminal, Database, User, Layers, Search, Zap
+  Terminal, Database, User, Layers, Search, Zap, Puzzle
 } from 'lucide-react'
 
 // Import Sections
@@ -21,6 +21,7 @@ import { EnvironmentSection } from './sections/EnvironmentSection'
 import { DataSection } from './sections/DataSection'
 import { HardwareSection } from './sections/HardwareSection'
 import { LocalModelSection } from './sections/LocalModelSection'
+import { ExtensionsSection } from './sections/ExtensionsSection'
 
 type TabId =
   | 'providers'
@@ -39,6 +40,7 @@ type TabId =
   | 'environment' 
   | 'data'
   | 'hardware'
+  | 'extensions'
 
 interface SettingsPanelProps {
   onClose: () => void
@@ -64,6 +66,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'environment': return <EnvironmentSection />
       case 'data':        return <DataSection />
       case 'hardware':    return <HardwareSection />
+      case 'extensions':  return <ExtensionsSection />
       default:            return <ProvidersSection />
     }
   }
@@ -107,6 +110,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
 
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
             <TabButton id="security" label="Security" icon={<Shield size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="extensions" label="Extensions" icon={<Puzzle size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="environment" label="Environment" icon={<Terminal size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="hardware" label="Hardware" icon={<Cpu size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="data" label="State & Data" icon={<Database size={14} />} active={activeTab} onClick={setActiveTab} />

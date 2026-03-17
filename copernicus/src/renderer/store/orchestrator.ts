@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 export interface OrchestratorTile {
   id: string
-  category: 'vcs' | 'search' | 'review' | 'container' | 'browser'
+  category: 'vcs' | 'search' | 'review' | 'container' | 'browser' | 'extensions' | string
   label: string
   icon: string        // Phosphor icon name (string)
   defaultConfig: Record<string, string>

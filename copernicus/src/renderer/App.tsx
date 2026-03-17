@@ -10,6 +10,7 @@ import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
 import { unwrapIpc, IpcResult } from './types/ipc'
+import { useExtensionStore } from './store/extensionStore'
 import { FileTree } from './components/FileTree/FileTree'
 import { ChatPanel } from './components/chat/ChatPanel'
 import { StatusBar } from './components/layout/StatusBar'
@@ -182,6 +183,26 @@ export default function App() {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isFullscreen, invoke])
+
+  // Load extensions on mount
+  useEffect(() => {
+    const loadExtensions = async () => {
+      try {
+        const [nodesRes, tilesRes, providersRes] = await Promise.all([
+          invoke('extensions:workflow-nodes'),
+          invoke('extensions:tiles'),
+          invoke('extensions:providers'),
+        ])
+        const nodes = unwrapIpc<any[]>(nodesRes as any) ?? []
+        const tiles = unwrapIpc<any[]>(tilesRes as any) ?? []
+        const providers = unwrapIpc<any[]>(providersRes as any) ?? []
+        useExtensionStore.getState().setWorkflowNodes(nodes)
+        useExtensionStore.getState().setTiles(tiles)
+        useExtensionStore.getState().setProviders(providers)
+      } catch { /* no extensions installed — ignore */ }
+    }
+    loadExtensions()
+  }, [invoke])
 
   // Initial setup and IPC listeners
   useEffect(() => {
