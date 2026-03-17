@@ -70,6 +70,8 @@ export const ActivityBar: React.FC = () => {
 
   return (
     <aside className="w-12 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center z-50 h-full">
+      {/* Header-height spacer — keeps traffic lights unobstructed, extends drag region */}
+      <div className="h-8 w-full shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
       {/* C Logo */}
       <div className="w-12 h-12 flex items-center justify-center border-b border-white/5 bg-zinc-950/30 shrink-0">
         <div className="w-6 h-6 bg-copernicus-phosphor/20 rounded-sm flex items-center justify-center phosphor-glow-border">

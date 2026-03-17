@@ -144,11 +144,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #287 | Genesis Llm Epic And Story Synthesis | APPROVED FOR IMPLEMENTATION | P1 |
 | #288 | Genesis Repo Scaffold And Agent Config Generation | APPROVED FOR IMPLEMENTATION | P1 |
 | #289 | Planner Archive Retro Bar Layout | APPROVED FOR IMPLEMENTATION | P1 |
-| #291 | Activity Bar Header Overflow Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #293 | Wizard Github Pat Inline Input | APPROVED FOR IMPLEMENTATION | P1 |
 | #294 | Post Wizard Existing Repo Story Import | APPROVED FOR IMPLEMENTATION | P1 |
-| #295 | Reporter Reduce Regression | APPROVED FOR IMPLEMENTATION | P1 |
-| #296 | Chat Panel Flip React Error 31 | APPROVED FOR IMPLEMENTATION | P1 |
 | #303 | Editor Multi File Tabs | APPROVED FOR IMPLEMENTATION | P1 |
 | #312 | Terminal Keyboard Input | APPROVED FOR IMPLEMENTATION | P1 |
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
@@ -235,7 +232,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #285 | Project Genesis Onboarding Wizard | COMPLETE | P1 |
 | #286 | Genesis Wizard Ui | COMPLETE | P1 |
 | #290 | Planning Lane Creation Dropdown | COMPLETE | P1 |
+| #291 | Activity Bar Header Overflow Fix | COMPLETE | P1 |
 | #292 | Terminal Pulse Removal And Header Buttons | COMPLETE | P1 |
+| #295 | Reporter Reduce Regression | COMPLETE | P1 |
+| #296 | Chat Panel Flip React Error 31 | COMPLETE | P1 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
