@@ -200,6 +200,14 @@ This file is auto-generated. Run `make backlog` to update.
 | #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | APPROVED FOR IMPLEMENTATION | P1 |
+| #392 | Orchestrator Tileinspector Collapses When Empty | APPROVED FOR IMPLEMENTATION | P1 |
+| #393 | Designer Canvasobject Copernicus Design Tokens | APPROVED FOR IMPLEMENTATION | P1 |
+| #394 | Uibuildercanvas Visible Component Overlay | APPROVED FOR IMPLEMENTATION | P1 |
+| #395 | Uibuildercanvas Iframe Colour Tokens And Offline Image | APPROVED FOR IMPLEMENTATION | P2 |
+| #396 | Editor Tab Active Border Phosphor | APPROVED FOR IMPLEMENTATION | P2 |
+| #398 | Kanban Column Colours Design System | APPROVED FOR IMPLEMENTATION | P1 |
+| #399 | Remove Orphaned Contextstore | APPROVED FOR IMPLEMENTATION | P1 |
+| #400 | Uicanvas Remove Hardcoded Cdn | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -317,4 +325,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #344 | Crt Pulse Shaders | DRAFT | P3 |
 | #345 | Time Travel Orchestration | DRAFT | P3 |
 | #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
+| #397 | Designer Canvas Consolidation Audit | DRAFT | P1 |
+| #401 | Layoutstore Split Ui Builder State | DRAFT | P2 |
 
