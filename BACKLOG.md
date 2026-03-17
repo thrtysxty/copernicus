@@ -23,9 +23,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #112 | Llm Streaming Service | COMPLETE | CRITICAL |
 | #113 | Filesystem Integration | COMPLETE | CRITICAL |
 | #223 | Python Shim To Service | COMPLETE | CRITICAL |
-| #211 | Resolve Explorer Folder Listing Failure | APPROVED FOR IMPLEMENTATION | High |
 | #225 | Websocket Streaming Bus | APPROVED FOR IMPLEMENTATION | HIGH |
-| #227 | Automated Documentation Lifecycle | APPROVED FOR IMPLEMENTATION | HIGH |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -47,10 +45,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #156 | Model Call Ledger | COMPLETE | HIGH |
 | #205 | Auto-Trigger Onboarding Wizard | COMPLETE | High |
 | #207 | Fix Editor Canvas Logic Regression | COMPLETE | High |
+| #211 | Resolve Explorer Folder Listing Failure | COMPLETE | High |
 | #214 | Ollama Cloud Authentication And Dynamic Routing | COMPLETE | High |
 | #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
 | #217 | Nodeinspector Focus And Stability | COMPLETE | High |
 | #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
+| #227 | Automated Documentation Lifecycle | COMPLETE | HIGH |
 | #265 | Open External Url Validation | COMPLETE | HIGH |
 | #266 | Unicode Normalization Model Validation | COMPLETE | HIGH |
 | #268 | Persona Provider Allowlist | COMPLETE | HIGH |
@@ -78,9 +78,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #166 | Touch Bar Hardening And Configuration | COMPLETED | HIGH |
 | #050 | Implement Agent Tool Use | DONE | High |
 | #224 | Claude Gemini Python Migration | PENDING | HIGH |
-| #209 | Designer Explorer Collapse By Default | APPROVED FOR IMPLEMENTATION | Medium |
-| #210 | Restore Control Buttons To Canvas Preview | APPROVED FOR IMPLEMENTATION | Medium |
-| #212 | Fix Orchestrator Modal Centering And Canvas Edge | APPROVED FOR IMPLEMENTATION | Medium |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -93,6 +90,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #204 | Add Spotlight To Command Center Panes | COMPLETE | Medium |
 | #206 | Remove Redundant Cmd+P Button | COMPLETE | Medium |
 | #208 | Implement Single Header Row Initiative | COMPLETE | Medium |
+| #209 | Designer Explorer Collapse By Default | COMPLETE | Medium |
+| #210 | Restore Control Buttons To Canvas Preview | COMPLETE | Medium |
+| #212 | Fix Orchestrator Modal Centering And Canvas Edge | COMPLETE | Medium |
 | #216 | Chat Utility Breadcrumb Navigation | COMPLETE | Medium |
 | #267 | Rate Limiter Key Fix | COMPLETE | MEDIUM |
 | #272 | Electron Ipc Audit Fixes | COMPLETE | MEDIUM |
@@ -101,8 +101,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
 | #155 | Playwright External Browser Automation | COMPLETED | MEDIUM |
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
-| #213 | Optimize Reports View Justification | APPROVED FOR IMPLEMENTATION | Low |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
+| #213 | Optimize Reports View Justification | COMPLETE | Low |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
