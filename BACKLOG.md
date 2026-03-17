@@ -245,6 +245,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #323 | Agent Telemetry List | COMPLETE | P2 |
 | #327 | Status Bar Remove Story Id | COMPLETE | P1 |
 | #329 | Orchestrator View Cutoff | COMPLETE | P1 |
+| #335 | Story Status Automation | COMPLETE | P2 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
@@ -318,7 +319,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #331 | Hardware Command Tray Scrollable | DRAFT | P2 |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
 | #334 | Semantic Diff Summaries | DRAFT | P1 |
-| #335 | Story Status Automation | DRAFT | P2 |
 | #336 | Git Panel | DRAFT | P1 |
 | #337 | Codebase Search Panel | DRAFT | P2 |
 | #338 | Diagnostics Problems Panel | DRAFT | P1 |
