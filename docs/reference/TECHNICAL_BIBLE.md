@@ -906,37 +906,49 @@ Every `conn.execute()` / `cursor.execute()` call in `backend/` must use `?` plac
 
 ### 16.2 Path Safety
 
-All file paths originating from user input or IPC payloads must be validated before use:
+All file paths originating from user input or IPC payloads must be validated before use. The `backend/utils/path_guard.py` utility is provided for this purpose. It ensures that a given path resolves only within a set of pre-defined allowed root directories and handles path traversal attempts and symlinks that resolve outside the allowed roots.
 
 ```python
 # backend/utils/path_guard.py
 from pathlib import Path
+import os
 
+# Define allowed roots for file operations
+# This list implicitly includes the project root and user's home directory.
 ALLOWED_ROOTS = [
     str(Path.home() / 'Projects'),
     '/tmp/copernicus',
+    str(Path(__file__).resolve().parent.parent.parent)  # Current project root
 ]
 
-def assert_safe_path(path: str, roots: list[str] = ALLOWED_ROOTS) -> Path:
-    resolved = Path(path).resolve()
-    if not any(str(resolved).startswith(r) for r in roots):
+def assert_safe_path(path_str: str, roots: list[str] = None) -> Path:
+    """
+    Resolves path and asserts it is within one of the allowed roots.
+    Returns the resolved Path object.
+    Raises ValueError if path is outside allowed roots.
+    """
+    if roots is None:
+        roots = ALLOWED_ROOTS
+        
+    resolved = Path(path_str).resolve()
+    resolved_str = str(resolved)
+    
+    # Ensure all roots are absolute
+    abs_roots = [str(Path(r).resolve()) for r in roots]
+    
+    # Check if the resolved path starts with any of the absolute allowed roots
+    # Also handles cases where the resolved path *is* one of the roots
+    if not any(resolved_str == root or resolved_str.startswith(root + os.sep) for root in abs_roots):
         raise ValueError(f"Path outside allowed roots: {resolved}")
+        
     return resolved
 ```
 
-```typescript
-// copernicus/electron/utils/path-guard.ts
-import path from 'path'
-const ALLOWED_ROOTS = [process.env.HOME + '/Projects']
-export function assertSafePath(p: string): string {
-  const resolved = path.resolve(p)
-  if (!ALLOWED_ROOTS.some(r => resolved.startsWith(r)))
-    throw new Error(`Path outside allowed roots: ${resolved}`)
-  return resolved
-}
-```
+**Rule:** Every user-supplied file path or path-like input must be passed through `assert_safe_path()` before being used in file system operations (e.g., `open()`, `os.path`, `Path()`).
 
 ### 16.3 Subprocess Safety
+
+When executing external commands, **command injection** is a critical vulnerability. All subprocess calls must adhere to the following:
 
 ```python
 # ❌ FORBIDDEN
@@ -953,11 +965,11 @@ execSync(`git ${userCommand}`)
 spawn('sh', ['-c', userInput])
 
 // ✅ REQUIRED — explicit argument array, shell: false
-execFileSync('git', ['status'], { cwd: safePath })
+execFileSync('git', ['status'], { cwd: safe_path })
 spawn('git', ['status'], { shell: false })
 ```
 
-**`shell: true` is forbidden in any call where any argument is user-controlled.**
+**`shell: true` is forbidden in any call where any argument is user-controlled.** Always use the list-form of commands and avoid `shell=True` unless explicitly necessary for static, trusted commands. Ensure that all paths used with subprocess commands are first validated with `assert_safe_path()`.
 
 ### 16.4 Input Validation
 

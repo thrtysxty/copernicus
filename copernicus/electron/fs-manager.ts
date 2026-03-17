@@ -80,10 +80,24 @@ export class FSManager {
 
     log.info(`[FSManager] Undoing transaction ${last.id}...`);
     for (const f of last.files) {
-      if (f.beforeHash) {
+      if (f.originalDataPath) {
+        try {
+          const originalContent = fs.readFileSync(f.originalDataPath, 'utf-8');
+          fs.writeFileSync(f.path, originalContent, 'utf-8');
+          log.info(`[FSManager] Restored ${f.path}`);
+        } catch (error: any) {
+          log.error(`[FSManager] Error restoring ${f.path} from ${f.originalDataPath}: ${error.message}`);
+        }
+      } else {
+        log.warn(`[FSManager] No original content path found for ${f.path} in transaction ${last.id}. Skipping.`);
       }
     }
-    log.warn('[FSManager] Undo logic partially implemented — requires persistent original content store.');
+    // After undoing, mark the transaction in the ledger as rolled back
+    stateLedger.logTransaction({
+      id: last.id,
+      status: 'ROLLED_BACK',
+      files: last.files // Keep the file information for historical purposes
+    });
   }
 
   private assertSafe(filePath: string, mode: 'read' | 'write' = 'read'): void {

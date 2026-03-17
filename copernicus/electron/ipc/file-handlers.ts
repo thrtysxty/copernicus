@@ -17,6 +17,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('fs:tx-commit', (_e, id) => handleIpc('fs:tx-commit', [id], () => fsManager.commitTransaction(id)))
   ipcMain.handle('fs:tx-rollback', (_e, id) => handleIpc('fs:tx-rollback', [id], () => fsManager.rollbackTransaction(id)))
   ipcMain.handle('fs:tx-status', () => handleIpc('fs:tx-status', [], () => fsManager.tx?.getActiveTransactionId()))
+  ipcMain.handle('fs:tx-undo', () => handleIpc('fs:tx-undo', [], () => fsManager.undoLastTransaction()))
   ipcMain.handle('fs:save-multiple', (_e, files: { filePath: string, content: string }[]) => handleIpc('fs:save-multiple', [files], async () => {
     const txId = await fsManager.beginTransaction();
     try {
@@ -43,7 +44,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       return { ok: false, error: message };
     }
   }))
-  ipcMain.handle('fs:undo-last-transaction', () => handleIpc('fs:undo-last-transaction', [], () => fsManager.undoLastTransaction()))
+
 
   // Agent Branch/Patch (Story 230)
   ipcMain.handle('agent:patch-apply', (_e, { changes, baseCommit, workingTree, dryRun }) => handleIpc('agent:patch-apply', [{ changes, baseCommit, workingTree, dryRun }], () => applyAndVerifyPatch(changes, baseCommit, workingTree, dryRun)))

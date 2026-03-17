@@ -253,6 +253,7 @@ export const SCHEMA = {
       file_path TEXT NOT NULL,
       before_hash TEXT,
       after_hash TEXT,
+      original_data_path TEXT,
       FOREIGN KEY(transaction_id) REFERENCES file_transactions(id)
     );
     CREATE INDEX IF NOT EXISTS idx_file_tx_entries_tx ON file_transaction_entries(transaction_id);

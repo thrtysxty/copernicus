@@ -25,7 +25,8 @@ interface WALRecord {
     gid?: number;
   };
   dataHash?: string; // SHA-256 of new data
-  dataPath?: string; // path to shadow copy
+  dataPath?: string; // path to shadow copy (new content)
+  originalDataPath?: string; // path to shadow copy (original content)
 }
 
 interface TransactionConfig {
@@ -155,6 +156,19 @@ export class Transaction {
     const absPath = path.resolve(filePath);
     await ensureDir(this.shadowDir);
 
+    let originalDataPath: string | undefined;
+    try {
+      // Read original content and store it in a shadow file
+      const originalContent = await fs.readFile(absPath);
+      originalDataPath = path.join(this.shadowDir, crypto.randomUUID() + '.original');
+      await fs.writeFile(originalDataPath, originalContent);
+    } catch (error: any) {
+      if (error.code !== 'ENOENT') { // Ignore if file does not exist
+        log.error(`[TransactionManager] Error reading original file ${absPath}: ${error.message}`);
+      }
+      originalDataPath = undefined; // No original file, so no path
+    }
+
     const prevStat = await preserveStat(absPath);
     const prevHash = await hashFile(absPath);
     const dataBuffer = Buffer.from(data);
@@ -172,7 +186,8 @@ export class Transaction {
       prevStat,
       prevHash,
       dataHash,
-      dataPath: shadowPath,
+      dataPath: shadowPath, // path to new content
+      originalDataPath: originalDataPath, // path to original content
     };
 
     await this.appendRecord(record);
@@ -265,7 +280,8 @@ export class TransactionManager {
     const files = records.filter(r => r.operation === 'write').map(r => ({
       path: r.filePath,
       beforeHash: r.prevHash,
-      afterHash: r.dataHash
+      afterHash: r.dataHash,
+      originalDataPath: r.originalDataPath
     }));
     
     this.ledger.logTransaction({
@@ -288,7 +304,8 @@ export class TransactionManager {
     const files = records.filter(r => r.operation === 'write').map(r => ({
       path: r.filePath,
       beforeHash: r.prevHash,
-      afterHash: r.dataHash
+      afterHash: r.dataHash,
+      originalDataPath: r.originalDataPath
     }));
     
     this.ledger.logTransaction({

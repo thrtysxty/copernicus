@@ -45,7 +45,6 @@ export interface IpcHandlerDeps {
   reversePatch: any;
   runRAGBenchmark: any;
   getPlaywright: any;
-  computeCoveragePct: any;
   LOG_DIR: string;
   dispatchJulesSession: any;
   createTouchBar: any;

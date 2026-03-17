@@ -217,7 +217,7 @@ export class StateLedger {
 
   // ── File Transactions (Story 220) ──────────────────────────────────────────
 
-  logTransaction(tx: { id: string, status: string, description?: string, files: any[] }): void {
+  logTransaction(tx: { id: string, status: string, description?: string, files: { path: string, beforeHash?: string, afterHash?: string, originalDataPath?: string }[] }): void {
     this.db.prepare(`
       INSERT INTO file_transactions (id, status, description)
       VALUES (?, ?, ?)
@@ -231,13 +231,13 @@ export class StateLedger {
 
     for (const f of tx.files) {
       this.db.prepare(`
-        INSERT INTO file_transaction_entries (transaction_id, file_path, before_hash, after_hash)
-        VALUES (?, ?, ?, ?)
-      `).run(tx.id, f.path, f.beforeHash, f.afterHash)
+        INSERT INTO file_transaction_entries (transaction_id, file_path, before_hash, after_hash, original_data_path)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(tx.id, f.path, f.beforeHash, f.afterHash, f.originalDataPath ?? null)
     }
   }
 
-  getLastTransaction(): { id: string, files: any[] } | null {
+  getLastTransaction(): { id: string, files: { path: string, beforeHash?: string, afterHash?: string, originalDataPath?: string }[] } | null {
     const row = this.db.prepare(`
       SELECT * FROM file_transactions 
       WHERE status = 'COMMITTED' 
@@ -254,7 +254,8 @@ export class StateLedger {
       files: entries.map(e => ({
         path: e.file_path,
         beforeHash: e.before_hash,
-        afterHash: e.after_hash
+        afterHash: e.after_hash,
+        originalDataPath: e.original_data_path
       }))
     }
   }

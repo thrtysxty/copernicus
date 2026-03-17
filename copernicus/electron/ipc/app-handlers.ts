@@ -13,6 +13,14 @@ import { IpcHandlerDeps } from './deps'
 
 const execFileAsync = promisify(execFile)
 
+function computeCoveragePct(coverageMap: Record<string, any>): number {
+  const files = Object.values(coverageMap)
+  if (!files.length) return 0
+  const total   = files.reduce((acc: number, f: any) => acc + (f.s?.total   ?? 0), 0)
+  const covered = files.reduce((acc: number, f: any) => acc + (f.s?.covered ?? 0), 0)
+  return total > 0 ? Math.round((covered / total) * 100 * 10) / 10 : 0
+}
+
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const {
     settingsStore, 
@@ -20,7 +28,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     devtimeManager, 
     storiesManager, 
     stateLedger, 
-    computeCoveragePct, 
     fsManager, 
     workflowEngine,
     authManager,
@@ -254,13 +261,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return true;
   }));
 
-  // Context Snapshots & Project Memory (Stories 157 & 158)
-  ipcMain.handle('snapshot:save', (_e, payload: any) => handleIpc('snapshot:save', [payload], () => {
-    stateLedger.saveSnapshot(payload);
-  }));
-  ipcMain.handle('snapshot:restore', (_e, panelId: string) => handleIpc('snapshot:restore', [panelId], () =>
-    stateLedger.getLatestSnapshot(panelId)
-  ));
+
 
   ipcMain.handle('app:quit', () => handleIpc('app:quit', [], () => { app.quit(); }));
 
@@ -563,5 +564,16 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       created_at: new Date().toISOString()
     })
     return true
+  }))
+
+  ipcMain.handle('window:exit-fullscreen', () => handleIpc('window:exit-fullscreen', [], () => {
+    const w = BrowserWindow.getAllWindows()[0]
+    if (w?.isFullScreen()) {
+      w.setFullScreen(false)
+    }
+  }))
+
+  ipcMain.handle('layout:goto-line', (_e, { file, line, col }) => handleIpc('layout:goto-line', [{ file, line, col }], () => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send('layout:goto-line', { file, line, col })
   }))
 }

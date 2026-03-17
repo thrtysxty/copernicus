@@ -118,7 +118,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
 | #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
 | #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
-| #220 | Atomic Multi File Edits | APPROVED FOR IMPLEMENTATION | P0 |
 | #221 | Intelligent Context Management | APPROVED FOR IMPLEMENTATION | P0 |
 | #222 | Native Diff Visualization | APPROVED FOR IMPLEMENTATION | P1 |
 | #226 | Deterministic Agent Registry | APPROVED FOR IMPLEMENTATION | P1 |
@@ -132,7 +131,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #240 | Hybrid Retrieval Engine & Mode Selection | APPROVED FOR IMPLEMENTATION | P1 |
 | #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
 | #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
-| #248 | Path Traversal Command Injection | APPROVED FOR IMPLEMENTATION | P0 |
 | #250 | Backend Input Validation Middleware | APPROVED FOR IMPLEMENTATION | P1 |
 | #251 | Decompose Main Ts | APPROVED FOR IMPLEMENTATION | P1 |
 | #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
@@ -224,6 +222,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #195 | Gemini Cli Pty Agent | COMPLETE | P1 |
 | #201 | Agent Terminal Rework | COMPLETE | P2 |
 | #219 | Enhanced Rag System | COMPLETE | P0 |
+| #220 | Atomic Multi File Edits | COMPLETE | P0 |
 | #228 | Orchestrator-Led Dynamic Model Selection | COMPLETE | P1 |
 | #231 | Activity Bar Vt Compliance | COMPLETE | P1 |
 | #233 | Generic Handoff Signal And Centralized Comms Bus | COMPLETE | P1 |
@@ -234,6 +233,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | COMPLETE | P1 |
 | #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | COMPLETE | P1 |
 | #247 | Sql Injection Remediation | COMPLETE | P0 |
+| #248 | Path Traversal Command Injection | COMPLETE | P0 |
 | #249 | Cors Env Sanitizer Hardening | COMPLETE | P0 |
 | #260 | Subprocess Arg Injection | COMPLETE | P0 |
 | #263 | Flask Rate Limiting | COMPLETE | P2 |

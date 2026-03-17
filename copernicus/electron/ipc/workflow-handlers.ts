@@ -105,4 +105,30 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   // WebSocket Handlers
   ipcMain.handle('ws:subscribe-session', (_e, sessionId: string) => handleIpc('ws:subscribe-session', [sessionId], () => socketManager.subscribeSession(sessionId)))
   ipcMain.handle('ws:unsubscribe-session', (_e, sessionId: string) => handleIpc('ws:unsubscribe-session', [sessionId], () => socketManager.unsubscribeSession(sessionId)))
+
+  // Template Handlers
+  ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {
+    return WORKFLOW_TEMPLATES.map(t => {
+      const override = deps.stateLedger.getTemplateOverride(t.id)
+      return {
+        id: t.id,
+        name: t.name,
+        type: 'Workflow',
+        content: override?.content ?? JSON.stringify(t, null, 2),
+        isOverridden: !!override
+      }
+    })
+  }))
+
+  ipcMain.handle('templates:save', (_e, id: string, content: string) => handleIpc(() => deps.stateLedger.saveTemplateOverride(id, content)))
+
+  ipcMain.handle('templates:reset', (_e, id: string) => handleIpc(() => deps.stateLedger.deleteTemplateOverride(id)))
+
+  // Snapshot Handlers
+  ipcMain.handle('snapshot:save', (_e, payload: any) => handleIpc('snapshot:save', [payload], () => {
+    deps.stateLedger.saveSnapshot(payload);
+  }));
+  ipcMain.handle('snapshot:restore', (_e, panelId: string) => handleIpc('snapshot:restore', [panelId], () =>
+    deps.stateLedger.getLatestSnapshot(panelId)
+  ));
 }
