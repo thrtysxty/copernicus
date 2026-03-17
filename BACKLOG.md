@@ -133,7 +133,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
 | #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
 | #254 | Typescript Strict Any Audit | APPROVED FOR IMPLEMENTATION | P1 |
-| #262 | Fs Save Multiple Path Validation | APPROVED FOR IMPLEMENTATION | P1 |
 | #274 | Ollama Url Settings Panel | APPROVED FOR IMPLEMENTATION | P2 |
 | #275 | Chat Panel Flip Render Error | APPROVED FOR IMPLEMENTATION | P1 |
 | #276 | Planner Visual Brightness And Panel Header Consistency | APPROVED FOR IMPLEMENTATION | P2 |
@@ -234,6 +233,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #259 | Provider Base Class Retry | COMPLETE | P2 |
 | #260 | Subprocess Arg Injection | COMPLETE | P0 |
 | #261 | Context Manager Thread Safety | COMPLETE | P1 |
+| #262 | Fs Save Multiple Path Validation | COMPLETE | P1 |
 | #263 | Flask Rate Limiting | COMPLETE | P2 |
 | #264 | Cors Null Origin Model Allowlist | COMPLETE | P2 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
