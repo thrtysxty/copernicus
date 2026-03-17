@@ -173,10 +173,20 @@ function createWindow() {
   }
 }
 
+import { ExtensionRegistry } from './extensions/ExtensionRegistry'
+import { ExtensionLoader } from './extensions/ExtensionLoader'
+import { registerExtensionHandlers } from './ipc/extension-handlers'
 import { handleIpc } from './utils/handle-ipc'
 import { WORKFLOW_TEMPLATES } from './workflow/templates'
 
-function registerIpcHandlers() {
+async function registerIpcHandlers() {
+  // Extensions
+  const extensionDir = path.join(app.getPath('home'), '.copernicus', 'extensions')
+  const extensionRegistry = ExtensionRegistry.getInstance()
+  const extensionLoader = new ExtensionLoader(extensionDir, extensionRegistry)
+  await extensionLoader.loadAll()
+  registerExtensionHandlers(extensionRegistry, extensionLoader)
+
   const scaffoldRunner = new ScaffoldRunner();
   const genesisRunner = new GenesisRunner({
     modelRegistry,
@@ -201,6 +211,7 @@ function registerIpcHandlers() {
     isFirstRun, spawn,
     worktreeManager: worktreeManager!,
     win: win!, // Added win to deps
+    extensionRegistry,
   }
 
   workflowEngine.setServices(deps);
@@ -238,12 +249,12 @@ function registerIpcHandlers() {
   ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {
     return WORKFLOW_TEMPLATES.map(t => {
       const override = deps.stateLedger.getTemplateOverride(t.id)
-      return { 
-        id: t.id, 
-        name: t.name, 
-        type: 'Workflow', 
-        content: override?.content ?? JSON.stringify(t, null, 2), 
-        isOverridden: !!override 
+      return {
+        id: t.id,
+        name: t.name,
+        type: 'Workflow',
+        content: override?.content ?? JSON.stringify(t, null, 2),
+        isOverridden: !!override
       }
     })
   }))
@@ -263,7 +274,6 @@ function registerIpcHandlers() {
     BrowserWindow.getAllWindows()[0]?.webContents.send('layout:goto-line', { file, line, col })
   }))
 }
-
 app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !== 'darwin') app.quit() })
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 app.on('will-quit', () => { globalShortcut.unregisterAll() })
@@ -276,8 +286,8 @@ app.on('before-quit', async () => {
   if (browserSession.browser) await browserSession.browser.close().catch(err => log.error(err)) 
 })
 
-app.whenReady().then(() => {
-  registerIpcHandlers(); backendManager.start(); setTimeout(() => socketManager.connect(), 3000)
+app.whenReady().then(async () => {
+  await registerIpcHandlers(); backendManager.start(); setTimeout(() => socketManager.connect(), 3000)
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({ applicationName: 'COPERNICUS', applicationVersion: '0.1.0', copyright: '© 2026 COPERNICUS IDE Team', credits: 'Professional Phosphor Edition' });
   }

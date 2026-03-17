@@ -10,6 +10,7 @@ import type { BrowserWindow } from 'electron';
 import type { JulesManager } from '../jules/jules-manager';
 import type { GithubManager } from '../github-manager';
 import type { StoriesManager } from '../stories';
+import type { ExtensionRegistry } from '../extensions/ExtensionRegistry';
 import log from '../utils/logger';
 import path from 'path';
 import { SnapshotManager } from './snapshot-manager';
@@ -31,6 +32,7 @@ export interface EngineServices {
   lspManager: import('../lsp/lsp-manager').LspManager;
   worktreeManager?: import('../worktree/WorktreeManager').WorktreeManager;
   snapshotManager: SnapshotManager;
+  extensionRegistry?: ExtensionRegistry;
 }
 
 export class WorkflowEngine {
