@@ -6,7 +6,8 @@ import {
   Box, 
   Monitor,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  ChevronLeft
 } from 'lucide-react'
 import { ORCHESTRATOR_TILES } from './tiles'
 import { OrchestratorTile } from '../../store/orchestrator'
@@ -72,6 +73,7 @@ const CategorySection: React.FC<{
 }
 
 export const TileLibrary: React.FC = () => {
+  const [collapsed, setCollapsed] = React.useState(false)
   const tilesByCategory = React.useMemo(() => {
     const groups: Record<string, OrchestratorTile[]> = {}
     ORCHESTRATOR_TILES.forEach(tile => {
@@ -83,24 +85,36 @@ export const TileLibrary: React.FC = () => {
   }, [])
 
   return (
-    <aside className="w-[240px] flex-shrink-0 bg-[#050505] border-r border-copernicus-steel flex flex-col h-full overflow-hidden select-none">
-      <div className="h-9 flex items-center px-4 border-b border-copernicus-steel bg-[#080808] shrink-0">
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor">
-          Tile Library
-        </span>
+    <aside className={`${collapsed ? 'w-8' : 'w-[220px]'} flex-shrink-0 bg-[#050505] border-r border-copernicus-steel flex flex-col h-full overflow-hidden select-none transition-all duration-200`}>
+      <div className="h-9 flex items-center px-3 border-b border-copernicus-steel bg-[#080808] shrink-0">
+        {!collapsed && (
+          <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor flex-1">
+            Tile Library
+          </span>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-zinc-500 hover:text-copernicus-phosphor transition-colors ml-auto p-1"
+        >
+          {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        </button>
       </div>
       
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {Object.entries(tilesByCategory).map(([category, tiles]) => (
-          <CategorySection key={category} category={category} tiles={tiles} />
-        ))}
-      </div>
+      {!collapsed && (
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {Object.entries(tilesByCategory).map(([category, tiles]) => (
+            <CategorySection key={category} category={category} tiles={tiles} />
+          ))}
+        </div>
+      )}
       
-      <div className="p-4 border-t border-zinc-800 bg-[#080808]/50 mt-auto">
-        <p className="text-[9px] font-mono text-zinc-600 leading-relaxed uppercase tracking-wider">
-          Drag tiles to canvas to add new operations to your workflow.
-        </p>
-      </div>
+      {!collapsed && (
+        <div className="p-4 border-t border-zinc-800 bg-[#080808]/50 mt-auto">
+          <p className="text-[9px] font-mono text-zinc-600 leading-relaxed uppercase tracking-wider">
+            Drag tiles to canvas to add new operations to your workflow.
+          </p>
+        </div>
+      )}
     </aside>
   )
 }

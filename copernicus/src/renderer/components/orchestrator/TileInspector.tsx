@@ -50,14 +50,7 @@ export const TileInspector: React.FC = () => {
   }, [tile?.category, workingDir, invoke])
 
   if (!node || !tile) {
-    return (
-      <aside className="w-[240px] flex-shrink-0 bg-[#050505] border-l border-copernicus-steel flex flex-col items-center justify-center p-6 text-center select-none">
-        <Box size={32} className="text-zinc-800 mb-4" />
-        <p className="text-[11px] font-mono text-zinc-600 uppercase tracking-widest leading-relaxed">
-          Select a tile to configure
-        </p>
-      </aside>
-    )
+    return null
   }
 
   const handleConfigChange = (key: string, value: string) => {
