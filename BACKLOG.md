@@ -110,7 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
 | #406 | Orchestrator Tile And Provider Contribution Points | APPROVED FOR IMPLEMENTATION | P2 |
@@ -134,6 +133,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #183 | Chat Tools Back Face | COMPLETE | P1 |
 | #184 | Command Center View | COMPLETE | P1 |
 | #185 | Designer Canvas Unification | COMPLETE | P1 |
+| #186 | Card Workflow Assignment | COMPLETE | P1 |
 | #187 | Jules Pr Manager Workflow | COMPLETE | P1 |
 | #188 | Copernicus Guide Persona | COMPLETE | P1 |
 | #189 | Lsp Monaco Chatpanel Wiring | COMPLETE | P1 |
