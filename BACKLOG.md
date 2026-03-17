@@ -132,9 +132,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #240 | Hybrid Retrieval Engine & Mode Selection | APPROVED FOR IMPLEMENTATION | P1 |
 | #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
 | #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
-| #247 | Sql Injection Remediation | APPROVED FOR IMPLEMENTATION | P0 |
 | #248 | Path Traversal Command Injection | APPROVED FOR IMPLEMENTATION | P0 |
-| #249 | Cors Env Sanitizer Hardening | APPROVED FOR IMPLEMENTATION | P0 |
 | #250 | Backend Input Validation Middleware | APPROVED FOR IMPLEMENTATION | P1 |
 | #251 | Decompose Main Ts | APPROVED FOR IMPLEMENTATION | P1 |
 | #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
@@ -145,7 +143,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #257 | Memory Leak Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #258 | Async Blocking Ops | APPROVED FOR IMPLEMENTATION | P2 |
 | #259 | Provider Base Class Retry | APPROVED FOR IMPLEMENTATION | P2 |
-| #260 | Subprocess Arg Injection | APPROVED FOR IMPLEMENTATION | P0 |
 | #261 | Context Manager Thread Safety | APPROVED FOR IMPLEMENTATION | P1 |
 | #262 | Fs Save Multiple Path Validation | APPROVED FOR IMPLEMENTATION | P1 |
 | #263 | Flask Rate Limiting | APPROVED FOR IMPLEMENTATION | P2 |
@@ -201,7 +198,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | APPROVED FOR IMPLEMENTATION | P1 |
 | #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
-| #403 | Extension Loader And Registry | APPROVED FOR IMPLEMENTATION | P1 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
 | #406 | Orchestrator Tile And Provider Contribution Points | APPROVED FOR IMPLEMENTATION | P2 |
@@ -239,6 +235,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #244 | Security Fix — Command Injection In Electron Ipc Subprocess Calls | COMPLETE | P0 — SECURITY |
 | #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | COMPLETE | P1 |
 | #246 | Backend Api Hardening — Request.Json None Guard, Provider Indexerrors, Input Validation | COMPLETE | P1 |
+| #247 | Sql Injection Remediation | COMPLETE | P0 |
+| #249 | Cors Env Sanitizer Hardening | COMPLETE | P0 |
+| #260 | Subprocess Arg Injection | COMPLETE | P0 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
@@ -264,6 +263,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #397 | Designer Canvas Consolidation Audit | COMPLETE | P1 |
 | #398 | Kanban Column Colours Design System | COMPLETE | P1 |
 | #399 | Remove Orphaned Contextstore | COMPLETE | P1 |
+| #403 | Extension Loader And Registry | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
