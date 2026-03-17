@@ -1,69 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { unwrapIpc } from '../../types/ipc'
 import { Message, ModelInfo, AuthStatus } from './useChatPanel'
-import { CheckCircle2, Play, Eye, Save, Hash, ChevronDown, Minimize2, Maximize2, RotateCcw, ChevronRight } from 'lucide-react'
+import { Save, Hash, ChevronDown, Minimize2, Maximize2, RotateCcw, ChevronRight } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { UIUpdateChip } from './UIUpdateChip'
 import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 
-// ── ReviewSummaryCard Sub-component ──────────────────────────────────────
 
-const ReviewSummaryCard: React.FC = () => {
-  const { pendingReviewSummary, setPendingReviewSummary, setPendingReview, setView, workingDir } = useLayoutStore()
-  const invoke = useIpcError()
-
-  if (!pendingReviewSummary) return null
-
-  const data = pendingReviewSummary
-
-  return (
-    <div className="mx-4 mb-6 p-3 bg-copernicus-phosphor/5 border border-copernicus-phosphor/20 rounded-lg">
-      <div className="flex items-center gap-2 mb-3 text-copernicus-phosphor">
-        <CheckCircle2 size={14} />
-        <span className="text-[10px] font-bold uppercase tracking-widest">Review Session Ready</span>
-      </div>
-      
-      <div className="flex gap-2">
-        <button
-          onClick={() => setView('review')}
-          className="flex items-center gap-1.5 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[9px] font-bold uppercase tracking-wider rounded transition-colors"
-        >
-          <Eye size={10} /> View Diff →
-        </button>
-        <button
-          onClick={() => {
-            invoke('terminal:spawn', { 
-               id: `tsc-${Date.now()}`,
-               label: 'TSC CHECK',
-               command: 'npx tsc --noEmit', 
-               cwd: workingDir + '/copernicus' 
-             })
-          }}
-          className="flex items-center gap-1.5 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[9px] font-bold uppercase tracking-wider rounded transition-colors"
-        >
-          <Play size={10} /> Run tsc →
-        </button>
-        <button
-          onClick={async () => {
-            if (data.stories && data.stories.length > 0) {
-              const storyId = data.stories[0]
-              if (storyId !== undefined) {
-                await invoke('stories:set-field', { id: storyId.toString(), field: 'status', value: 'COMPLETE' })
-              }
-            }
-            setPendingReview(null)
-            setPendingReviewSummary(null)
-          }}
-          className="flex items-center gap-1.5 px-2 py-1 bg-copernicus-phosphor text-[#050505] text-[9px] font-bold uppercase tracking-wider rounded hover:opacity-90 transition-opacity"
-        >
-          <CheckCircle2 size={10} /> Approve →
-        </button>
-      </div>
-    </div>
-  )
-}
 
 interface ChatThreadProps {
   messages: Message[]
@@ -232,14 +177,50 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
     spotlightPane, 
     toggleFlip, 
     setChatPanelOpen,
-    pendingReviewSummary
+    pendingSystemMessage, // Changed from pendingReviewSummary
+    clearPendingSystemMessage, // Added
+    setView, // Added
   } = useLayoutStore()
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, pendingReviewSummary])
+  }, [messages, pendingSystemMessage]) // Changed from pendingReviewSummary
+
+  // New component for rendering the structured summary message
+  const ReviewSummaryCard: React.FC = () => {
+    if (!pendingSystemMessage || pendingSystemMessage.type !== 'review-summary') return null
+
+    const { storyId, changedFiles, summary } = pendingSystemMessage
+    const invoke = useIpcError()
+
+    const handleApprove = async () => {
+      await invoke('stories:set-status', { id: storyId, status: 'COMPLETE' })
+      clearPendingSystemMessage()
+    }
+
+    return (
+      <div className="mx-4 mb-6 bg-zinc-900/50 border border-zinc-700/30 rounded p-3 text-[10px] font-mono">
+        <div className="text-zinc-300">✓ {summary}</div>
+        <div className="text-zinc-500 mt-1">What changed: {changedFiles.join(', ')}</div>
+        <div className="flex gap-2 mt-3">
+          <button 
+            onClick={() => setView('review')} 
+            className="px-2 py-0.5 text-[9px] border border-zinc-700 rounded hover:border-copernicus-phosphor text-zinc-400 hover:text-copernicus-phosphor"
+          >
+            View Diff →
+          </button>
+          <button 
+            onClick={handleApprove} 
+            className="px-2 py-0.5 text-[9px] border border-zinc-700 rounded hover:border-copernicus-phosphor text-zinc-400 hover:text-copernicus-phosphor"
+          >
+            Approve →
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   function renderMessageContent(
     content: string,
@@ -417,36 +398,38 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
             <div className="text-[10px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
           </div>
         ) : (
-          messages.map(m => (
-            <div key={m.id}>
-              <ChatMessage
-                role={m.role}
-                content={m.role !== 'user' ? renderMessageContent(m.content, openFilePath, m.id) : m.content}
-                tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
-              />
-            </div>
-          ))
-        )}
-        <ReviewSummaryCard />
-        {pendingModelSwitch && (
-          <div className="mx-4 mb-2 p-2 bg-zinc-900 border border-amber-500/30 rounded text-[10px]">
-            <span className="text-amber-400 font-mono">Orchestrator → </span>
-            <span className="text-zinc-300">Use <strong>{pendingModelSwitch.model}</strong> for {pendingModelSwitch.reason}</span>
-            <div className="flex gap-2 mt-1.5">
-              <button
-                onClick={() => acceptModelSwitch(pendingModelSwitch)}
-                className="px-2 py-0.5 bg-copernicus-phosphor text-[#050505] rounded-none text-[9px] font-bold"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => rejectModelSwitch()}
-                className="px-2 py-0.5 border border-zinc-700 text-zinc-500 rounded text-[9px]"
-              >
-                Reject
-              </button>
-            </div>
-          </div>
+          <>
+            {messages.map(m => (
+              <div key={m.id}>
+                <ChatMessage
+                  role={m.role}
+                  content={m.role !== 'user' ? renderMessageContent(m.content, openFilePath, m.id) : m.content}
+                  tokens={m.tokens ? { in: 0, out: m.tokens, cost: 0 } : undefined}
+                />
+              </div>
+            ))}
+            <ReviewSummaryCard />
+            {pendingModelSwitch && (
+              <div className="mx-4 mb-2 p-2 bg-zinc-900 border border-amber-500/30 rounded text-[10px]">
+                <span className="text-amber-400 font-mono">Orchestrator → </span>
+                <span className="text-zinc-300">Use <strong>{pendingModelSwitch.model}</strong> for {pendingModelSwitch.reason}</span>
+                <div className="flex gap-2 mt-1.5">
+                  <button
+                    onClick={() => acceptModelSwitch(pendingModelSwitch)}
+                    className="px-2 py-0.5 bg-copernicus-phosphor text-[#050505] rounded-none text-[9px] font-bold"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => rejectModelSwitch()}
+                    className="px-2 py-0.5 border border-zinc-700 text-zinc-500 rounded text-[9px]"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>

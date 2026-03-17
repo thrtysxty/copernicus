@@ -147,7 +147,7 @@ export default function App() {
   const setChatPanelTab = useLayoutStore(s => s.setChatPanelTab)
   const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
   const setPendingReview = useLayoutStore(s => s.setPendingReview)
-  const setPendingReviewSummary = useLayoutStore(s => s.setPendingReviewSummary)
+  const setPendingSystemMessage = useLayoutStore(s => s.setPendingSystemMessage)
   const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
   const setChatPanelOpen = useLayoutStore(s => s.setChatPanelOpen)
@@ -253,14 +253,20 @@ export default function App() {
     })
 
     const removeReviewSession = window.ipcRenderer.on('review:session-complete', (_e, data: any) => {
-      setPendingReview(data)
-      setPendingReviewSummary(data)
-      
-      const stories = data.stories.map((n: number) => `#${n}`).join(', ')
-      const files = data.changedFiles.map((f: string) => `• ${f.split('/').pop()}`).join('\n')
-      const message = `✓ Session complete — ${stories}\n\nChanged files (${data.changedFiles.length}):\n${files}\n\nExit code: ${data.exitCode === 0 ? '✓ 0 (clean)' : `✗ ${data.exitCode}`}`
-      
-      invoke('chat:send-system', message)
+      // New logic for story 334:
+      const storyId = data.stories && data.stories.length > 0 ? data.stories[0].toString() : 'UNKNOWN'
+      const storyTitle = data.stories && data.stories.length > 0 ? `Story ${data.stories[0]}` : 'Untitled Story'
+
+      setPendingSystemMessage({
+        type: 'review-summary',
+        storyId,
+        storyTitle,
+        changedFiles: data.changedFiles ? data.changedFiles.slice(0, 10) : [],
+        summary: `Story ${storyId} implementation complete. ${data.changedFiles ? data.changedFiles.length : 0} file(s) changed.`,
+        timestamp: new Date().toISOString()
+      })
+      // The generic chat message is no longer needed as the ReviewSummaryCard handles display
+      // invoke('chat:send-system', message)
     })
 
     const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory', 'review', 'git'] as const

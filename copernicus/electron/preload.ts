@@ -78,7 +78,7 @@ const SEND_CHANNELS = new Set([
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
   'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind', 'workflow:get-context', 'workflow:set-context', 'workflow:resume-node',
   // Review gate
-  'review:log', 'review:session-complete',
+  'review:log', 'review:session-complete', 'review:generate-summary',
   // Codebase semantic index
   'codebase:search-deep', 'codebase:search-fast', 'codebase:index-status', 'codebase:run-benchmark',
   // LSP (Story 176 + 189)

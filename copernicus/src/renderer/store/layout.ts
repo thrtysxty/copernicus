@@ -208,8 +208,9 @@ interface LayoutState {
   // Review
   pendingReview: ReviewSession | null
   setPendingReview: (review: ReviewSession | null) => void
-  pendingReviewSummary: ReviewSession | null
-  setPendingReviewSummary: (review: ReviewSession | null) => void
+  pendingSystemMessage: { type: 'review-summary'; storyId: string; storyTitle: string; changedFiles: string[]; summary: string; timestamp: string } | null
+  setPendingSystemMessage: (msg: { type: 'review-summary'; storyId: string; storyTitle: string; changedFiles: string[]; summary: string; timestamp: string } | null) => void
+  clearPendingSystemMessage: () => void
 
   // Archive
   showArchive: boolean
@@ -433,8 +434,9 @@ export const useLayoutStore = create<LayoutState>()(
       pendingReview: null,
       setPendingReview: (review) => set({ pendingReview: review }),
 
-      pendingReviewSummary: null,
-      setPendingReviewSummary: (review) => set({ pendingReviewSummary: review }),
+      pendingSystemMessage: null,
+      setPendingSystemMessage: (msg) => set({ pendingSystemMessage: msg }),
+      clearPendingSystemMessage: () => set({ pendingSystemMessage: null }),
 
       showArchive: false,
       toggleArchive: () => set((state) => ({ showArchive: !state.showArchive })),

@@ -135,6 +135,22 @@ async function registerIpcHandlers() {
         isFirstRun, spawn
       }
 
+  ipcMain.handle('review:generate-summary', (_e, { diff, storyId, storyTitle }) => handleIpc(async () => {
+    // Fast LLM summary via cloud_agent or simple fallback
+    // Truncate diff to 4000 chars
+    const truncated = (diff as string).slice(0, 4000)
+    // For now: return structured response without LLM (LLM integration is optional)
+    // Parse changed files from diff
+    const fileLines = truncated.split('\n').filter((l: string) => l.startsWith('--- a/') || l.startsWith('+++ b/')).map((l: string) => l.replace(/^(\+\+\+ b\/|--- a\/)/, '').trim()).filter((f: string, i: number, arr: string[]) => arr.indexOf(f) === i && f !== '/dev/null')
+    return {
+      storyId,
+      storyTitle,
+      changedFiles: fileLines.slice(0, 10),
+      summary: `Story ${storyId} implementation complete. ${fileLines.length} file(s) changed.`,
+      timestamp: new Date().toISOString()
+    }
+  }))
+
   ipcMain.handle('health:check-all', (_e) => handleIpc(async () => {
     const checks = await Promise.allSettled([
       // Backend reachable

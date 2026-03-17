@@ -110,16 +110,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | APPROVED FOR IMPLEMENTATION | P1 — High |
 | #178 | Ipc Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P0 |
-| #180 | Kanban Swimlane Remap And Card Spotlight | APPROVED FOR IMPLEMENTATION | P1 |
-| #181 | Quick Tour | APPROVED FOR IMPLEMENTATION | P1 |
-| #183 | Chat Tools Back Face | APPROVED FOR IMPLEMENTATION | P1 |
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
 | #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
-| #196 | Ollama Subagent Orchestration | APPROVED FOR IMPLEMENTATION | P1 |
 | #221 | Intelligent Context Management | APPROVED FOR IMPLEMENTATION | P0 |
-| #222 | Native Diff Visualization | APPROVED FOR IMPLEMENTATION | P1 |
 | #226 | Deterministic Agent Registry | APPROVED FOR IMPLEMENTATION | P1 |
 | #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | APPROVED FOR IMPLEMENTATION | P0 |
 | #230 | Agent Branch And Patch Workflow | APPROVED FOR IMPLEMENTATION | P1 |
@@ -131,15 +125,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #240 | Hybrid Retrieval Engine & Mode Selection | APPROVED FOR IMPLEMENTATION | P1 |
 | #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
 | #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
-| #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
-| #254 | Typescript Strict Any Audit | APPROVED FOR IMPLEMENTATION | P1 |
 | #274 | Ollama Url Settings Panel | APPROVED FOR IMPLEMENTATION | P2 |
 | #279 | Dogfooding Harness Planning And Review Pipeline | APPROVED FOR IMPLEMENTATION | P1 |
-| #283 | Project Memory Persistence Layer | APPROVED FOR IMPLEMENTATION | P1 |
-| #287 | Genesis Llm Epic And Story Synthesis | APPROVED FOR IMPLEMENTATION | P1 |
-| #288 | Genesis Repo Scaffold And Agent Config Generation | APPROVED FOR IMPLEMENTATION | P1 |
-| #293 | Wizard Github Pat Inline Input | APPROVED FOR IMPLEMENTATION | P1 |
-| #294 | Post Wizard Existing Repo Story Import | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
 | #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
@@ -164,9 +151,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #173 | Model Dynamic Env | COMPLETE | P1 |
 | #174 | Hardware Touchbar | COMPLETE | P1 |
 | #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | COMPLETE | P0 — Critical |
+| #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | COMPLETE | P1 — High |
 | #177 | Renderer Bug Sweep | COMPLETE | P0 |
 | #179 | Vt Selection Highlight | COMPLETE | P1 |
+| #180 | Kanban Swimlane Remap And Card Spotlight | COMPLETE | P1 |
+| #181 | Quick Tour | COMPLETE | P1 |
 | #182 | Flippablepanel Mode Prop | COMPLETE | P1 |
+| #183 | Chat Tools Back Face | COMPLETE | P1 |
 | #184 | Command Center View | COMPLETE | P1 |
 | #185 | Designer Canvas Unification | COMPLETE | P1 |
 | #187 | Jules Pr Manager Workflow | COMPLETE | P1 |
@@ -177,9 +168,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #193 | Accessibility Pass | COMPLETE | P2 |
 | #194 | Flask Backend Scaffold | COMPLETE | P1 |
 | #195 | Gemini Cli Pty Agent | COMPLETE | P1 |
+| #196 | Ollama Subagent Orchestration | COMPLETE | P1 |
 | #201 | Agent Terminal Rework | COMPLETE | P2 |
 | #219 | Enhanced Rag System | COMPLETE | P0 |
 | #220 | Atomic Multi File Edits | COMPLETE | P0 |
+| #222 | Native Diff Visualization | COMPLETE | P1 |
 | #228 | Orchestrator-Led Dynamic Model Selection | COMPLETE | P1 |
 | #231 | Activity Bar Vt Compliance | COMPLETE | P1 |
 | #233 | Generic Handoff Signal And Centralized Comms Bus | COMPLETE | P1 |
@@ -194,7 +187,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #249 | Cors Env Sanitizer Hardening | COMPLETE | P0 |
 | #250 | Backend Input Validation Middleware | COMPLETE | P1 |
 | #251 | Decompose Main Ts | COMPLETE | P1 |
+| #252 | Decompose Chatpanel | COMPLETE | P1 |
 | #253 | Sqlite Hardening | COMPLETE | P1 |
+| #254 | Typescript Strict Any Audit | COMPLETE | P1 |
 | #255 | Error Handling Infrastructure | COMPLETE | P1 |
 | #256 | Dead Code Sweep | COMPLETE | P2 |
 | #257 | Memory Leak Cleanup | COMPLETE | P2 |
@@ -212,13 +207,18 @@ This file is auto-generated. Run `make backlog` to update.
 | #280 | Release Retrospective And Agent Memory Reinforcement | COMPLETE | P1 |
 | #281 | Review-6 Hotfixes — Column Header, Archive Filter, Type Safety | COMPLETE | P1 |
 | #282 | New Story Form Column Target Fix | COMPLETE | P2 |
+| #283 | Project Memory Persistence Layer | COMPLETE | P1 |
 | #284 | Bug Card Type In Planning Column | COMPLETE | P2 |
 | #285 | Project Genesis Onboarding Wizard | COMPLETE | P1 |
 | #286 | Genesis Wizard Ui | COMPLETE | P1 |
+| #287 | Genesis Llm Epic And Story Synthesis | COMPLETE | P1 |
+| #288 | Genesis Repo Scaffold And Agent Config Generation | COMPLETE | P1 |
 | #289 | Planner Archive Retro Bar Layout | COMPLETE | P1 |
 | #290 | Planning Lane Creation Dropdown | COMPLETE | P1 |
 | #291 | Activity Bar Header Overflow Fix | COMPLETE | P1 |
 | #292 | Terminal Pulse Removal And Header Buttons | COMPLETE | P1 |
+| #293 | Wizard Github Pat Inline Input | COMPLETE | P1 |
+| #294 | Post Wizard Existing Repo Story Import | COMPLETE | P1 |
 | #295 | Reporter Reduce Regression | COMPLETE | P1 |
 | #296 | Chat Panel Flip React Error 31 | COMPLETE | P1 |
 | #297 | Global Window Responsiveness | COMPLETE | P1 |
@@ -257,6 +257,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #330 | System Templates Editable | COMPLETE | P2 |
 | #331 | Hardware Command Tray Scrollable | COMPLETE | P2 |
 | #333 | Agent Review Panel | COMPLETE | P1 |
+| #334 | Semantic Diff Summaries | COMPLETE | P1 |
 | #335 | Story Status Automation | COMPLETE | P2 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
@@ -318,7 +319,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
-| #334 | Semantic Diff Summaries | DRAFT | P1 |
 | #336 | Git Panel | DRAFT | P1 |
 | #337 | Codebase Search Panel | DRAFT | P2 |
 | #338 | Diagnostics Problems Panel | DRAFT | P1 |
