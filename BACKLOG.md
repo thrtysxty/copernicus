@@ -201,13 +201,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | APPROVED FOR IMPLEMENTATION | P1 |
 | #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
-| #392 | Orchestrator Tileinspector Collapses When Empty | APPROVED FOR IMPLEMENTATION | P1 |
-| #394 | Uibuildercanvas Visible Component Overlay | APPROVED FOR IMPLEMENTATION | P1 |
-| #395 | Uibuildercanvas Iframe Colour Tokens And Offline Image | APPROVED FOR IMPLEMENTATION | P2 |
-| #396 | Editor Tab Active Border Phosphor | APPROVED FOR IMPLEMENTATION | P2 |
-| #397 | Designer Canvas Consolidation Audit | APPROVED FOR IMPLEMENTATION | P1 |
-| #398 | Kanban Column Colours Design System | APPROVED FOR IMPLEMENTATION | P1 |
-| #399 | Remove Orphaned Contextstore | APPROVED FOR IMPLEMENTATION | P1 |
 | #403 | Extension Loader And Registry | APPROVED FOR IMPLEMENTATION | P1 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
@@ -264,6 +257,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #380 | Application Window Controls | COMPLETE | P1 |
 | #381 | File Explorer Context Menu | COMPLETE | P1 |
 | #382 | Git Branch Ux | COMPLETE | P1 |
+| #392 | Orchestrator Tileinspector Collapses When Empty | COMPLETE | P1 |
+| #394 | Uibuildercanvas Visible Component Overlay | COMPLETE | P1 |
+| #395 | Uibuildercanvas Iframe Colour Tokens And Offline Image | COMPLETE | P2 |
+| #396 | Editor Tab Active Border Phosphor | COMPLETE | P2 |
+| #397 | Designer Canvas Consolidation Audit | COMPLETE | P1 |
+| #398 | Kanban Column Colours Design System | COMPLETE | P1 |
+| #399 | Remove Orphaned Contextstore | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
