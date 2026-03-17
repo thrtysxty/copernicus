@@ -40,7 +40,7 @@ export const SharedPanelHeader: React.FC<SharedPanelHeaderProps> = ({
       <div className="flex items-center gap-3">
         {children}
 
-        <div className="flex items-center gap-1.5 opacity-0 group-hover/header:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1.5 opacity-60 group-hover/header:opacity-100 transition-opacity">
           {onRotate && (
             <button 
               onClick={onRotate} 
