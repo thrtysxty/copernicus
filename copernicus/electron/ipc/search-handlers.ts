@@ -1,5 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { execSync } from 'node:child_process'
+import { exec } from 'node:child_process'
+import { promisify } from 'node:util'
+const execAsync = promisify(exec)
 import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
 
@@ -7,7 +9,7 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   const cwd = () => deps.settingsStore.get<string>('workspace', process.cwd())
 
   ipcMain.handle('codebase:text-search', (_e, { query, caseSensitive, regex, wholeWord }: any) =>
-    handleIpc('codebase:text-search', [query], () => {
+    handleIpc('codebase:text-search', [query], async () => {
       const flags = [
         '--json', '--max-count', '5', '--max-filesize', '500K',
         caseSensitive ? '' : '-i',
@@ -16,8 +18,8 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
         '--glob', '!node_modules', '--glob', '!.git', '--glob', '!dist',
       ].filter(Boolean)
       try {
-        const out = execSync(`rg ${flags.join(' ')} ${JSON.stringify(query)}`, {
-          cwd: cwd(), encoding: 'utf8', maxBuffer: 2 * 1024 * 1024
+        const { stdout: out } = await execAsync(`rg ${flags.join(' ')} ${JSON.stringify(query)}`, {
+          cwd: cwd(), maxBuffer: 2 * 1024 * 1024
         })
         return out.trim().split('\n').filter(Boolean).map(line => {
           try { return JSON.parse(line) } catch { return null }
@@ -28,7 +30,7 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
           text: r.data.lines.text.trim()
         }))
       } catch (e: any) {
-        if (e.status === 1) return [] // no matches
+        if ((e as any).code === 1 || (e as any).status === 1) return [] // no matches
         throw e
       }
     })
