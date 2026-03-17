@@ -2,7 +2,7 @@ import { ipcMain } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
 import { dapClient } from '../debug/DapClient'
 
-export function registerDebugHandlers() {
+export function registerDebugHandlers(): () => void {
   ipcMain.handle('debug:launch', (_e, config) =>
     handleIpc(() => dapClient.launch(config))
   )
@@ -50,4 +50,19 @@ export function registerDebugHandlers() {
   ipcMain.handle('debug:evaluate', (_e, { expression, frameId, context }) =>
     handleIpc(() => dapClient.evaluate(expression, frameId, context))
   )
+
+  return () => {
+    ipcMain.removeHandler('debug:launch')
+    ipcMain.removeHandler('debug:stop')
+    ipcMain.removeHandler('debug:pause')
+    ipcMain.removeHandler('debug:resume')
+    ipcMain.removeHandler('debug:step-over')
+    ipcMain.removeHandler('debug:step-into')
+    ipcMain.removeHandler('debug:step-out')
+    ipcMain.removeHandler('debug:set-breakpoints')
+    ipcMain.removeHandler('debug:get-call-stack')
+    ipcMain.removeHandler('debug:get-scopes')
+    ipcMain.removeHandler('debug:get-variables')
+    ipcMain.removeHandler('debug:evaluate')
+  }
 }

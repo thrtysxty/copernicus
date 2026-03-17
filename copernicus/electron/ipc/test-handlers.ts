@@ -3,7 +3,7 @@ import { handleIpc } from '../utils/handle-ipc'
 import { testRunner } from '../test-runner/TestRunner'
 import { FSManager } from '../fs-manager'
 
-export function register(win: BrowserWindow, deps: { fsManager: FSManager }) {
+export function register(win: BrowserWindow, deps: { fsManager: FSManager }): () => void {
   testRunner.setWindow(win)
 
   ipcMain.handle('test:discover', async () => {
@@ -34,4 +34,11 @@ export function register(win: BrowserWindow, deps: { fsManager: FSManager }) {
       return await testRunner.runCoverage()
     })
   })
+
+  return () => {
+    ipcMain.removeHandler('test:discover')
+    ipcMain.removeHandler('test:run')
+    ipcMain.removeHandler('test:stop')
+    ipcMain.removeHandler('test:coverage')
+  }
 }

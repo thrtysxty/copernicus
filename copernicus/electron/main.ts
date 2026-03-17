@@ -207,15 +207,21 @@ function registerIpcHandlers() {
   gitHandlers.register(win!, deps)
   searchHandlers.register(win!, deps)
   diagnosticsHandlers.register(win!, deps)
-  testHandlers.register(win!, deps)
+  const cleanupTestHandlers = testHandlers.register(win!, deps)
   diagHandlers.register(win!, deps)
   logHandlers.registerLogHandlers(win!)
   lspHandlers.register(win!, deps)
   securityScoreHandlers.register()
   localModelHandlers.register()
-  registerReplayHandlers()
-  debugHandlers.registerDebugHandlers()
+  const cleanupReplayHandlers = registerReplayHandlers()
+  const cleanupDebugHandlers = debugHandlers.registerDebugHandlers()
   registerSecurityHandlers(ipcMain, settingsStore)
+
+  win!.webContents.on('did-navigate', () => {
+    cleanupTestHandlers()
+    cleanupReplayHandlers()
+    cleanupDebugHandlers()
+  })
 
   ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {
     return WORKFLOW_TEMPLATES.map(t => {

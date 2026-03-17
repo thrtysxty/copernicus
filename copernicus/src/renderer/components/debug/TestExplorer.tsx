@@ -17,6 +17,11 @@ export const TestExplorer: React.FC = () => {
   const setCenterMode = useLayoutStore(s => s.setCenterMode)
   const openFile = useLayoutStore(s => s.openFile)
 
+  const isMounted = useRef(true)
+  useEffect(() => {
+    return () => { isMounted.current = false }
+  }, [])
+
   useEffect(() => {
     discoverTests()
   }, [])
@@ -38,7 +43,7 @@ export const TestExplorer: React.FC = () => {
 
   const discoverTests = async () => {
     const res = await invoke<any[]>('test:discover')
-    if (res) {
+    if (res && isMounted.current) {
       setSuites(unwrapIpc<any[]>(res) ?? [])
     }
   }

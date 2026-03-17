@@ -65,6 +65,7 @@ export class DapClient extends EventEmitter {
       })
 
       this.cdpShim = new NodeCdpShim()
+      this.adapterProcess.stdout?.resume() // AC2: Consume stdout to prevent pipe buffer from filling
       this.cdpShim.on('event', (e) => this.emitEvent(e.event, e.body))
       this.cdpShim.on('initialized', () => this.emitEvent('initialized', {}))
       this.cdpShim.on('terminated', () => {
@@ -74,22 +75,25 @@ export class DapClient extends EventEmitter {
 
       // We need to wait for debugger output to get the ws url, or just connect to localhost:9229
       // For simplicity we try to connect after a small delay
-      await new Promise(r => setTimeout(r, 1000))
-
-      // fetch ws url from http://localhost:9229/json/list
-      try {
-        const res = await fetch('http://localhost:9229/json/list')
-        const list = await res.json()
-        const wsUrl = list[0]?.webSocketDebuggerUrl
-        if (wsUrl) {
-          this.cdpShim.attach(wsUrl)
-          this.isAttached = true
-          return
+      let wsUrl: string | undefined
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await new Promise(r => setTimeout(r, 200))
+        try {
+          const res = await fetch('http://localhost:9229/json/list')
+          const list = await res.json() as Array<{ webSocketDebuggerUrl?: string }>
+          wsUrl = list[0]?.webSocketDebuggerUrl
+          if (wsUrl) break
+        } catch {
+          // inspector not ready yet
         }
-      } catch (e) {
-        console.error('[DAP] Failed to connect to node debugger', e)
+      }
+      if (!wsUrl) {
+        console.error('[DAP] Failed to connect to node debugger after 10 attempts')
         throw new Error('Failed to connect to node debugger')
       }
+      this.cdpShim.attach(wsUrl)
+      this.isAttached = true
+      return
 
     } else if (config.type === 'python') {
       // Use debugpy
@@ -102,7 +106,7 @@ export class DapClient extends EventEmitter {
 
     if (!this.adapterProcess) throw new Error('Failed to start debug adapter')
 
-    if (config.type !== 'node') {
+    if (config.type === 'python') {
       this.adapterProcess.stdout?.on('data', this.handleData.bind(this))
     }
     this.adapterProcess.stderr?.on('data', (err) => {
@@ -155,6 +159,11 @@ export class DapClient extends EventEmitter {
     } catch {
       // ignore
     }
+    // AC1: Clear pending requests
+    for (const [, { reject }] of this.pendingRequests) {
+      reject(new Error('Debug session stopped'))
+    }
+    this.pendingRequests.clear()
     this.adapterProcess?.kill()
     this.cdpShim = null
     this.isAttached = false
@@ -222,6 +231,11 @@ export class DapClient extends EventEmitter {
 
   private handleData(data: Buffer) {
     this.rawData = Buffer.concat([this.rawData, data])
+    if (this.rawData.length > 10 * 1024 * 1024) {
+      console.warn('[DAP] rawData exceeded 10 MB — resetting buffer')
+      this.rawData = Buffer.alloc(0)
+      return
+    }
 
     while (true) {
       const match = this.rawData.toString('utf-8').match(/Content-Length: (\d+)\r\n\r\n/)
