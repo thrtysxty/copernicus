@@ -81,9 +81,9 @@ def handle_generic_error(error: Exception):
         "error": "Internal Server Error",
     }, 500
 
-CORS(app, origins=list(ALLOWED_ORIGINS), supports_credentials=False)
+CORS(app, origins=validate_origin, supports_credentials=False)
 
-socketio.init_app(app, cors_allowed_origins=list(ALLOWED_ORIGINS))
+socketio.init_app(app, cors_allowed_origins=validate_origin)
 
 app.register_blueprint(stories_bp, url_prefix='/api/stories')
 app.register_blueprint(agents_bp, url_prefix='/api/agents')
