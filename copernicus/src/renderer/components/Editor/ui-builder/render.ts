@@ -7,9 +7,9 @@ export function renderComponentTree(components: UIComponent[]): string {
 <html>
 <head>
   <meta charset="UTF-8">
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #050505; margin: 0; min-height: 100vh; overflow-x: hidden; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { background: #050505; color: #e4e4e7; font-family: sans-serif; margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; }
     #canvas { position: relative; width: 100%; min-height: 100vh; }
     .component-outline:hover { outline: 1px dashed rgba(74, 222, 128, 0.5); }
   </style>

@@ -23,7 +23,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #112 | Llm Streaming Service | COMPLETE | CRITICAL |
 | #113 | Filesystem Integration | COMPLETE | CRITICAL |
 | #223 | Python Shim To Service | COMPLETE | CRITICAL |
-| #225 | Websocket Streaming Bus | APPROVED FOR IMPLEMENTATION | HIGH |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -50,6 +49,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
 | #217 | Nodeinspector Focus And Stability | COMPLETE | High |
 | #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
+| #225 | Websocket Streaming Bus | COMPLETE | HIGH |
 | #227 | Automated Documentation Lifecycle | COMPLETE | HIGH |
 | #265 | Open External Url Validation | COMPLETE | HIGH |
 | #266 | Unicode Normalization Model Validation | COMPLETE | HIGH |
@@ -111,7 +111,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
-| #221 | Intelligent Context Management | APPROVED FOR IMPLEMENTATION | P0 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
 | #406 | Orchestrator Tile And Provider Contribution Points | APPROVED FOR IMPLEMENTATION | P2 |
@@ -148,6 +147,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #201 | Agent Terminal Rework | COMPLETE | P2 |
 | #219 | Enhanced Rag System | COMPLETE | P0 |
 | #220 | Atomic Multi File Edits | COMPLETE | P0 |
+| #221 | Intelligent Context Management | COMPLETE | P0 |
 | #222 | Native Diff Visualization | COMPLETE | P1 |
 | #226 | Deterministic Agent Registry | COMPLETE | P1 |
 | #228 | Orchestrator-Led Dynamic Model Selection | COMPLETE | P1 |
@@ -250,6 +250,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #335 | Story Status Automation | COMPLETE | P2 |
 | #336 | Git Panel | COMPLETE | P1 |
 | #337 | Codebase Search Panel | COMPLETE | P2 |
+| #338 | Diagnostics Problems Panel | COMPLETE | P1 |
 | #339 | Project Workspace Switcher | COMPLETE | P1 |
 | #340 | Agent Queue Scheduler | COMPLETE | P2 |
 | #341 | Wireframe Image Upload Chat | COMPLETE | P2 |
@@ -305,6 +306,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #397 | Designer Canvas Consolidation Audit | COMPLETE | P1 |
 | #398 | Kanban Column Colours Design System | COMPLETE | P1 |
 | #399 | Remove Orphaned Contextstore | COMPLETE | P1 |
+| #400 | Uicanvas Remove Hardcoded Cdn | COMPLETE | P2 |
 | #402 | Copernicus Worktree Manager — Full System | COMPLETE | P1 |
 | #403 | Extension Loader And Registry | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
@@ -327,9 +329,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
-| #338 | Diagnostics Problems Panel | DRAFT | P1 |
 | #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
 | #401 | Layoutstore Split Ui Builder State | DRAFT | P2 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
-| #400 | Uicanvas Remove Hardcoded Cdn | SUPERSEDED — by story 397 (System A files deleted) | P2 |
 
