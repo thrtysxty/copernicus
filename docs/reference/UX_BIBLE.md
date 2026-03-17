@@ -8,6 +8,48 @@ an explicit architect decision recorded in the story.
 
 ---
 
+## 0. Agent Modification Protocol — MANDATORY
+
+**The single most common source of regression is an agent rewriting an existing
+component without preserving its current visual state.**
+
+### Rules for modifying existing JSX/TSX files
+
+1. **Read the full current file before writing any code.** Not a summary — the
+   actual file. Every className, every layout div, every prop.
+
+2. **Identify in-scope lines first.** From the story ACs, determine the exact
+   lines/blocks you will add or change. Write them down before touching the file.
+
+3. **Every out-of-scope line is frozen.** If a line is not explicitly required
+   by a story AC, its content — including all Tailwind classes, element type,
+   props, and children — must be preserved exactly. Do not reformat, reorder,
+   or "clean up" anything not in scope.
+
+4. **className strings are atomic.** Never remove a class from an existing
+   className. If adding classes, append to the existing string. If a className
+   is not in scope, copy it character-for-character.
+
+5. **Layout structure is frozen unless the story explicitly changes it.** Do
+   not add, remove, or change wrapper divs, flex/grid containers, or padding on
+   elements not listed in the story scope.
+
+6. **Check the story's `## Frozen Surfaces` section.** Any surface listed there
+   is a hard freeze — touching it is a blocking defect regardless of what the
+   story ACs say.
+
+### Failure mode this prevents
+
+An agent tasked with "add a button to panel X" reads the story, writes the
+button correctly, but in the process reformats the JSX, drops a `border-b` from
+an unrelated div, or swaps `text-zinc-400` for `text-zinc-500`. The button
+works. The visual regression ships. A follow-up story costs half a day.
+
+**This is the pattern we are eliminating. Read → identify scope → freeze
+everything else → implement only scope.**
+
+---
+
 ## 1. Application Shell
 
 ### 1.1 Window Frame

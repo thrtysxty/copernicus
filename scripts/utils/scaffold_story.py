@@ -43,6 +43,15 @@ STORY_TEMPLATE = """# User Story {number}: {title}
 ## Files in Scope
 - `path/to/file.ts`
 
+## Frozen Surfaces
+<!--
+List every part of every in-scope file that must NOT change.
+Be specific: component names, prop names, className strings, layout structure.
+Agents must copy these sections verbatim — no reformatting, no class changes.
+If a file is in scope but has no frozen surfaces, write "None".
+-->
+- `path/to/file.ts`: [describe what must be preserved exactly]
+
 ## Blocks:
 - None
 
