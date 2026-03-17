@@ -136,10 +136,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #274 | Ollama Url Settings Panel | APPROVED FOR IMPLEMENTATION | P2 |
 | #279 | Dogfooding Harness Planning And Review Pipeline | APPROVED FOR IMPLEMENTATION | P1 |
 | #283 | Project Memory Persistence Layer | APPROVED FOR IMPLEMENTATION | P1 |
-| #284 | Bug Card Type In Planning Column | APPROVED FOR IMPLEMENTATION | P2 |
 | #287 | Genesis Llm Epic And Story Synthesis | APPROVED FOR IMPLEMENTATION | P1 |
 | #288 | Genesis Repo Scaffold And Agent Config Generation | APPROVED FOR IMPLEMENTATION | P1 |
-| #289 | Planner Archive Retro Bar Layout | APPROVED FOR IMPLEMENTATION | P1 |
 | #293 | Wizard Github Pat Inline Input | APPROVED FOR IMPLEMENTATION | P1 |
 | #294 | Post Wizard Existing Repo Story Import | APPROVED FOR IMPLEMENTATION | P1 |
 | #303 | Editor Multi File Tabs | APPROVED FOR IMPLEMENTATION | P1 |
@@ -229,8 +227,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #280 | Release Retrospective And Agent Memory Reinforcement | COMPLETE | P1 |
 | #281 | Review-6 Hotfixes — Column Header, Archive Filter, Type Safety | COMPLETE | P1 |
 | #282 | New Story Form Column Target Fix | COMPLETE | P2 |
+| #284 | Bug Card Type In Planning Column | COMPLETE | P2 |
 | #285 | Project Genesis Onboarding Wizard | COMPLETE | P1 |
 | #286 | Genesis Wizard Ui | COMPLETE | P1 |
+| #289 | Planner Archive Retro Bar Layout | COMPLETE | P1 |
 | #290 | Planning Lane Creation Dropdown | COMPLETE | P1 |
 | #291 | Activity Bar Header Overflow Fix | COMPLETE | P1 |
 | #292 | Terminal Pulse Removal And Header Buttons | COMPLETE | P1 |
