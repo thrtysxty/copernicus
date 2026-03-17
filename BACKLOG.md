@@ -143,25 +143,14 @@ This file is auto-generated. Run `make backlog` to update.
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
-| #358 | Nlp Cron Scheduling | APPROVED FOR IMPLEMENTATION | P2 |
 | #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
 | #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #362 | Zero Config Onboarding | APPROVED FOR IMPLEMENTATION | P1 |
 | #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
 | #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
-| #367 | Planner Inspector Polish | APPROVED FOR IMPLEMENTATION | P1 |
-| #368 | Editor Header Button Reflow | APPROVED FOR IMPLEMENTATION | P2 |
-| #369 | Search Slide Up Drawer | APPROVED FOR IMPLEMENTATION | P2 |
-| #370 | Designer View Header Fix | APPROVED FOR IMPLEMENTATION | P1 |
-| #371 | Designer Canvas Objects | APPROVED FOR IMPLEMENTATION | P2 |
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
-| #383 | Dap Debug Adapter Protocol | APPROVED FOR IMPLEMENTATION | P2 |
-| #384 | Integrated Test Runner | APPROVED FOR IMPLEMENTATION | P2 |
-| #385 | Agent Replay Debugging | APPROVED FOR IMPLEMENTATION | P2 |
 | #386 | Integrated Log Viewer | APPROVED FOR IMPLEMENTATION | P2 |
 | #387 | Unified Health View | APPROVED FOR IMPLEMENTATION | P2 |
-| #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
-| #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | APPROVED FOR IMPLEMENTATION | P1 |
 | #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
@@ -254,9 +243,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #350 | Detached Head Banner Reset | COMPLETE | P2 |
 | #351 | Snapshot Manager Hardening | COMPLETE | P3 |
 | #357 | Security Posture Score | COMPLETE | P1 |
+| #358 | Nlp Cron Scheduling | COMPLETE | P2 |
 | #360 | Tdd Enforcement | COMPLETE | P1 |
 | #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
 | #366 | Planner Title Normalization | COMPLETE | P1 |
+| #367 | Planner Inspector Polish | COMPLETE | P1 |
+| #368 | Editor Header Button Reflow | COMPLETE | P2 |
+| #369 | Search Slide Up Drawer | COMPLETE | P2 |
+| #370 | Designer View Header Fix | COMPLETE | P1 |
+| #371 | Designer Canvas Objects | COMPLETE | P2 |
 | #372 | Orchestrator Tile Library | COMPLETE | P2 |
 | #373 | Orchestrator Tile Inspector | COMPLETE | P2 |
 | #374 | Genesis Repo Browser | COMPLETE | P1 |
@@ -267,6 +262,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #380 | Application Window Controls | COMPLETE | P1 |
 | #381 | File Explorer Context Menu | COMPLETE | P1 |
 | #382 | Git Branch Ux | COMPLETE | P1 |
+| #383 | Dap Debug Adapter Protocol | COMPLETE | P2 |
+| #384 | Integrated Test Runner | COMPLETE | P2 |
+| #385 | Agent Replay Debugging | COMPLETE | P2 |
+| #388 | Ipc Lint Violations | COMPLETE | P1 |
+| #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | COMPLETE | P1 |
 | #392 | Orchestrator Tileinspector Collapses When Empty | COMPLETE | P1 |
 | #394 | Uibuildercanvas Visible Component Overlay | COMPLETE | P1 |
 | #395 | Uibuildercanvas Iframe Colour Tokens And Offline Image | COMPLETE | P2 |
