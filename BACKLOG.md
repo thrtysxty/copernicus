@@ -26,9 +26,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #211 | Resolve Explorer Folder Listing Failure | APPROVED FOR IMPLEMENTATION | High |
 | #225 | Websocket Streaming Bus | APPROVED FOR IMPLEMENTATION | HIGH |
 | #227 | Automated Documentation Lifecycle | APPROVED FOR IMPLEMENTATION | HIGH |
-| #269 | Terminal Cwd Gemini Path Tempfile | APPROVED FOR IMPLEMENTATION | HIGH |
-| #270 | Allowed Personas Code Reviewer | APPROVED FOR IMPLEMENTATION | HIGH |
-| #271 | Gemini Spawn Cwd Guard | APPROVED FOR IMPLEMENTATION | HIGH |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -57,6 +54,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #265 | Open External Url Validation | COMPLETE | HIGH |
 | #266 | Unicode Normalization Model Validation | COMPLETE | HIGH |
 | #268 | Persona Provider Allowlist | COMPLETE | HIGH |
+| #269 | Terminal Cwd Gemini Path Tempfile | COMPLETE | HIGH |
+| #270 | Allowed Personas Code Reviewer | COMPLETE | HIGH |
+| #271 | Gemini Spawn Cwd Guard | COMPLETE | HIGH |
 | #273 | Llm Auth Webview Disable | COMPLETE | HIGH |
 | #352 | Ollama Anthropic Provider | COMPLETE | High |
 | #353 | Lsp Guardrail Enforcement | COMPLETE | High |
