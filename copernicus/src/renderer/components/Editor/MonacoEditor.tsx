@@ -170,7 +170,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
     const newDecorations: monaco.editor.IModelDeltaDecoration[] = []
 
-    Object.entries(fileCoverage.lines).forEach(([lineStr, status]) => {
+    Object.entries(fileCoverage.lines ?? {}).forEach(([lineStr, status]) => {
       const line = parseInt(lineStr, 10)
 
       let colorClass = ''

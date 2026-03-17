@@ -49,6 +49,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
 | #217 | Nodeinspector Focus And Stability | COMPLETE | High |
 | #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
+| #224 | Claude Gemini Python Migration | COMPLETE | HIGH |
 | #225 | Websocket Streaming Bus | COMPLETE | HIGH |
 | #227 | Automated Documentation Lifecycle | COMPLETE | HIGH |
 | #265 | Open External Url Validation | COMPLETE | HIGH |
@@ -77,7 +78,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #165 | Terminal Split And Productivity Features | COMPLETED | HIGH |
 | #166 | Touch Bar Hardening And Configuration | COMPLETED | HIGH |
 | #050 | Implement Agent Tool Use | DONE | High |
-| #224 | Claude Gemini Python Migration | PENDING | HIGH |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -242,6 +242,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #329 | Orchestrator View Cutoff | COMPLETE | P1 |
 | #330 | System Templates Editable | COMPLETE | P2 |
 | #331 | Hardware Command Tray Scrollable | COMPLETE | P2 |
+| #332 | Renderer Null To Object Error | COMPLETE | P1 |
 | #333 | Agent Review Panel | COMPLETE | P1 |
 | #334 | Semantic Diff Summaries | COMPLETE | P1 |
 | #335 | Story Status Automation | COMPLETE | P2 |
@@ -328,7 +329,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #332 | Renderer Null To Object Error | DRAFT | P1 |
 | #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
 | #401 | Layoutstore Split Ui Builder State | DRAFT | P2 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
