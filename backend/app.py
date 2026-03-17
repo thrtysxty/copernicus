@@ -13,13 +13,17 @@ from backend.api.orchestration import orchestration_bp
 from backend.api.docs import docs_bp
 from backend.api.registry import registry_bp
 from backend.routes.webhook_routes import webhook_bp
-from backend.socket_manager import socketio
+from backend.socket_manager import SocketManager
 from backend.utils.errors import AppError, handle_app_error
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
+
+# Initialize SocketManager and get the socketio instance
+socket_manager = SocketManager(app)
+socketio = SocketManager.get_socketio()
 
 # Allowed origins set
 ALLOWED_ORIGINS = {'http://localhost:3000', 'http://localhost:5001', 'app://copernicus'}
@@ -83,7 +87,6 @@ def handle_generic_error(error: Exception):
 
 CORS(app, origins=list(ALLOWED_ORIGINS), supports_credentials=False)
 
-socketio.init_app(app, cors_allowed_origins=list(ALLOWED_ORIGINS))
 
 app.register_blueprint(stories_bp, url_prefix='/api/stories')
 app.register_blueprint(agents_bp, url_prefix='/api/agents')

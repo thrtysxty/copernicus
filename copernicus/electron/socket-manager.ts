@@ -44,12 +44,12 @@ export class SocketManager {
       log.error('[SocketManager] /agents connection error:', error.message);
     });
 
-    this.agentsSocket.on('token_stream', (data: { session_id: string, token: string, done: boolean }) => {
+    this.agentsSocket.on('token:stream', (data: { sessionId: string, token: string, done: boolean }) => {
       this.broadcast('ws:token-stream', data);
     });
 
-    this.agentsSocket.on('tool_status', (data: { session_id: string, message: string, tool_name?: string }) => {
-      this.broadcast('ws:tool-status', data);
+    this.agentsSocket.on('agent:status', (data: { sessionId: string, message: string }) => {
+      this.broadcast('ws:agent-status', data);
     });
 
     this.telemetrySocket.on('connect', () => {

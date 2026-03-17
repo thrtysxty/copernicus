@@ -414,9 +414,11 @@ export const CapexDashboard: React.FC = () => {
                 {latestRun ? (
                   <div className={`flex items-center gap-12 justify-between max-w-4xl mx-auto ${spotlightId ? 'py-12' : ''}`}>
                     <div className="relative w-32 h-32 flex-shrink-0">
-                      <RadialBarChart width={128} height={128} cx={64} cy={64} innerRadius={44} outerRadius={60} data={[{ value: coveragePct, fill: gaugeColor }]} startAngle={90} endAngle={-270}>
-                        <RadialBar background={{ fill: CHART_THEME.muted }} dataKey="value" />
-                      </RadialBarChart>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadialBarChart cx="50%" cy="50%" innerRadius="70%" outerRadius="90%" data={[{ value: coveragePct, fill: gaugeColor }]} startAngle={90} endAngle={-270}>
+                          <RadialBar background={{ fill: CHART_THEME.muted }} dataKey="value" />
+                        </RadialBarChart>
+                      </ResponsiveContainer>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-xl font-bold" style={{ color: gaugeColor }}>{coveragePct.toFixed(1)}%</span>
                         <span className="text-[9px] text-zinc-600 uppercase font-black">Coverage</span>

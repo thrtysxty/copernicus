@@ -131,11 +131,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #240 | Hybrid Retrieval Engine & Mode Selection | APPROVED FOR IMPLEMENTATION | P1 |
 | #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
 | #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
-| #250 | Backend Input Validation Middleware | APPROVED FOR IMPLEMENTATION | P1 |
 | #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
-| #253 | Sqlite Hardening | APPROVED FOR IMPLEMENTATION | P1 |
 | #254 | Typescript Strict Any Audit | APPROVED FOR IMPLEMENTATION | P1 |
-| #255 | Error Handling Infrastructure | APPROVED FOR IMPLEMENTATION | P1 |
 | #256 | Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P2 |
 | #257 | Memory Leak Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #258 | Async Blocking Ops | APPROVED FOR IMPLEMENTATION | P2 |
@@ -232,7 +229,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #247 | Sql Injection Remediation | COMPLETE | P0 |
 | #248 | Path Traversal Command Injection | COMPLETE | P0 |
 | #249 | Cors Env Sanitizer Hardening | COMPLETE | P0 |
+| #250 | Backend Input Validation Middleware | COMPLETE | P1 |
 | #251 | Decompose Main Ts | COMPLETE | P1 |
+| #253 | Sqlite Hardening | COMPLETE | P1 |
+| #255 | Error Handling Infrastructure | COMPLETE | P1 |
 | #260 | Subprocess Arg Injection | COMPLETE | P0 |
 | #263 | Flask Rate Limiting | COMPLETE | P2 |
 | #264 | Cors Null Origin Model Allowlist | COMPLETE | P2 |

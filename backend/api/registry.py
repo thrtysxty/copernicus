@@ -21,7 +21,7 @@ def load_registry():
             _registry_data = json.load(f)
         return True
     except Exception as e:
-        print(f"Error loading registry: {e}")
+        logger.error("Error loading registry: %s", e)
         return False
 
 # Initial load

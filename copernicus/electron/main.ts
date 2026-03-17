@@ -33,12 +33,12 @@ import { socketManager } from './socket-manager'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
 import { addRecentProject } from './utils/recent-projects'
-import { SnapshotManager } from './workflow/snapshot-manager'
+
 import { localModelManager } from './local-model/LocalModelManager'
 import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
-import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
+import { ensureCopernicusDirectory } from './utils/app-setup'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -124,14 +124,14 @@ function createWindow() {
 
 async function registerIpcHandlers() {
   const globalDeps = {
-    authManager, githubManager, modelRegistry, settingsStore, storiesManager, devtimeManager,
-    fsManager, workflowEngine, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
-    socketManager, stateLedger, llmService, lspManager, backendManager, julesMonitor, julesManager,
-    applyAndVerifyPatch, reversePatch, runRAGBenchmark,
-    getPlaywright: async () => await import('playwright-core'), // utility function not a manager
-    LOG_DIR, dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG,
-    isFirstRun, spawn, SnapshotManager
-  }
+        authManager, githubManager, modelRegistry, settingsStore, storiesManager, devtimeManager,
+        fsManager, workflowEngine, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
+        socketManager, stateLedger, llmService, lspManager, backendManager, julesMonitor, julesManager,
+        applyAndVerifyPatch, reversePatch, runRAGBenchmark,
+        getPlaywright: async () => await import('playwright-core'), // utility function not a manager
+        dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG,
+        isFirstRun, spawn
+      }
 
   const { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager: registeredWorktreeManager } =
     await registerAllIpcHandlers(win!, globalDeps, touchBarCleanup)
