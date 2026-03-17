@@ -380,11 +380,11 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
         
         <div className="flex items-center gap-1 opacity-60 group-hover/tree:opacity-100 transition-all">
           <button
-            onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
-            className={`p-1 rounded hover:bg-white/5 ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
-            title={spotlightPane === 'explorer' ? "Shrink Explorer" : "Spotlight Explorer"}
+            onClick={() => setSidebarOpen(false)}
+            className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors"
+            title="Collapse Sidebar"
           >
-            {spotlightPane === 'explorer' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+            <ChevronLeft size={14} />
           </button>
           <button
             onClick={() => toggleFlip('sidebar')}
@@ -394,11 +394,11 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
             <RotateCcw size={10} />
           </button>
           <button
-            onClick={() => setSidebarOpen(false)}
-            className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
-            title="Collapse Sidebar"
+            onClick={() => setSpotlight(spotlightPane === 'explorer' ? null : 'explorer')}
+            className={`p-1 rounded hover:bg-white/5 ${spotlightPane === 'explorer' ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-300'}`}
+            title={spotlightPane === 'explorer' ? "Shrink Explorer" : "Spotlight Explorer"}
           >
-            <ChevronLeft size={14} />
+            {spotlightPane === 'explorer' ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
           </button>
         </div>
       </div>

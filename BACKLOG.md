@@ -228,8 +228,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #300 | App Header Full Width Divider | COMPLETE | P1 |
 | #302 | Editor File Load White Flash | COMPLETE | P1 |
 | #303 | Editor Multi File Tabs | COMPLETE | P1 |
+| #309 | Explorer Header Button Set | COMPLETE | P1 |
+| #310 | Explorer Spotlight Functional | COMPLETE | P1 |
+| #311 | Chat Header Chevron Collapse | COMPLETE | P1 |
 | #312 | Terminal Keyboard Input | COMPLETE | P1 |
 | #313 | Terminal Header Top Divider | COMPLETE | P2 |
+| #314 | Planning Lane Pinned Badge | COMPLETE | P2 |
 | #315 | Settings Providers Phosphor Icons | COMPLETE | P2 |
 | #316 | Settings Model Defaults Empty Lists | COMPLETE | P1 |
 | #319 | Settings Personas Management | COMPLETE | P2 |
@@ -309,10 +313,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #306 | Editor Spotlight Behavior | DRAFT | P1 |
 | #307 | Designer Ui Files Only | DRAFT | P2 |
 | #308 | Designer Element Visual Cues | DRAFT | P2 |
-| #309 | Explorer Header Button Set | DRAFT | P1 |
-| #310 | Explorer Spotlight Functional | DRAFT | P1 |
-| #311 | Chat Header Chevron Collapse | DRAFT | P1 |
-| #314 | Planning Lane Pinned Badge | DRAFT | P2 |
 | #317 | Settings Embedding Provider List | DRAFT | P2 |
 | #318 | Settings Provider Tiles Drag Order | DRAFT | P2 |
 | #326 | Technical Pulse Stacked List | DRAFT | P2 |

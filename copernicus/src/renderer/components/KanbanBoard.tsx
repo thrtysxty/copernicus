@@ -404,7 +404,11 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                   <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
                     <span className="font-bold text-[9px] text-zinc-100 uppercase tracking-widest truncate">{col.label}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
+                      {col.id === 'planning' && colStories.length > 0 ? (
+                        <span className="bg-indigo-600 text-white text-[10px] rounded-full px-1.5 min-w-[18px] text-center font-bold">{colStories.length}</span>
+                      ) : (
+                        <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
+                      )}
                     </div>
                   </div>
 
