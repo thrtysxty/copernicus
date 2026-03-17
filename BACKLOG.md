@@ -138,7 +138,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #277 | Planner Crud Archive And Epic Story Dual Action | APPROVED FOR IMPLEMENTATION | P1 |
 | #278 | App Header Terminal Header And Activity Bar Polish | APPROVED FOR IMPLEMENTATION | P2 |
 | #279 | Dogfooding Harness Planning And Review Pipeline | APPROVED FOR IMPLEMENTATION | P1 |
-| #281 | Review-6 Hotfixes — Column Header, Archive Filter, Type Safety | APPROVED FOR IMPLEMENTATION | P1 |
 | #283 | Project Memory Persistence Layer | APPROVED FOR IMPLEMENTATION | P1 |
 | #284 | Bug Card Type In Planning Column | APPROVED FOR IMPLEMENTATION | P2 |
 | #287 | Genesis Llm Epic And Story Synthesis | APPROVED FOR IMPLEMENTATION | P1 |
@@ -228,6 +227,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #264 | Cors Null Origin Model Allowlist | COMPLETE | P2 |
 | #275 | Chat Panel Flip Render Error | COMPLETE | P1 |
 | #280 | Release Retrospective And Agent Memory Reinforcement | COMPLETE | P1 |
+| #281 | Review-6 Hotfixes — Column Header, Archive Filter, Type Safety | COMPLETE | P1 |
 | #282 | New Story Form Column Target Fix | COMPLETE | P2 |
 | #285 | Project Genesis Onboarding Wizard | COMPLETE | P1 |
 | #286 | Genesis Wizard Ui | COMPLETE | P1 |
