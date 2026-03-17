@@ -228,6 +228,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #300 | App Header Full Width Divider | COMPLETE | P1 |
 | #302 | Editor File Load White Flash | COMPLETE | P1 |
 | #303 | Editor Multi File Tabs | COMPLETE | P1 |
+| #307 | Designer Ui Files Only | COMPLETE | P2 |
+| #308 | Designer Element Visual Cues | COMPLETE | P2 |
 | #309 | Explorer Header Button Set | COMPLETE | P1 |
 | #310 | Explorer Spotlight Functional | COMPLETE | P1 |
 | #311 | Chat Header Chevron Collapse | COMPLETE | P1 |
@@ -236,6 +238,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #314 | Planning Lane Pinned Badge | COMPLETE | P2 |
 | #315 | Settings Providers Phosphor Icons | COMPLETE | P2 |
 | #316 | Settings Model Defaults Empty Lists | COMPLETE | P1 |
+| #317 | Settings Embedding Provider List | COMPLETE | P2 |
+| #318 | Settings Provider Tiles Drag Order | COMPLETE | P2 |
 | #319 | Settings Personas Management | COMPLETE | P2 |
 | #320 | Settings Window Resize Clipping | COMPLETE | P1 |
 | #321 | Status Bar Item Breakdown | COMPLETE | P2 |
@@ -247,6 +251,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #328 | Command Palette Vscode Style | COMPLETE | P2 |
 | #329 | Orchestrator View Cutoff | COMPLETE | P1 |
 | #330 | System Templates Editable | COMPLETE | P2 |
+| #331 | Hardware Command Tray Scrollable | COMPLETE | P2 |
 | #333 | Agent Review Panel | COMPLETE | P1 |
 | #335 | Story Status Automation | COMPLETE | P2 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
@@ -311,12 +316,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #304 | Editor Header Active Filename | DRAFT | P1 |
 | #305 | Lsp Indicator Fix | DRAFT | P2 |
 | #306 | Editor Spotlight Behavior | DRAFT | P1 |
-| #307 | Designer Ui Files Only | DRAFT | P2 |
-| #308 | Designer Element Visual Cues | DRAFT | P2 |
-| #317 | Settings Embedding Provider List | DRAFT | P2 |
-| #318 | Settings Provider Tiles Drag Order | DRAFT | P2 |
 | #326 | Technical Pulse Stacked List | DRAFT | P2 |
-| #331 | Hardware Command Tray Scrollable | DRAFT | P2 |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
 | #334 | Semantic Diff Summaries | DRAFT | P1 |
 | #336 | Git Panel | DRAFT | P1 |
