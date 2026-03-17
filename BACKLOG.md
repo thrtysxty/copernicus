@@ -200,6 +200,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #388 | Ipc Lint Violations | APPROVED FOR IMPLEMENTATION | P1 |
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | APPROVED FOR IMPLEMENTATION | P1 |
 | #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | APPROVED FOR IMPLEMENTATION | P1 |
+| #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
 | #392 | Orchestrator Tileinspector Collapses When Empty | APPROVED FOR IMPLEMENTATION | P1 |
 | #394 | Uibuildercanvas Visible Component Overlay | APPROVED FOR IMPLEMENTATION | P1 |
 | #395 | Uibuildercanvas Iframe Colour Tokens And Offline Image | APPROVED FOR IMPLEMENTATION | P2 |
@@ -207,7 +208,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #397 | Designer Canvas Consolidation Audit | APPROVED FOR IMPLEMENTATION | P1 |
 | #398 | Kanban Column Colours Design System | APPROVED FOR IMPLEMENTATION | P1 |
 | #399 | Remove Orphaned Contextstore | APPROVED FOR IMPLEMENTATION | P1 |
-| #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
 | #403 | Extension Loader And Registry | APPROVED FOR IMPLEMENTATION | P1 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
