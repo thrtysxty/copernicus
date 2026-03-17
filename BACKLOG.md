@@ -110,34 +110,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #178 | Ipc Compliance And Dead Code Sweep | APPROVED FOR IMPLEMENTATION | P0 |
 | #186 | Card Workflow Assignment | APPROVED FOR IMPLEMENTATION | P1 |
-| #188 | Copernicus Guide Persona | APPROVED FOR IMPLEMENTATION | P1 |
 | #221 | Intelligent Context Management | APPROVED FOR IMPLEMENTATION | P0 |
-| #226 | Deterministic Agent Registry | APPROVED FOR IMPLEMENTATION | P1 |
-| #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | APPROVED FOR IMPLEMENTATION | P0 |
-| #230 | Agent Branch And Patch Workflow | APPROVED FOR IMPLEMENTATION | P1 |
-| #232 | Strict Orchestrator Delegation And Jules Integration | APPROVED FOR IMPLEMENTATION | P1 |
-| #235 | Container Runtime Viewer — Docker And Vm Integration | APPROVED FOR IMPLEMENTATION | P1 |
-| #236 | Comprehensive E2E Testing With Playwright | APPROVED FOR IMPLEMENTATION | P1 |
-| #238 | Lsp Metadata Augmentation & Hybrid Schema | APPROVED FOR IMPLEMENTATION | P1 |
-| #239 | Type-Aware Weighted Embeddings | APPROVED FOR IMPLEMENTATION | P1 |
-| #240 | Hybrid Retrieval Engine & Mode Selection | APPROVED FOR IMPLEMENTATION | P1 |
-| #241 | Rag Performance Benchmarking & Mode Validation | APPROVED FOR IMPLEMENTATION | P2 |
-| #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | APPROVED FOR IMPLEMENTATION | P1 |
-| #274 | Ollama Url Settings Panel | APPROVED FOR IMPLEMENTATION | P2 |
-| #279 | Dogfooding Harness Planning And Review Pipeline | APPROVED FOR IMPLEMENTATION | P1 |
-| #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
-| #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
-| #359 | Verification Node | APPROVED FOR IMPLEMENTATION | P1 |
-| #361 | Local Model Manager | APPROVED FOR IMPLEMENTATION | P1 |
-| #362 | Zero Config Onboarding | APPROVED FOR IMPLEMENTATION | P1 |
-| #363 | Context Manager | APPROVED FOR IMPLEMENTATION | P1 |
-| #364 | Content Injection Budget | APPROVED FOR IMPLEMENTATION | P1 |
-| #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
-| #386 | Integrated Log Viewer | APPROVED FOR IMPLEMENTATION | P2 |
-| #387 | Unified Health View | APPROVED FOR IMPLEMENTATION | P2 |
-| #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
 | #406 | Orchestrator Tile And Provider Contribution Points | APPROVED FOR IMPLEMENTATION | P2 |
@@ -153,6 +127,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #175 | Fix Ipc Envelope Unwrapping Across Renderer — React Error 31 | COMPLETE | P0 — Critical |
 | #176 | Lsp Integration — Code Intelligence Via Language Server Protocol | COMPLETE | P1 — High |
 | #177 | Renderer Bug Sweep | COMPLETE | P0 |
+| #178 | Ipc Compliance And Dead Code Sweep | COMPLETE | P0 |
 | #179 | Vt Selection Highlight | COMPLETE | P1 |
 | #180 | Kanban Swimlane Remap And Card Spotlight | COMPLETE | P1 |
 | #181 | Quick Tour | COMPLETE | P1 |
@@ -161,6 +136,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #184 | Command Center View | COMPLETE | P1 |
 | #185 | Designer Canvas Unification | COMPLETE | P1 |
 | #187 | Jules Pr Manager Workflow | COMPLETE | P1 |
+| #188 | Copernicus Guide Persona | COMPLETE | P1 |
 | #189 | Lsp Monaco Chatpanel Wiring | COMPLETE | P1 |
 | #190 | Mcp Settings Tab | COMPLETE | P2 |
 | #191 | Context Snapshots Project Memory | COMPLETE | P1 |
@@ -173,11 +149,22 @@ This file is auto-generated. Run `make backlog` to update.
 | #219 | Enhanced Rag System | COMPLETE | P0 |
 | #220 | Atomic Multi File Edits | COMPLETE | P0 |
 | #222 | Native Diff Visualization | COMPLETE | P1 |
+| #226 | Deterministic Agent Registry | COMPLETE | P1 |
 | #228 | Orchestrator-Led Dynamic Model Selection | COMPLETE | P1 |
+| #229 | Lsp-Optimized Rag Indexing And Cross-Model Retrieval | COMPLETE | P0 |
+| #230 | Agent Branch And Patch Workflow | COMPLETE | P1 |
 | #231 | Activity Bar Vt Compliance | COMPLETE | P1 |
+| #232 | Strict Orchestrator Delegation And Jules Integration | COMPLETE | P1 |
 | #233 | Generic Handoff Signal And Centralized Comms Bus | COMPLETE | P1 |
 | #234 | Application Shell Hardening — Header, Activitybar, Session Dialog | COMPLETE | P1 |
+| #235 | Container Runtime Viewer — Docker And Vm Integration | COMPLETE | P1 |
+| #236 | Comprehensive E2E Testing With Playwright | COMPLETE | P1 |
 | #237 | Gemini Cli Session Manager — Background Terminal Tracking | COMPLETE | P1 |
+| #238 | Lsp Metadata Augmentation & Hybrid Schema | COMPLETE | P1 |
+| #239 | Type-Aware Weighted Embeddings | COMPLETE | P1 |
+| #240 | Hybrid Retrieval Engine & Mode Selection | COMPLETE | P1 |
+| #241 | Rag Performance Benchmarking & Mode Validation | COMPLETE | P2 |
+| #242 | Sub-Agent Intelligence Quality Ledger & Model Weighting | COMPLETE | P1 |
 | #243 | Dev Orchestrator Bug Fix — Model Routing, Error Handling, And Atomic Writes | COMPLETE | P1 |
 | #244 | Security Fix — Command Injection In Electron Ipc Subprocess Calls | COMPLETE | P0 — SECURITY |
 | #245 | Frontend Ipc Compliance — Unwrapipc Violations In App And Kanbanboard | COMPLETE | P1 |
@@ -200,10 +187,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #262 | Fs Save Multiple Path Validation | COMPLETE | P1 |
 | #263 | Flask Rate Limiting | COMPLETE | P2 |
 | #264 | Cors Null Origin Model Allowlist | COMPLETE | P2 |
+| #274 | Ollama Url Settings Panel | COMPLETE | P2 |
 | #275 | Chat Panel Flip Render Error | COMPLETE | P1 |
 | #276 | Planner Visual Brightness And Panel Header Consistency | COMPLETE | P2 |
 | #277 | Planner Crud Archive And Epic Story Dual Action | COMPLETE | P1 |
 | #278 | App Header Terminal Header And Activity Bar Polish | COMPLETE | P2 |
+| #279 | Dogfooding Harness Planning And Review Pipeline | COMPLETE | P1 |
 | #280 | Release Retrospective And Agent Memory Reinforcement | COMPLETE | P1 |
 | #281 | Review-6 Hotfixes — Column Header, Archive Filter, Type Safety | COMPLETE | P1 |
 | #282 | New Story Form Column Target Fix | COMPLETE | P2 |
@@ -259,15 +248,30 @@ This file is auto-generated. Run `make backlog` to update.
 | #333 | Agent Review Panel | COMPLETE | P1 |
 | #334 | Semantic Diff Summaries | COMPLETE | P1 |
 | #335 | Story Status Automation | COMPLETE | P2 |
+| #336 | Git Panel | COMPLETE | P1 |
+| #337 | Codebase Search Panel | COMPLETE | P2 |
+| #339 | Project Workspace Switcher | COMPLETE | P1 |
+| #340 | Agent Queue Scheduler | COMPLETE | P2 |
+| #341 | Wireframe Image Upload Chat | COMPLETE | P2 |
+| #342 | Technical Debt Heatmap | COMPLETE | P2 |
+| #343 | Ghost Implementation Shadow Coding | COMPLETE | P2 |
+| #344 | Crt Pulse Shaders | COMPLETE | P3 |
+| #345 | Time Travel Orchestration | COMPLETE | P3 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
 | #349 | Snapshot Ipc Standard Compliance | COMPLETE | P2 |
 | #350 | Detached Head Banner Reset | COMPLETE | P2 |
 | #351 | Snapshot Manager Hardening | COMPLETE | P3 |
+| #356 | Model Performance Leaderboard | COMPLETE | P2 |
 | #357 | Security Posture Score | COMPLETE | P1 |
 | #358 | Nlp Cron Scheduling | COMPLETE | P2 |
+| #359 | Verification Node | COMPLETE | P1 |
 | #360 | Tdd Enforcement | COMPLETE | P1 |
+| #361 | Local Model Manager | COMPLETE | P1 |
+| #362 | Zero Config Onboarding | COMPLETE | P1 |
+| #363 | Context Manager | COMPLETE | P1 |
+| #364 | Content Injection Budget | COMPLETE | P1 |
 | #365 | Planner Delete Archive Behavioral Fixes | COMPLETE | P1 |
 | #366 | Planner Title Normalization | COMPLETE | P1 |
 | #367 | Planner Inspector Polish | COMPLETE | P1 |
@@ -282,12 +286,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #376 | Model Selection System Wide | COMPLETE | P1 |
 | #377 | Chat Panel Polish | COMPLETE | P1 |
 | #378 | Settings Panel Fixes | COMPLETE | P1 |
+| #379 | Settings Personas And Templates | COMPLETE | P1 |
 | #380 | Application Window Controls | COMPLETE | P1 |
 | #381 | File Explorer Context Menu | COMPLETE | P1 |
 | #382 | Git Branch Ux | COMPLETE | P1 |
 | #383 | Dap Debug Adapter Protocol | COMPLETE | P2 |
 | #384 | Integrated Test Runner | COMPLETE | P2 |
 | #385 | Agent Replay Debugging | COMPLETE | P2 |
+| #386 | Integrated Log Viewer | COMPLETE | P2 |
+| #387 | Unified Health View | COMPLETE | P2 |
 | #388 | Ipc Lint Violations | COMPLETE | P1 |
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | COMPLETE | P1 |
 | #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | COMPLETE | P1 |
@@ -298,6 +305,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #397 | Designer Canvas Consolidation Audit | COMPLETE | P1 |
 | #398 | Kanban Column Colours Design System | COMPLETE | P1 |
 | #399 | Remove Orphaned Contextstore | COMPLETE | P1 |
+| #402 | Copernicus Worktree Manager — Full System | COMPLETE | P1 |
 | #403 | Extension Loader And Registry | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
@@ -319,15 +327,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
-| #336 | Git Panel | DRAFT | P1 |
-| #337 | Codebase Search Panel | DRAFT | P2 |
 | #338 | Diagnostics Problems Panel | DRAFT | P1 |
-| #340 | Agent Queue Scheduler | DRAFT | P2 |
-| #341 | Wireframe Image Upload Chat | DRAFT | P2 |
-| #342 | Technical Debt Heatmap | DRAFT | P2 |
-| #343 | Ghost Implementation Shadow Coding | DRAFT | P2 |
-| #344 | Crt Pulse Shaders | DRAFT | P3 |
-| #345 | Time Travel Orchestration | DRAFT | P3 |
 | #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
 | #401 | Layoutstore Split Ui Builder State | DRAFT | P2 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
