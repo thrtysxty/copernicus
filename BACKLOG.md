@@ -140,8 +140,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #288 | Genesis Repo Scaffold And Agent Config Generation | APPROVED FOR IMPLEMENTATION | P1 |
 | #293 | Wizard Github Pat Inline Input | APPROVED FOR IMPLEMENTATION | P1 |
 | #294 | Post Wizard Existing Repo Story Import | APPROVED FOR IMPLEMENTATION | P1 |
-| #303 | Editor Multi File Tabs | APPROVED FOR IMPLEMENTATION | P1 |
-| #312 | Terminal Keyboard Input | APPROVED FOR IMPLEMENTATION | P1 |
 | #333 | Agent Review Panel | APPROVED FOR IMPLEMENTATION | P1 |
 | #339 | Project Workspace Switcher | APPROVED FOR IMPLEMENTATION | P1 |
 | #356 | Model Performance Leaderboard | APPROVED FOR IMPLEMENTATION | P2 |
@@ -240,6 +238,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #299 | Stoplight Buttons Vertical Center | COMPLETE | P1 |
 | #300 | App Header Full Width Divider | COMPLETE | P1 |
 | #302 | Editor File Load White Flash | COMPLETE | P1 |
+| #303 | Editor Multi File Tabs | COMPLETE | P1 |
+| #312 | Terminal Keyboard Input | COMPLETE | P1 |
+| #313 | Terminal Header Top Divider | COMPLETE | P2 |
+| #322 | Status Bar Stacked List Overlays | COMPLETE | P2 |
+| #323 | Agent Telemetry List | COMPLETE | P2 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
@@ -297,7 +300,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #309 | Explorer Header Button Set | DRAFT | P1 |
 | #310 | Explorer Spotlight Functional | DRAFT | P1 |
 | #311 | Chat Header Chevron Collapse | DRAFT | P1 |
-| #313 | Terminal Header Top Divider | DRAFT | P2 |
 | #314 | Planning Lane Pinned Badge | DRAFT | P2 |
 | #315 | Settings Providers Phosphor Icons | DRAFT | P2 |
 | #316 | Settings Model Defaults Empty Lists | DRAFT | P1 |
@@ -306,8 +308,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #319 | Settings Personas Management | DRAFT | P2 |
 | #320 | Settings Window Resize Clipping | DRAFT | P1 |
 | #321 | Status Bar Item Breakdown | DRAFT | P2 |
-| #322 | Status Bar Stacked List Overlays | DRAFT | P2 |
-| #323 | Agent Telemetry List | DRAFT | P2 |
 | #324 | Telemetry Alltime Session Totals | DRAFT | P2 |
 | #325 | Session Timer Capex Gate | DRAFT | P2 |
 | #326 | Technical Pulse Stacked List | DRAFT | P2 |
