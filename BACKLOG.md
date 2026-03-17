@@ -236,6 +236,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #292 | Terminal Pulse Removal And Header Buttons | COMPLETE | P1 |
 | #295 | Reporter Reduce Regression | COMPLETE | P1 |
 | #296 | Chat Panel Flip React Error 31 | COMPLETE | P1 |
+| #299 | Stoplight Buttons Vertical Center | COMPLETE | P1 |
+| #300 | App Header Full Width Divider | COMPLETE | P1 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
@@ -285,8 +287,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #297 | Global Window Responsiveness | DRAFT | P1 |
 | #298 | Global Visibility Brightness | DRAFT | P1 |
-| #299 | Stoplight Buttons Vertical Center | DRAFT | P1 |
-| #300 | App Header Full Width Divider | DRAFT | P1 |
 | #301 | Spotlight Panel Expand Collapse | DRAFT | P1 |
 | #302 | Editor File Load White Flash | DRAFT | P1 |
 | #304 | Editor Header Active Filename | DRAFT | P1 |
