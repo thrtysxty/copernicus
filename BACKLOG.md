@@ -134,7 +134,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #252 | Decompose Chatpanel | APPROVED FOR IMPLEMENTATION | P1 |
 | #254 | Typescript Strict Any Audit | APPROVED FOR IMPLEMENTATION | P1 |
 | #274 | Ollama Url Settings Panel | APPROVED FOR IMPLEMENTATION | P2 |
-| #275 | Chat Panel Flip Render Error | APPROVED FOR IMPLEMENTATION | P1 |
 | #276 | Planner Visual Brightness And Panel Header Consistency | APPROVED FOR IMPLEMENTATION | P2 |
 | #277 | Planner Crud Archive And Epic Story Dual Action | APPROVED FOR IMPLEMENTATION | P1 |
 | #278 | App Header Terminal Header And Activity Bar Polish | APPROVED FOR IMPLEMENTATION | P2 |
@@ -236,6 +235,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #262 | Fs Save Multiple Path Validation | COMPLETE | P1 |
 | #263 | Flask Rate Limiting | COMPLETE | P2 |
 | #264 | Cors Null Origin Model Allowlist | COMPLETE | P2 |
+| #275 | Chat Panel Flip Render Error | COMPLETE | P1 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |

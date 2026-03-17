@@ -99,7 +99,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
             activeBackTab={chat.activeBackTab} setActiveBackTab={chat.setActiveBackTab}
             toggleFlip={chat.toggleFlip} model={chat.model} setModel={chat.setModel}
             availableModels={chat.availableModels} totalTokens={chat.messages.reduce((acc, m) => acc + (m.tokens || 0), 0)}
-            contextMaxTokens={chat.availableModels.find(m => m.id === chat.model)?.contextWindow || 0}
+            contextMaxTokens={(Array.isArray(chat.availableModels) ? chat.availableModels.find(m => m.id === chat.model) : undefined)?.contextWindow || 0}
             context={chat.context} setContext={chat.setContext} handleClearContext={chat.handleClearContext}
             authStatus={chat.authStatus} isSavingPrompt={chat.isSavingPrompt}
             setIsSavingPrompt={chat.setIsSavingPrompt} newPromptName={chat.newPromptName}
