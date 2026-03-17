@@ -13,15 +13,15 @@ export interface ReviewSession {
 }
 
 export const DEFAULT_COLUMNS: KanbanColumn[] = [
-  { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'storyboarding',  status: 'STORYBOARDING',  label: 'Storyboarding',   color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'sprint-planning',status: 'SPRINT_PLANNING', label: 'Sprint Planning', color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'development',    status: 'IN_PROGRESS',     label: 'Development',     color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'testing',        status: 'TESTING',         label: 'Testing',         color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'qa',             status: 'QA',              label: 'QA',              color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'documenting',    status: 'DOCUMENTING',     label: 'Documenting',     color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'ready-to-build', status: 'READY',           label: 'Ready to Build',  color: 'bg-zinc-800/30 border-zinc-600/40',   accent: 'bg-zinc-600' },
-  { id: 'done',           status: 'COMPLETE',        label: 'Done',            color: 'bg-copernicus-phosphor/5 border-copernicus-phosphor/20', accent: 'bg-copernicus-phosphor' },
+  { id: 'planning',       status: 'PLANNING',       label: 'Planning',        color: 'bg-zinc-900/60 border-copernicus-phosphor/10',   accent: 'bg-copernicus-phosphor/20' },
+  { id: 'storyboarding',  status: 'STORYBOARDING',  label: 'Storyboarding',   color: 'bg-zinc-900/60 border-copernicus-phosphor/10',   accent: 'bg-copernicus-phosphor/20' },
+  { id: 'sprint-planning',status: 'SPRINT_PLANNING', label: 'Sprint Planning', color: 'bg-zinc-900/60 border-copernicus-phosphor/10',   accent: 'bg-copernicus-phosphor/20' },
+  { id: 'development',    status: 'IN_PROGRESS',     label: 'Development',     color: 'bg-zinc-900/60 border-copernicus-phosphor/10',   accent: 'bg-copernicus-phosphor/20' },
+  { id: 'testing',        status: 'TESTING',         label: 'Testing',         color: 'bg-zinc-900/60 border-copernicus-phosphor/10',   accent: 'bg-copernicus-phosphor/20' },
+  { id: 'qa',             status: 'QA',              label: 'QA',              color: 'bg-zinc-900/60 border-copernicus-phosphor/10',   accent: 'bg-copernicus-phosphor/20' },
+  { id: 'documenting',    status: 'DOCUMENTING',     label: 'Documenting',     color: 'bg-zinc-900/60 border-copernicus-phosphor/10',   accent: 'bg-copernicus-phosphor/20' },
+  { id: 'ready-to-build', status: 'READY',           label: 'Ready to Build',  color: 'bg-zinc-900/60 border-copernicus-phosphor/15',   accent: 'bg-copernicus-phosphor/30' },
+  { id: 'done',           status: 'COMPLETE',        label: 'Done',            color: 'bg-copernicus-phosphor/10 border-copernicus-phosphor/30', accent: 'bg-copernicus-phosphor' },
 ]
 
 export const PHOSPHOR_PRESETS = {
