@@ -5,6 +5,8 @@ import { useLayoutStore } from '../../store/layout';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
 import { NodeInspector } from './NodeInspector';
 import { DispatchQueue } from './DispatchQueue';
+import { ORCHESTRATOR_TILES } from '../orchestrator/tiles';
+import { useOrchestratorStore } from '../../store/orchestrator';
 import log from '../../utils/logger'
 
 const GRID_SIZE = 20;
@@ -123,7 +125,25 @@ export default function WorkflowCanvas() {
     setTourStep,
     setTourHighlight,
     setHasCompletedTour,
+    activeView,
   } = useLayoutStore();
+
+  const {
+    selectedNodeId: storeSelectedNodeId,
+    setSelectedNodeId: setStoreSelectedNodeId,
+    canvasNodes: orchestratorNodes,
+    setTiles,
+    addNodeFromTile: addOrchestratorNode,
+    updateNode: updateOrchestratorNode,
+  } = useOrchestratorStore();
+
+  const [localSelectedNodeId, setLocalSelectedNodeId] = useState<string | null>(null);
+  
+  const selectedNodeId = activeView === 'orchestrator' ? storeSelectedNodeId : localSelectedNodeId;
+  const setSelectedNodeId = (id: string | null) => {
+    if (activeView === 'orchestrator') setStoreSelectedNodeId(id);
+    else setLocalSelectedNodeId(id);
+  };
 
   const [nodes, setNodes] = useState<WFNode[]>([]);
   const [edges, setEdges] = useState<WFEdge[]>([]);
@@ -139,7 +159,6 @@ export default function WorkflowCanvas() {
   const [isRunning, setIsRunning] = useState(false);
   const [rootPath, setRootPath] = useState<string>('');
 
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showQueue, setShowQueue] = useState(false);
   const [authStatus, setAuthStatus] = useState<Record<string, boolean>>({});
   const [availableModels, setAvailableModels] = useState<{id:string;name:string;provider:string}[]>([]);
@@ -149,8 +168,55 @@ export default function WorkflowCanvas() {
   const svgRef = useRef<SVGSVGElement>(null);
   const wasNodeClickHandled = useRef<boolean>(false);
 
-  // Fetch root path and templates
+  // Sync store nodes to local nodes if changed in inspector
   useEffect(() => {
+    if (activeView === 'orchestrator') {
+      setNodes(prev => {
+        const nextNodes = [...prev];
+        let changed = false;
+        orchestratorNodes.forEach(sn => {
+          const idx = nextNodes.findIndex(n => n.id === sn.id);
+          if (idx > -1) {
+             // Update existing
+             const existing = nextNodes[idx];
+             if (existing) {
+               const newData = { ...existing.data, ...sn.config };
+               if (existing.label !== sn.label || 
+                   existing.x !== sn.position.x || 
+                   existing.y !== sn.position.y || 
+                   JSON.stringify(existing.data) !== JSON.stringify(newData)) {
+                  nextNodes[idx] = {
+                    ...existing,
+                    id: existing.id,
+                    label: sn.label,
+                    x: sn.position.x,
+                    y: sn.position.y,
+                    data: newData as any
+                  };
+                  changed = true;
+               }
+             }
+          } else {
+            // New node from store
+            nextNodes.push({
+              id: sn.id,
+              type: 'tool',
+              label: sn.label,
+              x: sn.position.x,
+              y: sn.position.y,
+              data: { variant: sn.tileId, ...sn.config } as any
+            });
+            changed = true;
+          }
+        });
+        return changed ? nextNodes : prev;
+      });
+    }
+  }, [orchestratorNodes, activeView]);
+
+  // Initial fetch
+  useEffect(() => {
+    setTiles(ORCHESTRATOR_TILES);
     invoke<string>('app:get-root-path')
       .then((result: any) => setRootPath(result.data || result))
       .catch((err) => log.error('Failed to get root path:', err));
@@ -281,10 +347,16 @@ export default function WorkflowCanvas() {
     if (draggingNodeId) {
       setNodes(prev => prev.map(n => {
         if (n.id === draggingNodeId) {
-          return {
-            ...n,
+          const nextPos = {
             x: Math.round(coords.x / GRID_SIZE) * GRID_SIZE,
             y: Math.round(coords.y / GRID_SIZE) * GRID_SIZE
+          };
+          if (activeView === 'orchestrator') {
+            updateOrchestratorNode(n.id, { position: nextPos });
+          }
+          return {
+            ...n,
+            ...nextPos
           };
         }
         return n;
@@ -325,6 +397,35 @@ export default function WorkflowCanvas() {
 
   const handleCanvasDrop = (e: React.DragEvent<SVGSVGElement>) => {
     e.preventDefault();
+    const tileId = e.dataTransfer.getData('tile-id');
+
+    if (tileId) {
+      const tile = ORCHESTRATOR_TILES.find(t => t.id === tileId);
+      if (tile && svgRef.current) {
+        const coords = getSvgCoordinates(e);
+        const x = Math.round(coords.x / GRID_SIZE) * GRID_SIZE;
+        const y = Math.round(coords.y / GRID_SIZE) * GRID_SIZE;
+
+        if (activeView === 'orchestrator') {
+          addOrchestratorNode(tile, { x, y });
+          return;
+        }
+
+        const newNode: WFNode = {
+          id: `node-${Date.now()}`,
+          type: 'tool',
+          label: tile.label,
+          x,
+          y,
+          data: { variant: tile.id, ...tile.defaultConfig } as any,
+        };
+
+        setNodes(prev => [...prev, newNode]);
+        setSelectedNodeId(newNode.id);
+        return;
+      }
+    }
+
     if (!draggingTile || !svgRef.current) return;
 
     const coords = getSvgCoordinates(e);
@@ -718,7 +819,7 @@ export default function WorkflowCanvas() {
         </div>
 
         {/* Inspector */}
-        {selectedNodeId && (() => {
+        {activeView !== 'orchestrator' && selectedNodeId && (() => {
           const node = nodes.find(n => n.id === selectedNodeId);
           if (!node) return null;
           return (

@@ -19,6 +19,8 @@ import { TerminalTabs } from './components/Terminal/TerminalTabs'
 import { KanbanBoard } from './components/KanbanBoard'
 import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
+import { TileLibrary } from './components/orchestrator/TileLibrary'
+import { TileInspector } from './components/orchestrator/TileInspector'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
 import { commandRegistry } from './store/commandRegistry'
@@ -436,7 +438,13 @@ export default function App() {
               <KanbanBoard onStartSession={() => setProjectSelectorOpen(true)} />
             )}
             {activeView === 'reporter' && <CapexDashboard />}
-            {activeView === 'orchestrator' && <WorkflowCanvas />}
+            {activeView === 'orchestrator' && (
+              <div className="flex flex-1 overflow-hidden">
+                <TileLibrary />
+                <WorkflowCanvas />
+                <TileInspector />
+              </div>
+            )}
             {activeView === 'github' && <GithubDashboard />}
             {activeView === 'memory' && <MemoryBrowser />}
             {activeView === 'review' && <ReviewPanel />}
