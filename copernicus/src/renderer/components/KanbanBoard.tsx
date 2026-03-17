@@ -128,12 +128,12 @@ const StoryCard = React.memo(({
       )}
 
       <div className="mt-2 flex items-center gap-1.5 border-t border-white/5 pt-2 overflow-hidden">
-        <span className="text-[8px] font-mono text-zinc-500 shrink-0">#{story.id.match(/\d+/)?.[0] ?? story.id}</span>
+        <span className="text-[8px] font-mono text-zinc-300 shrink-0">#{story.id.match(/\d+/)?.[0] ?? story.id}</span>
         {story.workflowId && story.workflowId !== '— none —' && (
-          <span className="text-[7px] font-mono text-zinc-600 truncate">{story.workflowId}</span>
+          <span className="text-[7px] font-mono text-zinc-300 truncate">{story.workflowId}</span>
         )}
         {story.model && story.model !== '(unassigned)' && (
-          <span className="text-[7px] font-mono text-zinc-600 truncate">{story.model}</span>
+          <span className="text-[7px] font-mono text-zinc-300 truncate">{story.model}</span>
         )}
         <span className={`ml-auto shrink-0 px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
       </div>
