@@ -228,6 +228,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #300 | App Header Full Width Divider | COMPLETE | P1 |
 | #302 | Editor File Load White Flash | COMPLETE | P1 |
 | #303 | Editor Multi File Tabs | COMPLETE | P1 |
+| #305 | Lsp Indicator Fix | COMPLETE | P2 |
 | #307 | Designer Ui Files Only | COMPLETE | P2 |
 | #308 | Designer Element Visual Cues | COMPLETE | P2 |
 | #309 | Explorer Header Button Set | COMPLETE | P1 |
@@ -247,6 +248,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #323 | Agent Telemetry List | COMPLETE | P2 |
 | #324 | Telemetry Alltime Session Totals | COMPLETE | P2 |
 | #325 | Session Timer Capex Gate | COMPLETE | P2 |
+| #326 | Technical Pulse Stacked List | COMPLETE | P2 |
 | #327 | Status Bar Remove Story Id | COMPLETE | P1 |
 | #328 | Command Palette Vscode Style | COMPLETE | P2 |
 | #329 | Orchestrator View Cutoff | COMPLETE | P1 |
@@ -314,9 +316,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #301 | Spotlight Panel Expand Collapse | DRAFT | P1 |
 | #304 | Editor Header Active Filename | DRAFT | P1 |
-| #305 | Lsp Indicator Fix | DRAFT | P2 |
 | #306 | Editor Spotlight Behavior | DRAFT | P1 |
-| #326 | Technical Pulse Stacked List | DRAFT | P2 |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
 | #334 | Semantic Diff Summaries | DRAFT | P1 |
 | #336 | Git Panel | DRAFT | P1 |

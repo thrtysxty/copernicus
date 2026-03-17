@@ -6,6 +6,7 @@ import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
 import { unwrapIpc } from '../../types/ipc'
 import { FileTreeContextMenu, ContextMenuProps } from './FileTreeContextMenu'
+import { LspStatusPopover } from './LspStatusPopover'
 
 const LANGUAGE_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'typescript',
@@ -230,7 +231,10 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   const { spotlightPane, setSpotlight, toggleFlip, setSidebarOpen, openFile, setCenterMode, setActiveFileContent, setActiveFileLanguage } = useLayoutStore()
   const [rootChildren, setRootChildren] = useState<FileNode[]>([])
   const [lspRunning, setLspRunning] = useState(false)
+  const [lspPopoverOpen, setLspPopoverOpen] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuProps | null>(null)
+  
+  const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
   
   const [creatingItem, setCreatingItem] = useState<{type: 'file' | 'folder', path: string} | null>(null)
   const [newItemName, setNewItemName] = useState('')
@@ -372,10 +376,23 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
       <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/tree">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>
-          <div 
-            className={`w-1.5 h-1.5 rounded-full ${lspRunning ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]' : 'bg-red-500'} transition-all duration-500`}
-            title={lspRunning ? "LSP Online" : "LSP Offline"}
-          />
+          <div className="relative">
+            <button
+              onClick={() => setLspPopoverOpen(v => !v)}
+              className="focus:outline-none"
+              title={lspRunning ? "LSP Online" : "LSP Offline"}
+            >
+              <div 
+                className={`w-1.5 h-1.5 rounded-full ${lspRunning ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]' : 'bg-red-500'} transition-all duration-500`}
+              />
+            </button>
+            <LspStatusPopover
+              isOpen={lspPopoverOpen}
+              onClose={() => setLspPopoverOpen(false)}
+              lspRunning={lspRunning}
+              language={activeFileLanguage}
+            />
+          </div>
         </div>
         
         <div className="flex items-center gap-1 opacity-60 group-hover/tree:opacity-100 transition-all">

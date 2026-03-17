@@ -123,6 +123,7 @@ const SEND_CHANNELS = new Set([
   'test:discover', 'test:run', 'test:stop', 'test:coverage',
   'layout:goto-line',
   'worktree:list', 'worktree:create', 'worktree:diff', 'worktree:merge', 'worktree:remove', 'worktree:poll',
+  'health:check-all',
   // Extensions
   'extensions:list', 'extensions:workflow-nodes', 'extensions:tiles', 'extensions:providers', 'extensions:reload',
   // DAP

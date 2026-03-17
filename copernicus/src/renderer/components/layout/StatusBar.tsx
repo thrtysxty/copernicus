@@ -6,6 +6,7 @@ import { unwrapIpc } from '../../types/ipc'
 import { StatusBarOverlay } from './StatusBarOverlay'
 import { useSessionStore, formatElapsed } from '../../store/sessionStore'
 import { AgentTelemetryOverlay } from './AgentTelemetryOverlay'
+import { TechnicalPulseOverlay } from './TechnicalPulseOverlay'
 
 interface ModelConfig { id: string; name: string; provider: string } // telemetry model picker
 
@@ -37,6 +38,7 @@ export const StatusBar: React.FC = () => {
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
   const [lspErrorCount, setLspErrorCount] = useState(0)
   const [securityScore, setSecurityScore] = useState<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number } | null>(null)
+  const [pulseOpen, setPulseOpen] = useState(false)
 
   const modelAnchorRef = useRef<HTMLDivElement>(null)
   const [modelOverlayOpen, setModelOverlayOpen] = useState(false)
@@ -194,6 +196,8 @@ export const StatusBar: React.FC = () => {
         <AgentTelemetryOverlay onModelSelected={handleModelSelected} activeModelId={activeModel?.id} />
       </StatusBarOverlay>
 
+      {pulseOpen && <TechnicalPulseOverlay onClose={() => setPulseOpen(false)} />}
+
       <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30 flex-shrink-0">
         {/* Timer display */}
         <div className="flex items-center gap-1.5 px-2">
@@ -226,8 +230,8 @@ export const StatusBar: React.FC = () => {
 
         {/* LSP Error Badge */}
         {lspErrorCount > 0 && (
-          <div 
-            title={`${lspErrorCount} TypeScript error(s) in workspace`} 
+          <div
+            title={`${lspErrorCount} TypeScript error(s) in workspace`}
             className="flex items-center gap-1.5 px-3 text-yellow-400 font-mono text-[9px] animate-pulse cursor-help"
           >
             ⚠ {lspErrorCount}
@@ -280,8 +284,9 @@ export const StatusBar: React.FC = () => {
         </Tooltip>
 
         {/* Codebase Index Status / LSP indicator */}
-        <Tooltip content="Language server — click for details">
-          <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer">
+        <Tooltip content="Technical Pulse — click for health checks">
+          <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer" onClick={() => setPulseOpen(v => !v)}>
+            <span className="text-copernicus-phosphor/60">⚡</span> {/* Icon for Technical Pulse */}
             {indexStatus && indexStatus.provider !== 'none' ? (
               indexStatus.indexing ? (
                 <span className="text-zinc-500 animate-pulse uppercase tracking-tighter">
@@ -296,6 +301,5 @@ export const StatusBar: React.FC = () => {
           </div>
         </Tooltip>
       </div>
-    </footer>
-  )
+      </footer>  )
 }

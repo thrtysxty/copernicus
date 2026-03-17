@@ -29,11 +29,13 @@ import { julesMonitor } from './jules/monitor'
 import { julesManager } from './jules/jules-manager'
 import { lspManager } from './lsp/lsp-manager'
 import { backendManager } from './backend-manager'
+import { handleIpc } from './utils/handle-ipc'
 import { socketManager } from './socket-manager'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
 import { addRecentProject } from './utils/recent-projects'
-
+import { execAsync } from './utils/exec-async'
+import { cwd } from 'node:process'
 import { localModelManager } from './local-model/LocalModelManager'
 import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
 
@@ -132,6 +134,16 @@ async function registerIpcHandlers() {
         dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG,
         isFirstRun, spawn
       }
+
+  ipcMain.handle('health:check-all', (_e) => handleIpc(async () => {
+    const checks = await Promise.allSettled([
+      // Backend reachable
+      fetch('http://localhost:5001/api/health').then(() => ({ name: 'Backend', ok: true })).catch(() => ({ name: 'Backend', ok: false })),
+      // Git valid
+      execAsync('git rev-parse --git-dir', { cwd: cwd() }).then(() => ({ name: 'Git', ok: true })).catch(() => ({ name: 'Git', ok: false })),
+    ])
+    return checks.map((r, i) => r.status === 'fulfilled' ? r.value : { name: ['Backend','Git'][i], ok: false })
+  }))
 
   const { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager: registeredWorktreeManager } =
     await registerAllIpcHandlers(win!, globalDeps, touchBarCleanup)
