@@ -6,12 +6,22 @@ import sqlite3
 import os
 import uuid
 import time
+import re
 from contextlib import closing
 from backend.middleware.auth import require_auth
 from backend.utils.validate import validate
 from backend.schemas.stories import StoryCreateRequest, StoryUpdateRequest
 
 stories_bp = Blueprint('stories', __name__)
+
+# Same character set as StoryCreateRequest.id pattern — no SQL special chars
+_STORY_ID_RE = re.compile(r'^[a-zA-Z0-9._:-]{1,100}$')
+
+def _validate_story_id(story_id: str):
+    """Return a 422 response tuple if story_id is invalid, else None."""
+    if not _STORY_ID_RE.match(story_id):
+        return jsonify({"error": "Validation failed", "detail": ["story_id: invalid format"]}), 422
+    return None
 
 def get_db_connection():
     db_path = os.environ.get('COPERNICUS_DB_PATH', os.path.expanduser('~/.copernicus/copernicus.db'))
@@ -58,6 +68,9 @@ def list_stories():
 @stories_bp.route('/<story_id>', methods=['GET'])
 @require_auth
 def get_story(story_id):
+    err = _validate_story_id(story_id)
+    if err:
+        return err
     try:
         with closing(get_db_connection()) as conn:
             cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))
@@ -98,6 +111,9 @@ def create_story(request_data: StoryCreateRequest):
 @require_auth
 @validate(StoryUpdateRequest)
 def update_story(story_id, request_data: StoryUpdateRequest):
+    err = _validate_story_id(story_id)
+    if err:
+        return err
     try:
         with closing(get_db_connection()) as conn:
             # First check if exists
@@ -138,6 +154,9 @@ def update_story(story_id, request_data: StoryUpdateRequest):
 @stories_bp.route('/<story_id>', methods=['DELETE'])
 @require_auth
 def delete_story(story_id):
+    err = _validate_story_id(story_id)
+    if err:
+        return err
     try:
         with closing(get_db_connection()) as conn:
             cursor = conn.execute('SELECT * FROM stories WHERE id = ?', (story_id,))

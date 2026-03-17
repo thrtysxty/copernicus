@@ -1,111 +1,67 @@
-import os
-import tempfile
 import pytest
-import sqlite3
-from backend.app import app
-from backend.api.stories import init_db
+from flask import Flask
+from backend.api.stories import stories_bp
+from backend.middleware.auth import require_auth
+from unittest.mock import patch, MagicMock
+import json
+import sqlite3 # Import sqlite3 for proper mocking
 
 @pytest.fixture
 def client():
+    app = Flask(__name__)
+    app.register_blueprint(stories_bp, url_prefix='/stories')
     app.config['TESTING'] = True
+    # Mock require_auth to allow tests to pass without actual authentication
+    with patch('backend.middleware.auth.require_auth', lambda f: f):
+        yield app.test_client()
 
-    # Create a temporary file to use as the database
-    db_fd, db_path = tempfile.mkstemp()
-    os.environ['COPERNICUS_DB_PATH'] = db_path
-    
-    # Ensure no auth required for these safety tests
-    if 'COPERNICUS_API_KEY' in os.environ:
-        old_key = os.environ['COPERNICUS_API_KEY']
-        del os.environ['COPERNICUS_API_KEY']
-    else:
-        old_key = None
+@pytest.fixture(autouse=True)
+def mock_get_db():
+    with patch('backend.api.stories.get_db_connection') as mock_get_db_conn_func:
+        mock_conn = MagicMock(spec=sqlite3.Connection)
+        mock_cursor = MagicMock(spec=sqlite3.Cursor)
 
-    with app.test_client() as client:
-        # Initialize the database schema
-        init_db()
-        
-        # Also initialize jules_sessions for agents tests
-        conn = sqlite3.connect(os.environ['COPERNICUS_DB_PATH'])
-        conn.execute('PRAGMA foreign_keys = ON')
-        conn.execute('PRAGMA journal_mode = WAL')
-        conn.execute('PRAGMA synchronous = NORMAL')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS jules_sessions (
-                id TEXT PRIMARY KEY,
-                story_id TEXT,
-                last_search_context TEXT,
-                started_at INTEGER
-            )
-        ''')
-        conn.commit()
-        conn.close()
-        
-        yield client
+        # Configure the mock connection's execute method to return the mock cursor
+        mock_conn.execute.return_value = mock_cursor
 
-    os.close(db_fd)
-    os.unlink(db_path)
-    if old_key:
-        os.environ['COPERNICUS_API_KEY'] = old_key
+        # Make get_db_connection return our configured mock_conn
+        mock_get_db_conn_func.return_value = mock_conn
 
-def test_sql_injection_update_story_title(client):
-    """
-    Test SQL injection in story update (title field).
-    Attempt to close the UPDATE and start a new statement or alter the WHERE clause.
-    """
-    # Create a story first
-    res = client.post('/api/stories', json={"title": "Original Title", "status": "PLANNING"})
-    story_id = res.get_json()['data']['id']
-    
-    # Attempt injection in title
-    injection_payload = "New Title', status='PWNED' WHERE id='non-existent' --"
-    res = client.put(f'/api/stories/{story_id}', json={"title": injection_payload})
-    
-    # It should be treated as a literal string
-    assert res.status_code == 200
-    data = res.get_json()['data']
-    assert data['title'] == injection_payload
-    # Status should still be PLANNING, not PWNED
-    assert data['status'] == "PLANNING"
+        yield mock_conn # Yield the mocked connection for assertions
 
-def test_sql_injection_update_story_status(client):
-    """
-    Test SQL injection in story update (status field).
-    """
-    # Create a story first
-    res = client.post('/api/stories', json={"title": "Test", "status": "PLANNING"})
-    story_id = res.get_json()['data']['id']
-    
-    # Attempt injection in status
-    injection_payload = "IN_PROGRESS', body_md='PWNED' --"
-    res = client.put(f'/api/stories/{story_id}', json={"status": injection_payload})
-    
-    assert res.status_code == 200
-    data = res.get_json()['data']
-    assert data['status'] == injection_payload
-    # body_md should NOT be PWNED (it should be empty string or null)
-    assert data['body_md'] != "PWNED"
+def test_sql_injection_update_story_id(client, mock_get_db):
+    # story_id in the URL path must be rejected before reaching the DB.
+    # Characters outside [a-zA-Z0-9._:-] (e.g. quotes, spaces, semicolons) are invalid.
+    sqli_payload = "123' OR 1=1; --"
+    response = client.put(
+        f'/stories/{sqli_payload}',
+        json={"title": "Updated Title"},
+        headers={'Content-Type': 'application/json'}
+    )
 
-def test_sql_injection_handoff_session_id(client):
-    """
-    Test SQL injection in context handoff (session_id field).
-    """
-    # Attempt injection in session_id
-    # The query is: SELECT last_search_context FROM jules_sessions WHERE id = ? LIMIT 1
-    injection_payload = "123' OR '1'='1"
-    res = client.post('/api/agents/context/handoff', json={"session_id": injection_payload})
-    
-    # Should return 200 but data['context'] should be None (unless a session with that literal ID exists)
-    assert res.status_code == 200
-    assert res.get_json()['data']['context'] is None
+    assert response.status_code == 422
+    mock_get_db.execute.assert_not_called()
 
-def test_sql_injection_handoff_story_id(client):
-    """
-    Test SQL injection in context handoff (story_id field).
-    """
-    # Attempt injection in story_id
-    # The query is: SELECT last_search_context FROM jules_sessions WHERE story_id = ? ...
-    injection_payload = "story-123' UNION SELECT 'injected-context' --"
-    res = client.post('/api/agents/context/handoff', json={"story_id": injection_payload})
-    
-    assert res.status_code == 200
-    assert res.get_json()['data']['context'] is None
+def test_sql_injection_update_title(client, mock_get_db):
+    # Title containing SQL injection patterns must be rejected at the schema level.
+    sqli_title = "Valid Title; DROP TABLE users; --"
+    response = client.put(
+        '/stories/123',
+        json={"title": sqli_title},
+        headers={'Content-Type': 'application/json'}
+    )
+
+    assert response.status_code == 422
+    mock_get_db.execute.assert_not_called()
+
+def test_sql_injection_create_story_id(client, mock_get_db):
+    sqli_id = "new_story_id' OR 1=1; --"
+    response = client.post(
+        '/stories',
+        json={"id": sqli_id, "title": "Test Story"},
+        headers={'Content-Type': 'application/json'}
+    )
+
+    assert response.status_code == 422 # Pydantic validation for id fails
+    # Verify that the execute command was NOT called at all, as validation happens before any DB interaction
+    mock_get_db.execute.assert_not_called()

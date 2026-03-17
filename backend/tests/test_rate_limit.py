@@ -8,11 +8,9 @@ from backend.limiter import limiter
 def client():
     app.config['TESTING'] = True
     with app.test_client() as client:
-        try:
-            limiter.storage.clear()
-        except:
-            pass
+        limiter.storage.reset()
         yield client
+        limiter.storage.reset()
 
 def test_research_rate_limit(client, mocker):
     # Mock subprocess.run to return a successful result

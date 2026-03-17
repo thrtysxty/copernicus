@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
-from backend.utils.validate import validate_no_paths
+from backend.utils.validate import validate_no_paths, validate_no_sql
 
 
 class StoryCreateRequest(BaseModel):
@@ -11,8 +11,10 @@ class StoryCreateRequest(BaseModel):
 
     @field_validator('title')
     @classmethod
-    def validate_title_no_paths(cls, v: str) -> str:
-        return validate_no_paths('title')(v)
+    def validate_title(cls, v: str) -> str:
+        validate_no_paths('title')(v)
+        validate_no_sql('title')(v)
+        return v
 
     @field_validator('body_md')
     @classmethod
@@ -27,8 +29,10 @@ class StoryUpdateRequest(BaseModel):
 
     @field_validator('title')
     @classmethod
-    def validate_title_no_paths(cls, v: Optional[str]) -> Optional[str]:
-        return validate_no_paths('title')(v)
+    def validate_title(cls, v: Optional[str]) -> Optional[str]:
+        validate_no_paths('title')(v)
+        validate_no_sql('title')(v)
+        return v
 
     @field_validator('body_md')
     @classmethod

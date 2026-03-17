@@ -10,13 +10,19 @@ from backend.routes.webhook_routes import webhook_bp
 def client():
     app = Flask(__name__)
     app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
-    
-    # Mock environment variables
+
+    prev_secret = os.environ.get('GITHUB_WEBHOOK_SECRET')
     os.environ['GITHUB_WEBHOOK_SECRET'] = 'test-secret'
     os.environ['COPERNICUS_DB_PATH'] = ':memory:'
-    
+
     with app.test_client() as client:
         yield client
+
+    # Restore env state
+    if prev_secret is None:
+        os.environ.pop('GITHUB_WEBHOOK_SECRET', None)
+    else:
+        os.environ['GITHUB_WEBHOOK_SECRET'] = prev_secret
 
 def test_github_webhook_missing_secret(client):
     del os.environ['GITHUB_WEBHOOK_SECRET']

@@ -25,40 +25,64 @@ class TestResearchEndpointSecurity:
     }
 
     def test_research_injection_with_leading_dash(self, client):
-        """Test 422 when prompt starts with dash (command flag injection)."""
+        """Test 400 when prompt starts with dash (command flag injection)."""
         payload = self.VALID_PAYLOAD.copy()
         payload["prompt"] = "-h; whoami"
 
         response = client.post("/api/agents/research", json=payload)
-        assert response.status_code == 422
+        assert response.status_code == 400
         json_data = response.get_json()
-        # The error message comes from ResearchRequest prompt_no_leading_dash validator
-        assert "prompt" in json_data.get("detail", [[""]])[0].lower() or "must not start" in json_data.get("detail", [""])[0].lower()
+        assert "invalid prompt" in json_data.get("error", "").lower()
 
     def test_research_injection_with_leading_dash_and_whitespace(self, client):
-        """Test 422 when prompt has leading whitespace before dash."""
+        """Test 400 when prompt has leading whitespace before dash."""
         payload = self.VALID_PAYLOAD.copy()
         payload["prompt"] = "   -h; whoami"
 
         response = client.post("/api/agents/research", json=payload)
-        assert response.status_code == 422
+        assert response.status_code == 400
+        json_data = response.get_json()
+        assert "invalid prompt" in json_data.get("error", "").lower()
+
+    def test_research_injection_with_double_dash(self, client):
+        """Test 400 when prompt starts with double dash."""
+        payload = self.VALID_PAYLOAD.copy()
+        payload["prompt"] = "--version"
+
+        response = client.post("/api/agents/research", json=payload)
+        assert response.status_code == 400
+        json_data = response.get_json()
+        assert "invalid prompt" in json_data.get("error", "").lower()
+
+    def test_research_injection_with_null_byte(self, client):
+        """Test 400 when prompt contains a null byte."""
+        payload = self.VALID_PAYLOAD.copy()
+        payload["prompt"] = "normal_prompt\x00evil_command"
+
+        response = client.post("/api/agents/research", json=payload)
+        assert response.status_code == 400
+        json_data = response.get_json()
+        assert "invalid prompt" in json_data.get("error", "").lower()
 
     def test_research_injection_with_empty_prompt_fails_validation(self, client):
-        """Empty prompt should fail pydantic min_length=1."""
+        """Empty prompt should fail pydantic min_length=1 with 422."""
         payload = self.VALID_PAYLOAD.copy()
         payload["prompt"] = ""
 
         response = client.post("/api/agents/research", json=payload)
         assert response.status_code == 422
+        json_data = response.get_json()
+        assert "prompt: string should have at least 1 character" in json_data.get("detail", [[""]])[0].lower()
 
     def test_research_injection_with_very_long_prompt_fails_validation(self, client):
-        """Prompt >32k chars should fail max_length validation."""
+        """Prompt >32k chars should fail max_length validation with 422."""
         payload = self.VALID_PAYLOAD.copy()
         payload["prompt"] = "x" * 32001
 
         response = client.post("/api/agents/research", json=payload)
-        # Pydantic 422
         assert response.status_code == 422
+        json_data = response.get_json()
+        assert "prompt: string should have at most 32000 characters" in json_data.get("detail", [[""]])[0].lower()
 
     def test_research_valid_prompt_succeeds(self, client, mocker):
         """Test that a safe prompt is accepted."""

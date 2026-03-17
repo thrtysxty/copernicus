@@ -33,12 +33,34 @@ def _is_path_violating(value: Any) -> bool:
     return False
 
 
+# SQL injection indicators: semicolon-prefixed DML/DDL or comment sequences
+_SQL_INJECTION_RE = re.compile(
+    r'(;\s*(DROP|INSERT|UPDATE|DELETE|CREATE|ALTER|TRUNCATE|EXEC|EXECUTE)\b|--(?:\s|$)|/\*)',
+    re.IGNORECASE,
+)
+
+def _is_sql_injection(value: Any) -> bool:
+    """Return True if value contains common SQL injection patterns."""
+    if not isinstance(value, str):
+        return False
+    return bool(_SQL_INJECTION_RE.search(unicodedata.normalize('NFKC', value)))
+
+
 # Global validator factory for Pydantic v2 (used in schemas)
 def validate_no_paths(field_name: str):
     """Factory for field_validator to reject path-like strings."""
     def validator(v):
         if v and _is_path_violating(v):
             raise ValueError(f'{field_name} must not contain absolute paths, "..", or hidden folder references (e.g., ".git")')
+        return v
+    return validator
+
+
+def validate_no_sql(field_name: str):
+    """Factory for field_validator to reject SQL injection patterns."""
+    def validator(v):
+        if v and _is_sql_injection(v):
+            raise ValueError(f'{field_name} must not contain SQL injection patterns')
         return v
     return validator
 
@@ -50,13 +72,13 @@ def validate(schema_class: Type[BaseModel]):
         def wrapper(*args, **kwargs):
             try:
                 data = request.get_json(silent=True, force=True)
-                if data is None:
+                if data is None and request.content_length:
                     return jsonify({"error": "Validation failed", "detail": ["Request body must be valid JSON"]}), 422
 
-                validated = schema_class.model_validate(data)
+                validated = schema_class.model_validate(data or {})
 
-                # Inject as first arg
-                return f(validated, *args, **kwargs)
+                # Inject as keyword arg so URL params aren't displaced
+                return f(*args, **kwargs, request_data=validated)
 
             except ValidationError as e:
                 errors = []

@@ -1,9 +1,6 @@
 import sys
 from unittest.mock import MagicMock
-
-# Mock flask before importing backend.api.agents
-mock_flask = MagicMock()
-sys.modules["flask"] = mock_flask
+import importlib
 
 import threading
 import time
@@ -13,7 +10,20 @@ from pathlib import Path
 # Add parent to path if needed
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backend.api.agents import ContextManager, ContextItem
+# Mock flask only for the duration of the agents import — restore immediately after
+# so subsequent tests in the session see the real flask module.
+_real_flask = sys.modules.get("flask")
+sys.modules["flask"] = MagicMock()
+try:
+    # Force re-import so the mock is picked up by agents module's top-level imports
+    if "backend.api.agents" in sys.modules:
+        del sys.modules["backend.api.agents"]
+    from backend.api.agents import ContextManager, ContextItem
+finally:
+    if _real_flask is not None:
+        sys.modules["flask"] = _real_flask
+    else:
+        sys.modules.pop("flask", None)
 
 
 class TestContextManager(unittest.TestCase):

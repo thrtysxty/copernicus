@@ -1,3 +1,11 @@
+
+# Security Audit Note (Story 248):
+# No direct user-provided parameters in this file are passed to `open()`, `os.path`, or `Path()` in a way
+# that would directly benefit from `assert_safe_path()`. Path constructions (e.g., for database, temporary files,
+# or internal gateway scripts) are either internal to the application, derived from environment variables,
+# or user home directory in a controlled manner. User prompts are treated as content, not file paths.
+# The `get_db_path()` function resolves paths based on environment variables or project structure,
+# and `research` endpoint's `history_path` is a securely created temporary file.
 from backend.utils.errors import AppError
 import logging
 logger = logging.getLogger(__name__)
@@ -438,6 +446,8 @@ def _add_context_to_payload(
 @validate(ResearchRequest)
 def research(request_data: ResearchRequest):
     prompt = request_data.prompt
+    if prompt.lstrip().startswith('-') or '\x00' in prompt:
+        return jsonify({'error': 'Invalid prompt'}), 400
     persona = request_data.persona
     role = PERSONA_ROLE_MAP.get(persona, request_data.role or GATEWAY_ROLE_CODER)
 

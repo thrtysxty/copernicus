@@ -49,6 +49,13 @@ class ResearchRequest(BaseModel):
     session_id: Optional[str] = Field(default=None)
     model: str = Field(...)
 
+    @field_validator('session_id')
+    @classmethod
+    def session_id_non_empty(cls, v: Optional[str]) -> Optional[str]:
+        if v == "":
+            raise ValueError("Session ID cannot be an empty string")
+        return v
+
     @field_validator('persona')
     @classmethod
     def validate_persona(cls, v: str) -> str:
@@ -66,9 +73,4 @@ class ResearchRequest(BaseModel):
             raise ValueError('Invalid model name format')
         return normalized
 
-    @field_validator('prompt')
-    @classmethod
-    def prompt_no_leading_dash(cls, v: str) -> str:
-        if v and v.lstrip().startswith('-'):
-            raise ValueError("Prompt must not start with '-' or whitespace followed by '-'")
-        return v
+

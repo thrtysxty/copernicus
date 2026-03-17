@@ -26,13 +26,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #211 | Resolve Explorer Folder Listing Failure | APPROVED FOR IMPLEMENTATION | High |
 | #225 | Websocket Streaming Bus | APPROVED FOR IMPLEMENTATION | HIGH |
 | #227 | Automated Documentation Lifecycle | APPROVED FOR IMPLEMENTATION | HIGH |
-| #265 | Open External Url Validation | APPROVED FOR IMPLEMENTATION | HIGH |
-| #266 | Unicode Normalization Model Validation | APPROVED FOR IMPLEMENTATION | HIGH |
-| #268 | Persona Provider Allowlist | APPROVED FOR IMPLEMENTATION | HIGH |
 | #269 | Terminal Cwd Gemini Path Tempfile | APPROVED FOR IMPLEMENTATION | HIGH |
 | #270 | Allowed Personas Code Reviewer | APPROVED FOR IMPLEMENTATION | HIGH |
 | #271 | Gemini Spawn Cwd Guard | APPROVED FOR IMPLEMENTATION | HIGH |
-| #273 | Llm Auth Webview Disable | APPROVED FOR IMPLEMENTATION | HIGH |
 | #047 | Persist Agent Reviews | COMPLETE | HIGH |
 | #068 | Security Persona | COMPLETE | HIGH |
 | #086 | Atlas Security Boundary | COMPLETE | HIGH — Must ship with Story 077 (Foundation) |
@@ -58,6 +54,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #215 | Terminal Dynamic Orchestration And Spotlight | COMPLETE | High |
 | #217 | Nodeinspector Focus And Stability | COMPLETE | High |
 | #218 | Three Tier Layout And Header Symmetry | COMPLETE | High |
+| #265 | Open External Url Validation | COMPLETE | HIGH |
+| #266 | Unicode Normalization Model Validation | COMPLETE | HIGH |
+| #268 | Persona Provider Allowlist | COMPLETE | HIGH |
+| #273 | Llm Auth Webview Disable | COMPLETE | HIGH |
 | #352 | Ollama Anthropic Provider | COMPLETE | High |
 | #353 | Lsp Guardrail Enforcement | COMPLETE | High |
 | #355 | Webhook Hmac Verification | COMPLETE | High |
@@ -81,8 +81,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #209 | Designer Explorer Collapse By Default | APPROVED FOR IMPLEMENTATION | Medium |
 | #210 | Restore Control Buttons To Canvas Preview | APPROVED FOR IMPLEMENTATION | Medium |
 | #212 | Fix Orchestrator Modal Centering And Canvas Edge | APPROVED FOR IMPLEMENTATION | Medium |
-| #267 | Rate Limiter Key Fix | APPROVED FOR IMPLEMENTATION | MEDIUM |
-| #272 | Electron Ipc Audit Fixes | APPROVED FOR IMPLEMENTATION | MEDIUM |
 | #024 | Project Bootstrap Templates | COMPLETE | Medium |
 | #043 | Implement Scribe Persona | COMPLETE | MEDIUM |
 | #088 | Agentic Sdk Canonical | COMPLETE | Medium — architectural hygiene, unblocks clean CORE bootstrapping |
@@ -96,6 +94,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #206 | Remove Redundant Cmd+P Button | COMPLETE | Medium |
 | #208 | Implement Single Header Row Initiative | COMPLETE | Medium |
 | #216 | Chat Utility Breadcrumb Navigation | COMPLETE | Medium |
+| #267 | Rate Limiter Key Fix | COMPLETE | MEDIUM |
+| #272 | Electron Ipc Audit Fixes | COMPLETE | MEDIUM |
 | #354 | Lsp Mcp Server | COMPLETE | Medium |
 | #148 | Ollama Dynamic Model Discovery | COMPLETED | MEDIUM |
 | #153 | Electron Native Canvas Screenshot And Interaction | COMPLETED | MEDIUM |
@@ -145,8 +145,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #259 | Provider Base Class Retry | APPROVED FOR IMPLEMENTATION | P2 |
 | #261 | Context Manager Thread Safety | APPROVED FOR IMPLEMENTATION | P1 |
 | #262 | Fs Save Multiple Path Validation | APPROVED FOR IMPLEMENTATION | P1 |
-| #263 | Flask Rate Limiting | APPROVED FOR IMPLEMENTATION | P2 |
-| #264 | Cors Null Origin Model Allowlist | APPROVED FOR IMPLEMENTATION | P2 |
 | #274 | Ollama Url Settings Panel | APPROVED FOR IMPLEMENTATION | P2 |
 | #275 | Chat Panel Flip Render Error | APPROVED FOR IMPLEMENTATION | P1 |
 | #276 | Planner Visual Brightness And Panel Header Consistency | APPROVED FOR IMPLEMENTATION | P2 |
@@ -238,6 +236,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #247 | Sql Injection Remediation | COMPLETE | P0 |
 | #249 | Cors Env Sanitizer Hardening | COMPLETE | P0 |
 | #260 | Subprocess Arg Injection | COMPLETE | P0 |
+| #263 | Flask Rate Limiting | COMPLETE | P2 |
+| #264 | Cors Null Origin Model Allowlist | COMPLETE | P2 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
