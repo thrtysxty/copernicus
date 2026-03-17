@@ -243,6 +243,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #313 | Terminal Header Top Divider | COMPLETE | P2 |
 | #322 | Status Bar Stacked List Overlays | COMPLETE | P2 |
 | #323 | Agent Telemetry List | COMPLETE | P2 |
+| #327 | Status Bar Remove Story Id | COMPLETE | P1 |
+| #329 | Orchestrator View Cutoff | COMPLETE | P1 |
 | #346 | Snapshot Shell Injection Fix | COMPLETE | P0 |
 | #347 | Rewind Safety And Error Surface | COMPLETE | P1 |
 | #348 | Snapshot Map Ordering Fix | COMPLETE | P1 |
@@ -311,9 +313,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #324 | Telemetry Alltime Session Totals | DRAFT | P2 |
 | #325 | Session Timer Capex Gate | DRAFT | P2 |
 | #326 | Technical Pulse Stacked List | DRAFT | P2 |
-| #327 | Status Bar Remove Story Id | DRAFT | P1 |
 | #328 | Command Palette Vscode Style | DRAFT | P2 |
-| #329 | Orchestrator View Cutoff | DRAFT | P1 |
 | #330 | System Templates Editable | DRAFT | P2 |
 | #331 | Hardware Command Tray Scrollable | DRAFT | P2 |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
