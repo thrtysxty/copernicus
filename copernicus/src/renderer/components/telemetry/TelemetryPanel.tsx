@@ -1,9 +1,9 @@
 import React from 'react'
 import { Activity } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useTelemetryStore } from '../../store/telemetryStore'
 
 export const TelemetryPanel: React.FC = () => {
-  const { agentTelemetry, capexTotal, capexTimer } = useLayoutStore()
+  const { agentTelemetry, capexTotal, capexTimer } = useTelemetryStore()
 
   return (
     <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-[10px]">

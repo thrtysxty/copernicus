@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { useLayoutStore } from '../../../store/layout'
+import { useUIBuilderStore } from '../../../store/uiBuilderStore'
 import { UIComponent, UIComponentType } from './types'
 import { renderComponentTree } from './render'
 import { UIComponentInspector } from './UIComponentInspector'
@@ -52,7 +52,7 @@ export const UIBuilderCanvas: React.FC = () => {
   const { 
     uiComponents, setUIComponents, 
     paletteOpen, inspectorOpen
-  } = useLayoutStore()
+  } = useUIBuilderStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)

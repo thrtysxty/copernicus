@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useLayoutStore } from '../../store/layout'
+import { useTelemetryStore } from '../../store/telemetryStore'
 import { useIpcError } from '../../hooks/useIpcError'
 import type { ModelCallStats } from '../../../../electron/db/state-ledger'
 import { unwrapIpc } from '../../types/ipc'
@@ -25,10 +26,14 @@ export const StatusBar: React.FC = () => {
     workingDir,
     gitBranch,
     isGitDirty,
-    agentTelemetry,
-    capexTotal,
     setSessionEnded
   } = useLayoutStore()
+
+  const {
+    agentTelemetry,
+    capexTotal,
+    setTelemetry: setTelemetryStore
+  } = useTelemetryStore()
 
   // agentTelemetry still drives the token counter and capex — kept in store subscription
 
@@ -102,7 +107,7 @@ export const StatusBar: React.FC = () => {
     invoke<number>('ledger:all-time-cost').then(result => {
       const cost = unwrapIpc<any>(result)
       if (typeof cost === 'number') {
-        useLayoutStore.getState().setTelemetry({ capexTotal: cost })
+        setTelemetryStore({ capexTotal: cost })
       }
     }).catch(() => {})
 
@@ -118,7 +123,7 @@ export const StatusBar: React.FC = () => {
             limit:     200000,
           }
         })
-        useLayoutStore.getState().setTelemetry({ agentTelemetry: telemetry, capexTotal: stats.total_cost_usd })
+        setTelemetryStore({ agentTelemetry: telemetry, capexTotal: stats.total_cost_usd })
       }
     )
     return () => removeLedger()

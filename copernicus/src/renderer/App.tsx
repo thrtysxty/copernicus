@@ -3,6 +3,8 @@ import {
   Maximize2, RotateCcw, ChevronDown, Archive,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from './store/layout'
+import { useUIBuilderStore } from './store/uiBuilderStore'
+import { useTelemetryStore } from './store/telemetryStore'
 import { useToastStore } from './store/toastStore'
 import { ActivityBar } from './components/layout/ActivityBar'
 import { ApplicationHeader } from './components/layout/ApplicationHeader'
@@ -121,8 +123,6 @@ export default function App() {
   const workingDir = useLayoutStore(s => s.workingDir)
   const gitBranch = useLayoutStore(s => s.gitBranch)
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
-  const capexSessionTime = useLayoutStore(s => s.capexSessionTime)
-  const capexTotal = useLayoutStore(s => s.capexTotal)
   const activeFilePath = useLayoutStore(s => s.activeFilePath)
   const activeFileContent = useLayoutStore(s => s.activeFileContent)
   const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
@@ -130,6 +130,12 @@ export default function App() {
   const hasCompletedTour = useLayoutStore(s => s.hasCompletedTour)
   const tourHighlight = useLayoutStore(s => s.tourHighlight)
   const settingsOpen = useLayoutStore(s => s.settingsOpen)
+
+  const capexSessionTime = useTelemetryStore(s => s.capexSessionTime)
+  const capexTotal = useTelemetryStore(s => s.capexTotal)
+  const agentTelemetry = useTelemetryStore(s => s.agentTelemetry)
+
+  const toggleUIBuilder = useUIBuilderStore(s => s.toggleUIBuilder)
 
   // Subscriptions for functions (these don't change, so they don't trigger re-renders)
   const setView = useLayoutStore(s => s.setView)
@@ -141,7 +147,6 @@ export default function App() {
   const addTerminal = useLayoutStore(s => s.addTerminal)
   const removeTerminal = useLayoutStore(s => s.removeTerminal)
   const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy)
-  const toggleUIBuilder = useLayoutStore(s => s.toggleUIBuilder)
   const setActiveFileContent = useLayoutStore(s => s.setActiveFileContent)
   const setCenterMode = useLayoutStore(s => s.setCenterMode)
   const setTourHighlight = useLayoutStore(s => s.setTourHighlight)
@@ -418,7 +423,7 @@ export default function App() {
     return 'w-80 flex-shrink-0'
   })()
 
-  const agentTelemetry = useLayoutStore(s => s.agentTelemetry)
+
   const crtMode = useLayoutStore(s => s.crtMode)
   const anyAgentActive = Object.keys(agentTelemetry ?? {}).length > 0
   const heavyLoad = Object.keys(agentTelemetry ?? {}).length >= 3

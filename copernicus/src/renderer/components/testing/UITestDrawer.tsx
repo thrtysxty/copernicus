@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { useLayoutStore } from '../../store/layout'
+
+import { useUIBuilderStore } from '../../store/uiBuilderStore'
 import { Play, PlaySquare, X, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { unwrapIpc } from '../../types/ipc'
 
@@ -12,7 +13,7 @@ interface TestResult {
 
 export const UITestDrawer: React.FC = () => {
   const invoke = useIpcError()
-  const toggleUITestingDrawer = useLayoutStore(s => s.toggleUITestingDrawer)
+  const toggleUITestingDrawer = useUIBuilderStore(s => s.toggleUITestingDrawer)
   const [testFiles, setTestFiles] = useState<string[]>([])
   const [results, setResults] = useState<TestResult[]>([])
   const [isRunning, setIsRunning] = useState(false)

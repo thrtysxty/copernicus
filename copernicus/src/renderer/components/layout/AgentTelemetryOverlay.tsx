@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useLayoutStore } from '../../store/layout'
+import { useTelemetryStore } from '../../store/telemetryStore'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 
@@ -31,7 +31,7 @@ const PROVIDER_LABEL: Record<string, string> = {
 }
 
 export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, activeModelId }) => {
-  const { agentTelemetry } = useLayoutStore()
+  const { agentTelemetry } = useTelemetryStore()
   const invoke = useIpcError()
   const [activeTab, setActiveTab] = useState<Tab>(onModelSelected ? 'models' : 'activity')
   const [roleStats, setRoleStats] = useState<RoleStat[]>([])

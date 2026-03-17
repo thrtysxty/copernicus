@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { commandRegistry } from '../../commands/registry'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
+import { useUIBuilderStore } from '../../store/uiBuilderStore'
 import log from '../../utils/logger'
 import { matchKnowledge } from './CopernicusKnowledgeBase'
 import { unwrapIpc, IpcResult } from '../../types/ipc'
@@ -73,7 +74,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
   const toggleFlip = useLayoutStore(s => s.toggleFlip)
   const centerMode = useLayoutStore(s => s.centerMode)
-  const uiComponents = useLayoutStore(useShallow(s => s.uiComponents))
+  const uiComponents = useUIBuilderStore(useShallow(s => s.uiComponents))
   const flippedPanes = useLayoutStore(useShallow(s => s.flippedPanes))
 
   const [slashSuggestions, setSlashSuggestions] = useState<any[]>([])

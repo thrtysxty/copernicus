@@ -7,6 +7,7 @@ import { UIUpdateChip } from './UIUpdateChip'
 import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
+import { useUIBuilderStore } from '../../store/uiBuilderStore'
 
 
 
@@ -45,7 +46,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
   const [applied, setApplied] = useState(false)
   const [showDiff, setShowDiff] = useState(false)
   const [existingContent, setExistingContent] = useState('')
-  const { setCanvasContent, setUIComponents } = useLayoutStore()
+  const { setCanvasContent } = useLayoutStore()
+  const { setUIComponents } = useUIBuilderStore()
 
   useEffect(() => {
     if (language === 'component-update') {

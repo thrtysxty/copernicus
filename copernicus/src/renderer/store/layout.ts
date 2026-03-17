@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { UIComponent } from '../components/Editor/ui-builder/types'
+
 
 export type StoryboardView = 'planner' | 'designer' | 'editor' | 'reporter' | 'orchestrator' | 'command-center' | 'memory' | 'github' | 'review' | 'git' | 'search' | 'diagnostics' | 'logs' | 'replay' | 'test-explorer' | 'debug'
 export type PaneId = 'explorer' | 'editor' | 'inspector' | 'chat' | 'kanban' | 'orchestrator' | 'terminal'
@@ -43,12 +43,7 @@ export interface KanbanColumn {
   accent: string
 }
 
-interface AgentTelemetry {
-  tokensIn: number
-  tokensOut: number
-  limit: number
-  cost: number
-}
+
 
 export interface TerminalSession {
   id: string
@@ -102,12 +97,7 @@ interface LayoutState {
   tourStep: number
   tourActive: boolean
 
-  // UI Builder State
-  uiBuilderOpen: boolean
-  uiTestingDrawerOpen: boolean
-  paletteOpen: boolean
-  inspectorOpen: boolean
-  uiComponents: UIComponent[]
+
 
   // Browser Session
   browserSessionActive: boolean
@@ -117,14 +107,12 @@ interface LayoutState {
   chatPanelTab: 'chat' | 'guide'
   chatPanelOpen: boolean
 
-  // Telemetry
+  // Git & Working Dir
   workingDir: string
   gitBranch: string
   isGitDirty: boolean
-  capexTotal: number
-  capexSessionTime: number
-  capexTimer: string
-  agentTelemetry: Record<string, AgentTelemetry>
+
+
 
   // Actions
   setView: (view: StoryboardView) => void
@@ -133,9 +121,7 @@ interface LayoutState {
   setSpotlightLane: (id: string | null) => void
   setActiveStoryId: (id: string | null) => void
   setDrawerStory: (id: string | null) => void
-  setTelemetry: (data: Partial<LayoutState>) => void
-  setCapexTimer: (timer: string) => void
-  updateAgentTelemetry: (agentId: string, data: Partial<AgentTelemetry>) => void
+
   setPhosphorColor: (color: PhosphorColor) => void
   setReviewEnabled: (enabled: boolean) => void
   setColumns: (columns: KanbanColumn[]) => void
@@ -149,11 +135,6 @@ interface LayoutState {
   setActiveFile: (path: string) => void
   setFileDirty: (path: string, dirty: boolean) => void
   setAppearance: (patch: Partial<{ uiDensity: 'compact' | 'normal' | 'comfortable', fontSize: number, animationsEnabled: boolean, crtMode: boolean }>) => void
-  toggleUIBuilder: () => void
-  setPaletteOpen: (open: boolean) => void
-  setInspectorOpen: (open: boolean) => void
-  toggleUITestingDrawer: () => void
-  setUIComponents: (components: UIComponent[]) => void
   setWorkingDir: (dir: string) => void
   setGitBranch: (branch: string) => void
   setGitDirty: (dirty: boolean) => void
@@ -275,12 +256,9 @@ export const useLayoutStore = create<LayoutState>()(
       tourStep: 0,
       tourActive: false,
 
-      uiBuilderOpen: false,
-      uiTestingDrawerOpen: false,
-      paletteOpen: true,
-      inspectorOpen: true,
-      uiComponents: [],
       browserSessionActive: false,
+
+
 
       flippedPanes: [],
       chatPanelTab: 'chat',
@@ -289,14 +267,8 @@ export const useLayoutStore = create<LayoutState>()(
       workingDir: '',
       gitBranch: 'main',
       isGitDirty: true,
-      capexTotal: 0,
-      capexSessionTime: 0,
-      capexTimer: '00:00:00',
-      agentTelemetry: {
-        claude: { tokensIn: 0, tokensOut: 0, limit: 200000, cost: 0 },
-        gemini: { tokensIn: 0, tokensOut: 0, limit: 1000000, cost: 0 },
-        jules: { tokensIn: 0, tokensOut: 0, limit: 128000, cost: 0 },
-      },
+
+
 
       setSearchDrawerOpen: (v) => set({ searchDrawerOpen: v }),
 
@@ -324,19 +296,7 @@ export const useLayoutStore = create<LayoutState>()(
 
       setDrawerStory: (id) => set({ drawerStoryId: id }),
 
-      setTelemetry: (data) => set((state) => ({ ...state, ...data })),
 
-      setCapexTimer: (timer) => set({ capexTimer: timer }),
-
-      updateAgentTelemetry: (agentId, data) => set((state) => {
-        const existing = state.agentTelemetry[agentId] || { tokensIn: 0, tokensOut: 0, cost: 0, limit: 1000000 }
-        return {
-          agentTelemetry: {
-            ...state.agentTelemetry,
-            [agentId]: { ...existing, ...data }
-          }
-        }
-      }),
 
       setPhosphorColor: (color) => set({ phosphorColor: color }),
       setReviewEnabled: (enabled) => set({ reviewEnabled: enabled }),
@@ -369,11 +329,6 @@ export const useLayoutStore = create<LayoutState>()(
         openFiles: state.openFiles.map(f => f.path === path ? { ...f, isDirty: dirty } : f)
       })),
       setAppearance: (patch) => set((state) => ({ ...state, ...patch })),
-      toggleUIBuilder: () => set((state) => ({ uiBuilderOpen: !state.uiBuilderOpen })),
-      setPaletteOpen: (open) => set({ paletteOpen: open }),
-      setInspectorOpen: (open) => set({ inspectorOpen: open }),
-      toggleUITestingDrawer: () => set((state) => ({ uiTestingDrawerOpen: !state.uiTestingDrawerOpen })),
-      setUIComponents: (components) => set({ uiComponents: components }),
       setWorkingDir: (dir) => set({ workingDir: dir }),
       setGitBranch: (branch) => set({ gitBranch: branch }),
       setGitDirty: (dirty) => set({ isGitDirty: dirty }),

@@ -305,6 +305,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #398 | Kanban Column Colours Design System | COMPLETE | P1 |
 | #399 | Remove Orphaned Contextstore | COMPLETE | P1 |
 | #400 | Uicanvas Remove Hardcoded Cdn | COMPLETE | P2 |
+| #401 | Layoutstore Split Ui Builder State | COMPLETE | P2 |
 | #402 | Copernicus Worktree Manager — Full System | COMPLETE | P1 |
 | #403 | Extension Loader And Registry | COMPLETE | P1 |
 | #404 | Extension Store And Renderer Integration | COMPLETE | P1 |
@@ -330,6 +331,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
-| #401 | Layoutstore Split Ui Builder State | DRAFT | P2 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
