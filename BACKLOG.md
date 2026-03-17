@@ -150,7 +150,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #379 | Settings Personas And Templates | APPROVED FOR IMPLEMENTATION | P1 |
 | #386 | Integrated Log Viewer | APPROVED FOR IMPLEMENTATION | P2 |
 | #387 | Unified Health View | APPROVED FOR IMPLEMENTATION | P2 |
-| #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | APPROVED FOR IMPLEMENTATION | P1 |
 | #402 | Copernicus Worktree Manager — Full System | APPROVED FOR IMPLEMENTATION | P1 |
 | #404 | Extension Store And Renderer Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #405 | Workflow Node Contribution Point | APPROVED FOR IMPLEMENTATION | P1 |
@@ -226,9 +225,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #298 | Global Visibility Brightness | COMPLETE | P1 |
 | #299 | Stoplight Buttons Vertical Center | COMPLETE | P1 |
 | #300 | App Header Full Width Divider | COMPLETE | P1 |
+| #301 | Spotlight Panel Expand Collapse | COMPLETE | P1 |
 | #302 | Editor File Load White Flash | COMPLETE | P1 |
 | #303 | Editor Multi File Tabs | COMPLETE | P1 |
+| #304 | Editor Header Active Filename | COMPLETE | P1 |
 | #305 | Lsp Indicator Fix | COMPLETE | P2 |
+| #306 | Editor Spotlight Behavior | COMPLETE | P1 |
 | #307 | Designer Ui Files Only | COMPLETE | P2 |
 | #308 | Designer Element Visual Cues | COMPLETE | P2 |
 | #309 | Explorer Header Button Set | COMPLETE | P1 |
@@ -287,6 +289,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #385 | Agent Replay Debugging | COMPLETE | P2 |
 | #388 | Ipc Lint Violations | COMPLETE | P1 |
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | COMPLETE | P1 |
+| #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | COMPLETE | P1 |
 | #392 | Orchestrator Tileinspector Collapses When Empty | COMPLETE | P1 |
 | #394 | Uibuildercanvas Visible Component Overlay | COMPLETE | P1 |
 | #395 | Uibuildercanvas Iframe Colour Tokens And Offline Image | COMPLETE | P2 |
@@ -314,9 +317,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #301 | Spotlight Panel Expand Collapse | DRAFT | P1 |
-| #304 | Editor Header Active Filename | DRAFT | P1 |
-| #306 | Editor Spotlight Behavior | DRAFT | P1 |
 | #332 | Renderer Null To Object Error | DRAFT | P1 |
 | #334 | Semantic Diff Summaries | DRAFT | P1 |
 | #336 | Git Panel | DRAFT | P1 |

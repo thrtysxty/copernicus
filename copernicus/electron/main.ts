@@ -150,7 +150,7 @@ async function registerIpcHandlers() {
 
   worktreeManager = registeredWorktreeManager
 
-  win!.webContents.on('did-navigate', () => {
+  win!.webContents.on('did-start-loading', () => {
     cleanupTestHandlers()
     cleanupReplayHandlers()
     cleanupDebugHandlers()

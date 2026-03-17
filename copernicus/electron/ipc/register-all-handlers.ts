@@ -99,12 +99,7 @@ export async function registerAllIpcHandlers(
   const cleanupWorktreeHandlers = registerWorktreeHandlers(worktreeManager)
   registerSecurityHandlers(ipcMain, globalDeps.settingsStore)
 
-  win.webContents.on('did-navigate', () => {
-    cleanupTestHandlers()
-    cleanupReplayHandlers()
-    cleanupDebugHandlers()
-    cleanupWorktreeHandlers()
-  })
+
 
   return { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager }
 }

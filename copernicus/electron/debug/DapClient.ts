@@ -160,8 +160,8 @@ export class DapClient extends EventEmitter {
       // ignore
     }
     // AC1: Clear pending requests
-    for (const [, { reject }] of this.pendingRequests) {
-      reject(new Error('Debug session stopped'))
+    for (const [, entry] of this.pendingRequests) {
+      entry.reject(new Error('Debug session stopped'))
     }
     this.pendingRequests.clear()
     this.adapterProcess?.kill()
