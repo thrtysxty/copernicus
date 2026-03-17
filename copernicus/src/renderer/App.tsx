@@ -21,6 +21,7 @@ import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 import { TileLibrary } from './components/orchestrator/TileLibrary'
 import { TileInspector } from './components/orchestrator/TileInspector'
+import { WorktreePanel } from './components/orchestrator/WorktreePanel'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
 import { commandRegistry } from './store/commandRegistry'
@@ -439,10 +440,13 @@ export default function App() {
             )}
             {activeView === 'reporter' && <CapexDashboard />}
             {activeView === 'orchestrator' && (
-              <div className="flex flex-1 overflow-hidden">
-                <TileLibrary />
-                <WorkflowCanvas />
-                <TileInspector />
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <div className="flex flex-1 overflow-hidden">
+                  <TileLibrary />
+                  <WorkflowCanvas />
+                  <TileInspector />
+                </div>
+                <WorktreePanel />
               </div>
             )}
             {activeView === 'github' && <GithubDashboard />}

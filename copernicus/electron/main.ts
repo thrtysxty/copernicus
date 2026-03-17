@@ -1,4 +1,7 @@
+import { WorktreeManager } from './worktree/WorktreeManager'
+import { registerWorktreeHandlers } from './ipc/worktree-handlers'
 import { app, BrowserWindow, ipcMain, session, globalShortcut } from 'electron'
+
 import path from 'node:path'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
@@ -104,6 +107,7 @@ process.on('unhandledRejection', (reason: unknown) => {
 export let win: BrowserWindow | null
 let isFirstRun = false;
 let touchBarCleanup: { remove: () => void } | null = null
+let worktreeManager: WorktreeManager | null = null
 
 const VITE_DEV_SERVER_URL = process.env.NODE_ENV === 'development' ? process.env['VITE_DEV_SERVER_URL'] : undefined
 if (process.env.NODE_ENV === 'production' && process.env['VITE_DEV_SERVER_URL']) {
@@ -185,6 +189,8 @@ function registerIpcHandlers() {
   const snapshotManager = new SnapshotManager(stateLedger.db, fsManager.getRootPath());
   workflowEngine.setSnapshotManager(snapshotManager);
 
+  worktreeManager = new WorktreeManager(stateLedger.db, fsManager.getRootPath());
+
   const deps = {
     authManager, githubManager, modelRegistry, settingsStore, storiesManager, devtimeManager,
     fsManager, workflowEngine, snapshotManager, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
@@ -192,8 +198,12 @@ function registerIpcHandlers() {
     genesisRunner,
     applyAndVerifyPatch, reversePatch, runRAGBenchmark, getPlaywright, computeCoveragePct,
     LOG_DIR, dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG, touchBarCleanup,
-    isFirstRun, spawn
+    isFirstRun, spawn,
+    worktreeManager: worktreeManager!,
+    win: win!, // Added win to deps
   }
+
+  workflowEngine.setServices(deps);
   fileHandlers.register(win!, deps)
   authHandlers.register(win!, deps)
   modelHandlers.register(win!, deps)
@@ -215,12 +225,14 @@ function registerIpcHandlers() {
   localModelHandlers.register()
   const cleanupReplayHandlers = registerReplayHandlers()
   const cleanupDebugHandlers = debugHandlers.registerDebugHandlers()
+  const cleanupWorktreeHandlers = registerWorktreeHandlers(worktreeManager)
   registerSecurityHandlers(ipcMain, settingsStore)
 
   win!.webContents.on('did-navigate', () => {
     cleanupTestHandlers()
     cleanupReplayHandlers()
     cleanupDebugHandlers()
+    cleanupWorktreeHandlers()
   })
 
   ipcMain.handle('templates:list', () => handleIpc('templates:list', [], () => {
@@ -287,6 +299,9 @@ app.whenReady().then(() => {
   fsManager.setRootPath(workspaceRoot); storiesManager.setProjectRoot(workspaceRoot);
   addRecentProject(workspaceRoot, settingsStore);
   ensureCopernicusDirectory(); createWindow();
+  if (worktreeManager && win) {
+    worktreeManager.startPolling(win);
+  }
   globalShortcut.register('CommandOrControl+P', () => win?.webContents.send('layout:open-palette', { mode: 'all' }))
   globalShortcut.register('CommandOrControl+Shift+P', () => win?.webContents.send('layout:open-palette', { mode: 'commands' }))
   codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(log.error)

@@ -16,6 +16,8 @@ export interface AgentNodeData {
   outputFile?: string;
   temperature?: number;
   maxTokens?: number;
+  useWorktree?: boolean;
+  mergeMode?: 'gated' | 'yolo';
 }
 
 export interface ToolNodeData {

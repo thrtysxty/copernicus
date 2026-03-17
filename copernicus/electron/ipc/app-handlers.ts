@@ -26,10 +26,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     authManager,
     codebaseIndexer,
     lspManager,
-    ptyManager,
-    julesManager,
-    githubManager,
-    modelRegistry,
+    ptyManager, // Re-added ptyManager
     julesMonitor,
     dispatchJulesSession,
     createTouchBar,
@@ -550,20 +547,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   // Slash Commands
   setupDispatcherHandlers();
-
-  // Workflow engine configuration
-  workflowEngine.setServices({
-    authManager,
-    modelRegistry,
-    ptyManager,
-    stateLedger,
-    fsManager,
-    win,
-    julesManager,
-    githubManager,
-    storiesManager,
-    lspManager,
-  });
 
   let lastReviewSession: any = null
   ipcMain.handle('review:session-complete', (_e, data: any) => handleIpc('review:session-complete', [data], () => {

@@ -255,6 +255,28 @@ function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onProvider
       <Field label="Max Tokens">
         <DebouncedInput type="number" className="inspector-input" initialValue={data.maxTokens ?? 2048} onCommit={(v: number) => onUpdate({ maxTokens: v })} />
       </Field>
+      <div className="space-y-2 pt-3 border-t border-zinc-800/50 mt-3">
+        <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">Worktree</p>
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={data.useWorktree ?? false}
+            onChange={e => onUpdate({ useWorktree: e.target.checked })}
+            className="accent-copernicus-phosphor w-3 h-3"
+          />
+          <span className="text-[10px] font-mono text-zinc-400">Isolated git worktree</span>
+        </label>
+        {data.useWorktree && (
+          <select
+            className="inspector-input"
+            value={data.mergeMode ?? 'gated'}
+            onChange={e => onUpdate({ mergeMode: e.target.value as 'gated' | 'yolo' })}
+          >
+            <option value="gated">Gated — human review</option>
+            <option value="yolo">Yolo — auto-merge</option>
+          </select>
+        )}
+      </div>
     </>
   );
 }

@@ -270,5 +270,18 @@ export const SCHEMA = {
     updated_at TEXT DEFAULT (datetime('now'))
   )`,
   workflow_snapshots: `CREATE TABLE IF NOT EXISTS workflow_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workflow_id TEXT NOT NULL, node_id TEXT NOT NULL, git_sha TEXT NOT NULL, workflow_state TEXT NOT NULL DEFAULT '{}', captured_at TEXT DEFAULT (datetime('now')))`,
-  workflow_snapshots_idx: `CREATE INDEX IF NOT EXISTS idx_ws_workflow_id ON workflow_snapshots(workflow_id)`
+  workflow_snapshots_idx: `CREATE INDEX IF NOT EXISTS idx_ws_workflow_id ON workflow_snapshots(workflow_id)`,
+  agent_worktrees: `CREATE TABLE IF NOT EXISTS agent_worktrees (
+    id           TEXT PRIMARY KEY,
+    branch       TEXT NOT NULL UNIQUE,
+    story_id     TEXT,
+    node_id      TEXT,
+    worktree_path TEXT NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'active',
+    merge_mode   TEXT NOT NULL DEFAULT 'gated',
+    commit_sha   TEXT,
+    commit_count INTEGER NOT NULL DEFAULT 0,
+    created_at   TEXT NOT NULL,
+    completed_at TEXT
+  )`
 };

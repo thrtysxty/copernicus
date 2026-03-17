@@ -121,6 +121,7 @@ const SEND_CHANNELS = new Set([
   // Testing (Story 384)
   'test:discover', 'test:run', 'test:stop', 'test:coverage',
   'layout:goto-line',
+  'worktree:list', 'worktree:create', 'worktree:diff', 'worktree:merge', 'worktree:remove', 'worktree:poll',
   // DAP
   'debug:launch', 'debug:stop', 'debug:pause', 'debug:resume',
   'debug:step-over', 'debug:step-into', 'debug:step-out',
@@ -167,6 +168,7 @@ const LISTEN_CHANNELS = new Set([
   'window:fullscreen-state',
   // Testing (Story 384)
   'test:results',
+  'worktree:completed', 'worktree:merged',
   // DAP
   'debug:event',
 ])

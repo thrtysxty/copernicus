@@ -29,6 +29,8 @@ export interface EngineServices {
   githubManager: GithubManager;
   storiesManager: StoriesManager;
   lspManager: import('../lsp/lsp-manager').LspManager;
+  worktreeManager?: import('../worktree/WorktreeManager').WorktreeManager;
+  snapshotManager: SnapshotManager;
 }
 
 export class WorkflowEngine {
@@ -270,6 +272,18 @@ export class WorkflowEngine {
 
     const { authManager } = this.services;
     const d = node.data as import('./types').AgentNodeData;
+
+    if (d.useWorktree && this.services?.worktreeManager) {
+      const branch = `agent-${node.id}-${Date.now()}`
+      const wt = this.services.worktreeManager.create(
+        branch,
+        this.context.get('__storyId') ?? null,
+        node.id,
+        d.mergeMode ?? 'gated'
+      )
+      this.context.set('__worktreePath', wt.worktreePath)
+      this.context.set('__worktreeBranch', branch)
+    }
 
     const apiKey = authManager.getApiKey(d.provider);
     if (!apiKey && d.provider !== 'ollama' && d.provider !== 'ollama-anthropic') {
