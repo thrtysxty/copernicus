@@ -296,6 +296,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #387 | Unified Health View | COMPLETE | P2 |
 | #388 | Ipc Lint Violations | COMPLETE | P1 |
 | #389 | Gitnexus Mcp — Codebase Intelligence Context Injection | COMPLETE | P1 |
+| #390 | Cred Agent Oauth Delegation — Research Spike | COMPLETE | P2 |
 | #391 | Debug Layer Stability — Dapclient Leaks, Handler Cleanup, Testexplorer Unmount Guard | COMPLETE | P1 |
 | #392 | Orchestrator Tileinspector Collapses When Empty | COMPLETE | P1 |
 | #394 | Uibuildercanvas Visible Component Overlay | COMPLETE | P1 |
@@ -330,6 +331,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #390 | Cred Agent Oauth Delegation — Research Spike | DRAFT | P2 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
