@@ -168,7 +168,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
                       <textarea
                         required
                         className="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors resize-none"
-                        placeholder="A prop rental marketplace for film productions..."
+                        placeholder="A SaaS tool that helps small businesses manage invoices..."
                         value={formData.idea}
                         onChange={e => setFormData({ ...formData, idea: e.target.value })}
                       />
@@ -182,7 +182,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
                         required
                         type="text"
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors"
-                        placeholder="Production managers and prop masters"
+                        placeholder="Freelancers and small business owners"
                         value={formData.audience}
                         onChange={e => setFormData({ ...formData, audience: e.target.value })}
                       />
@@ -195,7 +195,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
                       <textarea
                         required
                         className="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors resize-none"
-                        placeholder="Streamline procurement and logistics for multi-million dollar sets..."
+                        placeholder="Save users hours of manual work by automating the most tedious parts of their workflow..."
                         value={formData.coreValue}
                         onChange={e => setFormData({ ...formData, coreValue: e.target.value })}
                       />
@@ -208,7 +208,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
                       <input
                         type="text"
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors"
-                        placeholder="PropPortal"
+                        placeholder="InvoiceFlow"
                         value={formData.projectName}
                         onChange={e => setFormData({ ...formData, projectName: e.target.value })}
                       />
