@@ -78,6 +78,7 @@ export class StoriesManager {
 
   syncFromDisk(): number {
     if (!fs.existsSync(this.storiesPath)) return 0
+    if (!this.ledger.db.open) return 0
     let count = 0
 
     const files = fs.readdirSync(this.storiesPath)

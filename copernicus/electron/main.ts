@@ -230,7 +230,7 @@ app.whenReady().then(async () => {
   globalShortcut.register('CommandOrControl+Shift+P', () => win?.webContents.send('layout:open-palette', { mode: 'commands' }))
   codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(log.error)
   lspManager.start(fsManager.getRootPath())
-  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify();
+  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(err => log.warn('[AutoUpdater] update check failed:', err));
 
   // Story 361: Auto-start local model if Ollama is not detected
   fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) })
