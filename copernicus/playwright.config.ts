@@ -23,7 +23,7 @@ export default defineConfig({
     },
     {
       name: 'functional',
-      testMatch: ['**/workflow.test.ts', '**/onboarding.test.ts', '**/debug.test.ts'],
+      testMatch: ['**/workflow.test.ts', '**/onboarding.test.ts', '**/debug.test.ts', '**/settings.test.ts', '**/navigation.test.ts'],
     },
     {
       name: 'screenshots',

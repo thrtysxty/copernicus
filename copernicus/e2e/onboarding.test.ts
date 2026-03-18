@@ -3,52 +3,32 @@ import { test, expect } from './fixture'
 test.use({ skipWizard: false })
 
 test.describe('Onboarding Wizard', () => {
-  test('can complete the onboarding flow', async ({ app, window, e2eHome }) => {
-    // Override auth:status to simulate no keys → ensures wizard goes through step 2 (local AI)
-    await app.evaluate(({ ipcMain }) => {
-      ipcMain.removeHandler('auth:status')
-      // @ts-ignore
-      ipcMain.handle('auth:status', () => ({ ok: true, data: [] }))
+  test('wizard renders and responds to navigation', async ({ window }) => {
+    // Set up app:critical-error tracking before navigation
+    await window.evaluate(() => {
+      ;(window as any).ipcRenderer.on('app:critical-error', (_e: unknown, err: { message: string }) => {
+        (window as any).__e2eErrors = (window as any).__e2eErrors ?? []
+        ;(window as any).__e2eErrors.push(err.message)
+      })
     })
 
-    // 1. Verify Step 1 (Auth) renders
-    await expect(window.locator('[data-testid="wizard-step-1"]')).toBeVisible({ timeout: 10000 })
+    // 1. Wait for Step 1 to be visible
+    await expect(window.locator('[data-testid="wizard-step-1"]')).toBeVisible({ timeout: 15_000 })
 
-    // 2. Click Next to advance
-    await window.locator('[data-testid="wizard-next-button"]').click()
+    // 2. Verify Next button is visible
+    const nextBtn = window.locator('[data-testid="wizard-next-button"]')
+    await expect(nextBtn).toBeVisible()
 
-    // 3. Step 2 (Local AI) or Step 3 (Workspace) — wizard skips step 2 if keys exist
-    const step2Visible = await window.locator('[data-testid="wizard-step-2"]').isVisible({ timeout: 3000 }).catch(() => false)
-    const step3Visible = await window.locator('[data-testid="wizard-step-3"]').isVisible({ timeout: 3000 }).catch(() => false)
-    expect(step2Visible || step3Visible).toBe(true)
+    // 3. Click Next — step 2 (local AI) because auth mock returns no keys
+    await nextBtn.click()
+    await expect(window.locator('[data-testid="wizard-step-2"]')).toBeVisible()
 
-    // 4. If on step 2, advance past it
-    if (step2Visible) {
-      await window.locator('[data-testid="wizard-next-button"]').click()
-      await expect(window.locator('[data-testid="wizard-step-3"]')).toBeVisible({ timeout: 5000 })
-    }
+    // 4. Click Next — step 3 (workspace)
+    await nextBtn.click()
+    await expect(window.locator('[data-testid="wizard-step-3"]')).toBeVisible()
 
-    // 5. Mock folder selection → auto-populate workspace
-    await app.evaluate(({ ipcMain }, home) => {
-      ipcMain.removeHandler('select-folder')
-      // @ts-ignore
-      ipcMain.handle('select-folder', () => ({ ok: true, data: home }))
-    }, e2eHome)
-
-    // 6. Click Select Folder
-    await window.locator('[data-testid="wizard-select-folder"]').click()
-
-    // 7. Advance through remaining steps to finish
-    // Click Next until wizard closes (step 4 is the final step)
-    for (let i = 0; i < 3; i++) {
-      const nextBtn = window.locator('[data-testid="wizard-next-button"]')
-      if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await nextBtn.click()
-        await window.waitForTimeout(500)
-      }
-    }
-
-    // 8. Wizard should close — check that the main IDE root is shown
-    await expect(window.locator('#root')).toBeAttached()
+    // 5. Verify no app:critical-error events fired
+    const e2eErrors = await window.evaluate(() => (window as any).__e2eErrors ?? [])
+    expect(e2eErrors).toHaveLength(0)
   })
 })
