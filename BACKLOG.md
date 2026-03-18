@@ -110,6 +110,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #407 | Playwright E2E — Full Ui Coverage Sprint | APPROVED FOR IMPLEMENTATION | P0 — Blocks release verification |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -331,6 +332,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #407 | Playwright E2E — Full Ui Coverage Sprint | DRAFT | P1 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
