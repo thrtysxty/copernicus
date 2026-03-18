@@ -17,12 +17,13 @@ type ElectronFixtures = {
 const APP_MAIN = path.join(__dirname, '../dist-electron/main.js')
 
 function seedPreferences(e2eHome: string) {
-  const prefsPath = path.join(e2eHome, 'preferences.json')
-  if (!fs.existsSync(prefsPath)) {
-    fs.writeFileSync(prefsPath, JSON.stringify({
+  // Write copernicus-settings.json to the isolated userData dir so the app
+  // treats this as an existing workspace and skips first-run wizard.
+  const settingsPath = path.join(e2eHome, 'copernicus-settings.json')
+  if (!fs.existsSync(settingsPath)) {
+    fs.writeFileSync(settingsPath, JSON.stringify({
       workspace: path.join(os.homedir(), 'Projects'),
-      completedAt: new Date().toISOString(),
-      theme: 'phosphor',
+      workingDir: path.join(os.homedir(), 'Projects'),
     }, null, 2))
   }
 }
@@ -52,7 +53,7 @@ export const test = base.extend<E2EOptions & ElectronFixtures>({
     }
 
     const app = await electron.launch({
-      args: [APP_MAIN],
+      args: [APP_MAIN, `--user-data-dir=${e2eHome}`],
       env: {
         ...process.env,
         NODE_ENV: 'test',

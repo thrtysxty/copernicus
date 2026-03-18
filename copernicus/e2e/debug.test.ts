@@ -1,8 +1,7 @@
-import { test, expect } from './fixture'
-import path from 'path'
+import { test, expect, screenshotPath } from './fixture'
 
-test('Debug panel appears', async ({ app, window }) => {
-  // Click Debug icon
+test('Debug panel appears', async ({ window }) => {
+  // Click Debug icon in activity bar
   await window.click('[data-testid="nav-debug"]')
 
   // Wait for Debug panel to appear
@@ -12,6 +11,6 @@ test('Debug panel appears', async ({ app, window }) => {
   const launchNode = window.locator('text=Launch Node').first()
   await expect(launchNode).toBeVisible()
 
-  // Take a screenshot
-  await window.screenshot({ path: '/home/jules/verification/debug_panel.png' })
+  // Screenshot to docs
+  await window.screenshot({ path: screenshotPath('debug-panel') })
 })

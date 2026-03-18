@@ -37,7 +37,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     julesMonitor,
     dispatchJulesSession,
     createTouchBar,
-    isFirstRun
   } = deps
 
   ipcMain.handle('settings:save', (_event, patch: unknown) => handleIpc('settings:save', [patch], async () => {
@@ -487,8 +486,8 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }));
 
   ipcMain.handle('app:get-root-path', () => handleIpc('app:get-root-path', [], () => {
-    if (isFirstRun) return null;
-    return settingsStore.get('workspace', null) || fsManager.getRootPath();
+    // Return null when no workspace is configured (first-run state triggers wizard)
+    return (settingsStore.get('workspace', null) as string | null) || null;
   }))
 
   ipcMain.handle('app:get-user-guide', () => handleIpc('app:get-user-guide', [], async () => {

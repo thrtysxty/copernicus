@@ -416,6 +416,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                     {col.id === 'planning' && (
                       <div ref={dropdownRef} className="relative mb-2">
                         <button
+                          data-testid="add-story-button"
                           onClick={() => setShowCreateDropdown(v => !v)}
                           className="w-full flex items-center justify-center gap-1 py-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor border border-dashed border-zinc-800 hover:border-copernicus-phosphor/40 rounded transition-colors"
                         >
@@ -426,6 +427,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                             {TEMPLATE_MANIFEST.map(t => (
                               <button
                                 key={t.id}
+                                data-testid={`template-${t.label.toLowerCase()}`}
                                 onClick={() => { setNewTitle(''); setNewEpic(''); setCreation({ phase: 'form', type: t.label }); setShowCreateDropdown(false) }}
                                 className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 flex items-center gap-2"
                               >

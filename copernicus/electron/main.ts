@@ -40,7 +40,7 @@ import { localModelManager } from './local-model/LocalModelManager'
 import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
-import { ensureCopernicusDirectory } from './utils/app-setup'
+import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -68,6 +68,12 @@ export let win: BrowserWindow | null
 let isFirstRun = false;
 let touchBarCleanup: { remove: () => void } | null = null
 let worktreeManager: WorktreeManager | null = null
+let ipcCleanupFns: {
+  cleanupTestHandlers: () => void
+  cleanupReplayHandlers: () => void
+  cleanupDebugHandlers: () => void
+  cleanupWorktreeHandlers: () => void
+} | null = null
 
 const VITE_DEV_SERVER_URL = process.env.NODE_ENV === 'development' ? process.env['VITE_DEV_SERVER_URL'] : undefined
 if (process.env.NODE_ENV === 'production' && process.env['VITE_DEV_SERVER_URL']) {
@@ -117,6 +123,14 @@ function createWindow() {
   win.on('leave-full-screen', () => win?.webContents.send('window:fullscreen-state', false))
 
   win.webContents.on('did-finish-load', () => win?.webContents.send('main-process-message', (new Date).toLocaleString()))
+  if (ipcCleanupFns) {
+    win.webContents.on('did-start-loading', () => {
+      ipcCleanupFns!.cleanupTestHandlers()
+      ipcCleanupFns!.cleanupReplayHandlers()
+      ipcCleanupFns!.cleanupDebugHandlers()
+      ipcCleanupFns!.cleanupWorktreeHandlers()
+    })
+  }
   if (isFirstRun) {
     VITE_DEV_SERVER_URL ? win.loadURL(`${VITE_DEV_SERVER_URL}?window=wizard`) : win.loadFile(path.join(process.env.DIST!, 'index.html'), { query: { window: 'wizard' } })
   } else {
@@ -132,7 +146,7 @@ async function registerIpcHandlers() {
         applyAndVerifyPatch, reversePatch, runRAGBenchmark,
         getPlaywright: async () => await import('playwright-core'), // utility function not a manager
         dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG,
-        isFirstRun, spawn
+        isFirstRun, spawn, LOG_DIR
       }
 
   ipcMain.handle('review:generate-summary', (_e, { diff, storyId, storyTitle }) => handleIpc(async () => {
@@ -165,13 +179,7 @@ async function registerIpcHandlers() {
     await registerAllIpcHandlers(win!, globalDeps, touchBarCleanup)
 
   worktreeManager = registeredWorktreeManager
-
-  win!.webContents.on('did-start-loading', () => {
-    cleanupTestHandlers()
-    cleanupReplayHandlers()
-    cleanupDebugHandlers()
-    cleanupWorktreeHandlers()
-  })
+  ipcCleanupFns = { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers }
 }
 
 app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !== 'darwin') app.quit() })
@@ -201,14 +209,20 @@ app.whenReady().then(async () => {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [`default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; ${connectSrc}; worker-src 'self' blob: file:;`] } })
   })
-  let workspaceRoot = (settingsStore.getAll().workspace as string) || (settingsStore.getAll().workingDir as string) || path.join(os.homedir(), 'Copernicus');
-  if (!fs.existsSync(workspaceRoot)) try { fs.mkdirSync(workspaceRoot, { recursive: true }); } catch (e) { log.error(e); workspaceRoot = os.homedir(); }
-  
-  settingsStore.set('workspace', workspaceRoot);
-  settingsStore.set('workingDir', workspaceRoot);
-  fsManager.setRootPath(workspaceRoot); storiesManager.setProjectRoot(workspaceRoot);
-  addRecentProject(workspaceRoot, settingsStore);
-  ensureCopernicusDirectory(settingsStore, { current: isFirstRun }); createWindow();
+  // Only configure workspace if it was already saved — new users go through the wizard
+  const existingWorkspace = (settingsStore.getAll().workspace as string) || (settingsStore.getAll().workingDir as string)
+  if (existingWorkspace) {
+    let workspaceRoot = existingWorkspace
+    if (!fs.existsSync(workspaceRoot)) try { fs.mkdirSync(workspaceRoot, { recursive: true }); } catch (e) { log.error(e); workspaceRoot = os.homedir(); }
+    settingsStore.set('workspace', workspaceRoot);
+    settingsStore.set('workingDir', workspaceRoot);
+    fsManager.setRootPath(workspaceRoot); storiesManager.setProjectRoot(workspaceRoot);
+    addRecentProject(workspaceRoot, settingsStore);
+  }
+  const firstRunRef = { current: isFirstRun }
+  ensureCopernicusDirectory(settingsStore, firstRunRef)
+  isFirstRun = firstRunRef.current
+  createWindow();
   if (worktreeManager && win) {
     worktreeManager.startPolling(win);
   }
