@@ -15,8 +15,10 @@ export class WorktreeManager {
   constructor(db: Database.Database, repoRoot: string) {
     this.db = db
     this.repoRoot = repoRoot
-    this.worktreesDir = path.join(this.repoRoot, '.agent-worktrees')
-    fs.mkdirSync(this.worktreesDir, { recursive: true })
+    this.worktreesDir = repoRoot ? path.join(this.repoRoot, '.agent-worktrees') : ''
+    if (this.worktreesDir) {
+      fs.mkdirSync(this.worktreesDir, { recursive: true })
+    }
   }
 
   create(

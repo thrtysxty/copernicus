@@ -195,7 +195,13 @@ app.on('before-quit', async () => {
 })
 
 app.whenReady().then(async () => {
-  await registerIpcHandlers(); backendManager.start(); setTimeout(() => socketManager.connect(), 3000)
+  try {
+    await registerIpcHandlers()
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? (err.stack ?? err.message) : String(err)
+    log.error('[Main] CRITICAL: registerIpcHandlers() failed — window will open without handlers:', msg)
+  }
+  backendManager.start(); setTimeout(() => socketManager.connect(), 3000)
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({ applicationName: 'COPERNICUS', applicationVersion: '0.1.0', copyright: '© 2026 COPERNICUS IDE Team', credits: 'Professional Phosphor Edition' });
   }
