@@ -26,30 +26,20 @@
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*",
-      "node_modules/better-sqlite3/**/*",
-      "node_modules/node-pty/**/*",
-      "node_modules/sqlite-vec/**/*",
-      "node_modules/sqlite-vec-darwin-arm64/**/*",
-      "node_modules/typescript-language-server/**/*",
-      "node_modules/typescript/**/*",
-      "node_modules/vscode-languageserver-protocol/**/*",
-      "node_modules/vscode-languageserver-types/**/*",
-      "node_modules/vscode-jsonrpc/**/*"
+      "dist-electron/**/*"
     ],
     "asar": true,
     "asarUnpack": [
-      "**/node_modules/node-pty/**",
-      "**/node_modules/better-sqlite3/**",
-      "**/node_modules/sqlite-vec/**",
-      "**/node_modules/sqlite-vec-darwin-arm64/**",
-      "**/node_modules/sqlite-vec-linux-arm64/**",
-      "**/node_modules/sqlite-vec-win32-x64/**",
-      "**/node_modules/typescript-language-server/**",
-      "**/node_modules/typescript/**",
-      "**/node_modules/vscode-languageserver-protocol/**",
-      "**/node_modules/vscode-languageserver-types/**",
-      "**/node_modules/vscode-jsonrpc/**"
+      "**/*.node",
+      "node_modules/node-pty/**",
+      "node_modules/better-sqlite3/**",
+      "node_modules/sqlite-vec/**",
+      "node_modules/sqlite-vec-darwin-arm64/**",
+      "node_modules/typescript-language-server/**",
+      "node_modules/typescript/**",
+      "node_modules/vscode-languageserver-protocol/**",
+      "node_modules/vscode-languageserver-types/**",
+      "node_modules/vscode-jsonrpc/**"
     ],
     "mac": {
       "icon": "resources/icons/icon.icns",
