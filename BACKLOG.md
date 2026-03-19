@@ -122,6 +122,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #423 | 423 Genesis Scaffold Shell Injection Fix | APPROVED FOR IMPLEMENTATION | P1 — Security |
 | #424 | 424 Worktreepanel Ipc Standard Compliance | APPROVED FOR IMPLEMENTATION | P1 — Security/Standards |
+| #425 | 425 Cloud Agent Tool Calling Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
