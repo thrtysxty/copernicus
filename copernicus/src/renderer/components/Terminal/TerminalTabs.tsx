@@ -1,9 +1,7 @@
 import React from 'react';
 import { Terminal } from './Terminal';
-import { GeminiPanel } from './GeminiPanel';
-import { JulesPanel } from '../jules/JulesPanel';
 import { useLayoutStore } from '../../store/layout';
-import { X, Loader2, Square, Plus, RotateCcw, Maximize2, ChevronDown } from 'lucide-react';
+import { X, Loader2, Square, Plus, RotateCcw, Maximize2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { IpcResult } from '../../types/ipc';
 
@@ -15,6 +13,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
   const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy, addTerminal } = useLayoutStore();
   const setSpotlight = useLayoutStore(s => s.setSpotlight);
   const spotlightPane = useLayoutStore(s => s.spotlightPane);
+  const terminalOpen = useLayoutStore(s => s.terminalOpen);
   const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen);
   const toggleArchive = useLayoutStore(s => s.toggleArchive);
   const invoke = useIpcError();
@@ -27,15 +26,6 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
     const segments = pathStr.split('/').filter(Boolean);
     if (segments.length <= 2) return pathStr;
     return `.../${segments.slice(-2).join('/')}`;
-  };
-
-  const getAgentBadge = (label: string) => {
-    const l = label.toLowerCase();
-    if (l.includes('claude')) return { letter: 'C', color: 'text-[#4ADE80]' };
-    if (l.includes('gemini')) return { letter: 'G', color: 'text-[#60A5FA]' };
-    if (l.includes('jules')) return { letter: 'J', color: 'text-[#FBBF24]' };
-    if (l.includes('ollama')) return { letter: 'O', color: 'text-orange-400' };
-    return null;
   };
 
   const handleStopAgent = async (e: React.MouseEvent, id: string) => {
@@ -65,20 +55,13 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
               `}
               onClick={() => setActiveTerminal(tab.id)}
             >
-              {(() => {
-                const badge = getAgentBadge(tab.label);
-                if (badge) {
-                  return (
-                    <span className={`mr-1.5 font-bold ${badge.color} ${tab.isBusy ? 'animate-pulse' : ''}`}>
-                      {badge.letter}
-                    </span>
-                  );
-                }
-                if (tab.isBusy) {
-                  return <Loader2 size={8} className="animate-spin mr-1.5 text-copernicus-phosphor" />;
-                }
-                return null;
-              })()}
+              {tab.isBusy ? (
+                  <Loader2 size={8} className="animate-spin mr-1.5 text-copernicus-phosphor" />
+                ) : (
+                  <span className={`mr-1.5 font-bold text-zinc-500`}>
+                    {tab.label.charAt(0).toUpperCase()}
+                  </span>
+                )}
 
               <span className={`truncate ${tab.isBusy ? 'phosphor-glow font-bold' : ''}`}>
                 {tab.label}
@@ -89,7 +72,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
 
               {terminals.length > 1 && (
                 <div className="flex items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity pl-2">
-                  {getAgentBadge(tab.label) && tab.isBusy ? (
+                  {tab.isBusy ? (
                     <button
                       onClick={(e) => handleStopAgent(e, tab.id)}
                       className="hover:text-red-400 transition-colors mr-1"
@@ -148,11 +131,11 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
           </button>
           <button
             data-testid="terminal-collapse-btn"
-            onClick={() => setTerminalOpen(false)}
+            onClick={() => setTerminalOpen(!terminalOpen)}
             className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100"
-            title="Collapse panel"
+            title={terminalOpen ? 'Collapse panel' : 'Expand panel'}
           >
-            <ChevronDown size={12} />
+            {terminalOpen ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
           </button>
         </div>
       </div>
@@ -162,13 +145,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             key={tab.id}
             className={`absolute inset-0 ${activeTerminalId === tab.id ? 'z-10 visible' : 'z-0 invisible'}`}
           >
-            {tab.id === 'terminal-jules' ? (
-              <JulesPanel />
-            ) : tab.id.startsWith('gemini-') ? (
-              <GeminiPanel sessionId={tab.id.slice('gemini-'.length)} />
-            ) : (
-              <Terminal id={tab.id} active={activeTerminalId === tab.id} cwd={cwd} />
-            )}
+            <Terminal id={tab.id} active={activeTerminalId === tab.id} cwd={cwd} />
           </div>
         ))}
       </div>

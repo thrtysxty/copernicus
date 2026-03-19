@@ -6,8 +6,8 @@ export interface KnowledgeEntry {
 
 export const COP_KNOWLEDGE_BASE: KnowledgeEntry[] = [
   {
-    trigger: ['how do i dispatch to jules', 'send to jules', 'jules dispatch'],
-    response: "Open the Story Drawer (click a card), set Assigned to Jules, then click → Jules. I'll watch the session and flag the card when the PR is ready for your review."
+    trigger: ['how do i assign an agent', 'agent dispatch', 'assign agent'],
+    response: "Open the Story Inspector (click a card), set Assigned To your preferred agent, then trigger it from the Workflow view."
   },
   {
     trigger: ['what is the canvas', 'designer', 'ui builder', 'canvas'],
@@ -43,8 +43,8 @@ export const COP_KNOWLEDGE_BASE: KnowledgeEntry[] = [
     response: "I'm Copernicus, your guide! You can ask me about IDE features, use the @help context in chat for the full manual, or click the '?' in the status bar for a quick overview."
   },
   {
-    trigger: ['model switching', 'change model', 'claude', 'gemini'],
-    response: "Switch models in the Persona tab (on the back of this panel) or click the model name in the Chat Header. Use Claude for coding and Gemini for long-context research."
+    trigger: ['model switching', 'change model'],
+    response: "Switch models in the Persona tab or click the model name in the Chat Header. Choose the model that best fits your task."
   },
   {
     trigger: ['mcp servers', 'mcp', 'context'],

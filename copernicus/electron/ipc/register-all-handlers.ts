@@ -22,6 +22,7 @@ import * as chatHandlers from './chat-handlers'
 import * as storyHandlers from './story-handlers'
 import * as workflowHandlers from './workflow-handlers'
 import * as terminalHandlers from './terminal-handlers'
+import * as terminalAgentHandlers from './terminal-agent-handlers'
 import * as appHandlers from './app-handlers'
 import * as capexHandlers from './capex-handlers'
 import * as genesisHandlers from './genesis-handlers'
@@ -82,6 +83,7 @@ export async function registerAllIpcHandlers(
   storyHandlers.register(win, deps)
   workflowHandlers.register(win, deps)
   terminalHandlers.register(win, deps)
+  terminalAgentHandlers.register(win, deps)
   appHandlers.register(win, deps)
   capexHandlers.registerCapexHandlers()
   genesisHandlers.register(win, deps)

@@ -4,7 +4,7 @@ import { useToastStore } from '../../../store/toastStore'
 import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
   ShieldCheck, Loader2, GripVertical, Zap, Check,
-  Brain, Bot, HardDrive, ArrowLeftRight, GitPullRequest, Plug
+  Brain, Bot, HardDrive, ArrowLeftRight, Plug
 } from 'lucide-react'
 import log from '../../../utils/logger'
 
@@ -16,7 +16,7 @@ const PROVIDER_ICONS: Record<string, React.FC<any>> = {
   'ollama-cloud': HardDrive,
   openrouter:  ArrowLeftRight,
   deepinfra:   Cpu,
-  jules:       GitPullRequest,
+
 }
 
 const ProviderIcon: React.FC<{ provider: string }> = ({ provider }) => {
@@ -38,7 +38,7 @@ export const ProvidersSection: React.FC = () => {
   const [status, setStatus] = useState<AuthStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
-  const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'jules', 'openrouter', 'deepinfra', 'ollama', 'ollama-cloud'])
+  const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama', 'ollama-cloud'])
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [keyDraft, setKeyDraft] = useState<Record<string, string>>({})

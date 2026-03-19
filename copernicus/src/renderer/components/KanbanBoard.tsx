@@ -82,7 +82,11 @@ const StoryCard = React.memo(({
       onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
       className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor overflow-hidden ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
       onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(spotlightLane === colId ? null : colId); }}
-      onDoubleClick={() => handleOpen()}
+      onDoubleClick={(e) => {
+        e.preventDefault(); // Prevent onClick from firing
+        setSpotlightLane(null); // Collapse the card/lane if expanded
+        handleOpen(); // Open the inspector
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -187,11 +191,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
     return () => document.removeEventListener('mousedown', handler)
   }, [showCreateDropdown])
 
-  const fetchJulesSessions = useCallback(async () => {
-    try {
-      await invoke<any>('jules:list-sessions')
-    } catch { /* session list unavailable */ }
-  }, [invoke])
+
 
   const refreshData = useCallback(async () => {
     try {
@@ -199,11 +199,10 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       setStories(unwrapIpc<any>(_rawStories) ?? [])
       const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
       setIsRepoTargeted(unwrapIpc<any>(_rawTargeted) ?? false)
-      fetchJulesSessions()
     } catch (e) {
       log.warn('Failed to fetch stories', e)
     }
-  }, [invoke, fetchJulesSessions])
+  }, [invoke])
 
   useEffect(() => {
     refreshData()
@@ -238,7 +237,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       removeStoriesUpdate()
       removeStatusChanged()
     }
-  }, [invoke, fetchJulesSessions, refreshData])
+  }, [invoke, refreshData])
 
   const handleDrop = async (e: React.DragEvent, targetStatus: string) => {
     e.preventDefault()

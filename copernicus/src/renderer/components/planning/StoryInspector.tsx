@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Save, Trash2, Archive } from 'lucide-react'
+import { ArrowLeft, Trash2, Archive, Check, X } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import { useToastStore } from '../../store/toastStore'
@@ -56,7 +56,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [showSavedIndicator, setShowSavedIndicator] = useState(false)
   
-  const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'gemini', 'jules', 'human'])
+  const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'human'])
   const [workflowTemplates, setWorkflowTemplates] = useState<{ id: string, name: string }[]>([])
   const [workflowStatus, setWorkflowStatus] = useState<string | null>(null)
   const [workflowStartTime, setWorkflowStartTime] = useState<number | null>(null)
@@ -77,12 +77,24 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   }, [storyId, story])
 
   useEffect(() => {
-    invoke<any>('models:list').then(result => {
-      const models = unwrapIpc<Array<{ id: string }>>(result)
-      if (Array.isArray(models)) {
-        setModelOptions(['(unassigned)', ...models.map(m => m.id), 'gemini', 'jules', 'human'])
+    const fetchModelOptions = async () => {
+      const uniqueModelNames = new Set<string>();
+      
+      try {
+        const modelsResult = await invoke<any>('models:list');
+        const models = unwrapIpc<Array<{ id: string; name: string }>>(modelsResult);
+        if (Array.isArray(models)) {
+          models.forEach(m => uniqueModelNames.add(m.name));
+        }
+      } catch (error) {
+        log.error('Failed to fetch models list:', error);
       }
-    }).catch(() => {})
+
+      const sortedModels = Array.from(uniqueModelNames).sort();
+      setModelOptions(['(unassigned)', ...sortedModels, 'human']);
+    };
+
+    fetchModelOptions();
 
     invoke<any>('workflow:list-templates').then(result => {
       const data = unwrapIpc<any[]>(result)
@@ -298,6 +310,21 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
             </button>
             <div className="flex items-center gap-1">
               <button
+                onClick={handleCancel}
+                className="p-1 hover:text-copernicus-phosphor transition-colors"
+                title="Cancel"
+              >
+                <X size={11} />
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="p-1 hover:text-copernicus-phosphor transition-colors"
+                title="Save"
+              >
+                <Check size={11} />
+              </button>
+              <button
                 onClick={handleArchive}
                 className="p-1 text-zinc-700 hover:text-blue-400 transition-colors"
                 title="Archive"
@@ -454,22 +481,6 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
                    </motion.span>
                  )}
                </AnimatePresence>
-            </div>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={handleCancel}
-                className="text-[10px] font-bold px-3 py-1.5 rounded hover:bg-white/5 text-zinc-400 transition-colors uppercase tracking-widest"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSave}
-                disabled={isSaving}
-                className="text-[10px] font-bold px-3 py-1.5 rounded bg-copernicus-phosphor text-[#050505] hover:bg-copernicus-phosphor/90 transition-colors uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-50"
-              >
-                <Save size={12} />
-                {isSaving ? 'Saving' : 'Save'}
-              </button>
             </div>
           </div>
         </div>
