@@ -120,11 +120,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #415 | Designer Tile Visual Fidelity | APPROVED FOR IMPLEMENTATION | P1 |
 | #416 | Orchestrator Cleanup | APPROVED FOR IMPLEMENTATION | P1 |
 | #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #423 | 423 Genesis Scaffold Shell Injection Fix | APPROVED FOR IMPLEMENTATION | P1 — Security |
-| #424 | 424 Worktreepanel Ipc Standard Compliance | APPROVED FOR IMPLEMENTATION | P1 — Security/Standards |
-| #427 | Workflow Step Events Ipc | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #428 | Sqlite State Canonicalization Rule | APPROVED FOR IMPLEMENTATION | P2 — Tech Debt |
-| #429 | Ipc Batching And Caching Layer | APPROVED FOR IMPLEMENTATION | P2 — Performance |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -333,10 +328,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #420 | Agent Assignment Genericization | COMPLETE | P0 — Correctness |
 | #421 | Terminal Purge And Agent Terminal | COMPLETE | P0 — Correctness |
 | #422 | Agent Agnostic Diff Review | COMPLETE | P1 — Correctness |
+| #423 | 423 Genesis Scaffold Shell Injection Fix | COMPLETE | P1 — Security |
+| #424 | 424 Worktreepanel Ipc Standard Compliance | COMPLETE | P1 — Security/Standards |
+| #425 | 425 Cloud Agent Tool Calling Loop | COMPLETE | P1 |
 | #426 | Agent Sandbox Isolation For Bash Tool | COMPLETE | P1 — Security |
+| #427 | Workflow Step Events Ipc | COMPLETE | P1 — Feature |
+| #428 | Sqlite State Canonicalization Rule | COMPLETE | P2 — Tech Debt |
+| #429 | Ipc Batching And Caching Layer | COMPLETE | P2 — Performance |
 | #430 | Registerallipchandlers Decomposition | COMPLETE | P2 — Tech Debt |
 | #431 | Workflow Engine Shell Injection Fix | COMPLETE | P0 — Security (blocking) |
-| #425 | 425 Cloud Agent Tool Calling Loop | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
