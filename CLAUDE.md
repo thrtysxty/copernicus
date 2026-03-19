@@ -22,6 +22,9 @@ Claude's role is **Plan → Delegate → Review**. Not implement.
 - Run `gemini ... &` — use `gemini_session_manager.py spawn` instead
 - Dispatch multiple overlapping stories to Gemini simultaneously if they touch the same files
 - Do Gemini's implementation work because it "seems faster"
+- Make **any** aesthetic, styling, className, or layout change not explicitly listed in the story ACs — frozen surfaces are frozen, full stop
+- Report cloud model audit findings without first verifying them by **reading the actual files** — cloud models hallucinate; never trust agent-reported results
+- Commit code without first running `tsc --noEmit` — zero TypeScript errors is a hard gate
 
 ### UI Story Dispatch — Design Preservation Header
 
@@ -162,6 +165,28 @@ You have access to tools. To use them, output strict XML tags in your response.
 4. **Development Orchestrator (Cloud Dispatch):**
    `<exec_command>python3 dev_orchestrator/cloud_agent.py coder "Refactor IPC" --worktree feature-refactor</exec_command>`
 
+## Repo Intelligence — Low-Token Code Awareness
+
+Before reading full files, use these to understand structure cheaply:
+
+```bash
+# Exports/signatures only — no bodies (~5 tokens/symbol vs full file)
+python3 scripts/repo_intelligence.py outline <file>
+
+# Import chain — what does this file depend on?
+python3 scripts/repo_intelligence.py imports <file> [--depth 2]
+
+# All references to a symbol across ts,tsx,py
+python3 scripts/repo_intelligence.py usages <symbol>
+
+# What changed vs HEAD (or any ref)
+python3 scripts/repo_intelligence.py changed [--base main]
+```
+
+Use `outline` before dispatching any story that touches a file you haven't read this session.
+Use `imports` before editing shared utilities to understand blast radius.
+Use `usages` instead of grepping manually for a symbol.
+
 ## Common Commands
 ```bash
 make dev             # Start Backend (5001) + COPERNICUS (3000)
@@ -238,7 +263,7 @@ These are **non-negotiable** for all new code and all stories written going forw
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **agentic-platform** (30871 symbols, 63402 relationships, 257 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **agentic-platform** (36916 symbols, 77933 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
