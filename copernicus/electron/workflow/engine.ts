@@ -165,6 +165,12 @@ export class WorkflowEngine {
       // Optionally push a global error if needed, but per-node errors are more granular
     } finally {
       this.snapshotManager?.endRun()
+      const { browserSession } = await import('../browser-session')
+      if (browserSession.browser) {
+        await browserSession.browser.close().catch(() => {})
+        browserSession.browser = null
+        browserSession.page = null
+      }
     }
   }
 
@@ -518,7 +524,7 @@ export class WorkflowEngine {
       case 'kanban-flag-card': {
         const storyId = this.context.get('__storyId')
         if (!storyId) throw new Error('kanban-flag-card: __storyId missing from context')
-        await this.services.storiesManager.setField(storyId, 'flagged', true)
+        this.services.storiesManager.setField(storyId, 'flagged', true)
         this.services.win.webContents.send('stories:updated', this.services.storiesManager.listStories())
         return `kanban-flag-card:flagged:${storyId}`
       }
