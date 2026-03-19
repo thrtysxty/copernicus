@@ -9,6 +9,17 @@ import threading
 from datetime import datetime
 from ollama import Client as OllamaClient
 
+# Load ~/.secrets into environment for non-login shells (Claude Code, VS Code terminals)
+_secrets_path = os.path.expanduser("~/.secrets")
+if os.path.exists(_secrets_path):
+    with open(_secrets_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _key, _, _val = _line.lstrip('export ').partition('=')
+                if _key.strip() and _key.strip() not in os.environ:
+                    os.environ[_key.strip()] = _val.strip()
+
 # Standalone Cloud Agent System (V2.3.1)
 # Development-only tool for orchestration via an active Orchestrator.
 # Routes :cloud models directly to Ollama's Cloud API.

@@ -122,7 +122,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #423 | 423 Genesis Scaffold Shell Injection Fix | APPROVED FOR IMPLEMENTATION | P1 — Security |
 | #424 | 424 Worktreepanel Ipc Standard Compliance | APPROVED FOR IMPLEMENTATION | P1 — Security/Standards |
-| #425 | 425 Cloud Agent Tool Calling Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -331,6 +330,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #420 | Agent Assignment Genericization | COMPLETE | P0 — Correctness |
 | #421 | Terminal Purge And Agent Terminal | COMPLETE | P0 — Correctness |
 | #422 | Agent Agnostic Diff Review | COMPLETE | P1 — Correctness |
+| #425 | 425 Cloud Agent Tool Calling Loop | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
