@@ -54,6 +54,7 @@ export const UIBuilderCanvas: React.FC = () => {
     paletteOpen, inspectorOpen
   } = useUIBuilderStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const invoke = useIpcError()
@@ -143,23 +144,26 @@ export const UIBuilderCanvas: React.FC = () => {
     const base = 'w-full h-full flex items-center justify-center overflow-hidden pointer-events-none select-none'
     switch (type) {
       case 'button':
-        return <div className={`${base}`}><span className="bg-copernicus-phosphor/90 text-[#050505] font-mono font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-none">{props.text || 'BUTTON'}</span></div>
+        return <div className="w-full h-full flex items-center justify-center px-2"><div className="w-full bg-copernicus-phosphor/80 text-[#050505] font-mono font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 flex items-center justify-center">{props.text || 'BUTTON'}</div></div>
       case 'input':
-        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1">{props.placeholder || 'Input...'}</div></div>
+        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 flex items-center"><span>{props.placeholder || 'Input...'}</span><span className="animate-pulse ml-0.5">|</span></div></div>
       case 'textarea':
-        return <div className={`${base} px-2`}><div className="w-full h-4/5 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1">{props.placeholder || 'Textarea...'}</div></div>
+        return <div className={`${base} px-2`}><div className="w-full h-4/5 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 relative"><span>{props.placeholder || 'Textarea...'}</span><span className="animate-pulse ml-0.5">|</span><div className="mt-1 flex flex-col gap-1 absolute bottom-0 left-0 w-full px-2"><div className="h-px bg-zinc-700/30 w-full"/><div className="h-px bg-zinc-700/30 w-full"/></div></div></div>
       case 'select':
         return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 flex items-center justify-between"><span>Select...</span><span>▾</span></div></div>
       case 'heading':
-        return <div className={`${base} px-2`}><span className="font-mono font-bold text-zinc-200 text-sm">{props.text || 'Heading'}</span></div>
+        return <div className={`${base} px-2`}><span className="font-mono font-bold text-zinc-200 text-sm border-b border-zinc-700/50 pb-0.5 mx-2">{props.text || 'Heading'}</span></div>
       case 'paragraph':
       case 'label':
-        return <div className={`${base} px-2`}><span className="font-mono text-zinc-400 text-[10px]">{props.text || type}</span></div>
+        return <div className="w-full px-2 flex flex-col gap-1.5 justify-center h-full"><div className="h-1.5 bg-zinc-700/60 rounded-full w-full"/><div className="h-1.5 bg-zinc-700/60 rounded-full w-4/5"/><div className="h-1.5 bg-zinc-700/60 rounded-full w-3/5"/></div>
       case 'container':
+        return <div className="w-full h-full relative border-2 border-dashed border-zinc-700/50 bg-zinc-900/20"><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">CONTAINER</span></div>
       case 'row':
+        return <div className="w-full h-full relative border border-zinc-700 flex justify-around items-center"><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">ROW</span><span>→</span><span>→</span><span>→</span></div>
       case 'column':
+        return <div className="w-full h-full relative border border-zinc-700 flex flex-col items-center justify-around"><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">COLUMN</span><span>↓</span><span>↓</span><span>↓</span></div>
       case 'card':
-        return <div className="w-full h-full border-2 border-dashed border-zinc-700/50 bg-zinc-900/20" />
+        return <div className="w-full h-full flex flex-col relative"><div className="w-full h-[20%] bg-zinc-800"/><div className="w-full h-[80%] bg-zinc-900/30"/></div>
       case 'badge':
         return <div className={`${base}`}><span className="bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[9px] px-2 py-0.5 rounded-full">{props.text || 'Badge'}</span></div>
       case 'alert':
@@ -167,9 +171,9 @@ export const UIBuilderCanvas: React.FC = () => {
       case 'divider':
         return <div className={`${base}`}><div className="w-full border-t border-zinc-700" /></div>
       case 'spacer':
-        return <div className="w-full h-full border border-dashed border-zinc-800/50" />
+        return <div className="w-full h-full border border-dashed border-zinc-800/50 flex items-center justify-center bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(255,255,255,0.03)_4px,rgba(255,255,255,0.03)_5px)]"><span className="text-[8px] text-zinc-600">SPACER</span></div>
       case 'image':
-        return <div className={`${base} bg-zinc-900/60`}><ImageIcon size={24} className="text-zinc-700" /></div>
+        return <div className="w-full h-full relative flex items-center justify-center bg-[repeating-conic-gradient(#1a1a1a_0%_25%,#111_0%_50%)] bg-[length:16px_16px]"><ImageIcon size={24} className="text-zinc-700" /><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">IMAGE</span></div>
       default:
         return <div className={`${base}`}><span className="font-mono text-zinc-600 text-[9px] uppercase">{type}</span></div>
     }
@@ -256,11 +260,13 @@ export const UIBuilderCanvas: React.FC = () => {
 
         {/* Inspector */}
         {inspectorOpen && selectedComponent && (
-          <div className="w-72 border-l border-zinc-800 bg-[#080808] flex flex-col overflow-y-auto no-scrollbar animate-in slide-in-from-right duration-200">
+          <div className={`border-l border-zinc-800 bg-[#080808] flex flex-col overflow-y-auto no-scrollbar animate-in slide-in-from-right duration-200 transition-all duration-200 ${inspectorCollapsed ? 'w-9' : 'w-72'}`}>
             <UIComponentInspector 
               component={selectedComponent}
               onChange={(updated) => updateComponent(selectedComponent.id, updated)}
               onDelete={() => deleteComponent(selectedComponent.id)}
+              collapsed={inspectorCollapsed}
+              setCollapsed={setInspectorCollapsed}
             />
           </div>
         )}

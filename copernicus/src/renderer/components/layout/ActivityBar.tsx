@@ -1,8 +1,8 @@
 import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
-  Activity, Brain, Github, Settings, FolderPlus,
-  Diff, GitBranch, Search, AlertTriangle, ScrollText, History, Bug
+  Activity, Brain, Settings, FolderPlus,
+  Diff, GitBranch, FlaskConical,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
 
@@ -70,16 +70,17 @@ export const ActivityBar: React.FC = () => {
 
   return (
     <aside className="w-12 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center z-50 h-full">
-      {/* Header-height spacer — keeps traffic lights unobstructed, extends drag region */}
-      <div className="h-8 w-full shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
-      {/* C Logo */}
-      <div className="w-12 h-12 flex items-center justify-center border-b border-white/5 bg-zinc-950/30 shrink-0">
-        <div className="w-6 h-6 bg-copernicus-phosphor/20 rounded-sm flex items-center justify-center phosphor-glow-border">
-          <span className="text-copernicus-phosphor font-black text-[10px]">C</span>
+      {/* Traffic light spacer + C logo merged into one draggable header */}
+      <div
+        className="w-12 h-10 flex items-center justify-center border-b border-white/5 bg-zinc-950/30 shrink-0"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      >
+        <div className="w-5 h-5 bg-copernicus-phosphor/20 rounded-sm flex items-center justify-center phosphor-glow-border" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+          <span className="text-copernicus-phosphor font-black text-[9px]">C</span>
         </div>
       </div>
 
-      {/* Top Nav */}
+      {/* Primary Nav */}
       <div className="flex flex-col items-center w-full">
         <NavItem id="planner" icon={FolderOpen} label="Planner" shortcut="⌘1" badge={inProgressCount} testId="nav-planner" />
         <NavItem
@@ -99,29 +100,46 @@ export const ActivityBar: React.FC = () => {
           onClick={() => { setView('designer'); setCenterMode('canvas') }}
         />
         <NavItem id="orchestrator" icon={Workflow} label="Orchestrator" shortcut="⌘4" testId="nav-orchestrator" />
-        <NavItem id="reporter" icon={BarChart2} label="Reporter" shortcut="⌘5" testId="nav-reporter" />
-        <NavItem id="review" icon={Diff} label="Review" shortcut="⌘8" hasDot={!!pendingReview} testId="nav-review" />
-        <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘6" testId="nav-telemetry" />
-        <NavItem id="memory" icon={Brain} label="Agent Memory" shortcut="⌘7" testId="nav-memory" />
-        <NavItem id="git" icon={GitBranch} label="Git" shortcut="⌘9" testId="nav-git" />
-        <NavItem id="search" icon={Search} label="Search" shortcut="⌘F2" testId="nav-search" />
-        <NavItem id="diagnostics" icon={AlertTriangle} label="Problems" shortcut="⌘Shift+M" badge={diagnosticErrorCount} hasDot={diagnosticErrorCount > 0} testId="nav-diagnostics" />
-        <NavItem id="test-explorer" icon={Bug} label="Test Explorer" shortcut="⌘Shift+T" testId="nav-tests" />
-        <NavItem id="logs" icon={ScrollText} label="Logs" shortcut="⌘Shift+L" testId="nav-logs" />
-        <NavItem id="replay" icon={History} label="Replay" shortcut="⌘Shift+R" testId="nav-replay" />
-        <NavItem id="debug" icon={Bug} label="Debug" shortcut="⌘D" testId="nav-debug" />
+        <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘5" testId="nav-telemetry" />
+        <NavItem
+          icon={Brain}
+          label="Agent Memory"
+          shortcut="⌘6"
+          isActive={activeView === 'memory' || activeView === 'replay'}
+          onClick={() => setView('memory')}
+          testId="nav-memory"
+        />
+        <NavItem id="review" icon={Diff} label="Reviews" shortcut="⌘7" hasDot={!!pendingReview} testId="nav-review" />
+        <NavItem
+          icon={FlaskConical}
+          label="Testing"
+          shortcut="⌘8"
+          badge={diagnosticErrorCount}
+          hasDot={diagnosticErrorCount > 0}
+          isActive={activeView === 'diagnostics' || activeView === 'test-explorer' || activeView === 'logs'}
+          onClick={() => setView('diagnostics')}
+          testId="nav-diagnostics"
+        />
+        <NavItem
+          icon={GitBranch}
+          label="Source Control"
+          shortcut="⌘9"
+          isActive={activeView === 'git' || activeView === 'github'}
+          onClick={() => setView('git')}
+          testId="nav-git"
+        />
+        <NavItem id="reporter" icon={BarChart2} label="Reporter" shortcut="⌘0" testId="nav-reporter" />
       </div>
 
       <div className="flex-1" />
 
       {/* Bottom Tools */}
       <div className="flex flex-col items-center w-full pb-2">
-        <NavItem id="github" icon={Github} label="GitHub" testId="nav-github" />
-        <NavItem 
-          icon={FolderPlus} 
-          label="New Project" 
-          testId="nav-genesis" 
-          onClick={() => useLayoutStore.getState().setShowGenesis(true)} 
+        <NavItem
+          icon={FolderPlus}
+          label="New Project"
+          testId="nav-genesis"
+          onClick={() => useLayoutStore.getState().setShowGenesis(true)}
         />
         <NavItem
           icon={Settings}

@@ -111,6 +111,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #407 | Playwright E2E — Full Ui Coverage Sprint | APPROVED FOR IMPLEMENTATION | P0 — Blocks release verification |
+| #408 | Terminal Chevron Direction | APPROVED FOR IMPLEMENTATION | P2 |
+| #409 | Planner Inspector Icon Buttons | APPROVED FOR IMPLEMENTATION | P2 |
+| #410 | Planner Card Doubleclick Inspector | APPROVED FOR IMPLEMENTATION | P2 |
+| #411 | Editor Search Ux Overhaul | APPROVED FOR IMPLEMENTATION | P1 |
+| #412 | Lsp Badge To Status Bar | APPROVED FOR IMPLEMENTATION | P2 |
+| #413 | Editor File Tab Bug | APPROVED FOR IMPLEMENTATION | P1 (Bug) |
+| #414 | Designer Inspector Header Consolidation | APPROVED FOR IMPLEMENTATION | P2 |
+| #415 | Designer Tile Visual Fidelity | APPROVED FOR IMPLEMENTATION | P1 |
+| #416 | Orchestrator Cleanup | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |

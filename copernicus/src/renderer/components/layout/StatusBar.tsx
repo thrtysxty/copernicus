@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useLayoutStore } from '../../store/layout'
+import { useCommandStore } from '../../store/commandStore'
 import { useTelemetryStore } from '../../store/telemetryStore'
 import { useIpcError } from '../../hooks/useIpcError'
 import type { ModelCallStats } from '../../../../electron/db/state-ledger'
@@ -29,6 +30,8 @@ export const StatusBar: React.FC = () => {
     setSessionEnded
   } = useLayoutStore()
 
+  const { lspState } = useCommandStore()
+
   const {
     agentTelemetry,
     capexTotal,
@@ -41,7 +44,7 @@ export const StatusBar: React.FC = () => {
 
   const [hasError, setHasError] = useState(false)
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
-  const [lspErrorCount, setLspErrorCount] = useState(0)
+
   const [securityScore, setSecurityScore] = useState<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number } | null>(null)
   const [pulseOpen, setPulseOpen] = useState(false)
 
@@ -138,21 +141,7 @@ export const StatusBar: React.FC = () => {
     return () => removeListener()
   }, [])
 
-  useEffect(() => {
-    if (!window.ipcRenderer) return
-    const removeLsp = window.ipcRenderer.on('lsp:diagnostics-update', (_e, data: any) => {
-      setLspErrorCount(data?.errorCount ?? 0)
-    })
 
-    // Fetch initial count
-    invoke<any>('lsp:workspace-check').then(res => {
-      if (res && typeof res.errorCount === 'number') {
-        setLspErrorCount(res.errorCount)
-      }
-    }).catch(() => {})
-
-    return () => removeLsp()
-  }, [invoke])
 
   // Poll security score every 5 seconds
   useEffect(() => {
@@ -233,14 +222,20 @@ export const StatusBar: React.FC = () => {
           </button>
         )}
 
-        {/* LSP Error Badge */}
-        {lspErrorCount > 0 && (
-          <div
-            title={`${lspErrorCount} TypeScript error(s) in workspace`}
-            className="flex items-center gap-1.5 px-3 text-yellow-400 font-mono text-[9px] animate-pulse cursor-help"
+        {/* LSP Status Indicator */}
+        {lspState && (
+          <Tooltip
+            content={`${lspState.serverName} — ${lspState.running ? 'Running' : 'Stopped'} | ${lspState.openFiles} files | ${lspState.errorCount} errors | ${lspState.warningCount} warnings`}
           >
-            ⚠ {lspErrorCount}
-          </div>
+            <div className="flex items-center gap-1.5 px-3 cursor-help">
+              <span className={`text-[8px] ${lspState.running ? 'text-green-500' : 'text-red-500'}`}>●</span>
+              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                {lspState.serverName.substring(0, 2).toUpperCase()}
+                {lspState.errorCount > 0 && <span className="text-red-400"> {lspState.errorCount}e</span>}
+                {lspState.warningCount > 0 && <span className="text-amber-400"> {lspState.warningCount}w</span>}
+              </span>
+            </div>
+          </Tooltip>
         )}
 
         {/* Security Posture Score */}

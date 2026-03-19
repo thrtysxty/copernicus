@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .env
+claude_mcp_config.json
 .venv
 env/
 venv/

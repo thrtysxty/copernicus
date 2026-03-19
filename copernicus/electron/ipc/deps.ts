@@ -19,8 +19,15 @@ import { SocketManager } from '../socket-manager'
 import { GenesisRunner } from '../genesis/genesis-runner'
 import { SnapshotManager } from '../workflow/snapshot-manager'
 
-export interface IpcHandlerDeps {
-  authManager: AuthManager;
+export interface TerminalSession {
+  id: string
+  label: string
+  isBusy: boolean
+  ephemeral?: boolean
+  cwd?: string
+}
+
+export interface IpcHandlerDeps {  authManager: AuthManager;
   githubManager: GithubManager;
   modelRegistry: ModelRegistry;
   settingsStore: SettingsStore;
@@ -41,6 +48,7 @@ export interface IpcHandlerDeps {
   julesMonitor: JulesMonitor;
   julesManager: JulesManager;
   genesisRunner: GenesisRunner;
+  layoutStore: any;
   applyAndVerifyPatch: any;
   reversePatch: any;
   runRAGBenchmark: any;

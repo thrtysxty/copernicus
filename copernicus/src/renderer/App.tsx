@@ -22,27 +22,25 @@ import { TerminalTabs } from './components/Terminal/TerminalTabs'
 import { KanbanBoard } from './components/KanbanBoard'
 import { CapexDashboard } from './components/capex/CapexDashboard'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas'
-import { TileLibrary } from './components/orchestrator/TileLibrary'
 import { TileInspector } from './components/orchestrator/TileInspector'
-import { WorktreePanel } from './components/orchestrator/WorktreePanel'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
 import { commandRegistry } from './store/commandRegistry'
-import { GithubDashboard } from './components/github/GithubDashboard'
 import Wizard from './components/wizard/Wizard'
 import GenesisWizard from './components/genesis/GenesisWizard'
 import SplashScreen from './components/layout/SplashScreen'
 import { CRTOverlay } from './components/effects/CRTOverlay'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
-import { MemoryBrowser } from './components/memory/MemoryBrowser'
-import { ReviewPanel } from './components/review/ReviewPanel'
-import { GitPanel } from './components/git/GitPanel'
-import { SearchPanel } from './components/search/SearchPanel'
-import { DiagnosticsPanel } from './components/debug/DiagnosticsPanel'
-import { TestExplorer } from './components/debug/TestExplorer'
-import { ReplayPanel } from './components/debug/ReplayPanel'
-import { LogViewer } from './components/debug/LogViewer'
 import { DebugPanel } from './components/debug/DebugPanel'
+
+import { SourceControlView } from './components/source-control/SourceControlView'
+import { MemoryReplayView } from './components/memory/MemoryReplayView'
+import { OutputView } from './components/output/OutputView'
+
+// The following panels are still rendered directly as they are not part of the new tiled views
+import { SearchPanel } from './components/search/SearchPanel'
+import { ReviewPanel } from './components/review/ReviewPanel'
+
 
 const TERMINAL_HEIGHT = 200
 
@@ -474,22 +472,16 @@ export default function App() {
             {activeView === 'orchestrator' && (
               <div className="flex flex-col flex-1 overflow-hidden">
                 <div className="flex flex-1 overflow-hidden">
-                  <TileLibrary />
                   <WorkflowCanvas />
                   <TileInspector />
                 </div>
-                <WorktreePanel />
               </div>
             )}
-            {activeView === 'github' && <GithubDashboard />}
-            {activeView === 'memory' && <MemoryBrowser />}
-            {activeView === 'review' && <ReviewPanel />}
-            {activeView === 'git' && <GitPanel />}
+            {activeView === 'diagnostics' && <OutputView />}
+            {activeView === 'memory' && <MemoryReplayView />}
+            {activeView === 'git' && <SourceControlView />}
             {activeView === 'search' && <SearchPanel />}
-            {activeView === 'diagnostics' && <DiagnosticsPanel />}
-            {activeView === 'test-explorer' && <TestExplorer />}
-            {activeView === 'logs' && <LogViewer />}
-            {activeView === 'replay' && <ReplayPanel />}
+            {activeView === 'review' && <ReviewPanel />}
             {activeView === 'debug' && <DebugPanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
 

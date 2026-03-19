@@ -5,7 +5,7 @@ import { useLayoutStore } from '../../store/layout';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
 import { NodeInspector } from './NodeInspector';
 import { DispatchQueue } from './DispatchQueue';
-import { ORCHESTRATOR_TILES } from '../orchestrator/tiles';
+import { ORCHESTRATOR_TILES, OrchestratorTile } from '../orchestrator/tiles'; // Import OrchestratorTile type
 import { useOrchestratorStore } from '../../store/orchestrator';
 import { useExtensionStore } from '../../store/extensionStore';
 import log from '../../utils/logger'
@@ -81,17 +81,43 @@ const PALETTE_QUALITY: PaletteTile[] = [
     defaultData: { variant: 'verification', checklist: [] } as any },
 ];
 
+// Group orchestrator tiles by category
+const categoryMap: { [key: string]: string } = {
+  'vcs': 'SOURCE CONTROL',
+  'container': 'INFRASTRUCTURE',
+  'browser': 'BROWSER',
+  'review': 'QUALITY TOOLS',
+  'search': 'SEARCH',
+};
+
+const orchestratorTileCategories: Record<string, OrchestratorTile[]> = {
+  'SOURCE CONTROL': [],
+  'INFRASTRUCTURE': [],
+  'BROWSER': [],
+  'QUALITY TOOLS': [],
+  'SEARCH': [],
+};
+
+ORCHESTRATOR_TILES.forEach(tile => {
+  const mappedCategory = categoryMap[tile.category];
+  if (mappedCategory) { // Check if mappedCategory exists
+    orchestratorTileCategories[mappedCategory]!.push(tile); // Added non-null assertion
+  }
+});
+
+
 interface WorkflowStatusPush {
   rewoundTo?: number
   detachedHead?: boolean
 }
 
 function NodePaletteSection({
-  title, nodes, onDragStart
+  title, nodes, onDragStart, orchestratorTiles
 }: {
   title: string;
-  nodes: PaletteTile[];
-  onDragStart: (tile: PaletteTile) => void;
+  nodes?: PaletteTile[];
+  onDragStart?: (tile: PaletteTile) => void;
+  orchestratorTiles?: OrchestratorTile[];
 }) {
   return (
     <div>
@@ -99,14 +125,29 @@ function NodePaletteSection({
         {title}
       </p>
       <div className="flex flex-col gap-1">
-        {nodes.map(tile => (
+        {nodes && nodes.map(tile => (
           <div
             key={tile.label}
             draggable
-            onDragStart={() => onDragStart(tile)}
+            onDragStart={() => onDragStart && onDragStart(tile)}
             className="px-2 py-1.5 rounded text-[10px] font-mono cursor-grab
                        select-none bg-zinc-900 border hover:bg-zinc-800 transition-colors"
             style={{ borderColor: tile.color, color: tile.color }}
+          >
+            {tile.label}
+          </div>
+        ))}
+        {orchestratorTiles && orchestratorTiles.map(tile => (
+          <div
+            key={tile.id}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('tile-id', tile.id);
+              e.dataTransfer.effectAllowed = 'copy';
+            }}
+            className="px-2 py-1.5 rounded text-[10px] font-mono cursor-grab
+                       select-none bg-zinc-900 border hover:bg-zinc-800 transition-colors"
+            style={{ borderColor: '#FFD700', color: '#FFD700' }} // A distinct color for orchestrator tiles
           >
             {tile.label}
           </div>
@@ -612,6 +653,16 @@ export default function WorkflowCanvas() {
           <NodePaletteSection title="DECISIONS" nodes={PALETTE_DECISIONS} onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="FLOW"      nodes={PALETTE_FLOW}      onDragStart={handlePaletteDragStart} />
           <NodePaletteSection title="QUALITY"   nodes={PALETTE_QUALITY}   onDragStart={handlePaletteDragStart} />
+          {/* New Orchestrator Tile Sections */}
+          {Object.entries(orchestratorTileCategories).map(([title, tiles]) => (
+            tiles.length > 0 && ( // Only render if there are tiles in the category
+              <NodePaletteSection
+                key={title}
+                title={title}
+                orchestratorTiles={tiles}
+              />
+            )
+          ))}
           {extensionWorkflowNodes.length > 0 && (
             <NodePaletteSection title="EXTENSIONS" nodes={extensionWorkflowNodes.map(n => ({
               type: 'extension',

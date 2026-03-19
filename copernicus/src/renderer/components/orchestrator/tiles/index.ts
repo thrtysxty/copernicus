@@ -1,5 +1,7 @@
 import { OrchestratorTile } from '../../../store/orchestrator'
 
+export type { OrchestratorTile } from '../../../store/orchestrator'
+
 export const ORCHESTRATOR_TILES: OrchestratorTile[] = [
   {
     id: 'git',

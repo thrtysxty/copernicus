@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DiffEditor } from '@monaco-editor/react'
 import { useLayoutStore } from '../../store/layout'
 import { ReviewPanel, Verdict } from './ReviewPanel'
 import { useIpcError } from '../../hooks/useIpcError'
+import { unwrapIpc } from '../../types/ipc'
 
 interface DiffViewerProps {
   original: string
@@ -22,8 +23,21 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const invoke = useIpcError()
   const { reviewEnabled } = useLayoutStore()
   const [reviewState, setReviewState] = useState<'idle' | 'reviewing' | 'done'>('idle')
-  const [sessionIds, setSessionIds] = useState<{ claude: string; gemini: string } | null>(null)
-  const [verdicts, setVerdicts] = useState<{ claude: Verdict; gemini: Verdict } | null>(null)
+  const [sessionIds, setSessionIds] = useState<{ a: string; b: string } | null>(null)
+  const [verdicts, setVerdicts] = useState<{ a: Verdict; b: Verdict } | null>(null)
+  const [availableModels, setAvailableModels] = useState<Array<{ id: string; name: string }>>([])
+  const [modelA, setModelA] = useState('')
+  const [modelB, setModelB] = useState('')
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      const models = unwrapIpc(await invoke('models:list')) as Array<{ id: string; name: string }>
+      setAvailableModels(models)
+      setModelA(models[0]?.id ?? '')
+      setModelB(models[1]?.id ?? models[0]?.id ?? '')
+    }
+    fetchModels()
+  }, [invoke])
 
   const handleApply = async () => {
     if (!reviewEnabled) {
@@ -31,32 +45,23 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       return
     }
 
-    // Start Review
     const ts = Date.now()
-    const claudeId = `review-claude-${ts}`
-    const geminiId = `review-gemini-${ts}`
-    setSessionIds({ claude: claudeId, gemini: geminiId })
+    const agentAId = `review-a-${ts}`
+    const agentBId = `review-b-${ts}`
+    setSessionIds({ a: agentAId, b: agentBId })
     setReviewState('reviewing')
-
-    // Sending modified content as diff isn't easily available as text diff, or should I send both?
-    // Actually, sending just modified content is often enough, but for a true diff review, I should send the diff.
-    // Since I don't have the diff text readily available (Monaco computes it), I'll send the modified file content and ask for a review of it.
-    // Or better: "Review the following code change." + modified.
-    // The requirement says: "Gemini session: same prompt, same diff".
-    // I'll send: "Original:\n" + original + "\n\nModified:\n" + modified
 
     const content = `Please review this code change.\n\nORIGINAL:\n${original}\n\nMODIFIED:\n${modified}\n\n[REVIEW] Does this change look correct? List any concerns.`
 
-    // Fire requests — results arrive via chat:token / chat:done IPC events
     invoke('chat:send', {
-      sessionId: claudeId,
-      model: 'claude-3-5-sonnet-20240620',
+      sessionId: agentAId,
+      model: modelA,
       messages: [{ role: 'user', content }]
     })
 
     invoke('chat:send', {
-      sessionId: geminiId,
-      model: 'gemini-1.5-pro',
+      sessionId: agentBId,
+      model: modelB,
       messages: [{ role: 'user', content }]
     })
   }
@@ -78,6 +83,42 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <span className="text-xs font-mono text-copernicus-phosphor uppercase tracking-widest">
           DIFF PREVIEW — Review before applying
         </span>
+        {reviewEnabled && reviewState === 'idle' && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500">Reviewer A</span>
+              <select
+                className="text-xs bg-zinc-800 text-zinc-300 rounded px-2 py-1 border border-zinc-700"
+                value={modelA}
+                onChange={(e) => setModelA(e.target.value)}
+              >
+                {availableModels.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {availableModels.length >= 2 ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-500">Reviewer B</span>
+                <select
+                  className="text-xs bg-zinc-800 text-zinc-300 rounded px-2 py-1 border border-zinc-700"
+                  value={modelB}
+                  onChange={(e) => setModelB(e.target.value)}
+                >
+                  {availableModels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <span className="text-xs text-zinc-500">Configure a second provider in Settings</span>
+            )}
+          </div>
+        )}
         <div className="flex gap-2">
           <button
             onClick={onCancel}
@@ -123,7 +164,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                  : 'bg-copernicus-phosphor/20 text-copernicus-phosphor hover:bg-copernicus-phosphor/30'
               }`}
             >
-              Apply Changes
+              {reviewEnabled ? 'Start Review' : 'Apply Changes'}
             </button>
           )}
 
@@ -162,8 +203,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             </div>
             {(reviewState === 'reviewing' || reviewState === 'done') && sessionIds && (
                 <ReviewPanel
-                    claudeSessionId={sessionIds.claude}
-                    geminiSessionId={sessionIds.gemini}
+                    agentASessionId={sessionIds.a}
+                    agentBSessionId={sessionIds.b}
+                    agentALabel={availableModels.find(m => m.id === modelA)?.name ?? modelA}
+                    agentBLabel={availableModels.find(m => m.id === modelB)?.name ?? modelB}
                     onComplete={(v) => {
                         setVerdicts(v)
                         setReviewState('done')
