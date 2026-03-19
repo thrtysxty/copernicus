@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
+import { useIpcCache } from '../hooks/useIpcCache'
 import { useLayoutStore } from '../store/layout'
 import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap } from 'lucide-react'
 import log from '../utils/logger'
@@ -153,6 +154,7 @@ interface KanbanBoardProps {
 
 export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => {
   const invoke = useIpcError()
+  const { data: storiesIpcResult, invalidate: invalidateStories } = useIpcCache('stories:list', [], 3000)
   const [stories, setStories] = useState<Story[]>([])
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
 
@@ -179,6 +181,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const [showCreateDropdown, setShowCreateDropdown] = useState(false)
   const [workflowStatus, setWorkflowStatus] = useState<{ storyId: string | null; state: string } | null>(null)
 
+  // Sync cache data to stories state when cache resolves (AC5)
+  useEffect(() => {
+    const list = unwrapIpc<Story[]>(storiesIpcResult as any)
+    if (list && Array.isArray(list)) setStories(list)
+  }, [storiesIpcResult])
+
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!showCreateDropdown) return
@@ -194,9 +202,8 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
 
   const refreshData = useCallback(async () => {
+    invalidateStories()
     try {
-      const _rawStories = await invoke<any>('stories:list')
-      setStories(unwrapIpc<any>(_rawStories) ?? [])
       const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
       setIsRepoTargeted(unwrapIpc<any>(_rawTargeted) ?? false)
       const LABELS: Record<string, string> = {
@@ -257,7 +264,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       await invoke('stories:update', id, targetStatus)
     } catch (e) {
       log.error('Failed to update story status', e)
-      refreshData()
+      invalidateStories()
     }
   }
 
