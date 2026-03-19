@@ -199,8 +199,18 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       setStories(unwrapIpc<any>(_rawStories) ?? [])
       const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
       setIsRepoTargeted(unwrapIpc<any>(_rawTargeted) ?? false)
+      const LABELS: Record<string, string> = {
+        'planning': 'Planning', 'storyboarding': 'Storyboarding', 'sprint-planning': 'Sprint Planning',
+        'development': 'Development', 'testing': 'Testing', 'qa': 'QA',
+        'documenting': 'Documenting', 'ready-to-build': 'Ready to Build', 'done': 'Done',
+      }
+      const _rawCols = await invoke<any>('kanban:get-columns')
+      const cols = unwrapIpc<any>(_rawCols)
+      if (cols && Array.isArray(cols)) {
+        useLayoutStore.getState().setColumns(cols.map((c: any) => ({ ...c, label: LABELS[c.id] ?? c.id })))
+      }
     } catch (e) {
-      log.warn('Failed to fetch stories', e)
+      log.warn('Failed to fetch stories or columns', e)
     }
   }, [invoke])
 

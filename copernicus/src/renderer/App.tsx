@@ -167,6 +167,21 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true)
 
 
+  // Story 428: Init kanban columns from SQLite on mount
+  useEffect(() => {
+    const LABELS: Record<string, string> = {
+      'planning': 'Planning', 'storyboarding': 'Storyboarding', 'sprint-planning': 'Sprint Planning',
+      'development': 'Development', 'testing': 'Testing', 'qa': 'QA',
+      'documenting': 'Documenting', 'ready-to-build': 'Ready to Build', 'done': 'Done',
+    }
+    invoke<unknown>('kanban:get-columns').then((res) => {
+      const cols = unwrapIpc<Array<{ id: string; [k: string]: unknown }>>(res as IpcResult<Array<{ id: string; [k: string]: unknown }>>)
+      if (cols && Array.isArray(cols)) {
+        useLayoutStore.getState().setColumns(cols.map(c => ({ ...c, label: LABELS[c.id] ?? c.id } as any)))
+      }
+    }).catch((e: unknown) => console.error('Failed to init kanban columns', e))
+  }, [invoke])
+
   // Story 380: Sync fullscreen state from main process
   const [isFullscreen, setIsFullscreen] = useState(false)
   useEffect(() => {

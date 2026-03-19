@@ -38,6 +38,7 @@ const SEND_CHANNELS = new Set([
   'ledger:session-stats', 'ledger:recent-calls', 'ledger:all-time-cost',
   // Layout / telemetry
   'layout:update-telemetry', 'telemetry:update-touchbar',
+  'kanban:get-columns', 'kanban:set-column',
   // Agent interop
   'agent:delegate', 'agent:forward',
   'agent:patch-apply', 'agent:patch-reverse',

@@ -1,4 +1,16 @@
 export const SCHEMA = {
+
+  kanban_columns: `
+    CREATE TABLE IF NOT EXISTS kanban_columns (
+      id TEXT PRIMARY KEY,
+      status TEXT NOT NULL,
+      color TEXT NOT NULL,
+      accent TEXT NOT NULL,
+      minimized INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+  `,
+
   stories: `
     CREATE TABLE IF NOT EXISTS stories (
       id            TEXT PRIMARY KEY,       -- 'story_159'
