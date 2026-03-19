@@ -116,7 +116,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #410 | Planner Card Doubleclick Inspector | APPROVED FOR IMPLEMENTATION | P2 |
 | #411 | Editor Search Ux Overhaul | APPROVED FOR IMPLEMENTATION | P1 |
 | #412 | Lsp Badge To Status Bar | APPROVED FOR IMPLEMENTATION | P2 |
-| #413 | Editor File Tab Bug | APPROVED FOR IMPLEMENTATION | P1 (Bug) |
 | #414 | Designer Inspector Header Consolidation | APPROVED FOR IMPLEMENTATION | P2 |
 | #415 | Designer Tile Visual Fidelity | APPROVED FOR IMPLEMENTATION | P1 |
 | #416 | Orchestrator Cleanup | APPROVED FOR IMPLEMENTATION | P1 |
@@ -325,6 +324,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #404 | Extension Store And Renderer Integration | COMPLETE | P1 |
 | #405 | Workflow Node Contribution Point | COMPLETE | P1 |
 | #406 | Orchestrator Tile And Provider Contribution Points | COMPLETE | P2 |
+| #413 | Editor File Tab Bug | COMPLETE | P1 (Bug) |
+| #417 | Editor Tab Desync And White Flash | COMPLETE | P1 |
 | #418 | Worktreemanager Command Injection | COMPLETE | P0 — Security |
 | #420 | Agent Assignment Genericization | COMPLETE | P0 — Correctness |
 | #421 | Terminal Purge And Agent Terminal | COMPLETE | P0 — Correctness |
@@ -348,6 +349,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #417 | Editor Tab Desync And White Flash | IN PROGRESS | P1 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
