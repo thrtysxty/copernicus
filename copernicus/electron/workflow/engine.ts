@@ -386,7 +386,7 @@ export class WorkflowEngine {
       }
       case 'makefile-run': {
         const target = d.command ?? 'test';
-        return await this.runShell(`make ${target}`);
+        return await this.runShell(`make ${target.trim()}`);
       }
       case 'file-read': {
         if (!d.filePath) throw new Error('file-read: filePath is required');
@@ -716,21 +716,31 @@ export class WorkflowEngine {
 
   private runShell(cmd: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const { exec } = require('node:child_process');
+      const { spawn } = require('node:child_process');
       const cwd = this.services!.fsManager.getRootPath();
-      exec(
-        cmd,
-        { cwd, timeout: 60_000, maxBuffer: 1024 * 1024 },
-        (error: any, stdout: string, stderr: string) => {
-          if (error) {
-            this.context.set('__lastExitCode', String(error.code ?? 1));
-            reject(new Error(stderr.trim() || (error as Error).message));
-          } else {
-            this.context.set('__lastExitCode', '0');
-            resolve(stdout.trim());
-          }
+      const argv = cmd.trim().split(/\s+/).filter(Boolean);
+      if (argv.length === 0) {
+        reject(new Error('runShell: empty command'));
+        return;
+      }
+      const child = spawn(argv[0], argv.slice(1), { cwd, shell: false, timeout: 60_000 });
+      let stdout = '';
+      let stderr = '';
+      child.stdout?.on('data', (d: Buffer) => { stdout += d.toString(); });
+      child.stderr?.on('data', (d: Buffer) => { stderr += d.toString(); });
+      child.on('error', (err: Error) => {
+        this.context.set('__lastExitCode', '1');
+        reject(err);
+      });
+      child.on('close', (code: number | null) => {
+        const exitCode = code ?? 1;
+        this.context.set('__lastExitCode', String(exitCode));
+        if (exitCode !== 0) {
+          reject(new Error(stderr.trim() || `exit code ${exitCode}`));
+        } else {
+          resolve(stdout.trim());
         }
-      );
+      });
     });
   }
 
