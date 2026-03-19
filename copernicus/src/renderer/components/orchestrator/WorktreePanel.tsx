@@ -24,18 +24,16 @@ const timeAgo = (dateString: string) => {
 export const WorktreePanel: React.FC = () => {
   const { worktrees, alwaysUseWorktrees, defaultMergeMode, setWorktrees, upsertWorktree, removeWorktree, setAlwaysUseWorktrees, setDefaultMergeMode } = useWorktreeStore()
   const [isExpanded, setIsExpanded] = useState(true)
-  const setError = useIpcError()
+  const invoke = useIpcError()
 
   const nonMergedWorktrees = worktrees.filter(wt => wt.status !== 'merged')
 
   useEffect(() => {
     const fetchWorktrees = async () => {
       try {
-        const result = unwrapIpc(await window.ipcRenderer.invoke('worktree:list'))
-        setWorktrees(result as AgentWorktree[])
-      } catch (e) {
-        setError(String(e))
-      }
+        const result = unwrapIpc<AgentWorktree[]>(await invoke<AgentWorktree[]>('worktree:list'))
+        setWorktrees(result)
+      } catch { /* error toasted by invoke */ }
     }
 
     fetchWorktrees()
@@ -55,34 +53,28 @@ export const WorktreePanel: React.FC = () => {
       removeWorktreeCompletedListener()
       removeWorktreeMergedListener()
     }
-  }, [setWorktrees, upsertWorktree, setError])
+  }, [setWorktrees, upsertWorktree, invoke])
 
   const handleReview = async (id: string) => {
     try {
-      const { files, diff } = unwrapIpc<{ files: string[]; diff: string }>(await window.ipcRenderer.invoke('worktree:diff', { id }))
+      const { files, diff } = unwrapIpc<{ files: string[]; diff: string }>(await invoke<{ files: string[]; diff: string }>('worktree:diff', { id }))
       useLayoutStore.getState().setReviewMode(
         files.map((f: string) => ({ path: f, original: '', modified: diff, status: 'modified' as const }))
       )
-    } catch (e) {
-      setError(String(e))
-    }
+    } catch { /* error toasted by invoke */ }
   }
 
   const handleMerge = async (id: string) => {
     try {
-      unwrapIpc(await window.ipcRenderer.invoke('worktree:merge', { id }))
-    } catch (e) {
-      setError(String(e))
-    }
+      unwrapIpc(await invoke('worktree:merge', { id }))
+    } catch { /* error toasted by invoke */ }
   }
 
   const handleRemove = async (id: string) => {
     try {
-      unwrapIpc(await window.ipcRenderer.invoke('worktree:remove', { id }))
+      unwrapIpc(await invoke('worktree:remove', { id }))
       removeWorktree(id)
-    } catch (e) {
-      setError(String(e))
-    }
+    } catch { /* error toasted by invoke */ }
   }
 
   return (
