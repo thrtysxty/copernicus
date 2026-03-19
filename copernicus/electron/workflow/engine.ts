@@ -1,5 +1,5 @@
 import { WorkflowState, VALID_TRANSITIONS } from './states';
-import { WorkflowGraph, WFNode, NodeStatus, WorkflowExecutionEvent } from './types';
+import { WorkflowGraph, WFNode, NodeStatus, WorkflowExecutionEvent, WorkflowStepStartEvent, WorkflowStepEndEvent } from './types';
 import type { AuthManager } from '../auth-manager';
 import type { ModelRegistry } from '../models/model-registry';
 import type { PTYManager } from '../pty-manager';
@@ -39,6 +39,7 @@ export class WorkflowEngine {
   private currentState: WorkflowState = 'IDLE';
   private nodeStatuses: Map<string, { status: NodeStatus; error?: string }> = new Map();
   private context: Map<string, string> = new Map();
+  private currentTurn: number = 0;
   private services: EngineServices | null = null;
 
   constructor(private snapshotManager?: SnapshotManager) {
@@ -84,6 +85,7 @@ export class WorkflowEngine {
     this.currentState = 'IDLE';
     this.nodeStatuses.clear();
     this.context.clear();
+    this.currentTurn = 0;
   }
 
   public transition(newState: WorkflowState): boolean {
@@ -127,6 +129,7 @@ export class WorkflowEngine {
     } catch { /* lspManager not yet available — safe to ignore */ }
 
     this.context.set('__workflowId', graph.id);
+    this.currentTurn = 0;
     this.snapshotManager?.beginRun()
     graph.nodes.forEach(n => this.nodeStatuses.set(n.id, { status: 'idle' }));
 
@@ -145,6 +148,15 @@ export class WorkflowEngine {
       for (const node of sortedNodes) {
         if (skipped.has(node.id)) {
           this.updateNodeStatus(node.id, 'skipped', undefined, callback);
+          if (this.services?.win) {
+            this.services.win.webContents.send('workflow:step-end', {
+              workflowId: graph.id,
+              nodeId: node.id,
+              status: 'skipped',
+              durationMs: 0,
+              timestamp: Date.now()
+            } as WorkflowStepEndEvent);
+          }
           continue;
         }
 
@@ -233,6 +245,20 @@ export class WorkflowEngine {
   }
 
   private async executeNode(node: WFNode, callback?: StateCallback): Promise<void> {
+    this.currentTurn++;
+    const workflowId = this.context.get('__workflowId') ?? 'unknown';
+    const startTime = Date.now();
+
+    if (this.services?.win) {
+      this.services.win.webContents.send('workflow:step-start', {
+        workflowId,
+        nodeId: node.id,
+        nodeType: node.type,
+        turn: this.currentTurn,
+        timestamp: startTime
+      } as WorkflowStepStartEvent);
+    }
+
     this.updateNodeStatus(node.id, 'running', undefined, callback);
 
     try {
@@ -271,10 +297,33 @@ export class WorkflowEngine {
       this.context.set(node.id, output);
       if (node.type !== 'decision') this.context.set('__lastOutput', output);
       this.updateNodeStatus(node.id, 'completed', undefined, callback);
+
+      const endTime = Date.now();
+      if (this.services?.win) {
+        this.services.win.webContents.send('workflow:step-end', {
+          workflowId,
+          nodeId: node.id,
+          status: 'completed',
+          durationMs: endTime - startTime,
+          timestamp: endTime
+        } as WorkflowStepEndEvent);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.context.set(node.id, `ERROR:${msg}`);
       this.updateNodeStatus(node.id, 'error', msg, callback);
+
+      const endTime = Date.now();
+      if (this.services?.win) {
+        this.services.win.webContents.send('workflow:step-end', {
+          workflowId,
+          nodeId: node.id,
+          status: 'error',
+          durationMs: endTime - startTime,
+          timestamp: endTime
+        } as WorkflowStepEndEvent);
+      }
+
       throw err;
     }
   }

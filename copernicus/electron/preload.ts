@@ -163,7 +163,7 @@ const LISTEN_CHANNELS = new Set([
   // Command Center (Story 184)
   'command:telemetry-update',
   // Workflow engine state push (Story 186)
-  'workflow:status', 'workflow:status-update', 'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
+  'workflow:status', 'workflow:status-update', 'workflow:step-start', 'workflow:step-end', 'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
   'review:session-complete',
   'layout:goto-line',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',
