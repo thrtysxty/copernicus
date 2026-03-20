@@ -5,12 +5,18 @@ import { renderComponentTree } from './render'
 import { UIComponentInspector } from './UIComponentInspector'
 import { Rnd } from 'react-rnd'
 import {
-  Layout, GripVertical, 
-  MousePointer2, Square, Type, Image as ImageIcon,
+  Layout, GripVertical,
+  MousePointer2, Square, Type,
   FormInput, Layers, Box
 } from 'lucide-react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
+import { TILE_MAP } from './tile-renders'
+
+const renderPreview = (comp: UIComponent) => {
+  const Tile = TILE_MAP[comp.type]
+  return Tile ? <Tile props={comp.props} /> : null
+}
 
 const PALETTE: Array<{ section: string; icon: any; items: Array<{ type: UIComponentType; label: string; icon: any }> }> = [
   { 
@@ -31,7 +37,7 @@ const PALETTE: Array<{ section: string; icon: any; items: Array<{ type: UICompon
     items: [
       { type:'heading',label:'Heading', icon: Type },
       { type:'paragraph',label:'Text', icon: Type },
-      { type:'image',label:'Image', icon: ImageIcon },
+      { type:'image',label:'Image', icon: Square },
       { type:'badge',label:'Badge', icon: Box },
       { type:'alert',label:'Alert', icon: Box }
     ] 
@@ -139,46 +145,6 @@ export const UIBuilderCanvas: React.FC = () => {
   ;(window as any)._ui_export_jsx = handleExportJSX
   ;(window as any)._ui_export_html = handleExportHTML
 
-  const renderPreview = (comp: UIComponent) => {
-    const { type, props } = comp
-    const base = 'w-full h-full flex items-center justify-center overflow-hidden pointer-events-none select-none'
-    switch (type) {
-      case 'button':
-        return <div className="w-full h-full flex items-center justify-center px-2"><div className="w-full bg-copernicus-phosphor/80 text-[#050505] font-mono font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 flex items-center justify-center">{props.text || 'BUTTON'}</div></div>
-      case 'input':
-        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 flex items-center"><span>{props.placeholder || 'Input...'}</span><span className="animate-pulse ml-0.5">|</span></div></div>
-      case 'textarea':
-        return <div className={`${base} px-2`}><div className="w-full h-4/5 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 relative"><span>{props.placeholder || 'Textarea...'}</span><span className="animate-pulse ml-0.5">|</span><div className="mt-1 flex flex-col gap-1 absolute bottom-0 left-0 w-full px-2"><div className="h-px bg-zinc-700/30 w-full"/><div className="h-px bg-zinc-700/30 w-full"/></div></div></div>
-      case 'select':
-        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 flex items-center justify-between"><span>Select...</span><span>▾</span></div></div>
-      case 'heading':
-        return <div className={`${base} px-2`}><span className="font-mono font-bold text-zinc-200 text-sm border-b border-zinc-700/50 pb-0.5 mx-2">{props.text || 'Heading'}</span></div>
-      case 'paragraph':
-      case 'label':
-        return <div className="w-full px-2 flex flex-col gap-1.5 justify-center h-full"><div className="h-1.5 bg-zinc-700/60 rounded-full w-full"/><div className="h-1.5 bg-zinc-700/60 rounded-full w-4/5"/><div className="h-1.5 bg-zinc-700/60 rounded-full w-3/5"/></div>
-      case 'container':
-        return <div className="w-full h-full relative border-2 border-dashed border-zinc-700/50 bg-zinc-900/20"><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">CONTAINER</span></div>
-      case 'row':
-        return <div className="w-full h-full relative border border-zinc-700 flex justify-around items-center"><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">ROW</span><span>→</span><span>→</span><span>→</span></div>
-      case 'column':
-        return <div className="w-full h-full relative border border-zinc-700 flex flex-col items-center justify-around"><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">COLUMN</span><span>↓</span><span>↓</span><span>↓</span></div>
-      case 'card':
-        return <div className="w-full h-full flex flex-col relative"><div className="w-full h-[20%] bg-zinc-800"/><div className="w-full h-[80%] bg-zinc-900/30"/></div>
-      case 'badge':
-        return <div className={`${base}`}><span className="bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[9px] px-2 py-0.5 rounded-full">{props.text || 'Badge'}</span></div>
-      case 'alert':
-        return <div className="w-full h-full border-l-2 border-copernicus-phosphor/60 bg-zinc-900/40 flex items-center px-3"><span className="font-mono text-[10px] text-zinc-300">{props.text || 'Alert'}</span></div>
-      case 'divider':
-        return <div className={`${base}`}><div className="w-full border-t border-zinc-700" /></div>
-      case 'spacer':
-        return <div className="w-full h-full border border-dashed border-zinc-800/50 flex items-center justify-center bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(255,255,255,0.03)_4px,rgba(255,255,255,0.03)_5px)]"><span className="text-[8px] text-zinc-600">SPACER</span></div>
-      case 'image':
-        return <div className="w-full h-full relative flex items-center justify-center bg-[repeating-conic-gradient(#1a1a1a_0%_25%,#111_0%_50%)] bg-[length:16px_16px]"><ImageIcon size={24} className="text-zinc-700" /><span className="text-[8px] text-zinc-600 absolute top-0 left-0 px-1">IMAGE</span></div>
-      default:
-        return <div className={`${base}`}><span className="font-mono text-zinc-600 text-[9px] uppercase">{type}</span></div>
-    }
-  }
-
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505] overflow-hidden" ref={containerRef}>
       <div className="flex-1 flex overflow-hidden relative">
@@ -250,7 +216,9 @@ export const UIBuilderCanvas: React.FC = () => {
                     {comp.type}
                   </span>
                 </div>
-                {renderPreview(comp)}
+                <div className="w-full h-full relative pointer-events-none select-none">
+                  {renderPreview(comp)}
+                </div>
               </Rnd>
             ))}
           </div>
