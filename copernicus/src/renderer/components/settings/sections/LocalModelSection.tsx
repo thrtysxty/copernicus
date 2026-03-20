@@ -41,7 +41,7 @@ export const LocalModelSection: React.FC = () => {
         if (data.running) {
           addToast('Local model server started successfully', 'success');
         } else {
-          addToast('Failed to start local model server', 'error');
+          addToast('BitNet server failed to start. Check that llama-server binary is present in resources/.', 'error');
         }
       }
     } catch (e: unknown) {
