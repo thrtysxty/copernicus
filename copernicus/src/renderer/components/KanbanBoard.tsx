@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
@@ -66,6 +66,14 @@ const StoryCard = React.memo(({
   setSpotlight: (pane: any) => void;
   workflowStatus: { storyId: string | null; state: string } | null;
   }) => {
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current)
+    }
+  }, [])
+
   const handleOpen = () => {
     setActiveStoryId(story.id)
     setDrawerStory(story.id)
@@ -82,11 +90,29 @@ const StoryCard = React.memo(({
       draggable
       onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
       className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor overflow-hidden ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
-      onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(spotlightLane === colId ? null : colId); }}
+      onClick={(e) => {
+        e.stopPropagation()
+        setActiveStoryId(story.id)
+
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+          return
+        }
+
+        const nextLane = spotlightLane === colId ? null : colId
+        clickTimerRef.current = setTimeout(() => {
+          setSpotlightLane(nextLane)
+          clickTimerRef.current = null
+        }, 250)
+      }}
       onDoubleClick={(e) => {
-        e.preventDefault(); // Prevent onClick from firing
-        setSpotlightLane(null); // Collapse the card/lane if expanded
-        handleOpen(); // Open the inspector
+        e.stopPropagation()
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+        }
+        handleOpen()
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
