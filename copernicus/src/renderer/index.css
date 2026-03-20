@@ -50,7 +50,7 @@ body {
 
 .inspector-input {
   @apply w-full bg-zinc-900 border border-copernicus-steel rounded px-2 py-1
-         text-[10px] font-mono text-zinc-300 focus:outline-none transition-colors;
+         text-[13px] font-mono text-zinc-300 focus:outline-none transition-colors;
 }
 
 .inspector-input:focus {
@@ -71,4 +71,10 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--phosphor);
+}
+
+/* ─── Editor field base size (10pt / 13px) ──────────────────────────────── */
+/* Unlayered — takes precedence over @layer utilities (Tailwind classes).    */
+input, textarea, select {
+  font-size: 13px;
 }
