@@ -144,11 +144,17 @@ export const ReplayPanel: React.FC = () => {
           <span className="font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1 mr-2">
             <Database size={12} /> Detail
           </span>
-          <div className="flex h-full items-center gap-1">
-            <Tab label="Prompt" active={activeTab === 'prompt'} onClick={() => setActiveTab('prompt')} />
-            <Tab label="Context" active={activeTab === 'context'} onClick={() => setActiveTab('context')} />
-            <Tab label="Response" active={activeTab === 'response'} onClick={() => setActiveTab('response')} />
-          </div>
+          <button
+            onClick={() => {
+              if (activeTab === 'prompt') setActiveTab('context')
+              else if (activeTab === 'context') setActiveTab('response')
+              else setActiveTab('prompt')
+            }}
+            title={`Switch to ${activeTab === 'prompt' ? 'Context' : activeTab === 'context' ? 'Response' : 'Prompt'}`}
+            className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-copernicus-phosphor hover:text-copernicus-phosphor transition-colors"
+          >
+            {activeTab}
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 whitespace-pre-wrap leading-relaxed selection:bg-copernicus-phosphor/30 select-text custom-scrollbar">
           {!selectedStepId && (
@@ -196,16 +202,3 @@ export const ReplayPanel: React.FC = () => {
   )
 }
 
-const Tab: React.FC<{ label: string; active: boolean; onClick: () => void }> = ({ label, active, onClick }) => (
-  <button
-    onClick={onClick}
-    className={clsx(
-      "px-2 py-0.5 uppercase tracking-widest text-[10px] font-bold transition-all h-5 flex items-center",
-      active 
-        ? "bg-copernicus-phosphor text-[#050505] rounded-none" 
-        : "text-zinc-500 hover:text-zinc-300"
-    )}
-  >
-    {label}
-  </button>
-)
