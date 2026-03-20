@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../hooks/useIpcError'
+import { useIpcCache } from '../hooks/useIpcCache'
 import { useLayoutStore } from '../store/layout'
 import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap } from 'lucide-react'
 import log from '../utils/logger'
@@ -65,6 +66,14 @@ const StoryCard = React.memo(({
   setSpotlight: (pane: any) => void;
   workflowStatus: { storyId: string | null; state: string } | null;
   }) => {
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current)
+    }
+  }, [])
+
   const handleOpen = () => {
     setActiveStoryId(story.id)
     setDrawerStory(story.id)
@@ -81,8 +90,30 @@ const StoryCard = React.memo(({
       draggable
       onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
       className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor overflow-hidden ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
-      onClick={(e) => { e.stopPropagation(); setActiveStoryId(story.id); setSpotlightLane(spotlightLane === colId ? null : colId); }}
-      onDoubleClick={() => handleOpen()}
+      onClick={(e) => {
+        e.stopPropagation()
+        setActiveStoryId(story.id)
+
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+          return
+        }
+
+        const nextLane = spotlightLane === colId ? null : colId
+        clickTimerRef.current = setTimeout(() => {
+          setSpotlightLane(nextLane)
+          clickTimerRef.current = null
+        }, 250)
+      }}
+      onDoubleClick={(e) => {
+        e.stopPropagation()
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+        }
+        handleOpen()
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -149,6 +180,7 @@ interface KanbanBoardProps {
 
 export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => {
   const invoke = useIpcError()
+  const { data: storiesIpcResult, invalidate: invalidateStories } = useIpcCache('stories:list', [], 3000)
   const [stories, setStories] = useState<Story[]>([])
   const [isRepoTargeted, setIsRepoTargeted] = useState(false)
 
@@ -175,6 +207,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const [showCreateDropdown, setShowCreateDropdown] = useState(false)
   const [workflowStatus, setWorkflowStatus] = useState<{ storyId: string | null; state: string } | null>(null)
 
+  // Sync cache data to stories state when cache resolves (AC5)
+  useEffect(() => {
+    const list = unwrapIpc<Story[]>(storiesIpcResult as any)
+    if (list && Array.isArray(list)) setStories(list)
+  }, [storiesIpcResult])
+
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!showCreateDropdown) return
@@ -187,23 +225,27 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
     return () => document.removeEventListener('mousedown', handler)
   }, [showCreateDropdown])
 
-  const fetchJulesSessions = useCallback(async () => {
-    try {
-      await invoke<any>('jules:list-sessions')
-    } catch { /* session list unavailable */ }
-  }, [invoke])
+
 
   const refreshData = useCallback(async () => {
+    invalidateStories()
     try {
-      const _rawStories = await invoke<any>('stories:list')
-      setStories(unwrapIpc<any>(_rawStories) ?? [])
       const _rawTargeted = await invoke<any>('stories:is-repo-targeted')
       setIsRepoTargeted(unwrapIpc<any>(_rawTargeted) ?? false)
-      fetchJulesSessions()
+      const LABELS: Record<string, string> = {
+        'planning': 'Planning', 'storyboarding': 'Storyboarding', 'sprint-planning': 'Sprint Planning',
+        'development': 'Development', 'testing': 'Testing', 'qa': 'QA',
+        'documenting': 'Documenting', 'ready-to-build': 'Ready to Build', 'done': 'Done',
+      }
+      const _rawCols = await invoke<any>('kanban:get-columns')
+      const cols = unwrapIpc<any>(_rawCols)
+      if (cols && Array.isArray(cols)) {
+        useLayoutStore.getState().setColumns(cols.map((c: any) => ({ ...c, label: LABELS[c.id] ?? c.id })))
+      }
     } catch (e) {
-      log.warn('Failed to fetch stories', e)
+      log.warn('Failed to fetch stories or columns', e)
     }
-  }, [invoke, fetchJulesSessions])
+  }, [invoke])
 
   useEffect(() => {
     refreshData()
@@ -238,7 +280,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       removeStoriesUpdate()
       removeStatusChanged()
     }
-  }, [invoke, fetchJulesSessions, refreshData])
+  }, [invoke, refreshData])
 
   const handleDrop = async (e: React.DragEvent, targetStatus: string) => {
     e.preventDefault()
@@ -248,7 +290,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       await invoke('stories:update', id, targetStatus)
     } catch (e) {
       log.error('Failed to update story status', e)
-      refreshData()
+      invalidateStories()
     }
   }
 

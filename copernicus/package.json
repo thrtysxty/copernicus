@@ -80,7 +80,13 @@
         "deb"
       ],
       "category": "Development"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "../resources/knowledge",
+        "to": "knowledge"
+      }
+    ]
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

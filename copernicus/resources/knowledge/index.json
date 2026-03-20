@@ -1,0 +1,100 @@
+{
+<<<<<<< HEAD
+  "version": 1,
+  "topics": [
+    {
+      "id": "getting-started",
+      "title": "Getting Started with COPERNICUS",
+      "file": "topics/01_getting_started.md",
+      "keywords": ["start", "begin", "what is", "overview", "copernicus", "intro", "welcome", "first time", "launch", "open"]
+    },
+    {
+      "id": "api-keys",
+      "title": "Adding API Keys and Provider Setup",
+      "file": "topics/02_api_keys.md",
+      "keywords": ["api key", "api", "key", "anthropic", "openai", "google", "provider", "auth", "authenticate", "token", "secret", "claude", "gpt", "openrouter", "deepinfra", "credential"]
+    },
+    {
+      "id": "ollama-setup",
+      "title": "Setting Up Ollama for Local Models",
+      "file": "topics/03_ollama_setup.md",
+      "keywords": ["ollama", "local model", "local ai", "llama", "qwen", "install ollama", "pull model", "offline", "self-hosted"]
+    },
+    {
+      "id": "bitnet-bundled",
+      "title": "Using the Bundled BitNet Model",
+      "file": "topics/04_bitnet_bundled.md",
+      "keywords": ["bitnet", "bundled", "bundled model", "local server", "start server", "no internet", "zero dependency", "inference server"]
+    },
+    {
+      "id": "model-defaults",
+      "title": "Setting Model Defaults",
+      "file": "topics/05_model_defaults.md",
+      "keywords": ["model default", "default model", "chat model", "code model", "workflow model", "embedding", "switch model", "change model", "model settings", "architect model"]
+    },
+    {
+      "id": "kanban-stories",
+      "title": "Kanban Board and Story Management",
+      "file": "topics/06_kanban_stories.md",
+      "keywords": ["kanban", "story", "stories", "card", "board", "backlog", "column", "status", "todo", "in progress", "done", "create story", "new story", "inspector", "assign"]
+    },
+    {
+      "id": "workflow-builder",
+      "title": "Building and Running Workflows",
+      "file": "topics/07_workflow_builder.md",
+      "keywords": ["workflow", "node", "agent node", "trigger", "decision", "run workflow", "flow", "pipeline", "automate", "builder", "canvas"]
+    },
+    {
+      "id": "search",
+      "title": "Searching the Codebase",
+      "file": "topics/08_search.md",
+      "keywords": ["search", "find", "codebase", "semantic search", "text search", "regex", "whole word", "case sensitive", "index", "rag", "vector"]
+    },
+    {
+      "id": "git-integration",
+      "title": "Git Integration and Source Control",
+      "file": "topics/09_git_integration.md",
+      "keywords": ["git", "github", "branch", "commit", "pull request", "pr", "source control", "repository", "repo", "clone", "push", "merge", "pat", "token"]
+    },
+    {
+      "id": "terminal",
+      "title": "Using the Integrated Terminal",
+      "file": "topics/10_terminal.md",
+      "keywords": ["terminal", "console", "shell", "bash", "command", "run command", "tab", "new terminal", "agent terminal"]
+    },
+    {
+      "id": "settings-navigation",
+      "title": "Navigating Settings",
+      "file": "topics/11_settings_navigation.md",
+      "keywords": ["settings", "preferences", "configure", "configuration", "auth settings", "model settings", "appearance", "theme", "mcp", "extension", "section", "gear"]
+    },
+    {
+      "id": "memory-replay",
+      "title": "Agent Memory and Session Replay",
+      "file": "topics/12_memory_replay.md",
+      "keywords": ["memory", "replay", "session", "history", "agent memory", "replay panel", "prompt", "context", "response", "run", "step", "telemetry"]
+    },
+    {
+      "id": "free-providers",
+      "title": "Free AI Providers — Getting Started at No Cost",
+      "file": "topics/13_free_providers.md",
+      "keywords": [
+        "free",
+        "no account",
+        "sign up",
+        "get started",
+        "ollama",
+        "google",
+        "openrouter",
+        "gemini",
+        "no cost",
+        "no api key",
+        "no credit card",
+        "first time",
+        "new user",
+        "register",
+        "create account"
+      ]
+    }
+  ]
+}

@@ -250,6 +250,21 @@ reviewEnabled: boolean
 
 ---
 
+## State Ownership
+
+SQLite is canonical for any state that must survive app restart or be queryable. Zustand is a read-through cache — it mirrors SQLite, never diverges from it. Flat files are for user-editable config only (genesis, auth).
+
+### State Audit Table
+
+| Store | Owns | Compliance | Migration Needed |
+|-------|------|------------|------------------|
+| SQLite (`db.ts`) | stories, model calls, events, memory, auth config | ✅ compliant | No |
+| Zustand (`store/layout.ts`) | columns | ✅ migrated to SQLite | No (Story 428) |
+| Zustand (`store/layout.ts`) | active view, panel sizes, active file, worktree list, etc. | ⚠️ ephemeral only | Future |
+| Flat files (`~/.copernicus/`) | project config, genesis scaffold output | ✅ compliant | No |
+
+---
+
 ## 4. Manager Singleton Pattern
 
 Every Electron-side service is a class exported as a singleton:

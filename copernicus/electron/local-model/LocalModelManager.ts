@@ -18,8 +18,11 @@ export class LocalModelManager {
     try {
       this.port = await this.findEphemeralPort();
       
-      const binaryPath = path.join(app.getAppPath(), 'resources', 'llama-server');
-      const modelPath = path.join(app.getAppPath(), 'resources', 'models', 'bitnet-b158-2b.gguf');
+      const resourcesDir = app.isPackaged
+        ? process.resourcesPath
+        : path.join(app.getAppPath(), '..', 'resources');
+      const binaryPath = path.join(resourcesDir, 'llama-server');
+      const modelPath  = path.join(resourcesDir, 'models', 'bitnet-b158-2b.gguf');
       
       log.info(`Starting local model server on port ${this.port}...`);
       
@@ -34,6 +37,7 @@ export class LocalModelManager {
 
       this.childProcess.on('error', (err) => {
         log.error('Local model server failed to start:', err);
+        this.childProcess = null;
         this.stop();
       });
 
@@ -56,6 +60,24 @@ export class LocalModelManager {
       // Update authManager to point ollama at our local server
       authManager.setBaseUrl('ollama', `http://localhost:${this.port}`);
 
+      // Poll /health until server is ready (max 30s)
+      const maxAttempts = 60;
+      for (let i = 0; i < maxAttempts; i++) {
+        if (!this.childProcess) {
+          return { running: false, port: null };
+        }
+        try {
+          const res = await fetch(`http://127.0.0.1:${this.port}/health`);
+          if (res.ok) break;
+        } catch {
+          // not ready yet
+        }
+        await new Promise(r => setTimeout(r, 500));
+        if (i === maxAttempts - 1) {
+          this.stop();
+          return { running: false, port: null };
+        }
+      }
       return this.getStatus();
     } catch (error) {
       log.error('Failed to start local model manager:', error);

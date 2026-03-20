@@ -78,6 +78,10 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
       .ghost-added { background: rgba(74, 222, 128, 0.1) !important; width: 100%; display: block; border-left: 2px solid #4ade80; }
       .ghost-removed { background: rgba(239, 68, 68, 0.1) !important; text-decoration: line-through; width: 100%; display: block; border-left: 2px solid #ef4444; }
       .ghost-glyph-add { border-left: 2px solid #4ade80; }
+      .monaco-editor,
+      .monaco-editor-background,
+      .monaco-editor .overflow-guard,
+      .monaco-editor .margin { background-color: #050505 !important; }
     `
     document.head.appendChild(style)
     return () => {
@@ -464,12 +468,38 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     return () => disposable?.dispose();
   }, [filePath, monacoInstance, invoke, setFileDirty]);
 
+  React.useEffect(() => {
+    if (!editorRef.current || !monacoInstance || !filePath) return;
+
+    // Get the current model or create a new one if it doesn't exist
+    let model = monacoInstance.editor.getModel(monacoInstance.Uri.parse(`file://${filePath}`));
+    if (!model) {
+      model = monacoInstance.editor.createModel(value, language, monacoInstance.Uri.parse(`file://${filePath}`));
+    } else if (model.getValue() !== value) {
+      // Update model content only if it's different to avoid unnecessary updates
+      model.setValue(value);
+    }
+
+    // Set the editor's model to the correct one
+    if (editorRef.current.getModel() !== model) {
+      editorRef.current.setModel(model);
+    }
+
+    // Also ensure language is set correctly
+    if (model.getLanguageId() !== language) {
+      monacoInstance.editor.setModelLanguage(model, language);
+    }
+
+  }, [filePath, value, language, monacoInstance]);
+
   return (
     <div 
       data-testid="monaco-container"
       className="h-full w-full bg-[#050505] relative group/editor"
     >
         <Editor
+        theme="copernicus-phosphor"
+        loading={<div className="h-full w-full bg-[#050505]" />}
         height="100%"
         path={filePath ?? undefined}
         language={language}

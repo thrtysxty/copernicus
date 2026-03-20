@@ -1,5 +1,5 @@
 import { WorkflowState, VALID_TRANSITIONS } from './states';
-import { WorkflowGraph, WFNode, NodeStatus, WorkflowExecutionEvent } from './types';
+import { WorkflowGraph, WFNode, NodeStatus, WorkflowExecutionEvent, WorkflowStepStartEvent, WorkflowStepEndEvent } from './types';
 import type { AuthManager } from '../auth-manager';
 import type { ModelRegistry } from '../models/model-registry';
 import type { PTYManager } from '../pty-manager';
@@ -39,6 +39,7 @@ export class WorkflowEngine {
   private currentState: WorkflowState = 'IDLE';
   private nodeStatuses: Map<string, { status: NodeStatus; error?: string }> = new Map();
   private context: Map<string, string> = new Map();
+  private currentTurn: number = 0;
   private services: EngineServices | null = null;
 
   constructor(private snapshotManager?: SnapshotManager) {
@@ -84,6 +85,7 @@ export class WorkflowEngine {
     this.currentState = 'IDLE';
     this.nodeStatuses.clear();
     this.context.clear();
+    this.currentTurn = 0;
   }
 
   public transition(newState: WorkflowState): boolean {
@@ -127,6 +129,7 @@ export class WorkflowEngine {
     } catch { /* lspManager not yet available — safe to ignore */ }
 
     this.context.set('__workflowId', graph.id);
+    this.currentTurn = 0;
     this.snapshotManager?.beginRun()
     graph.nodes.forEach(n => this.nodeStatuses.set(n.id, { status: 'idle' }));
 
@@ -145,6 +148,15 @@ export class WorkflowEngine {
       for (const node of sortedNodes) {
         if (skipped.has(node.id)) {
           this.updateNodeStatus(node.id, 'skipped', undefined, callback);
+          if (this.services?.win) {
+            this.services.win.webContents.send('workflow:step-end', {
+              workflowId: graph.id,
+              nodeId: node.id,
+              status: 'skipped',
+              durationMs: 0,
+              timestamp: Date.now()
+            } as WorkflowStepEndEvent);
+          }
           continue;
         }
 
@@ -165,6 +177,12 @@ export class WorkflowEngine {
       // Optionally push a global error if needed, but per-node errors are more granular
     } finally {
       this.snapshotManager?.endRun()
+      const { browserSession } = await import('../browser-session')
+      if (browserSession.browser) {
+        await browserSession.browser.close().catch(() => {})
+        browserSession.browser = null
+        browserSession.page = null
+      }
     }
   }
 
@@ -227,6 +245,20 @@ export class WorkflowEngine {
   }
 
   private async executeNode(node: WFNode, callback?: StateCallback): Promise<void> {
+    this.currentTurn++;
+    const workflowId = this.context.get('__workflowId') ?? 'unknown';
+    const startTime = Date.now();
+
+    if (this.services?.win) {
+      this.services.win.webContents.send('workflow:step-start', {
+        workflowId,
+        nodeId: node.id,
+        nodeType: node.type,
+        turn: this.currentTurn,
+        timestamp: startTime
+      } as WorkflowStepStartEvent);
+    }
+
     this.updateNodeStatus(node.id, 'running', undefined, callback);
 
     try {
@@ -265,10 +297,33 @@ export class WorkflowEngine {
       this.context.set(node.id, output);
       if (node.type !== 'decision') this.context.set('__lastOutput', output);
       this.updateNodeStatus(node.id, 'completed', undefined, callback);
+
+      const endTime = Date.now();
+      if (this.services?.win) {
+        this.services.win.webContents.send('workflow:step-end', {
+          workflowId,
+          nodeId: node.id,
+          status: 'completed',
+          durationMs: endTime - startTime,
+          timestamp: endTime
+        } as WorkflowStepEndEvent);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.context.set(node.id, `ERROR:${msg}`);
       this.updateNodeStatus(node.id, 'error', msg, callback);
+
+      const endTime = Date.now();
+      if (this.services?.win) {
+        this.services.win.webContents.send('workflow:step-end', {
+          workflowId,
+          nodeId: node.id,
+          status: 'error',
+          durationMs: endTime - startTime,
+          timestamp: endTime
+        } as WorkflowStepEndEvent);
+      }
+
       throw err;
     }
   }
@@ -380,7 +435,7 @@ export class WorkflowEngine {
       }
       case 'makefile-run': {
         const target = d.command ?? 'test';
-        return await this.runShell(`make ${target}`);
+        return await this.runShell(`make ${target.trim()}`);
       }
       case 'file-read': {
         if (!d.filePath) throw new Error('file-read: filePath is required');
@@ -518,7 +573,7 @@ export class WorkflowEngine {
       case 'kanban-flag-card': {
         const storyId = this.context.get('__storyId')
         if (!storyId) throw new Error('kanban-flag-card: __storyId missing from context')
-        await this.services.storiesManager.setField(storyId, 'flagged', true)
+        this.services.storiesManager.setField(storyId, 'flagged', true)
         this.services.win.webContents.send('stories:updated', this.services.storiesManager.listStories())
         return `kanban-flag-card:flagged:${storyId}`
       }
@@ -710,21 +765,31 @@ export class WorkflowEngine {
 
   private runShell(cmd: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const { exec } = require('node:child_process');
+      const { spawn } = require('node:child_process');
       const cwd = this.services!.fsManager.getRootPath();
-      exec(
-        cmd,
-        { cwd, timeout: 60_000, maxBuffer: 1024 * 1024 },
-        (error: any, stdout: string, stderr: string) => {
-          if (error) {
-            this.context.set('__lastExitCode', String(error.code ?? 1));
-            reject(new Error(stderr.trim() || (error as Error).message));
-          } else {
-            this.context.set('__lastExitCode', '0');
-            resolve(stdout.trim());
-          }
+      const argv = cmd.trim().split(/\s+/).filter(Boolean);
+      if (argv.length === 0) {
+        reject(new Error('runShell: empty command'));
+        return;
+      }
+      const child = spawn(argv[0], argv.slice(1), { cwd, shell: false, timeout: 60_000 });
+      let stdout = '';
+      let stderr = '';
+      child.stdout?.on('data', (d: Buffer) => { stdout += d.toString(); });
+      child.stderr?.on('data', (d: Buffer) => { stderr += d.toString(); });
+      child.on('error', (err: Error) => {
+        this.context.set('__lastExitCode', '1');
+        reject(err);
+      });
+      child.on('close', (code: number | null) => {
+        const exitCode = code ?? 1;
+        this.context.set('__lastExitCode', String(exitCode));
+        if (exitCode !== 0) {
+          reject(new Error(stderr.trim() || `exit code ${exitCode}`));
+        } else {
+          resolve(stdout.trim());
         }
-      );
+      });
     });
   }
 

@@ -41,6 +41,7 @@ export interface KanbanColumn {
   label: string
   color: string
   accent: string
+  minimized?: number
 }
 
 
@@ -125,6 +126,7 @@ interface LayoutState {
   setPhosphorColor: (color: PhosphorColor) => void
   setReviewEnabled: (enabled: boolean) => void
   setColumns: (columns: KanbanColumn[]) => void
+  updateKanbanColumn: (id: string, updates: Partial<KanbanColumn>, invoke: (channel: string, ...args: unknown[]) => Promise<unknown>) => Promise<void>
   setActiveWorkflowTemplate: (id: string | null) => void
   setCenterMode: (mode: CenterMode) => void
   setActiveFilePath: (path: string | null) => void
@@ -301,6 +303,16 @@ export const useLayoutStore = create<LayoutState>()(
       setPhosphorColor: (color) => set({ phosphorColor: color }),
       setReviewEnabled: (enabled) => set({ reviewEnabled: enabled }),
       setColumns: (columns) => set({ columns }),
+      updateKanbanColumn: async (id, updates, invoke) => {
+        try {
+          await invoke('kanban:set-column', id, updates)
+          set((state) => ({
+            columns: state.columns.map(c => c.id === id ? { ...c, ...updates } : c)
+          }))
+        } catch (e) {
+          console.error('Failed to update column', e)
+        }
+      },
       setActiveWorkflowTemplate: (id) => set({ activeWorkflowTemplate: id }),
       setCenterMode: (mode) => set({ centerMode: mode }),
       setActiveFilePath: (path) => set({ activeFilePath: path }),

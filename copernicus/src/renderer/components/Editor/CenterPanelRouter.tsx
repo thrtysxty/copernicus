@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import { X, RotateCcw, Maximize2, Minimize2, Ghost, Check, X as CloseIcon } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { X, RotateCcw, Maximize2, Minimize2, Ghost, Check, X as CloseIcon, CaseSensitive, WholeWord, Regex, FileCode, SearchCode } from 'lucide-react'
 import { EditorPanel } from './EditorPanel'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
@@ -7,12 +7,24 @@ import { UIBuilderCanvas } from './ui-builder/UIBuilderCanvas'
 import DiffPanel from './DiffPanel'
 import { ContentPreview } from './ContentPreview'
 import { useLayoutStore } from '../../store/layout'
-import { SearchDrawer } from '../search/SearchDrawer'
-import { Search } from 'lucide-react'
 import { classifyFile } from '../../utils/fileUtils'
 import { useIpcError } from '../../hooks/useIpcError'
 import { SharedPanelHeader } from '../layout/SharedPanelHeader'
-import { unwrapIpc, IpcResult, LspStatusResponse } from '../../types/ipc'
+import { unwrapIpc, IpcResult } from '../../types/ipc'
+import { useMonaco } from '@monaco-editor/react'
+
+interface SearchResult {
+  file: string
+  line: number
+  col: number
+  text: string
+}
+
+interface SemanticResult {
+  path: string
+  score: number
+  content: string
+}
 
 interface CenterPanelRouterProps {
   filePath?: string | null
@@ -58,7 +70,7 @@ function CenterPanelHeader({
   setGhostMode,
   hasGhost,
   handleAcceptAll,
-  handleRejectAll
+  handleRejectAll,
 }: {
   ghostMode?: boolean
   setGhostMode?: (val: boolean) => void
@@ -72,27 +84,10 @@ function CenterPanelHeader({
     spotlightPane, setSpotlight, toggleFlip, activeView, activeStoryId
   } = useLayoutStore()
   const invoke = useIpcError()
-  const [lspRunning, setLspRunning] = useState(false)
-  const [lspPopoverOpen, setLspPopoverOpen] = useState(false)
-  const [errorCount, setErrorCount] = useState(0)
-  const [warnCount, setWarnCount] = useState(0)
+  const monacoInstance = useMonaco()
 
-  useEffect(() => {
-    invoke<IpcResult<LspStatusResponse>>('lsp:status').then((res) => {
-      if (res?.ok && res.data) setLspRunning(res.data.running ?? false)
-    }).catch(() => {})
-    const removeDiag = window.ipcRenderer.on(
-      'lsp:diagnostics-update',
-      (_e: any, { uri, diagnostics }: { uri: string; diagnostics: { severity: number }[] }) => {
-        if (!activeFilePath || `file://${activeFilePath}` !== uri) return
-        let errors = 0, warnings = 0
-        diagnostics.forEach((d) => { if (d.severity === 1) errors++; if (d.severity === 2) warnings++ })
-        setErrorCount(errors)
-        setWarnCount(warnings)
-      }
-    )
-    return () => removeDiag()
-  }, [invoke, activeFilePath])
+
+
 
   const isSpotlightActive = spotlightPane === 'editor'
   const showLsp = activeView === 'editor' || activeView === 'designer'
@@ -111,31 +106,7 @@ function CenterPanelHeader({
         name="DESIGNER"
         onRotate={() => toggleFlip('center-panel')}
       >
-        {showLsp && (
-          <div className="relative">
-            <button
-              aria-label="LSP status"
-              className="flex items-center gap-1.5 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
-              onClick={() => setLspPopoverOpen(v => !v)}
-            >
-              <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">LSP {errorCount}E {warnCount}W</span>
-            </button>
-            {lspPopoverOpen && (
-              <div
-                className="absolute top-8 right-0 z-50 bg-[#0d0d0d] border border-copernicus-steel/40 rounded shadow-2xl p-3 w-56 font-mono"
-                onMouseLeave={() => setLspPopoverOpen(false)}
-              >
-                <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-2">Language Server</div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`w-2 h-2 rounded-full ${lspRunning ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-[10px] text-zinc-300">{lspRunning ? 'Connected' : 'Disconnected'}</span>
-                </div>
-                <div className="text-[9px] text-zinc-600 mt-2">{errorCount}E · {warnCount}W in active file</div>
-              </div>
-            )}
-          </div>
-        )}
+
       </SharedPanelHeader>
     )
   }
@@ -153,12 +124,28 @@ function CenterPanelHeader({
                 key={file.path}
                 onClick={async () => {
                   if (file.path === activeFilePath) return
-                  setActiveFile(file.path)
+                
+                  // If Monaco already has a model for this file, switch with correct content instantly — no IPC
+                  const existingModel = monacoInstance?.editor.getModel(
+                    monacoInstance.Uri.parse(`file://${file.path}`)
+                  )
+                  if (existingModel) {
+                    setActiveFileContent(existingModel.getValue())
+                    setActiveFileLanguage(getLanguage(file.path))
+                    setActiveFile(file.path)
+                    const cl = classifyFile(file.path)
+                    if (cl === 'binary') setCenterMode('binary')
+                    else setCenterMode('code')
+                    return
+                  }
+                
+                  // First open — load from IPC, then switch so path and value change in the same render
                   try {
                     const result = await invoke<any>('fs:read-file', file.path)
                     const content = unwrapIpc<string>(result) || ''
                     setActiveFileContent(content)
                     setActiveFileLanguage(getLanguage(file.path))
+                    setActiveFile(file.path)
                     const cl = classifyFile(file.path)
                     if (cl === 'binary') setCenterMode('binary')
                     else setCenterMode('code')
@@ -183,8 +170,10 @@ function CenterPanelHeader({
         )}
       </div>
 
-      {/* Right: LSP status + panel controls */}
+      {/* Right: inline search + panel controls */}
       <div className="flex items-center gap-1 px-2 shrink-0">
+
+
         {showLsp && setGhostMode && (
           <div className="flex items-center gap-1 border-r border-zinc-800 pr-2 mr-1">
             <button
@@ -219,31 +208,7 @@ function CenterPanelHeader({
           </div>
         )}
 
-        {showLsp && (
-          <div className="relative">
-            <button
-              aria-label="LSP status"
-              className="flex items-center gap-1.5 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 cursor-pointer hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
-              onClick={() => setLspPopoverOpen(v => !v)}
-            >
-              <span className={`text-[8px] ${lspRunning ? 'text-green-500' : 'text-red-500'}`}>◉</span>
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">LSP {errorCount}E {warnCount}W</span>
-            </button>
-            {lspPopoverOpen && (
-              <div
-                className="absolute top-8 right-0 z-50 bg-[#0d0d0d] border border-copernicus-steel/40 rounded shadow-2xl p-3 w-56 font-mono"
-                onMouseLeave={() => setLspPopoverOpen(false)}
-              >
-                <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-2">Language Server</div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`w-2 h-2 rounded-full ${lspRunning ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-[10px] text-zinc-300">{lspRunning ? 'Connected' : 'Disconnected'}</span>
-                </div>
-                <div className="text-[9px] text-zinc-600 mt-2">{errorCount}E · {warnCount}W in active file</div>
-              </div>
-            )}
-          </div>
-        )}
+
         <button
           onClick={() => toggleFlip('center-panel')}
           className="p-1.5 text-zinc-400 hover:text-zinc-300 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
@@ -276,11 +241,12 @@ export function CenterPanelRouter({
   const [hasGhost, setHasGhost] = useState(false)
   const [ghostAction, setGhostAction] = useState<'accept' | 'reject' | null>(null)
 
+  const activeFilePathForReset = useLayoutStore(s => s.activeFilePath)
   useEffect(() => {
     setGhostMode(false)
     setHasGhost(false)
     setGhostAction(null)
-  }, [propFilePath, useLayoutStore.getState().activeFilePath])
+  }, [propFilePath, activeFilePathForReset])
 
   const handleAcceptAll = () => {
     setGhostAction('accept')
@@ -292,25 +258,83 @@ export function CenterPanelRouter({
     setTimeout(() => setGhostAction(null), 100)
   }
 
-  const { 
+  const [query, setQuery] = useState('')
+  const [mode, setMode] = useState<'text' | 'semantic'>('text')
+  const [caseSensitive, setCaseSensitive] = useState(false)
+  const [regex, setRegex] = useState(false)
+  const [wholeWord, setWholeWord] = useState(false)
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [semanticResults, setSemanticResults] = useState<SemanticResult[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const invoke = useIpcError()
+  const openFile = useLayoutStore(s => s.openFile)
+
+  const handleSearch = useCallback(async () => {
+    if (!query) return
+    setLoading(true)
+    try {
+      if (mode === 'text') {
+        const r = await invoke<IpcResult<SearchResult[]>>('codebase:text-search', {
+          query, caseSensitive, regex, wholeWord
+        })
+        const res = unwrapIpc<SearchResult[]>(r) ?? []
+        setResults(res)
+        setSemanticResults([]) // Clear semantic results when doing text search
+      } else {
+        const r = await invoke<IpcResult<SemanticResult[]>>('codebase:semantic-search', {
+          query, topK: 10
+        })
+        const res = unwrapIpc<SemanticResult[]>(r) ?? []
+        setSemanticResults(res)
+        setResults([]) // Clear text results when doing semantic search
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [query, mode, caseSensitive, regex, wholeWord, invoke])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const {
     centerMode, setCenterMode, 
     activeView,
     canvasContent, canvasUrl,
     activeFilePath, activeFileContent, activeFileLanguage,
     setActiveFileContent, browserSessionActive,
     reviewMode,
-    searchDrawerOpen,
-    setSearchDrawerOpen
   } = useLayoutStore()
 
   const filePath = activeFilePath ?? propFilePath ?? null
   const language = activeFilePath ? activeFileLanguage : (propLanguage ?? 'typescript')
 
+  // Use a ref so effects can read centerMode without subscribing to it (prevents update loops)
+  const centerModeRef = useRef(centerMode)
+  centerModeRef.current = centerMode
+
   useEffect(() => {
-    if (centerMode === 'builder' && !isUIFile(filePath)) {
+    if (centerModeRef.current === 'builder' && !isUIFile(filePath)) {
       setCenterMode('code')
     }
-  }, [filePath, centerMode, setCenterMode])
+  }, [filePath, setCenterMode])
+
+  const groupedResults = useMemo(() => {
+    return results.reduce((acc, curr) => {
+      if (!acc[curr.file]) acc[curr.file] = []
+      acc[curr.file]!.push(curr)
+      return acc
+    }, {} as Record<string, SearchResult[]>)
+  }, [results])
 
   const renderedContent = useMemo(() => {
     if (reviewMode) {
@@ -387,30 +411,28 @@ export function CenterPanelRouter({
 
   // FIX: When switching from Designer/other to Editor view, ensure centerMode is reset correctly
   useEffect(() => {
-    if (activeView === 'editor' && (centerMode === 'canvas' || centerMode === 'builder')) {
-      if (!filePath) return;
-      
+    if (activeView === 'editor' && (centerModeRef.current === 'canvas' || centerModeRef.current === 'builder')) {
+      if (!filePath) return
       const fileType = classifyFile(filePath)
       if (fileType === 'canvas') setCenterMode('canvas')
       else if (fileType === 'svg') setCenterMode('canvas')
       else if (fileType === 'binary') setCenterMode('binary')
       else setCenterMode('code')
     }
-  }, [activeView, filePath, language, setCenterMode, centerMode])
+  }, [activeView, filePath, language, setCenterMode])
 
   useEffect(() => {
-    if (centerMode === 'builder' || centerMode === 'canvas') return;
-    if (!filePath) return;
-
+    if (centerModeRef.current === 'builder' || centerModeRef.current === 'canvas') return
+    if (!filePath) return
     if (language === 'svg') setCenterMode('canvas')
     else if (language === 'image') setCenterMode('canvas')
     else if (language === 'binary') setCenterMode('binary')
     else setCenterMode('code')
-  }, [language, filePath, setCenterMode, centerMode])
+  }, [language, filePath, setCenterMode])
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden relative">
-      <CenterPanelHeader 
+      <CenterPanelHeader
         ghostMode={ghostMode}
         setGhostMode={setGhostMode}
         hasGhost={hasGhost}
@@ -419,22 +441,110 @@ export function CenterPanelRouter({
       />
       <div className="flex-1 overflow-hidden relative">
         {renderedContent}
-        <SearchDrawer />
       </div>
 
-      {/* Editor-Terminal Divider Bar */}
-      <div className="h-6 bg-[#050505] border-t border-copernicus-steel flex items-center justify-end px-4 shrink-0 shadow-sm relative z-40">
-        <button 
-          onClick={() => setSearchDrawerOpen(!searchDrawerOpen)}
-          className={`p-1 rounded transition-colors focus-visible:ring-1 focus-visible:ring-copernicus-phosphor focus-visible:outline-none flex items-center gap-1.5 ${searchDrawerOpen ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}
-          title="Search Codebase (Cmd+Shift+F)"
-          aria-label="Toggle Search Drawer"
-          aria-expanded={searchDrawerOpen}
-        >
-          <Search size={10} />
-          <span className="text-[9px] uppercase tracking-widest font-mono">Search</span>
-        </button>
+      {/* Search control row — permanent, replaces old search button position */}
+      <div className="shrink-0 flex items-center gap-3 px-2 h-8 border-t border-copernicus-steel bg-[#0A0A0A]">
+        {/* Mode toggle */}
+        <div className="flex bg-zinc-900 rounded p-0.5 shrink-0">
+          <button
+            onClick={() => setMode('text')}
+            className={`px-2 py-0.5 rounded text-[9px] uppercase tracking-widest transition-colors ${mode === 'text' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >Text</button>
+          <button
+            onClick={() => setMode('semantic')}
+            className={`px-2 py-0.5 rounded text-[9px] uppercase tracking-widest transition-colors ${mode === 'semantic' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >Semantic</button>
+        </div>
+        {/* Search input */}
+        <div className="flex-1 relative flex items-center">
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder={mode === 'text' ? 'Search text…' : 'Ask codebase…'}
+            className="w-full bg-zinc-950 border border-zinc-800 text-[10px] font-mono text-zinc-300 px-2 py-0.5 focus:outline-none focus:border-copernicus-phosphor placeholder-zinc-600"
+          />
+          {mode === 'text' && (
+            <div className="absolute right-1 flex items-center gap-0.5">
+              <button onClick={() => setCaseSensitive(!caseSensitive)} className={`p-0.5 rounded ${caseSensitive ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`} title="Case sensitive"><CaseSensitive size={10} /></button>
+              <button onClick={() => setWholeWord(!wholeWord)} className={`p-0.5 rounded ${wholeWord ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`} title="Whole word"><WholeWord size={10} /></button>
+              <button onClick={() => setRegex(!regex)} className={`p-0.5 rounded ${regex ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-zinc-400'}`} title="Regex"><Regex size={10} /></button>
+            </div>
+          )}
+        </div>
+        {loading && <span className="text-[8px] text-zinc-600 animate-pulse shrink-0">searching…</span>}
+        {query && <button onClick={() => { setQuery(''); setResults([]); setSemanticResults([]) }} className="text-zinc-600 hover:text-zinc-400 shrink-0"><X size={10} /></button>}
       </div>
+
+      {query && (results.length > 0 || semanticResults.length > 0 || loading) && (
+        <div 
+          className="border-t border-copernicus-steel bg-[#080808] font-mono text-[10px] text-zinc-300 overflow-y-auto"
+          style={{ maxHeight: '260px' }}
+        >
+          <div className="flex-1 overflow-y-auto p-2">
+            {mode === 'text' ? (
+              <div className="space-y-2">
+                {Object.keys(groupedResults).length === 0 && !loading && query && (
+                  <div className="text-zinc-600 italic px-2">No matches found</div>
+                )}
+                {Object.entries(groupedResults).map(([file, matches]) => (
+                  <div key={file} className="space-y-0.5">
+                    <div className="flex items-center gap-2 text-zinc-400 font-bold px-2 py-1 bg-zinc-900/50 rounded sticky top-0">
+                      <FileCode size={12} className="text-copernicus-phosphor/60" />
+                      <span className="truncate">{file}</span>
+                      <span className="text-[8px] bg-zinc-800 px-1 rounded text-zinc-500">{matches.length}</span>
+                    </div>
+                    {matches.map((m, i) => (
+                      <div 
+                        key={i} 
+                        className="px-2 py-1 pl-6 hover:bg-zinc-900 cursor-pointer rounded flex flex-col gap-1 transition-colors group"
+                        onClick={() => openFile(m.file)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-600 text-[8px] w-6 group-hover:text-copernicus-phosphor/70">L{m.line}</span>
+                          <span className="text-zinc-300 truncate font-mono">{m.text}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2 max-w-4xl">
+                {semanticResults.length === 0 && !loading && query && (
+                  <div className="text-zinc-600 italic px-2">No semantic matches found</div>
+                )}
+                {semanticResults.map((r, i) => (
+                  <div 
+                    key={i} 
+                    className="p-2 border border-zinc-800 rounded hover:border-zinc-700 cursor-pointer group hover:bg-zinc-900/30 transition-colors"
+                    onClick={() => openFile(r.path)}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <SearchCode size={12} className="text-copernicus-phosphor" />
+                        <span className="text-zinc-300 font-bold">{r.path.split('/').pop()}</span>
+                        <span className="text-[8px] text-zinc-600 truncate">{r.path}</span>
+                      </div>
+                      <span className="text-[8px] text-zinc-500 uppercase tracking-tighter">Similarity: {Math.round(r.score * 100)}%</span>
+                    </div>
+                    <div className="text-zinc-400 text-[9px] line-clamp-2 pl-5">
+                      {r.content}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="px-3 py-1 border-t border-copernicus-steel/20 text-[8px] text-zinc-600 flex justify-between shrink-0 bg-[#050505]">
+            <span>MODE: {mode.toUpperCase()}</span>
+            <span>{mode === 'text' ? results.length : semanticResults.length} RESULTS</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -115,3 +115,19 @@ export interface WorkflowExecutionEvent {
   message?: string;
   error?: string;
 }
+
+export interface WorkflowStepStartEvent {
+  workflowId: string;
+  nodeId: string;
+  nodeType: string;
+  turn: number;
+  timestamp: number;
+}
+
+export interface WorkflowStepEndEvent {
+  workflowId: string;
+  nodeId: string;
+  status: 'completed' | 'error' | 'skipped';
+  durationMs: number;
+  timestamp: number;
+}

@@ -5,12 +5,18 @@ import { renderComponentTree } from './render'
 import { UIComponentInspector } from './UIComponentInspector'
 import { Rnd } from 'react-rnd'
 import {
-  Layout, GripVertical, 
-  MousePointer2, Square, Type, Image as ImageIcon,
+  Layout, GripVertical,
+  MousePointer2, Square, Type,
   FormInput, Layers, Box
 } from 'lucide-react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
+import { TILE_MAP } from './tile-renders'
+
+const renderPreview = (comp: UIComponent) => {
+  const Tile = TILE_MAP[comp.type]
+  return Tile ? <Tile props={comp.props} /> : null
+}
 
 const PALETTE: Array<{ section: string; icon: any; items: Array<{ type: UIComponentType; label: string; icon: any }> }> = [
   { 
@@ -31,7 +37,7 @@ const PALETTE: Array<{ section: string; icon: any; items: Array<{ type: UICompon
     items: [
       { type:'heading',label:'Heading', icon: Type },
       { type:'paragraph',label:'Text', icon: Type },
-      { type:'image',label:'Image', icon: ImageIcon },
+      { type:'image',label:'Image', icon: Square },
       { type:'badge',label:'Badge', icon: Box },
       { type:'alert',label:'Alert', icon: Box }
     ] 
@@ -54,6 +60,7 @@ export const UIBuilderCanvas: React.FC = () => {
     paletteOpen, inspectorOpen
   } = useUIBuilderStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const invoke = useIpcError()
@@ -138,43 +145,6 @@ export const UIBuilderCanvas: React.FC = () => {
   ;(window as any)._ui_export_jsx = handleExportJSX
   ;(window as any)._ui_export_html = handleExportHTML
 
-  const renderPreview = (comp: UIComponent) => {
-    const { type, props } = comp
-    const base = 'w-full h-full flex items-center justify-center overflow-hidden pointer-events-none select-none'
-    switch (type) {
-      case 'button':
-        return <div className={`${base}`}><span className="bg-copernicus-phosphor/90 text-[#050505] font-mono font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-none">{props.text || 'BUTTON'}</span></div>
-      case 'input':
-        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1">{props.placeholder || 'Input...'}</div></div>
-      case 'textarea':
-        return <div className={`${base} px-2`}><div className="w-full h-4/5 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1">{props.placeholder || 'Textarea...'}</div></div>
-      case 'select':
-        return <div className={`${base} px-2`}><div className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] px-2 py-1 flex items-center justify-between"><span>Select...</span><span>▾</span></div></div>
-      case 'heading':
-        return <div className={`${base} px-2`}><span className="font-mono font-bold text-zinc-200 text-sm">{props.text || 'Heading'}</span></div>
-      case 'paragraph':
-      case 'label':
-        return <div className={`${base} px-2`}><span className="font-mono text-zinc-400 text-[10px]">{props.text || type}</span></div>
-      case 'container':
-      case 'row':
-      case 'column':
-      case 'card':
-        return <div className="w-full h-full border-2 border-dashed border-zinc-700/50 bg-zinc-900/20" />
-      case 'badge':
-        return <div className={`${base}`}><span className="bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[9px] px-2 py-0.5 rounded-full">{props.text || 'Badge'}</span></div>
-      case 'alert':
-        return <div className="w-full h-full border-l-2 border-copernicus-phosphor/60 bg-zinc-900/40 flex items-center px-3"><span className="font-mono text-[10px] text-zinc-300">{props.text || 'Alert'}</span></div>
-      case 'divider':
-        return <div className={`${base}`}><div className="w-full border-t border-zinc-700" /></div>
-      case 'spacer':
-        return <div className="w-full h-full border border-dashed border-zinc-800/50" />
-      case 'image':
-        return <div className={`${base} bg-zinc-900/60`}><ImageIcon size={24} className="text-zinc-700" /></div>
-      default:
-        return <div className={`${base}`}><span className="font-mono text-zinc-600 text-[9px] uppercase">{type}</span></div>
-    }
-  }
-
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505] overflow-hidden" ref={containerRef}>
       <div className="flex-1 flex overflow-hidden relative">
@@ -246,7 +216,9 @@ export const UIBuilderCanvas: React.FC = () => {
                     {comp.type}
                   </span>
                 </div>
-                {renderPreview(comp)}
+                <div className="w-full h-full relative pointer-events-none select-none">
+                  {renderPreview(comp)}
+                </div>
               </Rnd>
             ))}
           </div>
@@ -256,11 +228,13 @@ export const UIBuilderCanvas: React.FC = () => {
 
         {/* Inspector */}
         {inspectorOpen && selectedComponent && (
-          <div className="w-72 border-l border-zinc-800 bg-[#080808] flex flex-col overflow-y-auto no-scrollbar animate-in slide-in-from-right duration-200">
+          <div className={`border-l border-zinc-800 bg-[#080808] flex flex-col overflow-y-auto no-scrollbar animate-in slide-in-from-right duration-200 transition-all duration-200 ${inspectorCollapsed ? 'w-9' : 'w-72'}`}>
             <UIComponentInspector 
               component={selectedComponent}
               onChange={(updated) => updateComponent(selectedComponent.id, updated)}
               onDelete={() => deleteComponent(selectedComponent.id)}
+              collapsed={inspectorCollapsed}
+              setCollapsed={setInspectorCollapsed}
             />
           </div>
         )}

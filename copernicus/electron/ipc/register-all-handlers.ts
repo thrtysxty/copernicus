@@ -22,6 +22,7 @@ import * as chatHandlers from './chat-handlers'
 import * as storyHandlers from './story-handlers'
 import * as workflowHandlers from './workflow-handlers'
 import * as terminalHandlers from './terminal-handlers'
+import * as terminalAgentHandlers from './terminal-agent-handlers'
 import * as appHandlers from './app-handlers'
 import * as capexHandlers from './capex-handlers'
 import * as genesisHandlers from './genesis-handlers'
@@ -36,6 +37,7 @@ import * as lspHandlers from './lsp-handlers'
 import * as securityScoreHandlers from './security-handlers'
 import * as localModelHandlers from './local-model-handlers'
 import { registerReplayHandlers } from './replay-handlers'
+import { handleIpc } from '../utils/handle-ipc'
 
 export async function registerAllIpcHandlers(
   win: BrowserWindow,
@@ -82,6 +84,7 @@ export async function registerAllIpcHandlers(
   storyHandlers.register(win, deps)
   workflowHandlers.register(win, deps)
   terminalHandlers.register(win, deps)
+  terminalAgentHandlers.register(win, deps)
   appHandlers.register(win, deps)
   capexHandlers.registerCapexHandlers()
   genesisHandlers.register(win, deps)
@@ -99,7 +102,9 @@ export async function registerAllIpcHandlers(
   const cleanupWorktreeHandlers = registerWorktreeHandlers(worktreeManager)
   registerSecurityHandlers(ipcMain, globalDeps.settingsStore)
 
-
+  // Kanban Columns (Story 428)
+  ipcMain.handle('kanban:get-columns', () => handleIpc(() => stateLedger.getKanbanColumns()))
+  ipcMain.handle('kanban:set-column', (_e, id: string, updates: Record<string, unknown>) => handleIpc(() => stateLedger.setKanbanColumn(id, updates)))
 
   return { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager }
 }

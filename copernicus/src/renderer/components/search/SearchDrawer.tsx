@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, CaseSensitive, WholeWord, Regex, FileCode, SearchCode, X } from 'lucide-react'
 import { useLayoutStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -54,27 +54,35 @@ export const SearchDrawer: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [searchDrawerOpen, setSearchDrawerOpen])
 
-  const handleSearch = async () => {
-    if (!query) return
+  const handleSearch = useCallback(async () => {
+    if (!query.trim()) return
     setLoading(true)
     try {
       if (mode === 'text') {
         const r = await invoke<IpcResult<SearchResult[]>>('codebase:text-search', {
           query, caseSensitive, regex, wholeWord
         })
-        const res = unwrapIpc<SearchResult[]>(r) ?? []
-        setResults(res)
+        setResults(unwrapIpc<SearchResult[]>(r) ?? [])
       } else {
         const r = await invoke<IpcResult<SemanticResult[]>>('codebase:semantic-search', {
           query, topK: 10
         })
-        const res = unwrapIpc<SemanticResult[]>(r) ?? []
-        setSemanticResults(res)
+        setSemanticResults(unwrapIpc<SemanticResult[]>(r) ?? [])
       }
     } finally {
       setLoading(false)
     }
-  }
+  }, [query, mode, caseSensitive, regex, wholeWord, invoke])
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      setSemanticResults([])
+      return
+    }
+    const id = setTimeout(handleSearch, mode === 'text' ? 300 : 600)
+    return () => clearTimeout(id)
+  }, [query, mode, caseSensitive, regex, wholeWord, handleSearch])
 
   const groupedResults = results.reduce((acc, curr) => {
     if (!acc[curr.file]) acc[curr.file] = []
@@ -113,7 +121,7 @@ export const SearchDrawer: React.FC = () => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); handleSearch() } }}
                 placeholder={mode === 'text' ? "Search text..." : "Ask codebase..."}
                 className="w-full bg-zinc-950 border border-zinc-800 rounded p-1.5 pl-2 pr-20 focus:outline-none focus:border-copernicus-phosphor"
               />

@@ -25,9 +25,9 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('terminal:resize', (_e, { id, cols, rows }: { id: string; cols: number; rows: number }) => handleIpc('terminal:resize', [{ id, cols, rows }], () => ptyManager.resize(id, cols, rows)));
 
-  ipcMain.handle('terminal:input', (_e, { tabId, data }: { tabId: string; data: string }) =>
-    handleIpc('terminal:input', [tabId, data], async () => {
-      await ptyManager.write(tabId, data)
+  ipcMain.handle('terminal:input', (_e, { id, data }: { id: string; data: string }) =>
+    handleIpc('terminal:input', [id, data], async () => {
+      await ptyManager.write(id, data)
       return { ok: true }
     })
   )

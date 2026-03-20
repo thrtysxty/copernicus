@@ -111,6 +111,23 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #407 | Playwright E2E — Full Ui Coverage Sprint | APPROVED FOR IMPLEMENTATION | P0 — Blocks release verification |
+| #408 | Terminal Chevron Direction | APPROVED FOR IMPLEMENTATION | P2 |
+| #409 | Planner Inspector Icon Buttons | APPROVED FOR IMPLEMENTATION | P2 |
+| #410 | Planner Card Doubleclick Inspector | APPROVED FOR IMPLEMENTATION | P2 |
+| #411 | Editor Search Ux Overhaul | APPROVED FOR IMPLEMENTATION | P1 |
+| #412 | Lsp Badge To Status Bar | APPROVED FOR IMPLEMENTATION | P2 |
+| #414 | Designer Inspector Header Consolidation | APPROVED FOR IMPLEMENTATION | P2 |
+| #415 | Designer Tile Visual Fidelity | APPROVED FOR IMPLEMENTATION | P1 |
+| #416 | Orchestrator Cleanup | APPROVED FOR IMPLEMENTATION | P1 |
+| #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
+| #438 | Kanban Card Double Click Fix | APPROVED FOR IMPLEMENTATION | P1 — Bug |
+| #440 | Ui Builder Tile Render System | APPROVED FOR IMPLEMENTATION | P1 — Feature / Regression Prevention |
+| #441 | Statusbar Lsp Servername Crash | APPROVED FOR IMPLEMENTATION | P0 — Bug |
+| #442 | Terminal Input Blocked | APPROVED FOR IMPLEMENTATION | P1 — Bug |
+| #443 | Replay Panel Tab Layout | APPROVED FOR IMPLEMENTATION | P2 — UX |
+| #444 | Bitnet Start Fix And Wizard Option | APPROVED FOR IMPLEMENTATION | P1 — Bug + UX |
+| #446 | Bitnet Knowledge Base | APPROVED FOR IMPLEMENTATION | P1 — Feature |
+| #447 | Genesis Model Guard And Free Provider Topic | APPROVED FOR IMPLEMENTATION | P1 — Bug + Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -313,6 +330,23 @@ This file is auto-generated. Run `make backlog` to update.
 | #404 | Extension Store And Renderer Integration | COMPLETE | P1 |
 | #405 | Workflow Node Contribution Point | COMPLETE | P1 |
 | #406 | Orchestrator Tile And Provider Contribution Points | COMPLETE | P2 |
+| #413 | Editor File Tab Bug | COMPLETE | P1 (Bug) |
+| #417 | Editor Tab Desync And White Flash | COMPLETE | P1 |
+| #418 | Worktreemanager Command Injection | COMPLETE | P0 — Security |
+| #420 | Agent Assignment Genericization | COMPLETE | P0 — Correctness |
+| #421 | Terminal Purge And Agent Terminal | COMPLETE | P0 — Correctness |
+| #422 | Agent Agnostic Diff Review | COMPLETE | P1 — Correctness |
+| #423 | 423 Genesis Scaffold Shell Injection Fix | COMPLETE | P1 — Security |
+| #424 | 424 Worktreepanel Ipc Standard Compliance | COMPLETE | P1 — Security/Standards |
+| #425 | 425 Cloud Agent Tool Calling Loop | COMPLETE | P1 |
+| #426 | Agent Sandbox Isolation For Bash Tool | COMPLETE | P1 — Security |
+| #427 | Workflow Step Events Ipc | COMPLETE | P1 — Feature |
+| #428 | Sqlite State Canonicalization Rule | COMPLETE | P2 — Tech Debt |
+| #429 | Ipc Batching And Caching Layer | COMPLETE | P2 — Performance |
+| #430 | Registerallipchandlers Decomposition | COMPLETE | P2 — Tech Debt |
+| #431 | Workflow Engine Shell Injection Fix | COMPLETE | P0 — Security (blocking) |
+| #439 | Search Drawer Live Results And Enter Persist | COMPLETE | P1 — Bug |
+| #448 | 448 Editor Field Base Font Size 10Pt | COMPLETE | P2 — UX |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -332,5 +366,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
+| #432 | Notebooklm Backend Provider And Ipc | DRAFT | P2 — Feature |
+| #433 | Notebooklm Renderer Integration | DRAFT | P2 — Feature |
+| #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
+| #435 | Developer First Launch Setup | DRAFT | P0 — Blocker |
+| #436 | End User Setup Guide | DRAFT | P1 — Feature |
+| #437 | Multiplatform Build Pipeline | DRAFT | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

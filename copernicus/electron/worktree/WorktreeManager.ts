@@ -1,4 +1,4 @@
-import { execSync } from 'child_process'
+import { spawnSync } from 'child_process'
 import path from 'path'
 import fs from 'fs'
 import Database from 'better-sqlite3'
@@ -28,7 +28,7 @@ export class WorktreeManager {
     mergeMode: 'gated' | 'yolo',
   ): AgentWorktree {
     const worktreePath = path.join(this.worktreesDir, branch)
-    this.execGit(`worktree add -b "${branch}" "${worktreePath}"`)
+    this.execGit(['worktree', 'add', '-b', branch, worktreePath])
 
 
     const stmt = this.db.prepare(`
@@ -65,8 +65,8 @@ export class WorktreeManager {
     const worktree = this.getById(id)
     if (!worktree) throw new Error(`Worktree with id ${id} not found`)
 
-    const diff = this.execGit(`diff main...${worktree.branch}`)
-    const files = this.execGit(`diff main...${worktree.branch} --name-only`)
+    const diff = this.execGit(['diff', `main...${worktree.branch}`])
+    const files = this.execGit(['diff', `main...${worktree.branch}`, '--name-only'])
       .split('\n').filter(Boolean)
     return { files, diff }
   }
@@ -76,9 +76,9 @@ export class WorktreeManager {
     if (!worktree) throw new Error(`Worktree with id ${id} not found`)
 
     // Ensure we are on main branch for merge
-    this.execGit('checkout main')
-    this.execGit(`merge --squash "${worktree.branch}"`)
-    this.execGit(`commit -m "feat(agent): squash merge ${worktree.branch}"`)
+    this.execGit(['checkout', 'main'])
+    this.execGit(['merge', '--squash', worktree.branch])
+    this.execGit(['commit', '-m', `feat(agent): squash merge ${worktree.branch}`])
     this._cleanup(worktree.branch, worktree.worktreePath)
 
     const stmt = this.db.prepare(
@@ -103,12 +103,12 @@ export class WorktreeManager {
 
   _cleanup(branch: string, worktreePath: string) {
     try {
-      this.execGit(`worktree remove --force "${worktreePath}"`)
+      this.execGit(['worktree', 'remove', '--force', worktreePath])
     } catch (error: any) {
       console.error(`Error removing worktree ${worktreePath}:`, error.message)
     }
     try {
-      this.execGit(`branch -D "${branch}"`)
+      this.execGit(['branch', '-D', branch])
     } catch (error: any) {
       console.error(`Error deleting branch ${branch}:`, error.message)
     }
@@ -120,14 +120,14 @@ export class WorktreeManager {
     for (const wt of activeWorktrees) {
       try {
         const logOutput = this.execGit(
-          `log main..${wt.branch} --oneline`,
+          ['log', `main..${wt.branch}`, '--oneline'],
           wt.worktreePath,
         )
         const commitCount = logOutput.split('\n').filter(Boolean).length
 
         if (commitCount > 0) {
           const latestCommitSha = this.execGit(
-            `rev-parse ${wt.branch}`,
+            ['rev-parse', wt.branch],
             wt.worktreePath,
           ).trim()
 
@@ -178,16 +178,16 @@ export class WorktreeManager {
     }
   }
 
-  private execGit(command: string, cwd?: string): string {
-    const fullCommand = `git -C "${cwd || this.repoRoot}" ${command}`
-    console.log(`Executing: ${fullCommand}`)
-    try {
-      return execSync(fullCommand, { encoding: 'utf8' }).trim()
-    } catch (error: any) {
-      console.error(`Git command failed: ${fullCommand}`)
-      console.error(error.message)
-      throw new Error(`Git command failed: ${command}. Error: ${error.message}`)
+  private execGit(args: string[], cwd?: string): string {
+    const root = cwd || this.repoRoot
+    console.log(`Executing: git -C ${root} ${args.join(' ')}`)
+    const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' })
+    if (result.status !== 0) {
+      const msg = result.stderr?.trim() || result.error?.message || 'unknown error'
+      console.error(`Git command failed: git -C ${root} ${args.join(' ')}`)
+      throw new Error(`Git command failed: ${args.join(' ')}. Error: ${msg}`)
     }
+    return (result.stdout || '').trim()
   }
 
   private mapRowToAgentWorktree(row: any): AgentWorktree {

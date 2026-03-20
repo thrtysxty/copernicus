@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { GenesisPayload, SynthesisResult } from './types';
 import { assertSafePath } from '../utils/path-guard';
 import log from '../utils/logger';
@@ -45,7 +45,9 @@ export class ScaffoldRunner {
     }
 
     try {
-      execSync('git init', { cwd: repoPath });
+      const res = spawnSync('git', ['init'], { cwd: repoPath });
+      if (res.error) throw res.error;
+      if (res.status !== 0) throw new Error(`git init exited with ${res.status}`);
     } catch (err: any) {
       log.warn(`[ScaffoldRunner] git init failed: ${err.message}`);
     }
@@ -152,8 +154,13 @@ Claude's role is Plan → Delegate → Review. Not implement.
 
   private firstCommit(repoPath: string, projectName: string): void {
     try {
-      execSync('git add -A', { cwd: repoPath });
-      execSync(`git commit -m "chore: project genesis scaffold — ${projectName}"`, { cwd: repoPath });
+      const resAdd = spawnSync('git', ['add', '-A'], { cwd: repoPath });
+      if (resAdd.error) throw resAdd.error;
+      if (resAdd.status !== 0) throw new Error(`git add exited with ${resAdd.status}`);
+
+      const resCommit = spawnSync('git', ['commit', '-m', `chore: project genesis scaffold — ${projectName}`], { cwd: repoPath });
+      if (resCommit.error) throw resCommit.error;
+      if (resCommit.status !== 0) throw new Error(`git commit exited with ${resCommit.status}`);
     } catch (err: any) {
       log.warn(`[ScaffoldRunner] first commit failed: ${err.message}`);
     }

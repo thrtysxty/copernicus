@@ -21,6 +21,8 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
   const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy);
   const setTerminalCwd = useLayoutStore(s => s.setTerminalCwd);
   const busyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const openedRef = useRef(false);
+  const tryOpenRef = useRef<(() => void) | null>(null);
   const invoke = useIpcError();
 
   useEffect(() => {
@@ -60,17 +62,16 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       return true;
     });
 
-    let opened = false;
 
     // Open only once the container has real pixel dimensions.
     // This prevents the xterm "container has no height" crash AND ensures
     // terminal-create is sent with accurate cols/rows so input works immediately.
     const tryOpen = () => {
-      if (opened || !terminalRef.current) return;
+      if (openedRef.current || !terminalRef.current) return;
       const { offsetWidth, offsetHeight } = terminalRef.current;
       if (offsetWidth === 0 || offsetHeight === 0) return;
 
-      opened = true;
+      openedRef.current = true;
       term.open(terminalRef.current);
       fitAddon.fit();
 
@@ -82,9 +83,10 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
       // Register input handler after open — ensures all keystrokes are captured
       term.onData((data) => {
-        invoke('terminal:input', { tabId: id, data }).catch(() => {});
+        invoke('terminal:input', { id, data }).catch(() => {});
       });
     };
+    tryOpenRef.current = tryOpen;
 
     // Handle data from backend
     const removeDataListener = ipcRenderer.on('terminal-incoming', (_event: any, { id: terminalId, data }: { id: string, data: string }) => {
@@ -100,7 +102,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
     // and subsequent resize events during panel animations
     const resizeObserver = new ResizeObserver(() => {
       tryOpen();
-      if (opened && fitAddonRef.current) {
+      if (openedRef.current && fitAddonRef.current) {
         fitAddonRef.current.fit();
         invoke('terminal:resize', { id, cols: term.cols, rows: term.rows });
       }
@@ -115,13 +117,18 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       removeDataListener();
       if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
       setTerminalBusy(id, false);
-      if (opened) ipcRenderer.send('terminal-kill', { id });
+      if (openedRef.current) ipcRenderer.send('terminal-kill', { id });
       term.dispose();
+      openedRef.current = false;
     };
   }, [id, setTerminalBusy, invoke]);
 
   useEffect(() => {
     if (xtermRef.current && fitAddonRef.current && active) {
+      // If the terminal hasn't been opened yet, try to open it before focusing.
+      if (!openedRef.current && tryOpenRef.current) {
+        tryOpenRef.current();
+      }
       setTimeout(() => {
           xtermRef.current?.focus();
           fitAddonRef.current?.fit();

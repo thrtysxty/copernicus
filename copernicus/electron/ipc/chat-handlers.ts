@@ -2,6 +2,8 @@ import { ipcMain, BrowserWindow } from 'electron'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
+import { knowledgeRouter } from '../local-model/KnowledgeRouter'
+import { localModelManager } from '../local-model/LocalModelManager'
 
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { modelRegistry, llmService } = deps
@@ -17,6 +19,20 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         return { 
           error: 'VISION_NOT_SUPPORTED', 
           message: 'Switch to a vision-capable model (Claude 3, GPT-4o, Gemini 1.5+) to send images.' 
+        }
+      }
+    }
+
+    // Knowledge injection for bundled BitNet model
+    if (payload.model === 'bitnet-b158-2b' && localModelManager.isRunning()) {
+      const userQuery = [...(payload.messages ?? [])].reverse()
+        .find((m: any) => m.role === 'user')?.content ?? ''
+      const knowledge = knowledgeRouter.getContext(String(userQuery))
+      if (knowledge) {
+        const baseSystem = payload.systemPrompt ?? ''
+        payload = {
+          ...payload,
+          systemPrompt: `You are COPERNICUS Assistant, a local AI embedded in the COPERNICUS IDE. Answer questions about using COPERNICUS accurately using the documentation below. If the documentation does not cover the question, say so and suggest the user ask the cloud AI panel.\n\nDOCUMENTATION:\n${knowledge}\n\n${baseSystem}`.trim()
         }
       }
     }

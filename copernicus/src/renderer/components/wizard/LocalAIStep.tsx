@@ -92,70 +92,70 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {ollamaReachable ? (
-          <div className="bg-black/30 border border-copernicus-steel/20 rounded-xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div className="flex items-center gap-3">
-                <Server size={18} className="text-copernicus-phosphor" />
-                <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">External Ollama Detected</span>
-              </div>
-              <span className="text-[9px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded font-bold">REACHABLE</span>
+        {/* Ollama card — always visible */}
+        <div className="bg-black/30 border border-copernicus-steel/20 rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <div className="flex items-center gap-3">
+              <Server size={18} className="text-copernicus-phosphor" />
+              <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">External Ollama</span>
             </div>
-            
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Select Model</label>
-                <select 
-                  className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white outline-none focus:border-copernicus-phosphor transition-colors"
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                >
-                  {ollamaModels.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                  {ollamaModels.length === 0 && <option disabled>No models found in Ollama</option>}
-                </select>
-              </div>
-              
-              <button
-                onClick={handleUseOllama}
-                disabled={!selectedModel}
-                className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 disabled:opacity-50"
-              >
-                Use Ollama
-              </button>
-            </div>
+            {ollamaReachable
+              ? <span className="text-[9px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded font-bold">REACHABLE</span>
+              : <span className="text-[9px] bg-zinc-900/40 text-zinc-500 px-2 py-0.5 rounded font-bold">NOT DETECTED</span>
+            }
           </div>
-        ) : (
-          <div className="bg-black/30 border border-copernicus-steel/20 rounded-xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div className="flex items-center gap-3">
-                <Cpu size={18} className="text-copernicus-phosphor" />
-                <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">Bundled Model</span>
-              </div>
-              <span className="text-[9px] text-zinc-500 font-mono uppercase">Zero Dependency</span>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="p-4 bg-zinc-900/30 border border-zinc-800 rounded-lg">
-                <h4 className="text-xs font-bold text-white uppercase mb-1">BitNet B1.58 2B</h4>
-                <p className="text-[10px] text-zinc-500 leading-relaxed font-mono italic">
-                  An efficient 2B parameter model optimized for local CPU inference. 
-                  Ships with COPERNICUS and starts immediately.
-                </p>
-              </div>
-              
-              <button
-                onClick={handleUseBundled}
-                disabled={isStartingBundled}
-                className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 flex items-center justify-center gap-2"
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Select Model</label>
+              <select
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white outline-none focus:border-copernicus-phosphor transition-colors"
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                disabled={!ollamaReachable}
               >
-                {isStartingBundled ? <Activity size={14} className="animate-spin" /> : <PlayIcon />}
-                {isStartingBundled ? 'Starting Inference Server...' : 'Start Bundled Model'}
-              </button>
+                {ollamaModels.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+                {ollamaModels.length === 0 && <option disabled>No models found in Ollama</option>}
+              </select>
             </div>
+            <button
+              onClick={handleUseOllama}
+              disabled={!selectedModel || !ollamaReachable}
+              className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 disabled:opacity-50"
+            >
+              Use Ollama
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* BitNet card — always visible */}
+        <div className="bg-black/30 border border-copernicus-steel/20 rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <div className="flex items-center gap-3">
+              <Cpu size={18} className="text-copernicus-phosphor" />
+              <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">Bundled Model</span>
+            </div>
+            <span className="text-[9px] text-zinc-500 font-mono uppercase">Zero Dependency</span>
+          </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-zinc-900/30 border border-zinc-800 rounded-lg">
+              <h4 className="text-xs font-bold text-white uppercase mb-1">BitNet B1.58 2B</h4>
+              <p className="text-[10px] text-zinc-500 leading-relaxed font-mono italic">
+                An efficient 2B parameter model optimized for local CPU inference.
+                Ships with COPERNICUS and starts immediately.
+              </p>
+            </div>
+            <button
+              onClick={handleUseBundled}
+              disabled={isStartingBundled}
+              className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 flex items-center justify-center gap-2"
+            >
+              {isStartingBundled ? <Activity size={14} className="animate-spin" /> : <PlayIcon />}
+              {isStartingBundled ? 'Starting Inference Server...' : 'Start Bundled Model'}
+            </button>
+          </div>
+        </div>
 
         <div className="pt-4 flex justify-center">
           <button

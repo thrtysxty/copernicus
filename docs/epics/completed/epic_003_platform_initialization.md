@@ -1,8 +1,10 @@
 # Epic 003: Platform Initialization & Template Readiness
 
-**Status:** PLANNED
+**Status:** COMPLETE — SUPERSEDED
 **Priority:** CRITICAL
 **Phase:** Phase 1 - Infrastructure
+
+> **Superseded 2026-03-19.** This epic was pre-product bootstrapping work — it called for a generic template repo with no COPERNICUS-specific code. The platform evolved into COPERNICUS IDE itself, making the "clean slate" goal obsolete. Story 030 (its primary child) is in `docs/stories/completed/`. No further action required.
 
 ## Narrative
 **As a** Platform Engineer,

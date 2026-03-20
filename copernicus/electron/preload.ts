@@ -26,7 +26,7 @@ const SEND_CHANNELS = new Set([
   // Terminal
   'terminal-create', 'terminal:resize', 'terminal-write', 'terminal-kill',
   'terminal:input', 'terminal:spawn',
-  'terminal:spawn-agent',
+  'terminal:spawn-agent', 'terminal:attach-agent',
   'terminal:stop-agent',
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
@@ -38,6 +38,7 @@ const SEND_CHANNELS = new Set([
   'ledger:session-stats', 'ledger:recent-calls', 'ledger:all-time-cost',
   // Layout / telemetry
   'layout:update-telemetry', 'telemetry:update-touchbar',
+  'kanban:get-columns', 'kanban:set-column',
   // Agent interop
   'agent:delegate', 'agent:forward',
   'agent:patch-apply', 'agent:patch-reverse',
@@ -77,6 +78,7 @@ const SEND_CHANNELS = new Set([
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
   'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind', 'workflow:get-context', 'workflow:set-context', 'workflow:resume-node',
+  'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
   // Review gate
   'review:log', 'review:session-complete', 'review:generate-summary',
   // Codebase semantic index
@@ -162,7 +164,7 @@ const LISTEN_CHANNELS = new Set([
   // Command Center (Story 184)
   'command:telemetry-update',
   // Workflow engine state push (Story 186)
-  'workflow:status', 'workflow:status-update',
+  'workflow:status', 'workflow:status-update', 'workflow:step-start', 'workflow:step-end', 'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
   'review:session-complete',
   'layout:goto-line',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',

@@ -657,7 +657,7 @@ The Kanban board updates status via IPC on card move.
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **agentic-platform** (30871 symbols, 63402 relationships, 257 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **agentic-platform** (36957 symbols, 78010 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -724,12 +724,6 @@ Before completing any code modification task, verify:
 2. No HIGH/CRITICAL risk warnings were ignored
 3. `gitnexus_detect_changes()` confirms changes match expected scope
 4. All d=1 (WILL BREAK) dependents were updated
-
-## Dispatch Context
-
-When a story is dispatched via `gemini_session_manager.py`:
-1. **Automated Impact Analysis**: The session manager automatically runs `gitnexus impact` for all files listed in the story's "Files in Scope" section. This output is injected into the dispatch prompt under the `## Blast Radius (GitNexus)` header.
-2. **Collision Detection**: If multiple stories being dispatched together share files in their impact graphs, a `WARNING: File collision detected` is printed to terminal. Use this to prevent parallel agents from clobbering shared dependencies.
 
 ## CLI
 

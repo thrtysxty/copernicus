@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { commandRegistry } from '../../commands/registry'
 import { useIpcError } from '../../hooks/useIpcError'
+import { useIpcCache } from '../../hooks/useIpcCache'
 import { useLayoutStore } from '../../store/layout'
 import { useUIBuilderStore } from '../../store/uiBuilderStore'
-import log from '../../utils/logger'
 import { matchKnowledge } from './CopernicusKnowledgeBase'
 import { unwrapIpc, IpcResult } from '../../types/ipc'
 
@@ -61,6 +61,7 @@ export interface PickerResult {
 
 export function useChatPanel(openFilePath: string | null | undefined, rootPath: string | undefined) {
   const invoke = useIpcError()
+  const { data: modelsIpcResult } = useIpcCache('models:list', [], 30000)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [model, setModel] = useState('claude-3-5-sonnet-20240620')
@@ -167,21 +168,23 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     const a = document.createElement('a'); a.href = url; a.download = `chat-export-${Date.now()}.txt`; a.click(); URL.revokeObjectURL(url)
   }
 
+  // Sync cached models:list result (TTL 30s) to availableModels, then augment with ollama
   useEffect(() => {
-    Promise.all([
-      invoke<IpcResult<ModelInfo[]>>('models:list'),
-      invoke<IpcResult<{ ok: boolean, models: ModelInfo[] }>>('models:list-ollama').catch(() => null)
-    ]).then(([res, ollamaRes]) => {
-      const allModels = unwrapIpc<ModelInfo[]>(res) ?? [];
-      if (ollamaRes) {
-        const ollamaData = unwrapIpc<{ ok: boolean, models: ModelInfo[] }>(ollamaRes);
+    const staticModels = unwrapIpc<ModelInfo[]>(modelsIpcResult as any) ?? []
+    if (staticModels.length === 0) return
+    invoke<IpcResult<{ ok: boolean, models: ModelInfo[] }>>('models:list-ollama')
+      .then((ollamaRes) => {
+        const allModels = [...staticModels]
+        const ollamaData = unwrapIpc<{ ok: boolean, models: ModelInfo[] }>(ollamaRes)
         if (ollamaData?.ok && Array.isArray(ollamaData.models)) {
-          allModels.push(...ollamaData.models);
+          allModels.push(...ollamaData.models)
         }
-      }
-      setAvailableModels(allModels);
-    }).catch(log.error)
+        setAvailableModels(allModels)
+      })
+      .catch(() => { setAvailableModels(staticModels) })
+  }, [modelsIpcResult, invoke])
 
+  useEffect(() => {
     invoke<any>('devtime:status').then(res => { setIsRepoActive(!!(res && res.session)) })
   }, [invoke])
 

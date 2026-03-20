@@ -406,7 +406,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* Google / Gemini */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google / Gemini / Jules</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google / Gemini</span>
                         {googleKey === 'saved' || googleKey === 'oauth' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SESSION ACTIVE</span> : <button onClick={handleGoogleOAuth} className="text-[10px] text-copernicus-phosphor font-bold uppercase hover:underline">Start OAuth Flow</button>}
                       </div>
                       <input

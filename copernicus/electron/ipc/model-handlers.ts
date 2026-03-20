@@ -75,7 +75,13 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('codebase:run-benchmark', () => handleIpc('codebase:run-benchmark', [], () => runRAGBenchmark()))
 
   // LSP (Story 176)
-  ipcMain.handle('lsp:status', () => handleIpc('lsp:status', [], () => lspManager.getStatus()))
+  ipcMain.handle('lsp:status', () => handleIpc('lsp:status', [], () => {
+    const state = lspManager.getStatus() as any
+    return {
+      ...state,
+      serverName: state.serverName ?? 'typescript-language-server'
+    }
+  }))
   ipcMain.handle('lsp:request', (_e, { method, params }: { method: string; params: unknown }) => handleIpc('lsp:request', [{ method, params }], () => lspManager.sendRequest(method, params)))
   ipcMain.handle('lsp:notify', (_e, { method, params }: { method: string; params: unknown }) => handleIpc('lsp:notify', [{ method, params }], () => { lspManager.sendNotify(method, params) }))
   // LSP file lifecycle + diagnostics (Story 189)

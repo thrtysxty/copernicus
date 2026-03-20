@@ -94,6 +94,10 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
     } catch (e: any) {
       if (e.message === 'NO_MODEL_CONFIGURED') {
         setError('Configure a model in Settings first.');
+      } else if (e.message === 'MODEL_TOO_SMALL') {
+        setError(
+          'Genesis requires a capable AI model. Switch to a cloud provider (Anthropic, Google, OpenRouter) or run Ollama with a 7B+ model in Settings → Models.'
+        );
       } else {
         setError('Project setup failed — please try again.');
       }
