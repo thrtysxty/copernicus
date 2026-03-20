@@ -356,5 +356,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
+| #432 | Notebooklm Backend Provider And Ipc | DRAFT | P2 — Feature |
+| #433 | Notebooklm Renderer Integration | DRAFT | P2 — Feature |
+| #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
+| #435 | Developer First Launch Setup | DRAFT | P0 — Blocker |
+| #436 | End User Setup Guide | DRAFT | P1 — Feature |
+| #437 | Multiplatform Build Pipeline | DRAFT | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
