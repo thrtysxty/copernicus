@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useLayoutStore } from '../../store/layout'
-import { useCommandStore } from '../../store/commandStore'
+import { useCommandStore, LspState } from '../../store/commandStore'
 import { useTelemetryStore } from '../../store/telemetryStore'
 import { useIpcError } from '../../hooks/useIpcError'
 import type { ModelCallStats } from '../../../../electron/db/state-ledger'
-import { unwrapIpc } from '../../types/ipc'
+import { IpcResult, unwrapIpc } from '../../types/ipc'
 import { StatusBarOverlay } from './StatusBarOverlay'
 import { useSessionStore, formatElapsed } from '../../store/sessionStore'
 import { AgentTelemetryOverlay } from './AgentTelemetryOverlay'
@@ -44,6 +44,15 @@ export const StatusBar: React.FC = () => {
 
   const [hasError, setHasError] = useState(false)
   const [indexStatus, setIndexStatus] = useState<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string } | null>(null)
+  const [localLspState, setLocalLspState] = useState<LspState | null>(null)
+
+  useEffect(() => {
+    invoke<IpcResult<LspState>>('lsp:status').then(r => {
+      if (!r?.ok) return
+      const state = unwrapIpc<LspState>(r)
+      if (state) setLocalLspState(state)
+    }).catch(() => {})
+  }, [invoke])
 
   const [securityScore, setSecurityScore] = useState<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number } | null>(null)
   const [pulseOpen, setPulseOpen] = useState(false)
@@ -283,10 +292,17 @@ export const StatusBar: React.FC = () => {
           </div>
         </Tooltip>
 
-        {/* Codebase Index Status / LSP indicator */}
-        <Tooltip content="Technical Pulse — click for health checks">
-          <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer" onClick={() => setPulseOpen(v => !v)}>
-            <span className="text-copernicus-phosphor/60">⚡</span> {/* Icon for Technical Pulse */}
+        {/* LSP indicator */}
+        <Tooltip content={(localLspState ?? lspState) ? `Language server: ${(localLspState ?? lspState)?.serverName ?? 'LSP'}` : "Language server — click for details"}>
+          <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer">
+            {(localLspState ?? lspState) && (
+              <div className="flex items-center gap-1 mr-2 border-r border-copernicus-steel/30 pr-3">
+                <span className="text-zinc-500 font-bold uppercase tracking-tighter">
+                  {((localLspState ?? lspState)?.serverName ?? 'LS').substring(0, 2).toUpperCase()}
+                </span>
+                <div className={`w-1.5 h-1.5 rounded-full ${(localLspState ?? lspState)?.running ? 'bg-green-500' : 'bg-red-500'}`} />
+              </div>
+            )}
             {indexStatus && indexStatus.provider !== 'none' ? (
               indexStatus.indexing ? (
                 <span className="text-zinc-500 animate-pulse uppercase tracking-tighter">
@@ -298,6 +314,13 @@ export const StatusBar: React.FC = () => {
             ) : (
               <span className="text-zinc-600 italic">No embedding provider</span>
             )}
+          </div>
+        </Tooltip>
+
+        {/* Technical Pulse */}
+        <Tooltip content="Technical Pulse — click for health checks">
+          <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer" onClick={() => setPulseOpen(v => !v)}>
+            <span className="text-copernicus-phosphor/60">⚡</span>
           </div>
         </Tooltip>
       </div>
