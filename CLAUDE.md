@@ -102,32 +102,42 @@ A **"Gemini Session"** terminal panel opens in VS Code and **closes automaticall
 
 ### Delegate Selection (in priority order)
 
-1. **Jules — self-contained implementation stories (async PR, zero Claude tokens):**
+> **All scripts run from repo root `/Users/dadmin/Projects/agentic-platform/` — never from inside `copernicus/`.**
+
+1. **Cloud Agent — primary implementation tool (25-turn agentic tool loop, reads/writes files directly):**
+   ```bash
+   python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" [--worktree <branch_name>]
+   ```
+   **CRITICAL:** Always use `--worktree <branch_name>` when the subagent drafts or modifies code.
+   Can be used for ANY task — does not require Jules or Gemini to resolve first.
+
+   | Role | Model | Use for |
+   |------|-------|---------|
+   | `coder` | devstral-2:123b-cloud | Multi-file implementation, TS/React |
+   | `thinker` | deepseek-v3.1:671b-cloud | Reasoning, planning, architecture |
+   | `researcher` | deepseek-v3.1:671b-cloud | Investigation, analysis |
+   | `architect` | nemotron-3-super:cloud | System design, schema |
+   | `fast` | gpt-oss:20b-cloud | Quick lookups, one-shot questions |
+   | `vision` | qwen3-vl:235b-cloud | Screenshot/image analysis |
+   | `large` | mistral-large-3:675b-cloud | Complex multi-file reasoning |
+
+2. **Jules — isolated TypeScript/React stories (async PR, zero Claude tokens):**
    ```bash
    bash scripts/jules_assign.sh docs/stories/story_NNN_*.md
    # Optional persona overlay: --as bolt|palette|sentinel
    ```
-   Use for TypeScript/React stories. Story must be `APPROVED FOR IMPLEMENTATION`.
+   Use for single-concern TS/React stories. Story must be `APPROVED FOR IMPLEMENTATION`.
+   Stories must have `Blocks:` and `Blocked By:` headers **with colons** or validation fails.
+   If files only exist on a feature branch, push the branch first so Jules can fetch it.
 
-2. **Gemini — multi-file implementation + cloud model orchestration (zero Claude tokens):**
+3. **Gemini — multi-file implementation + session management:**
    ```bash
-   python3 dev_orchestrator/gemini_session_manager.py spawn "$(cat /tmp/prompt.md)" --stories NNN
+   python3 dev_orchestrator/gemini_session_manager.py spawn --prompt-file /tmp/gemini_prompt.md --stories NNN --direct
    ```
-   Gemini manages cloud sub-agents internally and hands results back to Claude for review.
+   Always use `--direct` — prevents sub-delegation shim loop.
+   Write prompt to `/tmp/gemini_prompt.md` first, then launch via osascript terminal tab.
 
-3. **Local Ollama — quick lookups, RAG, security scans (zero cost, fast):**
-   ```bash
-   python3 scripts/claude_ollama_cli.py "/persona <prompt>"
-   ```
-   Personas: `/architect` (Gemma 3 12B), `/senior-dev` (GLM 4.7 9B), `/scribe` (Kimi), `/researcher` (DeepSeek-R1), `/sentinel` (Mistral-v0.2).
-
-4. **Cloud Dispatch — only when Gemini is not available and local cannot handle it:**
-   ```bash
-   python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" [--worktree <branch_name>]
-   ```
-   Roles: `thinker` (Kimi), `coder` (Qwen3-Coder), `vision` (Qwen3-VL), `researcher` (DeepSeek-V3), `fast` (Gemini-Flash).
-   **CRITICAL:** Always use `--worktree <branch_name>` when the subagent drafts or modifies code.
-
+- `scripts/claude_ollama_cli.py` **does not exist** — never call it.
 - Always use the most token-efficient subagent capable of the task.
 
 ## Context Discipline — Token Efficiency
@@ -263,7 +273,7 @@ These are **non-negotiable** for all new code and all stories written going forw
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **agentic-platform** (36916 symbols, 77933 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **agentic-platform** (36957 symbols, 78010 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
