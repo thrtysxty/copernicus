@@ -372,5 +372,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #435 | Developer First Launch Setup | DRAFT | P0 — Blocker |
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
 | #437 | Multiplatform Build Pipeline | DRAFT | P1 — Infrastructure |
+| #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | DRAFT | P1 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

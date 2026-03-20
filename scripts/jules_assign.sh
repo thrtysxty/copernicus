@@ -89,6 +89,29 @@ fi
 
 echo "✓ Story validated: $STORY_PATH"
 
+# ── Check origin/main is up to date ───────────────────────────────────────────
+# Jules fetches from origin/main — if local main is ahead, Jules can't see those
+# files and will report "file not found" errors mid-session.
+
+echo "Checking origin/main is in sync with local main..."
+git fetch origin main --quiet 2>/dev/null || {
+  echo "⚠️  Could not fetch origin/main — skipping sync check (no network?)"
+}
+
+UNPUSHED=$(git log origin/main..main --oneline 2>/dev/null)
+if [ -n "$UNPUSHED" ]; then
+  echo ""
+  echo "❌ DISPATCH BLOCKED — local main is ahead of origin/main."
+  echo "   Jules fetches from origin and won't see these commits:"
+  echo "$UNPUSHED" | sed 's/^/   /'
+  echo ""
+  echo "   Fix: git push origin main"
+  echo "   Then re-run this dispatch."
+  exit 1
+fi
+
+echo "✓ origin/main is in sync"
+
 # ── Run pre-flight IPC lint ────────────────────────────────────────────────────
 
 if [ -f "$REPO_ROOT/scripts/ipc-lint.sh" ]; then
