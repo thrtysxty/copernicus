@@ -39,9 +39,11 @@ export class GenesisRunner {
       return { ok: false, error: 'NO_MODEL_CONFIGURED' };
     }
 
-    // AC2: Context window warning
-    if (activeModel.contextWindow && activeModel.contextWindow < 8000) {
-      log.warn(`[GenesisRunner] Active model context window (${activeModel.contextWindow}) is below 8000. Quality may be lower.`);
+    const isIncapable =
+      activeModel.id === 'bitnet-b158-2b' ||
+      (activeModel.contextWindow > 0 && activeModel.contextWindow < 8000);
+    if (isIncapable) {
+      return { ok: false, error: 'MODEL_TOO_SMALL' };
     }
 
     const systemPrompt = "You are a senior product manager and software architect. Given a project idea, generate a structured project plan in JSON. Be specific and actionable. Output only valid JSON, no markdown.";
