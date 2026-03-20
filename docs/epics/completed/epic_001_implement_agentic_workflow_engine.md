@@ -1,8 +1,10 @@
 # Epic 001: Implement Configuration-Driven Agentic Workflow Engine
 
-**Status:** DRAFT
+**Status:** COMPLETE — SUPERSEDED
 **Priority:** CRITICAL
 **Phase:** Phase 4 - Maintenance & Iteration
+
+> **Superseded 2026-03-19.** This epic called for a `workflow.yaml` manifest engine + `run_transition.py` + SQLite `workflow.db`. The platform instead implemented a TypeScript `WorkflowEngine` in `copernicus/electron/workflow/engine.ts`, which covers the same goals with a better architecture. `scaffold_story.py` remains active by design. No further action required.
 **Target Repo:** Platform repo (Story #030 extraction)
 
 ## Narrative
