@@ -122,10 +122,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
-| #438 | Kanban Card Double Click Fix | APPROVED FOR IMPLEMENTATION | P1 — Bug |
-| #442 | Terminal Input Blocked | APPROVED FOR IMPLEMENTATION | P1 — Bug |
-| #444 | Bitnet Start Fix And Wizard Option | APPROVED FOR IMPLEMENTATION | P1 — Bug + UX |
-| #450 | Add Tavily Mcp As Live Web Intelligence Tool | APPROVED FOR IMPLEMENTATION | P0 — Dev Tooling |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -343,14 +339,18 @@ This file is auto-generated. Run `make backlog` to update.
 | #429 | Ipc Batching And Caching Layer | COMPLETE | P2 — Performance |
 | #430 | Registerallipchandlers Decomposition | COMPLETE | P2 — Tech Debt |
 | #431 | Workflow Engine Shell Injection Fix | COMPLETE | P0 — Security (blocking) |
+| #438 | Kanban Card Double Click Fix | COMPLETE | P1 — Bug |
 | #439 | Search Drawer Live Results And Enter Persist | COMPLETE | P1 — Bug |
 | #440 | Ui Builder Tile Render System | COMPLETE | P1 — Feature / Regression Prevention |
 | #441 | Statusbar Lsp Servername Crash | COMPLETE | P0 — Bug |
+| #442 | Terminal Input Blocked | COMPLETE | P1 — Bug |
 | #443 | Replay Panel Tab Layout | COMPLETE | P2 — UX |
+| #444 | Bitnet Start Fix And Wizard Option | COMPLETE | P1 — Bug + UX |
 | #446 | Bitnet Knowledge Base | COMPLETE | P1 — Feature |
 | #447 | Genesis Model Guard And Free Provider Topic | COMPLETE | P1 — Bug + Feature |
 | #448 | 448 Editor Field Base Font Size 10Pt | COMPLETE | P2 — UX |
 | #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | COMPLETE | P0 — Dev Tooling |
+| #450 | Add Tavily Mcp As Live Web Intelligence Tool | COMPLETE | P0 — Dev Tooling |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -375,6 +375,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
 | #451 | Notebooklm Packaged Binary Login | DRAFT | P1 — Feature |
-| #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | DRAFT | P1 |
+| #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | DRAFT | P2 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
