@@ -128,6 +128,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #444 | Bitnet Start Fix And Wizard Option | APPROVED FOR IMPLEMENTATION | P1 — Bug + UX |
 | #446 | Bitnet Knowledge Base | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #447 | Genesis Model Guard And Free Provider Topic | APPROVED FOR IMPLEMENTATION | P1 — Bug + Feature |
+| #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | APPROVED FOR IMPLEMENTATION | P0 — Dev Tooling |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -372,6 +373,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #435 | Developer First Launch Setup | DRAFT | P0 — Blocker |
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
 | #437 | Multiplatform Build Pipeline | DRAFT | P1 — Infrastructure |
-| #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | DRAFT | P1 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

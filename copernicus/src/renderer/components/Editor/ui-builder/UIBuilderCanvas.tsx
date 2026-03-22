@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { useUIBuilderStore } from '../../../store/uiBuilderStore'
+import { useLayoutStore } from '../../../store/layout'
 import { UIComponent, UIComponentType } from './types'
 import { renderComponentTree } from './render'
 import { UIComponentInspector } from './UIComponentInspector'
@@ -59,12 +60,20 @@ export const UIBuilderCanvas: React.FC = () => {
     uiComponents, setUIComponents, 
     paletteOpen, inspectorOpen
   } = useUIBuilderStore()
+  const {
+    stitchImportOpen, setStitchImportOpen,
+    stitchVerifyOpen, setStitchVerifyOpen,
+    setStitchTokens,
+    activeFilePath
+  } = useLayoutStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
+  const [stitchGhostHtml, setStitchGhostHtml] = useState<string | null>(null)
+  const [stitchGhostCss, setStitchGhostCss] = useState<string | null>(null)
 
   const selectedComponent = uiComponents.find(c => c.id === selectedId)
 
@@ -144,6 +153,179 @@ export const UIBuilderCanvas: React.FC = () => {
   // Expose these to satisfy React warnings if needed, though they were handled in headers
   ;(window as any)._ui_export_jsx = handleExportJSX
   ;(window as any)._ui_export_html = handleExportHTML
+
+  const StitchImportModal = () => {
+    const [projectId, setProjectId] = useState('')
+    const [screenId, setScreenId] = useState('')
+
+    const handleImport = async () => {
+      if (!projectId || !screenId) {
+        addToast('Please enter both Project ID and Screen ID', 'error')
+        return
+      }
+      try {
+        const { html, css } = await invoke<{ html: string, css: string }>('stitch:extract-design', { projectId, screenId })
+        const { fonts, colors, spacing } = await invoke<{ fonts: string[], colors: string[], spacing: string[] }>('stitch:design-dna', { projectId })
+        setStitchTokens({ fonts, colors, spacing })
+        setStitchGhostHtml(html)
+        setStitchGhostCss(css)
+        addToast('Stitch design imported as ghost suggestion!', 'success')
+        setStitchImportOpen(false)
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
+        addToast(`Stitch import failed: ${message}`, 'error')
+      }
+    }
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
+        <div className="bg-zinc-900 p-6 rounded-lg shadow-xl border border-zinc-800 w-96">
+          <h3 className="text-lg font-bold text-white mb-4">Import from Stitch</h3>
+          <div className="space-y-3 mb-6">
+            <div>
+              <label htmlFor="projectIdImport" className="block text-sm font-medium text-zinc-400 mb-1">Project ID</label>
+              <input
+                id="projectIdImport"
+                type="text"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:ring-copernicus-phosphor focus:border-copernicus-phosphor"
+                placeholder="Enter Project ID"
+              />
+            </div>
+            <div>
+              <label htmlFor="screenIdImport" className="block text-sm font-medium text-zinc-400 mb-1">Screen ID</label>
+              <input
+                id="screenIdImport"
+                type="text"
+                value={screenId}
+                onChange={(e) => setScreenId(e.target.value)}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:ring-copernicus-phosphor focus:border-copernicus-phosphor"
+                placeholder="Enter Screen ID"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setStitchImportOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-zinc-300 bg-zinc-700 rounded-md hover:bg-zinc-600 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleImport}
+              className="px-4 py-2 text-sm font-medium text-black bg-copernicus-phosphor rounded-md hover:bg-copernicus-phosphor/80 transition-colors"
+            >
+              Import
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const StitchVerifyModal = () => {
+    const [projectId, setProjectId] = useState('')
+    const [screenId, setScreenId] = useState('')
+
+    const handleVerify = async () => {
+      if (!projectId || !screenId) {
+        addToast('Please enter both Project ID and Screen ID', 'error')
+        return
+      }
+      if (!activeFilePath) {
+        addToast('No active file to verify', 'error')
+        return
+      }
+
+      try {
+        const fileContent = await invoke<string>('fs:read-file', activeFilePath)
+        const { specHtml, specCss, screenshot } = await invoke<{ specHtml: string, specCss: string, screenshot: string }>('stitch:verify-ui', { projectId, screenId, currentHtml: fileContent })
+
+        const precomposedMessage = `Verify my implementation against the Stitch design spec for screen ${screenId}.
+
+**Stitch design spec (HTML/CSS):**
+\`\`\`html
+${specHtml}
+\`\`\`
+\`\`\`css
+${specCss}
+\`\`\`
+
+**My current implementation:**
+\`\`\`html
+${fileContent}
+\`\`\`
+
+Identify visual discrepancies, missing tokens, and suggest the minimum changes needed to match the spec.`
+
+        const activeModel = await invoke<{ id: string }>('models:active')
+        await invoke('chat:send', { sessionId: 'stitch-verify-' + Date.now(), messages: [{ role: 'user', content: precomposedMessage, imageBase64: screenshot, imageMimeType: 'image/png' }], model: activeModel?.id ?? '' })
+        addToast('Stitch verification initiated!', 'success')
+        setStitchVerifyOpen(false)
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
+        addToast(`Stitch verification failed: ${message}`, 'error')
+      }
+    }
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
+        <div className="bg-zinc-900 p-6 rounded-lg shadow-xl border border-zinc-800 w-96">
+          <h3 className="text-lg font-bold text-white mb-4">Verify with Stitch</h3>
+          <div className="space-y-3 mb-6">
+            <div>
+              <label htmlFor="projectIdVerify" className="block text-sm font-medium text-zinc-400 mb-1">Project ID</label>
+              <input
+                id="projectIdVerify"
+                type="text"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:ring-copernicus-phosphor focus:border-copernicus-phosphor"
+                placeholder="Enter Project ID"
+              />
+            </div>
+            <div>
+              <label htmlFor="screenIdVerify" className="block text-sm font-medium text-zinc-400 mb-1">Screen ID</label>
+              <input
+                id="screenIdVerify"
+                type="text"
+                value={screenId}
+                onChange={(e) => setScreenId(e.target.value)}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:ring-copernicus-phosphor focus:border-copernicus-phosphor"
+                placeholder="Enter Screen ID"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Current File</label>
+              <input
+                type="text"
+                readOnly
+                value={activeFilePath || 'No file open'}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-500"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setStitchVerifyOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-zinc-300 bg-zinc-700 rounded-md hover:bg-zinc-600 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleVerify}
+              className="px-4 py-2 text-sm font-medium text-black bg-copernicus-phosphor rounded-md hover:bg-copernicus-phosphor/80 transition-colors"
+            >
+              Verify
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505] overflow-hidden" ref={containerRef}>
@@ -239,6 +421,22 @@ export const UIBuilderCanvas: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Ghost Suggestion Display */}
+      {(stitchGhostHtml || stitchGhostCss) && (
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+          {stitchGhostHtml && (
+            <div dangerouslySetInnerHTML={{ __html: stitchGhostHtml }} />
+          )}
+          {stitchGhostCss && (
+            <style dangerouslySetInnerHTML={{ __html: stitchGhostCss }} />
+          )}
+        </div>
+      )}
+
+      {/* Modals */}
+      {stitchImportOpen && <StitchImportModal />}
+      {stitchVerifyOpen && <StitchVerifyModal />}
     </div>
   )
 }
