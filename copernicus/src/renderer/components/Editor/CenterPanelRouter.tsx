@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { X, RotateCcw, Maximize2, Minimize2, Ghost, Check, X as CloseIcon, CaseSensitive, WholeWord, Regex, FileCode, SearchCode } from 'lucide-react'
+import { X, RotateCcw, Download, CheckSquare, Maximize2, Minimize2, Ghost, Check, X as CloseIcon, CaseSensitive, WholeWord, Regex, FileCode, SearchCode } from 'lucide-react'
 import { EditorPanel } from './EditorPanel'
 import { ImageViewer } from './ImageViewer'
 import { BinaryBlocker } from './BinaryBlocker'
@@ -81,7 +81,8 @@ function CenterPanelHeader({
   const {
     openFiles, activeFilePath, setActiveFile, closeFile,
     setActiveFileContent, setActiveFileLanguage, setCenterMode,
-    spotlightPane, setSpotlight, toggleFlip, activeView, activeStoryId
+    spotlightPane, setSpotlight, toggleFlip, activeView, activeStoryId,
+    setStitchImportOpen, setStitchVerifyOpen
   } = useLayoutStore()
   const invoke = useIpcError()
   const monacoInstance = useMonaco()
@@ -106,7 +107,22 @@ function CenterPanelHeader({
         name="DESIGNER"
         onRotate={() => toggleFlip('center-panel')}
       >
-
+        <button
+          onClick={() => setStitchImportOpen(true)}
+          className="flex items-center gap-1.5 px-2 py-1 bg-[#0F0F0F] border border-zinc-800 rounded text-[9px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+        >
+          <Download size={12} className="text-copernicus-phosphor" />
+          <span className="translate-y-px">Import from Stitch</span>
+        </button>
+        {activeFilePath && (
+          <button
+            onClick={() => setStitchVerifyOpen(true)}
+            className="flex items-center gap-1.5 px-2 py-1 bg-[#0F0F0F] border border-zinc-800 rounded text-[9px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+          >
+            <CheckSquare size={12} className="text-copernicus-phosphor" />
+            <span className="translate-y-px">Verify with Stitch</span>
+          </button>
+        )}
       </SharedPanelHeader>
     )
   }
@@ -270,6 +286,7 @@ export function CenterPanelRouter({
   const inputRef = useRef<HTMLInputElement>(null)
   const invoke = useIpcError()
   const openFile = useLayoutStore(s => s.openFile)
+
 
   const handleSearch = useCallback(async () => {
     if (!query) return
