@@ -79,7 +79,7 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
     const state = lspManager.getStatus() as any
     return {
       ...state,
-      serverName: state.serverName ?? 'typescript-language-server'
+      serverName: state?.serverName ?? 'typescript-language-server'
     }
   }))
   ipcMain.handle('lsp:request', (_e, { method, params }: { method: string; params: unknown }) => handleIpc('lsp:request', [{ method, params }], () => lspManager.sendRequest(method, params)))
