@@ -232,16 +232,16 @@ export const StatusBar: React.FC = () => {
         )}
 
         {/* LSP Status Indicator */}
-        {lspState && (
+        {(localLspState ?? lspState) && (
           <Tooltip
-            content={`${lspState.serverName} — ${lspState.running ? 'Running' : 'Stopped'} | ${lspState.openFiles} files | ${lspState.errorCount} errors | ${lspState.warningCount} warnings`}
+            content={`${(localLspState ?? lspState)!.serverName ?? 'LSP'} — ${(localLspState ?? lspState)!.running ? 'Running' : 'Stopped'} | ${(localLspState ?? lspState)!.openFiles} files | ${(localLspState ?? lspState)!.errorCount} errors | ${(localLspState ?? lspState)!.warningCount} warnings`}
           >
             <div className="flex items-center gap-1.5 px-3 cursor-help">
-              <span className={`text-[8px] ${lspState.running ? 'text-green-500' : 'text-red-500'}`}>●</span>
+              <span className={`text-[8px] ${(localLspState ?? lspState)!.running ? 'text-green-500' : 'text-red-500'}`}>●</span>
               <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                {lspState.serverName.substring(0, 2).toUpperCase()}
-                {lspState.errorCount > 0 && <span className="text-red-400"> {lspState.errorCount}e</span>}
-                {lspState.warningCount > 0 && <span className="text-amber-400"> {lspState.warningCount}w</span>}
+                {((localLspState ?? lspState)!.serverName ?? 'LS').substring(0, 2).toUpperCase()}
+                {(localLspState ?? lspState)!.errorCount > 0 && <span className="text-red-400"> {(localLspState ?? lspState)!.errorCount}e</span>}
+                {(localLspState ?? lspState)!.warningCount > 0 && <span className="text-amber-400"> {(localLspState ?? lspState)!.warningCount}w</span>}
               </span>
             </div>
           </Tooltip>
