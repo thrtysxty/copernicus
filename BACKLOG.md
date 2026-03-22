@@ -376,5 +376,22 @@ This file is auto-generated. Run `make backlog` to update.
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
 | #451 | Notebooklm Packaged Binary Login | DRAFT | P1 — Feature |
 | #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | DRAFT | P2 |
+| #453 | Otel Collector Sidecar | DRAFT | P2 — Infrastructure |
+| #454 | Telemetry Settings Managed Block | DRAFT | P2 — Infrastructure |
+| #455 | Prompt Id Workflow Events | DRAFT | P2 — Feature |
+| #456 | Model Calls Prompt Id Schema | DRAFT | P2 — Feature |
+| #457 | Capex Cost Per Active Second | DRAFT | P2 — Feature |
+| #458 | Card Spotlight Accept Reject Stats | DRAFT | P2 — Feature |
+| #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
+| #460 | Stack Detector | DRAFT | P1 — Feature |
+| #461 | Skill Template Library | DRAFT | P1 — Feature |
+| #462 | Skill Onboarding Card | DRAFT | P1 — Feature |
+| #463 | Skill Scaffold Generator | DRAFT | P1 — Feature |
+| #464 | Scaffold Skills Slash Command | DRAFT | P1 — Feature |
+| #465 | Skill Description Auditor | DRAFT | P2 — Feature |
+| #466 | Claude Plugin Data Migration | DRAFT | P2 — Maintenance |
+| #467 | Hindsight R620 Deployment | DRAFT | P1 — Infrastructure |
+| #468 | Memory Bank Wiring | DRAFT | P1 — Feature |
+| #469 | Reflect Session Injection | DRAFT | P1 — Feature |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
