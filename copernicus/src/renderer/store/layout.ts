@@ -60,6 +60,12 @@ interface LayoutState {
 
   activeView: StoryboardView
   isFlipped: Record<string, boolean>
+stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
+  setStitchTokens: (tokens: { fonts: string[], colors: string[], spacing: string[] } | null) => void
+  stitchImportOpen: boolean
+  setStitchImportOpen: (open: boolean) => void
+  stitchVerifyOpen: boolean
+  setStitchVerifyOpen: (open: boolean) => void
   spotlightPane: PaneId | null
   spotlightLane: string | null
   activeStoryId: string | null
@@ -218,6 +224,12 @@ export const useLayoutStore = create<LayoutState>()(
     (set) => ({
       searchDrawerOpen: false,
       activeView: 'editor',
+stitchTokens: null,
+      setStitchTokens: (tokens) => set({ stitchTokens: tokens }),
+      stitchImportOpen: false,
+      setStitchImportOpen: (open) => set({ stitchImportOpen: open }),
+      stitchVerifyOpen: false,
+      setStitchVerifyOpen: (open) => set({ stitchVerifyOpen: open }),
       isFlipped: {
         sidebar: false,
         chat: false,

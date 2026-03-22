@@ -38,6 +38,8 @@ import * as securityScoreHandlers from './security-handlers'
 import * as localModelHandlers from './local-model-handlers'
 import { registerReplayHandlers } from './replay-handlers'
 import { handleIpc } from '../utils/handle-ipc'
+import { registerStitchHandlers } from './stitch-handlers'
+
 
 export async function registerAllIpcHandlers(
   win: BrowserWindow,
@@ -101,6 +103,7 @@ export async function registerAllIpcHandlers(
   const cleanupDebugHandlers = debugHandlers.registerDebugHandlers()
   const cleanupWorktreeHandlers = registerWorktreeHandlers(worktreeManager)
   registerSecurityHandlers(ipcMain, globalDeps.settingsStore)
+  registerStitchHandlers()
 
   // Kanban Columns (Story 428)
   ipcMain.handle('kanban:get-columns', () => handleIpc(() => stateLedger.getKanbanColumns()))

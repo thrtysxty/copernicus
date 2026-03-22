@@ -19,10 +19,18 @@ export const MCPSection: React.FC = () => {
   const [newServer, setNewServer] = useState<McpServer>({ name: '', transport: 'stdio' })
   const [isLoading, setIsLoading] = useState(true)
 
+  const [stitchProjectId, setStitchProjectId] = useState('')
+  const [stitchStatus, setStitchStatus] = useState<'none' | 'success' | 'auth_failed' | 'error'>('none')
+  const [isStitchTesting, setIsStitchTesting] = useState(false)
+
+
   const loadSettings = async () => {
     try {
       const result = await invoke<SettingsLoadResponse>('settings:load')
+
       setMcpServers((result?.mcp as any)?.servers ?? [])
+      setStitchProjectId((result?.mcp as any)?.stitchProjectId ?? '')
+
       
       const statuses = await invoke<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>('mcp:get-status')
       const map: Record<string, 'connected' | 'disconnected' | 'error'> = {}
@@ -55,7 +63,37 @@ export const MCPSection: React.FC = () => {
     setMcpStatus(map)
   }
 
+
+  const saveStitchProject = async (id: string) => {
+    setStitchProjectId(id)
+    const current = await invoke<SettingsLoadResponse>('settings:load')
+    await invoke('settings:save', { ...current, mcp: { ...(current.mcp as any), stitchProjectId: id } })
+  }
+
+  const testStitchConnection = async () => {
+    if (!stitchProjectId) return
+    setIsStitchTesting(true)
+    setStitchStatus('none')
+    try {
+      const res = await invoke<{ok: boolean, error?: string}>('stitch:ping', stitchProjectId)
+      if (res.ok) {
+        setStitchStatus('success')
+      } else {
+        if (res.error?.includes('auth') || res.error?.includes('credentials')) {
+          setStitchStatus('auth_failed')
+        } else {
+          setStitchStatus('error')
+        }
+      }
+    } catch (err) {
+      setStitchStatus('error')
+    } finally {
+      setIsStitchTesting(false)
+    }
+  }
+
   const addMcpServer = async () => {
+
     if (!newServer.name) return
     if (newServer.transport === 'stdio' && !newServer.command) return
     if (newServer.transport !== 'stdio' && !newServer.url) return
@@ -138,6 +176,7 @@ export const MCPSection: React.FC = () => {
         )}
       </div>
 
+
       {allDisconnected && (
         <div className="flex items-start gap-3 p-3 bg-amber-500/5 border border-amber-500/20 rounded-none animate-in fade-in slide-in-from-top-1 duration-300">
           <AlertCircle size={14} className="text-amber-500 mt-0.5 shrink-0" />
@@ -148,7 +187,51 @@ export const MCPSection: React.FC = () => {
         </div>
       )}
 
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+          <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <Server size={14} className="text-copernicus-phosphor" />
+            Google Stitch MCP
+          </div>
+        </div>
+
+        <div className="bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full flex-none ${
+              stitchStatus === 'success' ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.4)]' :
+              stitchStatus === 'auth_failed' ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]' :
+              stitchStatus === 'error' ? 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.4)]' :
+              'bg-zinc-600'
+            }`} title={
+              stitchStatus === 'success' ? 'Connected successfully' :
+              stitchStatus === 'auth_failed' ? 'gcloud not authenticated' :
+              stitchStatus === 'error' ? 'Project not set / API not enabled' :
+              'Not tested'
+            } />
+            <div className="flex-1">
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Google Cloud Project ID</label>
+              <input
+                placeholder="e.g. my-design-project-123"
+                value={stitchProjectId}
+                onChange={e => saveStitchProject(e.target.value)}
+                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
+              />
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={testStitchConnection}
+                disabled={isStitchTesting || !stitchProjectId}
+                className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-none text-[9px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+              >
+                {isStitchTesting ? 'Testing...' : 'Test Connection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Add Server form */}
+
       {showAddForm && (
         <div className="space-y-4 p-4 bg-zinc-900/50 border border-zinc-700 rounded-none animate-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between mb-2">

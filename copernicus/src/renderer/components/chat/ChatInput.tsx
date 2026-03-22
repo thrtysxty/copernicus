@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, FileText, X } from 'lucide-react'
+import { Send, Paperclip, FileText, X, Download } from 'lucide-react'
 import { ContextChip } from './ContextChip'
 import { Command } from '../../commands/registry'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -63,6 +63,34 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   setPendingImage,
 }) => {
   const invoke = useIpcError()
+
+  const [showAttachMenu, setShowAttachMenu] = useState(false)
+  const [showStitchModal, setShowStitchModal] = useState(false)
+  const [stitchProjectId, setStitchProjectId] = useState('')
+  const [stitchScreenId, setStitchScreenId] = useState('')
+  const [isStitchLoading, setIsStitchLoading] = useState(false)
+
+  const handleStitchImport = async () => {
+    if (!stitchProjectId || !stitchScreenId) return
+    setIsStitchLoading(true)
+    try {
+      const res = await invoke<{ok: boolean, data?: any}>('stitch:screenshot', { projectId: stitchProjectId, screenId: stitchScreenId })
+      if (res.ok && res.data?.base64) {
+        setPendingImage({
+          base64: res.data.base64,
+          mimeType: res.data.mimeType || 'image/png',
+          previewUrl: `data:${res.data.mimeType || 'image/png'};base64,${res.data.base64}`
+        })
+      }
+      setShowStitchModal(false)
+      setShowAttachMenu(false)
+    } catch (e: any) {
+      console.error(e)
+    } finally {
+      setIsStitchLoading(false)
+    }
+  }
+
   const [imageError, setImageError] = useState('')
   const pickerRef = useRef<HTMLDivElement>(null)
 
@@ -280,8 +308,33 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             className="w-full bg-transparent border-none focus:ring-0 text-xs text-zinc-300 resize-none min-h-[40px] max-h-[200px] disabled:opacity-50 font-mono"
           />
           <div className="flex items-center justify-between mt-1 pt-1 border-t border-copernicus-steel/20">
-            <div className="flex gap-2 text-zinc-500">
-              <button onClick={handleFileAttach} aria-label="Attach File" className="hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none" title="Attach File"><Paperclip size={12} /></button>
+            <div className="flex gap-2 text-zinc-500 relative">
+              <button
+                onClick={() => setShowAttachMenu(!showAttachMenu)}
+                aria-label="Attach Menu"
+                className="hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none"
+                title="Attach"
+              >
+                <Paperclip size={12} />
+              </button>
+
+              {showAttachMenu && (
+                <div className="absolute bottom-6 left-0 bg-zinc-900 border border-zinc-800 rounded p-1 flex flex-col gap-1 min-w-[140px] z-50 shadow-xl">
+                  <button
+                    onClick={() => { handleFileAttach(); setShowAttachMenu(false) }}
+                    className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-800 text-left text-xs text-zinc-300 rounded"
+                  >
+                    <FileText size={12} /> Local File
+                  </button>
+                  <button
+                    onClick={() => { setShowStitchModal(true) }}
+                    className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-800 text-left text-xs text-zinc-300 rounded"
+                  >
+                    <Download size={12} className="text-copernicus-phosphor" /> Stitch Screenshot
+                  </button>
+                </div>
+              )}
+
               <button onClick={() => triggerPicker('story')} aria-label="Attach Story" className="hover:text-copernicus-phosphor transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none" title="Attach Story"><FileText size={12} /></button>
             </div>
             <button 
@@ -296,6 +349,56 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </div>
         </div>
       </div>
+
+      {showStitchModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-zinc-950 border border-zinc-800 rounded p-6 w-96 max-w-[90vw] shadow-xl">
+            <h2 className="text-lg font-bold text-white mb-4 uppercase tracking-wider">Stitch Screenshot</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Project ID</label>
+                <input
+                  type="text"
+                  value={stitchProjectId}
+                  onChange={e => setStitchProjectId(e.target.value)}
+                  placeholder="my-stitch-project"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-copernicus-phosphor"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Screen ID</label>
+                <input
+                  type="text"
+                  value={stitchScreenId}
+                  onChange={e => setStitchScreenId(e.target.value)}
+                  placeholder="login-screen-v2"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-copernicus-phosphor"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => { setShowStitchModal(false); setShowAttachMenu(false) }}
+                className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white uppercase tracking-wider transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStitchImport}
+                disabled={isStitchLoading || !stitchProjectId || !stitchScreenId}
+                className="px-4 py-2 bg-copernicus-phosphor text-[#050505] rounded text-xs font-bold uppercase tracking-wider disabled:opacity-50 hover:bg-copernicus-phosphor/90 transition-colors flex items-center gap-2"
+              >
+                {isStitchLoading ? <span className="animate-spin text-[#050505]">⟳</span> : null}
+                Attach
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   )
 }
