@@ -25,6 +25,7 @@ Claude's role is **Plan → Delegate → Review**. Not implement.
 - Make **any** aesthetic, styling, className, or layout change not explicitly listed in the story ACs — frozen surfaces are frozen, full stop
 - Report cloud model audit findings without first verifying them by **reading the actual files** — cloud models hallucinate; never trust agent-reported results
 - Commit code without first running `tsc --noEmit` — zero TypeScript errors is a hard gate
+- Skip `mcp__ide__getDiagnostics` after any file edit or merge — live LSP diagnostics are mandatory before declaring work done
 
 ### UI Story Dispatch — Design Preservation Header
 
@@ -54,46 +55,33 @@ read every in-scope file in full.
 ```
 
 ### Dispatch Protocol
+
 ```bash
 # Step 1 — write prompt to file
 cat > /tmp/gemini_prompt.md << 'EOF'
 <prompt content>
 EOF
 
-# Step 2 — write launcher script
-cat > /tmp/gemini_launch.sh << 'LAUNCH'
-#!/bin/zsh
-cd /Users/dadmin/Projects/agentic-platform
-python3 dev_orchestrator/gemini_session_manager.py spawn --prompt-file /tmp/gemini_prompt.md --stories NNN
-LAUNCH
-chmod +x /tmp/gemini_launch.sh
+# Step 2 — run headless in background (Claude is notified on completion)
+gemini -p "$(cat /tmp/gemini_prompt.md)" --approval-mode yolo 2>&1 | tee /tmp/gemini_NNN.log
+# Use run_in_background: true on the Bash tool call — no terminal tab needed.
+# On completion Claude reads /tmp/gemini_NNN.log to verify output.
 
-# Step 3 — open terminal tabs (one per session; slots A/B/C for parallel)
-# Single:   /tmp/gemini_launch.sh   → "Gemini: Run Session" task
-# Parallel B: /tmp/gemini_launch_b.sh → "Gemini: Run Session B"
-# Parallel C: /tmp/gemini_launch_c.sh → "Gemini: Run Session C"
-osascript << 'APPLESCRIPT'
-tell application "Visual Studio Code"
-  activate
-end tell
-delay 0.5
-tell application "System Events"
-  tell process "Code"
-    keystroke "`" using {control down, shift down}
-    delay 1.5
-    keystroke "/tmp/gemini_launch.sh"
-    delay 0.3
-    key code 36
-  end tell
-end tell
-APPLESCRIPT
+# Parallel sessions — run multiple Bash calls with run_in_background: true simultaneously.
+# Each writes to its own log: /tmp/gemini_437.log, /tmp/gemini_419.log, etc.
 ```
-A **"Gemini Session"** terminal panel opens in VS Code and **closes automatically on completion**. Claude returns tokens to the user. When the task finishes, Claude reviews `git diff HEAD~1`.
+
+**Session recovery** (if headless run is interrupted):
+```bash
+gemini --list-sessions          # find the session index
+gemini -r latest                # resume most recent session
+gemini -r 2                     # resume by index
+```
+
 **Cost of doing Gemini's work yourself: ~$40 in wasted tokens. Cost of delegating: $0.**
 
-> Always trigger the VS Code task on dispatch. Never run Gemini silently.
-> Jules dispatch: same pattern — write `/tmp/jules_launch.sh`, trigger **"Jules: Run Session"** task.
-> Parallel dispatch: write to `gemini_launch_b.sh` / `gemini_launch_c.sh`, trigger Session B / Session C tasks.
+> Jules dispatch: `bash scripts/jules_assign.sh docs/stories/story_NNN_*.md` — no launcher script needed.
+> Parallel Gemini: multiple `run_in_background: true` Bash calls, one per story, separate log files.
 
 ---
 
@@ -269,6 +257,36 @@ These are **non-negotiable** for all new code and all stories written going forw
 ## Security & Guardrails
 - **Pre-commit:** Blocks secrets and runs performance baseline audits.
 - **Sentinel:** Autonomous hardening and secret detection.
+
+# Tavily MCP — Live Web Intelligence
+
+Tavily MCP provides four production-grade web intelligence tools via HTTP. Fills the gap between static docs and live web data — use it to ground decisions in current information, check CVEs, extract structured API docs, and look up error solutions.
+
+**Complements codebase-memory-mcp:** code graph intelligence (local) + Tavily (external/live). Together they cover both surfaces.
+
+## Available Tools
+
+| Tool | Use for |
+|------|---------|
+| `tavily-search` | Real-time web search — current docs, error solutions, CVEs, release notes |
+| `tavily-extract` | Pull structured content from a specific URL — API docs, changelogs, specs |
+| `tavily-map` | Map a site's architecture — useful before implementing integrations |
+| `tavily-crawl` | Systematic crawl — index a service's doc site for deep research |
+
+## Always Do
+
+- **Run `tavily-search` before implementing any third-party integration** — check current API docs, not training-data snapshots
+- **Check CVEs before adding a new dependency:** `tavily-search "<package> CVE vulnerability"`
+- **Look up unfamiliar errors before guessing:** `tavily-search "<error message> fix"`
+- **Extract live pricing/limits before hardcoding:** `tavily-extract <vendor-url>`
+
+## Setup (one-time)
+
+```bash
+source ~/.secrets && claude mcp add --transport http tavily "https://mcp.tavily.com/mcp/?tavilyApiKey=$TAVILY_API_KEY"
+```
+
+Key stored in `~/.secrets` as `TAVILY_API_KEY`. Free tier: 1,000 searches/month.
 
 <!-- codebase-memory-mcp:start -->
 # codebase-memory-mcp — Code Intelligence
