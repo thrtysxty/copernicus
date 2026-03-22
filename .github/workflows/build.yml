@@ -1,0 +1,74 @@
+name: Build Copernicus Multi-Platform
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            platform_flag: --mac
+          - os: windows-latest
+            platform_flag: --win
+          - os: ubuntu-22.04
+            platform_flag: --linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies and PyInstaller
+      run: |
+        pip install pyinstaller
+        pip install -r backend/requirements.txt
+      working-directory: .
+
+    - name: Build Python backend with PyInstaller
+      run: pyinstaller backend/copernicus_backend.spec --distpath backend/dist/
+      working-directory: .
+
+    - name: Set up Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install JavaScript dependencies
+      run: npm ci
+      working-directory: copernicus
+
+    - name: Build Electron app
+      run: npm run build -- ${{ matrix.platform_flag }}
+      working-directory: copernicus
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Copernicus-Release-${{ matrix.os }}
+        path: copernicus/release/**
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          copernicus/release/**/*.dmg
+          copernicus/release/**/*.exe
+          copernicus/release/**/*.AppImage
+          copernicus/release/**/*.deb
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
