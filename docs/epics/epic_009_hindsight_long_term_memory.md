@@ -1,6 +1,6 @@
 # Epic 009: Hindsight Long-Term Memory Engine
 
-**Status:** PLANNED — POST-LAUNCH
+**Status:** ACTIVE
 **Priority:** P1
 **Theme:** Sovereign Intelligence & Cross-Session Learning
 

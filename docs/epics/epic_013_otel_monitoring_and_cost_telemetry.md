@@ -1,6 +1,6 @@
 # Epic 013: OTel Monitoring & Cost Telemetry
 
-**Status:** DRAFT
+**Status:** ACTIVE
 **Priority:** P2 — Observability
 **Phase:** Platform Instrumentation
 

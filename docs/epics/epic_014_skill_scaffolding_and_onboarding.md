@@ -1,6 +1,6 @@
 # Epic 014: Skill Scaffolding & Repo Onboarding
 
-**Status:** DRAFT
+**Status:** ACTIVE
 **Priority:** P1 — Product
 **Phase:** Developer Experience
 
