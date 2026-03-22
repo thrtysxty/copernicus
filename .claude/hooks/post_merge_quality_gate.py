@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PostToolUse hook — multi-language LSP/lint gate.
+PostToolUse hook — multi-language quality gate.
 
 Runs after Bash commands that merge or apply agent work.
 Checks TypeScript (tsc --noEmit) and Python (py_compile + mypy if available).
