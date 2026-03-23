@@ -6,6 +6,7 @@ import { SettingsStore } from '../settings-store'
 import log from '../utils/logger'
 import { TOOLS, ToolExecutor } from './tools'
 import { contextManager } from './ContextManager'
+import { systemPromptBuilder } from './system-prompt-builder'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -17,6 +18,8 @@ export interface ChatPayload {
   messages: ChatMessage[]
   model: string
   systemPrompt?: string
+  bankId?: string;    // new — forwarded from renderer for system prompt context
+  persona?: string;  // new — forwarded from renderer for system prompt context
 }
 
 const MAX_TOOL_DEPTH = 5
@@ -29,23 +32,20 @@ export class LLMService {
   }
 
   async streamChat(payload: ChatPayload, depth = 0): Promise<void> {
-    const { sessionId, messages, model, systemPrompt } = payload
+    const { sessionId, messages, model, systemPrompt, bankId, persona } = payload
 
-    const DEFAULT_SYSTEM_PROMPT = `You are the primary AI orchestrator inside the COPERNICUS IDE.
-Your goal is to assist the user with industrial-scale software engineering.
-
-CORE PROTOCOLS:
-1. REPO RAG: You have access to the local codebase via the 'search_codebase' and 'read_file' tools. If the user's request is vague or refers to existing logic, you MUST search the codebase before asking the user for paths.
-2. LOCAL DELEGATION: For tactical tasks like documentation, quick bug fixes, or UI tweaks, you can delegate to local sidekick models using 'local_research'.
-3. SURGICAL EDITS: When providing code, provide complete, valid blocks. Avoid placeholders like "// ... rest of code".
-4. CONTEXT AWARENESS: You are running in a professional environment. Prefer efficiency and technical precision over conversational filler.
-5. PM DISCIPLINE: For any task larger than a 2-line fix, you MUST: (1) use search_codebase to understand the codebase first, (2) create a story with create_story, (3) dispatch it with dispatch_agent. Never write more than 20 lines of code inline.`
-
-    const system = systemPrompt ?? DEFAULT_SYSTEM_PROMPT
     const callStart = Date.now()
 
     // STORY 363: Context Management
     const settings = new SettingsStore().getAll()
+
+    const builtSystem = systemPromptBuilder.build({
+      projectName: settings.projectName as string | undefined,
+      bankId: bankId,
+      persona: persona,
+    })
+    const system = systemPrompt ?? builtSystem
+
     contextManager.updateFromSettings(settings)
 
     const usedTokens = contextManager.calculateContextSize(messages, system)
@@ -94,6 +94,12 @@ CORE PROTOCOLS:
         }
       }
 
+      // Anthropic provider: cache_control wrapping
+      let finalSystemPrompt: any = system;
+      if (provider === 'anthropic') {
+        finalSystemPrompt = [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }];
+      }
+
       const response = await fetch('http://127.0.0.1:5001/api/llm/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,7 +108,7 @@ CORE PROTOCOLS:
           messages: finalMessages,
           model,
           provider,
-          systemPrompt: system,
+          systemPrompt: finalSystemPrompt,
           apiKey,
           baseUrl,
           tools: TOOLS,
