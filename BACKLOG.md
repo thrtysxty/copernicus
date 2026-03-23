@@ -122,6 +122,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
+| #460 | Stack Detector | APPROVED FOR IMPLEMENTATION | P1 — Feature |
+| #463 | Skill Scaffold Generator | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #488 | Split Claude Md Into Scoped Rules Files | APPROVED FOR IMPLEMENTATION | P1 |
 | #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
 | #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | APPROVED FOR IMPLEMENTATION | P1 |
@@ -415,10 +417,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #457 | Capex Cost Per Active Second | DRAFT | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | DRAFT | P2 — Feature |
 | #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
-| #460 | Stack Detector | DRAFT | P1 — Feature |
 | #461 | Skill Template Library | DRAFT | P1 — Feature |
 | #462 | Skill Onboarding Card | DRAFT | P1 — Feature |
-| #463 | Skill Scaffold Generator | DRAFT | P1 — Feature |
 | #464 | Scaffold Skills Slash Command | DRAFT | P1 — Feature |
 | #465 | Skill Description Auditor | DRAFT | P2 — Feature |
 | #466 | Claude Plugin Data Migration | DRAFT | P2 — Maintenance |
