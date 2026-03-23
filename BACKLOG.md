@@ -110,7 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #407 | Playwright E2E — Full Ui Coverage Sprint | APPROVED FOR IMPLEMENTATION | P0 — Blocks release verification |
 | #408 | Terminal Chevron Direction | APPROVED FOR IMPLEMENTATION | P2 |
 | #409 | Planner Inspector Icon Buttons | APPROVED FOR IMPLEMENTATION | P2 |
 | #410 | Planner Card Doubleclick Inspector | APPROVED FOR IMPLEMENTATION | P2 |
@@ -358,6 +357,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #404 | Extension Store And Renderer Integration | COMPLETE | P1 |
 | #405 | Workflow Node Contribution Point | COMPLETE | P1 |
 | #406 | Orchestrator Tile And Provider Contribution Points | COMPLETE | P2 |
+| #407 | Playwright E2E — Full Ui Coverage Sprint | COMPLETE | P0 — Blocks release verification |
 | #413 | Editor File Tab Bug | COMPLETE | P1 (Bug) |
 | #417 | Editor Tab Desync And White Flash | COMPLETE | P1 |
 | #418 | Worktreemanager Command Injection | COMPLETE | P0 — Security |
