@@ -275,6 +275,22 @@ export class StateLedger {
     `).all(projectId, bankId, limit) as any[];
   }
 
+  getAgentMemoryTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): any[] {
+    return this.db.prepare(`
+      SELECT * FROM agent_memory 
+      WHERE project_id = ? AND ts BETWEEN ? AND ? 
+      ORDER BY ts ASC LIMIT ?
+    `).all(projectId, fromTs, toTs, limit) as any[];
+  }
+
+  getAgentWorkLogTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): any[] {
+    return this.db.prepare(`
+      SELECT * FROM agent_work_log 
+      WHERE project_id = ? AND ts BETWEEN ? AND ? 
+      ORDER BY ts ASC LIMIT ?
+    `).all(projectId, fromTs, toTs, limit) as any[];
+  }
+
   recallAgentMemory(projectId: string, bankId: string, query: string, limit: number): any[] {
     return this.db.prepare(`
       SELECT * FROM memory_working_set

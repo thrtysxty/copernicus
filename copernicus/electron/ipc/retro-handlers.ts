@@ -1,6 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { stateLedger } from '../db/state-ledger'
 import { handleIpc } from '../utils/handle-ipc'
+import { retroSynthesizer } from '../retro/retro-synthesizer'
 
 export function registerRetroHandlers() {
   ipcMain.handle('retro:list', (_e, projectId: string) => handleIpc(() => {
@@ -40,6 +41,16 @@ export function registerRetroHandlers() {
   ipcMain.handle('retro:commit', (_e, _id: string) => handleIpc(() => {
     // reserved stub
     return { ok: true, message: 'not yet implemented' }
+  }))
+
+  ipcMain.handle('retro:generate', (_e, data: {
+    projectId: string
+    scope: string
+    fromTs: number
+    toTs: number
+  }) => handleIpc(async () => {
+    const retroId = await retroSynthesizer.synthesize(data)
+    return { retroId }
   }))
 
   ipcMain.handle('retro:push-ready', (_e, id: string) => handleIpc(() => {
