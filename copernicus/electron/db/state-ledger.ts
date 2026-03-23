@@ -208,14 +208,102 @@ export class StateLedger {
     // Kanban Columns (Story 428)
     this.db.exec(SCHEMA.kanban_columns);
     this.initKanbanColumns();
+
+    // Agent Memory (Story 489)
+    this.db.exec(SCHEMA.agent_memory);
+    this.db.exec(SCHEMA.agent_work_log);
+    this.db.exec(SCHEMA.memory_working_set);
+    this.migrateAgentMemory();
   }
 
+  // ── Agent Memory (Story 489) ──────────────────────────────────────────
+
+  private migrateAgentMemory(): void {
+    const hasRows = this.db.prepare('SELECT COUNT(*) as count FROM agent_memory WHERE bank_id = ? AND event_type = ?').get('chat', 'memory_fact') as { count: number };
+    
+    if (hasRows && hasRows.count === 0) {
+      this.db.transaction(() => {
+        const rows = this.db.prepare('SELECT * FROM project_memory').all() as any[];
+        const insertStmt = this.db.prepare(`
+          INSERT INTO agent_memory (id, project_id, bank_id, event_type, content, importance, ts)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const row of rows) {
+          const newId = crypto.randomUUID();
+          insertStmt.run(
+            newId,
+            'default', // project_id
+            'chat',    // bank_id
+            'memory_fact', // event_type
+            row.content,
+            row.importance,
+            Math.floor(row.created_at / 1000) // Convert from ms to seconds
+          );
+        }
+      })();
+    }
+  }
+
+  addAgentMemory(params: { id: string, projectId: string, bankId: string, eventType: string, content: string, importance: number, tags: string | null, entities: string | null, meta: string | null, ts: number }): void {
+    this.db.prepare(`
+      INSERT INTO agent_memory (id, project_id, bank_id, event_type, content, importance, tags, entities, meta, ts)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      params.id,
+      params.projectId,
+      params.bankId,
+      params.eventType,
+      params.content,
+      params.importance,
+      params.tags,
+      params.entities,
+      params.meta,
+      params.ts
+    );
+  }
+
+  getMemoryWorkingSet(projectId: string, bankId: string, limit: number): any[] {
+    return this.db.prepare(`
+      SELECT * FROM memory_working_set
+      WHERE project_id = ? AND bank_id = ?
+      ORDER BY score DESC
+      LIMIT ?
+    `).all(projectId, bankId, limit) as any[];
+  }
+
+  supersedeMemory(oldId: string, newId: string): void {
+    this.db.transaction(() => {
+      this.db.prepare(`
+        UPDATE agent_memory SET importance = 1 WHERE id = ?
+      `).run(oldId);
+      
+      this.db.prepare(`
+        UPDATE agent_memory SET supersedes_id = ? WHERE id = ?
+      `).run(newId, oldId);
+    })();
+  }
+
+  logAgentWork(params: { id: string, projectId: string, bankId: string, eventType: string, meta: string, ts: number }): void {
+    this.db.prepare(`
+      INSERT INTO agent_work_log (id, project_id, bank_id, event_type, meta, ts)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(params.id, params.projectId, params.bankId, params.eventType, params.meta, params.ts);
+  }
+
+  getAgentWorkLog(projectId: string, bankId: string, limit: number): any[] {
+    return this.db.prepare(`
+      SELECT * FROM agent_work_log
+      WHERE project_id = ? AND bank_id = ?
+      ORDER BY ts DESC
+      LIMIT ?
+    `).all(projectId, bankId, limit) as any[];
+  }
 
   // ── Kanban Columns (Story 428) ──────────────────────────────────────────
 
   private initKanbanColumns(): void {
     const existing = this.db.prepare('SELECT COUNT(*) as count FROM kanban_columns').get() as any;
-    if (existing.count === 0) {
+    if (existing && existing.count === 0) {
       const DEFAULT_COLUMNS = [
         { id: 'planning',        status: 'PLANNING',       color: 'bg-slate-500/10 border-slate-500/30',   accent: 'bg-slate-500' },
         { id: 'storyboarding',   status: 'STORYBOARDING',  color: 'bg-purple-500/10 border-purple-500/30', accent: 'bg-purple-500' },

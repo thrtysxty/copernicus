@@ -39,7 +39,7 @@ import * as localModelHandlers from './local-model-handlers'
 import { registerReplayHandlers } from './replay-handlers'
 import { handleIpc } from '../utils/handle-ipc'
 import { registerStitchHandlers } from './stitch-handlers'
-
+import { registerMemoryHandlers } from './memory-handlers'
 
 export async function registerAllIpcHandlers(
   win: BrowserWindow,
@@ -104,6 +104,7 @@ export async function registerAllIpcHandlers(
   const cleanupWorktreeHandlers = registerWorktreeHandlers(worktreeManager)
   registerSecurityHandlers(ipcMain, globalDeps.settingsStore)
   registerStitchHandlers()
+  registerMemoryHandlers()
 
   // Kanban Columns (Story 428)
   ipcMain.handle('kanban:get-columns', () => handleIpc(() => stateLedger.getKanbanColumns()))

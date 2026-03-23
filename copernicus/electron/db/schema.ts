@@ -296,5 +296,41 @@ export const SCHEMA = {
     commit_count INTEGER NOT NULL DEFAULT 0,
     created_at   TEXT NOT NULL,
     completed_at TEXT
-  )`
+  )`,
+  agent_memory: `
+    CREATE TABLE IF NOT EXISTS agent_memory (
+      id            TEXT    PRIMARY KEY,
+      project_id    TEXT    NOT NULL,
+      bank_id       TEXT    NOT NULL,
+      event_type    TEXT    NOT NULL,
+      content       TEXT    NOT NULL,
+      importance    INTEGER NOT NULL DEFAULT 5,
+      tags          TEXT,
+      entities      TEXT,
+      meta          TEXT,
+      supersedes_id TEXT    REFERENCES agent_memory(id),
+      ts            INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_memory_proj_bank ON agent_memory(project_id, bank_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_memory_ts ON agent_memory(ts DESC);
+  `,
+  agent_work_log: `
+    CREATE TABLE IF NOT EXISTS agent_work_log (
+      id          TEXT    PRIMARY KEY,
+      project_id  TEXT    NOT NULL,
+      bank_id     TEXT    NOT NULL,
+      event_type  TEXT    NOT NULL,
+      meta        TEXT    NOT NULL,
+      ts          INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_work_log_proj_bank ON agent_work_log(project_id, bank_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_work_log_ts ON agent_work_log(ts DESC);
+  `,
+  memory_working_set: `
+    CREATE VIEW IF NOT EXISTS memory_working_set AS
+    SELECT *,
+      importance * (1.0 / (1.0 + (unixepoch('now') - ts) / 3600.0 * 0.1)) AS score
+    FROM agent_memory
+    ORDER BY score DESC;
+  `
 };
