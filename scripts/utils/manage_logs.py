@@ -8,8 +8,17 @@ from pathlib import Path
 
 from src.agentic.telemetry import telemetry
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-LOGS_DIR = PROJECT_ROOT / "docs" / "logs"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+def get_logs_dir():
+    plugin_data_env = os.environ.get("CLAUDE_PLUGIN_DATA")
+    if plugin_data_env:
+        return Path(plugin_data_env) / "logs"
+    else:
+        project_name = PROJECT_ROOT.name
+        return Path.home() / ".claude" / "projects" / project_name / "logs"
+
+LOGS_DIR = get_logs_dir()
 METADATA_FILE = LOGS_DIR / "metadata.json"
 INTERVIEWER_FILE = PROJECT_ROOT / "docs" / "personas" / "04_meta_interviewer.md"
 
@@ -86,8 +95,8 @@ def main():
     args = parser.parse_args()
 
     # Ensure dirs exist
-    (LOGS_DIR / "errors").mkdir(exist_ok=True)
-    (LOGS_DIR / "successes").mkdir(exist_ok=True)
+    (LOGS_DIR / "errors").mkdir(parents=True, exist_ok=True)
+    (LOGS_DIR / "successes").mkdir(parents=True, exist_ok=True)
 
     # Log event to database first
     telemetry.log_audit_event(

@@ -363,6 +363,12 @@ export class StateLedger {
     })();
   }
 
+  demoteMemoryImportance(id: string): void {
+    this.db.prepare(`
+      UPDATE agent_memory SET importance = 1 WHERE id = ?
+    `).run(id);
+  }
+
   logAgentWork(params: { id: string, projectId: string, bankId: string, eventType: string, meta: string, ts: number }): void {
     this.db.prepare(`
       INSERT INTO agent_work_log (id, project_id, bank_id, event_type, meta, ts)
@@ -1057,6 +1063,15 @@ export class StateLedger {
       SET status = ?, edited_content = COALESCE(?, edited_content)
       WHERE id = ?
     `).run(data.status, data.edited_content || null, id);
+    return true;
+  }
+
+  approveRetroReport(id: string, originatedStories: string[]): boolean {
+    this.db.prepare(`
+      UPDATE retro_reports 
+      SET status = 'approved', ts_approved = ?, retro_originated_stories = ? 
+      WHERE id = ?
+    `).run(Date.now(), JSON.stringify(originatedStories), id)
     return true;
   }
 

@@ -13,6 +13,7 @@ import { stripStoryPrefix } from '../../utils/storyTitle'
 import { TEMPLATE_MANIFEST } from '../../templates'
 import { RetroCard } from './RetroCard'
 import { RetroReviewPanel } from './RetroReviewPanel'
+import { IntelligenceManager } from '../intelligence/IntelligenceManager'
 
 interface Story {
   id: string
@@ -213,6 +214,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   
   const [activeRetroCard, setActiveRetroCard] = useState<any | null>(null)
   const [additionalPendingCount, setAdditionalPendingCount] = useState(0)
+  const [activeView, setView] = useState<'planner' | 'intelligence'>('planner')
 
   // Sync cache data to stories state when cache resolves (AC5)
   useEffect(() => {
@@ -603,6 +605,24 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                         workflowStatus={workflowStatus}
                       />
                     ))}
+                    
+                    {/* Intelligence Card in Storyboarding (Blueprint) column */}
+                    {col.id === 'storyboarding' && (
+                      <div className="mt-4 border-t border-white/5 pt-4">
+                        <motion.div
+                          onClick={() => setView('intelligence' as any)}
+                          className="p-3 bg-zinc-900/50 border border-indigo-500/30 rounded cursor-pointer transition-all hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 overflow-hidden"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Brain size={12} className="text-indigo-400 shrink-0" />
+                            <span className="text-[11px] font-medium leading-tight transition-colors text-indigo-300">Intelligence Manager</span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-1.5 border-t border-white/5 pt-2">
+                            <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest">Manage Instructions & Rules</span>
+                          </div>
+                        </motion.div>
+                      </div>
+                    )}
                   </div>
 
                 </>
@@ -611,6 +631,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
           )
         })}
       </div>
+      
+      {activeView === 'intelligence' && (
+        <div className="absolute inset-0 z-[100] bg-black">
+          <IntelligenceManager onClose={() => setView('planner')} />
+        </div>
+      )}
     </div>
   )
 })

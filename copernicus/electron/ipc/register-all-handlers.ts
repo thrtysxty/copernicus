@@ -74,6 +74,7 @@ export async function registerAllIpcHandlers(
   const deps: IpcHandlerDeps = {
     ...globalDeps,
     genesisRunner,
+    scaffoldRunner,
     snapshotManager,
     touchBarCleanup,
     worktreeManager: worktreeManager as any,
@@ -109,7 +110,7 @@ export async function registerAllIpcHandlers(
   registerSecurityHandlers(ipcMain, globalDeps.settingsStore)
   registerStitchHandlers()
   registerMemoryHandlers()
-  registerRetroHandlers()
+  registerRetroHandlers(deps)
   registerIntelHandlers()
 
   ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {

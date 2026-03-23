@@ -1,0 +1,7 @@
+{
+  "plugin_data": {
+    "handoff": "Session handoff summaries written here",
+    "logs": "Success and error log entries written here"
+  },
+  "fallback_path": "~/.claude/projects/<project>/"
+}

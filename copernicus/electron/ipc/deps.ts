@@ -48,6 +48,7 @@ export interface IpcHandlerDeps {  authManager: AuthManager;
   julesMonitor: JulesMonitor;
   julesManager: JulesManager;
   genesisRunner: GenesisRunner;
+  scaffoldRunner?: any;
   layoutStore: any;
   applyAndVerifyPatch: any;
   reversePatch: any;

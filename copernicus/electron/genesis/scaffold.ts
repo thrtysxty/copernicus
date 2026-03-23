@@ -6,6 +6,14 @@ import { assertSafePath } from '../utils/path-guard';
 import log from '../utils/logger';
 
 export class ScaffoldRunner {
+  public scaffold(params: { title: string, priority: string }): string {
+    const { storiesManager } = require('../main')
+    if (storiesManager) {
+      return storiesManager.createStory({ title: params.title, priority: params.priority, type: 'Feature', epic: '(none)' })
+    }
+    return ''
+  }
+
   public async run(payload: GenesisPayload, _synthesisResult: SynthesisResult): Promise<void> {
     const { repoPath, projectName, isNewRepo } = payload;
     
