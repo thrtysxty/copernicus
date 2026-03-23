@@ -41,6 +41,7 @@ import { WorktreeManager } from './worktree/WorktreeManager' // Added this back 
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
+import { jsonlExporter } from './memory/jsonl-exporter'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -246,6 +247,27 @@ app.whenReady().then(async () => {
     .catch(() => {
       localModelManager.start().catch(log.error);
     });
+
+  // Story 496: JSONL Export Cycle and LSP Index for Agent Memory
+  setTimeout(async () => {
+    try {
+      const projectId = fsManager.getRootPath() || 'default'
+      await jsonlExporter.export(projectId)
+      const exportDir = path.join(app.getPath('userData'), 'memory', jsonlExporter.hashProjectId(projectId))
+      lspManager.watchMemoryDir(exportDir)
+      
+      setInterval(async () => {
+        try {
+          const pid = fsManager.getRootPath() || 'default'
+          await jsonlExporter.export(pid)
+        } catch (err) {
+          log.error('[Memory Export] Interval export failed:', err)
+        }
+      }, 5 * 60 * 1000)
+    } catch (err) {
+      log.error('[Memory Export] Initial export failed:', err)
+    }
+  }, 30 * 1000)
 
   // Story 335: Watch for story status files from Python orchestrator
   setInterval(() => {

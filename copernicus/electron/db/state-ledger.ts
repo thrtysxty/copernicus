@@ -262,6 +262,10 @@ export class StateLedger {
     );
   }
 
+  getAllAgentMemoryForProject(projectId: string): any[] {
+    return this.db.prepare('SELECT * FROM agent_memory WHERE project_id = ?').all(projectId) as any[];
+  }
+
   getMemoryWorkingSet(projectId: string, bankId: string, limit: number): any[] {
     return this.db.prepare(`
       SELECT * FROM memory_working_set

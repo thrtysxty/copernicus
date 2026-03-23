@@ -40,6 +40,7 @@ import { registerReplayHandlers } from './replay-handlers'
 import { handleIpc } from '../utils/handle-ipc'
 import { registerStitchHandlers } from './stitch-handlers'
 import { registerMemoryHandlers } from './memory-handlers'
+import { jsonlExporter } from '../memory/jsonl-exporter'
 import { registerRetroHandlers } from './retro-handlers'
 
 
@@ -108,6 +109,13 @@ export async function registerAllIpcHandlers(
   registerStitchHandlers()
   registerMemoryHandlers()
   registerRetroHandlers()
+
+  ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {
+    const projectId = fsManager.getRootPath()
+    await jsonlExporter.export(projectId)
+    const exportDir = path.join(app.getPath('userData'), 'memory', jsonlExporter.hashProjectId(projectId))
+    return { path: exportDir }
+  }))
 
 
   // Kanban Columns (Story 428)

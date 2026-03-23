@@ -117,6 +117,16 @@ export class LspManager {
     return this.diagnosticsCache.get(uri) ?? []
   }
 
+  watchMemoryDir(exportDir: string) {
+    if (!this.proc) return
+    this.sendNotify('workspace/didChangeWatchedFiles', {
+      changes: [{
+        uri: `file://${exportDir}/*.jsonl`,
+        type: 1 // Created
+      }]
+    })
+  }
+
   stop() {
     if (!this.proc) return
     this.sendRequest('shutdown', {})
