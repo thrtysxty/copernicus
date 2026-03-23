@@ -147,3 +147,17 @@ export interface WorkflowStepEndEvent {
   durationMs: number;
   timestamp: number;
 }
+
+export interface WavePlan {
+  waves: Array<{ storyIds: string[] }>;
+}
+
+export interface WorkflowWave {
+  id: string;
+  workflowId: string;
+  waveIndex: number;
+  storyIds: string[];
+  status: 'pending' | 'running' | 'done' | 'failed';
+  startedAt?: number;
+  completedAt?: number;
+}

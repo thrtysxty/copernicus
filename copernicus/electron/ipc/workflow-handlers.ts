@@ -2,6 +2,7 @@ import { ipcMain, BrowserWindow } from 'electron'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { WORKFLOW_TEMPLATES } from '../workflow/templates'
+import { workflowWaveExecutor } from '../workflow/wave-executor'
 
 import { IpcHandlerDeps } from './deps'
 
@@ -33,15 +34,42 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
     }
   }));
 
-  ipcMain.handle('workflow:run', (_event, payload: any) => handleIpc('workflow:run', [payload], () => {
+  ipcMain.handle('workflow:run', (_event, payload: any) => handleIpc('workflow:run', [payload], async () => {
+    const useWaves = deps.settingsStore.get('workflow.useWaves', false) as boolean;
+    
+    let targetGraph = payload;
+    let targetWorkflowId = payload?.id || 'unknown';
+
     if (payload && payload.templateId) {
       const tpl = WORKFLOW_TEMPLATES.find(t => t.id === payload.templateId)
       if (!tpl) throw new Error('TEMPLATE_NOT_FOUND')
       if (payload.context) workflowEngine.updateContext(payload.context)
-      return workflowEngine.runGraph(tpl.graph)
+      targetGraph = tpl.graph;
+      targetWorkflowId = tpl.id;
     }
-    return workflowEngine.runGraph(payload)
+
+    if (useWaves && payload?.storyIds && Array.isArray(payload.storyIds)) {
+      log.info(`[Workflow] Running with waves for workflow ${targetWorkflowId} with stories: ${payload.storyIds.join(', ')}`);
+      const plan = await workflowWaveExecutor.planWaves(payload.storyIds, deps.stateLedger);
+      
+      // Execute asynchronously to unblock IPC
+      workflowWaveExecutor.executeWaves(targetWorkflowId, plan, deps.stateLedger, deps.settingsStore).catch(err => {
+        log.error(`[Workflow] Wave execution failed:`, err);
+      });
+      
+      return; // Return immediately since wave executor runs asynchronously
+    }
+
+    return workflowEngine.runGraph(targetGraph)
   }))
+
+  ipcMain.handle('workflow:plan-waves', (_e, { workflowId, storyIds }: { workflowId: string, storyIds: string[] }) => 
+    handleIpc('workflow:plan-waves', [{ workflowId, storyIds }], () => workflowWaveExecutor.planWaves(storyIds, deps.stateLedger))
+  )
+
+  ipcMain.handle('workflow:waves-status', (_e, { workflowId }: { workflowId: string }) => 
+    handleIpc('workflow:waves-status', [{ workflowId }], () => deps.stateLedger.getWorkflowWaves(workflowId))
+  )
 
   ipcMain.handle('workflow:status', () => handleIpc('workflow:status', [], () => ({
     state: workflowEngine.getState(),

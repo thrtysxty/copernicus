@@ -378,5 +378,17 @@ export const SCHEMA = {
     );
     CREATE INDEX IF NOT EXISTS idx_intel_docs_project ON intelligence_documents(project_id);
     CREATE INDEX IF NOT EXISTS idx_intel_docs_type    ON intelligence_documents(project_id, type);
+  `,
+  workflow_waves: `
+    CREATE TABLE IF NOT EXISTS workflow_waves (
+      id           TEXT PRIMARY KEY,
+      workflow_id  TEXT NOT NULL,
+      wave_index   INTEGER NOT NULL,
+      story_ids    TEXT NOT NULL,
+      status       TEXT NOT NULL DEFAULT 'pending',
+      started_at   INTEGER,
+      completed_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_waves_workflow ON workflow_waves(workflow_id, wave_index);
   `
 };

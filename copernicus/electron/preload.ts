@@ -85,7 +85,7 @@ const SEND_CHANNELS = new Set([
   'ledger:daily-costs', 'ledger:cost-by-model', 'ledger:cost-by-story', 'ledger:heatmap-data', 'ledger:leaderboard',
   'ledger:stats-by-role-session', 'ledger:stats-by-role-alltime',
   // Workflow
-  'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status',
+  'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status', 'workflow:plan-waves', 'workflow:waves-status',
   'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind', 'workflow:get-context', 'workflow:set-context', 'workflow:resume-node',
   'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
   // Review gate
@@ -175,7 +175,7 @@ const LISTEN_CHANNELS = new Set([
   // Command Center (Story 184)
   'command:telemetry-update',
   // Workflow engine state push (Story 186)
-  'workflow:status', 'workflow:status-update', 'workflow:step-start', 'workflow:step-end', 'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
+  'workflow:status', 'workflow:status-update', 'workflow:step-start', 'workflow:step-end', 'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas', 'workflow:wave-complete',
   'review:session-complete',
   'layout:goto-line',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',

@@ -89,7 +89,7 @@ if (process.env.NODE_ENV === 'development') {
 const authManager = new AuthManager()
 const githubManager = new GithubManager(authManager)
 const modelRegistry = new ModelRegistry()
-const settingsStore = new SettingsStore()
+export const settingsStore = new SettingsStore()
 export const storiesManager = new StoriesManager(os.homedir(), stateLedger)
 const devtimeManager = new DevtimeManager()
 

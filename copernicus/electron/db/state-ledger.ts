@@ -244,6 +244,39 @@ export class StateLedger {
     }
   }
 
+  insertWorkflowWave(id: string, workflowId: string, waveIndex: number, storyIds: string[], startedAt: number): void {
+    this.db.prepare(`
+      INSERT INTO workflow_waves (id, workflow_id, wave_index, story_ids, status, started_at)
+      VALUES (?, ?, ?, ?, 'pending', ?)
+    `).run(id, workflowId, waveIndex, JSON.stringify(storyIds), startedAt);
+  }
+
+  updateWorkflowWaveStatus(id: string, status: string, completedAt?: number): void {
+    if (completedAt) {
+      this.db.prepare(`
+        UPDATE workflow_waves SET status = ?, completed_at = ? WHERE id = ?
+      `).run(status, completedAt, id);
+    } else {
+      this.db.prepare(`
+        UPDATE workflow_waves SET status = ? WHERE id = ?
+      `).run(status, id);
+    }
+  }
+
+  getWorkflowWaves(workflowId: string): any[] {
+    const rows = this.db.prepare(`
+      SELECT id, workflow_id as workflowId, wave_index as waveIndex, story_ids as storyIds, status, started_at as startedAt, completed_at as completedAt
+      FROM workflow_waves
+      WHERE workflow_id = ?
+      ORDER BY wave_index ASC
+    `).all(workflowId) as any[];
+
+    return rows.map(r => ({
+      ...r,
+      storyIds: JSON.parse(r.storyIds || '[]')
+    }));
+  }
+
   addAgentMemory(params: { id: string, projectId: string, bankId: string, eventType: string, content: string, importance: number, tags: string | null, entities: string | null, meta: string | null, ts: number }): void {
     this.db.prepare(`
       INSERT INTO agent_memory (id, project_id, bank_id, event_type, content, importance, tags, entities, meta, ts)
@@ -467,6 +500,12 @@ export class StateLedger {
   getProjectByPath(path: string): ProjectRecord | null {
     const row = this.db.prepare('SELECT * FROM projects WHERE path = ?').get(path) as any
     return row ?? null
+  }
+
+  getActiveProject(): ProjectRecord | null {
+    const { settingsStore } = require('../main');
+    const path = settingsStore.get('workspace') as string;
+    return path ? this.getProjectByPath(path) : null;
   }
 
   getProjectById(id: string): ProjectRecord | null {

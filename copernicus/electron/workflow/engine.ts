@@ -33,6 +33,7 @@ export interface EngineServices {
   worktreeManager?: import('../worktree/WorktreeManager').WorktreeManager;
   snapshotManager: SnapshotManager;
   extensionRegistry: ExtensionRegistry;
+  memoryService?: import('../memory/memoryService').MemoryService;
 }
 
 export class WorkflowEngine {
@@ -244,7 +245,7 @@ export class WorkflowEngine {
     return sorted;
   }
 
-  private async executeNode(node: WFNode, callback?: StateCallback): Promise<void> {
+  public async executeNode(node: WFNode, callback?: StateCallback): Promise<void> {
     this.currentTurn++;
     const workflowId = this.context.get('__workflowId') ?? 'unknown';
     const startTime = Date.now();
@@ -260,6 +261,21 @@ export class WorkflowEngine {
     }
 
     this.updateNodeStatus(node.id, 'running', undefined, callback);
+
+    const projectId = this.services?.stateLedger.getActiveProject()?.id ?? 'default';
+
+    this.services?.memoryService?.addMemory({
+      projectId,
+      bankId: `workflow:node:${node.id}`,
+      eventType: 'session_start',
+      content: `Node ${node.label} started (workflow: ${workflowId})`,
+      importance: 3,
+      meta: JSON.stringify({
+        model: (node.data as any).modelId,
+        workflow_id: workflowId,
+        node_type: node.type
+      })
+    });
 
     try {
       let output = '';
@@ -299,12 +315,23 @@ export class WorkflowEngine {
       this.updateNodeStatus(node.id, 'completed', undefined, callback);
 
       const endTime = Date.now();
+      const durationMs = endTime - startTime;
+
+      this.services?.memoryService?.addMemory({
+        projectId,
+        bankId: `workflow:node:${node.id}`,
+        eventType: 'session_end',
+        content: `Node ${node.label} completed in ${durationMs}ms`,
+        importance: 3,
+        meta: JSON.stringify({ status: 'completed', duration_ms: durationMs, workflow_id: workflowId })
+      });
+
       if (this.services?.win) {
         this.services.win.webContents.send('workflow:step-end', {
           workflowId,
           nodeId: node.id,
           status: 'completed',
-          durationMs: endTime - startTime,
+          durationMs,
           timestamp: endTime
         } as WorkflowStepEndEvent);
       }
@@ -314,12 +341,23 @@ export class WorkflowEngine {
       this.updateNodeStatus(node.id, 'error', msg, callback);
 
       const endTime = Date.now();
+      const durationMs = endTime - startTime;
+
+      this.services?.memoryService?.addMemory({
+        projectId,
+        bankId: `workflow:node:${node.id}`,
+        eventType: 'session_end',
+        content: `Node ${node.label} failed in ${durationMs}ms`,
+        importance: 7,
+        meta: JSON.stringify({ status: 'failed', duration_ms: durationMs, workflow_id: workflowId })
+      });
+
       if (this.services?.win) {
         this.services.win.webContents.send('workflow:step-end', {
           workflowId,
           nodeId: node.id,
           status: 'error',
-          durationMs: endTime - startTime,
+          durationMs,
           timestamp: endTime
         } as WorkflowStepEndEvent);
       }
@@ -744,20 +782,31 @@ export class WorkflowEngine {
 
   private async dispatchDecision(node: WFNode): Promise<string> {
     const d = node.data as import('./types').DecisionNodeData;
+    let winningBranch = 'Yes';
+    let decisionReason = '';
 
     switch (d.variant) {
       case 'exit-code-gate': {
         const code = this.context.get('__lastExitCode') ?? '0';
-        return code === '0' ? 'Yes' : 'No';
+        winningBranch = code === '0' ? 'Yes' : 'No';
+        decisionReason = `Exit code was ${code}`;
+        break;
       }
       case 'output-match': {
         const last = this.context.get('__lastOutput') ?? '';
-        if (!d.pattern) return 'No';
-        try {
-          return new RegExp(d.pattern).test(last) ? 'Yes' : 'No';
-        } catch {
-          return 'No'; // Invalid regex -> No
+        if (!d.pattern) {
+          winningBranch = 'No';
+          decisionReason = 'No pattern provided';
+        } else {
+          try {
+            winningBranch = new RegExp(d.pattern).test(last) ? 'Yes' : 'No';
+            decisionReason = `Output matched pattern ${d.pattern}`;
+          } catch {
+            winningBranch = 'No'; // Invalid regex -> No
+            decisionReason = `Invalid regex pattern: ${d.pattern}`;
+          }
         }
+        break;
       }
       case 'story-status-check': {
         this.services?.stateLedger.logEvent(
@@ -766,7 +815,9 @@ export class WorkflowEngine {
           {},
           'workflow'
         );
-        return 'Yes';
+        winningBranch = 'Yes';
+        decisionReason = 'Story status check not implemented';
+        break;
       }
       case 'human-approval': {
         this.services?.stateLedger.logEvent(
@@ -776,11 +827,29 @@ export class WorkflowEngine {
           'workflow'
         );
         await sleep(3000);
-        return 'Yes';
+        winningBranch = 'Yes';
+        decisionReason = 'Auto-approved (MVP)';
+        break;
       }
       default:
-        return 'Yes';
+        winningBranch = 'Yes';
+        decisionReason = 'Default behavior';
+        break;
     }
+
+    const projectId = this.services?.stateLedger.getActiveProject()?.id ?? 'default';
+    const workflowId = this.context.get('__workflowId') ?? 'unknown';
+
+    this.services?.memoryService?.addMemory({
+      projectId,
+      bankId: `workflow:${workflowId}`,
+      eventType: 'decision',
+      content: `Decision node "${node.label}" resolved branch: ${winningBranch}`,
+      importance: 5,
+      meta: JSON.stringify({ node_id: node.id, branch: winningBranch, reason: decisionReason })
+    });
+
+    return winningBranch;
   }
 
   private async dispatchFlow(node: WFNode): Promise<string> {
