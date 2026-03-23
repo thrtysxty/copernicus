@@ -360,5 +360,23 @@ export const SCHEMA = {
       ts                    INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_retro_items_retro ON retro_items(retro_id);
+  `,
+  intelligence_documents: `
+    CREATE TABLE IF NOT EXISTS intelligence_documents (
+      id          TEXT PRIMARY KEY,           -- doc_<ulid>
+      project_id  TEXT NOT NULL,
+      type        TEXT NOT NULL,              -- 'instruction'|'rule'|'agent'|'skill'|'command'
+      title       TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      content     TEXT NOT NULL DEFAULT '',
+      path_scope  TEXT,                       -- JSON array of glob strings, nullable
+      tool_restrictions TEXT,                 -- JSON array, nullable
+      preferred_model TEXT,
+      providers   TEXT NOT NULL DEFAULT '[]', -- JSON array of ProviderTarget
+      sync_status TEXT NOT NULL DEFAULT '{}', -- JSON Record<ProviderKey, SyncStatusValue>
+      ts          INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_intel_docs_project ON intelligence_documents(project_id);
+    CREATE INDEX IF NOT EXISTS idx_intel_docs_type    ON intelligence_documents(project_id, type);
   `
 };

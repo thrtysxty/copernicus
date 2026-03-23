@@ -1004,6 +1004,146 @@ export class StateLedger {
     `).run(id);
     return true;
   }
+
+  // ── Intelligence Documents ────────────────────────────────────────────────
+
+  listIntelDocs(projectId: string): any[] {
+    const rows = this.db.prepare(`
+      SELECT * FROM intelligence_documents
+      WHERE project_id = ?
+      ORDER BY type ASC, title ASC
+    `).all(projectId) as any[];
+
+    return rows.map(r => {
+      const mapped = {
+        ...r,
+        projectId: r.project_id,
+        pathScope: r.path_scope ? JSON.parse(r.path_scope) : null,
+        toolRestrictions: r.tool_restrictions ? JSON.parse(r.tool_restrictions) : null,
+        preferredModel: r.preferred_model,
+        providers: r.providers ? JSON.parse(r.providers) : [],
+        syncStatus: r.sync_status ? JSON.parse(r.sync_status) : {}
+      };
+      delete mapped.project_id;
+      delete mapped.path_scope;
+      delete mapped.tool_restrictions;
+      delete mapped.preferred_model;
+      delete mapped.sync_status;
+      return mapped;
+    });
+  }
+
+  getIntelDoc(id: string): any {
+    const row = this.db.prepare(`
+      SELECT * FROM intelligence_documents WHERE id = ?
+    `).get(id) as any;
+
+    if (!row) return null;
+
+    // Remove raw snake_case keys after mapping to camelCase
+    const mapped = {
+      ...row,
+      projectId: row.project_id,
+      pathScope: row.path_scope ? JSON.parse(row.path_scope) : null,
+      toolRestrictions: row.tool_restrictions ? JSON.parse(row.tool_restrictions) : null,
+      preferredModel: row.preferred_model,
+      providers: row.providers ? JSON.parse(row.providers) : [],
+      syncStatus: row.sync_status ? JSON.parse(row.sync_status) : {}
+    };
+
+    delete mapped.project_id;
+    delete mapped.path_scope;
+    delete mapped.tool_restrictions;
+    delete mapped.preferred_model;
+    delete mapped.sync_status;
+
+    return mapped;
+  }
+
+  createIntelDoc(data: {
+    projectId: string;
+    type: string;
+    title: string;
+    description?: string;
+    content?: string;
+    pathScope?: string[];
+    providers?: any[];
+  }): any {
+    // We use a custom ULID-like random ID to mimic the doc_<ulid> requested.
+    const id = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const ts = Date.now();
+    const syncStatus = {};
+
+    this.db.prepare(`
+      INSERT INTO intelligence_documents (
+        id, project_id, type, title, description, content, path_scope, providers, sync_status, ts
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      data.projectId,
+      data.type,
+      data.title,
+      data.description || '',
+      data.content || '',
+      data.pathScope ? JSON.stringify(data.pathScope) : null,
+      data.providers ? JSON.stringify(data.providers) : '[]',
+      JSON.stringify(syncStatus),
+      ts
+    );
+
+    return {
+      id,
+      projectId: data.projectId,
+      type: data.type,
+      title: data.title,
+      description: data.description || '',
+      content: data.content || '',
+      pathScope: data.pathScope || null,
+      toolRestrictions: null,
+      preferredModel: null,
+      providers: data.providers || [],
+      syncStatus,
+      ts
+    };
+  }
+
+  updateIntelDoc(id: string, partial: any): any {
+    const ts = Date.now();
+    const allowed = ['title', 'description', 'content', 'pathScope', 'toolRestrictions', 'preferredModel', 'providers', 'syncStatus'];
+    const sets: string[] = ['ts = ?'];
+    const vals: any[] = [ts];
+
+    // Map camelCase keys to snake_case db columns
+    const keyMap: Record<string, string> = {
+      pathScope: 'path_scope',
+      toolRestrictions: 'tool_restrictions',
+      preferredModel: 'preferred_model',
+      syncStatus: 'sync_status'
+    };
+
+    for (const [k, v] of Object.entries(partial)) {
+      if (allowed.includes(k)) {
+        const dbKey = keyMap[k] || k;
+        sets.push(`${dbKey} = ?`);
+        
+        if (['pathScope', 'toolRestrictions', 'providers', 'syncStatus'].includes(k)) {
+           vals.push(v ? JSON.stringify(v) : null);
+        } else {
+           vals.push(v);
+        }
+      }
+    }
+
+    vals.push(id);
+    this.db.prepare(`UPDATE intelligence_documents SET ${sets.join(', ')} WHERE id = ?`).run(...vals);
+
+    return this.getIntelDoc(id);
+  }
+
+  deleteIntelDoc(id: string): boolean {
+    this.db.prepare('DELETE FROM intelligence_documents WHERE id = ?').run(id);
+    return true;
+  }
 }
 
 // Module-level singleton for use across main-process modules

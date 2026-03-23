@@ -42,6 +42,7 @@ import { registerStitchHandlers } from './stitch-handlers'
 import { registerMemoryHandlers } from './memory-handlers'
 import { jsonlExporter } from '../memory/jsonl-exporter'
 import { registerRetroHandlers } from './retro-handlers'
+import { registerIntelHandlers } from './intel-handlers'
 
 
 export async function registerAllIpcHandlers(
@@ -109,6 +110,7 @@ export async function registerAllIpcHandlers(
   registerStitchHandlers()
   registerMemoryHandlers()
   registerRetroHandlers()
+  registerIntelHandlers()
 
   ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {
     const projectId = fsManager.getRootPath()
