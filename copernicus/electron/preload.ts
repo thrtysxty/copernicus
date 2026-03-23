@@ -13,6 +13,8 @@ const SEND_CHANNELS = new Set([
   'chat:send', 'chat:confirm-model-switch',
   // File System
   'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
+  // Skills
+  'skills:detect-stack',
   'fs:create-file', 'fs:create-dir', 'fs:rename', 'fs:trash', 'fs:reveal',
   'fs:tx-begin', 'fs:tx-commit', 'fs:tx-rollback', 'fs:tx-status', 'fs:tx-undo', 'fs:save-multiple',
   'dialog:open-file', 'dialog:open-folder',

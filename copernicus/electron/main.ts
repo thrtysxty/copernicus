@@ -38,6 +38,7 @@ import { execAsync } from './utils/exec-async'
 import { cwd } from 'node:process'
 import { localModelManager } from './local-model/LocalModelManager'
 import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
+import { detectStack } from './skills/stack-detector'
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
@@ -174,6 +175,11 @@ async function registerIpcHandlers() {
       execAsync('git rev-parse --git-dir', { cwd: cwd() }).then(() => ({ name: 'Git', ok: true })).catch(() => ({ name: 'Git', ok: false })),
     ])
     return checks.map((r, i) => r.status === 'fulfilled' ? r.value : { name: ['Backend','Git'][i], ok: false })
+  }))
+
+  ipcMain.handle('skills:detect-stack', () => handleIpc(() => {
+    const rootPath = fsManager.getRootPath()
+    return detectStack(rootPath || '')
   }))
 
   const { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager: registeredWorktreeManager } =
