@@ -3,6 +3,8 @@ import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { WORKFLOW_TEMPLATES } from '../workflow/templates'
 import { workflowWaveExecutor } from '../workflow/wave-executor'
+import { ContextAssembler } from '../workflow/context-assembler'
+import { RecoveryHandoff } from '../workflow/recovery-handoff'
 
 import { IpcHandlerDeps } from './deps'
 
@@ -65,6 +67,20 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('workflow:plan-waves', (_e, { workflowId, storyIds }: { workflowId: string, storyIds: string[] }) => 
     handleIpc('workflow:plan-waves', [{ workflowId, storyIds }], () => workflowWaveExecutor.planWaves(storyIds, deps.stateLedger))
+  )
+
+  ipcMain.handle('workflow:assemble-context', (_e, { projectId, storyId, nodeRole }: { projectId: string, storyId: string, nodeRole: any }) => 
+    handleIpc('workflow:assemble-context', [{ projectId, storyId, nodeRole }], () => {
+      const assembler = new ContextAssembler(deps.stateLedger);
+      return assembler.assemble({ projectId, storyId, nodeRole });
+    })
+  )
+
+  ipcMain.handle('workflow:recovery-brief', (_e, { storyId, failedAgentId, failureStatus, projectId }: { storyId: string, failedAgentId: string, failureStatus: any, projectId: string }) => 
+    handleIpc('workflow:recovery-brief', [{ storyId, failedAgentId, failureStatus, projectId }], () => {
+      const recoveryHandoff = new RecoveryHandoff(deps.stateLedger);
+      return recoveryHandoff.assemble({ projectId: projectId || 'unknown', storyId, failedAgentId, failureStatus });
+    })
   )
 
   ipcMain.handle('workflow:waves-status', (_e, { workflowId }: { workflowId: string }) => 

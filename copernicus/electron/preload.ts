@@ -86,6 +86,7 @@ const SEND_CHANNELS = new Set([
   'ledger:stats-by-role-session', 'ledger:stats-by-role-alltime',
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status', 'workflow:plan-waves', 'workflow:waves-status',
+  'workflow:assemble-context', 'workflow:recovery-brief',
   'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind', 'workflow:get-context', 'workflow:set-context', 'workflow:resume-node',
   'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
   // Review gate

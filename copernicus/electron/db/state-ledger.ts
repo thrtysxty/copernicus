@@ -308,6 +308,24 @@ export class StateLedger {
     `).all(projectId, bankId, limit) as any[];
   }
 
+  getMemoryWorkingSetForProject(projectId: string, limit: number, bankId?: string): any[] {
+    if (bankId) {
+      return this.db.prepare(`
+        SELECT * FROM memory_working_set
+        WHERE project_id = ? AND bank_id = ?
+        ORDER BY score DESC
+        LIMIT ?
+      `).all(projectId, bankId, limit) as any[];
+    } else {
+      return this.db.prepare(`
+        SELECT * FROM memory_working_set
+        WHERE project_id = ?
+        ORDER BY score DESC
+        LIMIT ?
+      `).all(projectId, limit) as any[];
+    }
+  }
+
   getAgentMemoryTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): any[] {
     return this.db.prepare(`
       SELECT * FROM agent_memory 
@@ -924,6 +942,13 @@ export class StateLedger {
     }
   }
 
+  insertAgentWorkLog(params: { id: string, projectId: string, bankId: string, eventType: string, meta: string, ts: number }): void {
+    this.db.prepare(`
+      INSERT INTO agent_work_log (id, project_id, bank_id, event_type, meta, ts)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(params.id, params.projectId, params.bankId, params.eventType, params.meta, params.ts);
+  }
+
   addProjectMemory(payload: { content: string, importance?: number, source: string }): void {
     const fingerprint = payload.content.trim().slice(0, 120)
     const existing = this.db.prepare(
@@ -1182,6 +1207,25 @@ export class StateLedger {
   deleteIntelDoc(id: string): boolean {
     this.db.prepare('DELETE FROM intelligence_documents WHERE id = ?').run(id);
     return true;
+  }
+
+  getFailedAgentWorkLog(projectId: string, storyId: string, failedAgentId: string): any[] {
+    // Schema doesn't have session_id or story_id directly on agent_work_log.
+    // They are stored in 'meta' or 'bank_id'.
+    // The requirement says: 
+    // SELECT * FROM agent_work_log WHERE session_id = :failedAgentId OR (story_id = :storyId AND event_type IN ('tool_call','file_edit','git_commit','error')) ORDER BY ts ASC
+    // We'll emulate session_id and story_id via bank_id and JSON in meta if needed.
+    // Assuming bank_id = storyId and session_id is in meta.
+    return this.db.prepare(`
+      SELECT * FROM agent_work_log
+      WHERE project_id = ?
+        AND (
+          json_extract(meta, '$.sessionId') = ?
+          OR json_extract(meta, '$.nodeId') = ?
+          OR (bank_id = ? AND event_type IN ('tool_call', 'file_edit', 'git_commit', 'error'))
+        )
+      ORDER BY ts ASC
+    `).all(projectId, failedAgentId, failedAgentId, storyId) as any[];
   }
 }
 

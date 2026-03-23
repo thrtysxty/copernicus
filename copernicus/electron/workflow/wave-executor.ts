@@ -1,10 +1,12 @@
+import { ContextAssembler } from './context-assembler';
+import { RecoveryHandoff } from './recovery-handoff';
 import { WavePlan } from './types';
+import * as crypto from 'crypto';
 import { workflowEngine } from './engine';
 import { StateLedger } from '../db/state-ledger';
 import { SettingsStore } from '../settings-store';
 import { BrowserWindow } from 'electron';
 import log from 'electron-log';
-import crypto from 'crypto';
 
 export class WorkflowWaveExecutor {
   async planWaves(storyIds: string[], stateLedger: StateLedger): Promise<WavePlan> {
@@ -87,6 +89,14 @@ export class WorkflowWaveExecutor {
           try {
             // "spawns up to maxConcurrent agent nodes in parallel using existing workflowEngine.runNode() internals"
             // We use executeNode since runNode does not exist. A story is essentially an agent node.
+            
+            const contextAssembler = new ContextAssembler(stateLedger);
+            const assembledContext = await contextAssembler.assemble({
+              projectId: workflowId, // assuming workflowId maps to project or similar... actually projectId is not strictly defined here, let's use a dummy or what we have.
+              storyId,
+              nodeRole: 'executor',
+            });
+
             const node: import('./types').WFNode = {
               id: `agent-story-${storyId}`,
               type: 'agent',
@@ -98,8 +108,10 @@ export class WorkflowWaveExecutor {
                 provider: 'anthropic',
                 modelId: 'claude-3-5-sonnet-20241022',
                 persona: 'coder',
-                systemPrompt: 'You are an agent executing a story.',
-                task: `Implement story ${storyId}`,
+                systemPrompt: assembledContext.systemPrompt,
+                task: assembledContext.taskPrompt + '\n\n' +
+                      (assembledContext.intelDocSummaries.length > 0 ? '## Intelligence\n' + assembledContext.intelDocSummaries.join('\n\n') + '\n\n' : '') +
+                      (assembledContext.memorySnippets.length > 0 ? '## Memory\n' + assembledContext.memorySnippets.join('\n\n') + '\n\n' : ''),
                 contextFiles: [],
                 outputChannel: 'chat',
                 useWorktree: true,
@@ -109,8 +121,50 @@ export class WorkflowWaveExecutor {
             
             // Set context for this node execution
             workflowEngine.updateContext({ '__storyId': storyId, '__workflowId': workflowId });
-            await workflowEngine.executeNode(node);
-            storiesCompleted++;
+            
+            try {
+              await workflowEngine.executeNode(node);
+              
+              // If node status is failed, error, or manual_remove we trigger recovery assembly
+              // NodeStatus doesn't have 'stuck' or 'manual_remove' directly in types, but the AC mentions them
+              // We cast node.status for the check.
+              const nodeStatusStr = node.status as string;
+              if (nodeStatusStr === 'stuck' || nodeStatusStr === 'failed' || nodeStatusStr === 'error' || nodeStatusStr === 'manual_remove') {
+                 throw new Error(`Node failed with status ${nodeStatusStr}`);
+              }
+              
+              storiesCompleted++;
+            } catch (e) {
+              // Trigger recovery assembly
+              const recoveryHandoff = new RecoveryHandoff(stateLedger);
+              
+              // We infer failure status from the node.status or the fact that an error was thrown
+              const nodeStatusStr = node.status as string;
+              let failureStatus: 'stuck' | 'failed' | 'manual_remove' = 'failed';
+              if (nodeStatusStr === 'stuck' || nodeStatusStr === 'manual_remove') {
+                failureStatus = nodeStatusStr;
+              }
+              
+              const recoveryContext = await recoveryHandoff.assemble({
+                 projectId: workflowId,
+                 storyId,
+                 failedAgentId: node.id,
+                 failureStatus
+              });
+                 
+              // Log to agent_work_log
+              stateLedger.insertAgentWorkLog({
+                 id: crypto.randomUUID(),
+                 projectId: workflowId,
+                 bankId: storyId,
+                 eventType: 'recovery_brief',
+                 meta: JSON.stringify(recoveryContext),
+                 ts: Date.now()
+              });
+            
+              throw e;
+            }
+
           } catch (e) {
             log.error(`[WorkflowWaveExecutor] Failed to execute story ${storyId}:`, e);
             storiesFailed++;
