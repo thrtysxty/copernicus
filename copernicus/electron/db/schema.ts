@@ -332,5 +332,33 @@ export const SCHEMA = {
       importance * (1.0 / (1.0 + (unixepoch('now') - ts) / 3600.0 * 0.1)) AS score
     FROM agent_memory
     ORDER BY score DESC;
+  `,
+  retro_reports: `
+    CREATE TABLE IF NOT EXISTS retro_reports (
+      id               TEXT PRIMARY KEY,   -- retro_<ulid>
+      project_id       TEXT NOT NULL,
+      scope            TEXT NOT NULL,      -- 'project' | bank_id
+      status           TEXT NOT NULL,      -- 'draft' | 'pending_review' | 'approved' | 'archived'
+      ts_generated     INTEGER NOT NULL,
+      ts_approved      INTEGER,
+      sessions_range   TEXT NOT NULL,      -- JSON: { from_ts, to_ts, session_count }
+      inflection_ids   TEXT               -- JSON array of prior retro_report IDs
+    );
+    CREATE INDEX IF NOT EXISTS idx_retro_reports_project ON retro_reports(project_id, ts_generated DESC);
+  `,
+  retro_items: `
+    CREATE TABLE IF NOT EXISTS retro_items (
+      id                    TEXT PRIMARY KEY,  -- ritem_<ulid>
+      retro_id              TEXT NOT NULL REFERENCES retro_reports(id),
+      item_type             TEXT NOT NULL,     -- 'memory_fact' | 'file_patch' | 'story_queue' | 'convention'
+      content               TEXT NOT NULL,
+      target                TEXT,
+      importance            INTEGER,
+      supersedes_memory_id  TEXT,
+      status                TEXT NOT NULL DEFAULT 'pending',  -- 'pending' | 'approved' | 'rejected' | 'edited'
+      edited_content        TEXT,
+      ts                    INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_retro_items_retro ON retro_items(retro_id);
   `
 };

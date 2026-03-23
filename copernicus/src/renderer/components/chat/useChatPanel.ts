@@ -7,6 +7,7 @@ import { useLayoutStore } from '../../store/layout'
 import { useUIBuilderStore } from '../../store/uiBuilderStore'
 import { matchKnowledge } from './CopernicusKnowledgeBase'
 import { unwrapIpc, IpcResult } from '../../types/ipc'
+import { useMemoryRecall } from '../../hooks/useMemoryRecall'
 
 const ipcRenderer = window.ipcRenderer
 
@@ -99,10 +100,12 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   const streamingIdRef = useRef<string | null>(null)
   const isFirstCallAfterSwitch = useRef(false)
-  const memoryInjectedRef = useRef(false)
+  const isFirstSendRef = useRef(true)
   const guideScrollRef = useRef<HTMLDivElement>(null)
 
   const isFlipped = flippedPanes.includes('chat')
+  const activeProjectId = rootPath ?? 'global'
+  const { memories } = useMemoryRecall(activeProjectId, 'chat', 5)
 
   useEffect(() => {
     setGuideMessages([]); setShowClaudeFallback(false)
@@ -186,17 +189,6 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   useEffect(() => {
     invoke<any>('devtime:status').then(res => { setIsRepoActive(!!(res && res.session)) })
-  }, [invoke])
-
-  useEffect(() => {
-    if (memoryInjectedRef.current) return
-    memoryInjectedRef.current = true
-    invoke<IpcResult<any[]>>('db:search-memory', 5).then((res) => {
-      if (res?.ok && res.data && res.data.length > 0) {
-        const memories = res.data.map((m: { content: string }) => m.content).join('\n')
-        setMessages([{ id: `msg-${Date.now()}`, role: 'assistant', content: `[Project Memory]\n${memories}\n\n---\n\nMemory injected silently.` }])
-      }
-    }).catch(() => {})
   }, [invoke])
 
   useEffect(() => {
@@ -299,8 +291,17 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     if (openFilePath) { try { const diagRes = await invoke<any>('lsp:get-diagnostics', openFilePath); const diags = unwrapIpc<any[]>(diagRes) ?? []; if (diags.length > 0) enrichedContent = `[LSP diagnostics for ${openFilePath.split(/[/\\]/).pop()}]\n${diags.slice(0, 10).map((d: any) => `[${d.severity === 1 ? 'ERROR' : 'WARN'}] L${(d.range?.start?.line ?? 0) + 1}: ${d.message}`).join('\n')}\n\n---\n\n${enrichedContent}` } catch {} }
     setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: 'assistant', content: '' }])
     
+    let systemPrompt: string | undefined = undefined
+    if (isFirstSendRef.current) {
+      if (memories && memories.length > 0) {
+        systemPrompt = `[SESSION MEMORY]\n${memories.map(m => m.content).join('\n')}`
+      }
+      isFirstSendRef.current = false
+    }
+
     invoke('chat:send', { 
       sessionId, 
+      systemPrompt,
       messages: [
         ...messages.filter(m => m.role !== 'copernicus').map(m => ({ 
           role: m.role, 

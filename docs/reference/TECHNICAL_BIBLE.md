@@ -786,6 +786,10 @@ behavior should be. No vague rejections.
 | `github:user` | main.ts | GitHub user info |
 | `jules:dispatch-session` | main.ts | Dispatches story to Jules |
 | `jules:session-status` | main.ts | Jules session status |
+
+### 2.6 MCP Server Registry
+COPERNICUS configures standard MCP servers dynamically via settings, but also includes native integration for specific providers like Google Stitch:
+- **Google Stitch MCP**: Registered in `stitch-handlers.ts`. Provides design-to-code extraction (`stitch:extract-design`), screenshots (`stitch:screenshot`), and design DNA tokens (`stitch:design-dna`). Managed via the Settings -> MCP Servers UI tile.
 | `security:get-env-allowlist` | main.ts | Gets env allowlist |
 | `security:add-env-var` | main.ts | Adds env var |
 | `security:remove-env-var` | main.ts | Removes env var |

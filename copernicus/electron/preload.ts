@@ -7,6 +7,8 @@ const SEND_CHANNELS = new Set([
   'auth:resolve-openai-config',
   // Models
   'models:list', 'models:active', 'models:set-active', 'models:list-ollama', 'models:set-default',
+  'retro:list', 'retro:get', 'retro:create', 'retro:update-item', 'retro:commit', 'retro:push-ready',
+
   // LLM Chat
   'chat:send', 'chat:confirm-model-switch',
   // File System
@@ -151,6 +153,8 @@ const LISTEN_CHANNELS = new Set([
   'agent:input', 'agent:message', 'agent:error', 'agent:code-stream',
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',
   'layout:toggle-ui-builder',
+  'retro:ready',
+
   'security:git-push-request',
   'splash-status',
   'app:critical-error',
