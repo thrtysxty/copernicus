@@ -385,6 +385,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | COMPLETE | P0 — Dev Tooling |
 | #450 | Add Tavily Mcp As Live Web Intelligence Tool | COMPLETE | P0 — Dev Tooling |
 | #494 | Work Log Hooks Posttooluse And File Edit Events | COMPLETE | P1 |
+| #520 | Stitch Mcp Api Key Auth Support | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
