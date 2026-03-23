@@ -120,6 +120,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #491 | Memoryrecall Ipc And Memory Injection Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #492 | Delta Summary On Model Switch | APPROVED FOR IMPLEMENTATION | P1 |
 | #493 | Auto-Extraction Micro-Critic On Chat Done | APPROVED FOR IMPLEMENTATION | P1 |
+| #494 | Work Log Hooks Posttooluse And File Edit Events | APPROVED FOR IMPLEMENTATION | P1 |
 | #495 | Workflowengine Agent Memory Integration | APPROVED FOR IMPLEMENTATION | P1 |
 | #496 | Jsonl Export And Lsp Index For Agent Memory | APPROVED FOR IMPLEMENTATION | P2 |
 | #497 | Memorybrowser Upgrade With Bank Id Scoping | APPROVED FOR IMPLEMENTATION | P2 |
