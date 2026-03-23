@@ -139,6 +139,7 @@ orchestrator:<workflowId>     — orchestrator-level records
 | `context_handoff` | Orchestrator | `from_bank_id`, `to_bank_id`, `summary` |
 | `model_switch` | Chat agent | `from_model`, `to_model`, `panel_id` |
 | `session_start` | Any agent | `model`, `scope` |
+| `skill_pattern` | Retro engine, auto-extractor | `skill_name`, `invocation_count`, `generalised_from: memory_id[]`, `description` |
 
 ---
 
@@ -226,25 +227,25 @@ This requires the LSP manager to index JSONL files in the watched file set and h
 
 | Story | Title | Depends On |
 |---|---|---|
-| 470 | `agent_memory` schema + `memory_working_set` view + migration from `project_memory` | — |
-| 471 | `SystemPromptBuilder` + provider adapters — Layer 1 stable system prompt | — |
-| 472 | `MemoryRecall` + session-start injection fix — Layer 2 SQLite view recall | 470 |
-| 473 | Layer 3 delta summary on model switch — replace `[CONTEXT HANDOFF]` injection | 472 |
-| 474 | Auto-extraction on `chat:done` — heuristic scorer, importance 3 auto-save | 470 |
-| 475 | `agent_work_log` table + capture hooks — file_edit, tool_call, git_commit, agent_spawn | 470 |
-| 476 | WorkflowEngine + orchestrator memory writes — bank_id per node, step events | 475 |
-| 477 | JSONL export cycle + JSON Schema + LSP file-watch registration | 470 |
-| 478 | MemoryBrowser upgrade — timeline, cross-agent search, click-to-file, source history | 477 |
-| 479 | Layer 4 tool-use recall — `recall_memory()` tool for workflow nodes | 472 |
+| 489 | `agent_memory` schema + `memory_working_set` view + migration from `project_memory` | — |
+| 490 | `SystemPromptBuilder` + provider adapters — Layer 1 stable system prompt | — |
+| 491 | `MemoryRecall` + session-start injection fix — Layer 2 SQLite view recall | 489 |
+| 492 | Layer 3 delta summary on model switch — replace `[CONTEXT HANDOFF]` injection | 491 |
+| 493 | Auto-extraction on `chat:done` — heuristic scorer, importance 3 auto-save | 489 |
+| 494 | `agent_work_log` table + capture hooks — file_edit, tool_call, git_commit, agent_spawn | 489 |
+| 495 | WorkflowEngine + orchestrator memory writes — bank_id per node, step events | 494 |
+| 496 | JSONL export cycle + JSON Schema + LSP file-watch registration | 489 |
+| 497 | MemoryBrowser upgrade — timeline, cross-agent search, click-to-file, source history | 496 |
+| 498 | Layer 4 tool-use recall — `recall_memory()` tool for workflow nodes | 491 |
 
 **Dependency order:**
-- 470 and 471 are independent — run in parallel
-- 472, 474, 475, 477 all gate on 470
-- 473 gates on 472
-- 476 gates on 475
-- 478 gates on 477
-- 479 gates on 472
-- 474, 475, 477 can run in parallel once 470 merges
+- 489 and 490 are independent — run in parallel
+- 491, 493, 494, 496 all gate on 489
+- 492 gates on 491
+- 495 gates on 494
+- 497 gates on 496
+- 498 gates on 491
+- 493, 494, 496 can run in parallel once 489 merges
 
 ---
 

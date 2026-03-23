@@ -122,6 +122,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
+| #488 | Split Claude Md Into Scoped Rules Files | APPROVED FOR IMPLEMENTATION | P1 |
+| #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
+| #519 | Agent Role Taxonomy Node Types In Workflow Engine | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -393,5 +396,34 @@ This file is auto-generated. Run `make backlog` to update.
 | #467 | Hindsight R620 Deployment | DRAFT | P1 — Infrastructure |
 | #468 | Memory Bank Wiring | DRAFT | P1 — Feature |
 | #469 | Reflect Session Injection | DRAFT | P1 — Feature |
+| #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | DRAFT | P1 |
+| #491 | Memoryrecall Ipc And Memory Injection Fix | DRAFT | P1 |
+| #492 | Delta Summary On Model Switch | DRAFT | P1 |
+| #493 | Auto-Extraction Micro-Critic On Chat Done | DRAFT | P1 |
+| #494 | Work Log Hooks Posttooluse And File Edit Events | DRAFT | P1 |
+| #495 | Workflowengine Agent Memory Integration | DRAFT | P1 |
+| #496 | Jsonl Export And Lsp Index For Agent Memory | DRAFT | P1 |
+| #497 | Memorybrowser Upgrade With Bank Id Scoping | DRAFT | P1 |
+| #498 | Tool-Use Recall Parallel Search Agents | DRAFT | P1 |
+| #499 | Reporter Retro Reports And Retro Items Schema Ipc | DRAFT | P1 |
+| #500 | Retro Synthesis Engine With Compounding Inflection Points | DRAFT | P1 |
+| #501 | Retro Card Type In Blueprint Kanban Column | DRAFT | P1 |
+| #502 | Retro Review Panel Per-Item Approve Reject Edit | DRAFT | P1 |
+| #503 | Retro Approval Commit Atomic Memory Writes And File Patches | DRAFT | P1 |
+| #504 | Historical Retro Archive In Reporter Retrospectives Tab | DRAFT | P1 |
+| #505 | Retro Trigger Session Count Threshold And Manual | DRAFT | P1 |
+| #506 | Sprint Gate Setting Block In Progress On Pending Retro | DRAFT | P1 |
+| #507 | Intelligence Documents Schema And Crud Ipc Handlers | DRAFT | P1 |
+| #508 | Provider Sync Engine Doctype Provider Path And Format Transform | DRAFT | P1 |
+| #509 | Intelligence Manager Ui Document List Editor Sync Status | DRAFT | P1 |
+| #510 | Stack Detector Auto-Suggest Intelligence Documents | DRAFT | P1 |
+| #511 | Epic 014 Bridge Skill Scaffold Through Intelligence Layer | DRAFT | P1 |
+| #512 | Path Scoping Ui Frontmatter Preview Per Provider | DRAFT | P1 |
+| #513 | Claude.Md Length Audit 200 Line Flag And Split Action | DRAFT | P1 |
+| #514 | Gsd Wave-Based Parallel Execution In Workflow Engine | DRAFT | P1 |
+| #515 | Plan-Checker Node Verification Loop Before Dispatch | DRAFT | P1 |
+| #516 | Context Assembler Node Sqlite-Backed Fresh Context Per Agent | DRAFT | P1 |
+| #517 | Recovery Handoff Context From Agent Work Log | DRAFT | P1 |
+| #518 | Situational Handoff Type Detection And Routing | DRAFT | P1 |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

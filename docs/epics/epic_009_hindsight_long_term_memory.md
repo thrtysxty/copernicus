@@ -1,8 +1,16 @@
 # Epic 009: Hindsight Long-Term Memory Engine
 
-**Status:** ACTIVE
-**Priority:** P1
+**Status:** SUPERSEDED
+**Priority:** P3 — Post-v1, high-volume deployments only
 **Theme:** Sovereign Intelligence & Cross-Session Learning
+
+> **Superseded by Epic 016 (Universal Agent Memory) + Epic 017 (Retrospective Engine).**
+> Hindsight's `reflect` operation is fully covered by Story 473 (delta summary) and Epic 017's
+> cross-session synthesis. Hindsight's vector retrieval backend has been benchmarked below
+> ASMR's agentic retrieval approach (~85% vs ~99% on LongMemEval_s).
+>
+> Remaining value: PostgreSQL durability for post-v1 high-volume deployments (HPH prop entity
+> recognition at scale). Revisit after Copernicus v1 ships and HPH volume warrants it.
 
 ## Narrative
 The hand-rolled `project_memory` and `context_snapshots` system (Stories 157–158) gives Copernicus basic session continuity — but it's a flat importance×recency lookup with no ability to synthesize patterns across sessions. Hindsight (vectorize-io/hindsight) is a self-hosted, benchmark-validated long-term memory engine that provides exactly what the next tier of agentic intelligence requires: structured retain/recall/reflect operations scoped per agent, per panel, and per project. Swapping the memory layer post-launch upgrades Copernicus agents from "remembers facts" to "builds mental models."
