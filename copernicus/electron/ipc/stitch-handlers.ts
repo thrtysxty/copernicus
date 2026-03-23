@@ -1,9 +1,17 @@
 import { ipcMain } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
 import { spawnSync } from 'node:child_process'
+import { authManager } from '../auth-manager'
+
+function buildStitchEnv(projectId: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env, GOOGLE_CLOUD_PROJECT: projectId }
+  const apiKey = authManager.getApiKey('stitch')
+  if (apiKey) env.STITCH_API_KEY = apiKey
+  return env
+}
 
 function runStitchCmd(projectId: string, args: string[]): any {
-  const env = { ...process.env, GOOGLE_CLOUD_PROJECT: projectId }
+  const env = buildStitchEnv(projectId)
   const isWin = process.platform === 'win32'
   const cmd = isWin ? 'npx.cmd' : 'npx'
   const finalArgs = ['stitch-mcp', ...args]
@@ -24,7 +32,7 @@ export function registerStitchHandlers() {
   ipcMain.handle('stitch:ping', (_e, projectId: string) =>
     handleIpc(async () => {
       try {
-        const env = { ...process.env, GOOGLE_CLOUD_PROJECT: projectId }
+        const env = buildStitchEnv(projectId)
         const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx'
         const res = spawnSync(cmd, ['stitch-mcp', 'ping'], { env, encoding: 'utf-8', shell: false })
 

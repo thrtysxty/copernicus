@@ -20,6 +20,7 @@ export const MCPSection: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
 
   const [stitchProjectId, setStitchProjectId] = useState('')
+  const [stitchApiKey, setStitchApiKey] = useState('')
   const [stitchStatus, setStitchStatus] = useState<'none' | 'success' | 'auth_failed' | 'error'>('none')
   const [isStitchTesting, setIsStitchTesting] = useState(false)
 
@@ -30,6 +31,8 @@ export const MCPSection: React.FC = () => {
 
       setMcpServers((result?.mcp as any)?.servers ?? [])
       setStitchProjectId((result?.mcp as any)?.stitchProjectId ?? '')
+      const storedKey = await invoke<string | null>('auth:get-api-key', 'stitch')
+      setStitchApiKey(storedKey ?? '')
 
       
       const statuses = await invoke<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>('mcp:get-status')
@@ -68,6 +71,13 @@ export const MCPSection: React.FC = () => {
     setStitchProjectId(id)
     const current = await invoke<SettingsLoadResponse>('settings:load')
     await invoke('settings:save', { ...current, mcp: { ...(current.mcp as any), stitchProjectId: id } })
+  }
+
+  const saveStitchApiKey = async (key: string) => {
+    setStitchApiKey(key)
+    if (key.trim()) {
+      await invoke('auth:store-api-key', 'stitch', key.trim())
+    }
   }
 
   const testStitchConnection = async () => {
@@ -208,14 +218,26 @@ export const MCPSection: React.FC = () => {
               stitchStatus === 'error' ? 'Project not set / API not enabled' :
               'Not tested'
             } />
-            <div className="flex-1">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Google Cloud Project ID</label>
-              <input
-                placeholder="e.g. my-design-project-123"
-                value={stitchProjectId}
-                onChange={e => saveStitchProject(e.target.value)}
-                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
-              />
+            <div className="flex-1 space-y-3">
+              <div>
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Google Cloud Project ID</label>
+                <input
+                  placeholder="e.g. my-design-project-123"
+                  value={stitchProjectId}
+                  onChange={e => saveStitchProject(e.target.value)}
+                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Stitch API Key <span className="normal-case text-zinc-600">(optional — skips gcloud auth)</span></label>
+                <input
+                  type="password"
+                  placeholder="Paste key from stitch.withgoogle.com → Settings"
+                  value={stitchApiKey}
+                  onChange={e => saveStitchApiKey(e.target.value)}
+                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
+                />
+              </div>
             </div>
             <div className="mt-4">
               <button
