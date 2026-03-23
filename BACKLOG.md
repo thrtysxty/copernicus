@@ -124,6 +124,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
 | #488 | Split Claude Md Into Scoped Rules Files | APPROVED FOR IMPLEMENTATION | P1 |
 | #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
+| #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | APPROVED FOR IMPLEMENTATION | P1 |
+| #491 | Memoryrecall Ipc And Memory Injection Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #519 | Agent Role Taxonomy Node Types In Workflow Engine | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -396,8 +398,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #467 | Hindsight R620 Deployment | DRAFT | P1 — Infrastructure |
 | #468 | Memory Bank Wiring | DRAFT | P1 — Feature |
 | #469 | Reflect Session Injection | DRAFT | P1 — Feature |
-| #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | DRAFT | P1 |
-| #491 | Memoryrecall Ipc And Memory Injection Fix | DRAFT | P1 |
 | #492 | Delta Summary On Model Switch | DRAFT | P1 |
 | #493 | Auto-Extraction Micro-Critic On Chat Done | DRAFT | P1 |
 | #494 | Work Log Hooks Posttooluse And File Edit Events | DRAFT | P1 |
