@@ -528,7 +528,30 @@ export class WorkflowEngine {
     switch (d.variant) {
       case 'shell-command': {
         if (!d.command) throw new Error('shell-command: command is required');
-        return await this.runShell(d.command);
+        const rootPath = fsManager.getRootPath();
+        const projectId = rootPath ? (stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
+        try {
+          const result = await this.runShell(d.command);
+          const { memoryService } = await import('../memory/memoryService');
+          memoryService.logWork({
+            projectId,
+            bankId: `workflow:node:${node.id}`,
+            eventType: 'tool_call',
+            meta: { tool: 'shell-command', command: d.command, exit_code: 0 }
+          }).catch(console.warn);
+          return result;
+        } catch (err: unknown) {
+          const { memoryService } = await import('../memory/memoryService');
+          const exitCodeStr = this.context.get('__lastExitCode');
+          const exitCode = exitCodeStr ? parseInt(exitCodeStr, 10) : 1;
+          memoryService.logWork({
+            projectId,
+            bankId: `workflow:node:${node.id}`,
+            eventType: 'tool_call',
+            meta: { tool: 'shell-command', command: d.command, exit_code: exitCode }
+          }).catch(console.warn);
+          throw err;
+        }
       }
       case 'makefile-run': {
         const target = d.command ?? 'test';

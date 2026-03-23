@@ -6,6 +6,7 @@ import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { assertSafePath } from '../utils/path-guard'
 import { parseMakefile } from '../utils/makefile-parser'
+import { memoryService } from '../memory/memoryService'
 
 import { IpcHandlerDeps } from './deps'
 
@@ -146,6 +147,17 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     // Auto-run linting based on file type
     const { runDiagnosticsOnFile } = await import('./diag-handlers')
     runDiagnosticsOnFile(filePath, fsManager.getRootPath()).catch(log.error)
+
+    const rootPath = fsManager.getRootPath();
+    const projectId = rootPath ? (stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
+    memoryService.logWork({
+      projectId,
+      bankId: 'orchestrator',
+      eventType: 'file_edit',
+      meta: { file: filePath, description: 'file saved via IPC' }
+    }).catch((err: unknown) => {
+      log.warn?.('Failed to log memory work for file_edit:', err);
+    });
 
     return true
   }))

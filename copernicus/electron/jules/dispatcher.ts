@@ -67,6 +67,10 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
     }
     stateLedger.upsertJulesSession(record)
 
+    // Call createSession from JulesManager to trigger the agent_spawn hook
+    const { julesManager } = await import('./jules-manager')
+    julesManager.createSession(story.id, sessionId, prompt)
+
     return { ok: true, sessionId }
   } catch (err: unknown) {
     return { ok: false, error: (err as Error).message }

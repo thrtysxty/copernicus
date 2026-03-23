@@ -4,6 +4,8 @@ import { promisify } from 'node:util'
 const execAsync = promisify(exec)
 import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
+import { memoryService } from '../memory/memoryService'
+import { stateLedger } from '../db/state-ledger'
 
 export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   const cwd = () => deps.settingsStore.get<string>('workspace', process.cwd())
@@ -28,6 +30,25 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('git:commit', (_e, { message }: { message: string }) => handleIpc('git:commit', [message], async () => {
     await execAsync(`git commit -m ${JSON.stringify(message)}`, { cwd: cwd() })
+    
+    // Log work using memoryService as a fire-and-forget hook
+    const rootPath = cwd();
+    const projectId = rootPath ? (stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
+    
+    Promise.all([
+      execAsync('git rev-parse HEAD', { cwd: rootPath }),
+      execAsync('git diff-tree --no-commit-id --name-only -r HEAD', { cwd: rootPath })
+    ]).then(([shaRes, diffRes]) => {
+      const commitSha = shaRes.stdout.trim();
+      const changedFiles = diffRes.stdout.trim().split('\n').filter(Boolean);
+      return memoryService.logWork({
+        projectId,
+        bankId: 'orchestrator',
+        eventType: 'git_commit',
+        meta: { sha: commitSha, message, files: changedFiles }
+      });
+    }).catch(console.warn);
+
     return { ok: true }
   }))
 
