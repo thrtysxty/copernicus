@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { WFNode } from '../../../../electron/workflow/types';
+import { WFNode, WFNodeRole } from '../../../../electron/workflow/types';
 import { AgentNodeData } from '../../../../electron/workflow/types';
 import { ExtensionProvider } from '../../store/extensionStore';
+import { ROLE_CONFIGS } from '../../../../electron/workflow/roles';
 import log from '../../utils/logger'
 import { unwrapIpc } from '../../types/ipc';
 import { useExtensionStore } from '../../store/extensionStore'
@@ -33,6 +34,9 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
 
   const updateData = (patch: Record<string, any>) =>
     onChange({ ...node, data: { ...node.data, ...patch } } as WFNode);
+
+  const updateRole = (role: WFNodeRole | undefined) =>
+    onChange({ ...node, role });
 
   const handleProviderChange = async (provider: string) => {
     updateData({ provider, modelId: '' });
@@ -96,7 +100,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
           />
         </Field>
 
-        {node.type === 'agent' && <AgentFields node={node} modelsForProvider={modelsForProvider} authStatus={authStatus} onUpdate={updateData} onProviderChange={handleProviderChange} extensionProviders={extensionProviders} />}
+        {node.type === 'agent' && <AgentFields node={node} modelsForProvider={modelsForProvider} authStatus={authStatus} onUpdate={updateData} onUpdateRole={updateRole} onProviderChange={handleProviderChange} extensionProviders={extensionProviders} />}
         {node.type === 'tool' && <ToolFields node={node} onUpdate={updateData} />}
         {node.type === 'trigger' && <TriggerFields node={node} stories={stories} onUpdate={updateData} onStoryChange={handleStoryChange} />}
         {node.type === 'decision' && <DecisionFields node={node} onUpdate={updateData} />}
@@ -207,10 +211,36 @@ function DebouncedTextarea({ initialValue, onCommit, className, placeholder, row
   );
 }
 
-function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onProviderChange, extensionProviders }: any) {
+function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onUpdateRole, onProviderChange, extensionProviders }: any) {
   const data = node.data;
+  const currentRole = node.role as WFNodeRole | undefined;
+  const roleConfig = currentRole ? ROLE_CONFIGS[currentRole] : null;
+
   return (
     <>
+      <Field label="Role">
+        <select
+          className="inspector-input"
+          value={currentRole ?? ''}
+          onChange={e => {
+            const val = e.target.value;
+            onUpdateRole(val ? (val as WFNodeRole) : undefined);
+          }}
+        >
+          <option value="">— select role —</option>
+          {Object.entries(ROLE_CONFIGS).map(([r, config]) => (
+            <option key={r} value={r}>
+              {r} — {config.description}
+            </option>
+          ))}
+        </select>
+        {roleConfig && (
+          <div className="mt-1 flex gap-2 text-[9px] text-zinc-500 bg-zinc-900 border border-zinc-800 p-1.5 rounded">
+            <span title="Model Tier">🧠 {roleConfig.modelTier}</span>
+            <span title="Tool Policy">🛠️ {roleConfig.toolPolicy}</span>
+          </div>
+        )}
+      </Field>
       <Field label="Persona Label">
         <DebouncedInput className="inspector-input" initialValue={data.persona} onCommit={(v: string) => onUpdate({ persona: v })} />
       </Field>

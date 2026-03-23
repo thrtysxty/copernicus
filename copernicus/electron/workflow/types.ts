@@ -4,6 +4,21 @@ export type NodeType = 'agent' | 'tool' | 'decision' | 'trigger' | 'flow' | 'ver
 
 export type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'error' | 'skipped' | 'paused';
 
+export type WFNodeRole =
+  | 'researcher'
+  | 'planner'
+  | 'checker'
+  | 'executor'
+  | 'verifier'
+  | 'auditor';
+
+export interface WFNodeRoleConfig {
+  role: WFNodeRole;
+  modelTier: 'fast' | 'thinker' | 'coder';
+  toolPolicy: 'all' | 'read-only' | 'read-no-exec' | 'read-bash-no-write';
+  description: string;
+}
+
 export interface AgentNodeData {
   variant: 'agent';
   provider: ProviderType;
@@ -91,6 +106,7 @@ export interface WFNode {
   y: number;
   data: WorkflowNodeData; // For storing config like agent name, command, etc.
   status?: NodeStatus;
+  role?: WFNodeRole;
 }
 
 export interface WFEdge {
