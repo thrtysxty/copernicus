@@ -115,6 +115,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
 | #460 | Stack Detector | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #463 | Skill Scaffold Generator | APPROVED FOR IMPLEMENTATION | P1 — Feature |
+| #465 | Skill Description Auditor | APPROVED FOR IMPLEMENTATION | P2 — Feature |
+| #466 | Claude Plugin Data Migration | APPROVED FOR IMPLEMENTATION | P2 — Maintenance |
 | #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
 | #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | APPROVED FOR IMPLEMENTATION | P1 |
 | #491 | Memoryrecall Ipc And Memory Injection Fix | APPROVED FOR IMPLEMENTATION | P1 |
@@ -421,8 +423,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #461 | Skill Template Library | DRAFT | P1 — Feature |
 | #462 | Skill Onboarding Card | DRAFT | P1 — Feature |
 | #464 | Scaffold Skills Slash Command | DRAFT | P1 — Feature |
-| #465 | Skill Description Auditor | DRAFT | P2 — Feature |
-| #466 | Claude Plugin Data Migration | DRAFT | P2 — Maintenance |
 | #467 | Hindsight R620 Deployment | DRAFT | P1 — Infrastructure |
 | #468 | Memory Bank Wiring | DRAFT | P1 — Feature |
 | #469 | Reflect Session Injection | DRAFT | P1 — Feature |
