@@ -70,6 +70,7 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   spotlightLane: string | null
   activeStoryId: string | null
   drawerStoryId: string | null
+  activeRetroId: string | null
   phosphorColor: PhosphorColor
   reviewEnabled: boolean
   columns: KanbanColumn[]
@@ -128,6 +129,7 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   setSpotlightLane: (id: string | null) => void
   setActiveStoryId: (id: string | null) => void
   setDrawerStory: (id: string | null) => void
+  setActiveRetroId: (id: string | null) => void
 
   setPhosphorColor: (color: PhosphorColor) => void
   setReviewEnabled: (enabled: boolean) => void
@@ -239,6 +241,7 @@ stitchTokens: null,
       spotlightLane: null,
       activeStoryId: null,
       drawerStoryId: null,
+      activeRetroId: null,
       phosphorColor: 'green',
       reviewEnabled: false,
       columns: DEFAULT_COLUMNS,
@@ -309,6 +312,8 @@ stitchTokens: null,
       setActiveStoryId: (id) => set({ activeStoryId: id }),
 
       setDrawerStory: (id) => set({ drawerStoryId: id }),
+
+      setActiveRetroId: (id) => set({ activeRetroId: id }),
 
 
 
