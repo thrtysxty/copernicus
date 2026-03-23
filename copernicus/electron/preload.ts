@@ -7,7 +7,7 @@ const SEND_CHANNELS = new Set([
   'auth:resolve-openai-config',
   // Models
   'models:list', 'models:active', 'models:set-active', 'models:list-ollama', 'models:set-default',
-  'retro:list', 'retro:get', 'retro:create', 'retro:update-item', 'retro:commit', 'retro:push-ready', 'retro:generate', 'retro:gate-status',
+  'retro:list', 'retro:get', 'retro:create', 'retro:update-item', 'retro:commit', 'retro:push-ready', 'retro:generate', 'retro:gate-status', 'retro:trigger-manual',
   'intel:list', 'intel:get', 'intel:create', 'intel:update', 'intel:delete',
 
   // LLM Chat
@@ -86,7 +86,7 @@ const SEND_CHANNELS = new Set([
   'ledger:stats-by-role-session', 'ledger:stats-by-role-alltime',
   // Workflow
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status', 'workflow:plan-waves', 'workflow:waves-status',
-  'workflow:assemble-context', 'workflow:recovery-brief',
+  'workflow:assemble-context', 'workflow:recovery-brief', 'workflow:classify-handoff',
   'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind', 'workflow:get-context', 'workflow:set-context', 'workflow:resume-node',
   'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
   // Review gate
@@ -176,7 +176,7 @@ const LISTEN_CHANNELS = new Set([
   // Command Center (Story 184)
   'command:telemetry-update',
   // Workflow engine state push (Story 186)
-  'workflow:status', 'workflow:status-update', 'workflow:step-start', 'workflow:step-end', 'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas', 'workflow:wave-complete',
+  'workflow:status', 'workflow:status-update', 'workflow:step-start', 'workflow:step-end', 'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas', 'workflow:wave-complete', 'workflow:plan-check-result', 'workflow:plan-check-escalated', 'workflow:handoff-complete',
   'review:session-complete',
   'layout:goto-line',
   'diagnostics:tsc-complete', 'diagnostics:tsc-progress',
@@ -189,6 +189,7 @@ const LISTEN_CHANNELS = new Set([
   'worktree:completed', 'worktree:merged',
   // DAP
   'debug:event',
+  'intel:sync-complete',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

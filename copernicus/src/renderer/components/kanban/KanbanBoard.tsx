@@ -12,6 +12,7 @@ import { StoryInspector } from '../planning/StoryInspector'
 import { stripStoryPrefix } from '../../utils/storyTitle'
 import { TEMPLATE_MANIFEST } from '../../templates'
 import { RetroCard } from './RetroCard'
+import { RetroReviewPanel } from './RetroReviewPanel'
 
 interface Story {
   id: string
@@ -458,6 +459,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
       {/* Main Board Area */}
       <div className="flex-1 flex overflow-x-auto gap-3 p-3 select-none scrollbar-thin scrollbar-thumb-copernicus-steel">
+        {useLayoutStore(s => s.activeRetroId) && (
+          <RetroReviewPanel 
+            retroId={useLayoutStore(s => s.activeRetroId)!} 
+            onClose={() => setActiveRetroId(null)} 
+          />
+        )}
         {(columns || []).map(col => {
           const colStories = (stories || []).filter(s => s.status === col.status && s.type !== 'Epic')
             .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 4) - (PRIORITY_ORDER[b.priority] ?? 4))
@@ -546,7 +553,6 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                         pendingCount={additionalPendingCount}
                         onReview={(id) => {
                           setActiveRetroId(id)
-                          // TODO: Switch view to retro review (Story 502)
                         }}
                       />
                     )}

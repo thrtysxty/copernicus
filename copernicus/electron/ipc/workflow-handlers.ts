@@ -5,6 +5,7 @@ import { WORKFLOW_TEMPLATES } from '../workflow/templates'
 import { workflowWaveExecutor } from '../workflow/wave-executor'
 import { ContextAssembler } from '../workflow/context-assembler'
 import { RecoveryHandoff } from '../workflow/recovery-handoff'
+import { HandoffRouter, AgentTransition } from '../workflow/handoff-router'
 
 import { IpcHandlerDeps } from './deps'
 
@@ -85,6 +86,13 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('workflow:waves-status', (_e, { workflowId }: { workflowId: string }) => 
     handleIpc('workflow:waves-status', [{ workflowId }], () => deps.stateLedger.getWorkflowWaves(workflowId))
+  )
+
+  ipcMain.handle('workflow:classify-handoff', (_e, transition: AgentTransition) => 
+    handleIpc('workflow:classify-handoff', [transition], () => {
+      const router = new HandoffRouter(deps.stateLedger)
+      return router.classify(transition)
+    })
   )
 
   ipcMain.handle('workflow:status', () => handleIpc('workflow:status', [], () => ({

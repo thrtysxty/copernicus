@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import { stateLedger } from '../db/state-ledger';
 import { MemoryRow, WorkLogRow } from '../../src/renderer/types/memory';
+import { retroTrigger } from '../retro/retro-trigger';
 
 export interface AddMemoryParams {
   projectId: string;
@@ -41,6 +42,12 @@ export class MemoryService {
       meta: metaStr,
       ts
     });
+
+    if (params.eventType === 'session_start') {
+      retroTrigger.checkAndTrigger(params.projectId).catch(err => {
+        console.error('Failed to check and trigger retro:', err);
+      });
+    }
 
     return id;
   }

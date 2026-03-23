@@ -2,6 +2,7 @@ import { ipcMain, BrowserWindow } from 'electron'
 import { stateLedger } from '../db/state-ledger'
 import { handleIpc } from '../utils/handle-ipc'
 import { retroSynthesizer } from '../retro/retro-synthesizer'
+import { retroTrigger } from '../retro/retro-trigger'
 import { SettingsStore } from '../settings-store'
 const settingsStore = new SettingsStore()
 
@@ -75,5 +76,10 @@ export function registerRetroHandlers() {
         win.webContents.send('retro:ready', { reportId: id })
     }
     return true
+  }))
+
+  ipcMain.handle('retro:trigger-manual', (_e, projectId: string) => handleIpc(async () => {
+    const retroId = await retroTrigger.triggerManual(projectId)
+    return { retroId }
   }))
 }
