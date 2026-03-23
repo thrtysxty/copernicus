@@ -354,7 +354,23 @@ export class WorkflowEngine {
     const task = this.interpolate(d.task ?? '');
     const systemPrompt = d.systemPrompt || `You are a ${d.persona ?? 'helpful assistant'}.`;
 
+    let tools: any[] | undefined = undefined;
+    if (node.role && ['executor', 'researcher', 'planner'].includes(node.role)) {
+      const { RECALL_MEMORY_TOOL } = await import('../llm/tools');
+      tools = [RECALL_MEMORY_TOOL];
+    }
+
     if (d.provider === 'anthropic') {
+      const body: any = {
+        model: d.modelId,
+        max_tokens: d.maxTokens ?? 2048,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: task }],
+      };
+      if (tools && tools.length > 0) {
+        body.tools = tools;
+      }
+      
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -362,17 +378,53 @@ export class WorkflowEngine {
           'x-api-key': apiKey ?? '',
           'anthropic-version': '2023-06-01',
         },
-        body: JSON.stringify({
-          model: d.modelId,
-          max_tokens: d.maxTokens ?? 2048,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: task }],
-        }),
+        body: JSON.stringify(body),
         signal: AbortSignal.timeout(120_000),
       });
       if (!res.ok) throw new Error(`Anthropic error ${res.status}`);
       const json = await res.json() as any;
-      return json.content?.[0]?.text ?? '';
+      
+      let output = json.content?.[0]?.text ?? '';
+      
+      // Handle potential tool calls
+      if (json.stop_reason === 'tool_use' && json.content) {
+        const toolUse = json.content.find((c: any) => c.type === 'tool_use');
+        if (toolUse && toolUse.name === 'recall_memory') {
+          const { ToolExecutor } = await import('../llm/tools');
+          const executor = new ToolExecutor();
+          const rootPath = this.services.fsManager.getRootPath();
+          const projectId = rootPath ? (this.services.stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
+          const bankId = `workflow:node:${node.id}`;
+          const toolResult = await executor.execute(toolUse.name, toolUse.input, { projectId, bankId });
+          
+          const followUpBody = {
+            ...body,
+            messages: [
+              { role: 'user', content: task },
+              { role: 'assistant', content: json.content },
+              { role: 'user', content: [{ type: 'tool_result', tool_use_id: toolUse.id, content: toolResult }] }
+            ]
+          };
+          const followUpRes = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey ?? '',
+              'anthropic-version': '2023-06-01',
+            },
+            body: JSON.stringify(followUpBody),
+            signal: AbortSignal.timeout(120_000),
+          });
+          if (!followUpRes.ok) throw new Error(`Anthropic tool follow-up error ${followUpRes.status}`);
+          const followUpJson = await followUpRes.json() as any;
+          output = followUpJson.content?.[0]?.text ?? '';
+        }
+      }
+      
+      if (d.outputChannel === 'file' && d.outputFile) {
+        this.services.fsManager.writeFile(d.outputFile, output);
+      }
+      return output;
     }
 
     if (d.provider === 'ollama-anthropic') {
@@ -400,6 +452,17 @@ export class WorkflowEngine {
       temperature: d.temperature ?? 0.7,
       max_tokens: d.maxTokens ?? 2048,
     };
+    
+    if (tools && tools.length > 0) {
+      body.tools = tools.map(t => ({
+        type: 'function',
+        function: {
+          name: t.name,
+          description: t.description,
+          parameters: t.input_schema || t.parameters
+        }
+      }));
+    }
 
     const res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
@@ -414,7 +477,41 @@ export class WorkflowEngine {
     }
 
     const json = await res.json() as any;
-    const output: string = json.choices?.[0]?.message?.content ?? '';
+    let output: string = json.choices?.[0]?.message?.content ?? '';
+    
+    // Handle potential tool calls
+    if (json.choices?.[0]?.finish_reason === 'tool_calls' || json.choices?.[0]?.message?.tool_calls) {
+      const toolCall = json.choices[0].message.tool_calls[0];
+      if (toolCall && toolCall.function.name === 'recall_memory') {
+        const { ToolExecutor } = await import('../llm/tools');
+        const executor = new ToolExecutor();
+        const rootPath = this.services.fsManager.getRootPath();
+        const projectId = rootPath ? (this.services.stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
+        const bankId = `workflow:node:${node.id}`;
+        let inputArgs = {};
+        try { inputArgs = JSON.parse(toolCall.function.arguments); } catch (e) {}
+        const toolResult = await executor.execute(toolCall.function.name, inputArgs, { projectId, bankId });
+        
+        const followUpBody = {
+          ...body,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: task },
+            json.choices[0].message,
+            { role: 'tool', tool_call_id: toolCall.id, name: toolCall.function.name, content: toolResult }
+          ]
+        };
+        const followUpRes = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(followUpBody),
+          signal: AbortSignal.timeout(120_000),
+        });
+        if (!followUpRes.ok) throw new Error(`${d.provider} tool follow-up error ${followUpRes.status}`);
+        const followUpJson = await followUpRes.json() as any;
+        output = followUpJson.choices?.[0]?.message?.content ?? '';
+      }
+    }
 
     if (d.outputChannel === 'file' && d.outputFile) {
       this.services.fsManager.writeFile(d.outputFile, output);

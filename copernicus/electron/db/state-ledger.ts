@@ -271,6 +271,15 @@ export class StateLedger {
     `).all(projectId, bankId, limit) as any[];
   }
 
+  recallAgentMemory(projectId: string, bankId: string, query: string, limit: number): any[] {
+    return this.db.prepare(`
+      SELECT * FROM memory_working_set
+      WHERE project_id = ? AND bank_id = ? AND content LIKE ?
+      ORDER BY score DESC
+      LIMIT ?
+    `).all(projectId, bankId, `%${query}%`, limit) as any[];
+  }
+
   supersedeMemory(oldId: string, newId: string): void {
     this.db.transaction(() => {
       this.db.prepare(`

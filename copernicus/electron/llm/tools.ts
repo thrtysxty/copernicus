@@ -7,6 +7,7 @@ import { authManager } from '../auth-manager'
 import { ragInjector, RagChunk } from './RagInjector'
 import { modelRegistry } from '../models/model-registry'
 import { SettingsStore } from '../settings-store'
+import { stateLedger } from '../db/state-ledger'
 
 const execAsync = promisify(exec)
 const execFileAsync = promisify(execFile)
@@ -14,7 +15,16 @@ const execFileAsync = promisify(execFile)
 export interface ToolDefinition {
   name: string
   description: string
-  parameters: {
+  parameters?: {
+    type: 'object'
+    properties: Record<string, {
+      type: string
+      description: string
+      enum?: string[]
+    }>
+    required: string[]
+  }
+  input_schema?: {
     type: 'object'
     properties: Record<string, {
       type: string
@@ -24,6 +34,25 @@ export interface ToolDefinition {
     required: string[]
   }
 }
+
+export const RECALL_MEMORY_TOOL: ToolDefinition = {
+  name: 'recall_memory',
+  description: 'Search project memory for facts relevant to a query. Use when you need context about prior decisions, file changes, or project conventions.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      query: {
+        type: 'string',
+        description: 'Keywords or phrase to search for'
+      },
+      limit: {
+        type: 'number',
+        description: 'Max results to return (default 5, max 10)'
+      }
+    },
+    required: ['query']
+  }
+};
 
 export const TOOLS: ToolDefinition[] = [
   {
@@ -114,8 +143,10 @@ export const TOOLS: ToolDefinition[] = [
 ]
 
 export class ToolExecutor {
-  async execute(name: string, args: any): Promise<string> {
+  async execute(name: string, args: any, context?: { projectId?: string, bankId?: string }): Promise<string> {
     switch (name) {
+      case 'recall_memory':
+        return this.recallMemory(args.query, args.limit, context?.projectId, context?.bankId)
       case 'search_codebase':
         return this.searchCodebase(args.query, args.mode)
       case 'read_file':
@@ -128,6 +159,28 @@ export class ToolExecutor {
         return this.dispatchAgent(args.storyId, args.provider)
       default:
         throw new Error(`Unknown tool: ${name}`)
+    }
+  }
+
+  private async recallMemory(query: string, limit?: number, projectId?: string, bankId?: string): Promise<string> {
+    if (!query?.trim()) return 'Error: query is required'
+    
+    // Fallbacks if not provided in context
+    const pid = projectId || 'default'
+    const bid = bankId || 'chat'
+    const maxResults = Math.min(limit ?? 5, 10)
+    
+    try {
+      const rows = stateLedger.recallAgentMemory(pid, bid, query, maxResults)
+      
+      if (rows.length === 0) {
+        return `Memory results for "${query}":\n(no results)`
+      }
+      
+      const formatted = rows.map((r, i) => `${i + 1}. [${r.event_type}] ${r.content} (importance: ${r.importance})`).join('\n')
+      return `Memory results for "${query}":\n${formatted}`
+    } catch (err: unknown) {
+      return `Error recalling memory: ${(err as Error).message}`
     }
   }
 
