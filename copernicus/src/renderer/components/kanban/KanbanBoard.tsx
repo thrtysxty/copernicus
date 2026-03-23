@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useIpcCache } from '../../hooks/useIpcCache'
 import { useLayoutStore } from '../../store/layout'
+import { useToastStore } from '../../store/toastStore'
 import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap } from 'lucide-react'
 import log from '../../utils/logger'
 import { unwrapIpc } from '../../types/ipc'
@@ -309,6 +310,24 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const handleDrop = async (e: React.DragEvent, targetStatus: string) => {
     e.preventDefault()
     const id = e.dataTransfer.getData('text/plain')
+
+    // Sprint gate: block drag to IN_PROGRESS if a retro is pending review
+    if (targetStatus === 'IN_PROGRESS') {
+      const story = stories.find(s => s.id === id)
+      if (story && story.status !== 'IN_PROGRESS' && story.type !== 'Epic' && story.type !== 'Retro' && !story.id.startsWith('special_')) {
+        try {
+          const _rawGate = await invoke<any>('retro:gate-status', '')
+          const gateStatus = unwrapIpc<any>(_rawGate)
+          if (gateStatus?.blocked) {
+            useToastStore.getState().addToast('A retrospective is pending review. Resolve it before starting new stories.', 'error')
+            return
+          }
+        } catch (gateErr) {
+          log.error('Gate check failed', gateErr)
+        }
+      }
+    }
+
     setStories(prev => prev.map(s => s.id === id ? { ...s, status: targetStatus } : s))
     try {
       await invoke('stories:update', id, targetStatus)

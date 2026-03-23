@@ -51,6 +51,22 @@ export class ModelRegistry {
     return this.models.get(this.activeModelId);
   }
 
+  getFastModel(): ModelConfig {
+    // Prefer Claude 3.5 Haiku, fallback to Claude 3 Haiku or any other small model
+    const m = this.models.get('claude-3-5-haiku-20241022') ||
+              this.models.get('claude-3-haiku-20240307') ||
+              this.models.get('gpt-4o-mini');
+    if (m) return m;
+    
+    // If not found, return whatever is first or default
+    return Array.from(this.models.values())[0] || {
+      id: 'claude-3-5-haiku-20241022',
+      name: 'Claude 3.5 Haiku',
+      provider: 'anthropic',
+      contextWindow: 200000
+    };
+  }
+
   setActiveModel(id: string): boolean {
     if (this.models.has(id)) {
       this.activeModelId = id;

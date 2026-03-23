@@ -7,11 +7,11 @@ const SEND_CHANNELS = new Set([
   'auth:resolve-openai-config',
   // Models
   'models:list', 'models:active', 'models:set-active', 'models:list-ollama', 'models:set-default',
-  'retro:list', 'retro:get', 'retro:create', 'retro:update-item', 'retro:commit', 'retro:push-ready', 'retro:generate',
+  'retro:list', 'retro:get', 'retro:create', 'retro:update-item', 'retro:commit', 'retro:push-ready', 'retro:generate', 'retro:gate-status',
   'intel:list', 'intel:get', 'intel:create', 'intel:update', 'intel:delete',
 
   // LLM Chat
-  'chat:send', 'chat:confirm-model-switch',
+  'chat:send', 'chat:confirm-model-switch', 'chat:compress-delta', 'chat:done-extraction',
   // File System
   'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
   // Skills

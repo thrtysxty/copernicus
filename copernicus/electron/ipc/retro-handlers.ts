@@ -2,8 +2,23 @@ import { ipcMain, BrowserWindow } from 'electron'
 import { stateLedger } from '../db/state-ledger'
 import { handleIpc } from '../utils/handle-ipc'
 import { retroSynthesizer } from '../retro/retro-synthesizer'
+import { SettingsStore } from '../settings-store'
+const settingsStore = new SettingsStore()
 
 export function registerRetroHandlers() {
+  ipcMain.handle('retro:gate-status', (_e, projectId: string) => handleIpc(() => {
+    const sprintGateEnabled = (settingsStore.get('retro') as any)?.sprintGate ?? false
+    if (!sprintGateEnabled) {
+      return { blocked: false }
+    }
+    const reports = stateLedger.listRetroReports(projectId)
+    const pendingReport = reports.find((r: any) => r.status === 'pending_review')
+    if (pendingReport) {
+      return { blocked: true, retroId: pendingReport.id }
+    }
+    return { blocked: false }
+  }))
+
   ipcMain.handle('retro:list', (_e, projectId: string) => handleIpc(() => {
     return stateLedger.listRetroReports(projectId)
   }))

@@ -65,7 +65,15 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const { data: modelsIpcResult } = useIpcCache('models:list', [], 30000)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [model, setModel] = useState('claude-3-5-sonnet-20240620')
+  const [modelInner, setModelInner] = useState('claude-3-5-sonnet-20240620')
+  const model = modelInner
+  const setModel = useCallback((newModelId: string) => {
+    if (newModelId !== modelInner) {
+      lastSeenTs.current.set(modelInner, Date.now())
+      isFirstCallAfterSwitch.current = true
+      setModelInner(newModelId)
+    }
+  }, [modelInner])
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
   const [showModelPicker, setShowModelPicker] = useState(false)
   const [context, setContext] = useState<ContextItem[]>([])
@@ -102,6 +110,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const isFirstCallAfterSwitch = useRef(false)
   const isFirstSendRef = useRef(true)
   const guideScrollRef = useRef<HTMLDivElement>(null)
+  const lastSeenTs = useRef(new Map<string, number>())
 
   const isFlipped = flippedPanes.includes('chat')
   const activeProjectId = rootPath ?? 'global'
@@ -278,8 +287,23 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     let enrichedContent = currentInput
     if (context.length > 0) enrichedContent = context.map(c => `[CONTEXT: ${c.type.toUpperCase()} - ${c.label}]\n${c.content}`).join('\n\n') + `\n\n---\n\nUSER_INPUT: ${currentInput}`
     if (isFirstCallAfterSwitch.current) {
-      isFirstCallAfterSwitch.current = false; const snapRes = await invoke<any>('snapshot:restore', 'chat'); const snapData = unwrapIpc<any>(snapRes)
-      if (snapData?.messages) { try { const m = typeof snapData.messages === 'string' ? JSON.parse(snapData.messages) : snapData.messages; enrichedContent = `[CONTEXT HANDOFF]\nPrevious session context:\n${m.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}\n\n${enrichedContent}` } catch {} }
+      isFirstCallAfterSwitch.current = false;
+      try {
+        const sinceTs = lastSeenTs.current.get(modelInner) ?? 0;
+        const res = await invoke<any>('memory:get-working-set', { projectId: activeProjectId, bankId: 'chat', limit: 10 });
+        const rows = unwrapIpc<any[]>(res) ?? [];
+        const deltaRows = rows.filter((r: any) => (r.ts * 1000) > sinceTs);
+        
+        if (deltaRows.length > 0) {
+          const compRes = await invoke<any>('chat:compress-delta', { rows: deltaRows, maxTokens: 150 });
+          const compData = unwrapIpc<{ summary: string }>(compRes);
+          if (compData && compData.summary) {
+            enrichedContent = `[DELTA]\n${compData.summary}\n\n${enrichedContent}`;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to get context delta', e);
+      }
     }
     if (centerMode === 'builder' && uiComponents.length > 0) enrichedContent += `\n\n<ui-canvas-context>\n${JSON.stringify(uiComponents, null, 2)}\n</ui-canvas-context>`
     

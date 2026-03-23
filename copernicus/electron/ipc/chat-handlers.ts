@@ -4,6 +4,10 @@ import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
 import { knowledgeRouter } from '../local-model/KnowledgeRouter'
 import { localModelManager } from '../local-model/LocalModelManager'
+import { MemoryRow } from '../../src/renderer/types/memory'
+import { autoExtractor } from '../memory/auto-extractor'
+import { stateLedger } from '../db/state-ledger'
+import { fsManager } from '../fs-manager'
 
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { modelRegistry, llmService } = deps
@@ -37,9 +41,21 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       }
     }
 
-    llmService.streamChat(payload).catch((err: unknown) => log.error('[LLM] streamChat error:', err))
+    llmService.streamChat(payload).then(() => {
+      // The service streamChat has finished. Wait for its broadcast to complete.
+    }).catch((err: unknown) => log.error('[LLM] streamChat error:', err))
     return { ok: true }
   }))
+
+  ipcMain.on('chat:done-extraction', (_e, payload: { fullResponseText: string }) => {
+    const rootPath = fsManager.getRootPath() ?? ''
+    const projectId = stateLedger.getProjectByPath(rootPath)?.id ?? 'default'
+    if (payload.fullResponseText) {
+      autoExtractor.extract(payload.fullResponseText, 'chat', projectId).catch(err => {
+        log.error('[AutoExtractor] unhandled error:', err)
+      })
+    }
+  })
 
   ipcMain.handle('chat:confirm-model-switch', (_e, payload: any) => handleIpc('chat:confirm-model-switch', [payload], async () => {
     // Notify all windows
@@ -69,4 +85,15 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       return { ok: true }
     })
   )
+
+  ipcMain.handle('chat:compress-delta', (_e, payload: { rows: MemoryRow[], maxTokens: number }) => 
+    handleIpc(async () => {
+      const { rows, maxTokens } = payload;
+      const content = rows.map(r => r.content).join('\n');
+      const prompt = `Compress these memory facts into ≤${maxTokens} tokens for a new model context:\n${content}`;
+      const fastModel = modelRegistry.getFastModel().id;
+      const summary = await llmService.generateText(prompt, fastModel);
+      return { summary };
+    })
+  );
 }
