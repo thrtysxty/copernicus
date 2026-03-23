@@ -39,6 +39,7 @@ import { cwd } from 'node:process'
 import { localModelManager } from './local-model/LocalModelManager'
 import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
 import { detectStack } from './skills/stack-detector'
+import { auditSkillDescriptions } from './skills/description-auditor'
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
@@ -182,6 +183,11 @@ async function registerIpcHandlers() {
     return detectStack(rootPath || '')
   }))
 
+  ipcMain.handle('skills:audit', () => handleIpc(async () => {
+    const rootPath = fsManager.getRootPath()
+    return auditSkillDescriptions(rootPath || '')
+  }))
+
   const { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager: registeredWorktreeManager } =
     await registerAllIpcHandlers(win!, globalDeps, touchBarCleanup)
 
@@ -231,6 +237,15 @@ app.whenReady().then(async () => {
     settingsStore.set('workingDir', workspaceRoot);
     fsManager.setRootPath(workspaceRoot); storiesManager.setProjectRoot(workspaceRoot);
     addRecentProject(workspaceRoot, settingsStore);
+
+    const auditResults = auditSkillDescriptions(workspaceRoot);
+    if (win) {
+      stateLedger.logEvent(
+        'skill-audit',
+        JSON.stringify(auditResults),
+        { timestamp: new Date().toISOString() }
+      );
+    }
   }
   const firstRunRef = { current: isFirstRun }
   ensureCopernicusDirectory(settingsStore, firstRunRef)

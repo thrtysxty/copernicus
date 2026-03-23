@@ -22,6 +22,7 @@ import { DataSection } from './sections/DataSection'
 import { HardwareSection } from './sections/HardwareSection'
 import { LocalModelSection } from './sections/LocalModelSection'
 import { ExtensionsSection } from './sections/ExtensionsSection'
+import { SkillsSection } from './sections/SkillsSection'
 
 type TabId =
   | 'providers'
@@ -41,6 +42,7 @@ type TabId =
   | 'data'
   | 'hardware'
   | 'extensions'
+  | 'skills'
 
 interface SettingsPanelProps {
   onClose: () => void
@@ -67,6 +69,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'data':        return <DataSection />
       case 'hardware':    return <HardwareSection />
       case 'extensions':  return <ExtensionsSection />
+      case 'skills':      return <SkillsSection />
       default:            return <ProvidersSection />
     }
   }
@@ -107,6 +110,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <TabButton id="mcp" label="MCP" icon={<Layers size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="rag" label="RAG Tuning" icon={<Search size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="templates" label="Templates" icon={<FileText size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="skills" label="Skills" icon={<Zap size={14} />} active={activeTab} onClick={setActiveTab} />
 
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
             <TabButton id="security" label="Security" icon={<Shield size={14} />} active={activeTab} onClick={setActiveTab} />
