@@ -80,6 +80,21 @@ if ! grep -q "APPROVED FOR IMPLEMENTATION" "$STORY_PATH"; then
   exit 1
 fi
 
+# ── Already-implemented guard ─────────────────────────────────────────────────
+# Abort if any commit on main already mentions this story number.
+# Prevents re-dispatching work that's already on main.
+EXISTING_COMMIT=$(git log origin/main --oneline --grep="story.${STORY_NUMBER}[^0-9]" -i 2>/dev/null | head -1)
+if [ -n "$EXISTING_COMMIT" ]; then
+  echo ""
+  echo "❌ DISPATCH BLOCKED — story ${STORY_NUMBER} already has a commit on main:"
+  echo "   $EXISTING_COMMIT"
+  echo ""
+  echo "   If this story is genuinely incomplete, update its commit message or"
+  echo "   override with: --force flag (not implemented — talk to Claude first)."
+  exit 1
+fi
+echo "✓ No prior implementation commit found — safe to dispatch"
+
 # Check Jules CLI
 if ! $DRY_RUN && ! command -v jules &> /dev/null; then
   echo "❌ 'jules' CLI not found in PATH."

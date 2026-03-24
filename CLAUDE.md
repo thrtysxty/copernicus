@@ -17,6 +17,7 @@ Claude's role is **Plan → Delegate → Review**. Not implement.
 - Merges or requests re-work
 
 ### What Claude MUST NOT DO
+- **Dispatch any story without first running `git log origin/main --oneline --grep="story.NNN"` — if a commit exists, mark it COMPLETE and move on. This has burned tokens twice.**
 - Write implementation code for any story that has a delegation path
 - Implement a fix inline when a story card can be created and dispatched
 - Run `gemini ... &` — use `gemini_session_manager.py spawn` instead

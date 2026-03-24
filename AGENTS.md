@@ -4,6 +4,20 @@
 
 ---
 
+## STEP ZERO — Before Anything Else
+
+**Before reading the story, before opening any file, run this:**
+
+```bash
+git log origin/main --oneline -i --grep="story.NNN[^0-9]"
+```
+
+Replace `NNN` with the story number from your assignment. If **any commit appears**, the story is already implemented. **Stop immediately. Do not write a single line of code. Output `[[ALREADY_IMPLEMENTED]]` and exit.**
+
+This check is non-negotiable. Re-implementing work that is already on main wastes tokens, creates merge conflicts, and has happened twice. It will not happen again.
+
+---
+
 ## Role Boundaries — ENFORCED
 
 Gemini's role is **Implement exactly what the story says**. Not plan. Not architect. Not expand scope.
