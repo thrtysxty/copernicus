@@ -256,6 +256,10 @@ async function registerIpcHandlers() {
     return checks.map((r, i) => r.status === 'fulfilled' ? r.value : { name: ['Backend','Git'][i], ok: false })
   }))
 
+  ipcMain.handle('db:get-edit-decisions', (_e, { promptId }: { promptId: string }) => handleIpc(() => {
+    return stateLedger.getEditDecisionsCounts(promptId)
+  }))
+
   ipcMain.handle('skills:detect-stack', () => handleIpc(() => {
     const rootPath = fsManager.getRootPath()
     return detectStack(rootPath || '')

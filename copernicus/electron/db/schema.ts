@@ -390,5 +390,14 @@ export const SCHEMA = {
       completed_at INTEGER
     );
     CREATE INDEX IF NOT EXISTS idx_waves_workflow ON workflow_waves(workflow_id, wave_index);
+  `,
+  edit_decisions: `
+    CREATE TABLE IF NOT EXISTS edit_decisions (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      prompt_id   TEXT,
+      decision    TEXT,
+      file_path   TEXT,
+      timestamp   TEXT
+    );
   `
 };

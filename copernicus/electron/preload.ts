@@ -35,7 +35,7 @@ const SEND_CHANNELS = new Set([
   'terminal:stop-agent',
   // State Ledger
   'db:log-intent', 'db:get-intents', 'db:log-event', 'db:get-events',
-  'db:add-memory', 'db:search-memory', 'db:vacuum',
+  'db:add-memory', 'db:search-memory', 'db:vacuum', 'db:get-edit-decisions',
   
   // Agent Memory
   'memory:add', 'memory:get-working-set', 'memory:supersede', 'memory:log-work', 'memory:get-work-log', 'memory:export-now',

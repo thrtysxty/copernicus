@@ -15,6 +15,7 @@ import { RetroCard } from './RetroCard'
 import { RetroReviewPanel } from './RetroReviewPanel'
 import { IntelligenceManager } from '../intelligence/IntelligenceManager'
 import { SkillOnboardingModal } from '../skills/SkillOnboardingModal'
+import { CardSpotlight } from './CardSpotlight'
 
 interface Story {
   id: string
@@ -173,6 +174,10 @@ const StoryCard = React.memo(({
         )}
         <span className={`ml-auto shrink-0 px-1 py-0.5 rounded-[2px] text-[7px] font-bold border ${PRIORITY_COLORS[story.priority]}`}>{story.priority}</span>
       </div>
+
+      {activeStoryId === story.id && (
+        <CardSpotlight promptId={story.id} />
+      )}
     </motion.div>
   )
   }

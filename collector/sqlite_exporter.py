@@ -65,7 +65,21 @@ def write_to_db(signal_type, data):
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (session_id, model_id, provider, tokens_in, tokens_out, cost_usd, latency_ms, reasoning, prompt_text, response_text, context_json))
 
-        elif signal_type in ["active_time", "tool_result", "code_edit_tool.decision"]:
+        elif signal_type == "code_edit_tool.decision":
+            prompt_id = data.get("prompt.id")
+            decision = data.get("decision")
+            file_path = data.get("file_path")
+            timestamp = data.get("timestamp") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+            if decision not in ["accept", "reject", "abort"]:
+                logger.warning(f"Invalid or missing decision value: '{decision}'. Skipping row.")
+            else:
+                cursor.execute("""
+                    INSERT INTO edit_decisions (prompt_id, decision, file_path, timestamp)
+                    VALUES (?, ?, ?, ?)
+                """, (prompt_id, decision, file_path, timestamp))
+
+        elif signal_type in ["active_time", "tool_result"]:
             # Insert into events table
             content = json.dumps(data)
             cursor.execute("""

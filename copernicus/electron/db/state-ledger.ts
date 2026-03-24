@@ -615,6 +615,22 @@ export class StateLedger {
     ).all(limit) as ModelCallRecord[]
   }
 
+  getEditDecisionsCounts(promptId: string): { accept: number, reject: number, abort: number } {
+    try {
+      const rows = this.db.prepare('SELECT decision, COUNT(*) as count FROM edit_decisions WHERE prompt_id = ? GROUP BY decision').all(promptId) as { decision: string, count: number }[];
+      const result = { accept: 0, reject: 0, abort: 0 };
+      for (const row of rows) {
+        if (row.decision === 'accept') result.accept = row.count;
+        if (row.decision === 'reject') result.reject = row.count;
+        if (row.decision === 'abort') result.abort = row.count;
+      }
+      return result;
+    } catch (e) {
+      console.error('Failed to get edit decisions counts', e);
+      return { accept: 0, reject: 0, abort: 0 };
+    }
+  }
+
   getAllTimeCost(): number {
     const row = this.db.prepare('SELECT SUM(cost_usd) as total FROM model_calls').get() as any
     return row?.total ?? 0
