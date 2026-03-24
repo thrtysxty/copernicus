@@ -424,6 +424,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #457 | Capex Cost Per Active Second | DRAFT | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | DRAFT | P2 — Feature |
 | #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
+| #522 | Nlm Tools Safari Extension Port | DRAFT | P1 |
+| #523 | Notebooklm Mcp Intelligence Bridge | DRAFT | P1 |
 | #488 | Split Claude Md Into Scoped Rules Files | N/A | P1 |
 | #467 | Hindsight R620 Deployment | SUPERSEDED | P1 — Infrastructure |
 | #468 | Memory Bank Wiring | SUPERSEDED | P1 — Feature |
