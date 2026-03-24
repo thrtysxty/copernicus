@@ -110,6 +110,9 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   // Browser Session
   browserSessionActive: boolean
 
+  // NotebookLM
+  notebooklmEnabled: boolean
+
   // Panel Modes
   flippedPanes: string[]
   chatPanelTab: 'chat' | 'guide'
@@ -164,6 +167,7 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   setCanvasContent: (content: string | null) => void
   setCanvasUrl: (url: string | null) => void
   setBrowserSessionActive: (active: boolean) => void
+  setNotebooklmEnabled: (enabled: boolean) => void
 
   // Tour Actions
   setHasCompletedTour: () => void
@@ -274,6 +278,7 @@ stitchTokens: null,
       tourActive: false,
 
       browserSessionActive: false,
+      notebooklmEnabled: false,
 
 
 
@@ -390,6 +395,7 @@ stitchTokens: null,
       setCanvasContent: (content) => set({ canvasContent: content }),
       setCanvasUrl: (url) => set({ canvasUrl: url }),
       setBrowserSessionActive: (active) => set({ browserSessionActive: active }),
+      setNotebooklmEnabled: (enabled) => set({ notebooklmEnabled: enabled }),
 
       setHasCompletedTour: () => set({ hasCompletedTour: true }),
       setTourHighlight: (id) => set({ tourHighlight: id }),

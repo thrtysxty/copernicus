@@ -14,8 +14,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   // LLM Chat
   ipcMain.handle('chat:send', (_event, payload: any) => handleIpc('chat:send', [payload], async () => {
-    const { model, imageBase64 } = payload
+    let { model, imageBase64 } = payload
     
+    // AC3: NotebookLM provider override
+    if (model?.startsWith('notebooklm:')) {
+      payload.provider = 'notebooklm'
+    }
+
     // AC3: Vision model check
     if (imageBase64) {
       const modelConfig = modelRegistry.getModels().find(m => m.id === model)

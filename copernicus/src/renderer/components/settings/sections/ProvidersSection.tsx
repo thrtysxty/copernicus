@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
+import { useLayoutStore } from '../../../store/layout'
 import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
   ShieldCheck, Loader2, GripVertical, Zap, Check,
@@ -35,6 +36,7 @@ interface AuthStatus {
 export const ProvidersSection: React.FC = () => {
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
+  const setNotebooklmEnabled = useLayoutStore(s => s.setNotebooklmEnabled)
   const [status, setStatus] = useState<AuthStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
@@ -52,6 +54,10 @@ export const ProvidersSection: React.FC = () => {
   const [customName, setCustomName] = useState('')
   const [customKey, setCustomKey] = useState('')
   const [customUrl, setCustomUrl] = useState('')
+
+  // NotebookLM state
+  const [nbConnected, setNbConnected] = useState(false)
+  const [nbChecking, setNbChecking] = useState(false)
 
   const fetchStatus = async () => {
     try {
@@ -74,9 +80,17 @@ export const ProvidersSection: React.FC = () => {
       const settings = await invoke<any>('settings:load')
       const savedOrder = (settings as any)?.providerOrder
       if (savedOrder && Array.isArray(savedOrder)) setProviders(savedOrder)
+
+      setNbChecking(true)
+      const nbStatus = await invoke<{ credentialsCached: boolean }>('notebooklm:status')
+      if (nbStatus && typeof nbStatus === 'object') {
+        setNbConnected(nbStatus.credentialsCached)
+        setNotebooklmEnabled(nbStatus.credentialsCached)
+      }
     } catch (e) {
       log.error('Failed to fetch auth status', e)
     } finally {
+      setNbChecking(false)
       setLoading(false)
     }
   }
@@ -90,6 +104,35 @@ export const ProvidersSection: React.FC = () => {
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
       addToast(message, 'error')
+    }
+  }
+
+  const handleNotebookLMAction = async () => {
+    if (nbConnected) {
+      try {
+        const res = await invoke<{ ok: boolean, error?: string }>('notebooklm:list-notebooks')
+        if (!res.ok) throw new Error(res.error)
+        const modelsRes = await invoke<{ ok: boolean, error?: string }>('models:list')
+        if (!modelsRes.ok) throw new Error(modelsRes.error)
+        addToast('NotebookLM notebooks refreshed', 'success')
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
+        addToast(`Failed to refresh notebooks: ${message}`, 'error')
+      }
+    } else {
+      try {
+        const setupRes = await invoke<{ ok: boolean, error?: string }>('notebooklm:setup')
+        if (!setupRes.ok) throw new Error(setupRes.error)
+        fetchStatus()
+        addToast('NotebookLM setup complete', 'success')
+        const res = await invoke<{ ok: boolean, error?: string }>('notebooklm:list-notebooks')
+        if (!res.ok) throw new Error(res.error)
+        const modelsRes = await invoke<{ ok: boolean, error?: string }>('models:list')
+        if (!modelsRes.ok) throw new Error(modelsRes.error)
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
+        addToast(`Failed to setup NotebookLM: ${message}`, 'error')
+      }
     }
   }
 
@@ -428,6 +471,37 @@ export const ProvidersSection: React.FC = () => {
             </div>
           )
         })}
+
+        {/* NotebookLM */}
+        <div className="bg-[#0F0F0F] border border-zinc-800 rounded-lg p-4 flex items-center justify-between group">
+          <div className="flex items-center gap-4">
+            <div className={`w-2 h-2 rounded-full flex-none ${
+              nbChecking ? 'bg-amber-400' :
+              nbConnected ? 'bg-green-400' :
+              'bg-zinc-600'
+            }`} title={nbChecking ? 'Checking…' : nbConnected ? 'Connected' : 'Not connected'} />
+            <div className="p-2 bg-zinc-900 text-zinc-600 rounded">
+              <Globe size={16} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">NotebookLM</h3>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleNotebookLMAction}
+              disabled={nbChecking}
+              className={`px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase transition-all flex items-center gap-2 ${
+                nbConnected ? 'text-zinc-400 hover:text-white hover:border-zinc-600' : 'text-zinc-400 hover:text-white hover:border-zinc-600'
+              }`}
+            >
+              {nbChecking ? <Loader2 size={10} className="animate-spin" /> : nbConnected ? <RefreshCcw size={10} /> : <LogOut size={10} className="rotate-180" />}
+              {nbConnected ? 'Refresh Notebooks' : 'Log in'}
+            </button>
+          </div>
+        </div>
 
         {/* Existing custom providers */}
         {status.filter(s => !providers.includes(s.provider)).map(s => (

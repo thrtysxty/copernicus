@@ -14,7 +14,30 @@ export class ModelRegistry {
   private activeModelId: string = 'claude-3-5-sonnet-20240620'; // Default fallback
 
   constructor() {
-    this.fetchRegistry().catch(err => log.error(err));
+    this.fetchRegistry()
+      .then(() => this.fetchNotebookLMModels())
+      .catch(err => log.error(err));
+  }
+
+  public async fetchNotebookLMModels() {
+    try {
+      const response = await fetch('http://localhost:5001/api/notebooklm/notebooks');
+      if (!response.ok) return;
+      const data = await response.json() as any[];
+      if (Array.isArray(data)) {
+        data.forEach(notebook => {
+          this.registerModel({
+            id: `notebooklm:${notebook.id}`,
+            name: `NbLM — ${notebook.title}`,
+            provider: 'google',
+            contextWindow: 0,
+            supportsVision: false
+          });
+        });
+      }
+    } catch (e) {
+      // Backend unreachable or credentials not configured, ignore silently
+    }
   }
 
   private async fetchRegistry() {
