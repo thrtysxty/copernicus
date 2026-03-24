@@ -358,6 +358,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #464 | Scaffold Skills Slash Command | COMPLETE | P1 — Feature |
 | #465 | Skill Description Auditor | COMPLETE | P2 — Feature |
 | #466 | Claude Plugin Data Migration | COMPLETE | P2 — Maintenance |
+| #467 | Hindsight R620 Deployment | COMPLETE | P1 — Infrastructure |
+| #468 | Memory Bank Wiring | COMPLETE | P1 — Feature |
+| #469 | Reflect Session Injection | COMPLETE | P1 — Feature |
+| #488 | Split Claude Md Into Scoped Rules Files | COMPLETE | P1 |
 | #489 | Agent Memory And Agent Work Log Schema Migration | COMPLETE | P1 |
 | #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | COMPLETE | P1 |
 | #491 | Memoryrecall Ipc And Memory Injection Fix | COMPLETE | P1 |
@@ -425,9 +429,5 @@ This file is auto-generated. Run `make backlog` to update.
 | #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
 | #522 | Nlm Tools Safari Extension Port | DRAFT | P1 |
 | #523 | Notebooklm Mcp Intelligence Bridge | DRAFT | P1 |
-| #488 | Split Claude Md Into Scoped Rules Files | N/A | P1 |
-| #467 | Hindsight R620 Deployment | SUPERSEDED | P1 — Infrastructure |
-| #468 | Memory Bank Wiring | SUPERSEDED | P1 — Feature |
-| #469 | Reflect Session Injection | SUPERSEDED | P1 — Feature |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
