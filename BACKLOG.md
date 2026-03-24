@@ -112,30 +112,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
-| #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
-| #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | APPROVED FOR IMPLEMENTATION | P1 |
-| #491 | Memoryrecall Ipc And Memory Injection Fix | APPROVED FOR IMPLEMENTATION | P1 |
-| #492 | Delta Summary On Model Switch | APPROVED FOR IMPLEMENTATION | P1 |
-| #493 | Auto-Extraction Micro-Critic On Chat Done | APPROVED FOR IMPLEMENTATION | P1 |
-| #494 | Work Log Hooks Posttooluse And File Edit Events | APPROVED FOR IMPLEMENTATION | P1 |
-| #495 | Workflowengine Agent Memory Integration | APPROVED FOR IMPLEMENTATION | P1 |
-| #496 | Jsonl Export And Lsp Index For Agent Memory | APPROVED FOR IMPLEMENTATION | P2 |
-| #497 | Memorybrowser Upgrade With Bank Id Scoping | APPROVED FOR IMPLEMENTATION | P2 |
-| #498 | Tool-Use Recall Parallel Search Agents | APPROVED FOR IMPLEMENTATION | P2 |
-| #499 | Reporter Retro Reports And Retro Items Schema Ipc | APPROVED FOR IMPLEMENTATION | P1 |
-| #500 | Retro Synthesis Engine With Compounding Inflection Points | APPROVED FOR IMPLEMENTATION | P1 |
-| #501 | Retro Card Type In Blueprint Kanban Column | APPROVED FOR IMPLEMENTATION | P1 |
-| #502 | Retro Review Panel Per-Item Approve Reject Edit | APPROVED FOR IMPLEMENTATION | P1 |
-| #505 | Retro Trigger Session Count Threshold And Manual | APPROVED FOR IMPLEMENTATION | P2 |
-| #506 | Sprint Gate Setting Block In Progress On Pending Retro | APPROVED FOR IMPLEMENTATION | P3 |
-| #507 | Intelligence Documents Schema And Crud Ipc Handlers | APPROVED FOR IMPLEMENTATION | P1 |
-| #508 | Provider Sync Engine Doctype Provider Path And Format Transform | APPROVED FOR IMPLEMENTATION | P1 |
-| #514 | Gsd Wave-Based Parallel Execution In Workflow Engine | APPROVED FOR IMPLEMENTATION | P1 |
-| #515 | Plan-Checker Node Verification Loop Before Dispatch | APPROVED FOR IMPLEMENTATION | P1 |
-| #516 | Context Assembler Node Sqlite-Backed Fresh Context Per Agent | APPROVED FOR IMPLEMENTATION | P1 |
-| #517 | Recovery Handoff Context From Agent Work Log | APPROVED FOR IMPLEMENTATION | P1 |
-| #518 | Situational Handoff Type Detection And Routing | APPROVED FOR IMPLEMENTATION | P1 |
-| #519 | Agent Role Taxonomy Node Types In Workflow Engine | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -382,14 +358,37 @@ This file is auto-generated. Run `make backlog` to update.
 | #464 | Scaffold Skills Slash Command | COMPLETE | P1 — Feature |
 | #465 | Skill Description Auditor | COMPLETE | P2 — Feature |
 | #466 | Claude Plugin Data Migration | COMPLETE | P2 — Maintenance |
+| #489 | Agent Memory And Agent Work Log Schema Migration | COMPLETE | P1 |
+| #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | COMPLETE | P1 |
+| #491 | Memoryrecall Ipc And Memory Injection Fix | COMPLETE | P1 |
+| #492 | Delta Summary On Model Switch | COMPLETE | P1 |
+| #493 | Auto-Extraction Micro-Critic On Chat Done | COMPLETE | P1 |
 | #494 | Work Log Hooks Posttooluse And File Edit Events | COMPLETE | P1 |
+| #495 | Workflowengine Agent Memory Integration | COMPLETE | P1 |
+| #496 | Jsonl Export And Lsp Index For Agent Memory | COMPLETE | P2 |
+| #497 | Memorybrowser Upgrade With Bank Id Scoping | COMPLETE | P2 |
+| #498 | Tool-Use Recall Parallel Search Agents | COMPLETE | P2 |
+| #499 | Reporter Retro Reports And Retro Items Schema Ipc | COMPLETE | P1 |
+| #500 | Retro Synthesis Engine With Compounding Inflection Points | COMPLETE | P1 |
+| #501 | Retro Card Type In Blueprint Kanban Column | COMPLETE | P1 |
+| #502 | Retro Review Panel Per-Item Approve Reject Edit | COMPLETE | P1 |
 | #503 | Retro Approval Commit Atomic Memory Writes And File Patches | COMPLETE | P1 |
 | #504 | Historical Retro Archive In Reporter Retrospectives Tab | COMPLETE | P2 |
+| #505 | Retro Trigger Session Count Threshold And Manual | COMPLETE | P2 |
+| #506 | Sprint Gate Setting Block In Progress On Pending Retro | COMPLETE | P3 |
+| #507 | Intelligence Documents Schema And Crud Ipc Handlers | COMPLETE | P1 |
+| #508 | Provider Sync Engine Doctype Provider Path And Format Transform | COMPLETE | P1 |
 | #509 | Intelligence Manager Ui Document List Editor Sync Status | COMPLETE | P1 |
 | #510 | Stack Detector Auto-Suggest Intelligence Documents | COMPLETE | P2 |
 | #511 | Epic 014 Bridge Skill Scaffold Through Intelligence Layer | COMPLETE | P2 |
 | #512 | Path Scoping Ui Frontmatter Preview Per Provider | COMPLETE | P2 |
 | #513 | Claude.Md Length Audit 200 Line Flag And Split Action | COMPLETE | P2 |
+| #514 | Gsd Wave-Based Parallel Execution In Workflow Engine | COMPLETE | P1 |
+| #515 | Plan-Checker Node Verification Loop Before Dispatch | COMPLETE | P1 |
+| #516 | Context Assembler Node Sqlite-Backed Fresh Context Per Agent | COMPLETE | P1 |
+| #517 | Recovery Handoff Context From Agent Work Log | COMPLETE | P1 |
+| #518 | Situational Handoff Type Detection And Routing | COMPLETE | P1 |
+| #519 | Agent Role Taxonomy Node Types In Workflow Engine | COMPLETE | P1 |
 | #520 | Stitch Mcp Api Key Auth Support | COMPLETE | P1 |
 | #521 | Jules Api Ipc Wiring And Sourcecontext Fix | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
