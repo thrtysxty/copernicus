@@ -136,7 +136,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #517 | Recovery Handoff Context From Agent Work Log | APPROVED FOR IMPLEMENTATION | P1 |
 | #518 | Situational Handoff Type Detection And Routing | APPROVED FOR IMPLEMENTATION | P1 |
 | #519 | Agent Role Taxonomy Node Types In Workflow Engine | APPROVED FOR IMPLEMENTATION | P1 |
-| #521 | Jules Api Ipc Wiring And Sourcecontext Fix | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -392,6 +391,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #512 | Path Scoping Ui Frontmatter Preview Per Provider | COMPLETE | P2 |
 | #513 | Claude.Md Length Audit 200 Line Flag And Split Action | COMPLETE | P2 |
 | #520 | Stitch Mcp Api Key Auth Support | COMPLETE | P1 |
+| #521 | Jules Api Ipc Wiring And Sourcecontext Fix | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
