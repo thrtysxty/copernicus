@@ -8,7 +8,7 @@ const SEND_CHANNELS = new Set([
   // Models
   'models:list', 'models:active', 'models:set-active', 'models:list-ollama', 'models:set-default',
   'retro:list', 'retro:get', 'retro:create', 'retro:update-item', 'retro:commit', 'retro:push-ready', 'retro:generate', 'retro:gate-status', 'retro:trigger-manual',
-  'intel:list', 'intel:get', 'intel:create', 'intel:update', 'intel:delete', 'intel:suggest',
+  'intel:list', 'intel:get', 'intel:create', 'intel:update', 'intel:delete', 'intel:suggest', 'intel:audit-length',
 
   // LLM Chat
   'chat:send', 'chat:confirm-model-switch', 'chat:compress-delta', 'chat:done-extraction',

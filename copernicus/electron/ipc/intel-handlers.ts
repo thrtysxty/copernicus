@@ -128,7 +128,20 @@ export function registerIntelHandlers() {
     return doc;
   }));
 
-  ipcMain.handle('intel:delete', (_e, { id }: { id: string }) => handleIpc(() => {
+ipcMain.handle('intel:delete', (_e, { id }: { id: string }) => handleIpc(() => {
     return { ok: stateLedger.deleteIntelDoc(id) };
+  }));
+
+  ipcMain.handle('intel:audit-length', (_e, { id }: { id: string }) => handleIpc(() => {
+    const doc = stateLedger.getIntelDoc(id);
+    if (!doc) {
+      throw new Error(`Document ${id} not found`);
+    }
+    const lines = (doc.content || '').split('\n').length;
+    return {
+      lines,
+      overThreshold: lines > 200,
+      threshold: 200
+    };
   }));
 }

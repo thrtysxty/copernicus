@@ -208,13 +208,116 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
     )
   }
 
+
+  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false)
+  const [splitProposals, setSplitProposals] = useState<Array<{ title: string, content: string }>>([])
+  const [splitSuccess, setSplitSuccess] = useState(false)
+
+  // Use intel:audit-length to check length
+  const [isInstructionLong, setIsInstructionLong] = useState(false)
+  useEffect(() => {
+    if (selectedDoc?.type === 'instruction' && selectedDocId) {
+      invoke<{ overThreshold: boolean }>('intel:audit-length', { id: selectedDocId })
+        .then(res => {
+          const unwrapped = unwrapIpc<{ overThreshold: boolean }>(res as any)
+          if (unwrapped) {
+            setIsInstructionLong(unwrapped.overThreshold)
+          }
+        })
+        .catch(err => console.error('Failed to audit length', err))
+    } else {
+      setIsInstructionLong(false)
+    }
+  }, [selectedDocId, editorContent, invoke, selectedDoc])
+
+  const handleOpenSplitModal = () => {
+    if (!selectedDoc) return
+    
+    const lines = editorContent.split('\n')
+    const proposals: Array<{ title: string, content: string }> = []
+    
+    let currentTitle = 'Preamble'
+    let currentContent: string[] = []
+    let isPreamble = true
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i] || ''
+      if (line.startsWith('## ')) {
+        if (currentContent.length > 0) {
+          proposals.push({
+            title: currentTitle,
+            content: isPreamble ? currentContent.slice(0, 50).join('\n') : currentContent.join('\n')
+          })
+          isPreamble = false
+        } else if (isPreamble) {
+          proposals.push({
+            title: currentTitle,
+            content: ''
+          })
+          isPreamble = false
+        }
+        currentTitle = line.substring(3).trim()
+        currentContent = [line]
+      } else {
+        currentContent.push(line)
+      }
+    }
+    
+    if (currentContent.length > 0) {
+      proposals.push({
+        title: currentTitle,
+        content: isPreamble ? currentContent.slice(0, 50).join('\n') : currentContent.join('\n')
+      })
+    }
+    
+    setSplitProposals(proposals)
+    setIsSplitModalOpen(true)
+    setSplitSuccess(false)
+  }
+
+  const handleCreateAllSplit = async () => {
+    if (!selectedDoc) return
+    
+    try {
+      const newDocs: IntelligenceDocument[] = []
+      
+      for (let i = 0; i < splitProposals.length; i++) {
+        const proposal = splitProposals[i]
+        if (!proposal) continue;
+        const isPreamble = i === 0
+        
+        const payload = {
+          projectId: 'current',
+          type: isPreamble ? 'instruction' : 'rule',
+          title: proposal.title,
+          content: proposal.content,
+          providers: selectedDoc.providers,
+          pathScope: []
+        }
+        
+        const res = await invoke<IntelligenceDocument>('intel:create', payload)
+        const unwrapped = unwrapIpc<IntelligenceDocument>(res as any)
+        if (unwrapped) {
+          newDocs.push(unwrapped)
+        }
+      }
+      
+      setDocuments(prev => [...prev, ...newDocs])
+      setSplitSuccess(true)
+      setIsSplitModalOpen(false)
+      
+    } catch (err) {
+      console.error('Failed to create split docs', err)
+    }
+  }
+
   // Group docs
   const groupedDocs = TYPE_ORDER.reduce((acc, type) => {
     acc[type] = documents.filter((d: any) => d.type === type)
     return acc
   }, {} as Record<IntelligenceDocType, IntelligenceDocument[]>)
 
-  const isInstructionLong = selectedDoc?.type === 'instruction' && editorContent.split('\n').length > 200
+
 
   return (
     <div className="flex h-full w-full bg-[#050505] text-zinc-300 font-sans relative z-10">
@@ -356,20 +459,72 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               </div>
             </div>
 
-            {isInstructionLong && (
+
+            {isInstructionLong && !splitSuccess && (
               <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2 text-amber-400 text-xs">
                   <AlertCircle size={14} />
                   <span>This instruction document exceeds 200 lines. Consider splitting into rule documents for better scoping.</span>
                 </div>
-                <div title="Available in a future update">
-                  <button disabled className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-500 rounded text-[10px] font-bold uppercase tracking-wider opacity-50 cursor-not-allowed">
+                <div>
+                  <button onClick={handleOpenSplitModal} className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors rounded text-[10px] font-bold uppercase tracking-wider">
                     <SplitSquareHorizontal size={12} />
                     Split into rules
                   </button>
                 </div>
               </div>
             )}
+
+            {splitSuccess && (
+              <div className="bg-green-500/10 border-b border-green-500/20 px-4 py-2 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2 text-green-400 text-xs">
+                  <CheckCircle2 size={14} />
+                  <span>Created {splitProposals.length - 1} rule documents. Review and delete the original when ready.</span>
+                </div>
+              </div>
+            )}
+
+            {isSplitModalOpen && (
+              <div className="shrink-0 border-b border-white/5 bg-zinc-900/50 flex flex-col max-h-[50vh]">
+                <div className="px-4 py-2 border-b border-white/5 flex items-center justify-between bg-zinc-900 sticky top-0 z-10">
+                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Proposed Split</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setIsSplitModalOpen(false)} className="text-[10px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider">Cancel</button>
+                    <button onClick={handleCreateAllSplit} className="text-[10px] bg-copernicus-phosphor text-[#050505] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">Create all</button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-zinc-800">
+                  {splitProposals.map((proposal, idx) => (
+                    <div key={idx} className="bg-black/50 border border-white/5 rounded flex flex-col">
+                      <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2 bg-zinc-900/50">
+                        <div className={`px-2 py-0.5 rounded-[2px] text-[9px] font-bold uppercase tracking-widest border border-white/10 ${idx === 0 ? TYPE_COLORS['instruction'].bg + ' ' + TYPE_COLORS['instruction'].text : TYPE_COLORS['rule'].bg + ' ' + TYPE_COLORS['rule'].text}`}>
+                          {idx === 0 ? 'instruction' : 'rule'}
+                        </div>
+                        <input
+                          className="flex-1 bg-transparent text-xs font-bold text-zinc-300 outline-none"
+                          value={proposal.title}
+                          onChange={e => {
+                            const newProposals = [...splitProposals]
+                            if (newProposals[idx]) newProposals[idx]!.title = e.target.value
+                            setSplitProposals(newProposals)
+                          }}
+                        />
+                      </div>
+                      <textarea
+                        className="w-full h-32 bg-transparent text-zinc-400 font-mono text-[10px] p-3 outline-none resize-y scrollbar-thin scrollbar-thumb-zinc-800"
+                        value={proposal.content}
+                        onChange={e => {
+                          const newProposals = [...splitProposals]
+                          if (newProposals[idx]) newProposals[idx]!.content = e.target.value
+                          setSplitProposals(newProposals)
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
 
             <div className="flex-1 p-4 relative">
               <textarea
