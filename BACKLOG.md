@@ -115,6 +115,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #456 | Model Calls Prompt Id Schema | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #457 | Capex Cost Per Active Second | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | APPROVED FOR IMPLEMENTATION | P2 — Feature |
+| #459 | Crash Recovery Otel Rehydration | APPROVED FOR IMPLEMENTATION | P2 — Reliability |
+| #532 | Jules Pr Auto Review Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -426,7 +428,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
-| #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
 | #522 | Nlm Tools Safari Extension Port | DRAFT | P1 |
 | #523 | Notebooklm Mcp Intelligence Bridge | DRAFT | P1 |
 | #524 | Cross Platform Daemon Installer | DRAFT | P1 — Infrastructure |
@@ -436,7 +437,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #529 | End User Documentation Suite | DRAFT | P1 — Feature |
 | #530 | Documentation Screenshot Capture | DRAFT | P2 — Feature |
 | #531 | Sprint Finishing Ceremony Workflow | DRAFT | P1 — Feature |
-| #532 | Jules Pr Auto Review Gate | DRAFT | P0 — Blocker |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
