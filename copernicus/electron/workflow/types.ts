@@ -138,6 +138,7 @@ export interface WorkflowStepStartEvent {
   nodeType: string;
   turn: number;
   timestamp: number;
+  promptId: string;
 }
 
 export interface WorkflowStepEndEvent {
@@ -146,6 +147,7 @@ export interface WorkflowStepEndEvent {
   status: 'completed' | 'error' | 'skipped';
   durationMs: number;
   timestamp: number;
+  promptId: string;
 }
 
 export interface WavePlan {

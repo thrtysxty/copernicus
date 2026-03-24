@@ -13,6 +13,7 @@ import type { StoriesManager } from '../stories';
 import { ExtensionRegistry } from '../extensions/ExtensionRegistry'; // Import as a concrete class
 import log from '../utils/logger';
 import path from 'path';
+import crypto from 'crypto';
 import { SnapshotManager } from './snapshot-manager';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -155,7 +156,8 @@ export class WorkflowEngine {
               nodeId: node.id,
               status: 'skipped',
               durationMs: 0,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              promptId: crypto.randomUUID()
             } as WorkflowStepEndEvent);
           }
           continue;
@@ -249,6 +251,11 @@ export class WorkflowEngine {
     this.currentTurn++;
     const workflowId = this.context.get('__workflowId') ?? 'unknown';
     const startTime = Date.now();
+    const promptId = crypto.randomUUID();
+
+    // Store promptId in context so it can be passed to agents as an env var/metadata
+    // This allows OTel telemetry (e.g. from Claude Code) to correlate with this step
+    this.context.set('__promptId', promptId);
 
     if (this.services?.win) {
       this.services.win.webContents.send('workflow:step-start', {
@@ -256,7 +263,8 @@ export class WorkflowEngine {
         nodeId: node.id,
         nodeType: node.type,
         turn: this.currentTurn,
-        timestamp: startTime
+        timestamp: startTime,
+        promptId
       } as WorkflowStepStartEvent);
     }
 
@@ -332,7 +340,8 @@ export class WorkflowEngine {
           nodeId: node.id,
           status: 'completed',
           durationMs,
-          timestamp: endTime
+          timestamp: endTime,
+          promptId
         } as WorkflowStepEndEvent);
       }
     } catch (err: unknown) {
@@ -358,7 +367,8 @@ export class WorkflowEngine {
           nodeId: node.id,
           status: 'error',
           durationMs,
-          timestamp: endTime
+          timestamp: endTime,
+          promptId
         } as WorkflowStepEndEvent);
       }
 
