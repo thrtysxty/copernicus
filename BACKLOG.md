@@ -116,7 +116,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #457 | Capex Cost Per Active Second | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #459 | Crash Recovery Otel Rehydration | APPROVED FOR IMPLEMENTATION | P2 — Reliability |
-| #532 | Jules Pr Auto Review Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -407,6 +406,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #519 | Agent Role Taxonomy Node Types In Workflow Engine | COMPLETE | P1 |
 | #520 | Stitch Mcp Api Key Auth Support | COMPLETE | P1 |
 | #521 | Jules Api Ipc Wiring And Sourcecontext Fix | COMPLETE | P1 |
+| #532 | Jules Pr Auto Review Gate | COMPLETE | P0 — Blocker |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
