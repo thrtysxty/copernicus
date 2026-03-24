@@ -89,6 +89,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const authManager = new AuthManager()
+julesMonitor.setApiKey(authManager.getApiKey('jules') ?? '')
+
 const githubManager = new GithubManager(authManager)
 const modelRegistry = new ModelRegistry()
 export const settingsStore = new SettingsStore()
@@ -116,7 +118,7 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false },
   })
   if (isDebug) { win.webContents.openDevTools(); log.transports.file.level = 'debug'; }
-  storiesManager.setWindow(win); julesMonitor.setWindow(win); lspManager.setWindow(win); julesMonitor.resumeWatching();
+  storiesManager.setWindow(win); julesMonitor.setWindow(win); lspManager.setWindow(win); 
   if (process.platform === 'darwin') {
     const tbConfig = { ...DEFAULT_TOUCH_BAR_CONFIG, ...(settingsStore.getAll()?.touchBar as any ?? {}) }
     touchBarCleanup = createTouchBar(win, tbConfig)
@@ -126,7 +128,10 @@ function createWindow() {
   win.on('enter-full-screen', () => win?.webContents.send('window:fullscreen-state', true))
   win.on('leave-full-screen', () => win?.webContents.send('window:fullscreen-state', false))
 
-  win.webContents.on('did-finish-load', () => win?.webContents.send('main-process-message', (new Date).toLocaleString()))
+  win.webContents.on('did-finish-load', () => {
+    win?.webContents.send('main-process-message', (new Date).toLocaleString())
+    julesMonitor.resumeWatching()
+  })
   if (ipcCleanupFns) {
     win.webContents.on('did-start-loading', () => {
       ipcCleanupFns!.cleanupTestHandlers()

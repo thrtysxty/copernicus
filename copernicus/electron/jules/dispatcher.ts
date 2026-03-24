@@ -1,7 +1,7 @@
 import { stateLedger, StoryRecord, JulesSession } from '../db/state-ledger'
 import { generateJulesPrompt } from './prompt-generator'
 
-const JULES_API_BASE = 'https://jules.google.com/v1alpha'
+const JULES_API_BASE = 'https://jules.googleapis.com/v1alpha'
 
 export interface DispatchOptions {
   story: StoryRecord
@@ -40,8 +40,8 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
         title: `Story ${story.id.replace('story_', '')} — ${story.title}`,
         prompt,
         sourceContext: {
-          repository: repo,
-          ref: branch,
+          source: `sources/github/${repo}`,
+          githubRepoContext: { startingBranch: branch },
         },
         requirePlanApproval,
         automationMode: requirePlanApproval ? undefined : 'AUTO_CREATE_PR',

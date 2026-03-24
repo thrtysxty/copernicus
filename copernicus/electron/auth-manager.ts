@@ -195,6 +195,7 @@ export class AuthManager {
       case 'ollama': return process.env.OLLAMA_API_KEY || process.env.OLLAMA_CLOUD_TOKEN;
       case 'ollama-cloud': return process.env.OLLAMA_CLOUD_TOKEN || process.env.OLLAMA_API_KEY;
       case 'stitch': return process.env.STITCH_API_KEY;
+      case 'jules': return process.env.JULES_API_KEY;
       default: return undefined;
     }
   }

@@ -104,7 +104,7 @@ const SEND_CHANNELS = new Set([
   'browser:launch', 'browser:navigate', 'browser:screenshot',
   'browser:click', 'browser:fill', 'browser:evaluate', 'browser:close',
   // Jules (Story 161)
-  'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session',
+  'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session', 'jules:list-sources', 'jules:approve-plan', 'jules:list-activities',
   // Local Model (Story 361)
   'localmodel:start', 'localmodel:stop', 'localmodel:status',
   // Gemini PTY agent (Story 195)
