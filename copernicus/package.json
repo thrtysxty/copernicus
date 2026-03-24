@@ -90,13 +90,17 @@
       {
         "from": "backend/dist/copernicus-backend",
         "to": "copernicus-backend",
-        "filter": ["!**/node_modules"],
+        "filter": [
+          "!**/node_modules"
+        ],
         "platform": "!win32"
       },
       {
         "from": "backend/dist/copernicus-backend.exe",
         "to": "copernicus-backend.exe",
-        "filter": ["!**/node_modules"],
+        "filter": [
+          "!**/node_modules"
+        ],
         "platform": "win32"
       }
     ]

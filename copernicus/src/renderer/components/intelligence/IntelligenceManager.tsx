@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Plus, Trash2, SplitSquareHorizontal, CheckCircle2, AlertCircle, Clock, Save, FileText, Bot, Wrench, Terminal, ShieldAlert } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
-import { IntelligenceDocument, IntelligenceDocType, SyncStatusValue, ProviderKey } from '../../../../electron/intelligence/types'
+import { IntelligenceDocument, IntelligenceDocType, SyncStatusValue, ProviderKey, IntelligenceDocSuggestion } from '../../../../electron/intelligence/types'
+import { IntelligenceSuggestBanner } from './IntelligenceSuggestBanner'
 
 const TYPE_ORDER: IntelligenceDocType[] = ['instruction', 'rule', 'agent', 'skill', 'command']
 const TYPE_COLORS: Record<IntelligenceDocType, { bg: string, text: string, icon: React.ReactNode }> = {
@@ -33,6 +34,9 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
   const [editorDesc, setEditorDesc] = useState('')
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'syncing' | 'error'>('saved')
   
+  const [suggestions, setSuggestions] = useState<IntelligenceDocSuggestion[]>([])
+  const [hasDismissedSuggestions, setHasDismissedSuggestions] = useState(false)
+
   const selectedDoc = documents.find(d => d.id === selectedDocId)
 
   const fetchDocs = useCallback(async () => {
@@ -41,6 +45,17 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
       const docs = unwrapIpc<IntelligenceDocument[]>(res as any)
       if (docs) {
         setDocuments(docs)
+        if (docs.length === 0) {
+          try {
+            const suggRes = await invoke<IntelligenceDocSuggestion[]>('intel:suggest', { projectId: 'current' })
+            const suggs = unwrapIpc<IntelligenceDocSuggestion[]>(suggRes as any)
+            if (suggs && suggs.length > 0) {
+              setSuggestions(suggs)
+            }
+          } catch (e) {
+            console.error('Failed to fetch intelligence suggestions', e)
+          }
+        }
       }
     } catch (e) {
       console.error('Failed to fetch intelligence docs', e)
@@ -290,7 +305,17 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
       </div>
 
       {/* Right Pane - Editor */}
-      <div className="flex-1 flex flex-col bg-[#050505]">
+      <div className="flex-1 flex flex-col bg-[#050505] overflow-hidden">
+        {documents.length === 0 && suggestions.length > 0 && !hasDismissedSuggestions && (
+          <IntelligenceSuggestBanner
+            suggestions={suggestions}
+            onDismiss={() => setHasDismissedSuggestions(true)}
+            onComplete={(newDocs) => {
+              setDocuments(prev => [...prev, ...newDocs])
+              setHasDismissedSuggestions(true)
+            }}
+          />
+        )}
         {selectedDoc ? (
           <>
             <div className="p-4 border-b border-white/5 space-y-3 shrink-0">

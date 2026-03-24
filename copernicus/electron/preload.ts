@@ -8,14 +8,14 @@ const SEND_CHANNELS = new Set([
   // Models
   'models:list', 'models:active', 'models:set-active', 'models:list-ollama', 'models:set-default',
   'retro:list', 'retro:get', 'retro:create', 'retro:update-item', 'retro:commit', 'retro:push-ready', 'retro:generate', 'retro:gate-status', 'retro:trigger-manual',
-  'intel:list', 'intel:get', 'intel:create', 'intel:update', 'intel:delete',
+  'intel:list', 'intel:get', 'intel:create', 'intel:update', 'intel:delete', 'intel:suggest',
 
   // LLM Chat
   'chat:send', 'chat:confirm-model-switch', 'chat:compress-delta', 'chat:done-extraction',
   // File System
   'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
   // Skills
-  'skills:detect-stack', 'skills:audit',
+  'skills:detect-stack', 'skills:audit', 'skills:scaffold',
   'fs:create-file', 'fs:create-dir', 'fs:rename', 'fs:trash', 'fs:reveal',
   'fs:tx-begin', 'fs:tx-commit', 'fs:tx-rollback', 'fs:tx-status', 'fs:tx-undo', 'fs:save-multiple',
   'dialog:open-file', 'dialog:open-folder',
@@ -157,7 +157,7 @@ const LISTEN_CHANNELS = new Set([
   'agent:input', 'agent:message', 'agent:error', 'agent:code-stream',
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',
   'layout:toggle-ui-builder',
-  'retro:ready', 'retro:approved',
+  'retro:ready', 'retro:approved', 'skills:onboarding-needed',
 
   'security:git-push-request',
   'splash-status',

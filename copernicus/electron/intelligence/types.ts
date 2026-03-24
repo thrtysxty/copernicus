@@ -24,3 +24,12 @@ export interface IntelligenceDocument {
   syncStatus: Record<ProviderKey, SyncStatusValue>;
   ts: number;
 }
+
+export interface IntelligenceDocSuggestion {
+  id: string;          // suggestion_<ulid> — ephemeral, not persisted
+  type: IntelligenceDocType;
+  title: string;
+  description: string;
+  content: string;
+  rationale: string;   // why this suggestion was generated (displayed to user)
+}

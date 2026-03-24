@@ -246,6 +246,41 @@ app.whenReady().then(async () => {
         { timestamp: new Date().toISOString() }
       );
     }
+
+    // Story 462: Skill Onboarding Card
+    const stackProfile = detectStack(workspaceRoot);
+    let validSkillCount = 0;
+    const skillsDir = path.join(workspaceRoot, '.claude', 'skills');
+    if (fs.existsSync(skillsDir)) {
+      try {
+        const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            const skillMdPath = path.join(skillsDir, entry.name, 'SKILL.md');
+            if (fs.existsSync(skillMdPath)) {
+              validSkillCount++;
+            }
+          }
+        }
+      } catch (err) {
+        log.error('Failed to read skills directory:', err);
+      }
+    }
+    
+    // Defer emitting until window is fully loaded (which happens soon after createWindow)
+    if (validSkillCount < 2) {
+      app.on('browser-window-created', (_e, window) => {
+        window.webContents.once('did-finish-load', () => {
+          window.webContents.send('skills:onboarding-needed', stackProfile);
+        });
+      });
+      // also if win already exists, send it
+      if (win) {
+        win.webContents.once('did-finish-load', () => {
+          win?.webContents.send('skills:onboarding-needed', stackProfile);
+        });
+      }
+    }
   }
   const firstRunRef = { current: isFirstRun }
   ensureCopernicusDirectory(settingsStore, firstRunRef)

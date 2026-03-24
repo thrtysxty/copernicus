@@ -14,6 +14,7 @@ import { TEMPLATE_MANIFEST } from '../../templates'
 import { RetroCard } from './RetroCard'
 import { RetroReviewPanel } from './RetroReviewPanel'
 import { IntelligenceManager } from '../intelligence/IntelligenceManager'
+import { SkillOnboardingModal } from '../skills/SkillOnboardingModal'
 
 interface Story {
   id: string
@@ -215,6 +216,9 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const [activeRetroCard, setActiveRetroCard] = useState<any | null>(null)
   const [additionalPendingCount, setAdditionalPendingCount] = useState(0)
   const [activeView, setView] = useState<'planner' | 'intelligence'>('planner')
+  const [onboardingStackProfile, setOnboardingStackProfile] = useState<any | null>(null)
+  const [showSkillModal, setShowSkillModal] = useState(false)
+  const [isSkillOnboardingDismissed, setIsSkillOnboardingDismissed] = useState(false)
 
   // Sync cache data to stories state when cache resolves (AC5)
   useEffect(() => {
@@ -302,11 +306,34 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       }
     })
 
+    const removeOnboardingNeeded = window.ipcRenderer.on('skills:onboarding-needed', async (_e: any, stackProfile: any) => {
+      try {
+        const settingsRes = await invoke<any>('settings:load')
+        const settings = unwrapIpc<any>(settingsRes)
+        if (settings && !settings.skillOnboardingDismissed) {
+          setOnboardingStackProfile(stackProfile)
+        } else {
+          setIsSkillOnboardingDismissed(true)
+        }
+      } catch (err) {
+        log.error('Failed to load settings for onboarding check', err)
+      }
+    })
+
+    // On initial mount, also check settings if it's already dismissed
+    invoke<any>('settings:load').then(res => {
+      const settings = unwrapIpc<any>(res)
+      if (settings?.skillOnboardingDismissed) {
+        setIsSkillOnboardingDismissed(true)
+      }
+    }).catch(err => log.error('Failed to load settings', err))
+
     return () => {
       removeWorkflowStatus()
       removeStoriesUpdate()
       removeStatusChanged()
       removeRetroReady()
+      removeOnboardingNeeded()
     }
   }, [invoke, refreshData])
 
@@ -589,6 +616,31 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                     )}
 
                     {/* Cards */}
+                    {col.id === 'storyboarding' && onboardingStackProfile && !isSkillOnboardingDismissed && (
+                      <div className="mb-3 p-3 bg-zinc-900 border border-dashed border-indigo-500/50 rounded shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain size={12} className="text-indigo-400 shrink-0" />
+                          <h4 className="text-[11px] font-bold text-indigo-300">Set up project skills</h4>
+                        </div>
+                        <p className="text-[9px] text-zinc-400 mb-3 leading-relaxed">
+                          Detected: {[
+                            onboardingStackProfile.hasElectron && 'Electron',
+                            onboardingStackProfile.hasReact && 'React',
+                            onboardingStackProfile.hasTypeScript && 'TypeScript',
+                            onboardingStackProfile.hasFlask && 'Flask',
+                            onboardingStackProfile.hasPytest && 'pytest',
+                            onboardingStackProfile.hasPlaywright && 'Playwright'
+                          ].filter(Boolean).join(', ') || 'Unknown'}
+                        </p>
+                        <button
+                          onClick={() => setShowSkillModal(true)}
+                          className="w-full py-1.5 text-[9px] font-bold uppercase tracking-widest bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 border border-indigo-500/30 rounded transition-colors"
+                        >
+                          Configure Skills →
+                        </button>
+                      </div>
+                    )}
+
                     {colStories.map((story, idx) => (
                       <StoryCard 
                         key={story.id}
@@ -636,6 +688,37 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
         <div className="absolute inset-0 z-[100] bg-black">
           <IntelligenceManager onClose={() => setView('planner')} />
         </div>
+      )}
+
+      {showSkillModal && onboardingStackProfile && (
+        <SkillOnboardingModal
+          stackProfile={onboardingStackProfile}
+          onClose={() => setShowSkillModal(false)}
+          onDismiss={async () => {
+            setIsSkillOnboardingDismissed(true)
+            setShowSkillModal(false)
+            try {
+              const settingsRes = await invoke<any>('settings:load')
+              const settings = unwrapIpc<any>(settingsRes) || {}
+              settings.skillOnboardingDismissed = true
+              await invoke('settings:save', settings)
+            } catch (err) {
+              log.error('Failed to save settings', err)
+            }
+          }}
+          onSuccess={async () => {
+            setIsSkillOnboardingDismissed(true)
+            setShowSkillModal(false)
+            try {
+              const settingsRes = await invoke<any>('settings:load')
+              const settings = unwrapIpc<any>(settingsRes) || {}
+              settings.skillOnboardingDismissed = true
+              await invoke('settings:save', settings)
+            } catch (err) {
+              log.error('Failed to save settings', err)
+            }
+          }}
+        />
       )}
     </div>
   )
