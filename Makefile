@@ -89,13 +89,13 @@ clean:
 
 reset:
 	@echo "Wiping COPERNICUS app state (DB, settings, logs)..."
-	rm -rf ~/Library/Application\ Support/COPERNICUS/
+	rm -rf ~/Library/Application\ Support/copernicus/
 	rm -rf ~/.copernicus/logs/
 	@echo "Done. App will show setup wizard on next launch."
 
 reset-db:
 	@echo "Wiping COPERNICUS database only..."
-	rm -f ~/Library/Application\ Support/COPERNICUS/copernicus.db
+	rm -f ~/Library/Application\ Support/copernicus/copernicus.db
 	@echo "Done."
 
 ## ── Ollama Inference Server (Dell R210ii Core) ────────────────────────

@@ -22,45 +22,49 @@ Copernicus solves this with three principles:
 
 ---
 
-## Agent Roster
+## Execution Channels & Providers
 
-### Orchestration Agents
+Copernicus is not wired to specific models — it exposes three execution channels that any provider can fill. The incumbents listed below are what we run; the architecture is open.
 
-| Agent | How it runs | Primary use |
-|-------|-------------|-------------|
-| **Claude** | Anthropic streaming API, in-process | Architecture, review, chat, context Q&A |
-| **Gemini CLI** | PTY session via `node-pty`, `--direct` mode | Multi-file implementation, LSP-fed diagnostics, parallel sprints |
-| **Jules** | REST API → GitHub branch + PR (async) | Story implementation at scale, PR creation |
+### Three Execution Channels
 
-### Inference Providers
+| Channel | How it works | What occupies it today |
+|---------|-------------|------------------------|
+| **In-process streaming** | Direct API call from the Electron main process; response streams live to the chat panel | Any provider — Anthropic, Google, OpenAI, OpenRouter, DeepInfra, Ollama |
+| **PTY session** | Shell process with filesystem access; agent reads/writes files, runs tsc, calls tools autonomously | Gemini CLI (`--approval-mode yolo`) |
+| **Async PR agent** | Fire-and-forget to a remote agent; result is a GitHub branch + PR, reviewed by Claude before merge | Jules (Google) |
 
-Any workflow node, chat panel, or agent persona can be routed to any of these:
+Any model can be promoted into any channel. You could run Claude Sonnet as a PTY session, route Llama 3 through the async PR channel, or wire a Gemini API call in-process. The channel is the interface; the model is a configuration choice.
 
-| Provider | Models | Notes |
-|----------|--------|-------|
-| **Anthropic** | Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Sonnet | Vision support on all claude-3 variants |
-| **OpenAI** | GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo | Vision support on GPT-4o |
-| **Google** | Gemini 1.5 Pro, Gemini 1.5 Flash | Vision support on both |
-| **OpenRouter** | Gemini Pro, Mistral 7B, + any model on the OpenRouter catalogue | Single key, 200+ models |
-| **DeepInfra** | Llama 2 70B, + hosted open-source models | Cost-efficient open-weight inference |
-| **Ollama (local)** | Any locally installed model — `qwen3-embedding:0.6b`, Gemma, Mistral, DeepSeek… | Zero cloud cost, fully offline — also the embedding provider |
-| **Ollama (sovereign)** | Kimi, Qwen3-Coder, Qwen3-VL, DeepSeek-V3, Gemini-Flash via `cloud_agent.py` | 
+### Provider Ecosystem
 
-`cloud_agent.py` exposes five named roles that route through the sovereign Ollama instance:
+| Provider | Models we test with | Cost | What it's great for |
+|----------|---------------------|------|---------------------|
+| **Anthropic** | Claude 4.6 Opus · Sonnet · Haiku | Pay-per-token | Architecture, code review, complex reasoning, the PR gate |
+| **Google Gemini** | Gemini 2.5 Pro · 2.0 Flash | Free tier + pay | Long-context implementation, multimodal, multi-file refactors |
+| **Jules** | Google async coding agent | Free tier | Story implementation via isolated GitHub branch + PR |
+| **OpenAI** | GPT-4o · GPT-4 Turbo | Pay-per-token | General purpose, vision, function calling |
+| **OpenRouter** | 200+ models via one key | Varies by model | Model variety, cost arbitrage, fallback routing |
+| **DeepInfra** | Llama 3.3 70B · Qwen2.5 · Mistral | Low cost | Cost-efficient open-weight inference, batch tasks |
+| **Ollama (local)** | Any model — Llama, Qwen, Gemma, DeepSeek, Phi… | Free | Full offline, privacy, codebase embeddings |
+| **Ollama (sovereign)** | Large models on a remote Ollama server — DeepSeek-V3, Qwen3-Coder, Kimi, Qwen3-VL… | Free (self-hosted) | GPU-class inference without cloud spend; set `OLLAMA_BASE_URL` to your server |
+| **Stitch / MCP** | codebase-memory · Context7 · Lynkr | Free | Live context injection, RAG, tool connectors |
 
-| Role | Model | Use |
-|------|-------|-----|
-| `thinker` | Kimi | Deep reasoning, long-context planning |
-| `coder` | Qwen3-Coder | Implementation, refactoring |
-| `vision` | Qwen3-VL | Image analysis, wireframe-to-component |
-| `researcher` | DeepSeek-V3 | Research, summarisation, literature review |
-| `fast` | Gemini-Flash | Parsing, classification, quick lookups |
+### Three Ways to Start
 
-```bash
-python3 dev_orchestrator/cloud_agent.py coder "Refactor auth module" --worktree feature-auth
-```
+**Free tier — zero API spend**
+Gemini CLI (free tier) handles multi-file implementation as a PTY session. Jules (free tier) handles async PR stories. Ollama runs local embeddings and inference. Full spec-driven development workflow, no credit card.
 
-Agents are not hardcoded to roles. Any node in the workflow engine can be wired to any provider + model + persona combination. The routing is yours to define.
+**Anthropic-first — the full review loop**
+Claude as architect and reviewer (in-process, streaming). Jules for async implementation. Claude Sonnet 4.6 reviews every PR diff against story ACs before `jules_daemon.py` merges. The complete Plan → Delegate → Review loop.
+
+**Local-first — nothing leaves your machine**
+Ollama handles inference, embeddings, and codebase search entirely on-device. Route individual tasks to cloud providers as you see fit. Start private, upgrade selectively.
+
+**Sovereign inference — own your stack**
+Point `OLLAMA_BASE_URL` at a self-hosted GPU server running DeepSeek-V3, Qwen3-Coder, or Kimi. GPU-class models at zero per-token cost. Mix with cloud providers for tasks where latency or capability matters more than cost.
+
+---
 
 ---
 
@@ -248,7 +252,7 @@ browser:close     → Session cleanup
 | Browser automation | `playwright-core` |
 | Charts | Recharts |
 | Backend | Python 3.11, Flask |
-| Orchestration | `gemini_session_manager.py` (spawn, monitor, tail) |
+| Orchestration | `gemini` CLI (yolo mode), `jules_daemon.py` (poll + review + merge) |
 | Inference | Anthropic · OpenAI · Google · OpenRouter · DeepInfra · Ollama (local) |
 | Infrastructure | Docker, PostgreSQL 16 |
 
@@ -257,10 +261,10 @@ browser:close     → Session cleanup
 ## Getting Started
 
 ```bash
-# Prerequisites: Node 20+, Python 3.11+, npm, Ollama (optional but recommended)
+# Prerequisites: Node.js 18+, Python 3.11+, gh CLI (recommended), Ollama (optional)
 
-# Install dependencies
-cd copernicus && npm install
+# One-command setup (checks prereqs, installs deps, creates config + secrets template)
+bash scripts/dev-setup.sh
 
 # Start backend (port 5001) + IDE
 make dev
@@ -268,10 +272,7 @@ make dev
 # Type check
 make tsc
 
-# Run Playwright tests
-make test-e2e
-
-# Regenerate backlog from story frontmatter
+# Regenerate BACKLOG.md from story files
 make backlog
 ```
 
@@ -282,24 +283,24 @@ On first launch, the **Genesis Wizard** walks you through credential setup, repo
 ## Agent Dispatch Toolchain
 
 ```bash
-# Dispatch a story to Jules (validates story format first)
-make jules STORY=docs/stories/story_NNN_title.md
+# Dispatch a story to Jules (validates story format, guards against re-dispatch)
+bash scripts/jules_assign.sh docs/stories/story_NNN_title.md
 
 # Dry run — print prompt size without dispatching
-make jules-dry STORY=...
+bash scripts/jules_assign.sh --dry-run docs/stories/story_NNN_title.md
 
-# Full preflight: install deps + tsc + ipc-lint
-make jules-preflight
+# Jules daemon — polls active sessions, reviews PRs, auto-merges on APPROVE
+python3 scripts/jules_daemon.py           # run continuously
+python3 scripts/jules_daemon.py --status  # show all sessions + review state
+
+# Gemini dispatch (write prompt to file first)
+gemini -p "$(cat /tmp/prompt.md)" --approval-mode yolo 2>&1 | tee /tmp/gemini_NNN.log
 
 # 10-point IPC compliance scan
 make ipc-lint
 
-# TypeScript check shortcut
+# TypeScript check
 make tsc
-
-# Gemini dispatch (via session manager)
-python3 dev_orchestrator/gemini_session_manager.py spawn \
-  --prompt-file /tmp/prompt.md --stories 346 --direct
 ```
 
 `ipc-lint` catches: bare `ipcMain.handle` without `handleIpc()` wrapper, renderer calls without `useIpcError()`, missing `unwrapIpc()`, stale channel IDs, stray `console.log`, ghost tint CSS, and more.
@@ -338,13 +339,13 @@ copernicus/
     hooks/              useIpcError (enforced IPC pattern)
 backend/                Flask API — devtime, story scaffolding, orchestration
 src/agentic/            Python multi-agent orchestration logic
-dev_orchestrator/       gemini_session_manager.py — spawn, list, tail, kill
 docs/
   stories/              Active stories (Markdown + frontmatter)
-  stories/completed/    267 archived completed stories
+  stories/completed/    Archived completed stories
+  sprints/              Sprint planning documents
   reference/            UX_BIBLE.md, TECHNICAL_BIBLE.md
-scripts/                jules_assign.sh, ipc-lint.sh, generate_backlog.py,
-                        security_audit.py…
+scripts/                jules_assign.sh, jules_daemon.py, dev-setup.sh,
+                        ipc-lint.sh, generate_backlog.py, security_audit.py…
 ```
 
 ---
@@ -353,7 +354,7 @@ scripts/                jules_assign.sh, ipc-lint.sh, generate_backlog.py,
 
 **IPC envelope** — Every `ipcMain.handle` uses `handleIpc()` returning `{ ok: true, data }` or `{ ok: false, error }`. Every renderer call uses `useIpcError()` + `unwrapIpc()`. Enforced by `make ipc-lint` and TypeScript types. No exceptions.
 
-**Agent dispatch** — Claude runs in-process (streaming). Gemini runs as a PTY session via `gemini_session_manager.py --direct` (suppresses sub-delegation footer). Jules dispatches async to GitHub and polls for PR completion. All three log to `model_calls` and surface in the terminal tab strip.
+**Agent dispatch** — Claude runs in-process (streaming). Gemini runs via the `gemini` CLI in yolo mode (`--approval-mode yolo`). Jules dispatches async to GitHub; `jules_daemon.py` polls for completion, runs a Claude Sonnet 4.6 review against story ACs and forbidden patterns, and auto-merges only on an explicit APPROVE verdict. All three log to `model_calls` and surface in the terminal tab strip.
 
 **Semantic search architecture** — LSP provides symbol boundaries → chunks stored in `sqlite-vec` with 768-dim embeddings → queries combine cosine similarity with symbol name boost → results returned as `{ file, line, col, symbol, score }[]`. No external dependencies beyond an embedding provider.
 
