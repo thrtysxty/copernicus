@@ -355,8 +355,8 @@ export const CapexDashboard: React.FC = () => {
                       actions={
                         <button onClick={() => exportToCsv(
                           `capex_${Date.now()}.csv`,
-                          ['Story ID','Component','Hours','Cost','Category','Sessions','Last Active'],
-                          report.map(r => [r.story_id, r.component, r.total_hours.toFixed(2), (r.total_hours * rate).toFixed(2), r.financial_category, String(r.session_count), r.end_date])
+                          ['Story ID','Component','Hours','Cost','Category','Sessions','Last Active','$/session'],
+                          report.map(r => [r.story_id, r.component, r.total_hours.toFixed(2), (r.total_hours * rate).toFixed(2), r.financial_category, String(r.session_count), r.end_date, r.session_count === 0 ? '' : ((r.total_hours * rate) / r.session_count).toFixed(2)])
                         )} className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors" title="Export CSV">
                           <Download size={12} />
                         </button>
@@ -369,11 +369,12 @@ export const CapexDashboard: React.FC = () => {
                               {['Story','Component','Hours','Est. Cost','Category','Sessions','Last Active'].map(h => (
                                 <th key={h} className="p-2 font-black tracking-tight">{h}</th>
                               ))}
+                              <th title="Estimated dev cost per dispatch session" className="p-2 font-black tracking-tight">$/session</th>
                             </tr>
                           </thead>
                           <tbody>
                             {report.length === 0 ? (
-                              <tr><td colSpan={7} className="p-6 text-center text-zinc-600 italic uppercase">No_Session_Data</td></tr>
+                              <tr><td colSpan={8} className="p-6 text-center text-zinc-600 italic uppercase">No_Session_Data</td></tr>
                             ) : (
                               report.map((r, i) => (
                                 <tr key={i} className="border-b border-zinc-800/40 hover:bg-white/5 transition-colors">
@@ -388,6 +389,11 @@ export const CapexDashboard: React.FC = () => {
                                   </td>
                                   <td className="p-2 text-right text-zinc-600 font-mono">{r.session_count}</td>
                                   <td className="p-2 text-right text-zinc-600 font-mono">{r.end_date}</td>
+                                  {r.session_count === 0 ? (
+                                    <td className="hidden"></td>
+                                  ) : (
+                                    <td className="p-2 text-right text-zinc-400 font-mono">${((r.total_hours * rate) / r.session_count).toFixed(2)}</td>
+                                  )}
                                 </tr>
                               ))
                             )}
