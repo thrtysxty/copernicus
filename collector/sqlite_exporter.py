@@ -6,6 +6,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import sys
 from urllib.parse import urlparse
 import time
+import hashlib
 
 # Configure logging
 logging.basicConfig(
@@ -20,6 +21,11 @@ DB_PATH = os.environ.get("COPERNICUS_DB_PATH")
 if not DB_PATH:
     logger.error("COPERNICUS_DB_PATH environment variable is not set")
     sys.exit(1)
+
+recovery_stats = {
+    "pendingRows": 0,
+    "recovered": 0
+}
 
 def parse_otlp_attributes(attributes):
     data = {}
@@ -38,7 +44,7 @@ def parse_otlp_attributes(attributes):
             data[key] = bool(value_dict["boolValue"])
     return data
 
-def write_to_db(signal_type, data):
+def write_to_db(signal_type, data, log_id=None):
     try:
         conn = sqlite3.connect(DB_PATH, timeout=10)
         cursor = conn.cursor()
@@ -101,6 +107,9 @@ def write_to_db(signal_type, data):
         else:
             logger.warning(f"Unknown signal type: {signal_type}")
 
+        if log_id is not None:
+            cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
+
         conn.commit()
         conn.close()
     except Exception as e:
@@ -112,11 +121,29 @@ class OTLPHandler(BaseHTTPRequestHandler):
         if content_length > 0:
             post_data = self.rfile.read(content_length)
             try:
+                # Compute hash and log payload
+                payload_hash = hashlib.sha256(post_data).hexdigest()
+                received_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+                try:
+                    conn = sqlite3.connect(DB_PATH, timeout=10)
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        INSERT INTO collector_log (received_at, payload_hash, written, payload)
+                        VALUES (?, ?, 0, ?)
+                    """, (received_at, payload_hash, post_data.decode('utf-8')))
+                    log_id = cursor.lastrowid
+                    conn.commit()
+                    conn.close()
+                except Exception as db_e:
+                    logger.error(f"Failed to write to collector_log: {db_e}")
+                    log_id = None
+
                 payload = json.loads(post_data.decode('utf-8'))
 
                 # Check for simplified testing format first
                 if "signal_type" in payload and "data" in payload:
-                    write_to_db(payload["signal_type"], payload["data"])
+                    write_to_db(payload["signal_type"], payload["data"], log_id)
 
                 # OTLP metrics format fallback
                 elif "resourceMetrics" in payload:
@@ -143,9 +170,18 @@ class OTLPHandler(BaseHTTPRequestHandler):
                                     elif "asDouble" in dp:
                                         data["value"] = float(dp["asDouble"])
 
-                                write_to_db(name, data)
+                                write_to_db(name, data, log_id)
                 else:
                     logger.warning("Unknown payload structure, ignoring.")
+                    if log_id is not None:
+                        try:
+                            conn = sqlite3.connect(DB_PATH, timeout=10)
+                            cursor = conn.cursor()
+                            cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
+                            conn.commit()
+                            conn.close()
+                        except Exception as ignore_e:
+                            pass
 
                 self.send_response(200)
                 self.end_headers()
@@ -165,11 +201,106 @@ class OTLPHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b"Empty payload")
 
+    def do_GET(self):
+        parsed_path = urlparse(self.path)
+        if parsed_path.path == '/recovery-status':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(recovery_stats).encode('utf-8'))
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b"Not Found")
+
     def log_message(self, format, *args):
         # Suppress default HTTP server logging
         pass
 
+def run_recovery():
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=10)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS collector_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                received_at TEXT,
+                payload_hash TEXT,
+                written INTEGER DEFAULT 0,
+                payload TEXT
+            )
+        """)
+        conn.commit()
+
+        cursor.execute("SELECT id, payload_hash, payload FROM collector_log WHERE written = 0 ORDER BY id ASC")
+        rows = cursor.fetchall()
+
+        pending_rows = len(rows)
+        recovery_stats["pendingRows"] = pending_rows
+        recovered = 0
+
+        if pending_rows > 0:
+            for log_id, payload_hash, payload_text in rows:
+                try:
+                    # Check if another row with same hash is already written
+                    cursor.execute("SELECT id FROM collector_log WHERE payload_hash = ? AND written = 1 LIMIT 1", (payload_hash,))
+                    if cursor.fetchone():
+                        # Deduplicate: Mark as written without processing
+                        cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
+                        conn.commit()
+                        continue
+
+                    payload = json.loads(payload_text)
+
+                    # Process payload manually to count exactly
+                    if "signal_type" in payload and "data" in payload:
+                        write_to_db(payload["signal_type"], payload["data"], log_id)
+                        recovered += 1
+                    elif "resourceMetrics" in payload:
+                        for rm in payload["resourceMetrics"]:
+                            for sm in rm.get("scopeMetrics", []):
+                                for metric in sm.get("metrics", []):
+                                    name = metric.get("name")
+                                    data = {}
+                                    data_points = []
+                                    if "sum" in metric:
+                                        data_points = metric["sum"].get("dataPoints", [])
+                                    elif "gauge" in metric:
+                                        data_points = metric["gauge"].get("dataPoints", [])
+
+                                    for dp in data_points:
+                                        attrs = dp.get("attributes", [])
+                                        data.update(parse_otlp_attributes(attrs))
+
+                                        if "asInt" in dp:
+                                            data["value"] = int(dp["asInt"])
+                                        elif "asDouble" in dp:
+                                            data["value"] = float(dp["asDouble"])
+
+                                    write_to_db(name, data, log_id)
+                        recovered += 1
+                    else:
+                        cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
+                        conn.commit()
+
+                except json.JSONDecodeError:
+                    logger.error(f"Invalid JSON payload in collector_log id {log_id}")
+                    cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
+                    conn.commit()
+                except Exception as e:
+                    logger.error(f"Error recovering log id {log_id}: {e}")
+
+            recovery_stats["recovered"] = recovered
+            if recovered > 0:
+                logger.info(f"[Telemetry] Recovered {recovered} rows from previous session")
+
+        conn.close()
+    except Exception as e:
+        logger.error(f"Recovery error: {e}")
+
 def run_server(port=4318):
+    run_recovery()
     server_address = ('localhost', port)
     httpd = HTTPServer(server_address, OTLPHandler)
     logger.info(f"Starting OTLP SQLite Exporter on port {port}")

@@ -226,6 +226,18 @@ async function registerIpcHandlers() {
     }
   }))
 
+  ipcMain.handle('telemetry:recovery-status', (_e) => handleIpc(async () => {
+    try {
+      const response = await fetch('http://localhost:4318/recovery-status');
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (err) {
+      log.warn('[Main] Failed to fetch recovery status:', err);
+    }
+    return { pendingRows: 0, recovered: 0 };
+  }))
+
   ipcMain.handle('telemetry:status', (_e) => handleIpc(async () => {
     const collectorRunning = collectorProcess !== null && !collectorProcess.killed;
 
