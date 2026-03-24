@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, Trash2, SplitSquareHorizontal, CheckCircle2, AlertCircle, Clock, Save, FileText, Bot, Wrench, Terminal, ShieldAlert } from 'lucide-react'
+import { Plus, Trash2, SplitSquareHorizontal, CheckCircle2, AlertCircle, Clock, Save, FileText, Bot, Wrench, Terminal, ShieldAlert, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 import { IntelligenceDocument, IntelligenceDocType, SyncStatusValue, ProviderKey, IntelligenceDocSuggestion } from '../../../../electron/intelligence/types'
@@ -36,6 +36,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
   
   const [suggestions, setSuggestions] = useState<IntelligenceDocSuggestion[]>([])
   const [hasDismissedSuggestions, setHasDismissedSuggestions] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   const selectedDoc = documents.find(d => d.id === selectedDocId)
 
@@ -380,6 +381,69 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               />
             </div>
 
+            {selectedDoc.type === 'rule' && (
+              <div className="shrink-0 border-t border-white/5 bg-zinc-900/50">
+                <PathScopeEditor
+                  pathScope={selectedDoc.pathScope || []}
+                  onChange={(newScope) => {
+                    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+                    setSaveStatus('saving')
+                    // update local list immediately so it reflects UI
+                    setDocuments(prev => prev.map(d => d.id === selectedDoc.id ? { ...d, pathScope: newScope } : d))
+                    saveTimerRef.current = setTimeout(() => {
+                      handleUpdate(selectedDoc.id, { pathScope: newScope })
+                    }, 800)
+                  }}
+                />
+                <div className="border-t border-white/5">
+                  <button
+                    onClick={() => setIsPreviewOpen(!isPreviewOpen)}
+                    className="flex items-center gap-1.5 px-4 py-2 w-full text-left hover:bg-zinc-800/50 transition-colors"
+                  >
+                    {isPreviewOpen ? <ChevronDown size={14} className="text-zinc-500" /> : <ChevronRight size={14} className="text-zinc-500" />}
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Frontmatter preview</span>
+                  </button>
+                  {isPreviewOpen && (
+                    <div className="px-4 pb-4 space-y-3">
+                      {selectedDoc.providers.filter(p => p.provider === 'claude' || p.provider === 'cursor').length > 0 ? (
+                        <>
+                          {selectedDoc.providers.some(p => p.provider === 'claude') && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Claude</span>
+                              <pre className="p-2 bg-black/50 border border-white/5 rounded text-[10px] text-zinc-300 font-mono overflow-x-auto">
+{`--- (paths:)
+paths:
+${(selectedDoc.pathScope || []).length > 0 ? (selectedDoc.pathScope || []).map(p => `  - ${p}`).join('\n') : ''}
+---
+${editorContent}`}
+                              </pre>
+                            </div>
+                          )}
+                          {selectedDoc.providers.some(p => p.provider === 'cursor') && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Cursor</span>
+                              <pre className="p-2 bg-black/50 border border-white/5 rounded text-[10px] text-zinc-300 font-mono overflow-x-auto">
+{`---
+globs:
+${(selectedDoc.pathScope || []).length > 0 ? (selectedDoc.pathScope || []).map(p => `  - ${p}`).join('\n') : ''}
+---
+${editorContent}`}
+                              </pre>
+                            </div>
+                          )}
+                        </>
+                      ) : null}
+                      {selectedDoc.providers.some(p => p.provider !== 'claude' && p.provider !== 'cursor') && (
+                        <div className="text-[10px] text-zinc-500">
+                          Path scoping not supported — content will be appended to the provider's instruction file.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Sync Status Bar */}
             <div className="h-8 border-t border-white/5 bg-zinc-950 flex items-center justify-between px-4 shrink-0">
               <div className="flex items-center gap-4">
@@ -423,4 +487,55 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
 
 function Brain(props: any) {
   return <Bot {...props} />
+}
+
+interface PathScopeEditorProps {
+  pathScope: string[]
+  onChange: (newScope: string[]) => void
+}
+
+function PathScopeEditor({ pathScope, onChange }: PathScopeEditorProps) {
+  const [inputValue, setInputValue] = useState('')
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const val = inputValue.trim().replace(/^,|,$/g, '')
+      if (val && !pathScope.includes(val)) {
+        onChange([...pathScope, val])
+      }
+      setInputValue('')
+    } else if (e.key === 'Backspace' && !inputValue && pathScope.length > 0) {
+      const newScope = [...pathScope]
+      newScope.pop()
+      onChange(newScope)
+    }
+  }
+
+  const removeTag = (tag: string) => {
+    onChange(pathScope.filter(t => t !== tag))
+  }
+
+  return (
+    <div className="px-4 py-3">
+      <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">Path scope (glob patterns)</div>
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-black/50 border border-zinc-800 rounded min-h-[34px] focus-within:border-copernicus-phosphor transition-colors">
+        {pathScope.map(tag => (
+          <div key={tag} className="flex items-center gap-1 bg-zinc-800 text-zinc-300 text-[10px] font-mono px-2 py-0.5 rounded-sm">
+            <span>{tag}</span>
+            <button onClick={() => removeTag(tag)} className="text-zinc-500 hover:text-white transition-colors">
+              <X size={10} />
+            </button>
+          </div>
+        ))}
+        <input
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={pathScope.length === 0 ? "e.g. src/**/*.ts (press Enter to add)" : ""}
+          className="flex-1 min-w-[120px] bg-transparent text-xs font-mono text-zinc-300 outline-none p-0.5 placeholder:font-sans placeholder:text-zinc-600"
+        />
+      </div>
+    </div>
+  )
 }
