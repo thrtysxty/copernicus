@@ -101,4 +101,14 @@ app.register_blueprint(notebooklm_bp, url_prefix='/api/notebooklm')
 app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
 
 if __name__ == '__main__':
+    import sys
+    if '--notebooklm-login' in sys.argv:
+        try:
+            from notebooklm.notebooklm_cli import main as notebooklm_main
+            sys.argv = [sys.argv[0], 'login']
+            sys.exit(notebooklm_main())
+        except ImportError:
+            logger.error("notebooklm package is not installed. Please install it first.")
+            sys.exit(1)
+
     socketio.run(app, host='0.0.0.0', port=5001, debug=False, allow_unsafe_werkzeug=True)
