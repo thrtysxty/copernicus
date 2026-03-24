@@ -4,13 +4,14 @@ import {
   RadialBarChart, RadialBar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
-import { Download, Play, RefreshCw, Maximize2, Minimize2 } from 'lucide-react'
+import { Download, Play, RefreshCw, Maximize2, Minimize2, Clock } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useToastStore } from '../../store/toastStore'
 import { CHART_THEME } from './chart-theme'
 import { unwrapIpc } from '../../types/ipc'
 import { HeatmapView } from './HeatmapView'
 import { ModelLeaderboard } from './ModelLeaderboard'
+import { RetroArchiveView } from './RetroArchiveView'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -30,7 +31,7 @@ interface Throughput     { week: string; completed: number }
 interface StatusDist     { status: string; count: number }
 interface BugsByAssignee { assignee: string; bug_count: number }
 
-type DashTab = 'financial' | 'quality' | 'llm' | 'velocity' | 'heatmap' | 'leaderboard'
+type DashTab = 'financial' | 'quality' | 'llm' | 'velocity' | 'heatmap' | 'leaderboard' | 'retrospectives'
 const TABS: { id: DashTab; label: string }[] = [
   { id: 'financial', label: 'FINANCIAL' },
   { id: 'quality',   label: 'QUALITY'   },
@@ -38,6 +39,7 @@ const TABS: { id: DashTab; label: string }[] = [
   { id: 'velocity',  label: 'VELOCITY'  },
   { id: 'heatmap',   label: 'HEATMAP'   },
   { id: 'leaderboard', label: 'LEADERBOARD' },
+  { id: 'retrospectives', label: 'RETROS' },
 ]
 
 // ── Components ─────────────────────────────────────────────────────────────
@@ -262,12 +264,15 @@ export const CapexDashboard: React.FC = () => {
         <div className="flex h-full">
           {TABS.map(t => (
             <button key={t.id} onClick={() => activateTab(t.id)}
-              className={`px-3 text-[10px] font-bold tracking-widest transition-all h-full border-r border-zinc-800/50 ${
+              className={`flex items-center gap-1.5 px-3 text-[10px] font-bold tracking-widest transition-all h-full border-r border-zinc-800/50 ${
                 activeTab === t.id
                   ? 'text-copernicus-phosphor bg-copernicus-phosphor/5'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
               }`}
-            >{t.label}</button>
+            >
+                {t.id === 'retrospectives' && <Clock size={12} className={activeTab === t.id ? 'text-copernicus-phosphor' : 'text-zinc-500'} />}
+                {t.label}
+            </button>
           ))}
         </div>
 
@@ -626,6 +631,9 @@ export const CapexDashboard: React.FC = () => {
 
           {/* ── LEADERBOARD ───────────────────────────────────────────────── */}
           {activeTab === 'leaderboard' && <ModelLeaderboard days={days} />}
+
+          {/* ── RETROS ────────────────────────────────────────────────────── */}
+          {activeTab === 'retrospectives' && <RetroArchiveView />}
 
         </div>
       </div>
