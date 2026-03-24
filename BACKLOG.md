@@ -110,13 +110,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #432 | Notebooklm Backend Provider And Ipc | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #433 | Notebooklm Renderer Integration | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
-| #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | APPROVED FOR IMPLEMENTATION | P2 |
-| #453 | Otel Collector Sidecar | APPROVED FOR IMPLEMENTATION | P2 — Infrastructure |
-| #454 | Telemetry Settings Managed Block | APPROVED FOR IMPLEMENTATION | P2 — Infrastructure |
-| #455 | Prompt Id Workflow Events | APPROVED FOR IMPLEMENTATION | P2 — Feature |
+| #451 | Notebooklm Packaged Binary Login | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #456 | Model Calls Prompt Id Schema | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #457 | Capex Cost Per Active Second | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | APPROVED FOR IMPLEMENTATION | P2 — Feature |
@@ -347,6 +342,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #429 | Ipc Batching And Caching Layer | COMPLETE | P2 — Performance |
 | #430 | Registerallipchandlers Decomposition | COMPLETE | P2 — Tech Debt |
 | #431 | Workflow Engine Shell Injection Fix | COMPLETE | P0 — Security (blocking) |
+| #432 | Notebooklm Backend Provider And Ipc | COMPLETE | P2 — Feature |
+| #433 | Notebooklm Renderer Integration | COMPLETE | P2 — Feature |
 | #437 | Multiplatform Build Pipeline | COMPLETE | P1 — Infrastructure |
 | #438 | Kanban Card Double Click Fix | COMPLETE | P1 — Bug |
 | #439 | Search Drawer Live Results And Enter Persist | COMPLETE | P1 — Bug |
@@ -360,6 +357,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #448 | 448 Editor Field Base Font Size 10Pt | COMPLETE | P2 — UX |
 | #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | COMPLETE | P0 — Dev Tooling |
 | #450 | Add Tavily Mcp As Live Web Intelligence Tool | COMPLETE | P0 — Dev Tooling |
+| #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | COMPLETE | P2 |
+| #453 | Otel Collector Sidecar | COMPLETE | P2 — Infrastructure |
+| #454 | Telemetry Settings Managed Block | COMPLETE | P2 — Infrastructure |
+| #455 | Prompt Id Workflow Events | COMPLETE | P2 — Feature |
 | #460 | Stack Detector | COMPLETE | P1 — Feature |
 | #461 | Skill Template Library | COMPLETE | P1 — Feature |
 | #462 | Skill Onboarding Card | COMPLETE | P1 — Feature |
@@ -425,9 +426,17 @@ This file is auto-generated. Run `make backlog` to update.
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
-| #451 | Notebooklm Packaged Binary Login | DRAFT | P1 — Feature |
 | #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
 | #522 | Nlm Tools Safari Extension Port | DRAFT | P1 |
 | #523 | Notebooklm Mcp Intelligence Bridge | DRAFT | P1 |
+| #524 | Cross Platform Daemon Installer | DRAFT | P1 — Infrastructure |
+| #525 | Flask Backend Persistent Service | DRAFT | P1 — Infrastructure |
+| #527 | Copernicus Mcp Hub | DRAFT | P1 — Infrastructure |
+| #528 | Developer Documentation Suite | DRAFT | P1 — Infrastructure |
+| #529 | End User Documentation Suite | DRAFT | P1 — Feature |
+| #530 | Documentation Screenshot Capture | DRAFT | P2 — Feature |
+| #531 | Sprint Finishing Ceremony Workflow | DRAFT | P1 — Feature |
+| #532 | Jules Pr Auto Review Gate | DRAFT | P0 — Blocker |
+| #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
