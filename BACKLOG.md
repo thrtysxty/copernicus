@@ -117,6 +117,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #461 | Skill Template Library | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #462 | Skill Onboarding Card | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #463 | Skill Scaffold Generator | APPROVED FOR IMPLEMENTATION | P1 — Feature |
+| #464 | Scaffold Skills Slash Command | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #465 | Skill Description Auditor | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #466 | Claude Plugin Data Migration | APPROVED FOR IMPLEMENTATION | P2 — Maintenance |
 | #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
@@ -422,7 +423,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #457 | Capex Cost Per Active Second | DRAFT | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | DRAFT | P2 — Feature |
 | #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
-| #464 | Scaffold Skills Slash Command | DRAFT | P1 — Feature |
 | #467 | Hindsight R620 Deployment | DRAFT | P1 — Infrastructure |
 | #468 | Memory Bank Wiring | DRAFT | P1 — Feature |
 | #469 | Reflect Session Injection | DRAFT | P1 — Feature |
