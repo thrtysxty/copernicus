@@ -219,6 +219,9 @@ export class StateLedger {
     this.db.exec(SCHEMA.agent_memory);
     this.db.exec(SCHEMA.agent_work_log);
     this.db.exec(SCHEMA.memory_working_set);
+
+    // NotebookLM
+    this.db.exec(SCHEMA.nlm_notebooks);
     this.migrateAgentMemory();
   }
 
@@ -1251,6 +1254,28 @@ export class StateLedger {
   deleteIntelDoc(id: string): boolean {
     this.db.prepare('DELETE FROM intelligence_documents WHERE id = ?').run(id);
     return true;
+  }
+
+  getNlmNotebooks() {
+    return this.db.prepare('SELECT * FROM nlm_notebooks ORDER BY created_at DESC').all();
+  }
+
+  registerNlmNotebook(notebook: { id: string; name: string; domain: string; description: string }) {
+    const stmt = this.db.prepare(`
+      INSERT INTO nlm_notebooks (id, name, domain, description)
+      VALUES (@id, @name, @domain, @description)
+      ON CONFLICT(id) DO UPDATE SET
+        name = @name,
+        domain = @domain,
+        description = @description
+    `);
+    stmt.run(notebook);
+    return this.getNlmNotebooks();
+  }
+
+  removeNlmNotebook(id: string) {
+    this.db.prepare('DELETE FROM nlm_notebooks WHERE id = ?').run(id);
+    return this.getNlmNotebooks();
   }
 
   getFailedAgentWorkLog(projectId: string, storyId: string, failedAgentId: string): any[] {

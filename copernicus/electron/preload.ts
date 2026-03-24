@@ -51,6 +51,8 @@ const SEND_CHANNELS = new Set([
   'agent:delegate', 'agent:forward',
   'agent:patch-apply', 'agent:patch-reverse',
   'agent:send-code-stream',
+  // NotebookLM
+  'nlm:list-notebooks', 'nlm:register-notebook', 'nlm:remove-notebook', 'nlm:query',
   // Security
   'security:git-push-response',
   // Settings

@@ -19,6 +19,18 @@
       ],
       "description": "Fetch External Open API specs and Pytest documentation",
       "disabled": false
+    },
+    "notebooklm": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "notebooklm",
+        "mcp"
+      ],
+      "env": {
+        "NLM_COOKIE_FILE": "~/.secrets/nlm-cookies.json"
+      },
+      "description": "NotebookLM MCP Intelligence Bridge"
     }
   },
   "lifecycle_hooks": {

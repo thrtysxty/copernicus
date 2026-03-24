@@ -401,5 +401,14 @@ export const SCHEMA = {
       file_path   TEXT,
       timestamp   TEXT
     );
+  `,
+  nlm_notebooks: `
+    CREATE TABLE IF NOT EXISTS nlm_notebooks (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      domain TEXT NOT NULL,
+      description TEXT,
+      created_at INTEGER DEFAULT (unixepoch())
+    );
   `
 };

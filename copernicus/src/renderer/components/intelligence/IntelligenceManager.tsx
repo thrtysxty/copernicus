@@ -4,6 +4,7 @@ import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 import { IntelligenceDocument, IntelligenceDocType, SyncStatusValue, ProviderKey, IntelligenceDocSuggestion } from '../../../../electron/intelligence/types'
 import { IntelligenceSuggestBanner } from './IntelligenceSuggestBanner'
+import { NotebookLMSection } from './NotebookLMSection'
 
 const TYPE_ORDER: IntelligenceDocType[] = ['instruction', 'rule', 'agent', 'skill', 'command']
 const TYPE_COLORS: Record<IntelligenceDocType, { bg: string, text: string, icon: React.ReactNode }> = {
@@ -369,42 +370,46 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
-          {TYPE_ORDER.map(type => {
-            const docs = groupedDocs[type]
-            if (!docs.length) return null
-            return (
-              <div key={type} className="mb-4 mt-2">
-                <div className="px-3 py-1.5 flex items-center gap-1.5 sticky top-0 bg-zinc-950/90 backdrop-blur z-10 border-b border-white/5">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">{type}s</span>
-                </div>
-                <div>
-                  {docs.map(doc => (
-                    <div
-                      key={doc.id}
-                      onClick={() => setSelectedDocId(doc.id)}
-                      className={`group flex items-center gap-2 px-3 py-2 cursor-pointer border-l-2 transition-colors ${selectedDocId === doc.id ? 'border-copernicus-phosphor bg-zinc-900' : 'border-transparent hover:bg-zinc-900/50'}`}
-                    >
-                      <div className={`p-1 rounded ${TYPE_COLORS[doc.type].bg} ${TYPE_COLORS[doc.type].text}`}>
-                        {TYPE_COLORS[doc.type].icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-medium text-zinc-200 truncate">{doc.title}</div>
-                        <div className="text-[9px] text-zinc-500 truncate">{doc.description}</div>
-                      </div>
-                      {renderStatusDots(doc)}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(doc.id); }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-red-400 transition-opacity ml-1"
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 p-2 space-y-4 pb-12">
+          <div>
+            {TYPE_ORDER.map(type => {
+              const docs = groupedDocs[type]
+              if (!docs.length) return null
+              return (
+                <div key={type} className="mb-4 mt-2">
+                  <div className="px-3 py-1.5 flex items-center gap-1.5 sticky top-0 bg-zinc-950/90 backdrop-blur z-10 border-b border-white/5">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">{type}s</span>
+                  </div>
+                  <div>
+                    {docs.map(doc => (
+                      <div
+                        key={doc.id}
+                        onClick={() => setSelectedDocId(doc.id)}
+                        className={`group flex items-center gap-2 px-3 py-2 cursor-pointer border-l-2 transition-colors ${selectedDocId === doc.id ? 'border-copernicus-phosphor bg-zinc-900' : 'border-transparent hover:bg-zinc-900/50'}`}
                       >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  ))}
+                        <div className={`p-1 rounded ${TYPE_COLORS[doc.type].bg} ${TYPE_COLORS[doc.type].text}`}>
+                          {TYPE_COLORS[doc.type].icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[11px] font-medium text-zinc-200 truncate">{doc.title}</div>
+                          <div className="text-[9px] text-zinc-500 truncate">{doc.description}</div>
+                        </div>
+                        {renderStatusDots(doc)}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(doc.id); }}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-red-400 transition-opacity ml-1"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
+
+          <NotebookLMSection />
         </div>
       </div>
 
