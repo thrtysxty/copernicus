@@ -45,7 +45,7 @@ const SEND_CHANNELS = new Set([
   // Model Call Ledger (Story 156)
   'ledger:session-stats', 'ledger:recent-calls', 'ledger:all-time-cost',
   // Layout / telemetry
-  'layout:update-telemetry', 'telemetry:update-touchbar',
+  'layout:update-telemetry', 'telemetry:update-touchbar', 'telemetry:status',
   'kanban:get-columns', 'kanban:set-column',
   // Agent interop
   'agent:delegate', 'agent:forward',

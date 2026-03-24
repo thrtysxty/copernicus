@@ -81,6 +81,56 @@ let ipcCleanupFns: {
 
 let collectorProcess: ChildProcess | null = null;
 
+function updateClaudeTelemetrySettings(write: boolean): boolean {
+  try {
+    const rootPath = fsManager.getRootPath();
+    if (!rootPath) return false;
+
+    const settingsPath = path.join(rootPath, '.claude', 'settings.json');
+    if (!write && !fs.existsSync(settingsPath)) return false;
+
+    if (write) {
+      if (!fs.existsSync(path.dirname(settingsPath))) {
+        fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+      }
+    }
+
+    let content = '';
+    if (fs.existsSync(settingsPath)) {
+      content = fs.readFileSync(settingsPath, 'utf-8');
+    }
+
+    // Remove existing managed block using regex
+    const startMarker = '// --- Copernicus Managed: OTel ---';
+    const endMarker = '// --- End Copernicus Managed: OTel ---';
+    const regex = new RegExp(startMarker + '[\\s\\S]*?' + endMarker + '\\n?', 'g');
+    content = content.replace(regex, '').trim();
+
+    if (write) {
+      const managedBlock = [
+        startMarker,
+        'CLAUDE_CODE_ENABLE_TELEMETRY=1',
+        'OTEL_METRICS_EXPORTER=otlp',
+        'OTEL_LOGS_EXPORTER=otlp',
+        'OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318',
+        'OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative',
+        'OTEL_LOG_TOOL_DETAILS=1',
+        endMarker
+      ].join('\n');
+
+      content = content.length > 0 ? content + '\n\n' + managedBlock + '\n' : managedBlock + '\n';
+    } else {
+      content = content.length > 0 ? content + '\n' : content;
+    }
+
+    fs.writeFileSync(settingsPath, content, 'utf-8');
+    return true;
+  } catch (err) {
+    log.error('[Main] Failed to update Claude telemetry settings:', err);
+    return false;
+  }
+}
+
 const VITE_DEV_SERVER_URL = process.env.NODE_ENV === 'development' ? process.env['VITE_DEV_SERVER_URL'] : undefined
 if (process.env.NODE_ENV === 'production' && process.env['VITE_DEV_SERVER_URL']) {
   throw new Error('Security violation: VITE_DEV_SERVER_URL exposed in production');
@@ -174,6 +224,26 @@ async function registerIpcHandlers() {
       summary: `Story ${storyId} implementation complete. ${fileLines.length} file(s) changed.`,
       timestamp: new Date().toISOString()
     }
+  }))
+
+  ipcMain.handle('telemetry:status', (_e) => handleIpc(async () => {
+    const collectorRunning = collectorProcess !== null && !collectorProcess.killed;
+
+    let settingsWritten = false;
+    try {
+      const rootPath = fsManager.getRootPath();
+      if (rootPath) {
+        const settingsPath = path.join(rootPath, '.claude', 'settings.json');
+        if (fs.existsSync(settingsPath)) {
+          const content = fs.readFileSync(settingsPath, 'utf-8');
+          settingsWritten = content.includes('// --- Copernicus Managed: OTel ---');
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return { collectorRunning, settingsWritten };
   }))
 
   ipcMain.handle('health:check-all', (_e) => handleIpc(async () => {
@@ -323,9 +393,11 @@ app.whenReady().then(async () => {
       });
 
       log.info(`[Main] OTel collector spawned with PID: ${collectorProcess.pid}`);
+      updateClaudeTelemetrySettings(true);
 
       collectorProcess.on('error', (err) => {
         log.warn(`[Main] Failed to start OTel collector: ${err.message}`);
+        updateClaudeTelemetrySettings(false);
       });
 
       collectorProcess.on('exit', (code) => {
@@ -335,10 +407,12 @@ app.whenReady().then(async () => {
           log.info(`[Main] OTel collector exited gracefully`);
         }
         collectorProcess = null;
+        updateClaudeTelemetrySettings(false);
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       log.warn(`[Main] Failed to spawn OTel collector: ${msg}`);
+      updateClaudeTelemetrySettings(false);
     }
   } else {
     log.warn('[Main] OTel collector script not found at:', collectorScript);

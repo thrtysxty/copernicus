@@ -3,6 +3,7 @@ import { useIpcError } from '../../../hooks/useIpcError'
 import { TouchBarConfig, DEFAULT_TOUCH_BAR_CONFIG } from '../../../types/touch-bar'
 import { SettingsLoadResponse } from '../../../types/ipc'
 import log from '../../../utils/logger'
+import { TelemetryStatusTile } from '../TelemetryStatusTile'
 
 const ALLOWED_TARGETS = ['dev','test','build','lint','backlog','deploy','commit','agent','dashboard']
 
@@ -110,6 +111,11 @@ export const HardwareSection: React.FC = () => {
         >
           {saving ? 'Applying…' : 'Apply to Touch Bar'}
         </button>
+      </div>
+
+      <div className="pt-6 border-t border-zinc-800">
+        <h3 className="text-[10px] uppercase text-zinc-500 tracking-widest mb-4">Telemetry Integration</h3>
+        <TelemetryStatusTile />
       </div>
     </div>
   )
