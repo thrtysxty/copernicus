@@ -39,6 +39,7 @@ import { cwd } from 'node:process'
 import { localModelManager } from './local-model/LocalModelManager'
 import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
 import { detectStack } from './skills/stack-detector'
+import { providerSyncEngine } from './intelligence/provider-sync-engine'
 import { auditSkillDescriptions } from './skills/description-auditor'
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
@@ -237,7 +238,22 @@ async function registerIpcHandlers() {
             content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName)
                              .replace(/\{\{STACK\}\}/g, stackStr)
                              .replace(/\{\{REPO_ROOT\}\}/g, rootPath)
-            fs.writeFileSync(dest, content, 'utf-8')
+            
+            if (path.basename(dest) === 'SKILL.md' && path.dirname(dest) === targetDir) {
+              const doc = stateLedger.createIntelDoc({
+                projectId: rootPath,
+                type: 'skill',
+                title: category,
+                description: `Skill scaffold for ${category}`,
+                content: content,
+                providers: [{ provider: 'claude', enabled: true }]
+              })
+              providerSyncEngine.sync(doc, rootPath).catch(err => {
+                log.error('Provider sync failed on skill scaffold:', err)
+              })
+            } else {
+              fs.writeFileSync(dest, content, 'utf-8')
+            }
           }
         }
 
