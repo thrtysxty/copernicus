@@ -110,7 +110,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #432 | Notebooklm Backend Provider And Ipc | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
+| #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | APPROVED FOR IMPLEMENTATION | P2 |
+| #453 | Otel Collector Sidecar | APPROVED FOR IMPLEMENTATION | P2 — Infrastructure |
+| #455 | Prompt Id Workflow Events | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -414,15 +418,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #432 | Notebooklm Backend Provider And Ipc | DRAFT | P2 — Feature |
 | #433 | Notebooklm Renderer Integration | DRAFT | P2 — Feature |
 | #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
 | #451 | Notebooklm Packaged Binary Login | DRAFT | P1 — Feature |
-| #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | DRAFT | P2 |
-| #453 | Otel Collector Sidecar | DRAFT | P2 — Infrastructure |
 | #454 | Telemetry Settings Managed Block | DRAFT | P2 — Infrastructure |
-| #455 | Prompt Id Workflow Events | DRAFT | P2 — Feature |
 | #456 | Model Calls Prompt Id Schema | DRAFT | P2 — Feature |
 | #457 | Capex Cost Per Active Second | DRAFT | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | DRAFT | P2 — Feature |
