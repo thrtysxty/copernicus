@@ -47,7 +47,12 @@
         "dmg"
       ],
       "category": "public.app-category.developer-tools",
-      "notarize": false
+      "notarize": false,
+      "extraResources": [
+        { "from": "../resources/knowledge", "to": "knowledge" },
+        { "from": "../scripts/install-daemon.sh", "to": "install-daemon.sh" },
+        { "from": "../backend/dist/copernicus-backend", "to": "copernicus-backend" }
+      ]
     },
     "dmg": {
       "window": {
@@ -72,6 +77,11 @@
       "icon": "resources/icons/icon.ico",
       "target": [
         "nsis"
+      ],
+      "extraResources": [
+        { "from": "../resources/knowledge", "to": "knowledge" },
+        { "from": "../scripts/install-daemon.ps1", "to": "install-daemon.ps1" },
+        { "from": "../backend/dist/copernicus-backend.exe", "to": "copernicus-backend.exe" }
       ]
     },
     "linux": {
@@ -80,30 +90,13 @@
         "AppImage",
         "deb"
       ],
-      "category": "Development"
-    },
-    "extraResources": [
-      {
-        "from": "../resources/knowledge",
-        "to": "knowledge"
-      },
-      {
-        "from": "backend/dist/copernicus-backend",
-        "to": "copernicus-backend",
-        "filter": [
-          "!**/node_modules"
-        ],
-        "platform": "!win32"
-      },
-      {
-        "from": "backend/dist/copernicus-backend.exe",
-        "to": "copernicus-backend.exe",
-        "filter": [
-          "!**/node_modules"
-        ],
-        "platform": "win32"
-      }
-    ]
+      "category": "Development",
+      "extraResources": [
+        { "from": "../resources/knowledge", "to": "knowledge" },
+        { "from": "../scripts/install-daemon.sh", "to": "install-daemon.sh" },
+        { "from": "../backend/dist/copernicus-backend", "to": "copernicus-backend" }
+      ]
+    }
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

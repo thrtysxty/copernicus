@@ -1,0 +1,50 @@
+<!-- tools/nlm-safari/popup/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NLM Tools</title>
+    <style>
+        body { font-family: sans-serif; width: 300px; padding: 10px; }
+        .tab-buttons { display: flex; margin-bottom: 10px; }
+        .tab-buttons button { flex-grow: 1; padding: 8px; cursor: pointer; }
+        .tab-content { border: 1px solid #ccc; padding: 10px; min-height: 150px; }
+        #progress { margin-top: 10px; color: green; }
+        textarea { width: 100%; height: 80px; margin-bottom: 5px; }
+        .prompt-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; }
+        .prompt-item button { margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>NLM Tools</h1>
+
+    <div class="tab-buttons">
+        <button id="tools-tab-btn">Tools</button>
+        <button id="prompts-tab-btn">Prompts</button>
+    </div>
+
+    <div id="tools-tab-content" class="tab-content">
+        <h2>Export / Import</h2>
+        <button id="export-notebooks">Export Notebooks</button>
+        <hr>
+        <input type="file" id="import-notebooks-file" accept=".json">
+        <button id="import-notebooks-btn">Import Notebooks</button>
+        <hr>
+        <h2>Bulk Import Sources</h2>
+        <textarea id="bulk-import-urls" placeholder="Enter URLs, one per line"></textarea>
+        <button id="bulk-import-btn">Bulk Import</button>
+        <div id="progress"></div>
+    </div>
+
+    <div id="prompts-tab-content" class="tab-content" style="display:none;">
+        <h2>Saved Prompts</h2>
+        <div id="prompts-list"></div>
+        <hr>
+        <h3>Add New Prompt</h3>
+        <input type="text" id="new-prompt-title" placeholder="Prompt Title">
+        <textarea id="new-prompt-body" placeholder="Prompt Body"></textarea>
+        <button id="add-prompt-btn">Add Prompt</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,88 +1,180 @@
-# COPERNICUS IDE // OPERATOR MANUAL [BETA v0.1.0]
-══════════════════════════════════════════════════════════════════════════════
-Identity: Professional Phosphor // Industrial Agentic Standard
-Authority: Architect / Senior Autonomous Engineer
-══════════════════════════════════════════════════════════════════════════════
+# COPERNICUS IDE — User Guide
 
-## 1. THE INTERFACE PHILOSOPHY
-COPERNICUS is not a general-purpose IDE; it is a **Mission Control for Autonomous Engineering**. The interface is optimized for long-duration technical sessions where visual deterministic feedback is paramount.
-
-### 1.1 The Professional Phosphor Aesthetic
-- **Midnight Background:** `#050505` (Zero-light pollution).
-- **VT420 Green:** `#4ADE80` (High-contrast, low-fatigue).
-- **Hairline Precision:** All panel borders are `0.5px` Steel (`#3F3F46`).
-- **Scanline Integrity:** Simulated CRT scanlines on the Engine Room [F3] terminal for improved readability.
-
-### 1.2 Zero-Gap Tiling Engine
-The IDE utilizes three primary **Storyboards**, accessible via F-keys:
-
-1.  **Blueprint [F1] // The Strategic Deck**
-    - **Focus:** Kanban Pipeline, State Ledger, and Financial CapEx Tracking.
-    - **Usage:** Planning features, auditing recent autonomous intents, and monitoring resource burn.
-
-2.  **Studio [F2] // The Primary Workshop**
-    - **Focus:** Explorer, Monaco Editor, and Strategic Chat.
-    - **Usage:** Implementation, technical delegation, and code review.
-
-3.  **Engine Room [F3] // The Execution Deck**
-    - **Focus:** Command Deck (Makefile), Multi-PTY Terminal, and Telemetry.
-    - **Usage:** Deployment, testing, and hardware-level monitoring.
+![main layout](screenshots/main-layout.png)
 
 ---
 
-## 2. WORKFLOW MAP: THE INDUSTRIAL PIPELINE
-COPERNICUS enforces a rigid, high-fidelity engineering workflow to ensure zero-defect delivery.
+## 1. Interface Overview
 
-### 2.1 The Handoff Loop (Heliocentric Workflow)
-```mermaid
-graph TD
-    A[Operator Intent] -->|/plan| B(Architect)
-    B -->|Generates| C[docs/stories/story_xxx.md]
-    C -->|Activate| D{Industrial Kanban}
-    D -->|Implement| E(Senior Agent)
-    E -->|Verify| F(Security Audit)
-    F -->|Document| G(Scribe)
-    G -->|Finalize| H[make deploy]
+Copernicus uses a **zero-gap tiling engine** — panels fill the window with no gaps or padding. The layout is built around five Storyboards and an Activity Bar.
+
+### Storyboards (F-keys)
+
+Switch storyboards instantly with the function keys:
+
+- **Blueprint `F1`** — Kanban pipeline, story management, CapEx summary. Your planning view.
+- **Studio `F2`** — File explorer, Monaco editor, Chat panel. Where you write and delegate.
+- **Engine Room `F3`** — PTY terminals, Makefile command deck, telemetry. Where you run things.
+- **CapEx `F4`** — Full CapEx dashboard with burn rate charts and model cost heatmaps.
+- **Workflow `F5`** — Visual workflow canvas for building multi-step agent pipelines.
+
+### Activity Bar
+
+The vertical icon strip on the left edge. Click any icon to jump to that storyboard or open a specific panel. The active view is highlighted.
+
+### Panel Collapse
+
+In 2-panel tiled views, click the vertical bookmark strip on a panel to collapse its sibling to a 40px-wide tab showing the panel label rotated vertically. Click the tab to restore. In 3-panel views, panels resize proportionally.
+
+### Spotlight
+
+Press `Cmd+K` to open the spotlight overlay. Type to fuzzy-search stories, files, commands, and models. Press `Enter` to navigate; `Esc` to close.
+
+---
+
+## 2. Chat Panel
+
+![studio view](screenshots/studio-view.png)
+
+The Chat panel lives in the right column of Studio (F2). Use it to talk to AI agents, delegate tasks, and review results.
+
+**To send a message:** Type in the input box and press `Enter`. Use `Shift+Enter` to insert a new line without sending.
+
+**Model picker:** Click the model name badge in the top bar to open the model picker. Select any configured provider and model. The switch takes effect on the next message.
+
+**Context selectors:** The attachment strip lets you add structured context:
+- **File** — attach a file from the current workspace
+- **Story** — inject the active story's full content
+- **Git** — inject recent git log
+
+**Model hot-swap:** Switching models mid-conversation inserts a handoff divider. The new model receives a compressed summary of the prior context automatically — no manual copy-paste needed.
+
+**Context handoff divider:** The `↔ Switched to <model>` line marks where the model changed. Content above was summarised and handed to the new model.
+
+---
+
+## 3. Kanban Board
+
+![kanban board](screenshots/kanban-board.png)
+
+The Kanban board (Blueprint F1, left panel) shows all stories organised by pipeline stage.
+
+### Lanes
+
+| Lane | Meaning |
+|---|---|
+| DRAFT | Written, not yet approved for dispatch |
+| APPROVED FOR IMPLEMENTATION | Ready to dispatch to Jules or Gemini |
+| IN PROGRESS | Agent is currently implementing |
+| REVIEW | PR open, awaiting review gate verdict |
+| COMPLETE | Merged, verified, and archived |
+
+### Creating a Story
+
+Press `N` with the board focused, or click the **+** button at the top of the DRAFT column. Fill in the title; Copernicus creates the story file in `docs/stories/` automatically.
+
+### Moving Stories
+
+Drag a card between columns, or click the card to open the story detail and change the status from the dropdown.
+
+### Column Controls
+
+- **Minimize** — click the minimize button on a column header to collapse to a 40px bookmark strip
+- **Reorder** — drag column headers left/right to rearrange
+- **Filter** — type in the filter bar above the board to filter by title, assignee, or priority
+
+### Repo Targeting
+
+The filter bar shows a status dot indicating whether the workspace is targeted to a git repo. An orange dot means no repo is targeted — click it to select one.
+
+---
+
+## 4. Monaco Editor
+
+The Monaco editor (Studio F2, center panel) is a full-featured code editor with LSP integration.
+
+**Opening files:** Click any file in the Explorer tree, or use `Cmd+P` to open by name.
+
+**Multi-file tabs:** Open files appear as tabs above the editor. Click to switch; middle-click or press `✕` to close.
+
+**LSP features (TypeScript Language Server):**
+- **Completions** — appear automatically as you type; press `Ctrl+Space` to trigger manually
+- **Hover** — hover over a symbol for type info and inline documentation
+- **Go to definition** — press `F12` or right-click → Go to Definition
+- **Diagnostics** — red underlines indicate type errors; hover to read the message
+
+**Save:** `Ctrl+S` saves the current file. Unsaved files show a dot indicator in their tab.
+
+**Binary and image files:** Binary files show a block screen (not editable in Monaco). Image files open in a built-in viewer with zoom controls.
+
+---
+
+## 5. Command Palette
+
+![command palette](screenshots/command-palette.png)
+
+Press `Cmd+P` to open the command palette. Search modes:
+- **Files** — type a filename to open it instantly
+- **Commands** — prefix with `>` to execute IDE commands (e.g. `>Format Document`)
+- **Stories** — prefix with `#` to jump to a story card
+
+Press `Enter` to run the selected result. Press `Esc` to close without action.
+
+---
+
+## 6. Agent Review Panel
+
+When an agent (Jules or Gemini) opens a PR, the Agent Review panel appears in Blueprint view (F1, right column).
+
+**Diff view:** Changes are syntax-highlighted. Added lines are green; removed lines are red. Modified files are listed in the sidebar.
+
+**Run tsc:** Click **Run tsc** to trigger a TypeScript type-check against the PR branch. Zero errors is the hard gate before approval.
+
+**Approve:** Click **Approve** to trigger the jules daemon's merge flow. The PR merges, the story status moves to COMPLETE.
+
+**Request Rework:** Click **Request Rework** and enter your notes. The feedback is sent back to the agent as a follow-up task. The PR stays open.
+
+---
+
+## 7. CapEx Dashboard
+
+![capex dashboard](screenshots/capex-dashboard.png)
+
+The CapEx dashboard (F4 or Blueprint F1 right panel) tracks AI spend and session cost across the project.
+
+| Tab | Shows |
+|---|---|
+| **Overview** | Total spend, session count, cost per story, burn rate |
+| **Burn Rate** | Daily/weekly spend over time |
+| **Model Heatmap** | Cost broken down by model and provider |
+| **Session Log** | Per-session detail — model, tokens, cost, story attribution |
+| **Export** | Download the full ledger as CSV |
+
+**Cost per session** = `(total_hours × developer_rate) / session_count`. Set your rate in `config.env`:
+```
+DEVELOPER_RATE=150   # USD/hr, default 150
 ```
 
-### 2.2 Panel Interaction Primitives
-- **Command Palette [Cmd+P]:** Open the universal command palette to search files, stories, and agents.
-- **Command Palette (Commands Only) [Cmd+Shift+P]:** Open the palette pre-filtered for slash commands.
-- **Spotlight [Ctrl+Enter]:** Maximize the currently focused panel to full window height.
-- **Flip [⌘+Shift+F]:** Flip a panel to its "Logic Side" (e.g., Strategic Chat flips to Kanban).
-- **Context Injectors:** Use `@files` or `@ledger` in chat to ground the agent in reality.
+---
+
+## 8. Settings
+
+![settings panel](screenshots/settings-panel.png)
+
+Open Settings from the activity bar (gear icon) or the app menu.
+
+| Tab | What you configure |
+|---|---|
+| **Providers** | API keys and base URLs for each AI provider |
+| **MCP Servers** | Register MCP tool servers; test connectivity |
+| **Security** | Git push protection rules, secret scan config |
+| **Background Services** | Register/unregister Jules daemon and backend services |
+| **Git** | Default branch, repo targeting, trusted repositories |
+
+API keys are encrypted using Electron's `safeStorage` before being written to disk. They are never stored in plain text.
 
 ---
 
-## 3. COMMAND & CONTROL (THE NERVOUS SYSTEM)
-### 3.1 Integrated Slash Commands
-| Command | Description |
-| :--- | :--- |
-| `/plan [text]` | Initialized a new feature story with the Architect persona. |
-| `/delegate agent=[ID] task="..."` | Hands context to a specialized sub-agent (Bolt, Palette, Sentinel). |
-| `/forward agent=[ID]` | Forwards terminal output or linter errors to an agent for correction. |
-| `/audit` | Triggers the **Sentinel** to scan staged changes for credential leaks. |
-| `/pi_check` | Runs the **Performance Baseline Audit** (verified against Pi 3B+ constraints). |
-| `/capex` | Generates a session-based financial capitalization report. |
+## 9. NotebookLM
 
-### 3.2 Hardware Mapping (MacBook / Touch Bar)
-- **Escape Key:** Global cancellation of agent generation.
-- **Touch Bar Segment 1:** Active View Switcher (Blueprint | Studio | Engine).
-- **Touch Bar Segment 2:** Active Story Timer & CapEx Burn Rate.
-- **Touch Bar Segment 3:** Deployment Ignition (System Pulse).
-
----
-
-## 4. TELEMETRY & COMPLIANCE
-### 4.1 Deployment Strategy
-`make deploy` triggers a synchronized push to the **Dell R210ii Core** server.
-- **Integrity Check:** Deployment is blocked if the `/audit` has not passed in the last 15 minutes.
-- **Performance Baseline:** Code that exceeds the RAM ceiling on the **Pi 3B+ Baseline** will trigger a "Performance Warning" in the Telemetry Popout.
-
-### 4.2 State Ledger persistence
-Every autonomous intent is logged to the **State Ledger** (`~/.copernicus/ledger.db`).
-- **Auditing:** Use `/ledger last=5` to see the most recent system transformations.
-- **Recovery:** In the event of a crash, the IDE restores state based on the last verified ledger entry.
-
-══════════════════════════════════════════════════════════════════════════════
-*COPERNICUS // FOR THE INDUSTRIAL AGENTIC OPERATOR*
+> 📌 **Pending Stories 432–433.** NotebookLM integration is not yet available in this build. Once shipped, you will be able to select a NotebookLM notebook as an AI model in the Chat panel — the notebook's sources become the model's context.

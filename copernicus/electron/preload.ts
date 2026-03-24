@@ -145,6 +145,8 @@ const SEND_CHANNELS = new Set([
   'debug:step-over', 'debug:step-into', 'debug:step-out',
   'debug:set-breakpoints', 'debug:get-call-stack', 'debug:get-scopes', 'debug:get-variables',
   'debug:evaluate',
+  // Daemon (Story 524)
+  'daemon:install', 'daemon:is-registered',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -192,6 +194,8 @@ const LISTEN_CHANNELS = new Set([
   // DAP
   'debug:event',
   'intel:sync-complete',
+  // Daemon first-run prompt (Story 524)
+  'daemon:prompt-install',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

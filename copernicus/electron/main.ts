@@ -183,6 +183,25 @@ function createWindow() {
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
     julesMonitor.resumeWatching()
+
+    // Story 524: prompt to register daemon on first packaged launch
+    if (app.isPackaged) {
+      let daemonRegistered = false
+      try {
+        if (process.platform === 'darwin') {
+          daemonRegistered = fs.existsSync(path.join(app.getPath('home'), 'Library', 'LaunchAgents', 'com.copernicus.jules-daemon.plist'))
+        } else if (process.platform === 'linux') {
+          require('node:child_process').execSync('systemctl --user is-enabled jules-daemon', { stdio: 'ignore' })
+          daemonRegistered = true
+        } else if (process.platform === 'win32') {
+          require('node:child_process').execSync('powershell.exe -Command "Get-ScheduledTask -TaskName CopernicusJulesDaemon -ErrorAction Stop"', { stdio: 'ignore' })
+          daemonRegistered = true
+        }
+      } catch { /* not registered */ }
+      if (!daemonRegistered) {
+        setTimeout(() => win?.webContents.send('daemon:prompt-install'), 3000)
+      }
+    }
   })
   if (ipcCleanupFns) {
     win.webContents.on('did-start-loading', () => {

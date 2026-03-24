@@ -110,12 +110,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
-| #451 | Notebooklm Packaged Binary Login | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #456 | Model Calls Prompt Id Schema | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #457 | Capex Cost Per Active Second | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #458 | Card Spotlight Accept Reject Stats | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #459 | Crash Recovery Otel Rehydration | APPROVED FOR IMPLEMENTATION | P2 — Reliability |
+| #522 | Nlm Tools Safari Extension Port | APPROVED FOR IMPLEMENTATION | P1 |
+| #524 | Cross Platform Daemon Installer | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
+| #528 | Developer Documentation Suite | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
+| #529 | End User Documentation Suite | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -345,6 +343,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #431 | Workflow Engine Shell Injection Fix | COMPLETE | P0 — Security (blocking) |
 | #432 | Notebooklm Backend Provider And Ipc | COMPLETE | P2 — Feature |
 | #433 | Notebooklm Renderer Integration | COMPLETE | P2 — Feature |
+| #435 | Developer First Launch Setup | COMPLETE | P0 — Blocker |
 | #437 | Multiplatform Build Pipeline | COMPLETE | P1 — Infrastructure |
 | #438 | Kanban Card Double Click Fix | COMPLETE | P1 — Bug |
 | #439 | Search Drawer Live Results And Enter Persist | COMPLETE | P1 — Bug |
@@ -358,10 +357,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #448 | 448 Editor Field Base Font Size 10Pt | COMPLETE | P2 — UX |
 | #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | COMPLETE | P0 — Dev Tooling |
 | #450 | Add Tavily Mcp As Live Web Intelligence Tool | COMPLETE | P0 — Dev Tooling |
+| #451 | Notebooklm Packaged Binary Login | COMPLETE | P1 — Feature |
 | #452 | Lsp Workspace Apply Edit — Multi-File Atomic Edits | COMPLETE | P2 |
 | #453 | Otel Collector Sidecar | COMPLETE | P2 — Infrastructure |
 | #454 | Telemetry Settings Managed Block | COMPLETE | P2 — Infrastructure |
 | #455 | Prompt Id Workflow Events | COMPLETE | P2 — Feature |
+| #456 | Model Calls Prompt Id Schema | COMPLETE | P2 — Feature |
+| #457 | Capex Cost Per Active Second | COMPLETE | P2 — Feature |
+| #458 | Card Spotlight Accept Reject Stats | COMPLETE | P2 — Feature |
+| #459 | Crash Recovery Otel Rehydration | COMPLETE | P2 — Reliability |
 | #460 | Stack Detector | COMPLETE | P1 — Feature |
 | #461 | Skill Template Library | COMPLETE | P1 — Feature |
 | #462 | Skill Onboarding Card | COMPLETE | P1 — Feature |
@@ -428,15 +432,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
 | #436 | End User Setup Guide | DRAFT | P1 — Feature |
-| #522 | Nlm Tools Safari Extension Port | DRAFT | P1 |
 | #523 | Notebooklm Mcp Intelligence Bridge | DRAFT | P1 |
-| #524 | Cross Platform Daemon Installer | DRAFT | P1 — Infrastructure |
 | #525 | Flask Backend Persistent Service | DRAFT | P1 — Infrastructure |
 | #527 | Copernicus Mcp Hub | DRAFT | P1 — Infrastructure |
-| #528 | Developer Documentation Suite | DRAFT | P1 — Infrastructure |
-| #529 | End User Documentation Suite | DRAFT | P1 — Feature |
 | #530 | Documentation Screenshot Capture | DRAFT | P2 — Feature |
 | #531 | Sprint Finishing Ceremony Workflow | DRAFT | P1 — Feature |
+| #533 | Pre Dispatch Story Spec Validator | DRAFT | P0 — Infrastructure / Quality Gate |
+| #534 | Living Spec Auto Update | DRAFT | P1 — Quality |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
