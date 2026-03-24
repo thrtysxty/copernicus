@@ -110,7 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
 | #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
@@ -351,6 +350,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #416 | Orchestrator Cleanup | COMPLETE | P1 |
 | #417 | Editor Tab Desync And White Flash | COMPLETE | P1 |
 | #418 | Worktreemanager Command Injection | COMPLETE | P0 — Security |
+| #419 | Stitch Mcp Design To Code Integration | COMPLETE | P1 — Feature |
 | #420 | Agent Assignment Genericization | COMPLETE | P0 — Correctness |
 | #421 | Terminal Purge And Agent Terminal | COMPLETE | P0 — Correctness |
 | #422 | Agent Agnostic Diff Review | COMPLETE | P1 — Correctness |
