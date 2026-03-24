@@ -111,7 +111,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
-| #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -339,6 +338,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #429 | Ipc Batching And Caching Layer | COMPLETE | P2 — Performance |
 | #430 | Registerallipchandlers Decomposition | COMPLETE | P2 — Tech Debt |
 | #431 | Workflow Engine Shell Injection Fix | COMPLETE | P0 — Security (blocking) |
+| #437 | Multiplatform Build Pipeline | COMPLETE | P1 — Infrastructure |
 | #438 | Kanban Card Double Click Fix | COMPLETE | P1 — Bug |
 | #439 | Search Drawer Live Results And Enter Persist | COMPLETE | P1 — Bug |
 | #440 | Ui Builder Tile Render System | COMPLETE | P1 — Feature / Regression Prevention |
