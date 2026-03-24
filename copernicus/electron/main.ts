@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, session, globalShortcut } from 'electron'
 
 import path from 'node:path'
-import { spawn } from 'node:child_process'
+import { spawn, ChildProcess } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import log from 'electron-log'
@@ -78,6 +78,8 @@ let ipcCleanupFns: {
   cleanupDebugHandlers: () => void
   cleanupWorktreeHandlers: () => void
 } | null = null
+
+let collectorProcess: ChildProcess | null = null;
 
 const VITE_DEV_SERVER_URL = process.env.NODE_ENV === 'development' ? process.env['VITE_DEV_SERVER_URL'] : undefined
 if (process.env.NODE_ENV === 'production' && process.env['VITE_DEV_SERVER_URL']) {
@@ -294,6 +296,10 @@ app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 app.on('will-quit', () => { globalShortcut.unregisterAll() })
 app.on('before-quit', async () => { 
+  if (collectorProcess && !collectorProcess.killed) {
+    log.info('[Main] Killing OTel collector process');
+    collectorProcess.kill();
+  }
   localModelManager.stop();
   lspManager.stop(); 
   backendManager.stop(); 
@@ -303,6 +309,41 @@ app.on('before-quit', async () => {
 })
 
 app.whenReady().then(async () => {
+  // Story 453: Spawn OTel Collector sidecar
+  const dbPath = path.join(app.getPath('userData'), 'copernicus.db');
+  const collectorScript = path.join(__dirname, '../../collector/sqlite_exporter.py');
+
+  if (fs.existsSync(collectorScript)) {
+    log.info('[Main] Spawning OTel collector sidecar...');
+    // We wrap it in a try-catch so that if the process fails to start, we degrade gracefully
+    try {
+      collectorProcess = spawn('python3', [collectorScript], {
+        env: { ...process.env, COPERNICUS_DB_PATH: dbPath },
+        stdio: 'ignore'
+      });
+
+      log.info(`[Main] OTel collector spawned with PID: ${collectorProcess.pid}`);
+
+      collectorProcess.on('error', (err) => {
+        log.warn(`[Main] Failed to start OTel collector: ${err.message}`);
+      });
+
+      collectorProcess.on('exit', (code) => {
+        if (code !== 0 && code !== null) {
+          log.warn(`[Main] OTel collector exited with non-zero code: ${code}`);
+        } else {
+          log.info(`[Main] OTel collector exited gracefully`);
+        }
+        collectorProcess = null;
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log.warn(`[Main] Failed to spawn OTel collector: ${msg}`);
+    }
+  } else {
+    log.warn('[Main] OTel collector script not found at:', collectorScript);
+  }
+
   try {
     await registerIpcHandlers()
   } catch (err: unknown) {

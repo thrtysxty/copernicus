@@ -1,0 +1,26 @@
+# OTel Collector Configuration for COPERNICUS IDE
+# This file is used to configure the OTel Collector sidecar.
+
+receivers:
+  # The OTLP receiver accepts telemetry data over HTTP.
+  otlp:
+    protocols:
+      http:
+        # Listen on localhost port 4318 for OTLP HTTP payloads
+        endpoint: "localhost:4318"
+
+exporters:
+  # The SQLite exporter writes received telemetry data to the local SQLite database.
+  sqlite:
+    # Target database path, read from the COPERNICUS_DB_PATH environment variable
+    target: "${COPERNICUS_DB_PATH}"
+
+service:
+  # Define the pipelines that process the telemetry data
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [sqlite]
+    logs:
+      receivers: [otlp]
+      exporters: [sqlite]
