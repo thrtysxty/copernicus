@@ -113,13 +113,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #419 | Stitch Mcp Design To Code Integration | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #435 | Developer First Launch Setup | APPROVED FOR IMPLEMENTATION | P0 — Blocker |
 | #437 | Multiplatform Build Pipeline | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
-| #460 | Stack Detector | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #461 | Skill Template Library | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #462 | Skill Onboarding Card | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #463 | Skill Scaffold Generator | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #464 | Scaffold Skills Slash Command | APPROVED FOR IMPLEMENTATION | P1 — Feature |
-| #465 | Skill Description Auditor | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #466 | Claude Plugin Data Migration | APPROVED FOR IMPLEMENTATION | P2 — Maintenance |
 | #489 | Agent Memory And Agent Work Log Schema Migration | APPROVED FOR IMPLEMENTATION | P1 |
 | #490 | Systempromptbuilder Provider-Agnostic System Prompt Delivery | APPROVED FOR IMPLEMENTATION | P1 |
 | #491 | Memoryrecall Ipc And Memory Injection Fix | APPROVED FOR IMPLEMENTATION | P1 |
@@ -134,17 +127,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #500 | Retro Synthesis Engine With Compounding Inflection Points | APPROVED FOR IMPLEMENTATION | P1 |
 | #501 | Retro Card Type In Blueprint Kanban Column | APPROVED FOR IMPLEMENTATION | P1 |
 | #502 | Retro Review Panel Per-Item Approve Reject Edit | APPROVED FOR IMPLEMENTATION | P1 |
-| #503 | Retro Approval Commit Atomic Memory Writes And File Patches | APPROVED FOR IMPLEMENTATION | P1 |
-| #504 | Historical Retro Archive In Reporter Retrospectives Tab | APPROVED FOR IMPLEMENTATION | P2 |
 | #505 | Retro Trigger Session Count Threshold And Manual | APPROVED FOR IMPLEMENTATION | P2 |
 | #506 | Sprint Gate Setting Block In Progress On Pending Retro | APPROVED FOR IMPLEMENTATION | P3 |
 | #507 | Intelligence Documents Schema And Crud Ipc Handlers | APPROVED FOR IMPLEMENTATION | P1 |
 | #508 | Provider Sync Engine Doctype Provider Path And Format Transform | APPROVED FOR IMPLEMENTATION | P1 |
-| #509 | Intelligence Manager Ui Document List Editor Sync Status | APPROVED FOR IMPLEMENTATION | P1 |
-| #510 | Stack Detector Auto-Suggest Intelligence Documents | APPROVED FOR IMPLEMENTATION | P2 |
-| #511 | Epic 014 Bridge Skill Scaffold Through Intelligence Layer | APPROVED FOR IMPLEMENTATION | P2 |
-| #512 | Path Scoping Ui Frontmatter Preview Per Provider | APPROVED FOR IMPLEMENTATION | P2 |
-| #513 | Claude.Md Length Audit 200 Line Flag And Split Action | APPROVED FOR IMPLEMENTATION | P2 |
 | #514 | Gsd Wave-Based Parallel Execution In Workflow Engine | APPROVED FOR IMPLEMENTATION | P1 |
 | #515 | Plan-Checker Node Verification Loop Before Dispatch | APPROVED FOR IMPLEMENTATION | P1 |
 | #516 | Context Assembler Node Sqlite-Backed Fresh Context Per Agent | APPROVED FOR IMPLEMENTATION | P1 |
@@ -389,7 +375,21 @@ This file is auto-generated. Run `make backlog` to update.
 | #448 | 448 Editor Field Base Font Size 10Pt | COMPLETE | P2 — UX |
 | #449 | 449 Swap Gitnexus For Codebase-Memory-Mcp As Dev Code Intelligence Backend | COMPLETE | P0 — Dev Tooling |
 | #450 | Add Tavily Mcp As Live Web Intelligence Tool | COMPLETE | P0 — Dev Tooling |
+| #460 | Stack Detector | COMPLETE | P1 — Feature |
+| #461 | Skill Template Library | COMPLETE | P1 — Feature |
+| #462 | Skill Onboarding Card | COMPLETE | P1 — Feature |
+| #463 | Skill Scaffold Generator | COMPLETE | P1 — Feature |
+| #464 | Scaffold Skills Slash Command | COMPLETE | P1 — Feature |
+| #465 | Skill Description Auditor | COMPLETE | P2 — Feature |
+| #466 | Claude Plugin Data Migration | COMPLETE | P2 — Maintenance |
 | #494 | Work Log Hooks Posttooluse And File Edit Events | COMPLETE | P1 |
+| #503 | Retro Approval Commit Atomic Memory Writes And File Patches | COMPLETE | P1 |
+| #504 | Historical Retro Archive In Reporter Retrospectives Tab | COMPLETE | P2 |
+| #509 | Intelligence Manager Ui Document List Editor Sync Status | COMPLETE | P1 |
+| #510 | Stack Detector Auto-Suggest Intelligence Documents | COMPLETE | P2 |
+| #511 | Epic 014 Bridge Skill Scaffold Through Intelligence Layer | COMPLETE | P2 |
+| #512 | Path Scoping Ui Frontmatter Preview Per Provider | COMPLETE | P2 |
+| #513 | Claude.Md Length Audit 200 Line Flag And Split Action | COMPLETE | P2 |
 | #520 | Stitch Mcp Api Key Auth Support | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
