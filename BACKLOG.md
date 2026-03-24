@@ -423,9 +423,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #457 | Capex Cost Per Active Second | DRAFT | P2 — Feature |
 | #458 | Card Spotlight Accept Reject Stats | DRAFT | P2 — Feature |
 | #459 | Crash Recovery Otel Rehydration | DRAFT | P2 — Reliability |
-| #467 | Hindsight R620 Deployment | DRAFT | P1 — Infrastructure |
-| #468 | Memory Bank Wiring | DRAFT | P1 — Feature |
-| #469 | Reflect Session Injection | DRAFT | P1 — Feature |
 | #488 | Split Claude Md Into Scoped Rules Files | N/A | P1 |
+| #467 | Hindsight R620 Deployment | SUPERSEDED | P1 — Infrastructure |
+| #468 | Memory Bank Wiring | SUPERSEDED | P1 — Feature |
+| #469 | Reflect Session Injection | SUPERSEDED | P1 — Feature |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
