@@ -59,11 +59,12 @@ def write_to_db(signal_type, data):
             prompt_text = data.get("prompt_text", None)
             response_text = data.get("response_text", None)
             context_json = data.get("context_json", None)
+            prompt_id = data.get("prompt.id", None)
 
             cursor.execute("""
-                INSERT INTO model_calls (session_id, model_id, provider, tokens_in, tokens_out, cost_usd, latency_ms, reasoning, prompt_text, response_text, context_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (session_id, model_id, provider, tokens_in, tokens_out, cost_usd, latency_ms, reasoning, prompt_text, response_text, context_json))
+                INSERT INTO model_calls (session_id, model_id, provider, tokens_in, tokens_out, cost_usd, latency_ms, reasoning, prompt_text, response_text, context_json, prompt_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (session_id, model_id, provider, tokens_in, tokens_out, cost_usd, latency_ms, reasoning, prompt_text, response_text, context_json, prompt_id))
 
         elif signal_type == "code_edit_tool.decision":
             prompt_id = data.get("prompt.id")
@@ -86,6 +87,16 @@ def write_to_db(signal_type, data):
                 INSERT INTO events (type, content, agent_id)
                 VALUES (?, ?, ?)
             """, (signal_type, content, data.get("agent_id", "collector")))
+
+            if signal_type == "tool_result" and "git_commit_id" in data:
+                commit_sha = data.get("git_commit_id")
+                session_id = data.get("session_id")
+                if commit_sha and session_id:
+                    cursor.execute("""
+                        UPDATE model_calls
+                        SET commit_sha = ?
+                        WHERE session_id = ? AND commit_sha IS NULL
+                    """, (commit_sha, session_id))
 
         else:
             logger.warning(f"Unknown signal type: {signal_type}")

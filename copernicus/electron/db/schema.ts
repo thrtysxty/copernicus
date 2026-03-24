@@ -145,7 +145,9 @@ export const SCHEMA = {
       created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
       prompt_text     TEXT,
       response_text   TEXT,
-      context_json    TEXT
+      context_json    TEXT,
+      prompt_id       TEXT,
+      commit_sha      TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_model_calls_session
       ON model_calls(session_id, created_at DESC);

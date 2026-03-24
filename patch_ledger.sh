@@ -1,0 +1,1 @@
+sed -i '' -e '/ALTER TABLE model_calls ADD COLUMN context_json/a\'$'\n''    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN prompt_id TEXT`) } catch (e) {}'$'\n''    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN commit_sha TEXT`) } catch (e) {}' copernicus/electron/db/state-ledger.ts

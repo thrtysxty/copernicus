@@ -20,6 +20,8 @@ export interface EventLog {
   metadata?: any;
   agent_id?: string;
   created_at?: string;
+  promptId?: string | null;
+  commitSha?: string | null;
 }
 
 export interface MemoryFragment {
@@ -180,6 +182,10 @@ export class StateLedger {
     try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN prompt_text TEXT`) } catch (e) {}
     try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN response_text TEXT`) } catch (e) {}
     try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN context_json TEXT`) } catch (e) {}
+
+    // Model Calls schema migration for Story 456
+    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN IF NOT EXISTS prompt_id TEXT`) } catch (e) {}
+    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN IF NOT EXISTS commit_sha TEXT`) } catch (e) {}
 
     // Projects & Epics (Story 211)
     this.db.exec(SCHEMA.projects);
@@ -812,11 +818,18 @@ export class StateLedger {
   }
 
   getRecentEvents(limit: number = 50): EventLog[] {
-    const stmt = this.db.prepare('SELECT * FROM events ORDER BY created_at DESC LIMIT ?');
+    const stmt = this.db.prepare(`
+      SELECT e.*, m.prompt_id, m.commit_sha
+      FROM events e
+      LEFT JOIN model_calls m ON json_extract(e.content, '$.session_id') = m.session_id
+      ORDER BY e.created_at DESC LIMIT ?
+    `);
     const rows = stmt.all(limit) as any[];
     return rows.map(row => ({
       ...row,
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      promptId: row.prompt_id || null,
+      commitSha: row.commit_sha || null
     }));
   }
 
