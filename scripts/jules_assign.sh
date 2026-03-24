@@ -1,5 +1,5 @@
 #!/bin/bash
-# jules_assign.sh — Dispatch a story to Jules CLI with full COPERNICUS context
+# jules_assign.sh — Dispatch a story to Jules API with full COPERNICUS context
 #
 # Usage:
 #   ./scripts/jules_assign.sh docs/stories/story_182_flippablepanel_mode_prop.md
@@ -8,10 +8,10 @@
 #
 # What this does:
 #   1. Validates the story file has required headers
-#   2. Runs the IPC compliance pre-check on the current codebase
-#   3. Injects the AGENTS.md into the prompt header
+#   2. Guards against re-dispatching already-implemented stories
+#   3. Injects AGENTS.md into the prompt header
 #   4. Constructs a structured prompt with explicit DoD checklist
-#   5. Dispatches via `jules new`
+#   5. Dispatches via Jules REST API with AUTO_CREATE_PR + requirePlanApproval
 
 set -euo pipefail
 
@@ -56,6 +56,10 @@ if [ ! -f "$STORY_PATH" ]; then
   exit 1
 fi
 
+# Extract story number early — needed for the already-implemented guard below
+STORY_NUMBER=$(basename "$STORY_PATH" | grep -oE '^story_[0-9]+' | grep -oE '[0-9]+' || echo "???")
+STORY_TITLE=$(grep -m1 "^# \(User \)\?Story" "$STORY_PATH" | sed 's/^# //')
+
 # Check story has required headers
 REQUIRED_HEADERS=("Status:" "Blocked By:" "Blocks:" "Acceptance Criteria" "Definition of Done")
 MISSING=()
@@ -77,32 +81,41 @@ if ! grep -q "APPROVED FOR IMPLEMENTATION" "$STORY_PATH"; then
   STATUS=$(grep "Status:" "$STORY_PATH" | head -1)
   echo "❌ Story is not APPROVED FOR IMPLEMENTATION"
   echo "   Current status: $STATUS"
+  echo "   Review the story ACs, then promote it before dispatching."
   exit 1
 fi
 
 # ── Already-implemented guard ─────────────────────────────────────────────────
 # Abort if any commit on main already mentions this story number.
 # Prevents re-dispatching work that's already on main.
-EXISTING_COMMIT=$(git log origin/main --oneline --grep="story.${STORY_NUMBER}[^0-9]" -i 2>/dev/null | head -1)
+EXISTING_COMMIT=$(git log origin/main --oneline --grep="feat(story-${STORY_NUMBER})" -i 2>/dev/null | head -1)
+if [ -z "$EXISTING_COMMIT" ]; then
+  # Broaden search: also catch feat: prefixes and direct feat commits
+  EXISTING_COMMIT=$(git log origin/main --oneline --grep="feat.*story.${STORY_NUMBER}[^0-9]" -i 2>/dev/null | head -1)
+fi
 if [ -n "$EXISTING_COMMIT" ]; then
   echo ""
-  echo "❌ DISPATCH BLOCKED — story ${STORY_NUMBER} already has a commit on main:"
+  echo "❌ DISPATCH BLOCKED — story ${STORY_NUMBER} already has an implementation commit on main:"
   echo "   $EXISTING_COMMIT"
   echo ""
-  echo "   If this story is genuinely incomplete, update its commit message or"
-  echo "   override with: --force flag (not implemented — talk to Claude first)."
+  echo "   Mark the story COMPLETE and move on."
   exit 1
 fi
 echo "✓ No prior implementation commit found — safe to dispatch"
 
-# Check Jules CLI
-if ! $DRY_RUN && ! command -v jules &> /dev/null; then
-  echo "❌ 'jules' CLI not found in PATH."
-  echo "   Install: npm install -g @google/jules-cli (or check your PATH)"
+echo "✓ Story validated: $STORY_PATH"
+
+# ── Check API key ─────────────────────────────────────────────────────────────
+
+# shellcheck source=/dev/null
+source ~/.secrets 2>/dev/null || true
+
+if [ -z "${JULES_API_KEY:-}" ]; then
+  echo "❌ JULES_API_KEY not set. Add it to ~/.secrets:"
+  echo "   export JULES_API_KEY=\"your-key-here\""
+  echo "   Get keys at: https://jules.google.com/settings"
   exit 1
 fi
-
-echo "✓ Story validated: $STORY_PATH"
 
 # ── Check origin/main is up to date ───────────────────────────────────────────
 # Jules fetches from origin/main — if local main is ahead, Jules can't see those
@@ -141,8 +154,6 @@ fi
 # ── Read inputs ───────────────────────────────────────────────────────────────
 
 STORY_CONTENT=$(cat "$STORY_PATH")
-STORY_NUMBER=$(basename "$STORY_PATH" | grep -oE '^story_[0-9]+' | grep -oE '[0-9]+' || echo "???")
-STORY_TITLE=$(grep -m1 "^# \(User \)\?Story" "$STORY_PATH" | sed 's/^# //')
 
 # Read AGENTS.md (Jules reads this from repo root automatically, but including
 # it inline ensures she sees it even if her session working dir differs)
@@ -153,12 +164,11 @@ fi
 
 echo "📖 Building prompt for: $STORY_TITLE"
 
-# ── Build Prompt (temp file approach — avoids quoting issues with story content) ──
+# ── Build Prompt ───────────────────────────────────────────────────────────────
 
 TMPFILE=$(mktemp /tmp/jules-prompt.XXXXXX)
 trap "rm -f '$TMPFILE'" EXIT
 
-# Write prompt to temp file section by section — printf handles special chars
 printf '%s\n' "$IDENTITY_HEADER" >> "$TMPFILE"
 printf '%s\n' "$(printf '━%.0s' {1..54})" >> "$TMPFILE"
 printf '%s\n' "COPERNICUS IDE — STORY IMPLEMENTATION REQUEST" >> "$TMPFILE"
@@ -189,7 +199,7 @@ printf '%s\n' "  - Is result.data accessed (not the whole result)? -> check afte
 printf '\n%s\n' "STEP 4 — Verify: cd copernicus && npx tsc --noEmit AGAIN after all changes." >> "$TMPFILE"
 printf '%s\n' "  Zero errors = ready. Any errors = do not submit." >> "$TMPFILE"
 printf '\n%s\n' "STEP 5 — Commit message format:" >> "$TMPFILE"
-printf '%s\n' "  feat: Story ${STORY_NUMBER} -- <short description matching story title>" >> "$TMPFILE"
+printf '%s\n' "  feat(story-${STORY_NUMBER}): <short description matching story title>" >> "$TMPFILE"
 printf '\n%s\n' "Do NOT amend prior commits. Do NOT skip the tsc check." >> "$TMPFILE"
 printf '%s\n' "Do NOT change files outside the scope listed in the story's Key Files section." >> "$TMPFILE"
 
@@ -214,6 +224,68 @@ if $DRY_RUN; then
   exit 0
 fi
 
-echo "🚀 Dispatching Story ${STORY_NUMBER} to Jules..."
-jules new --repo JMThiessen/Copernicus "$PROMPT"
-echo "✓ Dispatched. Monitor in Jules dashboard or IDE Jules panel."
+echo "🚀 Dispatching Story ${STORY_NUMBER} to Jules API..."
+
+# Build JSON payload using python3 to safely handle special characters in prompt
+PAYLOAD=$(python3 -c "
+import json, sys
+prompt = sys.stdin.read()
+payload = {
+    'prompt': prompt,
+    'title': 'Story ${STORY_NUMBER}: ${STORY_TITLE}',
+    'sourceContext': {
+        'source': 'sources/github/JMThiessen/Copernicus',
+        'githubRepoContext': {
+            'startingBranch': 'main'
+        }
+    },
+    'automationMode': 'AUTO_CREATE_PR',
+    'requirePlanApproval': True
+}
+print(json.dumps(payload))
+" <<< "$PROMPT")
+
+RESPONSE=$(curl -s -X POST \
+  'https://jules.googleapis.com/v1alpha/sessions' \
+  -H "Content-Type: application/json" \
+  -H "x-goog-api-key: ${JULES_API_KEY}" \
+  -d "$PAYLOAD")
+
+# Extract session ID
+SESSION_ID=$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" <<< "$RESPONSE" 2>/dev/null || echo "")
+
+if [ -z "$SESSION_ID" ]; then
+  echo "❌ Dispatch failed. API response:"
+  echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
+  exit 1
+fi
+
+echo "✓ Dispatched — session ${SESSION_ID}"
+echo "  https://jules.google.com/session/${SESSION_ID}"
+echo "  Jules will pause for plan approval before implementing."
+echo "  PR will be auto-created on completion (AUTO_CREATE_PR mode)."
+
+# ── Register session in jules.db ──────────────────────────────────────────────
+python3 -c "
+import sqlite3, datetime
+from pathlib import Path
+db_path = Path.home() / 'Library' / 'Application Support' / 'copernicus' / 'jules.db'
+conn = sqlite3.connect(db_path)
+conn.execute('''
+    CREATE TABLE IF NOT EXISTS jules_sessions (
+        session_id TEXT PRIMARY KEY, story INTEGER, title TEXT,
+        state TEXT DEFAULT 'QUEUED', pr_url TEXT, pr_number INTEGER,
+        commit_sha TEXT, branch TEXT, dispatched TEXT,
+        plan_approved TEXT, pr_opened TEXT, merged TEXT, updated TEXT
+    )
+''')
+conn.execute(
+    'INSERT OR IGNORE INTO jules_sessions (session_id, story, title, state, dispatched, updated) VALUES (?,?,?,?,?,?)',
+    ('${SESSION_ID}', '${STORY_NUMBER}', '''${STORY_TITLE}''', 'QUEUED',
+     datetime.datetime.utcnow().isoformat()+'Z', datetime.datetime.utcnow().isoformat()+'Z')
+)
+conn.commit()
+count = conn.execute('SELECT COUNT(*) FROM jules_sessions WHERE merged IS NULL').fetchone()[0]
+print(f'  Registered in jules.db ({count} active session(s))')
+conn.close()
+"
