@@ -96,6 +96,7 @@ const SEND_CHANNELS = new Set([
   // LSP (Story 176 + 189)
   'lsp:status', 'lsp:request', 'lsp:notify',
   'lsp:open-file', 'lsp:close-file', 'lsp:get-diagnostics', 'lsp:check-file', 'lsp:workspace-check',
+  'lsp:rename',
   // Canvas
   'canvas:iframe-bounds',
   // Templates (Story 330)

@@ -78,7 +78,7 @@ export class LspManager {
           definition: {},
           publishDiagnostics: { relatedInformation: false },
         },
-        workspace: { symbol: {} },
+        workspace: { symbol: {}, applyEdit: { supported: true } },
       },
       initializationOptions: {},
     }).then(() => {
@@ -200,7 +200,120 @@ export class LspManager {
     }
   }
 
+  public async applyWorkspaceEdit(edit: any): Promise<{ applied: boolean; failureReason?: string; filesChanged: string[] }> {
+    const filesChanged: Set<string> = new Set()
+
+    try {
+      if (edit.documentChanges) {
+        for (const docEdit of edit.documentChanges) {
+          if (!docEdit.textDocument?.uri || !docEdit.edits) continue
+
+          const uri = docEdit.textDocument.uri
+          const filePath = uri.startsWith('file://') ? uri.slice(7) : uri
+          if (!fs.existsSync(filePath)) continue
+
+          let content = fs.readFileSync(filePath, 'utf-8')
+          const edits = [...docEdit.edits].sort((a, b) => {
+            if (a.range.start.line !== b.range.start.line) return b.range.start.line - a.range.start.line
+            return b.range.start.character - a.range.start.character
+          })
+
+          for (const textEdit of edits) {
+            const lines = content.split('\n')
+            let startOffset = 0
+            for (let i = 0; i < textEdit.range.start.line; i++) {
+              startOffset += (lines[i]?.length ?? 0) + 1
+            }
+            startOffset += textEdit.range.start.character
+
+            let endOffset = 0
+            for (let i = 0; i < textEdit.range.end.line; i++) {
+              endOffset += (lines[i]?.length ?? 0) + 1
+            }
+            endOffset += textEdit.range.end.character
+
+            content = content.slice(0, startOffset) + textEdit.newText + content.slice(endOffset)
+          }
+
+          fs.writeFileSync(filePath, content, 'utf-8')
+          log.info(`[LSP] Applied document edit to ${filePath}`)
+          filesChanged.add(filePath)
+
+          // Let LSP server know about the change if file is open
+          if (this.fileVersions.has(uri)) {
+             const ver = (this.fileVersions.get(uri) ?? 0) + 1
+             this.fileVersions.set(uri, ver)
+             this.sendNotify('textDocument/didChange', {
+               textDocument: { uri, version: ver },
+               contentChanges: [{ text: content }],
+             })
+          }
+        }
+      } else if (edit.changes) {
+        for (const [uri, textEdits] of Object.entries<any[]>(edit.changes)) {
+          const filePath = uri.startsWith('file://') ? uri.slice(7) : uri
+          if (!fs.existsSync(filePath)) continue
+
+          let content = fs.readFileSync(filePath, 'utf-8')
+          const edits = [...textEdits].sort((a, b) => {
+            if (a.range.start.line !== b.range.start.line) return b.range.start.line - a.range.start.line
+            return b.range.start.character - a.range.start.character
+          })
+
+          for (const textEdit of edits) {
+            const lines = content.split('\n')
+            let startOffset = 0
+            for (let i = 0; i < textEdit.range.start.line; i++) {
+              startOffset += (lines[i]?.length ?? 0) + 1
+            }
+            startOffset += textEdit.range.start.character
+
+            let endOffset = 0
+            for (let i = 0; i < textEdit.range.end.line; i++) {
+              endOffset += (lines[i]?.length ?? 0) + 1
+            }
+            endOffset += textEdit.range.end.character
+
+            content = content.slice(0, startOffset) + textEdit.newText + content.slice(endOffset)
+          }
+
+          fs.writeFileSync(filePath, content, 'utf-8')
+          log.info(`[LSP] Applied edit to ${filePath}`)
+          filesChanged.add(filePath)
+
+          // Let LSP server know about the change if file is open
+          if (this.fileVersions.has(uri)) {
+             const ver = (this.fileVersions.get(uri) ?? 0) + 1
+             this.fileVersions.set(uri, ver)
+             this.sendNotify('textDocument/didChange', {
+               textDocument: { uri, version: ver },
+               contentChanges: [{ text: content }],
+             })
+          }
+        }
+      }
+
+      return { applied: true, filesChanged: Array.from(filesChanged) }
+    } catch (err: any) {
+      log.error('[LSP] Failed to apply workspace edit:', err)
+      return { applied: false, failureReason: err.message, filesChanged: Array.from(filesChanged) }
+    }
+  }
+
   private dispatch(msg: any) {
+    if (msg.method === 'workspace/applyEdit') {
+      const edit = msg.params.edit
+      this.applyWorkspaceEdit(edit).then(result => {
+         if (msg.id != null) {
+            this.write({
+               jsonrpc: '2.0',
+               id: msg.id,
+               result: { applied: result.applied, failureReason: result.failureReason }
+            })
+         }
+      })
+      return
+    }
     // Response to a pending request
     if (msg.id != null && this.pending.has(msg.id)) {
       const p = this.pending.get(msg.id)!

@@ -19,6 +19,25 @@ export interface WorkspaceCheckResult {
 }
 
 export function register(_win: BrowserWindow, deps: any) {
+  ipcMain.handle('lsp:rename', (_e, params: { filePath: string, line: number, character: number, newName: string }) =>
+    handleIpc('lsp:rename', [], async () => {
+      const lspManager = deps.lspManager as any;
+
+      const response = await lspManager.sendRequest('textDocument/rename', {
+        textDocument: { uri: `file://${params.filePath}` },
+        position: { line: params.line, character: params.character },
+        newName: params.newName
+      })
+
+      if (!response) {
+        return { filesChanged: [], errorCount: 0 }
+      }
+
+      const { filesChanged } = await lspManager.applyWorkspaceEdit(response)
+      return { filesChanged, errorCount: 0 }
+    })
+  )
+
   ipcMain.handle('lsp:workspace-check', (_e) =>
     handleIpc('lsp:workspace-check', [], async () => {
       const lspManager = deps.lspManager as any;
