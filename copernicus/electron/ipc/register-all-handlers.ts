@@ -44,6 +44,7 @@ import { jsonlExporter } from '../memory/jsonl-exporter'
 import { registerRetroHandlers } from './retro-handlers'
 import { registerIntelHandlers } from './intel-handlers'
 import { registerJulesHandlers } from './jules-handlers'
+import * as notebooklmHandlers from './notebooklm-handlers'
 
 
 export async function registerAllIpcHandlers(
@@ -114,6 +115,7 @@ export async function registerAllIpcHandlers(
   registerRetroHandlers(deps)
   registerIntelHandlers()
   registerJulesHandlers(deps)
+  notebooklmHandlers.register(deps)
 
   ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {
     const projectId = fsManager.getRootPath()

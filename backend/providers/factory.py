@@ -4,6 +4,7 @@ from backend.providers.anthropic import AnthropicProvider
 from backend.providers.google import GoogleProvider
 from backend.providers.openai import OpenAIProvider
 from backend.providers.ollama import OllamaProvider
+from backend.providers.notebooklm import NotebookLMProvider
 
 def get_provider(provider_name: str) -> BaseProvider:
     if provider_name == 'anthropic':
@@ -16,5 +17,7 @@ def get_provider(provider_name: str) -> BaseProvider:
         return OpenAIProvider()
     elif provider_name in ('openrouter', 'deepinfra'):
         return OpenAIProvider()
+    elif provider_name == 'notebooklm':
+        return NotebookLMProvider()
     else:
         raise AppError(f"Unknown provider: {provider_name}")
