@@ -200,5 +200,5 @@ if $DRY_RUN; then
 fi
 
 echo "🚀 Dispatching Story ${STORY_NUMBER} to Jules..."
-jules new "$PROMPT"
+jules new --repo JMThiessen/Copernicus "$PROMPT"
 echo "✓ Dispatched. Monitor in Jules dashboard or IDE Jules panel."
