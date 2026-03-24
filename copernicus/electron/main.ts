@@ -188,6 +188,80 @@ async function registerIpcHandlers() {
     return auditSkillDescriptions(rootPath || '')
   }))
 
+  ipcMain.handle('skills:scaffold', (_e, { categories, stackProfile }) => handleIpc(async () => {
+    const rootPath = fsManager.getRootPath()
+    if (!rootPath) throw new Error('No project root path set');
+
+    const generated: string[] = []
+    const skipped: string[] = []
+    const projectName = path.basename(rootPath)
+    const stackStr = stackProfile.frameworks.join(', ')
+
+    const targetSkillsDir = path.join(rootPath, '.claude', 'skills')
+    if (!fs.existsSync(targetSkillsDir)) {
+      fs.mkdirSync(targetSkillsDir, { recursive: true })
+    }
+
+    const templatesDir = path.join(__dirname, 'skills', 'templates')
+
+    for (const category of categories) {
+      const sourceDir = path.join(templatesDir, category)
+      const targetDir = path.join(targetSkillsDir, category)
+
+      if (!fs.existsSync(sourceDir)) {
+        log.warn(`[skills:scaffold] Template directory not found for category: ${category}`)
+        skipped.push(category)
+        continue
+      }
+
+      if (fs.existsSync(targetDir)) {
+        skipped.push(category)
+        continue
+      }
+
+      try {
+        fs.mkdirSync(targetDir, { recursive: true })
+
+        const copyRecursiveSync = (src: string, dest: string) => {
+          const exists = fs.existsSync(src)
+          const stats = exists && fs.statSync(src)
+          const isDirectory = exists && stats && stats.isDirectory()
+
+          if (isDirectory) {
+            if (!fs.existsSync(dest)) fs.mkdirSync(dest)
+            fs.readdirSync(src).forEach((childItemName) => {
+              copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName))
+            })
+          } else {
+            let content = fs.readFileSync(src, 'utf-8')
+            content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName)
+                             .replace(/\{\{STACK\}\}/g, stackStr)
+                             .replace(/\{\{REPO_ROOT\}\}/g, rootPath)
+            fs.writeFileSync(dest, content, 'utf-8')
+          }
+        }
+
+        copyRecursiveSync(sourceDir, targetDir)
+        generated.push(category)
+      } catch (err) {
+        log.error(`[skills:scaffold] Error writing skill ${category}:`, err)
+        skipped.push(category)
+      }
+    }
+
+    const newStackProfile = detectStack(rootPath)
+    
+    const activeWin = BrowserWindow.getAllWindows()[0]
+    if (activeWin) {
+      activeWin.webContents.send('skills:scaffolded', {
+        stackProfile: newStackProfile,
+        result: { generated, skipped }
+      })
+    }
+
+    return { generated, skipped }
+  }))
+
   const { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager: registeredWorktreeManager } =
     await registerAllIpcHandlers(win!, globalDeps, touchBarCleanup)
 
