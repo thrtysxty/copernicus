@@ -100,6 +100,38 @@ PLIST_EOF
 PLIST_EOF
     launchctl load "$PLIST"
     echo "Flask backend service registered — starts at login"
+  elif [[ "$SERVICE" == "mcp-hub" ]]; then
+    PLIST="$HOME/Library/LaunchAgents/com.copernicus.mcp-hub.plist"
+    if $UNINSTALL; then
+      launchctl unload "$PLIST" 2>/dev/null || true
+      rm -f "$PLIST"
+      echo "MCP Hub service unregistered (launchd)"
+      exit 0
+    fi
+    launchctl unload "$PLIST" 2>/dev/null || true
+    mkdir -p "$(dirname "$PLIST")"
+    cat > "$PLIST" << PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.copernicus.mcp-hub</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$PYTHON</string>
+    <string>$SCRIPT_DIR/mcp_hub.py</string>
+    <string>--transport</string>
+    <string>tcp</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/copernicus-mcp-hub.log</string>
+  <key>StandardErrorPath</key><string>/tmp/copernicus-mcp-hub.log</string>
+</dict>
+</plist>
+PLIST_EOF
+    launchctl load "$PLIST"
+    echo "MCP Hub service registered — starts at login"
   else
     echo "Unknown service: $SERVICE" >&2
     exit 1
@@ -163,6 +195,34 @@ UNIT_EOF
     systemctl --user enable copernicus-backend
     systemctl --user start copernicus-backend
     echo "Flask backend service registered and started via systemd --user"
+  elif [[ "$SERVICE" == "mcp-hub" ]]; then
+    UNIT="$HOME/.config/systemd/user/copernicus-mcp-hub.service"
+    if $UNINSTALL; then
+      systemctl --user stop copernicus-mcp-hub 2>/dev/null || true
+      systemctl --user disable copernicus-mcp-hub 2>/dev/null || true
+      rm -f "$UNIT"
+      systemctl --user daemon-reload
+      echo "MCP Hub service unregistered (systemd)"
+      exit 0
+    fi
+    systemctl --user stop copernicus-mcp-hub 2>/dev/null || true
+    systemctl --user disable copernicus-mcp-hub 2>/dev/null || true
+    mkdir -p "$(dirname "$UNIT")"
+    cat > "$UNIT" << UNIT_EOF
+[Unit]
+Description=Copernicus MCP Hub Service
+
+[Service]
+ExecStart=$PYTHON $SCRIPT_DIR/mcp_hub.py --transport tcp
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+UNIT_EOF
+    systemctl --user daemon-reload
+    systemctl --user enable copernicus-mcp-hub
+    systemctl --user start copernicus-mcp-hub
+    echo "MCP Hub service registered and started via systemd --user"
   else
     echo "Unknown service: $SERVICE" >&2
     exit 1

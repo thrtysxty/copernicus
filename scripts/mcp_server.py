@@ -1,236 +1,52 @@
 #!/usr/bin/env python3
 """
-COPERNICUS - MCP Server for Continue.dev
+COPERNICUS - MCP Server for Continue.dev (Backward Compatibility Shim)
 
-Provides utility tools for the agentic workflow:
-- story: Scaffold a new user story file
-- pi_check: Run Raspberry Pi compatibility audit
-- test_webhook: Send test payload to deployment webhook
-- handoff: Create session handoff note
-- log_error: Log a failed task for reflection
-- log_success: Log a successful task
-
-Usage:
-    # Run directly (for testing)
-    python scripts/mcp_server.py
-
-    # Via uv (for Continue.dev)
-    uv run scripts/mcp_server.py
-
-Requirements:
-    pip install mcp fastmcp
-    # or: uv add mcp fastmcp
+This script acts as a shim for legacy clients expecting mcp_server.py.
+It checks if the main MCP Hub is already running on port 6375.
+- If the hub is running, it exits gracefully.
+- If not, it starts the mcp_hub.py in stdio transport mode to serve legacy clients.
 """
 
+import socket
 import subprocess
 import sys
-from pathlib import Path
+import os
+import time
 
-# Add project root to path
-PROJECT_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+MCP_HUB_PORT = 6375
+MCP_HUB_SCRIPT = os.path.join(os.path.dirname(__file__), "mcp_hub.py")
 
-try:
-    from mcp.server import Server
-    from mcp.server.stdio import stdio_server
-    from mcp.types import Tool, TextContent
-except ImportError:
-    print("MCP library not installed. Run: pip install mcp", file=sys.stderr)
-    sys.exit(1)
-
-
-# Create the MCP server
-server = Server("highplains-tools")
-
-
-def run_script(script_path: str, args: list[str] | None = None) -> tuple[bool, str]:
+def is_hub_running(host='127.0.0.1', port=MCP_HUB_PORT, timeout=1):
     """
-    Run a Python script and return (success, output).
+    Checks if the MCP Hub is running by attempting to connect to its TCP port.
     """
-    cmd = [sys.executable, str(PROJECT_ROOT / script_path)]
-    if args:
-        cmd.extend(args)
-
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(PROJECT_ROOT),
-            timeout=60,
-        )
-        output = result.stdout + result.stderr
-        return result.returncode == 0, output.strip()
-    except subprocess.TimeoutExpired:
-        return False, "Script timed out after 60 seconds"
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (socket.timeout, ConnectionRefusedError):
+        return False
     except Exception as e:
-        return False, f"Error running script: {e}"
+        print(f"Error checking hub status: {e}", file=sys.stderr)
+        return False
 
-
-@server.list_tools()
-async def list_tools() -> list[Tool]:
-    """List available tools."""
-    return [
-        Tool(
-            name="story",
-            description="Scaffold a new user story file with the given title",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "description": "The title for the new user story",
-                    }
-                },
-                "required": ["title"],
-            },
-        ),
-        Tool(
-            name="pi_check",
-            description="Run Raspberry Pi 3B+ compatibility audit on a file or directory",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "path": {
-                        "type": "string",
-                        "description": "File or directory path to audit (relative to project root)",
-                    }
-                },
-                "required": ["path"],
-            },
-        ),
-        Tool(
-            name="test_webhook",
-            description="Send a test payload to the GitHub deployment webhook on the Pi",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-            },
-        ),
-        Tool(
-            name="handoff",
-            description="Create a handoff note for session restart with context summary",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "summary": {
-                        "type": "string",
-                        "description": "Summary of current session state and next steps",
-                    }
-                },
-                "required": ["summary"],
-            },
-        ),
-        Tool(
-            name="log_error",
-            description="Log a failed agentic task for later reflection and learning",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "description": "Description of what failed and why",
-                    }
-                },
-                "required": ["message"],
-            },
-        ),
-        Tool(
-            name="log_success",
-            description="Log a successful agentic task to capture patterns",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "description": "Description of what succeeded",
-                    }
-                },
-                "required": ["message"],
-            },
-        ),
-        Tool(
-            name="backlog",
-            description="Generate or refresh the master backlog document",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-            },
-        ),
-    ]
-
-
-@server.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Execute a tool and return the result."""
-
-    if name == "story":
-        title = arguments.get("title", "")
-        if not title:
-            return [TextContent(type="text", text="Error: title is required")]
-
-        success, output = run_script(
-            "scripts/utils/scaffold_story.py", ["--title", title]
-        )
-        status = "Created" if success else "Failed"
-        return [TextContent(type="text", text=f"{status}: {output}")]
-
-    elif name == "pi_check":
-        path = arguments.get("path", ".")
-        success, output = run_script("scripts/utils/pi_audit.py", [path])
-        return [TextContent(type="text", text=output)]
-
-    elif name == "test_webhook":
-        success, output = run_script("scripts/deployment/test_webhook.py", [])
-        status = "Webhook test sent" if success else "Webhook test failed"
-        return [TextContent(type="text", text=f"{status}\n{output}")]
-
-    elif name == "handoff":
-        summary = arguments.get("summary", "")
-        if not summary:
-            return [TextContent(type="text", text="Error: summary is required")]
-
-        success, output = run_script("scripts/utils/handoff.py", [summary])
-        return [TextContent(type="text", text=output)]
-
-    elif name == "log_error":
-        message = arguments.get("message", "")
-        if not message:
-            return [TextContent(type="text", text="Error: message is required")]
-
-        success, output = run_script(
-            "scripts/utils/manage_logs.py", ["--type", "error", "--message", message]
-        )
-        return [TextContent(type="text", text=output)]
-
-    elif name == "log_success":
-        message = arguments.get("message", "")
-        if not message:
-            return [TextContent(type="text", text="Error: message is required")]
-
-        success, output = run_script(
-            "scripts/utils/manage_logs.py", ["--type", "success", "--message", message]
-        )
-        return [TextContent(type="text", text=output)]
-
-    elif name == "backlog":
-        success, output = run_script("scripts/utils/generate_backlog.py", [])
-        status = "Backlog generated" if success else "Backlog generation failed"
-        return [TextContent(type="text", text=f"{status}\n{output}")]
-
+def main():
+    if is_hub_running():
+        print(f"Copernicus MCP Hub already running on port {MCP_HUB_PORT}", file=sys.stderr)
+        sys.exit(0)
     else:
-        return [TextContent(type="text", text=f"Unknown tool: {name}")]
-
-
-async def main():
-    """Run the MCP server."""
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream, write_stream, server.create_initialization_options()
-        )
-
+        print(f"Copernicus MCP Hub not detected on port {MCP_HUB_PORT}. Starting mcp_hub.py in stdio mode...", file=sys.stderr)
+        # Execute mcp_hub.py with stdio transport
+        # The execvp call replaces the current process with the new one
+        # This is important for correct signal handling and process management
+        try:
+            os.execvp(sys.executable, [sys.executable, MCP_HUB_SCRIPT, "--transport", "stdio"])
+        except FileNotFoundError:
+            print(f"Error: {sys.executable} or {MCP_HUB_SCRIPT} not found.", file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            print(f"Error executing mcp_hub.py: {e}", file=sys.stderr)
+            sys.exit(1)
 
 if __name__ == "__main__":
-    import asyncio
-
-    asyncio.run(main())
+    main()

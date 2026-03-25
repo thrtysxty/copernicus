@@ -111,7 +111,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #434 | Notebooklm Filetree Context View | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #527 | Copernicus Mcp Hub | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
 | #530 | Documentation Screenshot Capture | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -414,6 +413,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #523 | Notebooklm Mcp Intelligence Bridge | COMPLETE | P1 |
 | #524 | Cross Platform Daemon Installer | COMPLETE | P1 — Infrastructure |
 | #525 | Flask Backend Persistent Service | COMPLETE | P1 — Infrastructure |
+| #527 | Copernicus Mcp Hub | COMPLETE | P1 — Infrastructure |
 | #528 | Developer Documentation Suite | COMPLETE | P1 — Infrastructure |
 | #529 | End User Documentation Suite | COMPLETE | P1 — Feature |
 | #532 | Jules Pr Auto Review Gate | COMPLETE | P0 — Blocker |

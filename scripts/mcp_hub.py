@@ -7,7 +7,12 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
+
+# Add project root to path
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -57,9 +62,173 @@ class Tool:
             "parameters": self.parameters,
         }
 
+def _run_script_sync(script_path: str, args: Optional[List[str]] = None) -> tuple[bool, str]:
+    """
+    Run a Python script and return (success, output).
+    """
+    cmd = [sys.executable, str(PROJECT_ROOT / script_path)]
+    if args:
+        cmd.extend(args)
+
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+            timeout=60,
+        )
+        output = result.stdout + result.stderr
+        return result.returncode == 0, output.strip()
+    except subprocess.TimeoutExpired:
+        return False, "Script timed out after 60 seconds"
+    except Exception as e:
+        return False, f"Error running script: {e}"
+
 # --- Native Tools (Placeholder) ---
 # These will be populated from mcp_server.py and backend/mcp/lsp_diagnostics_tool.py
-NATIVE_TOOLS: Dict[str, Tool] = {}
+NATIVE_TOOLS: Dict[str, Tool] = {
+    "story": Tool(
+        name="story",
+        description="Scaffold a new user story file with the given title",
+        parameters={
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "The title for the new user story",
+                }
+            },
+            "required": ["title"],
+        },
+        handler=lambda title: (
+            {"result": _run_script_sync("scripts/utils/scaffold_story.py", ["--title", title])[1]}
+            if title
+            else {"error": "title is required"}
+        ),
+    ),
+    "pi_check": Tool(
+        name="pi_check",
+        description="Run Raspberry Pi 3B+ compatibility audit on a file or directory",
+        parameters={
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "File or directory path to audit (relative to project root)",
+                }
+            },
+            "required": ["path"],
+        },
+        handler=lambda path: {"result": _run_script_sync("scripts/utils/pi_audit.py", [path])[1]},
+    ),
+    "test_webhook": Tool(
+        name="test_webhook",
+        description="Send a test payload to the GitHub deployment webhook on the Pi",
+        parameters={"type": "object", "properties": {}},
+        handler=lambda: {"result": _run_script_sync("scripts/deployment/test_webhook.py")[1]},
+    ),
+    "handoff": Tool(
+        name="handoff",
+        description="Create a handoff note for session restart with context summary",
+        parameters={
+            "type": "object",
+            "properties": {
+                "summary": {
+                    "type": "string",
+                    "description": "Summary of current session state and next steps",
+                }
+            },
+            "required": ["summary"],
+        },
+        handler=lambda summary: (
+            {"result": _run_script_sync("scripts/utils/handoff.py", [summary])[1]}
+            if summary
+            else {"error": "summary is required"}
+        ),
+    ),
+    "log_error": Tool(
+        name="log_error",
+        description="Log a failed agentic task for later reflection and learning",
+        parameters={
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "Description of what failed and why",
+                }
+            },
+            "required": ["message"],
+        },
+        handler=lambda message: (
+            {"result": _run_script_sync("scripts/utils/manage_logs.py", ["--type", "error", "--message", message])[1]}
+            if message
+            else {"error": "message is required"}
+        ),
+    ),
+    "log_success": Tool(
+        name="log_success",
+        description="Log a successful agentic task to capture patterns",
+        parameters={
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "Description of what succeeded",
+                }
+            },
+            "required": ["message"],
+        },
+        handler=lambda message: (
+            {"result": _run_script_sync("scripts/utils/manage_logs.py", ["--type", "success", "--message", message])[1]}
+            if message
+            else {"error": "message is required"}
+        ),
+    ),
+    "backlog": Tool(
+        name="backlog",
+        description="Generate or refresh the master backlog document",
+        parameters={"type": "object", "properties": {}},
+        handler=lambda: {"result": _run_script_sync("scripts/utils/generate_backlog.py")[1]},
+    ),
+    "notebooklm_list_notebooks": Tool(
+        name="notebooklm_list_notebooks",
+        description="Lists available NotebookLM notebooks",
+        parameters={"type": "object", "properties": {}},
+        handler=lambda: {"error": "not implemented"},
+    ),
+    "notebooklm_ask": Tool(
+        name="notebooklm_ask",
+        description="Asks a question about a NotebookLM notebook",
+        parameters={
+            "type": "object",
+            "properties": {
+                "notebook_id": {"type": "string", "description": "The ID of the notebook"},
+                "query": {"type": "string", "description": "The question to ask"},
+            },
+            "required": ["notebook_id", "query"],
+        },
+        handler=lambda notebook_id, query: {"error": "not implemented"},
+    ),
+    "notebooklm_status": Tool(
+        name="notebooklm_status",
+        description="Gets the status of NotebookLM integration",
+        parameters={"type": "object", "properties": {}},
+        handler=lambda: {"error": "not implemented"},
+    ),
+    "get_workspace_diagnostics": Tool(
+        name="get_workspace_diagnostics",
+        description="Gets diagnostics for the workspace or a specific file",
+        parameters={
+            "type": "object",
+            "properties": {
+                "file": {"type": "string", "description": "Optional: file path to get diagnostics for"},
+            },
+        },
+        handler=lambda file=None: {"error": "not implemented"},
+    ),
+}
+
 
 class ProxyServer:
     def __init__(self, name: str, command: List[str], eager: bool = False, log_file: str = "/dev/null"):
@@ -368,17 +537,55 @@ class MCPHub:
         logging.info("--------------------------")
 
     def print_config(self):
-        config = {
+        port = self.port
+        host = "127.0.0.1"
+
+        # Claude Code format
+        print("--- Claude Code Configuration (TCP Transport) ---")
+        claude_config = {
             "mcpServers": {
                 "copernicus": {
-                    "transport": self.transport,
-                    "host": "127.0.0.1",
-                    "port": self.port
+                    "transport": "tcp",
+                    "host": host,
+                    "port": port
                 }
             }
         }
-        print(json.dumps(config, indent=2))
-        # TODO: Add Gemini CLI and Continue.dev formats
+        print(json.dumps(claude_config, indent=2))
+        print("\n")
+
+        # Gemini CLI format
+        print("--- Gemini CLI Configuration (~/.gemini/settings.json mcpServers format) ---")
+        gemini_cli_config = {
+            "mcpServers": {
+                "copernicus": {
+                    "transport": "tcp",
+                    "host": host,
+                    "port": port
+                }
+            }
+        }
+        print(json.dumps(gemini_cli_config, indent=2))
+        print("\n")
+
+        # Continue.dev format
+        print("--- Continue.dev Configuration (.continue/config.json mcpServers format) ---")
+        continue_dev_config = {
+            "mcpServers": {
+                "copernicus": {
+                    "transport": "tcp",
+                    "host": host,
+                    "port": port
+                }
+            }
+        }
+        print(json.dumps(continue_dev_config, indent=2))
+        print("\n")
+
+        # Generic format (host + port only)
+        print("--- Generic Configuration (Host:Port) ---")
+        print(f"{host}:{port}")
+        print("\n")
 
 
 def main():
@@ -396,18 +603,12 @@ def main():
     # Allow environment variable to override port
     port = int(os.environ.get("COPERNICUS_MCP_PORT", args.port))
 
-    # --print-config is purely static — no hub or proxy needed
+    # Handle --print-config separately, as it doesn't need to start the hub
     if args.print_config:
-        config = {
-            "mcpServers": {
-                "copernicus": {
-                    "transport": args.transport,
-                    "host": "127.0.0.1",
-                    "port": port
-                }
-            }
-        }
-        print(json.dumps(config, indent=2))
+        # Create a dummy hub instance to access print_config logic
+        # This hub won't actually start or initialize proxies
+        dummy_hub = MCPHub(port=port, transport=args.transport, start_proxies=False)
+        dummy_hub.print_config()
         sys.exit(0)
 
     # --status and --list-tools don't need eager proxies running

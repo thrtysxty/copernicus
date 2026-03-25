@@ -71,6 +71,32 @@ function Register-FlaskBackend {
     Write-Host "Flask backend service scheduled via Task Scheduler"
 }
 
+function Register-MCPHub {
+    $TaskName = "CopernicusMCPHub"
+    $McpHubScript = Join-Path $ScriptDir "mcp_hub.py"
+
+    if ($Uninstall) {
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+        Write-Host "MCP Hub service removed from Task Scheduler"
+        exit
+    }
+
+    # Idempotent — remove if exists before re-registering
+    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+
+    $Arguments = "`"$McpHubScript`" --transport tcp"
+
+    $Action = New-ScheduledTaskAction -Execute $PythonW -Argument $Arguments
+    $Trigger = New-ScheduledTaskTrigger -AtLogOn
+    $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable
+    $Principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -RunLevel Limited
+
+    Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger `
+        -Settings $Settings -Principal $Principal -Force
+
+    Write-Host "MCP Hub service scheduled via Task Scheduler"
+}
+
 switch ($Service) {
     "jules" {
         Register-JulesDaemon
@@ -78,8 +104,11 @@ switch ($Service) {
     "flask" {
         Register-FlaskBackend
     }
+    "mcp-hub" {
+        Register-MCPHub
+    }
     default {
-        Write-Error "Unknown service specified: $Service. Supported services are 'jules' and 'flask'."
+        Write-Error "Unknown service specified: $Service. Supported services are 'jules', 'flask', and 'mcp-hub'."
         exit 1
     }
 }
