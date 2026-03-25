@@ -243,6 +243,22 @@ The feature is live on the Dell R210ii Core.
 
 ---
 
+## Act 10 — Sprint Finishing Ceremony
+
+At the end of the sprint, the user triggers the **Sprint Finishing Ceremony** template from the Workflow canvas.
+
+This automated process:
+1. Gathers Git commits, performance metrics, and logs for review.
+2. Prompts the user to reflect on the sprint's successes and failures.
+3. Automatically extracts concrete learning rules and updates `AGENTS.md`.
+4. Refreshes core documentation based on codebase changes.
+5. Captures fresh screenshots if any UI elements were modified.
+6. Automatically creates a Pull Request with all docs and `CHANGELOG.md` updates.
+
+The codebase and its documentation stay in sync, ensuring the next sprint starts without technical debt.
+
+---
+
 ## The Daily Rhythm
 
 Once onboarded, the user's day looks like this:
