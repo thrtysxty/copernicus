@@ -97,7 +97,12 @@ export const ActivityBar: React.FC = () => {
           label="Designer"
           shortcut="⌘3"
           testId="nav-designer"
-          onClick={() => { setView('designer'); setCenterMode('canvas') }}
+          onClick={() => {
+            setView('designer')
+            setCenterMode('canvas')
+            const { flippedPanes, toggleFlip } = useLayoutStore.getState()
+            if (flippedPanes.includes('center-panel')) toggleFlip('center-panel')
+          }}
         />
         <NavItem id="orchestrator" icon={Workflow} label="Orchestrator" shortcut="⌘4" testId="nav-orchestrator" />
         <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘5" testId="nav-telemetry" />

@@ -120,7 +120,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     setGuideMessages([]); setShowClaudeFallback(false)
     if (isFlipped) {
       setActiveBackTab('context')
-      invoke<string>('models:active').then(activeId => {
+      invoke<IpcResult<string>>('models:active').then(res => {
+        const activeId = unwrapIpc<string>(res)
         if (activeId) setModel(activeId)
       }).catch(() => {})
     }

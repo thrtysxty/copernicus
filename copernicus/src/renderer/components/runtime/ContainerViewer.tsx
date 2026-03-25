@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useLayoutStore } from '../../store/layout';
-import { Play, Square, FileText, RefreshCw, RotateCcw } from 'lucide-react';
+import { Play, Square, FileText, RefreshCw, ChevronLeft } from 'lucide-react';
 
 export interface Container {
   ID: string;
@@ -67,7 +67,7 @@ export const ContainerViewer: React.FC = () => {
             className="p-1 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
             title="Back to Explorer"
           >
-            <RotateCcw size={12} />
+            <ChevronLeft size={12} />
           </button>
         </div>
       </div>

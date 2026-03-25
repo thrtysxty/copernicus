@@ -52,7 +52,7 @@ export function MemoryReplayView() {
           <section className="flex-1 flex flex-col border border-copernicus-steel bg-[#0A0A0A] overflow-hidden h-full">
             {renderHeader('Agent Memory', 'memory')}
             <div className="flex-1 overflow-auto min-h-0">
-              <MemoryBrowser />
+              <MemoryBrowser hideHeader />
             </div>
           </section>
         )}

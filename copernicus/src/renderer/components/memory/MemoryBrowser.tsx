@@ -30,7 +30,7 @@ const eventTypeBorderColor = (type: string) => {
   }
 }
 
-export const MemoryBrowser: React.FC = () => {
+export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader = false }) => {
   const invoke = useIpcError()
   const [memories, setMemories] = useState<MemoryRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,15 +95,17 @@ export const MemoryBrowser: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-mono">
-      <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
-        <div className="flex items-center gap-2">
-          <Brain size={11} className="text-copernicus-phosphor" />
-          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Agent Memory</span>
+      {!hideHeader && (
+        <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
+          <div className="flex items-center gap-2">
+            <Brain size={11} className="text-copernicus-phosphor" />
+            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Agent Memory</span>
+          </div>
+          <button onClick={fetchMemories} className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100" title="Refresh">
+            <RefreshCw size={11} />
+          </button>
         </div>
-        <button onClick={fetchMemories} className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100" title="Refresh">
-          <RefreshCw size={11} />
-        </button>
-      </div>
+      )}
 
       <div className="px-3 py-2 border-b border-white/5 space-y-2 shrink-0">
         <div className="flex items-center gap-2">

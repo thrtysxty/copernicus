@@ -105,6 +105,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu,
       setActiveFileLanguage('binary')
     } else {
       setCenterMode('code')
+      // Un-flip center-panel if it's showing the canvas back face
+      const { flippedPanes, toggleFlip } = useLayoutStore.getState()
+      if (flippedPanes.includes('center-panel')) toggleFlip('center-panel')
       try {
         const result = await invoke<any>('fs:read-file', node.path)
         const finalContent = unwrapIpc<string>(result) || ''

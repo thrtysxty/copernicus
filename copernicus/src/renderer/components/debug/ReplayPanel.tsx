@@ -3,7 +3,7 @@ import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 import { useReplayStore, ReplayRun, ReplayStep, ReplayStepDetail } from '../../store/replay'
 import { clsx } from 'clsx'
-import { RotateCw, ChevronRight, Activity, Terminal, Database } from 'lucide-react'
+import { RefreshCw, ChevronRight, Activity, Terminal, Database } from 'lucide-react'
 
 export const ReplayPanel: React.FC = () => {
   const invoke = useIpcError()
@@ -75,7 +75,7 @@ export const ReplayPanel: React.FC = () => {
             onClick={loadRuns} 
             className={clsx("hover:text-copernicus-phosphor transition-colors", isLoading && "animate-spin")}
           >
-            <RotateCw size={12} />
+            <RefreshCw size={12} />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar">

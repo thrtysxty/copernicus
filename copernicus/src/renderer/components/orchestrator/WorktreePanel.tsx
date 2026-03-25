@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useWorktreeStore } from '../../store/worktreeStore'
-import { GitBranch, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { GitBranch, Trash2 } from 'lucide-react'
 import { AgentWorktree } from '../../types/worktree'
 import { useLayoutStore } from '../../store/layout'
 import { unwrapIpc } from '../../types/ipc'
@@ -23,7 +23,6 @@ const timeAgo = (dateString: string) => {
 
 export const WorktreePanel: React.FC = () => {
   const { worktrees, alwaysUseWorktrees, defaultMergeMode, setWorktrees, upsertWorktree, removeWorktree, setAlwaysUseWorktrees, setDefaultMergeMode } = useWorktreeStore()
-  const [isExpanded, setIsExpanded] = useState(true)
   const invoke = useIpcError()
 
   const nonMergedWorktrees = worktrees.filter(wt => wt.status !== 'merged')
@@ -109,20 +108,13 @@ export const WorktreePanel: React.FC = () => {
           <option value="yolo">Yolo</option>
         </select>
 
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="ml-auto text-zinc-500 hover:text-zinc-300"
-        >
-          {isExpanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-        </button>
       </div>
 
-      {isExpanded && (
-        <div className="max-h-40 overflow-y-auto custom-scrollbar">
-          {worktrees.length === 0 ? (
-            <p className="text-zinc-600 text-[10px] p-2 text-center">No worktrees active.</p>
-          ) : (
-            worktrees.map((wt) => (
+      <div className="max-h-40 overflow-y-auto custom-scrollbar">
+        {worktrees.length === 0 ? (
+          <p className="text-zinc-600 text-[10px] p-2 text-center">No worktrees active.</p>
+        ) : (
+          worktrees.map((wt) => (
               <div key={wt.id} className="flex items-center p-2 border-b border-zinc-800 last:border-b-0">
                 <span className={`w-2 h-2 rounded-full mr-2
                   ${wt.status === 'active' ? 'bg-zinc-600 animate-spin' : ''}
@@ -174,7 +166,6 @@ export const WorktreePanel: React.FC = () => {
             ))
           )}
         </div>
-      )}
     </div>
   )
 }

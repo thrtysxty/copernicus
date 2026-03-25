@@ -542,7 +542,21 @@ export default function App() {
                             onChange={(v) => setActiveFileContent(v ?? '')}
                           />
                         }
-                        back={<div className="h-full w-full bg-zinc-900 flex items-center justify-center font-mono text-xs text-zinc-500">CANVAS_PREVIEW_ACTIVE</div>}
+                        back={
+                          <div className="h-full w-full flex flex-col bg-zinc-900">
+                            <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel bg-[#080808] shrink-0">
+                              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Canvas</span>
+                              <button
+                                onClick={() => toggleFlip('center-panel')}
+                                className="text-zinc-500 hover:text-zinc-200 transition-colors text-[9px] font-mono uppercase tracking-widest"
+                                title="Flip to Editor"
+                              >
+                                ← Editor
+                              </button>
+                            </div>
+                            <div className="flex-1 flex items-center justify-center font-mono text-xs text-zinc-600">CANVAS_PREVIEW_ACTIVE</div>
+                          </div>
+                        }
                       />
                     )}
                   </div>
