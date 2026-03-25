@@ -93,6 +93,16 @@ export class ModelRegistry {
   setActiveModel(id: string): boolean {
     if (this.models.has(id)) {
       this.activeModelId = id;
+      try {
+        const { BrowserWindow } = require('electron');
+        BrowserWindow.getAllWindows().forEach((w: any) => {
+          if (!w.isDestroyed()) {
+            w.webContents.send('models:active-changed', this.models.get(id));
+          }
+        });
+      } catch (e) {
+        // Ignore if electron isn't available or windows are destroyed
+      }
       return true;
     }
     return false;

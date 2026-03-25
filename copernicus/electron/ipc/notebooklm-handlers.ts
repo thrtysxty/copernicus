@@ -17,6 +17,23 @@ export function register(_deps: IpcHandlerDeps) {
     handleIpc(() => stateLedger.removeNlmNotebook(id))
   )
 
+  ipcMain.handle('notebooklm:notebook-contents', async (_e, notebookId: string) =>
+    handleIpc(async () => {
+      const authHeader = _deps.authManager.getApiKey('jules');
+      const response = await fetch(`http://localhost:5001/api/notebooklm/notebooks/${notebookId}/contents`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeader ? { 'Authorization': `Bearer ${authHeader}` } : {})
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch notebook contents: ${response.status}`);
+      }
+      return await response.json();
+    })
+  )
+
   ipcMain.handle('nlm:query', async (_e, _args: { notebookId: string; question: string }) =>
     handleIpc(async () => {
       return new Promise((resolve) => {

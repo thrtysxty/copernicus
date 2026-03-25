@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
-         Image as ImageIcon, Database, Maximize2, Minimize2, RotateCcw, ChevronLeft } from 'lucide-react'
+         Image as ImageIcon, Database, Maximize2, Minimize2, RotateCcw, ChevronLeft, BookOpen } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
 import { unwrapIpc } from '../../types/ipc'
 import { FileTreeContextMenu, ContextMenuProps } from './FileTreeContextMenu'
 import { LspStatusPopover } from './LspStatusPopover'
+import { NbLmTreeView } from './NbLmTreeView'
 
 const LANGUAGE_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'typescript',
@@ -233,12 +234,43 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   const [lspRunning, setLspRunning] = useState(false)
   const [lspPopoverOpen, setLspPopoverOpen] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuProps | null>(null)
+  const [nbLmOpen, setNbLmOpen] = useState(false)
   
   const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
-  
+  const [activeModelIdState, setActiveModelIdState] = useState<string | null>(null)
+
   const [creatingItem, setCreatingItem] = useState<{type: 'file' | 'folder', path: string} | null>(null)
   const [newItemName, setNewItemName] = useState('')
   const newItemInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    // Fetch initial active model
+    const fetchActiveModel = async () => {
+      try {
+        const res = await invoke<any>('models:active')
+        const data = unwrapIpc<any>(res)
+        if (data && data.id) {
+          setActiveModelIdState(data.id)
+          if (!data.id.startsWith('notebooklm:')) {
+            setNbLmOpen(false)
+          }
+        }
+      } catch(e) {}
+    }
+    fetchActiveModel()
+
+    // Listen for model changes
+    const removeListener = window.ipcRenderer.on('models:active-changed', (_e, modelData: any) => {
+      if (modelData && modelData.id) {
+        setActiveModelIdState(modelData.id)
+        if (!modelData.id.startsWith('notebooklm:')) {
+          setNbLmOpen(false)
+        }
+      }
+    })
+
+    return () => removeListener()
+  }, [invoke])
 
   const loadRoot = async () => {
     if (!rootPath) return
@@ -396,6 +428,15 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
         </div>
         
         <div className="flex items-center gap-1 opacity-60 group-hover/tree:opacity-100 transition-all">
+          {activeModelIdState?.startsWith('notebooklm:') && (
+            <button
+              onClick={() => setNbLmOpen(v => !v)}
+              className={`p-1 transition-colors ${nbLmOpen ? 'text-copernicus-phosphor' : 'text-zinc-600 hover:text-copernicus-phosphor'}`}
+              title="NotebookLM Context"
+            >
+              <BookOpen size={10} />
+            </button>
+          )}
           <button
             onClick={() => setSidebarOpen(false)}
             className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors"
@@ -419,31 +460,46 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-copernicus-steel">
-        {creatingItem && creatingItem.path === rootPath && (
-          <div className="flex items-center gap-1 px-1 py-[2px] ml-[4px]">
-            {creatingItem.type === 'file' ? <FileText size={12} className="text-zinc-500" /> : <Folder size={14} className="text-zinc-400" />}
-            <input
-              ref={newItemInputRef}
-              type="text"
-              value={newItemName}
-              onChange={e => setNewItemName(e.target.value)}
-              onBlur={submitNewItem}
-              onKeyDown={handleNewItemKeyDown}
-              className="bg-black text-white px-1 outline-none border border-copernicus-phosphor text-[11px] h-[18px] w-full"
-            />
+      <div className="flex-1 overflow-hidden relative">
+        <div
+          className="flex flex-row h-full w-[200%] transition-transform duration-200 ease-in-out"
+          style={{ transform: nbLmOpen ? 'translateX(-50%)' : 'translateX(0)' }}
+        >
+          {/* Left Slot: Existing File Tree */}
+          <div className="w-1/2 h-full overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-copernicus-steel">
+            {creatingItem && creatingItem.path === rootPath && (
+              <div className="flex items-center gap-1 px-1 py-[2px] ml-[4px]">
+                {creatingItem.type === 'file' ? <FileText size={12} className="text-zinc-500" /> : <Folder size={14} className="text-zinc-400" />}
+                <input
+                  ref={newItemInputRef}
+                  type="text"
+                  value={newItemName}
+                  onChange={e => setNewItemName(e.target.value)}
+                  onBlur={submitNewItem}
+                  onKeyDown={handleNewItemKeyDown}
+                  className="bg-black text-white px-1 outline-none border border-copernicus-phosphor text-[11px] h-[18px] w-full"
+                />
+              </div>
+            )}
+
+            {rootChildren.map(node => (
+              <FileTreeNode
+                key={node.path}
+                node={node}
+                depth={0}
+                onContextMenu={handleContextMenu}
+                onRefreshNeeded={loadRoot}
+              />
+            ))}
           </div>
-        )}
-        
-        {rootChildren.map(node => (
-          <FileTreeNode
-            key={node.path}
-            node={node}
-            depth={0}
-            onContextMenu={handleContextMenu}
-            onRefreshNeeded={loadRoot}
-          />
-        ))}
+
+          {/* Right Slot: NbLm Context Tree */}
+          <div className="w-1/2 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-copernicus-steel">
+            {nbLmOpen && activeModelIdState?.startsWith('notebooklm:') && (
+              <NbLmTreeView notebookId={activeModelIdState.replace('notebooklm:', '')} />
+            )}
+          </div>
+        </div>
       </div>
       
       {contextMenu && (

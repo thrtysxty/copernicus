@@ -52,7 +52,7 @@ const SEND_CHANNELS = new Set([
   'agent:patch-apply', 'agent:patch-reverse',
   'agent:send-code-stream',
   // NotebookLM
-  'nlm:list-notebooks', 'nlm:register-notebook', 'nlm:remove-notebook', 'nlm:query',
+  'nlm:list-notebooks', 'nlm:register-notebook', 'nlm:remove-notebook', 'nlm:query', 'notebooklm:notebook-contents',
   // Security
   'security:git-push-response',
   // Settings
@@ -164,6 +164,7 @@ const LISTEN_CHANNELS = new Set([
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',
   'layout:toggle-ui-builder',
   'retro:ready', 'retro:approved', 'skills:onboarding-needed', 'skills:scaffolded',
+  'models:active-changed',
 
   'security:git-push-request',
   'splash-status',
