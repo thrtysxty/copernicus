@@ -443,6 +443,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
+| #539 | Sqlite Vec Extension Load Failure | DRAFT | P1 — Stability |
+| #540 | Github Pat 401 Wizard And Startup | DRAFT | P1 — Onboarding |
+| #541 | Lsp Server Packaging | DRAFT | P2 — Developer Experience |
+| #542 | Stitch Sdk Migration | DRAFT | P2 — Feature |
+| #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
+| #544 | Genesis Rich Scaffold Templates | DRAFT | P2 — Feature |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

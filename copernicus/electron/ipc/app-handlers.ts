@@ -34,8 +34,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     codebaseIndexer,
     lspManager,
     ptyManager, // Re-added ptyManager
-    julesMonitor,
-    dispatchJulesSession,
     createTouchBar,
   } = deps
 
@@ -393,46 +391,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     appVersion: app.getVersion(),
     platform: process.platform,
   })))
-
-  // ── Jules Handlers (Story 161) ──────────────────────────────────────────
-  ipcMain.handle('jules:dispatch-session', (_e, storyId: string) => handleIpc('jules:dispatch-session', [storyId], async () => {
-    const story = stateLedger.getStoryById(storyId)
-    if (!story) throw new Error('STORY_NOT_FOUND')
-
-    const apiKey = authManager.getApiKey('jules')
-    if (!apiKey) throw new Error('JULES_API_KEY_MISSING')
-
-    const repo = authManager.getBaseUrl?.('jules') ?? ''
-    if (!repo) throw new Error('JULES_REPO_NOT_CONFIGURED')
-
-    const result = await dispatchJulesSession({
-      story, repo, branch: 'main', apiKey,
-      requirePlanApproval: false,
-    })
-
-    if (result.ok && result.sessionId) {
-      julesMonitor.startWatching(result.sessionId)
-    }
-
-    return result
-  }))
-
-  ipcMain.handle('jules:list-sessions', (_e, status?: string) => handleIpc('jules:list-sessions', [status], () =>
-    stateLedger.listJulesSessions(status)))
-
-  ipcMain.handle('jules:story-sessions', (_e, storyId: string) => handleIpc('jules:story-sessions', [storyId], () =>
-    stateLedger.getJulesSessionsByStory(storyId)))
-
-  ipcMain.handle('jules:retry-session', (_e, storyId: string) => handleIpc('jules:retry-session', [storyId], async () => {
-    const story = stateLedger.getStoryById(storyId)
-    if (!story) throw new Error('STORY_NOT_FOUND')
-    const apiKey = authManager.getApiKey('jules')
-    if (!apiKey) throw new Error('NO_KEY')
-    const repo = authManager.getBaseUrl?.('jules') ?? ''
-    const result = await dispatchJulesSession({ story, repo, branch: 'main', apiKey })
-    if (result.ok && result.sessionId) julesMonitor.startWatching(result.sessionId)
-    return result
-  }))
 
   ipcMain.handle('touchbar:rebuild', (_e, config: any) => handleIpc('touchbar:rebuild', [config], () => {
     if (process.platform !== 'darwin' || !win) return
