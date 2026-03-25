@@ -420,6 +420,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #532 | Jules Pr Auto Review Gate | COMPLETE | P0 — Blocker |
 | #533 | Pre Dispatch Story Spec Validator | COMPLETE | P0 — Infrastructure / Quality Gate |
 | #534 | Living Spec Auto Update | COMPLETE | P1 — Quality |
+| #535 | Non Blueprint Views Black Screen Regression | COMPLETE | P0 — Blocker |
+| #536 | Db Get Events Json Safety | COMPLETE | P1 — Bug Fix |
+| #537 | Fsevents Electron Shutdown Crash | COMPLETE | P1 — Stability |
+| #538 | Nav Debug Testid And E2E Coverage | COMPLETE | P2 — Test Infrastructure |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |

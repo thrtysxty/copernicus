@@ -600,8 +600,8 @@ export default function WorkflowCanvas() {
       )}
       {/* AC1: Modal Centering using 'absolute inset-0 flex items-center justify-center' */}
       {nodes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[100]">
-          <div className="bg-zinc-900 border border-copernicus-steel rounded p-6 w-96 shadow-2xl">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-[100]">
+          <div className="bg-zinc-800 border border-copernicus-steel rounded p-6 w-96 shadow-2xl">
             <div className="flex flex-col gap-2">
               {templates.map(t => (
                 <button

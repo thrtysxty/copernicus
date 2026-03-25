@@ -824,7 +824,7 @@ export class StateLedger {
     const stmt = this.db.prepare(`
       SELECT e.*, m.prompt_id, m.commit_sha
       FROM events e
-      LEFT JOIN model_calls m ON json_extract(e.content, '$.session_id') = m.session_id
+      LEFT JOIN model_calls m ON CASE WHEN json_valid(e.content) THEN json_extract(e.content, '$.session_id') ELSE NULL END = m.session_id
       ORDER BY e.created_at DESC LIMIT ?
     `);
     const rows = stmt.all(limit) as any[];

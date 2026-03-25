@@ -35,6 +35,13 @@ export class CodebaseIndexer {
     }
   }
 
+  async stop() {
+    if (this.watcher) {
+      await this.watcher.close()
+      this.watcher = undefined
+    }
+  }
+
   private loadVectorExtension() {
     const os = process.platform === 'darwin' ? 'darwin' : process.platform === 'win32' ? 'windows' : 'linux'
     const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64'

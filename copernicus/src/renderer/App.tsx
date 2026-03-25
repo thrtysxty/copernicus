@@ -423,7 +423,13 @@ export default function App() {
   })()
 
   const centerClass = (() => {
-    if (spotlightPane === 'editor') return 'flex-[3]'
+    if (spotlightPane === 'editor') return 'flex-[3]' // Maximize editor if spotlighted
+    // If the current view is editor or designer, ensure it's always visible
+    if (activeView === 'editor' || activeView === 'designer') {
+      return 'flex-1' // Always take normal space unless editor is spotlighted
+    }
+
+    // Original logic for other views (these are rendered outside this block and not directly affected by this flex context)
     if (spotlightPane === 'chat') return 'w-0 opacity-0 pointer-events-none'
     if (spotlightPane === 'explorer') return 'w-10 flex-shrink-0'
     return 'flex-1'

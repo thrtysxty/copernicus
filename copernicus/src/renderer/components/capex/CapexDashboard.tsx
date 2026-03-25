@@ -63,7 +63,7 @@ function MiniStat({ label, value, color }: { label: string; value: string | numb
 }
 
 function EmptyState({ msg }: { msg: string }) {
-  return <div className="flex items-center justify-center h-32 text-zinc-600 text-xs italic">{msg}</div>
+  return <div className="flex items-center justify-center h-32 text-zinc-400 text-xs italic">{msg}</div>
 }
 
 function DashboardPanel({ 
