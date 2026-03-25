@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process'
 import path from 'path'
 import fs from 'fs'
+import http from 'http'
 import log from 'electron-log'
 import { app } from 'electron'
 
@@ -10,6 +11,24 @@ export class BackendManager {
 
   async start(): Promise<void> {
     if (this.process) return
+
+    this.port = parseInt(process.env.COPERNICUS_BACKEND_PORT ?? '5001', 10);
+    const healthCheckUrl = `http://127.0.0.1:${this.port}/api/health`;
+
+    const alreadyRunning = await new Promise<boolean>((resolve) => {
+      const req = http.get(healthCheckUrl, { timeout: 1000 }, (res) => {
+        resolve(res.statusCode === 200)
+      })
+      req.on('error', () => resolve(false))
+      req.on('timeout', () => { req.destroy(); resolve(false) })
+    })
+    if (alreadyRunning) {
+      log.info(`[BackendManager] Backend service already running at ${healthCheckUrl} — skipping spawn`)
+      this.process = null
+      return
+    }
+    log.info(`[BackendManager] Backend service not running — proceeding to spawn`)
+
     const isPackaged = app.isPackaged
     let command: string
     let args: string[] = []
@@ -53,6 +72,7 @@ export class BackendManager {
       env: {
         ...process.env,
         FLASK_ENV: isPackaged ? 'production' : 'development',
+        COPERNICUS_BACKEND_PORT: this.port.toString(), // Ensure the spawned process gets the port
         // PYTHONPATH is not needed for binary, but keep for script fallback
         PYTHONPATH: isPackaged && !args.length ? undefined : path.join(app.getAppPath(), '..')
       },
@@ -73,17 +93,21 @@ export class BackendManager {
     })
 
     this.process.on('close', (code) => {
-      log.info(`[BackendManager] Flask backend exited with code ${code}`)
+      // Only log exit if it was a process we managed
+      if (this.process !== null) {
+        log.info(`[BackendManager] Flask backend exited with code ${code}`);
+      }
       this.process = null
     })
 
     this.process.on('error', (err) => {
       log.error(`[BackendManager] Failed to start backend: ${err.message}`)
+      this.process = null; // Ensure process is null on error
     })
   }
 
   stop(): void {
-    if (this.process) {
+    if (this.process) { // Only kill if we actually spawned and manage this process
       log.info('[BackendManager] Stopping Flask backend...')
       this.process.kill()
       this.process = null

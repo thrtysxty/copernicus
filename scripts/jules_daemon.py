@@ -211,13 +211,25 @@ def get_pr_commit(pr_number: int) -> str | None:
     sha = result.stdout.strip()
     return sha if sha and sha != "null" else None
 
-def review_pr(pr_number: int, story_id: int) -> tuple[str, str, dict]:
+def review_pr(pr_number: int, story_id: int) -> dict:
     """
     Reviews a PR using the Anthropic API.
-    Returns (verdict, summary, full_verdict_json)
+    Returns a dictionary with review verdict and details.
     """
     anthropic_key = anthropic_api_key()
     model = "claude-sonnet-4-6"
+    reviewer_model = model # Store the actual model used
+
+    # Default verdict structure for fallbacks
+    default_verdict = {
+        "verdict": "BLOCKED",
+        "acs_met": [],
+        "acs_missing": [],
+        "summary": "Failed to get a valid review verdict from Claude.",
+        "reviewer_model": reviewer_model,
+        "reviewed_at": now_iso(),
+        "merge_sha": "unknown"
+    }
 
     # 1. Fetch diff
     log.info(f"  Fetching PR #{pr_number} diff...")
@@ -229,7 +241,8 @@ def review_pr(pr_number: int, story_id: int) -> tuple[str, str, dict]:
 
     if result.returncode != 0:
         log.error(f"  Failed to fetch PR diff: {result.stderr}")
-        return "FAILED", "Failed to fetch PR diff", {}
+        default_verdict["summary"] = "Failed to fetch PR diff."
+        return default_verdict
 
     # 2. Read story file
     story_content = "Story file not found."
@@ -267,13 +280,18 @@ PR DIFF:
 {diff}
 
 Respond with a JSON object only:
+```json
 {{
-  "verdict": "APPROVE" | "BLOCK" | "REQUEST_CHANGES",
-  "summary": "<one sentence>",
-  "issues": ["<issue 1>", ...],  // empty array if APPROVE
-  "acs_met": ["<AC text>", ...],
-  "acs_missing": ["<AC text>", ...]
+  "verdict": "APPROVED" | "BLOCKED" | "REQUEST_CHANGES",
+  "acs_met": ["AC text or ID"],
+  "acs_missing": ["AC text or ID"],
+  "summary": "one-paragraph prose",
+  "reviewer_model": "{reviewer_model}",
+  "reviewed_at": "{now_iso()}",
+  "merge_sha": "unknown"
 }}
+```
+Make sure the JSON is properly formatted within the ```json block.
 """
     messages = [{"role": "user", "content": prompt}]
     headers = {
@@ -292,7 +310,7 @@ Respond with a JSON object only:
     try:
         # Using subprocess curl for direct HTTP POST, similar to curl_post for Jules API
         cmd = [
-            "curl", "-s", "-w", "\n__HTTP_CODE__%{http_code}",
+            "curl", "-s", "-w", "\\n__HTTP_CODE__%{http_code}",
             "-X", "POST", f"{ANTHROPIC_API}/messages",
         ]
         for header, value in headers.items():
@@ -306,7 +324,8 @@ Respond with a JSON object only:
 
         if status_code != 200:
             log.error(f"  Claude API error (status {status_code}): {response_body_text}")
-            return "FAILED", f"Claude API error: {status_code}", {}
+            default_verdict["summary"] = f"Claude API error: {status_code}"
+            return default_verdict
 
         # 6. Parse the response
         response_data = json.loads(response_body_text)
@@ -321,26 +340,116 @@ Respond with a JSON object only:
 
         if not verdict_content:
             log.error("  Claude API response missing text content.")
-            return "FAILED", "Claude API response missing text content", {}
+            default_verdict["summary"] = "Claude API response missing text content."
+            return default_verdict
 
-        verdict_json = json.loads(verdict_content)
-        verdict = verdict_json.get("verdict", "FAILED")
-        summary = verdict_json.get("summary", "No summary provided.")
+        # Extract JSON from markdown code block if present
+        if verdict_content.strip().startswith("```json"):
+            verdict_content = verdict_content.split("```json", 1)[1].split("```", 1)[0].strip()
 
-        return verdict, summary, verdict_json
+        try:
+            verdict_json = json.loads(verdict_content)
+            # Merge with default to ensure all keys are present
+            final_verdict = {**default_verdict, **verdict_json}
+            # Ensure acs_met and acs_missing are lists
+            final_verdict["acs_met"] = final_verdict.get("acs_met", [])
+            final_verdict["acs_missing"] = final_verdict.get("acs_missing", [])
+            return final_verdict
+        except json.JSONDecodeError as e:
+            log.error(f"  Failed to parse Claude API response JSON: {e}. Content: {verdict_content}")
+            default_verdict["summary"] = f"Failed to parse Claude API response JSON: {e}. Raw content: {verdict_content}"
+            return default_verdict
 
     except subprocess.TimeoutExpired:
         log.error("  Claude API call timed out after 60 seconds.")
-        return "FAILED", "Claude API call timed out", {}
+        default_verdict["summary"] = "Claude API call timed out."
+        return default_verdict
     except json.JSONDecodeError as e:
-        log.error(f"  Failed to parse Claude API response JSON: {e}")
-        return "FAILED", "Failed to parse Claude API response", {}
+        log.error(f"  Failed to parse Claude API response JSON (outer): {e}")
+        default_verdict["summary"] = f"Failed to parse Claude API response JSON (outer): {e}"
+        return default_verdict
     except Exception as e:
         log.error(f"  An unexpected error occurred during Claude API call: {e}")
-        return "FAILED", f"Unexpected error: {e}", {}
+        default_verdict["summary"] = f"An unexpected error occurred during Claude API call: {e}"
+        return default_verdict
 
 
 # ── Poll cycle ────────────────────────────────────────────────────────────────
+
+def write_verification_record(story_path: str, verdict: dict) -> None:
+    """
+    Reads the story file, appends (or replaces if '## Verification Record' already present)
+    a verification block, and updates the Status line to COMPLETE.
+    Performs an atomic write using a temporary file.
+    """
+    if not Path(story_path).is_file():
+        log.warning(f"Verification record: Story file not found at {story_path}")
+        return
+
+    try:
+        with open(story_path, "r") as f:
+            lines = f.readlines()
+
+        output_lines = []
+        in_existing_verification_block = False
+        status_line_found_and_updated = False
+
+        # Find and skip existing verification record, and update status line
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            if line.strip() == "## Verification Record":
+                in_existing_verification_block = True
+                # Skip all lines until next top-level heading or EOF
+                i += 1
+                while i < len(lines) and not lines[i].startswith("## "):
+                    i += 1
+                continue
+            
+            if not status_line_found_and_updated and line.startswith("**Status:**"):
+                output_lines.append("**Status:** COMPLETE\n")
+                status_line_found_and_updated = True
+            else:
+                output_lines.append(line)
+            i += 1
+        
+        # If status line was not found, append it at the end of the initial content if needed
+        if not status_line_found_and_updated:
+            pass # We'll append the new record, which will contain status as well if it's new.
+
+        # Construct new verification record
+        acs_met_str = "\n".join([f"- {ac}" for ac in verdict.get("acs_met", [])]) if verdict.get("acs_met") else ""
+        acs_missing_str = "\n".join([f"- {ac}" for ac in verdict.get("acs_missing", [])]) if verdict.get("acs_missing") else "_(none)_"
+
+        verification_record_block = f"""
+## Verification Record
+
+**Reviewed:** {verdict.get("reviewed_at")}
+**Reviewer:** {verdict.get("reviewer_model")}
+**Verdict:** {verdict.get("verdict")}
+**Merge SHA:** `{verdict.get("merge_sha", "unknown")}` (full 40-char; `git show <sha>` to inspect)
+
+### ACs Met
+{acs_met_str}
+
+### ACs Flagged
+{acs_missing_str}
+
+### Summary
+{verdict.get("summary")}
+"""
+        # Append the new record at the end of the file
+        output_lines.append(verification_record_block)
+
+        # Atomic write
+        tmp_path = Path(story_path).with_suffix(".md.tmp")
+        with open(tmp_path, "w") as f:
+            f.writelines(output_lines)
+        os.replace(tmp_path, story_path)
+        log.info(f"Verification record written to {story_path}")
+
+    except Exception as e:
+        log.error(f"Failed to write verification record to {story_path}: {e}")
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -418,6 +527,15 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
         conn.commit()
 
         if pr_number:
+            final_verdict = {
+                "verdict": row["review_state"] or "PENDING",
+                "acs_met": [],
+                "acs_missing": [],
+                "summary": "No review performed or decision made yet.",
+                "reviewer_model": row["reviewer"] or "unknown",
+                "reviewed_at": row["reviewed"] or now_iso(),
+                "merge_sha": "unknown"
+            }
             if skip_review:
                 log.warning(f"  ⚠ SKIP-REVIEW flag active — merging PR #{pr_number} without review.")
                 do_merge = True
@@ -442,29 +560,27 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                         do_review = True
 
                 if do_review:
-                    verdict, summary, full_verdict_json = review_pr(pr_number, story)
-                    full_verdict_str = json.dumps(full_verdict_json)
-                    current_iso = now_iso()
+                    final_verdict = review_pr(pr_number, story)
+                    final_verdict_str = json.dumps(final_verdict)
+                    
+                    # Always update DB with the latest review outcome
+                    conn.execute(
+                        "UPDATE jules_sessions SET review_state=?, review_verdict=?, reviewer=?, reviewed=?, updated=? WHERE session_id=?",
+                        (final_verdict["verdict"], final_verdict_str, final_verdict["reviewer_model"], final_verdict["reviewed_at"], now_iso(), session_id)
+                    )
+                    conn.commit()
 
-                    if verdict == "APPROVE":
-                        log.info(f"  ✓ Review APPROVED — {summary}")
-                        conn.execute(
-                            "UPDATE jules_sessions SET review_state=?, review_verdict=?, reviewer=?, reviewed=?, updated=? WHERE session_id=?",
-                            ("APPROVED", full_verdict_str, "claude-sonnet-3-5-20240429", current_iso, current_iso, session_id)
-                        )
+                    if final_verdict["verdict"] == "APPROVED":
+                        log.info(f"  ✓ Review APPROVED — {final_verdict['summary']}")
                         do_merge = True
                     else:
                         do_merge = False
-                        log.warning(f"  ❌ Review {verdict} — {summary}")
-                        conn.execute(
-                            "UPDATE jules_sessions SET review_state=?, review_verdict=?, reviewer=?, reviewed=?, updated=? WHERE session_id=?",
-                            (verdict, full_verdict_str, "claude-sonnet-3-5-20240429", current_iso, current_iso, session_id)
-                        )
-                        if "issues" in full_verdict_json:
-                            for issue in full_verdict_json["issues"]:
+                        log.warning(f"  ❌ Review {final_verdict['verdict']} — {final_verdict['summary']}")
+                        if final_verdict.get("issues"):
+                            for issue in final_verdict["issues"]:
                                 log.warning(f"   • {issue}")
-                        if "acs_missing" in full_verdict_json:
-                            for ac in full_verdict_json["acs_missing"]:
+                        if final_verdict.get("acs_missing"):
+                            for ac in final_verdict["acs_missing"]:
                                 log.warning(f"   • AC not met: {ac}")
                 else:
                     do_merge = False # Not approved, not retrying
@@ -472,11 +588,20 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
             if do_merge:
                 ok, err = merge_pr(pr_number)
                 if ok:
-                    commit_sha = get_pr_commit(pr_number)
-                    log.info(f"  ✓ Merged PR #{pr_number}" + (f" ({commit_sha[:8]})" if commit_sha else ""))
+                    # Populate merge_sha and write verification record
+                    merge_sha = get_pr_commit(pr_number)
+                    final_verdict["merge_sha"] = merge_sha if merge_sha else "unknown"
+
+                    story_paths = glob.glob(f"docs/stories/story_{story}_*.md")
+                    if story_paths:
+                        write_verification_record(story_paths[0], final_verdict)
+                    else:
+                        log.warning(f"  ❌ Story file for story {story} not found. Cannot write verification record.")
+
+                    log.info(f"  ✓ Merged PR #{pr_number}" + (f" ({final_verdict['merge_sha'][:8]})" if final_verdict['merge_sha'] else ""))
                     conn.execute(
                         "UPDATE jules_sessions SET merged=?, commit_sha=?, updated=? WHERE session_id=?",
-                        (now_iso(), commit_sha, now_iso(), session_id)
+                        (now_iso(), final_verdict["merge_sha"], now_iso(), session_id)
                     )
                 else:
                     log.warning(f"  ❌ Merge failed: {err}")

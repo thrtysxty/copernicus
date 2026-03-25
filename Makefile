@@ -1,4 +1,4 @@
-.PHONY: help dev test test-e2e backlog deploy db-deploy db-migrate clean reset reset-db
+.PHONY: help dev test test-e2e backlog deploy db-deploy db-migrate clean reset reset-db validate-story validate-all # Added validate-story validate-all
 
 # Infrastructure Config
 CORE_SERVER_IP ?= 192.168.1.185  # Dell R210ii
@@ -53,6 +53,17 @@ jules:
 jules-dry:
 	@bash scripts/jules_assign.sh --dry-run $(STORY)
 
+# Validate a single story spec:
+validate-story:
+	@bash scripts/story-validator.sh $(STORY)
+
+# Validate all stories:
+validate-all:
+	@for f in docs/stories/story_*.md; do 
+		echo "--- $$f ---"; 
+		python3 scripts/utils/story_validator.py "$$f" || true; 
+	done
+
 # IPC compliance check across codebase:
 ipc-lint:
 	@bash scripts/ipc-lint.sh
@@ -105,7 +116,7 @@ ollama-deploy:
 
 ollama-status:
 	@echo "=== Ollama on Core ==="
-	@curl -sf http://$(CORE_SERVER_IP):11434/api/tags | python3 -m json.tool 2>/dev/null \
+	@curl -sf http://$(CORE_SERVER_IP):11434/api/tags | python3 -m json.tool 2>/dev/null 
 	  || echo "[!] Ollama unreachable at http://$(CORE_SERVER_IP):11434"
 
 ollama-stop:

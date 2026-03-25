@@ -110,10 +110,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #522 | Nlm Tools Safari Extension Port | APPROVED FOR IMPLEMENTATION | P1 |
-| #524 | Cross Platform Daemon Installer | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
-| #528 | Developer Documentation Suite | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
-| #529 | End User Documentation Suite | APPROVED FOR IMPLEMENTATION | P1 — Feature |
+| #436 | End User Setup Guide | APPROVED FOR IMPLEMENTATION | P1 — Feature |
+| #523 | Notebooklm Mcp Intelligence Bridge | APPROVED FOR IMPLEMENTATION | P1 |
+| #525 | Flask Backend Persistent Service | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
+| #530 | Documentation Screenshot Capture | APPROVED FOR IMPLEMENTATION | P2 — Feature |
+| #533 | Pre Dispatch Story Spec Validator | APPROVED FOR IMPLEMENTATION | P0 — Infrastructure / Quality Gate |
+| #534 | Living Spec Auto Update | APPROVED FOR IMPLEMENTATION | P1 — Quality |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -410,6 +412,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #519 | Agent Role Taxonomy Node Types In Workflow Engine | COMPLETE | P1 |
 | #520 | Stitch Mcp Api Key Auth Support | COMPLETE | P1 |
 | #521 | Jules Api Ipc Wiring And Sourcecontext Fix | COMPLETE | P1 |
+| #522 | Nlm Tools Safari Extension Port | COMPLETE | P1 |
+| #524 | Cross Platform Daemon Installer | COMPLETE | P1 — Infrastructure |
+| #528 | Developer Documentation Suite | COMPLETE | P1 — Infrastructure |
+| #529 | End User Documentation Suite | COMPLETE | P1 — Feature |
 | #532 | Jules Pr Auto Review Gate | COMPLETE | P0 — Blocker |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
@@ -431,14 +437,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
-| #436 | End User Setup Guide | DRAFT | P1 — Feature |
-| #523 | Notebooklm Mcp Intelligence Bridge | DRAFT | P1 |
-| #525 | Flask Backend Persistent Service | DRAFT | P1 — Infrastructure |
 | #527 | Copernicus Mcp Hub | DRAFT | P1 — Infrastructure |
-| #530 | Documentation Screenshot Capture | DRAFT | P2 — Feature |
 | #531 | Sprint Finishing Ceremony Workflow | DRAFT | P1 — Feature |
-| #533 | Pre Dispatch Story Spec Validator | DRAFT | P0 — Infrastructure / Quality Gate |
-| #534 | Living Spec Auto Update | DRAFT | P1 — Quality |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
