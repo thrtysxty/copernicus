@@ -91,7 +91,7 @@ class StoryValidator:
             line = line.strip()
             # Regex to find paths like 'path/to/file.ts', 'path/to/file.py', etc.
             # Handles markdown list items like - `path/to/file.ts`
-            match = re.search(r"[`]?([\w./_-]+\.(?:ts|js|py|html|json|md|sh|ps1|yml|yaml|css|scss|txt|xml|java|cs|go|c|cpp|h|hpp|vue|svelte|jsx|tsx))[`]?", line)
+            match = re.search(r"[`]?([\w./_-]+\.(?:tsx|ts|jsx|js|py|html|json|md|sh|ps1|yml|yaml|css|scss|txt|xml|java|cs|go|cpp|c|hpp|h|vue|svelte))[`]?", line)
             if match:
                 path = match.group(1)
                 is_new = "(new)" in line.lower()
