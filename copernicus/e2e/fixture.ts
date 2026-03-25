@@ -113,7 +113,7 @@ const VIEW_MAP: Record<string, string> = {
 // Helper: push a layout:set-view IPC from main process → renderer
 export async function setView(
   app: ElectronApplication,
-  view: 'blueprint' | 'studio' | 'engine-room' | 'capex' | 'workflow'
+  view: string
 ) {
   const mapped = VIEW_MAP[view] ?? view
   await app.evaluate(({ BrowserWindow }, v) => {

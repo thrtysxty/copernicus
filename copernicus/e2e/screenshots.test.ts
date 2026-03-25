@@ -306,6 +306,48 @@ test.describe('Story530 Overlays', () => {
   })
 })
 
+// ─── Missing views ───────────────────────────────────────────────────────────
+
+test.describe('Missing Views', () => {
+  test('designer-canvas @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('designer-canvas')) return
+    // Click the Designer nav button directly — it sets view + centerMode + unflips
+    await window.locator('[data-testid="nav-designer"]').click()
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('designer-canvas'), fullPage: false })
+  })
+
+  test('memory-replay @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('memory-replay')) return
+    await setView(app, 'memory')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('memory-replay'), fullPage: false })
+  })
+
+  test('source-control @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('source-control')) return
+    await setView(app, 'git')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('source-control'), fullPage: false })
+  })
+
+  test('debug-panel @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('debug-panel')) return
+    await setView(app, 'debug')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('debug-panel'), fullPage: false })
+  })
+
+  test('intel-overlay @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('intel-overlay')) return
+    await setView(app, 'blueprint')
+    await window.waitForTimeout(300)
+    await window.locator('button:has-text("INTEL")').click()
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('intel-overlay'), fullPage: false })
+  })
+})
+
 // ─── Status Bar ──────────────────────────────────────────────────────────────
 
 test.describe('Status Bar', () => {
