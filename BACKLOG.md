@@ -110,7 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #523 | Notebooklm Mcp Intelligence Bridge | APPROVED FOR IMPLEMENTATION | P1 |
 | #527 | Copernicus Mcp Hub | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
 | #530 | Documentation Screenshot Capture | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -411,6 +410,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #520 | Stitch Mcp Api Key Auth Support | COMPLETE | P1 |
 | #521 | Jules Api Ipc Wiring And Sourcecontext Fix | COMPLETE | P1 |
 | #522 | Nlm Tools Safari Extension Port | COMPLETE | P1 |
+| #523 | Notebooklm Mcp Intelligence Bridge | COMPLETE | P1 |
 | #524 | Cross Platform Daemon Installer | COMPLETE | P1 — Infrastructure |
 | #525 | Flask Backend Persistent Service | COMPLETE | P1 — Infrastructure |
 | #528 | Developer Documentation Suite | COMPLETE | P1 — Infrastructure |
