@@ -1,6 +1,6 @@
 # Epic 011: OpenShell Agent Sandbox Runtime
 
-**Status:** DRAFT
+**Status:** COMPLETE
 **Priority:** P1 — Infrastructure
 **Phase:** Agent Security & Isolation
 

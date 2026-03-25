@@ -1,6 +1,6 @@
 # Epic 012: Jules REST API Integration
 
-**Status:** DRAFT — WAITING ON UPSTREAM
+**Status:** COMPLETE
 **Priority:** P2 — Infrastructure
 **Phase:** Agent Dispatch Modernisation
 **Blocked By:** Jules REST API exiting alpha (`https://jules.google/docs/api/reference/`)

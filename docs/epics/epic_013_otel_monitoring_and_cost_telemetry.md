@@ -1,6 +1,6 @@
 # Epic 013: OTel Monitoring & Cost Telemetry
 
-**Status:** ACTIVE
+**Status:** COMPLETE
 **Priority:** P2 — Observability
 **Phase:** Platform Instrumentation
 
@@ -42,7 +42,7 @@ Claude Code emits a full OTel signal suite — `api_request` (cost, tokens, cach
 | 442 | `prompt.id` added to `workflow:step-start` / `workflow:step-end` IPC events | — |
 | 443 | `prompt.id` written to `model_calls` table; foreign-keyed to workflow step | 440, 442 |
 | 444 | `active_time.total` (cli) → CAPEX cost-per-active-second column | 440 |
-| 445 | `tool_result.git_commit_id` → `model_calls.commit_sha` column | 440 |
+| 445 | `tool_result.git_commit_id` → `model_calls.commit_sha` column | 440 | ✅ delivered as story 456 |
 | 446 | `code_edit_tool.decision.source` → card spotlight accept/reject stats | 442 |
 | 447 | Crash recovery: re-hydrate `model_calls` from OTel Collector on Electron restart | 443 |
 
