@@ -1,0 +1,431 @@
+import argparse
+import json
+import logging
+import os
+import signal
+import subprocess
+import sys
+import threading
+import time
+from typing import Dict, Any, List, Optional, Callable
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# --- Configuration Constants ---
+DEFAULT_MCP_PORT = 6375
+MCP_HUB_CONFIG_DIR = os.path.expanduser("~/.copernicus/mcp-hub")
+os.makedirs(MCP_HUB_CONFIG_DIR, exist_ok=True)
+MCP_HUB_LOG_DIR = os.path.join(os.path.expanduser("~"), ".copernicus", "logs", "mcp-hub")
+os.makedirs(MCP_HUB_LOG_DIR, exist_ok=True)
+
+# Define proxy configurations
+PROXY_CONFIGS = {
+    "codebase-memory": {
+        "command": ["codebase-memory-mcp"],
+        "strategy": "eager",
+        "log_file": os.path.join(MCP_HUB_LOG_DIR, "copernicus-mcp-codebase-memory.log"),
+    },
+    "stitch": {
+        "command": ["npx", "stitch-mcp"],
+        "strategy": "lazy",
+        "log_file": os.path.join(MCP_HUB_LOG_DIR, "copernicus-mcp-stitch.log"),
+    },
+    "context7": {
+        "command": ["npx", "-y", "@context7/server"],
+        "strategy": "lazy",
+        "log_file": os.path.join(MCP_HUB_LOG_DIR, "copernicus-mcp-context7.log"),
+    },
+    "lynkr": {
+        "command": ["npx", "-y", "@lynkr/server"],
+        "strategy": "lazy",
+        "log_file": os.path.join(MCP_HUB_LOG_DIR, "copernicus-mcp-lynkr.log"),
+    },
+}
+
+class Tool:
+    def __init__(self, name: str, description: str, parameters: Dict, handler: Callable):
+        self.name = name
+        self.description = description
+        self.parameters = parameters
+        self.handler = handler
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "parameters": self.parameters,
+        }
+
+# --- Native Tools (Placeholder) ---
+# These will be populated from mcp_server.py and backend/mcp/lsp_diagnostics_tool.py
+NATIVE_TOOLS: Dict[str, Tool] = {}
+
+class ProxyServer:
+    def __init__(self, name: str, command: List[str], eager: bool = False, log_file: str = "/dev/null"):
+        self.name = name
+        self.command = command
+        self.eager = eager
+        self.process: Optional[subprocess.Popen] = None
+        self.tools: Dict[str, Tool] = {}
+        self.log_file = log_file
+        self._lock = threading.Lock()
+        self._stop_event = threading.Event()
+        self._reader_thread: Optional[threading.Thread] = None
+
+    def start(self) -> None:
+        if self.is_alive():
+            logging.info(f"Proxy '{self.name}' is already running.")
+            return
+
+        logging.info(f"Starting proxy '{self.name}' with command: {' '.join(self.command)}")
+        try:
+            with open(self.log_file, "a") as log_output:
+                self.process = subprocess.Popen(
+                    self.command,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=log_output,  # Redirect stderr to log file
+                    text=True,
+                    bufsize=1,  # Line-buffered
+                )
+            self._reader_thread = threading.Thread(target=self._read_stdout, daemon=True)
+            self._reader_thread.start()
+
+            # MCP Handshake: Read tool list
+            self._send_message({"type": "get_tools"})
+            response = self._read_response()
+            if response and response.get("type") == "tools_list":
+                for tool_data in response.get("tools", []):
+                    tool_name = f"{self.name}__{tool_data['name']}"
+                    self.tools[tool_name] = Tool(
+                        name=tool_name,
+                        description=tool_data.get("description", ""),
+                        parameters=tool_data.get("parameters", {}),
+                        handler=self._create_proxy_handler(tool_data['name'])
+                    )
+                logging.info(f"Proxy '{self.name}' registered {len(self.tools)} tools.")
+            else:
+                logging.warning(f"Proxy '{self.name}' failed to receive tools list or unexpected response: {response}")
+                self.stop() # Stop if handshake fails
+        except FileNotFoundError:
+            logging.error(f"Command not found for proxy '{self.name}': {self.command[0]}")
+        except Exception as e:
+            logging.error(f"Error starting proxy '{self.name}': {e}", exc_info=True)
+            self.stop()
+
+    def _read_stdout(self):
+        if not self.process or not self.process.stdout:
+            return
+        while not self._stop_event.is_set():
+            try:
+                line = self.process.stdout.readline()
+                if line:
+                    # In a real implementation, you might parse this for events or additional responses
+                    # For now, just logging to ensure we consume output
+                    with open(self.log_file, "a") as log_output:
+                        log_output.write(f"[{self.name} stdout]: {line}")
+                elif self.process.poll() is not None: # Process exited
+                    logging.info(f"Proxy '{self.name}' stdout stream closed, process exited.")
+                    break
+            except ValueError: # I/O operation on closed file
+                logging.info(f"Proxy '{self.name}' stdout stream already closed.")
+                break
+            except Exception as e:
+                logging.error(f"Error reading from proxy '{self.name}' stdout: {e}", exc_info=True)
+                break
+        logging.info(f"Proxy '{self.name}' reader thread terminated.")
+
+
+    def stop(self) -> None:
+        if self.process and self.process.poll() is None:
+            logging.info(f"Stopping proxy '{self.name}'.")
+            try:
+                # Notify proxy of shutdown
+                self._send_message({"type": "shutdown"})
+                self.process.stdin.close()
+                self._stop_event.set() # Signal reader thread to stop
+                if self._reader_thread and self._reader_thread.is_alive():
+                    self._reader_thread.join(timeout=5) # Give it a chance to finish
+                self.process.terminate()
+                self.process.wait(timeout=10)
+            except Exception as e:
+                logging.error(f"Error stopping proxy '{self.name}': {e}", exc_info=True)
+            finally:
+                self.process = None
+                self.tools = {}
+                self._stop_event.clear() # Reset for potential restart
+        else:
+            logging.info(f"Proxy '{self.name}' is not running.")
+
+
+    def is_alive(self) -> bool:
+        if self.process:
+            return self.process.poll() is None
+        return False
+
+    def _send_message(self, message: Dict) -> None:
+        if self.process and self.process.stdin:
+            try:
+                json_message = json.dumps(message)
+                self.process.stdin.write(json_message + "\n")
+                self.process.stdin.flush()
+            except Exception as e:
+                logging.error(f"Error sending message to proxy '{self.name}': {e}")
+                self.stop()
+        else:
+            logging.warning(f"Attempted to send message to non-running proxy '{self.name}'.")
+
+    def _read_response(self) -> Optional[Dict]:
+        if self.process and self.process.stdout:
+            try:
+                line = self.process.stdout.readline()
+                if line:
+                    return json.loads(line)
+            except json.JSONDecodeError as e:
+                logging.error(f"JSON decode error from proxy '{self.name}': {e}, line: {line.strip()}")
+            except Exception as e:
+                logging.error(f"Error reading response from proxy '{self.name}': {e}")
+        return None
+
+    def _create_proxy_handler(self, tool_name_in_proxy: str) -> Callable:
+        def handler(**kwargs):
+            if not self.is_alive():
+                logging.info(f"Proxy '{self.name}' is not alive, attempting to restart for tool '{tool_name_in_proxy}'.")
+                self.start()
+                if not self.is_alive():
+                    logging.error(f"Failed to restart proxy '{self.name}' for tool '{tool_name_in_proxy}'.")
+                    return {"error": f"Proxy '{self.name}' is not available."}
+            
+            with self._lock: # Ensure only one call at a time for stdio
+                self._send_message({"type": "call_tool", "name": tool_name_in_proxy, "args": kwargs})
+                response = self._read_response()
+                if response and response.get("type") == "tool_response":
+                    return response.get("result")
+                else:
+                    logging.error(f"Unexpected response for tool '{tool_name_in_proxy}' from proxy '{self.name}': {response}")
+                    return {"error": "Unexpected tool response from proxy."}
+        return handler
+
+
+class MCPHub:
+    def __init__(self, port: int, transport: str, start_proxies: bool = True):
+        self.port = port
+        self.transport = transport
+        self.native_tools = NATIVE_TOOLS # Will be populated
+        self.proxies: Dict[str, ProxyServer] = {}
+        self.all_tools: Dict[str, Tool] = {}
+        self._running = threading.Event()
+        self._server_thread: Optional[threading.Thread] = None
+
+        self._initialize_proxies(start_eager=start_proxies)
+
+    def _initialize_proxies(self, start_eager: bool = True):
+        for name, config in PROXY_CONFIGS.items():
+            proxy = ProxyServer(
+                name=name,
+                command=config["command"],
+                eager=(config["strategy"] == "eager"),
+                log_file=config["log_file"]
+            )
+            self.proxies[name] = proxy
+            if proxy.eager and start_eager:
+                proxy.start() # Start eager proxies immediately
+
+    def _register_tools(self):
+        self.all_tools.clear()
+        # Register native tools first
+        self.all_tools.update(self.native_tools)
+
+        # Register proxy tools, preferring native on collision
+        for proxy_name, proxy in self.proxies.items():
+            # If lazy, try to start it to get its tools, but don't fail if it doesn't start
+            if not proxy.is_alive() and not proxy.eager:
+                logging.info(f"Attempting to start lazy proxy '{proxy_name}' to get its tools...")
+                proxy.start()
+            
+            for tool_name, tool in proxy.tools.items():
+                if tool_name not in self.all_tools:
+                    self.all_tools[tool_name] = tool
+                else:
+                    logging.warning(f"Tool name collision for '{tool_name}'. Native tool takes precedence over proxy '{proxy_name}' tool.")
+
+        logging.info(f"Registered {len(self.all_tools)} total tools.")
+
+    def start(self):
+        self._register_tools()
+        if self.transport == "tcp":
+            logging.info(f"Starting MCP Hub (TCP) on port {self.port}...")
+            self._server_thread = threading.Thread(target=self._run_tcp_server, daemon=True)
+            self._server_thread.start()
+        elif self.transport == "stdio":
+            logging.info("Starting MCP Hub (STDIO)...")
+            self._run_stdio_server()
+        else:
+            logging.error(f"Unknown transport: {self.transport}")
+            sys.exit(1)
+
+        self._running.set()
+        logging.info("MCP Hub is running.")
+        try:
+            while self._running.is_set():
+                time.sleep(1) # Keep main thread alive
+        except KeyboardInterrupt:
+            logging.info("MCP Hub received KeyboardInterrupt. Shutting down.")
+        finally:
+            self.stop()
+
+    def stop(self):
+        logging.info("Stopping MCP Hub...")
+        self._running.clear()
+        for proxy in self.proxies.values():
+            proxy.stop()
+        if self._server_thread and self._server_thread.is_alive():
+            # TODO: Implement proper TCP server shutdown
+            pass
+        logging.info("MCP Hub stopped.")
+
+    def _run_tcp_server(self):
+        # Placeholder for TCP server implementation
+        logging.warning("TCP server not yet implemented.")
+        # In a real implementation, this would listen on self.port
+        # and handle incoming tool call requests.
+        pass
+
+    def _run_stdio_server(self):
+        while self._running.is_set():
+            try:
+                line = sys.stdin.readline()
+                if not line:
+                    break # EOF
+                
+                request = json.loads(line)
+                response = self._handle_request(request)
+                
+                json_response = json.dumps(response)
+                sys.stdout.write(json_response + "\n")
+                sys.stdout.flush()
+
+            except json.JSONDecodeError:
+                logging.error(f"STDIO: Invalid JSON received: {line.strip()}")
+                sys.stdout.write(json.dumps({"error": "Invalid JSON"}) + "\n")
+                sys.stdout.flush()
+            except Exception as e:
+                logging.error(f"STDIO: Error handling request: {e}", exc_info=True)
+                sys.stdout.write(json.dumps({"error": str(e)}) + "\n")
+                sys.stdout.flush()
+
+    def _handle_request(self, request: Dict) -> Dict:
+        request_type = request.get("type")
+        if request_type == "get_tools":
+            tools_list = [tool.to_dict() for tool in self.all_tools.values()]
+            return {"type": "tools_list", "tools": tools_list}
+        elif request_type == "call_tool":
+            tool_name = request.get("name")
+            args = request.get("args", {})
+            tool = self.all_tools.get(tool_name)
+            if tool:
+                try:
+                    result = tool.handler(**args)
+                    return {"type": "tool_response", "result": result}
+                except Exception as e:
+                    logging.error(f"Error executing tool '{tool_name}': {e}", exc_info=True)
+                    return {"type": "tool_response", "error": str(e)}
+            else:
+                return {"type": "tool_response", "error": f"Tool '{tool_name}' not found."}
+        elif request_type == "shutdown":
+            logging.info("Received shutdown request via STDIO.")
+            self._running.clear()
+            return {"type": "status", "message": "Shutting down."}
+        else:
+            return {"error": "Unknown request type."}
+
+
+    def print_status(self):
+        logging.info("--- MCP Hub Status ---")
+        logging.info(f"Bound Port: {self.port}")
+        logging.info(f"Transport: {self.transport}")
+        logging.info(f"Total Tools: {len(self.all_tools)}")
+        logging.info("Active Proxies:")
+        for name, proxy in self.proxies.items():
+            status = "Running" if proxy.is_alive() else "Stopped"
+            logging.info(f"  - {name}: {status} (Eager: {proxy.eager})")
+            if proxy.is_alive():
+                logging.info(f"    Tools provided: {len(proxy.tools)}")
+        logging.info("----------------------")
+
+    def list_tools(self):
+        logging.info("--- MCP Hub Tools List ---")
+        for tool_name, tool in self.all_tools.items():
+            source = "Native"
+            for proxy_name, proxy in self.proxies.items():
+                if tool_name in proxy.tools:
+                    source = f"Proxy ({proxy_name})"
+                    break
+            logging.info(f"- {tool_name} (Source: {source})")
+            logging.info(f"  Description: {tool.description}")
+            logging.info(f"  Parameters: {json.dumps(tool.parameters)}")
+        logging.info("--------------------------")
+
+    def print_config(self):
+        config = {
+            "mcpServers": {
+                "copernicus": {
+                    "transport": self.transport,
+                    "host": "127.0.0.1",
+                    "port": self.port
+                }
+            }
+        }
+        print(json.dumps(config, indent=2))
+        # TODO: Add Gemini CLI and Continue.dev formats
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Copernicus MCP Hub")
+    parser.add_argument("--port", type=int, default=DEFAULT_MCP_PORT,
+                        help=f"Port for TCP transport (default: {DEFAULT_MCP_PORT})")
+    parser.add_argument("--transport", type=str, default="tcp", choices=["tcp", "stdio"],
+                        help="Transport protocol (default: tcp)")
+    parser.add_argument("--status", action="store_true", help="Print hub status and exit.")
+    parser.add_argument("--list-tools", action="store_true", help="Print all registered tools and exit.")
+    parser.add_argument("--print-config", action="store_true", help="Print ready-to-paste client config and exit.")
+    
+    args = parser.parse_args()
+
+    # Allow environment variable to override port
+    port = int(os.environ.get("COPERNICUS_MCP_PORT", args.port))
+
+    # --print-config is purely static — no hub or proxy needed
+    if args.print_config:
+        config = {
+            "mcpServers": {
+                "copernicus": {
+                    "transport": args.transport,
+                    "host": "127.0.0.1",
+                    "port": port
+                }
+            }
+        }
+        print(json.dumps(config, indent=2))
+        sys.exit(0)
+
+    # --status and --list-tools don't need eager proxies running
+    informational = args.status or args.list_tools
+    hub = MCPHub(port=port, transport=args.transport, start_proxies=not informational)
+
+    if args.status:
+        hub.print_status()
+        sys.exit(0)
+    elif args.list_tools:
+        hub.list_tools()
+        sys.exit(0)
+    
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, lambda s, f: hub.stop())
+    signal.signal(signal.SIGTERM, lambda s, f: hub.stop())
+
+    hub.start()
+
+if __name__ == "__main__":
+    main()

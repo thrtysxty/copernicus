@@ -110,12 +110,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #436 | End User Setup Guide | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #523 | Notebooklm Mcp Intelligence Bridge | APPROVED FOR IMPLEMENTATION | P1 |
-| #525 | Flask Backend Persistent Service | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
+| #527 | Copernicus Mcp Hub | APPROVED FOR IMPLEMENTATION | P1 — Infrastructure |
 | #530 | Documentation Screenshot Capture | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #533 | Pre Dispatch Story Spec Validator | APPROVED FOR IMPLEMENTATION | P0 — Infrastructure / Quality Gate |
-| #534 | Living Spec Auto Update | APPROVED FOR IMPLEMENTATION | P1 — Quality |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -346,6 +343,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #432 | Notebooklm Backend Provider And Ipc | COMPLETE | P2 — Feature |
 | #433 | Notebooklm Renderer Integration | COMPLETE | P2 — Feature |
 | #435 | Developer First Launch Setup | COMPLETE | P0 — Blocker |
+| #436 | End User Setup Guide | COMPLETE | P1 — Feature |
 | #437 | Multiplatform Build Pipeline | COMPLETE | P1 — Infrastructure |
 | #438 | Kanban Card Double Click Fix | COMPLETE | P1 — Bug |
 | #439 | Search Drawer Live Results And Enter Persist | COMPLETE | P1 — Bug |
@@ -414,9 +412,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #521 | Jules Api Ipc Wiring And Sourcecontext Fix | COMPLETE | P1 |
 | #522 | Nlm Tools Safari Extension Port | COMPLETE | P1 |
 | #524 | Cross Platform Daemon Installer | COMPLETE | P1 — Infrastructure |
+| #525 | Flask Backend Persistent Service | COMPLETE | P1 — Infrastructure |
 | #528 | Developer Documentation Suite | COMPLETE | P1 — Infrastructure |
 | #529 | End User Documentation Suite | COMPLETE | P1 — Feature |
 | #532 | Jules Pr Auto Review Gate | COMPLETE | P0 — Blocker |
+| #533 | Pre Dispatch Story Spec Validator | COMPLETE | P0 — Infrastructure / Quality Gate |
+| #534 | Living Spec Auto Update | COMPLETE | P1 — Quality |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -437,7 +438,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #434 | Notebooklm Filetree Context View | DRAFT | P2 — Feature |
-| #527 | Copernicus Mcp Hub | DRAFT | P1 — Infrastructure |
 | #531 | Sprint Finishing Ceremony Workflow | DRAFT | P1 — Feature |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
