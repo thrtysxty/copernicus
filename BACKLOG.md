@@ -110,8 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #434 | Notebooklm Filetree Context View | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #531 | Sprint Finishing Ceremony Workflow | APPROVED FOR IMPLEMENTATION | P1 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -341,6 +339,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #431 | Workflow Engine Shell Injection Fix | COMPLETE | P0 — Security (blocking) |
 | #432 | Notebooklm Backend Provider And Ipc | COMPLETE | P2 — Feature |
 | #433 | Notebooklm Renderer Integration | COMPLETE | P2 — Feature |
+| #434 | Notebooklm Filetree Context View | COMPLETE | P2 — Feature |
 | #435 | Developer First Launch Setup | COMPLETE | P0 — Blocker |
 | #436 | End User Setup Guide | COMPLETE | P1 — Feature |
 | #437 | Multiplatform Build Pipeline | COMPLETE | P1 — Infrastructure |
@@ -417,6 +416,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #528 | Developer Documentation Suite | COMPLETE | P1 — Infrastructure |
 | #529 | End User Documentation Suite | COMPLETE | P1 — Feature |
 | #530 | Documentation Screenshot Capture | COMPLETE | P2 — Feature |
+| #531 | Sprint Finishing Ceremony Workflow | COMPLETE | P1 — Feature |
 | #532 | Jules Pr Auto Review Gate | COMPLETE | P0 — Blocker |
 | #533 | Pre Dispatch Story Spec Validator | COMPLETE | P0 — Infrastructure / Quality Gate |
 | #534 | Living Spec Auto Update | COMPLETE | P1 — Quality |
