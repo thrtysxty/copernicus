@@ -188,6 +188,10 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   showGenesis: boolean
   setShowGenesis: (show: boolean) => void
 
+  // Intelligence Manager (Agents)
+  agentsOpen: boolean
+  setAgentsOpen: (v: boolean) => void
+
   // Basement Archive
   basementOpen: boolean
   setBasementOpen: (open: boolean) => void
@@ -411,6 +415,9 @@ stitchTokens: null,
 
       showGenesis: false,
       setShowGenesis: (show) => set({ showGenesis: show }),
+
+      agentsOpen: false,
+      setAgentsOpen: (v) => set({ agentsOpen: v }),
 
       basementOpen: false,
       setBasementOpen: (open) => set({ basementOpen: open }),

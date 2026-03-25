@@ -28,6 +28,7 @@ import { CommandPalette } from './components/layout/CommandPalette'
 import { commandRegistry } from './store/commandRegistry'
 import Wizard from './components/wizard/Wizard'
 import GenesisWizard from './components/genesis/GenesisWizard'
+import { IntelligenceManager } from './components/intelligence/IntelligenceManager'
 import SplashScreen from './components/layout/SplashScreen'
 import { CRTOverlay } from './components/effects/CRTOverlay'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
@@ -128,6 +129,8 @@ export default function App() {
   const hasCompletedTour = useLayoutStore(s => s.hasCompletedTour)
   const tourHighlight = useLayoutStore(s => s.tourHighlight)
   const settingsOpen = useLayoutStore(s => s.settingsOpen)
+  const agentsOpen = useLayoutStore(s => s.agentsOpen)
+  const setAgentsOpen = useLayoutStore(s => s.setAgentsOpen)
 
   const capexSessionTime = useTelemetryStore(s => s.capexSessionTime)
   const capexTotal = useTelemetryStore(s => s.capexTotal)
@@ -599,6 +602,11 @@ export default function App() {
       </div>
 
       {/* Overlays */}
+      {agentsOpen && (
+        <div className="absolute inset-0 z-[200] bg-[#050505]">
+          <IntelligenceManager onClose={() => setAgentsOpen(false)} />
+        </div>
+      )}
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
       <CommandPalette
         open={commandPaletteOpen}
