@@ -320,10 +320,10 @@ payload = {
 print(json.dumps(payload))
 " <<< "$PROMPT")
 
-RESPONSE=$(curl -s -X POST 
-  'https://jules.googleapis.com/v1alpha/sessions' 
-  -H "Content-Type: application/json" 
-  -H "x-goog-api-key: ${JULES_API_KEY}" 
+RESPONSE=$(curl -s -X POST \
+  'https://jules.googleapis.com/v1alpha/sessions' \
+  -H "Content-Type: application/json" \
+  -H "x-goog-api-key: ${JULES_API_KEY}" \
   -d "$PAYLOAD")
 
 # Extract session ID
