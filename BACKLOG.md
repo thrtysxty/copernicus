@@ -111,7 +111,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #434 | Notebooklm Filetree Context View | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #530 | Documentation Screenshot Capture | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -416,6 +415,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #527 | Copernicus Mcp Hub | COMPLETE | P1 — Infrastructure |
 | #528 | Developer Documentation Suite | COMPLETE | P1 — Infrastructure |
 | #529 | End User Documentation Suite | COMPLETE | P1 — Feature |
+| #530 | Documentation Screenshot Capture | COMPLETE | P2 — Feature |
 | #532 | Jules Pr Auto Review Gate | COMPLETE | P0 — Blocker |
 | #533 | Pre Dispatch Story Spec Validator | COMPLETE | P0 — Infrastructure / Quality Gate |
 | #534 | Living Spec Auto Update | COMPLETE | P1 — Quality |
