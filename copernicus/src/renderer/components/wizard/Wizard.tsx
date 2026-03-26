@@ -605,7 +605,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           </button>
           <button
             onClick={handleNext}
-            disabled={genesisLoading}
+            disabled={genesisLoading || (step === 3 && wizardMode === 'existing' && !selectedProject) || (step === 3 && wizardMode === 'new' && !newProjectName.trim()) || (step === 2 && !workspacePath)}
             data-testid="wizard-next-button"
             className="group flex items-center gap-4 bg-copernicus-phosphor text-black px-12 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-xl shadow-copernicus-phosphor/20 disabled:opacity-50 disabled:pointer-events-none"
           >
