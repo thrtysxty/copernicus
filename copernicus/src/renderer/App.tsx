@@ -459,6 +459,7 @@ export default function App() {
       <Wizard
         onComplete={() => {
           setIsWizard(false)
+          setShowGenesis(false)
           setView('planner')
           invoke<any>('app:get-root-path').then((r: any) => {
             const root = unwrapIpc<any>(r)

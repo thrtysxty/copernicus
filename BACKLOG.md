@@ -449,6 +449,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #542 | Stitch Sdk Migration | DRAFT | P2 — Feature |
 | #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
 | #544 | Genesis Rich Scaffold Templates | DRAFT | P2 — Feature |
+| #545 | Docker Poller Enoent Flood | DRAFT | P1 |
+| #546 | Otel Collector Startup Crash | DRAFT | P2 |
+| #547 | Wizard Empty Project Path | DRAFT | P1 |
+| #548 | Kanban Repo Targeted Flash | DRAFT | P3 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
