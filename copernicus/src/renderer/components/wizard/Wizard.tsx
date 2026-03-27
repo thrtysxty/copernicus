@@ -48,6 +48,19 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [showPatInput, setShowPatInput] = useState(false);
   const [patInput, setPatInput] = useState('');
 
+  // Fast-path state
+  const [editAnthropic, setEditAnthropic] = useState(false);
+  const [editGoogle, setEditGoogle] = useState(false);
+  const [editGithub, setEditGithub] = useState(false);
+  const [editOllama, setEditOllama] = useState(false);
+
+  const isAnthropicConfigured = anthropicMethod === 'cli' || anthropicKey === 'saved';
+  const isGoogleConfigured = googleKey === 'saved' || googleKey === 'oauth';
+  const isGithubConfigured = githubUser !== null;
+  const isOllamaConfigured = ollamaKey === 'saved';
+
+  const isFastPathReady = isAnthropicConfigured || isGoogleConfigured;
+
   // Fetch CLI status in background
   useEffect(() => {
     invoke<any>('check-cli-tools').then((result) => {
@@ -364,6 +377,24 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
               {/* ── Phase 1: Authentication ─────────────────────────────────── */}
               {step === 1 && (
                 <div className="space-y-6 max-w-2xl mx-auto w-full py-2">
+                  {isFastPathReady && (
+                    <div className="flex items-center justify-between p-4 mb-4 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Check size={18} className="text-copernicus-phosphor" />
+                        <div>
+                          <p className="text-xs font-bold text-copernicus-phosphor uppercase tracking-wide">Providers Ready</p>
+                          <p className="text-[10px] text-zinc-400 font-mono">Your providers are set up. Continue to workspace setup or review below.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setStep(2)}
+                        className="bg-copernicus-phosphor text-black px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 flex items-center gap-2"
+                      >
+                        Continue <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex flex-col gap-1 mb-4 border-l-2 border-copernicus-phosphor pl-4">
                     <h2 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-3">
                       <Key size={18} className="text-copernicus-phosphor" /> Intelligence Bus Connectivity
@@ -373,115 +404,158 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
                   <div className="space-y-4">
                     {/* Anthropic / Claude */}
-                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Provider: Anthropic</span>
-                        {anthropicMethod && <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> Ready</span>}
+                        {isAnthropicConfigured && !editAnthropic ? (
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <button onClick={() => setEditAnthropic(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                          </div>
+                        ) : anthropicMethod && (
+                          <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> Selected</span>
+                        )}
                       </div>
                       
-                      <div className="grid grid-cols-1 gap-3">
-                        <button
-                          onClick={() => setAnthropicMethod('cli')}
-                          disabled={!claudeDetected}
-                          className={`w-full text-left p-3 rounded border transition-all ${anthropicMethod === 'cli' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 hover:border-zinc-700 opacity-60'}`}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Zap size={12} /> Use Claude Code (CLI)</span>
-                            {claudeDetected ? <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">DETECTED</span> : <span className="text-[9px] text-zinc-600">NOT FOUND</span>}
-                          </div>
-                          <p className="text-[10px] text-zinc-500 leading-tight">Leverages existing <code className="text-zinc-400">claude login</code> credentials.</p>
-                        </button>
-
-                        <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 opacity-60'}`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Key size={12} /> Direct API Access</span>
-                            <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[9px] text-zinc-500 hover:text-white underline">Manage Keys</button>
-                          </div>
-                          <input
-                            type="password"
-                            className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
-                            placeholder={anthropicKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'sk-ant-api03-...'}
-                            value={anthropicKey === 'saved' ? '' : anthropicKey}
-                            onChange={(e) => { setAnthropicKey(e.target.value); setAnthropicMethod('apikey'); }}
-                            onFocus={() => { if (anthropicMethod !== 'apikey') setAnthropicMethod('apikey') }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* GitHub Connection */}
-                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
-                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Github size={12}/> Repository Access (GitHub)</span>
-                        {githubUser && <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> {githubUser.login}</span>}
-                      </div>
-                      <button
-                        onClick={() => setShowPatInput(true)}
-                        className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all"
-                      >
-                        {githubUser ? 'Swap GitHub Identity' : 'Connect via PAT'}
-                      </button>
-                      {showPatInput && (
-                        <div className="mt-2 space-y-2">
-                          <input
-                            type="password"
-                            autoFocus
-                            className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
-                            placeholder="ghp_..."
-                            value={patInput}
-                            onChange={e => {
-                              setPatInput(e.target.value);
-                              if (error) setError(null);
-                            }}
-                            onKeyDown={e => e.key === 'Enter' && handlePatSubmit()}
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              onClick={handlePatSubmit}
-                              className="flex-1 py-1.5 bg-copernicus-phosphor/10 text-copernicus-phosphor border border-copernicus-phosphor/30 rounded text-[11px] font-bold uppercase"
-                            >Connect</button>
-                            <button
-                              onClick={() => { setShowPatInput(false); setPatInput(''); setError(null); }}
-                              className="px-3 py-1.5 text-zinc-500 hover:text-zinc-300 text-[11px] uppercase"
-                            >Cancel</button>
-                          </div>
-                          {error && step === 1 && (
-                            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center mt-2">
-                              <p className="text-xs text-red-400">{error}</p>
+                      {(!isAnthropicConfigured || editAnthropic) && (
+                        <div className="grid grid-cols-1 gap-3">
+                          <button
+                            onClick={() => setAnthropicMethod('cli')}
+                            disabled={!claudeDetected}
+                            className={`w-full text-left p-3 rounded border transition-all ${anthropicMethod === 'cli' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 hover:border-zinc-700 opacity-60'}`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Zap size={12} /> Use Claude Code (CLI)</span>
+                              {claudeDetected ? <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">DETECTED</span> : <span className="text-[9px] text-zinc-600">NOT FOUND</span>}
                             </div>
-                          )}
+                            <p className="text-[10px] text-zinc-500 leading-tight">Leverages existing <code className="text-zinc-400">claude login</code> credentials.</p>
+                          </button>
+
+                          <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 opacity-60'}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Key size={12} /> Direct API Access</span>
+                              <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[9px] text-zinc-500 hover:text-white underline">Manage Keys</button>
+                            </div>
+                            <input
+                              type="password"
+                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                              placeholder={anthropicKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'sk-ant-api03-...'}
+                              value={anthropicKey === 'saved' ? '' : anthropicKey}
+                              onChange={(e) => { setAnthropicKey(e.target.value); setAnthropicMethod('apikey'); }}
+                              onFocus={() => { if (anthropicMethod !== 'apikey') setAnthropicMethod('apikey') }}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
 
+                    {/* GitHub Connection */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Github size={12}/> Repository Access (GitHub)</span>
+                        {isGithubConfigured && !editGithub ? (
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <button onClick={() => setEditGithub(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                          </div>
+                        ) : githubUser && (
+                          <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> {githubUser.login}</span>
+                        )}
+                      </div>
+
+                      {(!isGithubConfigured || editGithub) && (
+                        <>
+                          <button
+                            onClick={() => setShowPatInput(true)}
+                            className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all"
+                          >
+                            {githubUser ? 'Swap GitHub Identity' : 'Connect via PAT'}
+                          </button>
+                          {showPatInput && (
+                            <div className="mt-2 space-y-2">
+                              <input
+                                type="password"
+                                autoFocus
+                                className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                                placeholder="ghp_..."
+                                value={patInput}
+                                onChange={e => {
+                                  setPatInput(e.target.value);
+                                  if (error) setError(null);
+                                }}
+                                onKeyDown={e => e.key === 'Enter' && handlePatSubmit()}
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={handlePatSubmit}
+                                  className="flex-1 py-1.5 bg-copernicus-phosphor/10 text-copernicus-phosphor border border-copernicus-phosphor/30 rounded text-[11px] font-bold uppercase"
+                                >Connect</button>
+                                <button
+                                  onClick={() => { setShowPatInput(false); setPatInput(''); setError(null); }}
+                                  className="px-3 py-1.5 text-zinc-500 hover:text-zinc-300 text-[11px] uppercase"
+                                >Cancel</button>
+                              </div>
+                              {error && step === 1 && (
+                                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center mt-2">
+                                  <p className="text-xs text-red-400">{error}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
                     {/* Ollama Cloud */}
-                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4">
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 transition-all duration-300">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2 mb-3">
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Zap size={12} className="text-copernicus-phosphor" /> High-Intelligence Tier (Ollama Cloud)</span>
-                        {ollamaKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">AUTHENTICATED</span>}
+                        {isOllamaConfigured && !editOllama ? (
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <button onClick={() => setEditOllama(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                          </div>
+                        ) : ollamaKey === 'saved' && (
+                          <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">AUTHENTICATED</span>
+                        )}
                       </div>
-                      <input
-                        type="password"
-                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
-                        placeholder={ollamaKey === 'saved' ? 'CLOUD TOKEN SECURED' : 'Ollama Bearer Token'}
-                        value={ollamaKey === 'saved' ? '' : ollamaKey}
-                        onChange={(e) => setOllamaKey(e.target.value)}
-                      />
+
+                      {(!isOllamaConfigured || editOllama) && (
+                        <input
+                          type="password"
+                          className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                          placeholder={ollamaKey === 'saved' ? 'CLOUD TOKEN SECURED' : 'Ollama Bearer Token'}
+                          value={ollamaKey === 'saved' ? '' : ollamaKey}
+                          onChange={(e) => setOllamaKey(e.target.value)}
+                        />
+                      )}
                     </div>
 
                     {/* Google / Gemini */}
-                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google / Gemini</span>
-                        {googleKey === 'saved' || googleKey === 'oauth' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SESSION ACTIVE</span> : <button onClick={handleGoogleOAuth} className="text-[10px] text-copernicus-phosphor font-bold uppercase hover:underline">Start OAuth Flow</button>}
+                        {isGoogleConfigured && !editGoogle ? (
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <button onClick={() => setEditGoogle(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                          </div>
+                        ) : (googleKey === 'saved' || googleKey === 'oauth') ? (
+                          <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SESSION ACTIVE</span>
+                        ) : (
+                          <button onClick={handleGoogleOAuth} className="text-[10px] text-copernicus-phosphor font-bold uppercase hover:underline">Start OAuth Flow</button>
+                        )}
                       </div>
-                      <input
-                        type="password"
-                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
-                        placeholder={googleKey === 'saved' || googleKey === 'oauth' ? 'OAUTH CREDENTIALS ACTIVE' : 'API Key Override (Optional)'}
-                        value={googleKey === 'saved' || googleKey === 'oauth' ? '' : googleKey}
-                        onChange={(e) => setGoogleKey(e.target.value)}
-                      />
+
+                      {(!isGoogleConfigured || editGoogle) && (
+                        <input
+                          type="password"
+                          className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                          placeholder={googleKey === 'saved' || googleKey === 'oauth' ? 'OAUTH CREDENTIALS ACTIVE' : 'API Key Override (Optional)'}
+                          value={googleKey === 'saved' || googleKey === 'oauth' ? '' : googleKey}
+                          onChange={(e) => setGoogleKey(e.target.value)}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
