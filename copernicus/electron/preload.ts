@@ -121,6 +121,7 @@ const SEND_CHANNELS = new Set([
   'project:save-billing', 'project:get-billing',
   // Splash / wizard
   'genesis:run', 'genesis:scaffold-harness', 'genesis:check-harness',
+  'wizard:get-username', 'wizard:spawn-auth-pty',
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
   // App Control
@@ -200,6 +201,8 @@ const LISTEN_CHANNELS = new Set([
   'intel:sync-complete',
   // Daemon first-run prompt (Story 524)
   'daemon:prompt-install',
+  // Wizard PTY auth widget (Story 561)
+  'wizard:pty-data', 'wizard:pty-exit',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

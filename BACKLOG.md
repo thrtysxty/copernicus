@@ -110,6 +110,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #559 | Genesis Cycling Placeholder Animation | APPROVED FOR IMPLEMENTATION | P3 |
+| #560 | Wizard Copernicus Narration Scaffold | APPROVED FOR IMPLEMENTATION | P3 |
+| #561 | Wizard Embedded Cli Terminal | APPROVED FOR IMPLEMENTATION | P3 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -463,9 +466,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #546 | Otel Collector Startup Crash | DRAFT | P2 |
 | #548 | Kanban Repo Targeted Flash | DRAFT | P3 |
 | #551 | Createstamp Ac Description Fields | DRAFT | P1 |
-| #559 | Genesis Cycling Placeholder Animation | DRAFT | P3 |
-| #560 | Wizard Copernicus Narration Scaffold | DRAFT | P3 |
-| #561 | Wizard Embedded Cli Terminal | DRAFT | P3 |
 | #562 | Jules Sdk Client Migration | DRAFT | P2 |
 | #563 | Stitch Setup Doc Sdk Update | DRAFT | P2 |
 | #564 | Jules Streaming Monitor | DRAFT | P2 |
