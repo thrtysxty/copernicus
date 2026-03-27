@@ -196,6 +196,8 @@ export class AuthManager {
       case 'ollama-cloud': return process.env.OLLAMA_CLOUD_TOKEN || process.env.OLLAMA_API_KEY;
       case 'stitch': return process.env.STITCH_API_KEY;
       case 'jules': return process.env.JULES_API_KEY;
+      case 'tavily': return process.env.TAVILY_API_KEY;
+      case 'context7': return process.env.CONTEXT7_API_KEY;
       default: return undefined;
     }
   }
@@ -238,7 +240,7 @@ export class AuthManager {
   }
 
   public async getAuthStatus() {
-    const defaultProviders = ['openai', 'anthropic', 'google', 'jules', 'openrouter', 'deepinfra', 'github', 'ollama', 'ollama-cloud'];
+    const defaultProviders = ['openai', 'anthropic', 'google', 'jules', 'stitch', 'openrouter', 'deepinfra', 'tavily', 'context7', 'github', 'ollama', 'ollama-cloud'];
     const allProviders = new Set([...defaultProviders, ...this.authState.keys()]);
 
     const statuses = await Promise.all(Array.from(allProviders).map(async p => {
