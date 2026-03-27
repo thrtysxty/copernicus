@@ -110,6 +110,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #554 | Wizard 5 Step Restructure | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -458,7 +459,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #548 | Kanban Repo Targeted Flash | DRAFT | P3 |
 | #551 | Createstamp Ac Description Fields | DRAFT | P1 |
 | #553 | Genesis Background Execution | DRAFT | P1 |
-| #554 | Wizard 5 Step Restructure | DRAFT | P2 |
 | #555 | Wizard Existing User Fast Path | DRAFT | P2 |
 | #556 | Wizard Complete Provider List | DRAFT | P2 |
 | #557 | Existing Repo Scaffold Offer | DRAFT | P2 |
