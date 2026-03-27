@@ -337,7 +337,6 @@ fi
 
 echo "✓ Dispatched — session ${SESSION_ID}"
 echo "  https://jules.google.com/session/${SESSION_ID}"
-echo "  Jules will pause for plan approval before implementing."
 echo "  PR will be auto-created on completion (AUTO_CREATE_PR mode)."
 
 # ── Register session in jules.db ──────────────────────────────────────────────
@@ -364,3 +363,23 @@ count = conn.execute('SELECT COUNT(*) FROM jules_sessions WHERE merged IS NULL')
 print(f'  Registered in jules.db ({count} active session(s))')
 conn.close()
 "
+
+# ── Start Jules daemon if not already running ─────────────────────────────────
+DAEMON_PIDFILE="/tmp/jules_daemon.pid"
+DAEMON_RUNNING=false
+if [ -f "$DAEMON_PIDFILE" ]; then
+  DAEMON_PID=$(cat "$DAEMON_PIDFILE")
+  if kill -0 "$DAEMON_PID" 2>/dev/null; then
+    DAEMON_RUNNING=true
+  fi
+fi
+
+if [ "$DAEMON_RUNNING" = false ]; then
+  echo "🔄 Starting Jules daemon (plan approval + PR review + auto-merge)..."
+  nohup python3 "$REPO_ROOT/scripts/jules_daemon.py" \
+    >> /tmp/jules_daemon.log 2>&1 &
+  echo $! > "$DAEMON_PIDFILE"
+  echo "  Daemon PID $(cat $DAEMON_PIDFILE) — logs at /tmp/jules_daemon.log"
+else
+  echo "  Jules daemon already running (PID $DAEMON_PID)"
+fi
