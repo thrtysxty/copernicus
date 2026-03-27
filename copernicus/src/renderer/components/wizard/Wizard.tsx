@@ -39,6 +39,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   // Other providers
   const [googleKey, setGoogleKey] = useState('');
   const [ollamaKey, setOllamaKey] = useState('');
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [openrouterKey, setOpenrouterKey] = useState('');
+  const [deepinfraKey, setDeepinfraKey] = useState('');
+  const [tavilyKey, setTavilyKey] = useState('');
+  const [context7Key, setContext7Key] = useState('');
+  const [julesKey, setJulesKey] = useState('');
+  const [stitchKey, setStitchKey] = useState('');
   const googleOAuthClientId = ''; // Static for now
   
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +81,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
             else { setAnthropicMethod('apikey'); setAnthropicKey('saved') }
           }
           if (p.provider === 'google') setGoogleKey('saved');
+          if (p.provider === 'openai') setOpenaiKey('saved');
+          if (p.provider === 'openrouter') setOpenrouterKey('saved');
+          if (p.provider === 'deepinfra') setDeepinfraKey('saved');
+          if (p.provider === 'tavily') setTavilyKey('saved');
+          if (p.provider === 'context7') setContext7Key('saved');
+          if (p.provider === 'jules') setJulesKey('saved');
+          if (p.provider === 'stitch') setStitchKey('saved');
           if (p.provider === 'github') {
              // Only test connection if it's explicitly saved or env, preventing 401 on missing file credentials
              if (p.source !== 'none' && p.type !== 'none') {
@@ -301,6 +315,27 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     if (googleKey && googleKey !== 'saved' && googleKey !== 'oauth') {
       await invoke('auth:store-api-key', 'google', googleKey).catch(() => {})
     }
+    if (openaiKey && openaiKey !== 'saved') {
+      await invoke('auth:store-api-key', 'openai', openaiKey).catch(() => {})
+    }
+    if (openrouterKey && openrouterKey !== 'saved') {
+      await invoke('auth:store-api-key', 'openrouter', openrouterKey).catch(() => {})
+    }
+    if (deepinfraKey && deepinfraKey !== 'saved') {
+      await invoke('auth:store-api-key', 'deepinfra', deepinfraKey).catch(() => {})
+    }
+    if (tavilyKey && tavilyKey !== 'saved') {
+      await invoke('auth:store-api-key', 'tavily', tavilyKey).catch(() => {})
+    }
+    if (context7Key && context7Key !== 'saved') {
+      await invoke('auth:store-api-key', 'context7', context7Key).catch(() => {})
+    }
+    if (julesKey && julesKey !== 'saved' && julesKey !== 'inherited') {
+      await invoke('auth:store-api-key', 'jules', julesKey).catch(() => {})
+    }
+    if (stitchKey && stitchKey !== 'saved') {
+      await invoke('auth:store-api-key', 'stitch', stitchKey).catch(() => {})
+    }
 
     // Save preferences
     await invoke('save-preferences', {
@@ -483,6 +518,116 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         onChange={(e) => setGoogleKey(e.target.value)}
                       />
                     </div>
+
+                    {/* Google Jules */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google Jules</span>
+                        {julesKey === 'saved' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span> : (googleKey === 'saved' || googleKey === 'oauth') ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SAME ACCOUNT AS GEMINI — INHERITED</span> : null}
+                      </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={julesKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : ((googleKey === 'saved' || googleKey === 'oauth') ? 'INHERITED FROM GEMINI' : 'Jules API Key')}
+                        value={julesKey === 'saved' ? '' : (julesKey === 'inherited' ? '' : julesKey)}
+                        onChange={(e) => setJulesKey(e.target.value)}
+                        disabled={googleKey === 'saved' || googleKey === 'oauth'}
+                      />
+                    </div>
+
+                    {/* Google Stitch */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google Stitch</span>
+                        {stitchKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+                      </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={stitchKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'Stitch API Key'}
+                        value={stitchKey === 'saved' ? '' : stitchKey}
+                        onChange={(e) => setStitchKey(e.target.value)}
+                      />
+                    </div>
+
+                    {/* OpenAI */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">OpenAI</span>
+                        {openaiKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+                      </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={openaiKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'sk-proj-...'}
+                        value={openaiKey === 'saved' ? '' : openaiKey}
+                        onChange={(e) => setOpenaiKey(e.target.value)}
+                      />
+                    </div>
+
+                    {/* OpenRouter */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">OpenRouter</span>
+                        {openrouterKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+                      </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={openrouterKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'sk-or-v1-...'}
+                        value={openrouterKey === 'saved' ? '' : openrouterKey}
+                        onChange={(e) => setOpenrouterKey(e.target.value)}
+                      />
+                    </div>
+
+                    {/* DeepInfra */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">DeepInfra</span>
+                        {deepinfraKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+                      </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={deepinfraKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'DeepInfra API Key'}
+                        value={deepinfraKey === 'saved' ? '' : deepinfraKey}
+                        onChange={(e) => setDeepinfraKey(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Tavily */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Tavily</span>
+                        {tavilyKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+                      </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={tavilyKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'tvly-...'}
+                        value={tavilyKey === 'saved' ? '' : tavilyKey}
+                        onChange={(e) => setTavilyKey(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Context7 */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Context7</span>
+                        {context7Key === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+                      </div>
+                      <input
+                        type="password"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={context7Key === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'Context7 API Key'}
+                        value={context7Key === 'saved' ? '' : context7Key}
+                        onChange={(e) => setContext7Key(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-8 text-center opacity-50 text-[10px] text-zinc-500">
+                    BitNet embedded agent: active by default
                   </div>
                 </div>
               )}
