@@ -18,6 +18,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   // Step 3 State
   const [wizardMode, setWizardMode] = useState<'new' | 'existing' | null>(null);
+  const [step3Substate, setStep3Substate] = useState<'base' | 'idea' | 'stack'>('base');
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [repoStatus, setRepoStatus] = useState<'checking' | 'has-git' | 'no-git' | null>(null);
@@ -29,7 +30,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [genesisAudience, setGenesisAudience] = useState('');
   const [genesisCoreValue, setGenesisCoreValue] = useState('');
   const [genesisStack, setGenesisStack] = useState('react-electron');
-  const [genesisLoading, setGenesisLoading] = useState(false);
+
 
   // Anthropic
   const [anthropicMethod, setAnthropicMethod] = useState<'cli' | 'apikey' | null>(null);
@@ -155,14 +156,60 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   const handleNext = () => {
     setError(null);
-    if (step === 1) setStep(2);
-    else if (step === 2) setStep(3);
-    else handleFinish();
+    if (step === 1) {
+      setStep(2);
+    } else if (step === 2) {
+      setStep(3);
+      setStep3Substate('base');
+    } else if (step === 3) {
+      if (wizardMode === 'existing') {
+        setStep(4);
+      } else if (wizardMode === 'new') {
+        if (step3Substate === 'base') {
+          if (!newProjectName.trim()) {
+            setError('Please enter a project name.');
+            return;
+          }
+          setStep3Substate('idea');
+        } else if (step3Substate === 'idea') {
+          setStep3Substate('stack');
+        } else if (step3Substate === 'stack') {
+          // Fire genesis:run in background here
+          const fullPath = `${workspacePath}/${newProjectName.trim()}`;
+          invoke('genesis:run', {
+            projectName: newProjectName.trim(),
+            idea: genesisIdea.trim() || 'A new software project.',
+            audience: genesisAudience.trim() || 'Developers',
+            coreValue: genesisCoreValue.trim() || 'Productivity',
+            stack: genesisStack,
+            repoPath: fullPath,
+            isNewRepo: true,
+          }).catch((err: unknown) => console.warn('[Wizard] genesis:run failed (non-fatal):', err));
+          setStep(4);
+        }
+      }
+    } else {
+      handleFinish();
+    }
   };
 
   const handleBack = () => {
     setError(null);
-    if (step > 1) setStep(step - 1);
+    if (step === 4) {
+      setStep(3);
+      if (wizardMode === 'new') setStep3Substate('stack');
+      else setStep3Substate('base');
+    } else if (step === 3) {
+      if (wizardMode === 'new' && step3Substate === 'stack') {
+        setStep3Substate('idea');
+      } else if (wizardMode === 'new' && step3Substate === 'idea') {
+        setStep3Substate('base');
+      } else {
+        setStep(2);
+      }
+    } else if (step > 1) {
+      setStep(step - 1);
+    }
   };
 
   const handleSelectFolder = async () => {
@@ -270,21 +317,6 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke('app:set-root-path', fullPath).catch(() => {})
       await invoke('stories:target-project', fullPath).catch(() => {})
 
-      // Genesis — scaffold repo + generate first-sprint backlog for new projects
-      if (wizardMode === 'new') {
-        setGenesisLoading(true);
-        await invoke('genesis:run', {
-          projectName: newProjectName.trim(),
-          idea: genesisIdea.trim() || 'A new software project.',
-          audience: genesisAudience.trim() || 'Developers',
-          coreValue: genesisCoreValue.trim() || 'Productivity',
-          stack: genesisStack,
-          repoPath: fullPath,
-          isNewRepo: true,
-        }).catch((err: unknown) => console.warn('[Wizard] genesis:run failed (non-fatal):', err));
-        setGenesisLoading(false);
-      }
-
       await invoke('project:save-billing', {
         id: `${githubUser?.login || 'local'}/${projectName}`,
         path: projectName,
@@ -313,7 +345,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
             <h1 className="text-xl font-bold tracking-widest text-copernicus-phosphor uppercase">COPERNICUS SETUP</h1>
           </div>
           <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-[0.2em]">
-            {`Step ${step} of 3`}
+            {`Step ${step} of 4`}
           </div>
         </header>
 
@@ -519,136 +551,85 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
                       <Layout size={28} className="text-copernicus-phosphor" /> Your Project
                     </h2>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Open an existing repository or start something new</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">
+                      {wizardMode === 'new' && step3Substate === 'idea' ? 'Describe your application' :
+                       wizardMode === 'new' && step3Substate === 'stack' ? 'Select your stack' :
+                       'Open an existing repository or start something new'}
+                    </p>
                   </div>
-
-                  {/* Mode selector */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() => { setWizardMode('existing'); setNewProjectName(''); setError(null); }}
-                      className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'existing' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}
-                    >
-                      <FolderOpen size={28} className={wizardMode === 'existing' ? 'text-copernicus-phosphor' : ''} />
-                      <div className="text-center">
-                        <p className="text-[11px] font-black uppercase tracking-widest">Existing Project</p>
-                        <p className="text-[9px] mt-1 opacity-60">Open a repository from your workspace</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => { setWizardMode('new'); setSelectedProject(''); setError(null); }}
-                      className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'new' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}
-                    >
-                      <Sparkles size={28} className={wizardMode === 'new' ? 'text-copernicus-phosphor' : ''} />
-                      <div className="text-center">
-                        <p className="text-[11px] font-black uppercase tracking-widest">New Project</p>
-                        <p className="text-[9px] mt-1 opacity-60">Scaffold a repo + generate first sprint</p>
-                      </div>
-                    </button>
-                  </div>
-
-                  {/* Existing: repo picker */}
-                  {wizardMode === 'existing' && (
-                    <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
-                      <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Select Repository</p>
-                      {availableProjects.length > 0 && (
-                        <select
-                          className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors"
-                          value={selectedProject}
-                          onChange={e => {
-                            setSelectedProject(e.target.value);
-                            if (error) setError(null);
-                          }}
-                        >
-                          <option value="">— choose from workspace —</option>
-                          {availableProjects.map(p => (
-                            <option key={p} value={p}>{p}</option>
-                          ))}
-                        </select>
-                      )}
-                      <button
-                        onClick={handleBrowseProject}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-black/40 border border-zinc-700 hover:border-copernicus-phosphor/40 hover:text-white text-zinc-400 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all"
-                      >
-                        <FolderOpen size={13} /> Browse for Repository
-                      </button>
-                      {selectedProject && (
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/5 border border-copernicus-phosphor/20 rounded-lg">
-                            <Check size={12} className="flex-none text-copernicus-phosphor" />
-                            <span className="text-[9px] font-mono text-zinc-300 truncate">{selectedProject.startsWith('/') ? selectedProject : `${workspacePath}/${selectedProject}`}</span>
+                  {step3Substate === 'base' && (
+                    <>
+                      {/* Mode selector */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <button onClick={() => { setWizardMode('existing'); setNewProjectName(''); setError(null); }} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'existing' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}>
+                          <FolderOpen size={28} className={wizardMode === 'existing' ? 'text-copernicus-phosphor' : ''} />
+                          <div className="text-center">
+                            <p className="text-[11px] font-black uppercase tracking-widest">Existing Project</p>
+                            <p className="text-[9px] mt-1 opacity-60">Open a repository from your workspace</p>
                           </div>
-
-                          {repoStatus === 'checking' && (
-                            <div className="flex items-center gap-2 p-2.5 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-400">
-                              <Loader2 size={12} className="animate-spin" />
-                              <span className="text-[9px] font-mono uppercase">Checking repo status...</span>
-                            </div>
+                        </button>
+                        <button onClick={() => { setWizardMode('new'); setSelectedProject(''); setError(null); }} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'new' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}>
+                          <Sparkles size={28} className={wizardMode === 'new' ? 'text-copernicus-phosphor' : ''} />
+                          <div className="text-center">
+                            <p className="text-[11px] font-black uppercase tracking-widest">New Project</p>
+                            <p className="text-[9px] mt-1 opacity-60">Scaffold a repo + generate first sprint</p>
+                          </div>
+                        </button>
+                      </div>
+                      {/* Existing: repo picker */}
+                      {wizardMode === 'existing' && (
+                        <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
+                          <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Select Repository</p>
+                          {availableProjects.length > 0 && (
+                            <select className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors" value={selectedProject} onChange={e => { setSelectedProject(e.target.value); if (error) setError(null); }}>
+                              <option value="">— choose from workspace —</option>
+                              {availableProjects.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
                           )}
-
-                          {repoStatus === 'has-git' && (
-                            <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 rounded-lg text-copernicus-phosphor">
-                              <Check size={12} />
-                              <span className="text-[9px] font-mono uppercase">Git repository found</span>
-                            </div>
-                          )}
-
-                          {repoStatus === 'no-git' && (
-                            <div className="flex flex-col gap-2 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg">
-                              <div className="flex items-start gap-2 text-amber-500">
-                                <Zap size={14} className="flex-none mt-0.5" />
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest">No git repo found. Initialise one?</p>
-                                  <p className="text-[9px] opacity-70">A git repository is required for COPERNICUS to function.</p>
-                                </div>
+                          <button onClick={handleBrowseProject} className="w-full flex items-center justify-center gap-2 py-3 bg-black/40 border border-zinc-700 hover:border-copernicus-phosphor/40 hover:text-white text-zinc-400 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all">
+                            <FolderOpen size={13} /> Browse for Repository
+                          </button>
+                          {selectedProject && (
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/5 border border-copernicus-phosphor/20 rounded-lg">
+                                <Check size={12} className="flex-none text-copernicus-phosphor" />
+                                <span className="text-[9px] font-mono text-zinc-300 truncate">{selectedProject.startsWith('/') ? selectedProject : `${workspacePath}/${selectedProject}`}</span>
                               </div>
-                              {repoInitError && (
-                                <div className="mt-2 p-2 bg-red-900/20 border border-red-900/40 rounded text-red-500 text-[9px] font-mono break-words">
-                                  {repoInitError}
+                              {repoStatus === 'checking' && <div className="flex items-center gap-2 p-2.5 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-400"><Loader2 size={12} className="animate-spin" /><span className="text-[9px] font-mono uppercase">Checking repo status...</span></div>}
+                              {repoStatus === 'has-git' && <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 rounded-lg text-copernicus-phosphor"><Check size={12} /><span className="text-[9px] font-mono uppercase">Git repository found</span></div>}
+                              {repoStatus === 'no-git' && (
+                                <div className="flex flex-col gap-2 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg">
+                                  <div className="flex items-start gap-2 text-amber-500">
+                                    <Zap size={14} className="flex-none mt-0.5" />
+                                    <div className="space-y-1"><p className="text-[10px] font-bold uppercase tracking-widest">No git repo found. Initialise one?</p><p className="text-[9px] opacity-70">A git repository is required for COPERNICUS to function.</p></div>
+                                  </div>
+                                  {repoInitError && <div className="mt-2 p-2 bg-red-900/20 border border-red-900/40 rounded text-red-500 text-[9px] font-mono break-words">{repoInitError}</div>}
+                                  <div className="flex gap-2 mt-2">
+                                    <button onClick={handleInitGitRepo} className="flex-1 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded text-[9px] font-bold uppercase transition-colors">Yes, init & setup</button>
+                                    <button onClick={handleNext} className="flex-1 py-1.5 bg-black/40 hover:bg-black/60 text-zinc-400 border border-zinc-800 hover:border-zinc-700 rounded text-[9px] font-bold uppercase transition-colors">No, continue anyway</button>
+                                  </div>
                                 </div>
                               )}
-                              <div className="flex gap-2 mt-2">
-                                <button
-                                  onClick={handleInitGitRepo}
-                                  className="flex-1 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded text-[9px] font-bold uppercase transition-colors"
-                                >Yes, init & setup</button>
-                                <button
-                                  onClick={handleNext}
-                                  className="flex-1 py-1.5 bg-black/40 hover:bg-black/60 text-zinc-400 border border-zinc-800 hover:border-zinc-700 rounded text-[9px] font-bold uppercase transition-colors"
-                                >No, continue anyway</button>
-                              </div>
                             </div>
                           )}
                         </div>
                       )}
-                    </div>
+                      {/* New: Project Name */}
+                      {wizardMode === 'new' && (
+                        <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Project Name</label>
+                            <input type="text" autoFocus className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors" placeholder="my-new-project" value={newProjectName} onChange={e => { setNewProjectName(e.target.value); if (error) setError(null); }} />
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
-
-                  {/* New: Genesis form */}
-                  {wizardMode === 'new' && (
+                  {wizardMode === 'new' && step3Substate === 'idea' && (
                     <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Project Name</label>
-                        <input
-                          type="text"
-                          autoFocus
-                          className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors"
-                          placeholder="my-new-project"
-                          value={newProjectName}
-                          onChange={e => {
-                            setNewProjectName(e.target.value);
-                            if (error) setError(null);
-                          }}
-                        />
-                      </div>
-                      <div className="space-y-1">
                         <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">What are you building? <span className="opacity-50">(optional)</span></label>
-                        <textarea
-                          rows={2}
-                          className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors resize-none"
-                          placeholder="A prop rental platform for the midwest film industry..."
-                          value={genesisIdea}
-                          onChange={e => setGenesisIdea(e.target.value)}
-                        />
+                        <textarea rows={2} className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors resize-none" placeholder="A prop rental platform for the midwest film industry..." value={genesisIdea} onChange={e => setGenesisIdea(e.target.value)} />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
@@ -660,6 +641,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           <input type="text" className="w-full bg-black/60 border border-zinc-800 rounded-lg p-2.5 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors" placeholder="Same-day, local inventory..." value={genesisCoreValue} onChange={e => setGenesisCoreValue(e.target.value)} />
                         </div>
                       </div>
+                    </div>
+                  )}
+                  {wizardMode === 'new' && step3Substate === 'stack' && (
+                    <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
                       <div className="space-y-1">
                         <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Stack template</label>
                         <select className="w-full bg-black/60 border border-zinc-800 rounded-lg p-2.5 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors" value={genesisStack} onChange={e => setGenesisStack(e.target.value)}>
@@ -673,44 +658,39 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       </div>
                     </div>
                   )}
-
-                  {/* CapEx — always required */}
-                  <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-copernicus-phosphor">
-                          <DollarSign size={16} />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Billing</span>
-                        </div>
-                        <div className="flex gap-2">
-                          {(['CAPEX', 'OPEX', 'NONE'] as const).map(mode => (
-                            <button key={mode} onClick={() => setBillingMode(mode)}
-                              className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest transition-all border ${billingMode === mode ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
-                            >{mode}</button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-zinc-700 text-2xl font-extralight">$</span>
-                        <input type="number" className="bg-transparent text-4xl font-black text-white w-28 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:text-copernicus-phosphor transition-colors" value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} />
-                        <span className="text-zinc-700 text-lg font-mono">/HR</span>
-                      </div>
-                    </div>
-
-                  {error && step === 3 && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center mt-4">
-                      <p className="text-xs text-red-400">{error}</p>
-                    </div>
-                  )}
-
-                  {genesisLoading && (
-                    <div className="flex items-center justify-center gap-3 p-4 text-copernicus-phosphor">
-                      <Loader2 size={16} className="animate-spin" />
-                      <span className="text-[11px] font-bold uppercase tracking-widest">Scaffolding project and generating backlog...</span>
-                    </div>
-                  )}
+                  {error && step === 3 && <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center mt-4"><p className="text-xs text-red-400">{error}</p></div>}
                 </div>
               )}
-
+              {/* ── Step 4: CapEx & Billing ────────────────────────── */}
+              {step === 4 && (
+                <div className="space-y-6 max-w-2xl mx-auto w-full py-4">
+                  <div className="flex flex-col gap-1 mb-2 text-center">
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
+                      <DollarSign size={28} className="text-copernicus-phosphor" /> Capital Expenditure
+                    </h2>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configure billing for this project</p>
+                  </div>
+                  <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-copernicus-phosphor">
+                        <DollarSign size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Billing</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {(['CAPEX', 'OPEX', 'NONE'] as const).map(mode => (
+                          <button key={mode} onClick={() => setBillingMode(mode)} className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest transition-all border ${billingMode === mode ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>{mode}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-zinc-700 text-2xl font-extralight">$</span>
+                      <input type="number" className="bg-transparent text-4xl font-black text-white w-28 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hover:text-copernicus-phosphor transition-colors" value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} />
+                      <span className="text-zinc-700 text-lg font-mono">/HR</span>
+                    </div>
+                  </div>
+                  {error && step === 4 && <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center mt-4"><p className="text-xs text-red-400">{error}</p></div>}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -726,20 +706,24 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           </button>
           <button
             onClick={handleNext}
-            disabled={genesisLoading || (step === 3 && wizardMode === 'existing' && (!selectedProject || repoStatus === 'no-git')) || (step === 3 && wizardMode === 'new' && !newProjectName.trim()) || (step === 2 && !workspacePath)}
+            disabled={(step === 3 && !wizardMode) || (step === 3 && wizardMode === 'existing' && (!selectedProject || repoStatus === 'no-git')) || (step === 3 && wizardMode === 'new' && step3Substate === 'base' && !newProjectName.trim()) || (step === 2 && !workspacePath)}
             data-testid="wizard-next-button"
             className="group flex items-center gap-4 bg-copernicus-phosphor text-black px-12 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-xl shadow-copernicus-phosphor/20 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {genesisLoading
-              ? <><Loader2 size={14} className="animate-spin" /> Scaffolding...</>
-              : step === 3 && wizardMode === 'new'
+            {step === 4
+              ? <>Launch COPERNICUS <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+              : step === 3 && wizardMode === 'new' && step3Substate === 'stack'
                 ? <>Generate &amp; Launch <Sparkles size={16} className="group-hover:scale-110 transition-transform" /></>
-                : step === 3
-                  ? <>Launch COPERNICUS <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
-                  : step === 2
-                    ? <>Next: Project <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
-                    : <>Advance <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
-            }
+                : step === 3 && wizardMode === 'existing'
+                  ? <>Next: Billing <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+                  : step === 3 && wizardMode === 'new' && step3Substate === 'idea'
+                    ? <>Next: Stack <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+                    : step === 3 && wizardMode === 'new' && step3Substate === 'base'
+                      ? <>Next: Idea <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+                      : step === 2
+                        ? <>Next: Project <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+                        : <>Advance <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+          }
           </button>
         </footer>
       </motion.div>
