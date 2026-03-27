@@ -20,6 +20,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [wizardMode, setWizardMode] = useState<'new' | 'existing' | null>(null);
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
+  const [repoStatus, setRepoStatus] = useState<'checking' | 'has-git' | 'no-git' | null>(null);
+  const [repoInitError, setRepoInitError] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState('');
   const [billingMode, setBillingMode] = useState<'CAPEX' | 'OPEX' | 'NONE'>('CAPEX');
   // Genesis fields (New mode)
@@ -101,6 +103,21 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     }
   }, [step, workspacePath, invoke]);
 
+  useEffect(() => {
+    if (wizardMode === 'existing' && selectedProject) {
+      setRepoStatus('checking');
+      const fullPath = selectedProject.startsWith('/') ? selectedProject : `${workspacePath}/${selectedProject}`;
+      invoke<{ hasGit: boolean }>('git:check-repo', { path: fullPath }).then(res => {
+        const data = unwrapIpc<{ hasGit: boolean }>(res);
+        setRepoStatus(data?.hasGit ? 'has-git' : 'no-git');
+      }).catch(() => {
+        setRepoStatus('no-git');
+      });
+    } else {
+      setRepoStatus(null);
+    }
+  }, [selectedProject, wizardMode, workspacePath, invoke]);
+
   const handleBrowseProject = async () => {
     try {
       const result = await invoke<any>('dialog:open-folder');
@@ -112,6 +129,25 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     } catch (error: unknown) {
       console.error('Folder selection failed:', error);
     }
+  };
+
+  const handleInitGitRepo = async () => {
+    setRepoInitError(null);
+    setRepoStatus('checking');
+    const fullPath = selectedProject.startsWith('/') ? selectedProject : `${workspacePath}/${selectedProject}`;
+
+    const res = await invoke<any>('git:init-repo', { path: fullPath });
+    if (!res.ok) {
+      setRepoInitError(res.error || 'Failed to initialize git repository');
+      setRepoStatus('no-git');
+      return;
+    }
+
+    setRepoStatus('has-git');
+    // Offer genesis by pre-filling the project name and switching mode
+    const folderName = fullPath.split('/').pop() || '';
+    setNewProjectName(folderName);
+    setWizardMode('new');
   };
 
   const handleNext = () => {
@@ -527,9 +563,52 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <FolderOpen size={13} /> Browse for Repository
                       </button>
                       {selectedProject && (
-                        <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/5 border border-copernicus-phosphor/20 rounded-lg">
-                          <Check size={12} className="flex-none text-copernicus-phosphor" />
-                          <span className="text-[9px] font-mono text-zinc-300 truncate">{selectedProject.startsWith('/') ? selectedProject : `${workspacePath}/${selectedProject}`}</span>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/5 border border-copernicus-phosphor/20 rounded-lg">
+                            <Check size={12} className="flex-none text-copernicus-phosphor" />
+                            <span className="text-[9px] font-mono text-zinc-300 truncate">{selectedProject.startsWith('/') ? selectedProject : `${workspacePath}/${selectedProject}`}</span>
+                          </div>
+
+                          {repoStatus === 'checking' && (
+                            <div className="flex items-center gap-2 p-2.5 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-400">
+                              <Loader2 size={12} className="animate-spin" />
+                              <span className="text-[9px] font-mono uppercase">Checking repo status...</span>
+                            </div>
+                          )}
+
+                          {repoStatus === 'has-git' && (
+                            <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 rounded-lg text-copernicus-phosphor">
+                              <Check size={12} />
+                              <span className="text-[9px] font-mono uppercase">Git repository found</span>
+                            </div>
+                          )}
+
+                          {repoStatus === 'no-git' && (
+                            <div className="flex flex-col gap-2 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg">
+                              <div className="flex items-start gap-2 text-amber-500">
+                                <Zap size={14} className="flex-none mt-0.5" />
+                                <div className="space-y-1">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest">No git repo found. Initialise one?</p>
+                                  <p className="text-[9px] opacity-70">A git repository is required for COPERNICUS to function.</p>
+                                </div>
+                              </div>
+                              {repoInitError && (
+                                <div className="mt-2 p-2 bg-red-900/20 border border-red-900/40 rounded text-red-500 text-[9px] font-mono break-words">
+                                  {repoInitError}
+                                </div>
+                              )}
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={handleInitGitRepo}
+                                  className="flex-1 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded text-[9px] font-bold uppercase transition-colors"
+                                >Yes, init & setup</button>
+                                <button
+                                  onClick={handleNext}
+                                  className="flex-1 py-1.5 bg-black/40 hover:bg-black/60 text-zinc-400 border border-zinc-800 hover:border-zinc-700 rounded text-[9px] font-bold uppercase transition-colors"
+                                >No, continue anyway</button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -638,7 +717,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           </button>
           <button
             onClick={handleNext}
-            disabled={genesisLoading || (step === 3 && wizardMode === 'existing' && !selectedProject) || (step === 3 && wizardMode === 'new' && !newProjectName.trim()) || (step === 2 && !workspacePath)}
+            disabled={genesisLoading || (step === 3 && wizardMode === 'existing' && (!selectedProject || repoStatus === 'no-git')) || (step === 3 && wizardMode === 'new' && !newProjectName.trim()) || (step === 2 && !workspacePath)}
             data-testid="wizard-next-button"
             className="group flex items-center gap-4 bg-copernicus-phosphor text-black px-12 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-xl shadow-copernicus-phosphor/20 disabled:opacity-50 disabled:pointer-events-none"
           >

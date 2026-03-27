@@ -61,7 +61,7 @@ const SEND_CHANNELS = new Set([
   'github:user', 'github:list-repos', 'github:create-repo', 'github:test-connection', 'github:search',
   'github:set-trust', 'github:add-repo', 'github:remove-repo', 'github:get-trust-list', 'github:set-target-repo', 'github:get-target-repo', 'github:clone-repo',
   // Git
-  'git:init-workspace',
+  'git:init-workspace', 'git:check-repo', 'git:init-repo',
   // MCP
   'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server', 'mcp:get-status',
   'stitch:ping', 'stitch:extract-design', 'stitch:screenshot', 'stitch:design-dna', 'stitch:verify-ui',

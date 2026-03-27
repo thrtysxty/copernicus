@@ -1,0 +1,4 @@
+<<<<<<< SEARCH
+  ipcMain.handle('git:init-workspace', () => handleIpc('git:init-workspace', [], async () => {
+=======
+  ipcMain.handle('git:init-workspace', () => handleIpc('git:init-workspace', [], async () => {

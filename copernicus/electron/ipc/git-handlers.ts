@@ -10,6 +10,24 @@ import { stateLedger } from '../db/state-ledger'
 export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   const cwd = () => deps.settingsStore.get<string>('workspace', process.cwd())
 
+  ipcMain.handle('git:check-repo', (_e, { path }: { path: string }) => handleIpc('git:check-repo', [path], async () => {
+    try {
+      const { stdout } = await execAsync('git rev-parse --is-inside-work-tree', { cwd: path })
+      return { hasGit: stdout.trim() === 'true' }
+    } catch {
+      return { hasGit: false }
+    }
+  }))
+
+  ipcMain.handle('git:init-repo', (_e, { path }: { path: string }) => handleIpc('git:init-repo', [path], async () => {
+    try {
+      await execAsync('git init', { cwd: path })
+      return { ok: true }
+    } catch (e: unknown) {
+      throw new Error(`Failed to initialize git repository: ${(e as Error).message}`)
+    }
+  }))
+
   ipcMain.handle('git:status', () => handleIpc('git:status', [], async () => {
     const { stdout } = await execAsync('git status --short', { cwd: cwd() })
     return stdout.trim().split('\n').filter(Boolean).map(line => ({
