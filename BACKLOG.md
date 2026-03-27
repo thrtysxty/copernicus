@@ -475,6 +475,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
 | #569 | Kb Local Voting | DRAFT | P3 |
 | #570 | Story Inspector Chat Scoping | DRAFT | P2 |
+| #571 | Repo Hygiene Ghost Script Cleanup | DRAFT | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
