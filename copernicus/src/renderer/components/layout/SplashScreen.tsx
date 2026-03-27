@@ -19,6 +19,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   const phosphorHex = params.get('phosphor') ?? '#4ADE80'
 
   const [stage, setStage] = useState<'off' | 'igniting' | 'on'>('off');
+  const [statusText, setStatusText] = useState<string>('Booting...');
 
   // Apply as CSS custom property so Tailwind arbitrary [var(--phosphor)] classes work
   useEffect(() => {
@@ -46,14 +47,39 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
     });
 
     // Notify main process we are ready after sequence
-    const readyTimeout = setTimeout(() => {
+    const bootNotifyTimeout = setTimeout(() => {
         ipcRenderer.send('splash-ready');
-        if (onComplete) onComplete();
     }, 2200);
-    timeouts.push(readyTimeout);
+    timeouts.push(bootNotifyTimeout);
+
+    // Listen for status updates
+    const handleStatus = (_e: any, msg: string) => {
+      setStatusText(msg);
+    };
+
+    // Listen for app ready signal
+    const handleReady = () => {
+      if (onComplete) onComplete();
+    };
+
+    ipcRenderer.on('app:ready-status', handleStatus);
+    ipcRenderer.on('app:ready', handleReady);
+
+    // Failsafe timeouts
+    const failsafeWarn = setTimeout(() => {
+      setStatusText('Taking longer than expected…');
+    }, 4000);
+    timeouts.push(failsafeWarn);
+
+    const failsafeComplete = setTimeout(() => {
+      if (onComplete) onComplete();
+    }, 5000);
+    timeouts.push(failsafeComplete);
 
     return () => {
       timeouts.forEach(clearTimeout);
+      ipcRenderer.off('app:ready-status', handleStatus);
+      ipcRenderer.off('app:ready', handleReady);
     };
   }, [onComplete]);
 
@@ -93,13 +119,20 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         variants={imageVariants}
         initial="off"
         animate={stage}
-        className="w-full h-full"
+        className="w-full h-full relative"
       >
         <img
           src={splashImg}
           alt="Copernicus Splash"
           className="w-full h-full object-cover"
         />
+
+        {/* Dynamic Status Text Overlay */}
+        <div className="absolute bottom-8 left-0 right-0 flex justify-center w-full z-10 px-8">
+          <div className="font-mono text-[10px] text-[var(--phosphor)]/80 tracking-widest uppercase truncate max-w-lg bg-[#050505]/60 px-2 py-1">
+            {statusText}
+          </div>
+        </div>
       </motion.div>
     </div>
   );

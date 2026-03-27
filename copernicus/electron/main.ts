@@ -537,9 +537,22 @@ app.whenReady().then(async () => {
   }
   globalShortcut.register('CommandOrControl+P', () => win?.webContents.send('layout:open-palette', { mode: 'all' }))
   globalShortcut.register('CommandOrControl+Shift+P', () => win?.webContents.send('layout:open-palette', { mode: 'commands' }))
-  codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(log.error)
-  lspManager.start(fsManager.getRootPath())
-  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(err => log.warn('[AutoUpdater] update check failed:', err));
+
+  const startupTasks = async () => {
+    try {
+      if (win) win.webContents.send('app:ready-status', 'Starting workspace index...')
+      await codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(err => {
+        log.error('Index failed:', err)
+      })
+      if (win) win.webContents.send('app:ready-status', 'Starting LSP...')
+      await lspManager.start(fsManager.getRootPath())
+      if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(err => log.warn('[AutoUpdater] update check failed:', err));
+      if (win) win.webContents.send('app:ready-status', 'Ready.')
+    } finally {
+      if (win) win.webContents.send('app:ready')
+    }
+  }
+  startupTasks()
 
   // Story 361: Auto-start local model if Ollama is not detected
   fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) })

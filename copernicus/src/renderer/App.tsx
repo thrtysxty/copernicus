@@ -6,6 +6,7 @@ import { useLayoutStore, StoryboardView } from './store/layout'
 import { useUIBuilderStore } from './store/uiBuilderStore'
 import { useTelemetryStore } from './store/telemetryStore'
 import { useToastStore } from './store/toastStore'
+import { motion } from 'framer-motion'
 import { ActivityBar } from './components/layout/ActivityBar'
 import { ApplicationHeader } from './components/layout/ApplicationHeader'
 import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog'
@@ -237,7 +238,6 @@ export default function App() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('window') === 'wizard') {
       setIsWizard(true)
-      setShowSplash(false)
     }
 
     const removeWorkspaceChanged = window.ipcRenderer.on('app:workspace-changed', (_e, { path }: { path: string }) => {
@@ -456,17 +456,24 @@ export default function App() {
 
   if (isWizard) {
     return (
-      <Wizard
-        onComplete={() => {
-          setIsWizard(false)
-          setShowGenesis(false)
-          setView('planner')
-          invoke<any>('app:get-root-path').then((r: any) => {
-            const root = unwrapIpc<any>(r)
-            if (root) setWorkingDir(root)
-          }).catch(() => {})
-        }}
-      />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="h-screen w-screen"
+      >
+        <Wizard
+          onComplete={() => {
+            setIsWizard(false)
+            setShowGenesis(false)
+            setView('planner')
+            invoke<any>('app:get-root-path').then((r: any) => {
+              const root = unwrapIpc<any>(r)
+              if (root) setWorkingDir(root)
+            }).catch(() => {})
+          }}
+        />
+      </motion.div>
     )
   }
 
