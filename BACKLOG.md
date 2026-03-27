@@ -110,7 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #539 | Sqlite Vec Extension Load Failure | APPROVED FOR IMPLEMENTATION | P1 — Stability |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -425,6 +424,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #536 | Db Get Events Json Safety | COMPLETE | P1 — Bug Fix |
 | #537 | Fsevents Electron Shutdown Crash | COMPLETE | P1 — Stability |
 | #538 | Nav Debug Testid And E2E Coverage | COMPLETE | P2 — Test Infrastructure |
+| #539 | Sqlite Vec Extension Load Failure | COMPLETE | P1 — Stability |
+| #540 | Github Pat 401 Wizard And Startup | COMPLETE | P1 — Onboarding |
+| #545 | Docker Poller Enoent Flood | COMPLETE | P1 |
+| #547 | Wizard Empty Project Path | COMPLETE | P1 |
+| #549 | Splash Before Wizard First Launch | COMPLETE | P1 |
+| #550 | Wizard Git Repo Detection | COMPLETE | P1 |
+| #552 | Wizard Replace Alert With Inline Errors | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -444,14 +450,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #540 | Github Pat 401 Wizard And Startup | DRAFT | P1 — Onboarding |
 | #541 | Lsp Server Packaging | DRAFT | P2 — Developer Experience |
-| #542 | Stitch Sdk Migration | DRAFT | P2 — Feature |
+| #542 | Stitch Sdk Migration | DRAFT | P2 |
 | #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
 | #544 | Genesis Rich Scaffold Templates | DRAFT | P2 — Feature |
-| #545 | Docker Poller Enoent Flood | DRAFT | P1 |
 | #546 | Otel Collector Startup Crash | DRAFT | P2 |
-| #547 | Wizard Empty Project Path | DRAFT | P1 |
 | #548 | Kanban Repo Targeted Flash | DRAFT | P3 |
 | #551 | Createstamp Ac Description Fields | DRAFT | P1 |
 | #553 | Genesis Background Execution | DRAFT | P1 |
@@ -472,9 +475,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
 | #569 | Kb Local Voting | DRAFT | P3 |
 | #570 | Story Inspector Chat Scoping | DRAFT | P2 |
-| #549 | Splash Before Wizard First Launch | IN PROGRESS | P1 |
-| #550 | Wizard Git Repo Detection | REVIEW | P1 |
-| #552 | Wizard Replace Alert With Inline Errors | REVIEW | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
