@@ -591,6 +591,7 @@ app.whenReady().then(async () => {
   }, 2000)
 })
 
+
 app.on('browser-window-focus', () => {
   const synced = storiesManager.syncFromDisk()
   if (synced > 0) { win?.webContents.send('stories:updated', storiesManager.listStories()) }

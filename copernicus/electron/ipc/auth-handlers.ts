@@ -282,7 +282,12 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const res = await fetch('https://api.github.com/user', {
       headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'COPERNICUS-IDE' }
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error('Unauthorized: Invalid GitHub Personal Access Token');
+      }
+      throw new Error(`HTTP ${res.status}`)
+    }
     const user = await res.json() as { login: string; avatar_url: string }
     return { login: user.login, avatar_url: user.avatar_url }
   }))

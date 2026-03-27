@@ -74,10 +74,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           }
           if (p.provider === 'google') setGoogleKey('saved');
           if (p.provider === 'github') {
-             invoke<any>('github:test-connection').then(res => {
-               const user = unwrapIpc<any>(res);
-               if (user) setGithubUser(user);
-             }).catch(() => {});
+             // Only test connection if it's explicitly saved or env, preventing 401 on missing file credentials
+             if (p.source !== 'none' && p.type !== 'none') {
+               invoke<any>('github:test-connection').then(res => {
+                 const user = unwrapIpc<any>(res);
+                 if (user && user.login) setGithubUser(user);
+               }).catch(() => {});
+             }
           }
         }
       });
@@ -191,16 +194,22 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const handlePatSubmit = async () => {
     if (!patInput.trim()) return;
     try {
-      await invoke('auth:store-api-key', 'github', patInput.trim());
+      const storeRes = await invoke<any>('auth:store-api-key', 'github', patInput.trim());
+      if (!storeRes.ok) {
+         throw new Error(storeRes.error || 'Failed to store API key.');
+      }
       const res = await invoke<any>('github:test-connection');
+      if (!res.ok) {
+        throw new Error(res.error || 'GitHub connection test failed');
+      }
       const user = unwrapIpc<any>(res);
-      if (user) {
+      if (user && user.login) {
         setGithubUser(user);
         setShowPatInput(false);
         setPatInput('');
         setError(null);
       } else {
-        setError('GitHub PAT saved, but profile fetch failed.');
+        setError('GitHub PAT saved, but profile fetch failed or returned invalid data.');
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? (e as any).message : String(e);
