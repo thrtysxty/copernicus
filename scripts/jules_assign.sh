@@ -315,7 +315,7 @@ payload = {
         }
     },
     'automationMode': 'AUTO_CREATE_PR',
-    'requirePlanApproval': True
+    'requirePlanApproval': False
 }
 print(json.dumps(payload))
 " <<< "$PROMPT")
