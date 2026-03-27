@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
          ShieldCheck, Key, Zap, Github, Layout, Sparkles, Loader2 } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc, IpcResult } from '../../types/ipc'
 import GenesisWizard from '../genesis/GenesisWizard';
+import AuthCliWidget from './AuthCliWidget';
+import { AUTH_CLI_CONFIGS } from './authCliConfigs';
 import { WizardNarration } from './WizardNarration';
 
 interface WizardProps {
@@ -110,8 +112,9 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           if (p.provider === 'github') {
              // Only test connection if it's explicitly saved or env, preventing 401 on missing file credentials
              if (p.source !== 'none' && p.type !== 'none') {
-               invoke<any>('github:test-connection').then(res => {
-                 const user = unwrapIpc<any>(res);
+               invoke<IpcResult<{ login: string; avatar_url: string }>>('github:test-connection').then(res => {
+                 if (!res.ok) return;
+                 const user = unwrapIpc<{ login: string; avatar_url: string }>(res);
                  if (user && user.login) setGithubUser(user);
                }).catch(() => {});
              }
@@ -299,11 +302,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       if (!storeRes.ok) {
          throw new Error(storeRes.error || 'Failed to store API key.');
       }
-      const res = await invoke<any>('github:test-connection');
+      const res = await invoke<IpcResult<{ login: string; avatar_url: string }>>('github:test-connection');
       if (!res.ok) {
         throw new Error(res.error || 'GitHub connection test failed');
       }
-      const user = unwrapIpc<any>(res);
+      const user = unwrapIpc<{ login: string; avatar_url: string }>(res);
       if (user && user.login) {
         setGithubUser(user);
         setShowPatInput(false);
@@ -495,20 +498,28 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                             <p className="text-[10px] text-zinc-500 leading-tight">Leverages existing <code className="text-zinc-400">claude login</code> credentials.</p>
                           </button>
 
-                          <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 opacity-60'}`}>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Key size={12} /> Direct API Access</span>
-                              <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[9px] text-zinc-500 hover:text-white underline">Manage Keys</button>
-                            </div>
-                            <input
-                              type="password"
-                              className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
-                              placeholder={anthropicKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'sk-ant-api03-...'}
-                              value={anthropicKey === 'saved' ? '' : anthropicKey}
-                              onChange={(e) => { setAnthropicKey(e.target.value); setAnthropicMethod('apikey'); }}
-                              onFocus={() => { if (anthropicMethod !== 'apikey') setAnthropicMethod('apikey') }}
+                          {anthropicMethod === 'cli' && AUTH_CLI_CONFIGS['anthropic'] ? (
+                            <AuthCliWidget
+                              config={AUTH_CLI_CONFIGS['anthropic']}
+                              onComplete={() => { setAnthropicMethod('cli'); setAnthropicKey('saved'); setEditAnthropic(false); }}
+                              onCancel={() => setAnthropicMethod(null)}
                             />
-                          </div>
+                          ) : (
+                            <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 opacity-60'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Key size={12} /> Direct API Access</span>
+                                <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[9px] text-zinc-500 hover:text-white underline">Manage Keys</button>
+                              </div>
+                              <input
+                                type="password"
+                                className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                                placeholder={anthropicKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : 'sk-ant-api03-...'}
+                                value={anthropicKey === 'saved' ? '' : anthropicKey}
+                                onChange={(e) => { setAnthropicKey(e.target.value); setAnthropicMethod('apikey'); }}
+                                onFocus={() => { if (anthropicMethod !== 'apikey') setAnthropicMethod('apikey') }}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -529,12 +540,38 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
                       {(!isGithubConfigured || editGithub) && (
                         <>
-                          <button
-                            onClick={() => setShowPatInput(true)}
-                            className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all"
-                          >
-                            {githubUser ? 'Swap GitHub Identity' : 'Connect via PAT'}
-                          </button>
+                          {!showPatInput && (
+                            <button
+                              onClick={() => setPatInput('cli')}
+                              className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all mb-2"
+                            >
+                              Use CLI
+                            </button>
+                          )}
+                          {patInput === 'cli' && AUTH_CLI_CONFIGS['github'] && (
+                            <AuthCliWidget
+                              config={AUTH_CLI_CONFIGS['github']}
+                              onComplete={() => {
+                                invoke<IpcResult<{ login: string; avatar_url: string }>>('github:test-connection').then(res => {
+                                  if (!res.ok) return;
+                                  const user = unwrapIpc<{ login: string; avatar_url: string }>(res);
+                                  if (user && user.login) {
+                                    setGithubUser(user);
+                                    setEditGithub(false);
+                                  }
+                                }).catch(() => {});
+                              }}
+                              onCancel={() => setPatInput('')}
+                            />
+                          )}
+                          {patInput !== 'cli' && (
+                            <button
+                              onClick={() => setShowPatInput(true)}
+                              className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all"
+                            >
+                              {githubUser ? 'Swap GitHub Identity' : 'Connect via PAT'}
+                            </button>
+                          )}
                           {showPatInput && (
                             <div className="mt-2 space-y-2">
                               <input
@@ -612,36 +649,54 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       </div>
 
                       {(!isGoogleConfigured || editGoogle) && (
-                        <input
-                          type="password"
-                          className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
-                          placeholder={googleKey === 'saved' || googleKey === 'oauth' ? 'OAUTH CREDENTIALS ACTIVE' : 'API Key Override (Optional)'}
-                          value={googleKey === 'saved' || googleKey === 'oauth' ? '' : googleKey}
-                          onChange={(e) => setGoogleKey(e.target.value)}
-                        />
+                        <>
+                          {googleKey === 'cli' && AUTH_CLI_CONFIGS['google'] ? (
+                            <AuthCliWidget
+                              config={AUTH_CLI_CONFIGS['google']}
+                              onComplete={() => { setGoogleKey('saved'); setEditGoogle(false); }}
+                              onCancel={() => setGoogleKey('')}
+                            />
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => setGoogleKey('cli')}
+                                className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all mb-2"
+                              >
+                                Use CLI
+                              </button>
+                              <input
+                                type="password"
+                                className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                                placeholder={googleKey === 'saved' || googleKey === 'oauth' ? 'OAUTH CREDENTIALS ACTIVE' : 'API Key Override (Optional)'}
+                                value={googleKey === 'saved' || googleKey === 'oauth' ? '' : googleKey}
+                                onChange={(e) => setGoogleKey(e.target.value)}
+                              />
+                            </>
+                          )}
+                        </>
                       )}
                     </div>
 
                     {/* Google Jules */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google Jules</span>
-                        {julesKey === 'saved' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span> : (googleKey === 'saved' || googleKey === 'oauth') ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SAME ACCOUNT AS GEMINI — INHERITED</span> : null}
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">Google Jules <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span></span>
+                        {julesKey === 'saved' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span> : (googleKey === 'saved' || googleKey === 'oauth' || googleKey === 'cli') ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SAME ACCOUNT AS GEMINI — INHERITED</span> : null}
                       </div>
                       <input
                         type="password"
                         className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
-                        placeholder={julesKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : ((googleKey === 'saved' || googleKey === 'oauth') ? 'INHERITED FROM GEMINI' : 'Jules API Key')}
+                        placeholder={julesKey === 'saved' ? 'CREDENTIALS ENCRYPTED' : ((googleKey === 'saved' || googleKey === 'oauth' || googleKey === 'cli') ? 'INHERITED FROM GEMINI' : 'Jules API Key')}
                         value={julesKey === 'saved' ? '' : (julesKey === 'inherited' ? '' : julesKey)}
                         onChange={(e) => setJulesKey(e.target.value)}
-                        disabled={googleKey === 'saved' || googleKey === 'oauth'}
+                        disabled={googleKey === 'saved' || googleKey === 'oauth' || googleKey === 'cli'}
                       />
                     </div>
 
                     {/* Google Stitch */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google Stitch</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">Google Stitch <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span></span>
                         {stitchKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
                       </div>
                       <input
