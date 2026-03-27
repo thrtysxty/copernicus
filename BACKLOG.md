@@ -110,6 +110,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #539 | Sqlite Vec Extension Load Failure | APPROVED FOR IMPLEMENTATION | P1 — Stability |
+| #540 | Github Pat 401 Wizard And Startup | APPROVED FOR IMPLEMENTATION | P1 — Onboarding |
+| #545 | Docker Poller Enoent Flood | APPROVED FOR IMPLEMENTATION | P1 |
+| #547 | Wizard Empty Project Path | APPROVED FOR IMPLEMENTATION | P1 |
+| #549 | Splash Before Wizard First Launch | APPROVED FOR IMPLEMENTATION | P1 |
+| #550 | Wizard Git Repo Detection | APPROVED FOR IMPLEMENTATION | P1 |
+| #552 | Wizard Replace Alert With Inline Errors | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -443,16 +450,31 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
-| #539 | Sqlite Vec Extension Load Failure | DRAFT | P1 — Stability |
-| #540 | Github Pat 401 Wizard And Startup | DRAFT | P1 — Onboarding |
 | #541 | Lsp Server Packaging | DRAFT | P2 — Developer Experience |
-| #542 | Stitch Sdk Migration | DRAFT | P2 — Feature |
+| #542 | Stitch Sdk Migration | DRAFT | P2 |
 | #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
 | #544 | Genesis Rich Scaffold Templates | DRAFT | P2 — Feature |
-| #545 | Docker Poller Enoent Flood | DRAFT | P1 |
 | #546 | Otel Collector Startup Crash | DRAFT | P2 |
-| #547 | Wizard Empty Project Path | DRAFT | P1 |
 | #548 | Kanban Repo Targeted Flash | DRAFT | P3 |
+| #551 | Createstamp Ac Description Fields | DRAFT | P1 |
+| #553 | Genesis Background Execution | DRAFT | P1 |
+| #554 | Wizard 5 Step Restructure | DRAFT | P2 |
+| #555 | Wizard Existing User Fast Path | DRAFT | P2 |
+| #556 | Wizard Complete Provider List | DRAFT | P2 |
+| #557 | Existing Repo Scaffold Offer | DRAFT | P2 |
+| #558 | Consolidate Genesis Wizard Implementations | DRAFT | P2 |
+| #559 | Genesis Cycling Placeholder Animation | DRAFT | P3 |
+| #560 | Wizard Copernicus Narration Scaffold | DRAFT | P3 |
+| #561 | Wizard Embedded Cli Terminal | DRAFT | P3 |
+| #562 | Jules Sdk Client Migration | DRAFT | P2 |
+| #563 | Stitch Setup Doc Sdk Update | DRAFT | P2 |
+| #564 | Jules Streaming Monitor | DRAFT | P2 |
+| #565 | Kb Activity Bar View Scaffold | DRAFT | P1 |
+| #566 | Kb Content Storage Seeding | DRAFT | P1 |
+| #567 | Kb Browse Article View | DRAFT | P1 |
+| #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
+| #569 | Kb Local Voting | DRAFT | P3 |
+| #570 | Story Inspector Chat Scoping | DRAFT | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
