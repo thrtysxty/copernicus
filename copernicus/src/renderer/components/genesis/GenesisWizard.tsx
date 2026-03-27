@@ -20,9 +20,11 @@ interface GenesisPayload {
 
 interface GenesisWizardProps {
   onComplete: () => void;
+  repoPath?: string;
+  projectName?: string;
 }
 
-const STEPS = [
+const ALL_STEPS = [
   { id: 'idea', label: 'Idea' },
   { id: 'stack', label: 'Stack' },
   { id: 'repo', label: 'Repo' },
@@ -38,20 +40,25 @@ const STACKS = [
   { id: 'custom', label: 'Custom', desc: "I'll configure manually", icon: Wrench },
 ];
 
-const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
+const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, projectName }) => {
   const invoke = useIpcError();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workspace, setWorkspace] = useState('');
 
+  const isWizardMode = !!repoPath;
+  const STEPS = isWizardMode
+    ? ALL_STEPS.filter(s => s.id !== 'repo')
+    : ALL_STEPS;
+
   const [formData, setFormData] = useState<GenesisPayload>({
     idea: '',
     audience: '',
     coreValue: '',
-    projectName: '',
+    projectName: projectName || '',
     stack: 'react-electron',
-    repoPath: '',
+    repoPath: repoPath || '',
     isNewRepo: true,
   });
 
@@ -60,13 +67,15 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
       const p = unwrapIpc<any>(prefs);
       if (p?.workspace) {
         setWorkspace(p.workspace);
-        setFormData(prev => ({ ...prev, repoPath: p.workspace }));
+        if (!repoPath) {
+          setFormData(prev => ({ ...prev, repoPath: p.workspace }));
+        }
       }
     });
-  }, [invoke]);
+  }, [invoke, repoPath]);
 
   const handleNext = () => {
-    if (step === 1 && !formData.projectName) {
+    if (STEPS[step - 1]?.id === 'idea' && !formData.projectName) {
       const autoName = formData.idea.split(' ').slice(0, 4).join('-').toLowerCase().replace(/[^a-z0-9-]/g, '');
       if (autoName) {
         setFormData(prev => ({ ...prev, projectName: autoName }));
@@ -78,9 +87,10 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
   const handleBack = () => setStep(prev => prev - 1);
 
   const isStepValid = () => {
-    if (step === 1) return formData.idea.trim() && formData.audience.trim() && formData.coreValue.trim();
-    if (step === 2) return !!formData.stack;
-    if (step === 3) return formData.repoPath.trim();
+    const currentStepId = STEPS[step - 1]?.id;
+    if (currentStepId === 'idea') return formData.idea.trim() && formData.audience.trim() && formData.coreValue.trim();
+    if (currentStepId === 'stack') return !!formData.stack;
+    if (currentStepId === 'repo') return formData.repoPath.trim();
     return true;
   };
 
@@ -162,7 +172,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
               transition={{ duration: 0.2 }}
               className="absolute inset-0 p-8 overflow-y-auto"
             >
-              {step === 1 && (
+              {STEPS[step - 1]?.id === 'idea' && (
                 <div className="max-w-2xl mx-auto space-y-6">
                   <div className="space-y-4">
                     <label className="block">
@@ -221,7 +231,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
                 </div>
               )}
 
-              {step === 2 && (
+              {STEPS[step - 1]?.id === 'stack' && (
                 <div className="max-w-3xl mx-auto space-y-6">
                   <div className="text-center mb-8">
                     <h3 className="text-lg font-bold text-white uppercase tracking-tight">Select your stack</h3>
@@ -247,7 +257,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
                 </div>
               )}
 
-              {step === 3 && (
+              {STEPS[step - 1]?.id === 'repo' && (
                 <div className="max-w-2xl mx-auto space-y-8 py-12">
                   <div className="flex items-center justify-center gap-8">
                     <button
@@ -289,7 +299,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
                 </div>
               )}
 
-              {step === 4 && (
+              {STEPS[step - 1]?.id === 'review' && (
                 <div className="max-w-2xl mx-auto space-y-8">
                   <div className="text-center">
                     <CheckCircle2 size={48} className="text-indigo-500 mx-auto mb-4" />
@@ -341,13 +351,13 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete }) => {
           </button>
           
           <button
-            onClick={step === 4 ? handleLaunch : handleNext}
+            onClick={step === STEPS.length ? handleLaunch : handleNext}
             disabled={!isStepValid() || loading}
             className={`flex items-center gap-2 px-8 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${!isStepValid() || loading ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'}`}
           >
             {loading ? (
               <Loader2 size={16} className="animate-spin" />
-            ) : step === 4 ? (
+            ) : step === STEPS.length ? (
               <>Launch Project <Sparkles size={16} /></>
             ) : (
               <>Next <ArrowRight size={16} /></>
