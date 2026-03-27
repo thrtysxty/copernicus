@@ -111,7 +111,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #553 | Genesis Background Execution | APPROVED FOR IMPLEMENTATION | P1 |
-| #554 | Wizard 5 Step Restructure | APPROVED FOR IMPLEMENTATION | P2 |
 | #555 | Wizard Existing User Fast Path | APPROVED FOR IMPLEMENTATION | P2 |
 | #556 | Wizard Complete Provider List | APPROVED FOR IMPLEMENTATION | P2 |
 | #557 | Existing Repo Scaffold Offer | APPROVED FOR IMPLEMENTATION | P2 |
@@ -437,6 +436,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #549 | Splash Before Wizard First Launch | COMPLETE | P1 |
 | #550 | Wizard Git Repo Detection | COMPLETE | P1 |
 | #552 | Wizard Replace Alert With Inline Errors | COMPLETE | P1 |
+| #554 | Wizard 5 Step Restructure | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
