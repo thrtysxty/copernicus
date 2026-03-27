@@ -38,6 +38,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [ollamaKey, setOllamaKey] = useState('');
   const googleOAuthClientId = ''; // Static for now
   
+  const [error, setError] = useState<string | null>(null);
+
   // GitHub
   const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string } | null>(null);
   const [showPatInput, setShowPatInput] = useState(false);
@@ -113,12 +115,14 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   };
 
   const handleNext = () => {
+    setError(null);
     if (step === 1) setStep(2);
     else if (step === 2) setStep(3);
     else handleFinish();
   };
 
   const handleBack = () => {
+    setError(null);
     if (step > 1) setStep(step - 1);
   };
 
@@ -128,6 +132,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       const selectedPath = unwrapIpc<string | null>(result);
       if (selectedPath) {
         setWorkspacePath(selectedPath);
+        setError(null);
         await invoke('app:set-root-path', selectedPath);
         // Reset project selection when workspace changes
         setSelectedProject('');
@@ -157,12 +162,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         setGithubUser(user);
         setShowPatInput(false);
         setPatInput('');
+        setError(null);
       } else {
-        alert('GitHub PAT saved, but profile fetch failed.');
+        setError('GitHub PAT saved, but profile fetch failed.');
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? (e as any).message : String(e);
-      alert('GitHub Connection Error: ' + message);
+      setError('GitHub Connection Error: ' + message);
     }
   };
 
@@ -174,19 +180,20 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   }, []);
 
   const handleFinish = async () => {
+    setError(null);
     if (!workspacePath) {
-      alert('A repository store directory is required.');
+      setError('A repository store directory is required.');
       setStep(2);
       return;
     }
     if (!wizardMode) {
-      alert('Please choose to open an existing project or create a new one.');
+      setError('Please choose to open an existing project or create a new one.');
       return;
     }
 
     const projectName = wizardMode === 'new' ? newProjectName.trim() : selectedProject;
     if (!projectName) {
-      alert(wizardMode === 'new' ? 'Please enter a project name.' : 'Please select a repository.');
+      setError(wizardMode === 'new' ? 'Please enter a project name.' : 'Please select a repository.');
       return;
     }
 
@@ -243,8 +250,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke('github:set-target-repo', `${githubUser?.login || 'local'}/${projectName}`).catch(() => {});
 
       onWizardComplete();
-    } catch (error: unknown) {
-      alert(`Initialization failed: ${(error as Error).message}`);
+    } catch (err: unknown) {
+      setError(`Initialization failed: ${(err as Error).message}`);
     }
   };
 
@@ -345,7 +352,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                             className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
                             placeholder="ghp_..."
                             value={patInput}
-                            onChange={e => setPatInput(e.target.value)}
+                            onChange={e => {
+                              setPatInput(e.target.value);
+                              if (error) setError(null);
+                            }}
                             onKeyDown={e => e.key === 'Enter' && handlePatSubmit()}
                           />
                           <div className="flex gap-2">
@@ -354,10 +364,15 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                               className="flex-1 py-1.5 bg-copernicus-phosphor/10 text-copernicus-phosphor border border-copernicus-phosphor/30 rounded text-[11px] font-bold uppercase"
                             >Connect</button>
                             <button
-                              onClick={() => { setShowPatInput(false); setPatInput(''); }}
+                              onClick={() => { setShowPatInput(false); setPatInput(''); setError(null); }}
                               className="px-3 py-1.5 text-zinc-500 hover:text-zinc-300 text-[11px] uppercase"
                             >Cancel</button>
                           </div>
+                          {error && step === 1 && (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center mt-2">
+                              <p className="text-xs text-red-400">{error}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -442,6 +457,12 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         </p>
                       </div>
                     )}
+
+                    {error && step === 2 && (
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center mt-4">
+                        <p className="text-xs text-red-400">{error}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -459,7 +480,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                   {/* Mode selector */}
                   <div className="grid grid-cols-2 gap-4">
                     <button
-                      onClick={() => { setWizardMode('existing'); setNewProjectName(''); }}
+                      onClick={() => { setWizardMode('existing'); setNewProjectName(''); setError(null); }}
                       className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'existing' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}
                     >
                       <FolderOpen size={28} className={wizardMode === 'existing' ? 'text-copernicus-phosphor' : ''} />
@@ -469,7 +490,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       </div>
                     </button>
                     <button
-                      onClick={() => { setWizardMode('new'); setSelectedProject(''); }}
+                      onClick={() => { setWizardMode('new'); setSelectedProject(''); setError(null); }}
                       className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'new' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}
                     >
                       <Sparkles size={28} className={wizardMode === 'new' ? 'text-copernicus-phosphor' : ''} />
@@ -488,7 +509,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <select
                           className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors"
                           value={selectedProject}
-                          onChange={e => setSelectedProject(e.target.value)}
+                          onChange={e => {
+                            setSelectedProject(e.target.value);
+                            if (error) setError(null);
+                          }}
                         >
                           <option value="">— choose from workspace —</option>
                           {availableProjects.map(p => (
@@ -522,7 +546,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white font-mono outline-none focus:border-copernicus-phosphor transition-colors"
                           placeholder="my-new-project"
                           value={newProjectName}
-                          onChange={e => setNewProjectName(e.target.value)}
+                          onChange={e => {
+                            setNewProjectName(e.target.value);
+                            if (error) setError(null);
+                          }}
                         />
                       </div>
                       <div className="space-y-1">
@@ -580,6 +607,12 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-zinc-700 text-lg font-mono">/HR</span>
                       </div>
                     </div>
+
+                  {error && step === 3 && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center mt-4">
+                      <p className="text-xs text-red-400">{error}</p>
+                    </div>
+                  )}
 
                   {genesisLoading && (
                     <div className="flex items-center justify-center gap-3 p-4 text-copernicus-phosphor">
