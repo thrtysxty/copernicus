@@ -30,6 +30,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [genesisAudience, setGenesisAudience] = useState('');
   const [genesisCoreValue, setGenesisCoreValue] = useState('');
   const [genesisStack, setGenesisStack] = useState('react-electron');
+  const [genesisProgress, setGenesisProgress] = useState<'pending' | 'complete' | 'failed' | null>(null);
 
 
   // Anthropic
@@ -181,6 +182,29 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
     setWizardMode('new');
   };
 
+  const startGenesisBackground = () => {
+    const fullPath = `${workspacePath}/${newProjectName.trim()}`;
+    setGenesisProgress('pending');
+    invoke<any>('genesis:run', {
+      projectName: newProjectName.trim(),
+      idea: genesisIdea.trim() || 'A new software project.',
+      audience: genesisAudience.trim() || 'Developers',
+      coreValue: genesisCoreValue.trim() || 'Productivity',
+      stack: genesisStack,
+      repoPath: fullPath,
+      isNewRepo: true,
+    }).then(res => {
+      if (!res.ok) {
+        setGenesisProgress('failed');
+        return;
+      }
+      unwrapIpc<any>(res);
+      setGenesisProgress('complete');
+    }).catch(() => {
+      setGenesisProgress('failed');
+    });
+  };
+
   const handleNext = () => {
     setError(null);
     if (step === 1) {
@@ -202,16 +226,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           setStep3Substate('stack');
         } else if (step3Substate === 'stack') {
           // Fire genesis:run in background here
-          const fullPath = `${workspacePath}/${newProjectName.trim()}`;
-          invoke('genesis:run', {
-            projectName: newProjectName.trim(),
-            idea: genesisIdea.trim() || 'A new software project.',
-            audience: genesisAudience.trim() || 'Developers',
-            coreValue: genesisCoreValue.trim() || 'Productivity',
-            stack: genesisStack,
-            repoPath: fullPath,
-            isNewRepo: true,
-          }).catch((err: unknown) => console.warn('[Wizard] genesis:run failed (non-fatal):', err));
+          startGenesisBackground();
           setStep(4);
         }
       }
@@ -889,6 +904,18 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     </h2>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configure billing for this project</p>
                   </div>
+                  {genesisProgress === 'pending' && (
+                    <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-4 flex flex-col gap-2 items-center justify-center">
+                      <Loader2 size={24} className="text-copernicus-phosphor animate-spin mb-1" />
+                      <p className="text-[10px] text-zinc-400 uppercase tracking-widest">Setting up your project...</p>
+                    </div>
+                  )}
+                  {genesisProgress === 'failed' && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex flex-col gap-2 items-center justify-center text-center">
+                      <p className="text-xs text-red-400 mb-1">Genesis project setup failed.</p>
+                      <button onClick={startGenesisBackground} className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-colors">Retry</button>
+                    </div>
+                  )}
                   <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-copernicus-phosphor">
