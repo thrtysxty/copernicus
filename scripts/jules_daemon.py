@@ -180,6 +180,11 @@ def approve_plan(session_id: str, key: str) -> bool:
     status, _ = curl_post(f"{JULES_API}/sessions/{session_id}:approvePlan", jules_api_key())
     return status == 200
 
+
+def send_message(session_id: str, key: str, prompt: str) -> bool:
+    status, _ = curl_post(f"{JULES_API}/sessions/{session_id}:sendMessage", key, {"prompt": prompt})
+    return status == 200
+
 # ── GitHub ────────────────────────────────────────────────────────────────────
 
 
@@ -517,6 +522,13 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                 "UPDATE jules_sessions SET state=?, updated=? WHERE session_id=?",
                 (state, updated, session_id)
             )
+
+    elif state == "AWAITING_USER_FEEDBACK":
+        log.warning(f"  ⏸  Jules is waiting for user feedback — check dashboard: https://jules.google.com/session/{session_id}")
+        conn.execute(
+            "UPDATE jules_sessions SET state=?, updated=? WHERE session_id=?",
+            (state, updated, session_id)
+        )
 
     elif is_completed_pr_ready:
         log.info(f"  PR ready: {pr_url}")
