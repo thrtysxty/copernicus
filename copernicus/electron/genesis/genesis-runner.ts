@@ -11,7 +11,7 @@ export class GenesisRunner {
   private authManager: AuthManager;
   private storiesManager: StoriesManager;
   private settingsStore: SettingsStore;
-  private scaffoldRunner: ScaffoldRunner;
+  public scaffoldRunner: ScaffoldRunner;
 
   constructor(deps: {
     modelRegistry: ModelRegistry;
