@@ -211,10 +211,11 @@ function createWindow() {
       ipcCleanupFns!.cleanupWorktreeHandlers()
     })
   }
+  const appVersion = app.getVersion()
   if (isFirstRun) {
-    VITE_DEV_SERVER_URL ? win.loadURL(`${VITE_DEV_SERVER_URL}?window=wizard`) : win.loadFile(path.join(process.env.DIST!, 'index.html'), { query: { window: 'wizard' } })
+    VITE_DEV_SERVER_URL ? win.loadURL(`${VITE_DEV_SERVER_URL}?window=wizard&version=${appVersion}`) : win.loadFile(path.join(process.env.DIST!, 'index.html'), { query: { window: 'wizard', version: appVersion } })
   } else {
-    VITE_DEV_SERVER_URL ? win.loadURL(VITE_DEV_SERVER_URL) : win.loadFile(path.join(process.env.DIST!, 'index.html'))
+    VITE_DEV_SERVER_URL ? win.loadURL(`${VITE_DEV_SERVER_URL}?version=${appVersion}`) : win.loadFile(path.join(process.env.DIST!, 'index.html'), { query: { version: appVersion } })
   }
 }
 
@@ -462,7 +463,7 @@ app.whenReady().then(async () => {
   }
   backendManager.start(); setTimeout(() => socketManager.connect(), 3000)
   if (process.platform === 'darwin') {
-    app.setAboutPanelOptions({ applicationName: 'COPERNICUS', applicationVersion: '0.1.0', copyright: '© 2026 COPERNICUS IDE Team', credits: 'Professional Phosphor Edition' });
+    app.setAboutPanelOptions({ applicationName: 'COPERNICUS', applicationVersion: app.getVersion(), copyright: '© 2026 COPERNICUS IDE Team', credits: 'Professional Phosphor Edition' });
   }
   const isDev = !!VITE_DEV_SERVER_URL
   const scriptSrc = isDev

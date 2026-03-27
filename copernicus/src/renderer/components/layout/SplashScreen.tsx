@@ -17,6 +17,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   // Read the phosphor color passed from main process as a query param
   const params = new URLSearchParams(window.location.search)
   const phosphorHex = params.get('phosphor') ?? '#4ADE80'
+  const appVersion = params.get('version') ?? '0.1.0'
 
   const [stage, setStage] = useState<'off' | 'igniting' | 'on'>('off');
   const [statusText, setStatusText] = useState<string>('Booting...');
@@ -126,6 +127,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
           alt="Copernicus Splash"
           className="w-full h-full object-cover"
         />
+
+        {/* Version Badge */}
+        <div className="absolute top-4 right-4 z-10">
+          <div className="font-mono text-[9px] text-[var(--phosphor)]/60 tracking-widest uppercase bg-[#050505]/60 px-2 py-0.5">
+            v{appVersion}
+          </div>
+        </div>
 
         {/* Dynamic Status Text Overlay */}
         <div className="absolute bottom-8 left-0 right-0 flex justify-center w-full z-10 px-8">
