@@ -110,8 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #559 | Genesis Cycling Placeholder Animation | APPROVED FOR IMPLEMENTATION | P3 |
-| #560 | Wizard Copernicus Narration Scaffold | APPROVED FOR IMPLEMENTATION | P3 |
 | #561 | Wizard Embedded Cli Terminal | APPROVED FOR IMPLEMENTATION | P3 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -440,6 +438,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #556 | Wizard Complete Provider List | COMPLETE | P2 |
 | #557 | Existing Repo Scaffold Offer | COMPLETE | P2 |
 | #558 | Consolidate Genesis Wizard Implementations | COMPLETE | P2 |
+| #559 | Genesis Cycling Placeholder Animation | COMPLETE | P3 |
+| #560 | Wizard Copernicus Narration Scaffold | COMPLETE | P3 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
