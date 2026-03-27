@@ -126,6 +126,18 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   // Container Runtime Handlers
+  ipcMain.handle('runtime:check-docker', () => handleIpc('runtime:check-docker', [], async () => {
+    return new Promise((resolve) => {
+      execFile('which', ['docker'], { shell: false }, (error: any) => {
+        if (error) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }));
+
   ipcMain.handle('runtime:list-containers', () => handleIpc('runtime:list-containers', [], async () => {
     return new Promise((resolve) => {
       execFile('docker', ['ps', '-a', '--format', '{{json .}}'], { shell: false }, (error: any, stdout: string) => {

@@ -126,7 +126,7 @@ const SEND_CHANNELS = new Set([
   // App Control
   'app:open-log', 'app:open-external', 'window:exit-fullscreen',
   // Runtime
-  'runtime:list-containers', 'runtime:manage-container',
+  'runtime:check-docker', 'runtime:list-containers', 'runtime:manage-container',
   // OAuth
   'oauth:start-google', 'oauth:start-anthropic', 'oauth:start-openrouter',
   'app:start-oauth-listener',

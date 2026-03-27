@@ -16,6 +16,7 @@ export const ContainerViewer: React.FC = () => {
   const [containers, setContainers] = useState<Container[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [dockerAvailable, setDockerAvailable] = useState<boolean | null>(null);
   const invoke = useIpcError();
   const toggleFlip = useLayoutStore(s => s.toggleFlip);
 
@@ -34,9 +35,29 @@ export const ContainerViewer: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchContainers();
-    const interval = setInterval(fetchContainers, 5000); // Auto-refresh every 5s
-    return () => clearInterval(interval);
+    let interval: NodeJS.Timeout;
+
+    const init = async () => {
+      try {
+        const checkRes = await invoke<{ ok: boolean; data?: boolean; error?: string }>('runtime:check-docker');
+        const isAvailable = checkRes?.ok && checkRes.data === true;
+        setDockerAvailable(isAvailable);
+
+        if (isAvailable) {
+          fetchContainers();
+          interval = setInterval(fetchContainers, 5000); // Auto-refresh every 5s
+        }
+      } catch (e) {
+        console.error('Failed to check docker availability', e);
+        setDockerAvailable(false);
+      }
+    };
+
+    init();
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [invoke]);
 
   const manageContainer = async (id: string, action: 'start' | 'stop' | 'logs') => {
@@ -73,7 +94,11 @@ export const ContainerViewer: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {containers.length === 0 ? (
+        {dockerAvailable === false ? (
+          <div className="p-4 text-zinc-600 text-center italic">Docker not available</div>
+        ) : dockerAvailable === null ? (
+          <div className="p-4 text-zinc-600 text-center italic">Checking Docker...</div>
+        ) : containers.length === 0 ? (
           <div className="p-4 text-zinc-600 text-center italic">No containers found</div>
         ) : (
           <ul className="flex flex-col">
