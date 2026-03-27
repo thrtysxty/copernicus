@@ -110,11 +110,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
-| #553 | Genesis Background Execution | APPROVED FOR IMPLEMENTATION | P1 |
-| #555 | Wizard Existing User Fast Path | APPROVED FOR IMPLEMENTATION | P2 |
-| #556 | Wizard Complete Provider List | APPROVED FOR IMPLEMENTATION | P2 |
-| #557 | Existing Repo Scaffold Offer | APPROVED FOR IMPLEMENTATION | P2 |
-| #558 | Consolidate Genesis Wizard Implementations | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -436,7 +431,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #549 | Splash Before Wizard First Launch | COMPLETE | P1 |
 | #550 | Wizard Git Repo Detection | COMPLETE | P1 |
 | #552 | Wizard Replace Alert With Inline Errors | COMPLETE | P1 |
+| #553 | Genesis Background Execution | COMPLETE | P1 |
 | #554 | Wizard 5 Step Restructure | COMPLETE | P2 |
+| #555 | Wizard Existing User Fast Path | COMPLETE | P2 |
+| #556 | Wizard Complete Provider List | COMPLETE | P2 |
+| #557 | Existing Repo Scaffold Offer | COMPLETE | P2 |
+| #558 | Consolidate Genesis Wizard Implementations | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
