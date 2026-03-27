@@ -63,8 +63,8 @@ class StoryValidator:
         with open(preload_path, 'r') as f:
             preload_content = f.read()
 
-        send_channels = re.findall(r"export const SEND_CHANNELS = \[(.*?)\]", preload_content, re.DOTALL)
-        listen_channels = re.findall(r"export const LISTEN_CHANNELS = \[(.*?)\]", preload_content, re.DOTALL)
+        send_channels = re.findall(r"SEND_CHANNELS\s*=\s*(?:new\s+Set\()?\[(.*?)\]", preload_content, re.DOTALL)
+        listen_channels = re.findall(r"LISTEN_CHANNELS\s*=\s*(?:new\s+Set\()?\[(.*?)\]", preload_content, re.DOTALL)
 
         send_channels_list = []
         if send_channels:
@@ -91,7 +91,7 @@ class StoryValidator:
             line = line.strip()
             # Regex to find paths like 'path/to/file.ts', 'path/to/file.py', etc.
             # Handles markdown list items like - `path/to/file.ts`
-            match = re.search(r"[`]?([\w./_-]+\.(?:tsx|ts|jsx|js|py|html|json|md|sh|ps1|yml|yaml|css|scss|txt|xml|java|cs|go|cpp|c|hpp|h|vue|svelte))[`]?", line)
+            match = re.search(r"[`]?([\w./_-]+\.(?:tsx|jsx|json|ts|js|py|html|md|sh|ps1|yaml|yml|css|scss|txt|xml|java|cs|go|cpp|hpp|vue|svelte|c|h))[`]?", line)
             if match:
                 path = match.group(1)
                 is_new = "(new)" in line.lower()
