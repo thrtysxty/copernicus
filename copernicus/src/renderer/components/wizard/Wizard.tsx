@@ -5,6 +5,7 @@ import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc'
 import GenesisWizard from '../genesis/GenesisWizard';
+import { WizardNarration } from './WizardNarration';
 
 interface WizardProps {
   onComplete: () => void;
@@ -434,6 +435,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="absolute w-full h-full flex flex-col overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-zinc-800"
             >
+
+              <WizardNarration step={step} wizardMode={wizardMode} />
 
               {/* ── Phase 1: Authentication ─────────────────────────────────── */}
               {step === 1 && (

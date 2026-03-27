@@ -3,6 +3,7 @@ import path from 'node:path'
 import { spawn, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import fs from 'node:fs'
+import os from 'node:os'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
 import { assertSafePath } from '../utils/path-guard'
@@ -532,5 +533,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('layout:goto-line', (_e, { file, line, col }) => handleIpc('layout:goto-line', [{ file, line, col }], () => {
     BrowserWindow.getAllWindows()[0]?.webContents.send('layout:goto-line', { file, line, col })
+  }))
+
+  ipcMain.handle('wizard:get-username', () => handleIpc('wizard:get-username', [], () => {
+    try {
+      return os.userInfo().username;
+    } catch {
+      return null;
+    }
   }))
 }
