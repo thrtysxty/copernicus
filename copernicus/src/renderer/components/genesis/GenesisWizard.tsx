@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ArrowRight, X, Sparkles, User, Target, 
@@ -7,6 +7,63 @@ import {
 } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc';
+
+const CYCLING_PLACEHOLDERS: Record<string, string[]> = {
+  idea: [
+    'A SaaS tool for managing invoices…',
+    'A mobile app for tracking fitness goals…',
+    'A browser extension for research workflows…',
+  ],
+  audience: [
+    'Film crews and prop houses',
+    'Freelancers and small businesses',
+    'Teachers and students',
+    'Indie game developers',
+  ],
+  coreValue: [
+    'Same-day local inventory, no Chicago shipping delays',
+    'Save hours of manual work every week',
+    'Zero setup, works out of the box',
+    'Makes complex workflows feel simple',
+  ],
+  projectName: ['PropVault', 'InvoiceFlow', 'FitTrack', 'ResearchLens'],
+};
+
+export function useCyclingPlaceholder(fieldId: keyof typeof CYCLING_PLACEHOLDERS) {
+  const examples = CYCLING_PLACEHOLDERS[fieldId] ?? [];
+  const [placeholder, setPlaceholder] = useState(examples[0] ?? '');
+  const indexRef = useRef(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasValueRef = useRef(false);
+
+  const start = useCallback(() => {
+    if (hasValueRef.current || examples.length === 0) return;
+    intervalRef.current = setInterval(() => {
+      indexRef.current = (indexRef.current + 1) % examples.length;
+      setPlaceholder(examples[indexRef.current] ?? '');
+    }, 2500);
+  }, [examples]);
+
+  const stop = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    start();
+    return stop;
+  }, [start, stop]);
+
+  const onFocus = useCallback(() => stop(), [stop]);
+  const onBlur = useCallback((value: string) => {
+    hasValueRef.current = value.length > 0;
+    if (!hasValueRef.current) start();
+  }, [start]);
+
+  return { placeholder, onFocus, onBlur };
+}
 
 interface GenesisPayload {
   idea: string;
@@ -43,6 +100,10 @@ const STACKS = [
 const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, projectName }) => {
   const invoke = useIpcError();
   const [step, setStep] = useState(1);
+  const ideaPlaceholder = useCyclingPlaceholder('idea');
+  const audiencePlaceholder = useCyclingPlaceholder('audience');
+  const coreValuePlaceholder = useCyclingPlaceholder('coreValue');
+  const projectNamePlaceholder = useCyclingPlaceholder('projectName');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workspace, setWorkspace] = useState('');
@@ -182,8 +243,10 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                       <textarea
                         required
                         className="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors resize-none"
-                        placeholder="A SaaS tool that helps small businesses manage invoices..."
+                        placeholder={ideaPlaceholder.placeholder}
                         value={formData.idea}
+                        onFocus={ideaPlaceholder.onFocus}
+                        onBlur={e => ideaPlaceholder.onBlur(e.target.value)}
                         onChange={e => setFormData({ ...formData, idea: e.target.value })}
                       />
                     </label>
@@ -196,8 +259,10 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                         required
                         type="text"
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors"
-                        placeholder="Freelancers and small business owners"
+                        placeholder={audiencePlaceholder.placeholder}
                         value={formData.audience}
+                        onFocus={audiencePlaceholder.onFocus}
+                        onBlur={e => audiencePlaceholder.onBlur(e.target.value)}
                         onChange={e => setFormData({ ...formData, audience: e.target.value })}
                       />
                     </label>
@@ -209,8 +274,10 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                       <textarea
                         required
                         className="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors resize-none"
-                        placeholder="Save users hours of manual work by automating the most tedious parts of their workflow..."
+                        placeholder={coreValuePlaceholder.placeholder}
                         value={formData.coreValue}
+                        onFocus={coreValuePlaceholder.onFocus}
+                        onBlur={e => coreValuePlaceholder.onBlur(e.target.value)}
                         onChange={e => setFormData({ ...formData, coreValue: e.target.value })}
                       />
                     </label>
@@ -222,8 +289,10 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                       <input
                         type="text"
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-colors"
-                        placeholder="InvoiceFlow"
+                        placeholder={projectNamePlaceholder.placeholder}
                         value={formData.projectName}
+                        onFocus={projectNamePlaceholder.onFocus}
+                        onBlur={e => projectNamePlaceholder.onBlur(e.target.value)}
                         onChange={e => setFormData({ ...formData, projectName: e.target.value })}
                       />
                     </label>
