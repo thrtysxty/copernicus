@@ -14,6 +14,80 @@ export class ScaffoldRunner {
     return ''
   }
 
+  public async checkHarness(repoPath: string): Promise<boolean> {
+    try {
+      assertSafePath(repoPath);
+    } catch (err: any) {
+      log.error(`[ScaffoldRunner] Path safety check failed: ${err.message}`);
+      return false;
+    }
+
+    const hasDocsStories = fs.existsSync(path.join(repoPath, 'docs', 'stories'));
+    const hasClaudeMd = fs.existsSync(path.join(repoPath, 'CLAUDE.md'));
+
+    return hasDocsStories && hasClaudeMd;
+  }
+
+  public async scaffoldHarness(repoPath: string): Promise<void> {
+    try {
+      assertSafePath(repoPath);
+    } catch (err: any) {
+      log.error(`[ScaffoldRunner] Path safety check failed: ${err.message}`);
+      return;
+    }
+
+    try {
+      // 1. Ensure docs/stories structure
+      this.ensureDocsStructure(repoPath);
+
+      // 2. Ensure docs/reference structure
+      const referencePath = path.join(repoPath, 'docs', 'reference');
+      if (!fs.existsSync(referencePath)) {
+        fs.mkdirSync(referencePath, { recursive: true });
+      }
+
+      // 3. Ensure CLAUDE.md (minimal template)
+      const projectName = path.basename(repoPath);
+      const claudePath = path.join(repoPath, 'CLAUDE.md');
+      if (!fs.existsSync(claudePath)) {
+        const claudeContent = `# CLAUDE.md
+**Project:** ${projectName}
+
+## Role Boundaries — ENFORCED
+Claude's role is Plan → Delegate → Review. Not implement.
+
+## Architecture
+- Defined as project develops
+`;
+        fs.writeFileSync(claudePath, claudeContent);
+      }
+
+      // 4. Ensure AGENTS.md (minimal template)
+      const agentsPath = path.join(repoPath, 'AGENTS.md');
+      if (!fs.existsSync(agentsPath)) {
+        const agentsContent = `# AGENTS.md — ${projectName}
+
+## Role Boundaries
+- Plan → Delegate → Review
+- Do not implement inline when a story can be dispatched
+
+## Key Constraints
+- Follow IPC error handling standard (handleIpc + useIpcError + unwrapIpc)
+- No secrets in committed files
+- Run tsc --noEmit before marking story complete
+
+## Stories
+Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/completed/\`.
+`;
+        fs.writeFileSync(agentsPath, agentsContent);
+      }
+
+      log.info(`[ScaffoldRunner] Harness scaffold complete for ${projectName} at ${repoPath}`);
+    } catch (err: any) {
+      log.error(`[ScaffoldRunner] scaffoldHarness failed: ${err.message}`);
+    }
+  }
+
   public async run(payload: GenesisPayload, _synthesisResult: SynthesisResult): Promise<void> {
     const { repoPath, projectName, isNewRepo } = payload;
     

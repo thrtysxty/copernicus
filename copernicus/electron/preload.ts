@@ -120,7 +120,7 @@ const SEND_CHANNELS = new Set([
   // Project Billing (Story 211)
   'project:save-billing', 'project:get-billing',
   // Splash / wizard
-  'genesis:run',
+  'genesis:run', 'genesis:scaffold-harness', 'genesis:check-harness',
   'splash-ready', 'check-cli-tools', 'select-folder',
   'save-preferences', 'restart-app', 'app:quit',
   // App Control
