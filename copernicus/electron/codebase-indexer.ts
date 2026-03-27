@@ -1,6 +1,5 @@
 import fs from 'fs'
 import path from 'path'
-import { app } from 'electron'
 import { stateLedger } from './db/state-ledger'
 import { authManager } from './auth-manager'
 import { SettingsStore } from './settings-store'
@@ -9,6 +8,7 @@ import log from './utils/logger'
 import { lspManager } from './lsp/lsp-manager'
 import * as chokidar from 'chokidar'
 import { normalizeEmbedding } from './llm/alignment'
+import * as sqliteVec from 'sqlite-vec'
 
 const settingsStore = new SettingsStore()
 
@@ -25,13 +25,17 @@ export class CodebaseIndexer {
   private totalFiles = 0
   private activeProvider = 'none'
   private watcher?: chokidar.FSWatcher
+  private isVectorEnabled = false
 
   constructor() {
     try {
       this.loadVectorExtension()
-      this.initSchema()
+      if (this.isVectorEnabled) {
+        this.initSchema()
+      }
     } catch (err) {
       log.error('[CodebaseIndexer] Failed to initialize:', err)
+      this.isVectorEnabled = false
     }
   }
 
@@ -43,16 +47,19 @@ export class CodebaseIndexer {
   }
 
   private loadVectorExtension() {
-    const os = process.platform === 'darwin' ? 'darwin' : process.platform === 'win32' ? 'windows' : 'linux'
-    const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64'
-    const pkgName = `sqlite-vec-${os}-${arch}`
-    const dir = app.isPackaged
-      ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', pkgName)
-      : path.dirname(require.resolve(`${pkgName}/package.json`))
-    stateLedger.db.loadExtension(path.join(dir, 'vec0'))
+    try {
+      sqliteVec.load(stateLedger.db)
+      this.isVectorEnabled = true
+      log.info('[CodebaseIndexer] sqlite-vec loaded successfully.')
+    } catch (err) {
+      log.warn('[CodebaseIndexer] Failed to load sqlite-vec extension. Degrading to walk-based indexer without vector support:', err)
+      this.isVectorEnabled = false
+    }
   }
 
   private initSchema() {
+    if (!this.isVectorEnabled) return
+
     stateLedger.db.exec(`
       CREATE VIRTUAL TABLE IF NOT EXISTS codebase_vec USING vec0(
         chunk_id TEXT PRIMARY KEY,
@@ -178,36 +185,38 @@ export class CodebaseIndexer {
         }
       }
 
-      const insertStmt = stateLedger.db.prepare(`
-        INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, symbol_uid, lsp_metadata, chunk_index, content, embedding)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `)
+      if (this.isVectorEnabled) {
+        const insertStmt = stateLedger.db.prepare(`
+          INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, symbol_uid, lsp_metadata, chunk_index, content, embedding)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
 
-      stateLedger.db.transaction(() => {
-        stateLedger.db.prepare('DELETE FROM codebase_vec WHERE file_path = ?').run(filePath)
-      })()
+        stateLedger.db.transaction(() => {
+          stateLedger.db.prepare('DELETE FROM codebase_vec WHERE file_path = ?').run(filePath)
+        })()
 
-      for (const chunk of chunks) {
-        try {
-          const { embedding, provider } = await this.getEmbedding(chunk.content)
-          this.activeProvider = provider
-          const normalized = normalizeEmbedding(embedding)
-          stateLedger.db.transaction(() => {
-            insertStmt.run(
-              chunk.chunk_id,
-              filePath,
-              chunk.line_start,
-              chunk.line_end,
-              chunk.symbols,
-              chunk.symbol_uid,
-              null, // lsp_metadata initially null
-              chunk.chunk_index,
-              chunk.content,
-              new Float32Array(normalized)
-            )
-          })()
-        } catch (e) {
-          log.error(`Failed to generate embedding for chunk ${chunk.chunk_id}:`, e)
+        for (const chunk of chunks) {
+          try {
+            const { embedding, provider } = await this.getEmbedding(chunk.content)
+            this.activeProvider = provider
+            const normalized = normalizeEmbedding(embedding)
+            stateLedger.db.transaction(() => {
+              insertStmt.run(
+                chunk.chunk_id,
+                filePath,
+                chunk.line_start,
+                chunk.line_end,
+                chunk.symbols,
+                chunk.symbol_uid,
+                null, // lsp_metadata initially null
+                chunk.chunk_index,
+                chunk.content,
+                new Float32Array(normalized)
+              )
+            })()
+          } catch (e) {
+            log.error(`Failed to generate embedding for chunk ${chunk.chunk_id}:`, e)
+          }
         }
       }
     } catch (e) {
@@ -294,6 +303,8 @@ export class CodebaseIndexer {
   }
 
   public async searchBySymbol(symbolUid: string): Promise<any[]> {
+    if (!this.isVectorEnabled) return []
+
     const stmt = stateLedger.db.prepare(`
       SELECT chunk_id, file_path, line_start, line_end, symbols, content
       FROM codebase_vec
@@ -307,6 +318,8 @@ export class CodebaseIndexer {
   }
 
   public async search(query: string, topK = 5): Promise<any[]> {
+    if (!this.isVectorEnabled) return []
+
     // AC-4: JIT indexing - if searching for a symbol not yet indexed
     if (query.startsWith('symbol:')) {
       const symbolUid = query.replace('symbol:', '')
