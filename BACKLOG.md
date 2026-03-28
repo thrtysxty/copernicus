@@ -114,6 +114,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #576 | Fix Is Repo Targeted Loop | COMPLETE | N/A |
+| #580 | Wizard Auth Provider Step Redesign | DRAFT | N/A |
+| #581 | Workspace Switch Context Reset | DRAFT | N/A |
+| #582 | Terminal Input Regression | DRAFT | N/A |
+| #583 | Terminal Phantom Tab Prefix | DRAFT | N/A |
+| #584 | Intelligence View Close Button Unresponsive | DRAFT | N/A |
 | #542 | Stitch Sdk Migration | APPROVED FOR IMPLEMENTATION | P2 |
 | #544 | Genesis Rich Scaffold Templates | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #551 | Createstamp Ac Description Fields | APPROVED FOR IMPLEMENTATION | P1 |

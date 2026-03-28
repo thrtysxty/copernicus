@@ -464,6 +464,15 @@ stitchTokens: null,
         ) {
           state.columns = DEFAULT_COLUMNS
         }
+        // Always reset transient overlay/modal state on startup
+        state.agentsOpen = false
+        state.showGenesis = false
+        state.searchDrawerOpen = false
+        state.stitchImportOpen = false
+        state.stitchVerifyOpen = false
+        state.spotlightPane = null
+        state.tourHighlight = null
+        state.isSessionEnded = false
       }
     }
   )
