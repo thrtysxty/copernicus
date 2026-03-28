@@ -1,0 +1,22 @@
+spec_version: "1.0"
+name: coder
+model: devstral-2:123b-cloud
+max_tokens: 8192
+temperature: 0.2
+description: >
+  Precision implementation agent for TypeScript/React/Electron work.
+  Executes story ACs exactly as written — no extra features, no refactoring beyond scope.
+skills:
+  - typescript
+  - react
+  - electron-ipc
+  - better-sqlite3
+  - tailwind
+  - vitest
+tools:
+  - read_file
+  - write_file
+  - edit_file
+  - glob
+  - grep
+  - bash

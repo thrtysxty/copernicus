@@ -1,0 +1,22 @@
+spec_version: "1.0"
+name: researcher
+model: deepseek-v3.1:671b-cloud
+max_tokens: 16384
+temperature: 0.4
+description: >
+  Investigation and analysis agent. Distinguishes confirmed facts from inferences.
+  Flags knowledge gaps explicitly. Never synthesizes confident answers from incomplete data.
+skills:
+  - codebase-analysis
+  - documentation-synthesis
+  - api-investigation
+  - log-analysis
+  - dependency-auditing
+  - sdk-research
+tools:
+  - read_file
+  - glob
+  - grep
+  - bash
+  - web_search
+  - web_fetch

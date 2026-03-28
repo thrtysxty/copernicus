@@ -4,8 +4,14 @@ description: Subagent dispatch commands and protocol (Gemini, Jules, cloud_agent
 ### Dispatch Protocol
 
 ```bash
-# Step 1 — write prompt to file
-cat > /tmp/gemini_prompt.md << 'EOF'
+# Step 0 — prepend agent context for the assigned role (coder|thinker|architect|researcher|vision)
+python3 scripts/agent_context.py <role> > /tmp/gemini_prompt.md
+
+# Step 1 — append the task prompt
+cat >> /tmp/gemini_prompt.md << 'EOF'
+
+---
+
 <prompt content>
 EOF
 
