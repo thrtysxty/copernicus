@@ -429,39 +429,41 @@ app.whenReady().then(async () => {
   const dbPath = path.join(app.getPath('userData'), 'copernicus.db');
   const collectorScript = path.join(__dirname, '../../collector/sqlite_exporter.py');
 
-  if (fs.existsSync(collectorScript)) {
-    log.info('[Main] Spawning OTel collector sidecar...');
-    // We wrap it in a try-catch so that if the process fails to start, we degrade gracefully
-    try {
-      collectorProcess = spawn('python3', [collectorScript], {
-        env: { ...process.env, COPERNICUS_DB_PATH: dbPath },
-        stdio: 'ignore'
-      });
+  if (settingsStore.getAll().enableOtelCollector) {
+    if (fs.existsSync(collectorScript)) {
+      log.info('[Main] Spawning OTel collector sidecar...');
+      // We wrap it in a try-catch so that if the process fails to start, we degrade gracefully
+      try {
+        collectorProcess = spawn('python3', [collectorScript], {
+          env: { ...process.env, COPERNICUS_DB_PATH: dbPath },
+          stdio: 'ignore'
+        });
 
-      log.info(`[Main] OTel collector spawned with PID: ${collectorProcess.pid}`);
-      updateClaudeTelemetrySettings(true);
+        log.info(`[Main] OTel collector spawned with PID: ${collectorProcess.pid}`);
+        updateClaudeTelemetrySettings(true);
 
-      collectorProcess.on('error', (err) => {
-        log.warn(`[Main] Failed to start OTel collector: ${err.message}`);
+        collectorProcess.on('error', (err) => {
+          log.warn(`[Main] Failed to start OTel collector: ${err.message}`);
+          updateClaudeTelemetrySettings(false);
+        });
+
+        collectorProcess.on('exit', (code) => {
+          if (code !== 0 && code !== null) {
+            log.warn(`[Main] OTel collector exited with non-zero code: ${code}`);
+          } else {
+            log.info(`[Main] OTel collector exited gracefully`);
+          }
+          collectorProcess = null;
+          updateClaudeTelemetrySettings(false);
+        });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log.warn(`[Main] Failed to spawn OTel collector: ${msg}`);
         updateClaudeTelemetrySettings(false);
-      });
-
-      collectorProcess.on('exit', (code) => {
-        if (code !== 0 && code !== null) {
-          log.warn(`[Main] OTel collector exited with non-zero code: ${code}`);
-        } else {
-          log.info(`[Main] OTel collector exited gracefully`);
-        }
-        collectorProcess = null;
-        updateClaudeTelemetrySettings(false);
-      });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      log.warn(`[Main] Failed to spawn OTel collector: ${msg}`);
-      updateClaudeTelemetrySettings(false);
+      }
+    } else {
+      log.warn('[Main] OTel collector script not found at:', collectorScript);
     }
-  } else {
-    log.warn('[Main] OTel collector script not found at:', collectorScript);
   }
 
   try {

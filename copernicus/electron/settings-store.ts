@@ -12,6 +12,7 @@ export interface Settings {
     servers: any[];
   };
   touchBar?: any;
+  enableOtelCollector?: boolean;
   [key: string]: unknown;
 }
 
