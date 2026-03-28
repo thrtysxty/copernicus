@@ -208,6 +208,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const setDrawerStory = useLayoutStore(s => s.setDrawerStory)
   const setSpotlight = useLayoutStore(s => s.setSpotlight)
   const setActiveRetroId = useLayoutStore(s => s.setActiveRetroId)
+  const activeRetroId = useLayoutStore(s => s.activeRetroId)
 
   const [showEpics, setShowEpics] = useState(false)
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
@@ -499,10 +500,10 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
       {/* Main Board Area */}
       <div className="flex-1 flex overflow-x-auto gap-3 p-3 select-none scrollbar-thin scrollbar-thumb-copernicus-steel">
-        {useLayoutStore(s => s.activeRetroId) && (
-          <RetroReviewPanel 
-            retroId={useLayoutStore(s => s.activeRetroId)!} 
-            onClose={() => setActiveRetroId(null)} 
+        {activeRetroId && (
+          <RetroReviewPanel
+            retroId={activeRetroId}
+            onClose={() => setActiveRetroId(null)}
           />
         )}
         {(columns || []).map(col => {

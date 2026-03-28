@@ -179,6 +179,19 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: false },
   })
   if (isDebug) { win.webContents.openDevTools(); log.transports.file.level = 'debug'; }
+
+  // Pair-test: forward renderer console to main-process log
+  const CONSOLE_LEVELS = ['LOG', 'INFO', 'WARN', 'ERROR'];
+  win.webContents.on('console-message', (_e, level, message, line, sourceId) => {
+    const tag = CONSOLE_LEVELS[level] ?? 'LOG';
+    const src = sourceId ? ` (${sourceId}:${line})` : '';
+    if (level >= 2) {
+      log.warn(`[renderer:${tag}]${src} ${message}`);
+    } else {
+      log.info(`[renderer:${tag}]${src} ${message}`);
+    }
+  });
+
   storiesManager.setWindow(win); julesMonitor.setWindow(win); lspManager.setWindow(win); 
   if (process.platform === 'darwin') {
     const tbConfig = { ...DEFAULT_TOUCH_BAR_CONFIG, ...(settingsStore.getAll()?.touchBar as any ?? {}) }

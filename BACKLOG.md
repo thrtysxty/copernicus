@@ -103,6 +103,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
+| #576 | Fix Is Repo Targeted Loop | APPROVED FOR IMPLEMENTATION | N/A |
+| #577 | Wizard Workspace Validation | APPROVED FOR IMPLEMENTATION | N/A |
+| #578 | Wizard Handoff Workingdir Race | APPROVED FOR IMPLEMENTATION | N/A |
+| #579 | Project Selector Dialog Fixes | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -112,7 +116,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #542 | Stitch Sdk Migration | APPROVED FOR IMPLEMENTATION | P2 |
 | #544 | Genesis Rich Scaffold Templates | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #546 | Otel Collector Startup Crash | APPROVED FOR IMPLEMENTATION | P2 |
 | #551 | Createstamp Ac Description Fields | APPROVED FOR IMPLEMENTATION | P1 |
 | #562 | Jules Sdk Client Migration | APPROVED FOR IMPLEMENTATION | P2 |
 | #570 | Story Inspector Chat Scoping | APPROVED FOR IMPLEMENTATION | P2 |
@@ -434,6 +437,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #540 | Github Pat 401 Wizard And Startup | COMPLETE | P1 — Onboarding |
 | #541 | Lsp Server Packaging | COMPLETE | P2 — Developer Experience |
 | #545 | Docker Poller Enoent Flood | COMPLETE | P1 |
+| #546 | Otel Collector Startup Crash | COMPLETE | P2 |
 | #547 | Wizard Empty Project Path | COMPLETE | P1 |
 | #548 | Kanban Repo Targeted Flash | COMPLETE | P3 |
 | #549 | Splash Before Wizard First Launch | COMPLETE | P1 |
