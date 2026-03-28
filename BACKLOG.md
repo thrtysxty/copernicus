@@ -108,6 +108,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #581 | Workspace Switch Context Reset | APPROVED FOR IMPLEMENTATION | N/A |
 | #582 | Terminal Input Regression | APPROVED FOR IMPLEMENTATION | N/A |
 | #583 | Terminal Phantom Tab Prefix | APPROVED FOR IMPLEMENTATION | N/A |
+| #585 | Chat Send Lsp Preflight Blocks | APPROVED FOR IMPLEMENTATION | N/A |
+| #587 | Templates Section Ux And Content | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
