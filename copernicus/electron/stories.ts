@@ -277,8 +277,8 @@ export class StoriesManager {
     }
   }
 
-  createStory({ title, type = 'Feature', epic = '(none)', priority = 'P2' }: {
-    title: string; type?: string; epic?: string; priority?: string
+  createStory({ title, type = 'Feature', epic = '(none)', priority = 'P2', ac, description }: {
+    title: string; type?: string; epic?: string; priority?: string; ac?: string; description?: string
   }): string {
     if (!this.storiesPath) throw new Error('No story storage path targeted.')
     if (!fs.existsSync(this.storiesPath)) {
@@ -311,9 +311,9 @@ export class StoriesManager {
 
 ## Problem
 ${title}
-
+${description ? `\n## Description\n${description}\n` : ''}
 ## Acceptance Criteria
-- [ ] Implement ${title}
+${ac ? ac : `- [ ] Implement ${title}`}
 
 ## Blocks
 - None

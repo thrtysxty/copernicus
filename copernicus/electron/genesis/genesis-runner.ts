@@ -88,8 +88,8 @@ Produce 3-5 stories. Stories should be the minimum viable first sprint.`;
       const epicId = this.storiesManager.createStory({
         title: synthesisResult.epic.title,
         type: 'Epic',
-        priority: 'P1'
-        // description is not an option in createStory currently
+        priority: 'P1',
+        description: synthesisResult.epic.description
       });
 
       const storyIds: string[] = [];
@@ -98,8 +98,8 @@ Produce 3-5 stories. Stories should be the minimum viable first sprint.`;
           title: s.title,
           type: 'Feature',
           priority: s.priority,
-          epic: synthesisResult.epic.title
-          // ac is not an option in createStory currently
+          epic: synthesisResult.epic.title,
+          ac: s.ac
         });
         if (storyId) storyIds.push(storyId);
       }
