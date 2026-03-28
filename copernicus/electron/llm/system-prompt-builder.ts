@@ -1,3 +1,6 @@
+import log from 'electron-log'
+import { stateLedger } from '../db/state-ledger';
+
 export interface SystemPromptContext {
   projectName?: string;      // from SettingsStore
   bankId?: string;           // chat | chat:<panelId> | workflow:node:<id>
@@ -44,6 +47,23 @@ export class SystemPromptBuilder {
       let task = '## Current Task\n';
       task += ctx.taskDescription;
       sections.push(task.trim());
+    }
+
+    // Story Context
+    if (ctx.bankId && ctx.bankId.startsWith('story:')) {
+      const storyId = ctx.bankId.replace('story:', '');
+      try {
+        const story = stateLedger.getStoryById(storyId);
+        if (story) {
+          let storyCtx = '## Story Context\n';
+          storyCtx += `You are currently scoped to the following story (${story.id}):\n\n`;
+          storyCtx += `Title: ${story.title}\n\n`;
+          storyCtx += `Content:\n${story.body_md}\n`;
+          sections.push(storyCtx.trim());
+        }
+      } catch (err) {
+        log.error('[SystemPromptBuilder] Failed to get story context:', err);
+      }
     }
 
     return sections.join('\n\n');

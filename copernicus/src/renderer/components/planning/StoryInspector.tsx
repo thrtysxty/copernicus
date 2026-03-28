@@ -511,7 +511,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
 
       {/* ── Column 3: Chat ──────────────────────────────────────── */}
       <div className="border-l border-white/5 flex flex-col overflow-hidden min-w-0">
-        <ChatPanel />
+        <ChatPanel panelId={`story:${storyId}`} />
       </div>
     </motion.div>
   )

@@ -110,11 +110,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #539 | Sqlite Vec Extension Load Failure | APPROVED FOR IMPLEMENTATION | P1 — Stability |
 | #542 | Stitch Sdk Migration | APPROVED FOR IMPLEMENTATION | P2 |
 | #544 | Genesis Rich Scaffold Templates | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #546 | Otel Collector Startup Crash | APPROVED FOR IMPLEMENTATION | P2 |
 | #548 | Kanban Repo Targeted Flash | APPROVED FOR IMPLEMENTATION | P3 |
 | #551 | Createstamp Ac Description Fields | APPROVED FOR IMPLEMENTATION | P1 |
+| #561 | Wizard Embedded Cli Terminal | APPROVED FOR IMPLEMENTATION | P3 |
 | #562 | Jules Sdk Client Migration | APPROVED FOR IMPLEMENTATION | P2 |
 | #570 | Story Inspector Chat Scoping | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -467,7 +469,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
+| #540 | Github Pat 401 Wizard And Startup | DRAFT | P1 — Onboarding |
+| #541 | Lsp Server Packaging | DRAFT | P2 — Developer Experience |
 | #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
+| #545 | Docker Poller Enoent Flood | DRAFT | P1 |
+| #547 | Wizard Empty Project Path | DRAFT | P1 |
 | #563 | Stitch Setup Doc Sdk Update | DRAFT | P2 |
 | #564 | Jules Streaming Monitor | DRAFT | P2 |
 | #565 | Kb Activity Bar View Scaffold | DRAFT | P1 |

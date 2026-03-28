@@ -60,7 +60,7 @@ export interface PickerResult {
   payload: string
 }
 
-export function useChatPanel(openFilePath: string | null | undefined, rootPath: string | undefined) {
+export function useChatPanel(openFilePath: string | null | undefined, rootPath: string | undefined, panelId: string = 'chat') {
   const invoke = useIpcError()
   const { data: modelsIpcResult } = useIpcCache('models:list', [], 30000)
   const [messages, setMessages] = useState<Message[]>([])
@@ -82,6 +82,42 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [pendingImage, setPendingImage] = useState<PendingImage | null>(null)
   
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
+
+  const messagesRef = useRef(messages)
+  messagesRef.current = messages
+
+  const modelInnerRef = useRef(modelInner)
+  modelInnerRef.current = modelInner
+
+  const availableModelsRef = useRef(availableModels)
+  availableModelsRef.current = availableModels
+
+  useEffect(() => {
+    invoke<any>('snapshot:restore', panelId).then(result => {
+      const snap = unwrapIpc<any>(result)
+      if (snap && snap.messages) {
+        setMessages(snap.messages)
+        if (snap.model_id) {
+          setModelInner(snap.model_id)
+        }
+      } else {
+        setMessages([])
+      }
+    }).catch(() => setMessages([]))
+
+    return () => {
+      const currentMessages = messagesRef.current.filter(msg => msg.role !== 'copernicus')
+      if (currentMessages.length > 0) {
+        invoke('snapshot:save', {
+          panel_id: panelId,
+          model_id: modelInnerRef.current,
+          provider: availableModelsRef.current.find(m => m.id === modelInnerRef.current)?.provider ?? 'anthropic',
+          messages: currentMessages
+        }).catch(() => {})
+      }
+    }
+  }, [panelId, invoke])
+
   const toggleFlip = useLayoutStore(s => s.toggleFlip)
   const centerMode = useLayoutStore(s => s.centerMode)
   const uiComponents = useUIBuilderStore(useShallow(s => s.uiComponents))
@@ -327,6 +363,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     invoke('chat:send', { 
       sessionId, 
       systemPrompt,
+      bankId: panelId,
       messages: [
         ...messages.filter(m => m.role !== 'copernicus').map(m => ({ 
           role: m.role, 

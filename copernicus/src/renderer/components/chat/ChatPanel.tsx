@@ -10,10 +10,11 @@ import { ErrorBoundary } from '../layout/ErrorBoundary'
 interface ChatPanelProps {
   openFilePath?: string | null
   rootPath?: string
+  panelId?: string
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootPath = '' }) => {
-  const chat = useChatPanel(openFilePath, rootPath)
+export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootPath = '', panelId = 'chat' }) => {
+  const chat = useChatPanel(openFilePath, rootPath, panelId)
 
   return (
     <FlippablePanel
