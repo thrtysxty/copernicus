@@ -133,6 +133,7 @@ export class PTYManager {
 
   // Resolves AC 3: Async write with GitGuard check
   async write(id: string, data: string): Promise<void> {
+    log.info('[PTY] write called:', { id });
     const session = this.sessions.get(id);
     if (!session) {
       log.warn(`Write failed: Terminal ${id} not found.`);

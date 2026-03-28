@@ -4,6 +4,7 @@ import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 import { useLayoutStore } from '../../store/layout';
 import { useIpcError } from '../../hooks/useIpcError';
+import log from '../../utils/logger';
 
 const ipcRenderer = window.ipcRenderer;
 
@@ -83,6 +84,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
       // Register input handler after open — ensures all keystrokes are captured
       term.onData((data) => {
+        log.info('[Terminal] onData fired:', { id, len: data.length });
         invoke('terminal:input', { id, data }).catch(() => {});
       });
     };

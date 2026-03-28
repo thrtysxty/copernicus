@@ -139,7 +139,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
         {terminals.map((tab) => (
           <div
             key={tab.id}
-            className={`absolute inset-0 ${activeTerminalId === tab.id ? 'z-10 visible' : 'z-0 invisible'}`}
+            className={`absolute inset-0 ${activeTerminalId === tab.id ? 'z-10 visible' : 'z-0 invisible pointer-events-none'}`}
           >
             <Terminal id={tab.id} active={activeTerminalId === tab.id} cwd={cwd} />
           </div>
