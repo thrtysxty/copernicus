@@ -191,7 +191,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const invoke = useIpcError()
   const { data: storiesIpcResult, invalidate: invalidateStories } = useIpcCache('stories:list', [], 3000)
   const [stories, setStories] = useState<Story[]>([])
-  const [isRepoTargeted, setIsRepoTargeted] = useState(false)
+  const [isRepoTargeted, setIsRepoTargeted] = useState<boolean | null>(null)
 
   // Selective subscriptions
   const activeStoryId = useLayoutStore(s => s.activeStoryId)
@@ -478,7 +478,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       )}
 
       {/* Target Repo Warning Overlay */}
-      {!isRepoTargeted && (
+      {isRepoTargeted === false && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-8">
           <div className="bg-zinc-900 border border-red-500/30 p-6 rounded shadow-2xl max-w-sm text-center space-y-4">
             <Lock className="mx-auto text-red-500" size={32} />
