@@ -84,4 +84,24 @@ describe('StoriesManager', () => {
     expect(writtenContent).not.toContain('## Description');
     expect(writtenContent).toContain('## Acceptance Criteria\n- [ ] Implement Test Story Default');
   });
+
+  it('targetProject creates docs/stories dir if it does not exist', () => {
+    // Override existSync to simulate directory not existing
+    (fs.existsSync as any).mockImplementation((_p: string) => false);
+
+    manager.targetProject('/new/project');
+
+    expect(fs.mkdirSync).toHaveBeenCalledWith(
+      expect.stringContaining('docs/stories'),
+      { recursive: true }
+    );
+  });
+
+  it('isRepoTargeted returns true when storiesPath is set even if dir missing on disk', () => {
+    (fs.existsSync as any).mockImplementation((_p: string) => false);
+    manager.targetProject('/new/project');
+
+    // isRepoTargeted should return true because storiesPath is targeted
+    expect(manager.isRepoTargeted()).toBe(true);
+  });
 });

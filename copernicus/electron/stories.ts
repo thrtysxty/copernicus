@@ -61,12 +61,11 @@ export class StoriesManager {
     }
 
     let imported = 0
-    if (fs.existsSync(this.storiesPath)) {
-      this.watch()
-      imported = this.syncFromDisk()
-    } else {
-      log.warn(`Stories path not found in project: ${this.storiesPath}`)
+    if (!fs.existsSync(this.storiesPath)) {
+      fs.mkdirSync(this.storiesPath, { recursive: true })
     }
+    this.watch()
+    imported = this.syncFromDisk()
     this.broadcastUpdate()
     return imported
   }
@@ -351,7 +350,7 @@ ${ac ? ac : `- [ ] Implement ${title}`}
   }
 
   isRepoTargeted(): boolean {
-    return this.storiesPath !== '' && fs.existsSync(this.storiesPath);
+    return this.storiesPath !== '';
   }
 
   updateStoryContent(id: string, content: string) {
