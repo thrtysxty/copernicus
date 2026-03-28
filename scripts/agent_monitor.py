@@ -213,6 +213,20 @@ GH_ENV = {k: v for k, v in os.environ.items() if k != "GITHUB_TOKEN"}
 GH_ENV.update({"HOME": str(Path.home()), "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"})
 
 
+def get_pr_state(pr_number: int) -> str:
+    """Return 'OPEN', 'CLOSED', or 'MERGED'. Returns 'OPEN' on error to avoid false skips."""
+    try:
+        result = subprocess.run(
+            [GH, "pr", "view", str(pr_number), "--repo", GITHUB_REPO, "--json", "state"],
+            capture_output=True, text=True, timeout=15, env=GH_ENV
+        )
+        if result.returncode == 0:
+            return json.loads(result.stdout).get("state", "OPEN").upper()
+    except Exception:
+        pass
+    return "OPEN"
+
+
 def merge_pr(pr_number: int) -> tuple[bool, str]:
     # AUTO_CREATE_PR still creates drafts — mark ready first
     subprocess.run(
@@ -612,7 +626,15 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                 if row["review_state"] is None or row["review_state"] == "FAILED":
                     do_review = True
                 elif row["review_state"] in ("BLOCKED", "REQUEST_CHANGES"):
-                    if row["reviewed"]:
+                    pr_state = get_pr_state(pr_number)
+                    if pr_state in ("CLOSED", "MERGED"):
+                        log.info(f"  PR #{pr_number} is {pr_state} on GitHub — marking finished, skipping re-review.")
+                        conn.execute(
+                            "UPDATE jules_sessions SET merged=? WHERE session_id=?",
+                            (pr_state, session_id)
+                        )
+                        conn.commit()
+                    elif row["reviewed"]:
                         last_reviewed_dt = datetime.fromisoformat(row["reviewed"].replace("Z", "+00:00"))
                         time_since_review = (datetime.now(timezone.utc) - last_reviewed_dt).total_seconds()
                         if time_since_review > RETRY_REVIEW_AFTER:

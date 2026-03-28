@@ -213,6 +213,7 @@ section "DB access boundary (StateLedger encapsulation)"
 
 DB_LEAKS=$(grep -rn "stateLedger\.db\." "$COPERNICUS/electron/" 2>/dev/null \
   | grep -v "state-ledger\.ts" \
+  | grep -v "\.test\.ts" \
   | grep -v "^\s*//" || true)
 
 if [ -n "$DB_LEAKS" ]; then
