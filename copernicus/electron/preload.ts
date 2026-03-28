@@ -13,7 +13,7 @@ const SEND_CHANNELS = new Set([
   // LLM Chat
   'chat:send', 'chat:confirm-model-switch', 'chat:compress-delta', 'chat:done-extraction',
   // File System
-  'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
+  'fs:path-has-git', 'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
   // Skills
   'skills:detect-stack', 'skills:audit', 'skills:scaffold',
   'fs:create-file', 'fs:create-dir', 'fs:rename', 'fs:trash', 'fs:reveal',

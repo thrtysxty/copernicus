@@ -27,26 +27,59 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [workspaceRoot, setWorkspaceRoot] = useState<string>(PROJECTS_ROOT)
+  const [usingFallback, setUsingFallback] = useState<boolean>(false)
+  const [isSettingsLoaded, setIsSettingsLoaded] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (open) {
+      setIsSettingsLoaded(false)
+      invoke<any>('settings:load')
+        .then(result => {
+          if (!result.ok) { setWorkspaceRoot(PROJECTS_ROOT); setUsingFallback(true); return; }
+          const settings = unwrapIpc<any>(result)
+          if (settings?.workspace) {
+            setWorkspaceRoot(settings.workspace)
+            setUsingFallback(false)
+          } else {
+            setWorkspaceRoot(PROJECTS_ROOT)
+            setUsingFallback(true)
+          }
+        })
+        .catch(() => {
+          setWorkspaceRoot(PROJECTS_ROOT)
+          setUsingFallback(true)
+        })
+        .finally(() => {
+          setIsSettingsLoaded(true)
+        })
+    }
+  }, [open, invoke])
+
   const loadDirs = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const result = await invoke<any>('fs:list-dir', PROJECTS_ROOT)
+      const result = await invoke<any>('fs:list-dir', workspaceRoot)
       const entries: FileNode[] = unwrapIpc<any>(result) ?? []
-      setDirs(entries.filter(e => e.isDir))
+      setDirs(
+        entries.filter(
+          e => e.isDir && !e.name.startsWith('.') && e.name !== 'node_modules'
+        )
+      )
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
       setError(message)
     } finally {
       setLoading(false)
     }
-  }, [invoke])
+  }, [invoke, workspaceRoot])
 
   useEffect(() => {
-    if (open && tab === 'workspace') {
+    if (open && tab === 'workspace' && isSettingsLoaded) {
       loadDirs()
     }
-  }, [open, tab, loadDirs])
+  }, [open, tab, loadDirs, workspaceRoot, isSettingsLoaded])
 
   const selectDir = async (dirPath: string) => {
     setError(null)
@@ -117,9 +150,14 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
                   <Loader2 size={16} className="animate-spin text-copernicus-phosphor" />
                 </div>
               )}
+              {usingFallback && (
+                <div className="px-4 py-2 bg-yellow-500/10 text-yellow-500 text-[10px] font-mono border-b border-yellow-500/20">
+                  No workspace configured in settings. Using fallback ~/Projects.
+                </div>
+              )}
               {!loading && dirs.length === 0 && !error && (
                 <div className="py-8 text-center text-zinc-600 text-[11px] font-mono">
-                  No directories found in ~/Projects
+                  No directories found in {workspaceRoot}
                 </div>
               )}
               {!loading && dirs.map(d => (

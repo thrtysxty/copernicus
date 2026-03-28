@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import log from 'electron-log/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
          ShieldCheck, Key, Zap, Github, Layout, Sparkles, Loader2 } from 'lucide-react';
@@ -87,8 +88,17 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   useEffect(() => {
     // 1. Check Preferences (Workspace)
     invoke<any>('settings:load').then((prefs) => {
+      if (!prefs.ok) return;
       const p = unwrapIpc<any>(prefs);
-      if (p?.workspace) setWorkspacePath(p.workspace);
+      if (p?.workspace) {
+        invoke<any>('fs:path-has-git', p.workspace).then(res => {
+          if (!res.ok) return;
+          const isGitRepo = unwrapIpc<boolean>(res);
+          if (!isGitRepo) {
+            setWorkspacePath(p.workspace);
+          }
+        }).catch(() => {});
+      }
       if (p?.capex?.rate) setHourlyRate(String(p.capex.rate));
     });
 
@@ -180,7 +190,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
         setWizardMode('existing');
       }
     } catch (error: unknown) {
-      console.error('Folder selection failed:', error);
+      log.error('Folder selection failed:', error);
     }
   };
 
@@ -272,8 +282,22 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const handleSelectFolder = async () => {
     try {
       const result = await invoke<any>('select-folder');
+      if (!result.ok) {
+        if (result.error) log.error('Folder selection failed:', result.error);
+        return;
+      }
       const selectedPath = unwrapIpc<string | null>(result);
       if (selectedPath) {
+        // Step 2 Validation: Check server-side if selected path is itself a git repo
+        const gitRes = await invoke<any>('fs:path-has-git', selectedPath);
+        if (gitRes.ok && unwrapIpc<boolean>(gitRes)) {
+          setError('This directory is a git repository. COPERNICUS needs the parent folder that contains your projects, not the project itself.');
+          setWorkspacePath('');
+          setSelectedProject('');
+          setWizardMode(null);
+          return;
+        }
+
         setWorkspacePath(selectedPath);
         setError(null);
         await invoke('app:set-root-path', selectedPath);

@@ -94,6 +94,10 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return canceled ? null : filePaths[0];
   }));
 
+  ipcMain.handle('fs:path-has-git', (_e, dirPath: string) => handleIpc('fs:path-has-git', [dirPath], () => {
+    return fs.existsSync(path.join(dirPath, '.git'));
+  }));
+
   ipcMain.handle('fs:make-dir', (_e, dirPath: string) => handleIpc('fs:make-dir', [dirPath], async () => {
     assertSafePath(dirPath);
     await fs.promises.mkdir(dirPath, { recursive: true })
