@@ -111,7 +111,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #542 | Stitch Sdk Migration | APPROVED FOR IMPLEMENTATION | P2 |
+| #544 | Genesis Rich Scaffold Templates | APPROVED FOR IMPLEMENTATION | P2 — Feature |
+| #546 | Otel Collector Startup Crash | APPROVED FOR IMPLEMENTATION | P2 |
+| #548 | Kanban Repo Targeted Flash | APPROVED FOR IMPLEMENTATION | P3 |
+| #551 | Createstamp Ac Description Fields | APPROVED FOR IMPLEMENTATION | P1 |
 | #562 | Jules Sdk Client Migration | APPROVED FOR IMPLEMENTATION | P2 |
+| #570 | Story Inspector Chat Scoping | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -463,10 +468,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
-| #544 | Genesis Rich Scaffold Templates | DRAFT | P2 — Feature |
-| #546 | Otel Collector Startup Crash | DRAFT | P2 |
-| #548 | Kanban Repo Targeted Flash | DRAFT | P3 |
-| #551 | Createstamp Ac Description Fields | DRAFT | P1 |
 | #563 | Stitch Setup Doc Sdk Update | DRAFT | P2 |
 | #564 | Jules Streaming Monitor | DRAFT | P2 |
 | #565 | Kb Activity Bar View Scaffold | DRAFT | P1 |
@@ -474,7 +475,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #567 | Kb Browse Article View | DRAFT | P1 |
 | #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
 | #569 | Kb Local Voting | DRAFT | P3 |
-| #570 | Story Inspector Chat Scoping | DRAFT | P2 |
 | #571 | Repo Hygiene Ghost Script Cleanup | DRAFT | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
