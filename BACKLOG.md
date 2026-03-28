@@ -103,12 +103,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
-| #563 | Stitch Setup Doc Sdk Update | APPROVED FOR IMPLEMENTATION | N/A |
-| #581 | Workspace Switch Context Reset | APPROVED FOR IMPLEMENTATION | N/A |
-| #582 | Terminal Input Regression | APPROVED FOR IMPLEMENTATION | N/A |
-| #585 | Chat Send Lsp Preflight Blocks | APPROVED FOR IMPLEMENTATION | N/A |
-| #587 | Templates Section Ux And Content | APPROVED FOR IMPLEMENTATION | N/A |
-| #593 | Core Agent Library | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -123,11 +117,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #578 | Wizard Handoff Workingdir Race | COMPLETE | N/A |
 | #579 | Project Selector Dialog Fixes | COMPLETE | N/A |
 | #581 | Workspace Switch Context Reset | COMPLETE | N/A |
+| #582 | Terminal Input Regression | COMPLETE | N/A |
 | #583 | Terminal Phantom Tab Prefix | COMPLETE | N/A |
 | #584 | Intelligence View Close Button Unresponsive | COMPLETE | N/A |
 | #585 | Chat Send Lsp Preflight Blocks | COMPLETE | N/A |
 | #586 | Skills Section Ipc Violation | COMPLETE | N/A |
 | #587 | Templates Section Ux And Content | COMPLETE | N/A |
+| #593 | Core Agent Library | COMPLETE | N/A |
 | #580 | Wizard Auth Provider Step Redesign | DRAFT | N/A |
 | #588 | Unify Provider Auth Surface | DRAFT | N/A |
 | #589 | Notebooklm Webview Embed | DRAFT | N/A |
