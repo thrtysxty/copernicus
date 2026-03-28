@@ -65,6 +65,7 @@ const SEND_CHANNELS = new Set([
   // MCP
   'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server', 'mcp:get-status',
   'stitch:ping', 'stitch:extract-design', 'stitch:screenshot', 'stitch:design-dna', 'stitch:verify-ui',
+  'stitch:generate', 'stitch:edit', 'stitch:variants', 'stitch:list-screens',
   'notebooklm:status', 'notebooklm:list-notebooks', 'notebooklm:setup',
 
   'git:status', 'git:stage', 'git:unstage', 'git:commit', 'git:branches', 'git:checkout', 'git:new-branch', 'git:diff-file', 'github:list-prs',
