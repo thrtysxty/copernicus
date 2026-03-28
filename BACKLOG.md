@@ -103,9 +103,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
-| #577 | Wizard Workspace Validation | APPROVED FOR IMPLEMENTATION | N/A |
+| #563 | Stitch Setup Doc Sdk Update | APPROVED FOR IMPLEMENTATION | N/A |
+| #564 | Jules Streaming Monitor | APPROVED FOR IMPLEMENTATION | N/A |
 | #578 | Wizard Handoff Workingdir Race | APPROVED FOR IMPLEMENTATION | N/A |
 | #579 | Project Selector Dialog Fixes | APPROVED FOR IMPLEMENTATION | N/A |
+| #581 | Workspace Switch Context Reset | APPROVED FOR IMPLEMENTATION | N/A |
+| #582 | Terminal Input Regression | APPROVED FOR IMPLEMENTATION | N/A |
+| #583 | Terminal Phantom Tab Prefix | APPROVED FOR IMPLEMENTATION | N/A |
+| #585 | Chat Send Lsp Preflight Blocks | APPROVED FOR IMPLEMENTATION | N/A |
+| #587 | Templates Section Ux And Content | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -114,18 +120,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
 | #576 | Fix Is Repo Targeted Loop | COMPLETE | N/A |
+| #577 | Wizard Workspace Validation | COMPLETE | N/A |
+| #584 | Intelligence View Close Button Unresponsive | COMPLETE | N/A |
+| #586 | Skills Section Ipc Violation | COMPLETE | N/A |
 | #580 | Wizard Auth Provider Step Redesign | DRAFT | N/A |
-| #581 | Workspace Switch Context Reset | DRAFT | N/A |
-| #582 | Terminal Input Regression | DRAFT | N/A |
-| #583 | Terminal Phantom Tab Prefix | DRAFT | N/A |
-| #584 | Intelligence View Close Button Unresponsive | DRAFT | N/A |
-| #585 | Chat Send Lsp Preflight Blocks | DRAFT | N/A |
-| #586 | Skills Section Ipc Violation | DRAFT | N/A |
-| #542 | Stitch Sdk Migration | APPROVED FOR IMPLEMENTATION | P2 |
-| #544 | Genesis Rich Scaffold Templates | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #551 | Createstamp Ac Description Fields | APPROVED FOR IMPLEMENTATION | P1 |
-| #562 | Jules Sdk Client Migration | APPROVED FOR IMPLEMENTATION | P2 |
-| #570 | Story Inspector Chat Scoping | APPROVED FOR IMPLEMENTATION | P2 |
+| #588 | Unify Provider Auth Surface | DRAFT | N/A |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -443,12 +442,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #539 | Sqlite Vec Extension Load Failure | COMPLETE | P1 — Stability |
 | #540 | Github Pat 401 Wizard And Startup | COMPLETE | P1 — Onboarding |
 | #541 | Lsp Server Packaging | COMPLETE | P2 — Developer Experience |
+| #542 | Stitch Sdk Migration | COMPLETE | P2 |
+| #544 | Genesis Rich Scaffold Templates | COMPLETE | P2 — Feature |
 | #545 | Docker Poller Enoent Flood | COMPLETE | P1 |
 | #546 | Otel Collector Startup Crash | COMPLETE | P2 |
 | #547 | Wizard Empty Project Path | COMPLETE | P1 |
 | #548 | Kanban Repo Targeted Flash | COMPLETE | P3 |
 | #549 | Splash Before Wizard First Launch | COMPLETE | P1 |
 | #550 | Wizard Git Repo Detection | COMPLETE | P1 |
+| #551 | Createstamp Ac Description Fields | COMPLETE | P1 |
 | #552 | Wizard Replace Alert With Inline Errors | COMPLETE | P1 |
 | #553 | Genesis Background Execution | COMPLETE | P1 |
 | #554 | Wizard 5 Step Restructure | COMPLETE | P2 |
@@ -459,6 +461,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #559 | Genesis Cycling Placeholder Animation | COMPLETE | P3 |
 | #560 | Wizard Copernicus Narration Scaffold | COMPLETE | P3 |
 | #561 | Wizard Embedded Cli Terminal | COMPLETE | P3 |
+| #562 | Jules Sdk Client Migration | COMPLETE | P2 |
+| #570 | Story Inspector Chat Scoping | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -479,8 +483,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
-| #563 | Stitch Setup Doc Sdk Update | DRAFT | P2 |
-| #564 | Jules Streaming Monitor | DRAFT | P2 |
 | #565 | Kb Activity Bar View Scaffold | DRAFT | P1 |
 | #566 | Kb Content Storage Seeding | DRAFT | P1 |
 | #567 | Kb Browse Article View | DRAFT | P1 |
