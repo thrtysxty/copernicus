@@ -376,7 +376,7 @@ fi
 
 if [ "$DAEMON_RUNNING" = false ]; then
   echo "🔄 Starting Jules daemon (plan approval + PR review + auto-merge)..."
-  nohup python3 "$REPO_ROOT/scripts/jules_daemon.py" \
+  nohup python3 "$REPO_ROOT/scripts/agent_monitor.py" \
     >> /tmp/jules_daemon.log 2>&1 &
   echo $! > "$DAEMON_PIDFILE"
   echo "  Daemon PID $(cat $DAEMON_PIDFILE) — logs at /tmp/jules_daemon.log"

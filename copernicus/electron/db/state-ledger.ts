@@ -218,7 +218,9 @@ export class StateLedger {
 
     // Agent Memory (Story 489)
     this.db.exec(SCHEMA.agent_memory);
+    try { this.db.exec("ALTER TABLE agent_memory ADD COLUMN story_id TEXT") } catch (e) { /* column already exists */ }
     this.db.exec(SCHEMA.agent_work_log);
+    try { this.db.exec("ALTER TABLE agent_work_log ADD COLUMN story_id TEXT") } catch (e) { /* column already exists */ }
     this.db.exec(SCHEMA.memory_working_set);
 
     // NotebookLM

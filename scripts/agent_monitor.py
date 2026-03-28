@@ -27,6 +27,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+import re
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,21 @@ ANTHROPIC_VERSION = "2023-06-01" # Required for Anthropic API
 RETRY_REVIEW_AFTER = 3600 # seconds (1 hour) for re-reviewing BLOCKED/REQUEST_CHANGES sessions
 POLL_INTERVAL = 30  # seconds between full cycles
 GITHUB_REPO = "JMThiessen/Copernicus"
+
+GEMINI_LOG_DIR = Path("/tmp")
+GEMINI_LOG_PATTERN = re.compile(r"gemini_(\d+)\.log")
+GEMINI_COMPLETION_MARKERS = (
+    "I have completed",
+    "All acceptance criteria",
+    "feat(story-",
+    "fix(story-",
+    "[[DONE]]",
+)
+GEMINI_INACTIVITY_TIMEOUT_SECONDS = 60
+GEMINI_MIN_LINES_FOR_INACTIVITY = 20
+
+# Dictionary to store last known state of Gemini log files for inactivity detection
+_gemini_log_states = {}
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 
@@ -93,6 +109,11 @@ def init_db():
             pass
         try:
             conn.execute("ALTER TABLE jules_sessions ADD COLUMN reviewed TEXT")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            conn.execute("ALTER TABLE jules_sessions ADD COLUMN agent TEXT")
+            conn.execute("UPDATE jules_sessions SET agent = 'jules' WHERE agent IS NULL")
         except sqlite3.OperationalError:
             pass
         conn.commit()
@@ -470,6 +491,28 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def stamp_story_id(story_id: str, started_at: str, completed_at: str) -> None:
+    """Stamp story_id on agent_memory and agent_work_log rows within the session window."""
+    copernicus_db = Path.home() / "Library" / "Application Support" / "COPERNICUS" / "copernicus.db"
+    if not copernicus_db.exists():
+        log.debug(f"copernicus.db not found at {copernicus_db} — skipping story_id stamp")
+        return
+    try:
+        with sqlite3.connect(copernicus_db) as conn:
+            conn.execute(
+                "UPDATE agent_memory SET story_id = ? WHERE story_id IS NULL AND ts >= ? AND ts <= ?",
+                (story_id, started_at, completed_at),
+            )
+            conn.execute(
+                "UPDATE agent_work_log SET story_id = ? WHERE story_id IS NULL AND ts >= ? AND ts <= ?",
+                (story_id, started_at, completed_at),
+            )
+            conn.commit()
+        log.info(f"  Stamped story_id={story_id} on agent_memory/agent_work_log rows in [{started_at}, {completed_at}]")
+    except Exception as e:
+        log.warning(f"  stamp_story_id failed (non-fatal): {e}")
+
+
 def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_review: bool = False):
     session_id = row["session_id"]
     story = row["story"]
@@ -624,10 +667,12 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                         log.warning(f"  ❌ Story file for story {story} not found. Cannot write verification record.")
 
                     log.info(f"  ✓ Merged PR #{pr_number}" + (f" ({final_verdict['merge_sha'][:8]})" if final_verdict['merge_sha'] else ""))
+                    merge_ts = now_iso()
                     conn.execute(
                         "UPDATE jules_sessions SET merged=?, commit_sha=?, updated=? WHERE session_id=?",
-                        (now_iso(), final_verdict["merge_sha"], now_iso(), session_id)
+                        (merge_ts, final_verdict["merge_sha"], merge_ts, session_id)
                     )
+                    stamp_story_id(str(story), row["dispatched"], merge_ts)
                 else:
                     log.warning(f"  ❌ Merge failed: {err}")
 
@@ -644,17 +689,369 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
             (state, pr_url, pr_number, updated, session_id)
         )
 
+def review_gemini_session(session_id: str, story_id: int, log_file_path: Path, conn: sqlite3.Connection, skip_review: bool = False):
+    log.info(f"Reviewing Gemini session {session_id} for story {story_id} from log: {log_file_path.name}")
+
+    session_record = conn.execute(
+        "SELECT * FROM jules_sessions WHERE session_id=?", (session_id,)
+    ).fetchone()
+
+    if not session_record:
+        log.error(f"Session record for {session_id} not found during Gemini review.")
+        return
+
+    # Default verdict structure for fallbacks
+    final_verdict = {
+        "verdict": "BLOCKED",
+        "acs_met": [],
+        "acs_missing": [],
+        "summary": "Failed to get a valid review verdict from Claude (Gemini log review).",
+        "reviewer_model": "claude-sonnet-4-6", # default reviewer for direct log analysis
+        "reviewed_at": now_iso(),
+        "merge_sha": "unknown"
+    }
+
+    try:
+        with open(log_file_path, "r", errors="ignore") as f:
+            log_content = f.read()
+    except Exception as e:
+        log.error(f"Could not read Gemini log file {log_file_path}: {e}")
+        conn.execute(
+            "UPDATE jules_sessions SET review_state='FAILED', review_verdict=?, updated=? WHERE session_id=?",
+            (json.dumps(final_verdict), now_iso(), session_id)
+        )
+        conn.commit()
+        return
+
+    # 1. Try to extract PR number from log content
+    pr_number = None
+    pr_match = re.search(r"github\.com/[^/]+/[^/]+/pull/(\d+)", log_content)
+    if pr_match:
+        pr_number = int(pr_match.group(1))
+        log.info(f"  Found PR #{pr_number} in Gemini log.")
+
+    if pr_number:
+        # Reuse the existing PR review logic
+        if skip_review:
+            log.warning(f"  ⚠ SKIP-REVIEW flag active — assuming approval for PR #{pr_number} without review.")
+            final_verdict["verdict"] = "APPROVED"
+            final_verdict["summary"] = "Skipped review due to --skip-review flag."
+        else:
+            final_verdict = review_pr(pr_number, story_id) # Reuse review_pr function
+        
+        final_verdict_str = json.dumps(final_verdict)
+
+        # Update session with PR info and review verdict
+        conn.execute(
+            """UPDATE jules_sessions SET
+                pr_url=?, pr_number=?,
+                review_state=?, review_verdict=?, reviewer=?, reviewed=?, updated=?
+            WHERE session_id=?
+            """,
+            (f"https://github.com/{GITHUB_REPO}/pull/{pr_number}", pr_number,
+             final_verdict["verdict"], final_verdict_str, final_verdict["reviewer_model"], final_verdict["reviewed_at"], now_iso(),
+             session_id)
+        )
+        conn.commit()
+
+        if final_verdict["verdict"] == "APPROVED":
+            log.info(f"  ✓ Review APPROVED for PR #{pr_number}. Attempting merge.")
+            ok, err = merge_pr(pr_number)
+            if ok:
+                merge_sha = get_pr_commit(pr_number)
+                final_verdict["merge_sha"] = merge_sha if merge_sha else "unknown"
+
+                story_path_result = subprocess.run(
+                    ["python3", "scripts/story.py", "path", str(story_id)],
+                    capture_output=True, text=True
+                )
+                if story_path_result.returncode == 0:
+                    write_verification_record(story_path_result.stdout.strip(), final_verdict)
+                else:
+                    log.warning(f"  ❌ Story file for story {story_id} not found. Cannot write verification record.")
+
+                log.info(f"  ✓ Merged PR #{pr_number}" + (f" ({final_verdict['merge_sha'][:8]})" if final_verdict['merge_sha'] else ""))
+                merge_ts = now_iso()
+                conn.execute(
+                    "UPDATE jules_sessions SET merged=?, commit_sha=?, state='MERGED', updated=? WHERE session_id=?",
+                    (merge_ts, final_verdict["merge_sha"], merge_ts, session_id)
+                )
+                stamp_story_id(str(story_id), session_record["dispatched"] or merge_ts, merge_ts)
+            else:
+                log.warning(f"  ❌ Merge failed for PR #{pr_number}: {err}")
+                conn.execute(
+                    "UPDATE jules_sessions SET state='FAILED', updated=? WHERE session_id=?",
+                    (now_iso(), session_id)
+                )
+            conn.commit()
+        else:
+            log.warning(f"  ❌ PR #{pr_number} review {final_verdict['verdict']}. No merge.")
+            conn.execute(
+                "UPDATE jules_sessions SET state=?, updated=? WHERE session_id=?",
+                (final_verdict["verdict"], now_iso(), session_id)
+            )
+            conn.commit()
+    else: # No PR found in log, review the log content directly
+        log.info(f"  No PR found in log. Reviewing Gemini log content directly for story {story_id}.")
+        anthropic_key = anthropic_api_key()
+        model = "claude-sonnet-4-6"
+        
+        # 2. Read story file
+        story_content = "Story file not found."
+        story_path_result = subprocess.run(
+            ["python3", "scripts/story.py", "path", str(story_id)],
+            capture_output=True, text=True
+        )
+        if story_path_result.returncode == 0:
+            story_file = story_path_result.stdout.strip()
+            try:
+                with open(story_file, "r") as f:
+                    story_content = f.read()
+            except Exception as e:
+                log.error(f"  Failed to read story file {story_file}: {e}")
+
+        # 3. Read forbidden patterns from AGENTS.md
+        forbidden_patterns = "Forbidden patterns section not found in AGENTS.md."
+        try:
+            with open("AGENTS.md", "r") as f:
+                agents_md_content = f.read()
+                forbidden_start_index = agents_md_content.find("## Forbidden")
+                if forbidden_start_index != -1:
+                    forbidden_patterns = agents_md_content[forbidden_start_index:].strip()
+        except Exception as e:
+            log.error(f"  Failed to read AGENTS.md or extract forbidden patterns: {e}")
+
+        prompt = f"""
+You are a senior code reviewer. Review the provided Gemini agent's execution log against the story's Acceptance Criteria and the project's forbidden patterns.
+Determine if the agent successfully completed the story, resulted in a PR that should be merged, or if it got blocked/failed.
+
+REVIEW SCOPE RULES:
+1. The Gemini agent produces code and interacts with the system. Evaluate its *final outcome* as reflected in the log: if it claims completion, does the log *suggest* success? If it attempted a PR, was it successful?
+2. Do NOT require screenshots, runtime evidence, or benchmark results. The agent is headless.
+3. Only block on verifiable issues: the log explicitly states a failure, a crucial step was skipped, or the overall outcome indicates incomplete work.
+
+STORY ACCEPTANCE CRITERIA:
+{story_content}
+
+FORBIDDEN PATTERNS (never allowed in generated code/output):
+{forbidden_patterns}
+
+GEMINI AGENT EXECUTION LOG (last ~200 lines if full log is too large):
+```
+{log_content[-10000:]}
+```
+
+Respond with a JSON object only:
+```json
+{{
+  "verdict": "APPROVED" | "BLOCKED" | "REQUEST_CHANGES",
+  "acs_met": ["AC text or ID"],
+  "acs_missing": ["AC text or ID"],
+  "summary": "one-paragraph prose explaining the verdict, especially if BLOCKED/REQUEST_CHANGES",
+  "reviewer_model": "{model}",
+  "reviewed_at": "{now_iso()}",
+  "merge_sha": "n/a"
+}}
+```
+Make sure the JSON is properly formatted within the ```json block.
+"""
+        messages = [{"role": "user", "content": prompt}]
+        headers = {
+            "x-api-key": anthropic_key,
+            "anthropic-version": ANTHROPIC_VERSION,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": model,
+            "max_tokens": 2000,
+            "messages": messages
+        }
+
+        log.info("  Calling Claude for Gemini log review...")
+        try:
+            cmd = [
+                "curl", "-s", "-w", "\\n__HTTP_CODE__%{http_code}",
+                "-X", "POST", f"{ANTHROPIC_API}/messages",
+            ]
+            for header, value in headers.items():
+                cmd.extend(["-H", f"{header}: {value}"])
+            cmd.extend(["-d", json.dumps(payload)])
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=90) # Increased timeout
+            parts = result.stdout.rsplit("__HTTP_CODE__", 1)
+            response_body_text = parts[0].strip()
+            status_code = int(parts[1].strip()) if len(parts) > 1 else 0
+
+            if status_code != 200:
+                log.error(f"  Claude API error (status {status_code}): {response_body_text}")
+                final_verdict["summary"] = f"Claude API error: {status_code}"
+            else:
+                response_data = json.loads(response_body_text)
+                verdict_content = ""
+                if 'content' in response_data and isinstance(response_data['content'], list):
+                    for block in response_data['content']:
+                        if block.get('type') == 'text':
+                            verdict_content = block['text']
+                            break
+
+                if verdict_content.strip().startswith("```json"):
+                    verdict_content = verdict_content.split("```json", 1)[1].split("```", 1)[0].strip()
+
+                try:
+                    claude_verdict = json.loads(verdict_content)
+                    final_verdict.update(claude_verdict)
+                    final_verdict["reviewer_model"] = model # Ensure this is set correctly
+                except json.JSONDecodeError as e:
+                    log.error(f"  Failed to parse Claude API response JSON: {e}. Content: {verdict_content}")
+                    final_verdict["summary"] = f"Failed to parse Claude API response JSON: {e}. Raw content: {verdict_content}"
+
+        except subprocess.TimeoutExpired:
+            log.error("  Claude API call timed out.")
+            final_verdict["summary"] = "Claude API call timed out."
+        except Exception as e:
+            log.error(f"  An unexpected error occurred during Claude API call: {e}")
+            final_verdict["summary"] = f"An unexpected error occurred during Claude API call: {e}"
+        
+        final_verdict_str = json.dumps(final_verdict)
+        conn.execute(
+            """UPDATE jules_sessions SET
+                review_state=?, review_verdict=?, reviewer=?, reviewed=?, updated=?, state=?
+            WHERE session_id=?
+            """,
+            (final_verdict["verdict"], final_verdict_str, final_verdict["reviewer_model"], final_verdict["reviewed_at"], now_iso(),
+             "MERGED" if final_verdict["verdict"] == "APPROVED" else final_verdict["verdict"],
+             session_id)
+        )
+        conn.commit()
+        log.info(f"  Gemini log review complete. Verdict: {final_verdict['verdict']}")
+
+def watch_gemini_logs(conn: sqlite3.Connection, skip_review: bool = False):
+    global _gemini_log_states
+
+    for log_file in GEMINI_LOG_DIR.glob("gemini_*.log"):
+        match = GEMINI_LOG_PATTERN.match(log_file.name)
+        if not match:
+            continue
+
+        story_id = int(match.group(1))
+        session_id_prefix = f"gemini-{story_id}"
+
+        # Check if this Gemini story is already in the DB and processed
+        existing_session = conn.execute(
+            "SELECT * FROM jules_sessions WHERE story=? AND agent='gemini' AND (merged IS NOT NULL OR review_state NOT IN ('PENDING', 'FAILED'))",
+            (story_id,)
+        ).fetchone()
+        
+        if existing_session:
+            # Already processed or under review. Skip.
+            continue
+        
+        try:
+            # Read last lines for completion markers
+            with open(log_file, "r", errors="ignore") as f:
+                lines = f.readlines()
+            
+            last_lines = [line.strip() for line in lines[-200:] if line.strip()] # Last 200 non-empty lines
+            
+            is_completed = False
+            for marker in GEMINI_COMPLETION_MARKERS:
+                if any(marker in line for line in last_lines):
+                    is_completed = True
+                    break
+            
+            # Inactivity check
+            file_stat = log_file.stat()
+            current_time = time.time()
+            last_mod_time = file_stat.st_mtime
+            current_size = file_stat.st_size
+
+            log_state = _gemini_log_states.get(log_file.name, {"size": 0, "mtime": 0, "last_check": current_time})
+            
+            if not is_completed and len(lines) >= GEMINI_MIN_LINES_FOR_INACTIVITY:
+                if current_size == log_state["size"] and (current_time - log_state["last_check"]) > GEMINI_INACTIVITY_TIMEOUT_SECONDS:
+                     # File hasn't grown and it's been inactive for long enough
+                    log.info(f"Gemini log {log_file.name} for story {story_id} detected as inactive (not grown for {GEMINI_INACTIVITY_TIMEOUT_SECONDS}s).")
+                    is_completed = True
+            
+            _gemini_log_states[log_file.name] = {
+                "size": current_size,
+                "mtime": last_mod_time,
+                "last_check": current_time
+            }
+
+            if is_completed:
+                log.info(f"Gemini log {log_file.name} for story {story_id} detected as completed.")
+                
+                # Check again if session exists, might have been added by another check during this cycle
+                existing_session = conn.execute(
+                    "SELECT * FROM jules_sessions WHERE story=? AND agent='gemini' AND (merged IS NOT NULL OR review_state NOT IN ('PENDING', 'FAILED'))",
+                    (story_id,)
+                ).fetchone()
+
+                if existing_session:
+                    log.info(f"Gemini session for story {story_id} already exists in DB as processed. Skipping.")
+                    continue
+
+                # Create or update session record for Gemini
+                session_id = f"{session_id_prefix}-{int(current_time)}"
+                # If a session exists with agent='gemini' and state is PENDING or FAILED, update it
+                existing_gemini_pending_session = conn.execute(
+                    "SELECT session_id FROM jules_sessions WHERE story=? AND agent='gemini' AND review_state IN ('PENDING', 'FAILED')",
+                    (story_id,)
+                ).fetchone()
+
+                if existing_gemini_pending_session:
+                    conn.execute(
+                        """UPDATE jules_sessions SET
+                            session_id=?,
+                            state='COMPLETED',
+                            title=?,
+                            pr_url=NULL,
+                            pr_number=NULL,
+                            commit_sha=NULL,
+                            branch='main',
+                            dispatched=?,
+                            plan_approved=?,
+                            pr_opened=?,
+                            merged=NULL,
+                            updated=?,
+                            review_state='PENDING',
+                            review_verdict=NULL,
+                            reviewer=NULL,
+                            reviewed=NULL,
+                            agent='gemini'
+                        WHERE story=? AND agent='gemini' AND review_state IN ('PENDING', 'FAILED')""",
+                        (session_id, f"Gemini Story {story_id} completion", now_iso(), now_iso(), now_iso(), now_iso(), story_id)
+                    )
+                else:
+                    conn.execute(
+                        """INSERT INTO jules_sessions (
+                            session_id, story, title, state, pr_url, pr_number,
+                            commit_sha, branch, dispatched, plan_approved, pr_opened,
+                            merged, updated, review_state, review_verdict, reviewer, reviewed, agent
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (session_id, story_id, f"Gemini Story {story_id} completion", "COMPLETED", None, None,
+                         None, "main", now_iso(), now_iso(), now_iso(),
+                         None, now_iso(), "PENDING", None, None, None, "gemini")
+                    )
+                conn.commit()
+                log.info(f"Created/updated Gemini session for story {story_id} with session_id: {session_id}")
+                review_gemini_session(session_id, story_id, log_file, conn, skip_review)
+
+        except Exception as e:
+            log.error(f"Error processing Gemini log {log_file.name}: {e}")
+
 
 def poll_cycle(skip_review: bool = False):
     key = jules_api_key()
     with get_db() as conn:
         sessions = get_active_sessions(conn)
-        if not sessions:
-            return
-        log.info(f"Polling {len(sessions)} active session(s)...")
-        for row in sessions:
-            process_session(row, key, conn, skip_review)
+        if sessions:
+            log.info(f"Polling {len(sessions)} active Jules session(s)...")
+            for row in sessions:
+                process_session(row, key, conn, skip_review)
         conn.commit()
+        watch_gemini_logs(conn, skip_review)
 
 # ── Status display ────────────────────────────────────────────────────────────
 
@@ -666,16 +1063,15 @@ def show_status():
     if not rows:
         print("No sessions in db.")
         return
-    print(f"{'STORY':<8} {'STATE':<22} {'REVIEW':<14} {'PR':<8} {'SHA':<10} {'TITLE'}")
-    print("-" * 90) # Adjusted separator length
+    print(f"{'AGENT':<8} {'STORY':<8} {'STATE':<22} {'REVIEW':<14} {'PR':<8} {'SHA':<10} {'TITLE'}")
+    print("-" * 99) # Adjusted separator length
     for r in rows:
         sha = (r["commit_sha"] or "")[:8]
         pr = f"#{r['pr_number']}" if r["pr_number"] else ""
         review_state = (r["review_state"] or "—")
         if review_state == "REQUEST_CHANGES":
             review_state = "REQ_CHANGES" # Abbreviate for display
-        print(f"{str(r['story']):<8} {(r['state'] or ''):<22} {review_state:<14} {pr:<8} {sha:<10} {r['title'] or ''}")
-
+        print(f"{(r['agent'] or '—'):<8} {str(r['story']):<8} {(r['state'] or ''):<22} {review_state:<14} {pr:<8} {sha:<10} {r['title'] or ''}")
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
