@@ -139,6 +139,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #595 | Fix Ghost Tint Active States — Ux Bible §1.4 Compliance | APPROVED FOR IMPLEMENTATION | P3 |
 | #596 | Refactor Direct Stateledger.Db Access To Api Methods | APPROVED FOR IMPLEMENTATION | P2 |
 | #597 | Remove Stale Column Ids From Layout.Ts | APPROVED FOR IMPLEMENTATION | P2 |
+| #598 | Complete Console.Log Cleanup — Renderer And New Electron Files (192 Continuation) | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
