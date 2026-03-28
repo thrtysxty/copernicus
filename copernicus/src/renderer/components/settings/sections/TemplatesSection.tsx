@@ -125,7 +125,7 @@ export const TemplatesSection: React.FC = () => {
           )}
         </div>
 
-        {editingId && (
+        {editingId === 'new' && (
           <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg space-y-4 animate-in fade-in slide-in-from-top-2">
             <div className="space-y-1.5">
               <label className="text-[9px] text-zinc-500 uppercase font-bold">Template Name</label>
@@ -151,10 +151,10 @@ export const TemplatesSection: React.FC = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={editingId === 'new' ? handleAdd : handleUpdate}
+                onClick={handleAdd}
                 className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[10px] font-bold uppercase hover:bg-green-400 transition-colors"
               >
-                {editingId === 'new' ? 'Create Template' : 'Update Template'}
+                Create Template
               </button>
               <button 
                 onClick={() => { setEditingId(null); setName(''); setBody('') }}
@@ -168,35 +168,78 @@ export const TemplatesSection: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-3">
           {templates.map(t => (
-            <div key={t.id} className="group bg-[#0F0F0F] border border-zinc-800 rounded-lg overflow-hidden transition-all hover:border-zinc-700">
-              <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded bg-zinc-900 text-zinc-500">
-                    <FileText size={16} />
+            <React.Fragment key={t.id}>
+              {editingId === t.id ? (
+                <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg space-y-4 animate-in fade-in">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] text-zinc-500 uppercase font-bold">Template Name</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="e.g. Bug Report, Feature Request"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs font-mono focus:border-copernicus-phosphor focus:outline-none"
+                    />
                   </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-zinc-200 uppercase">{t.name}</h3>
-                    <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{t.body.split('\n').length} lines</p>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[9px] text-zinc-500 uppercase font-bold">Markdown Content</label>
+                      <span className="text-[8px] text-zinc-600 font-mono italic">Supports &#123;&#123;storyTitle&#125;&#125; variable</span>
+                    </div>
+                    <textarea
+                      value={body}
+                      onChange={e => setBody(e.target.value)}
+                      rows={8}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs font-mono focus:border-copernicus-phosphor focus:outline-none resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleUpdate}
+                      className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[10px] font-bold uppercase hover:bg-green-400 transition-colors"
+                    >
+                      Update Template
+                    </button>
+                    <button
+                      onClick={() => { setEditingId(null); setName(''); setBody('') }}
+                      className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold uppercase hover:bg-zinc-700 transition-colors text-zinc-400"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={() => startEdit(t)}
-                    className="p-2 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
-                    title="Edit Template"
-                  >
-                    <Edit3 size={14} />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(t.id)}
-                    className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
-                    title="Delete Template"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+              ) : (
+                <div className="group bg-[#0F0F0F] border border-zinc-800 rounded-lg overflow-hidden transition-all hover:border-zinc-700">
+                  <div className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded bg-zinc-900 text-zinc-500">
+                        <FileText size={16} />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-zinc-200 uppercase">{t.name}</h3>
+                        <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{t.body.split('\n').length} lines</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => startEdit(t)}
+                        className="p-2 text-zinc-500 hover:text-copernicus-phosphor transition-colors"
+                        title="Edit Template"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(t.id)}
+                        className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
+                        title="Delete Template"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              )}
+            </React.Fragment>
           ))}
         </div>
       </div>

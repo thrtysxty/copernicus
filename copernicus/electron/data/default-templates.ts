@@ -29,13 +29,18 @@ export const DEFAULT_TEMPLATES = [
     name: 'API',
     body: `# {{storyTitle}}
 
-## Narrative
-**As a** [role]
-**I want** [action]
-**So that** [value]
-
 ## Context
 [Context about the API changes.]
+
+## Endpoints
+- \`GET /api/v1/resource\`
+
+## Request/Response Shape
+- Request:
+- Response:
+
+## Auth
+- [Auth requirements]
 
 ## Acceptance Criteria
 1. 
@@ -62,16 +67,16 @@ export const DEFAULT_TEMPLATES = [
 ## Context
 [Context about this epic.]
 
-## Acceptance Criteria
-1. 
-2. 
+## Sub-Stories
+- [ ] Story 1
+- [ ] Story 2
 
 ## Files in Scope
 - 
 
 ## Definition of Done
-- [ ] Tests pass
-- [ ] Requirements met
+- [ ] All sub-stories complete
+- [ ] Epic goals met
 `
   },
   {
@@ -113,6 +118,13 @@ export const DEFAULT_TEMPLATES = [
 ## Context
 [Context about the feature.]
 
+## User Flow
+1. User does X
+2. System does Y
+
+## Edge Cases
+- What if Z happens?
+
 ## Acceptance Criteria
 1. 
 2. 
@@ -153,6 +165,12 @@ export const DEFAULT_TEMPLATES = [
 ## Context
 [Foundation or infrastructure context.]
 
+## Architecture Decision
+[Explain the architecture decision.]
+
+## Migration Plan
+[How to migrate to this new foundation.]
+
 ## Acceptance Criteria
 1. 
 2. 
@@ -172,6 +190,12 @@ export const DEFAULT_TEMPLATES = [
 
 ## Context
 [Which dependencies need updating and why.]
+
+## Changelog Summary
+[Summary of changes in new versions.]
+
+## Breaking Changes
+[Any breaking changes to address.]
 
 ## Acceptance Criteria
 1. 
@@ -193,6 +217,13 @@ export const DEFAULT_TEMPLATES = [
 ## Context
 [Details about the regression.]
 
+## Root Cause
+[Why did this regression happen?]
+
+## Reproduction Steps
+1.
+2.
+
 ## Acceptance Criteria
 1. 
 2. 
@@ -212,6 +243,13 @@ export const DEFAULT_TEMPLATES = [
 
 ## Context
 [Why the code needs refactoring.]
+
+## Before / After
+- Before:
+- After:
+
+## Risk Assessment
+[What could break?]
 
 ## Acceptance Criteria
 1. 
