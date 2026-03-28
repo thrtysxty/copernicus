@@ -31,17 +31,17 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
     outputRef.current = output;
   }, [output]);
 
-  // State for session tracking
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  // Session tracking via ref — listeners must see the value synchronously, state would race
+  const activeSessionIdRef = useRef<string | null>(null);
 
   // Auto-scroll output
   useEffect(() => {
-    outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    outputEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [output]);
 
   useEffect(() => {
     const unsubData = window.ipcRenderer.on('wizard:pty-data', (_e: any, { sessionId, data }: { sessionId: string; data: string }) => {
-      if (sessionId !== activeSessionId) return;
+      if (sessionId !== activeSessionIdRef.current) return;
 
       const newOutput = [...outputRef.current, ...data.split('\n').filter(Boolean)];
       // Keep only last ~20 lines, but story says max 4 lines *visible*, so truncating to 50 is safe.
@@ -63,7 +63,7 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
     });
 
     const unsubExit = window.ipcRenderer.on('wizard:pty-exit', (_e: any, { sessionId, code }: { sessionId: string; code: number }) => {
-      if (sessionId !== activeSessionId) return;
+      if (sessionId !== activeSessionIdRef.current) return;
 
       const currentStage = stageRef.current;
 
@@ -103,7 +103,7 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
       unsubExit();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSessionId, config, invoke, onComplete, stageRef]);
+  }, [config, invoke, onComplete, stageRef]);
 
   const runCommand = async (nextStage: Stage) => {
     let cmd = '';
@@ -127,7 +127,7 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
          return;
       }
       const { sessionId } = unwrapIpc<{ sessionId: string }>(result);
-      setActiveSessionId(sessionId);
+      activeSessionIdRef.current = sessionId;
     } catch (err: any) {
       setOutput((prev) => [...prev, `\x1b[31m[ERROR] ${err.message}\x1b[0m`]);
     }

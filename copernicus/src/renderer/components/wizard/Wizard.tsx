@@ -288,25 +288,22 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       }
       const selectedPath = unwrapIpc<string | null>(result);
       if (selectedPath) {
-        // Step 2 Validation: Check server-side if selected path is itself a git repo
+        // Step 2 Advisory: warn if selected path is itself a git repo, but allow it
         const gitRes = await invoke<any>('fs:path-has-git', selectedPath);
         if (gitRes.ok && unwrapIpc<boolean>(gitRes)) {
-          setError('This directory is a git repository. COPERNICUS needs the parent folder that contains your projects, not the project itself.');
-          setWorkspacePath('');
-          setSelectedProject('');
-          setWizardMode(null);
-          return;
+          setError('Note: this folder is a git repository. If it contains your projects as subdirectories that is fine — otherwise select its parent folder.');
+        } else {
+          setError(null);
         }
 
         setWorkspacePath(selectedPath);
-        setError(null);
         await invoke('app:set-root-path', selectedPath);
         // Reset project selection when workspace changes
         setSelectedProject('');
         setWizardMode(null);
       }
     } catch (error: unknown) {
-      console.error('Folder selection failed:', error);
+      log.error('Folder selection failed:', error);
     }
   };
 
