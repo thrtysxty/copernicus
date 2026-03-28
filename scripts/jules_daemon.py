@@ -17,7 +17,6 @@ Log: /tmp/jules-daemon.log
 """
 
 import argparse
-import glob
 import json
 import logging
 import os
@@ -252,13 +251,17 @@ def review_pr(pr_number: int, story_id: int) -> dict:
 
     # 2. Read story file
     story_content = "Story file not found."
-    story_files = glob.glob(f"docs/stories/story_{story_id}_*.md")
-    if story_files:
+    story_path_result = subprocess.run(
+        ["python3", "scripts/story.py", "path", str(story_id)],
+        capture_output=True, text=True
+    )
+    if story_path_result.returncode == 0:
+        story_file = story_path_result.stdout.strip()
         try:
-            with open(story_files[0], "r") as f:
+            with open(story_file, "r") as f:
                 story_content = f.read()
         except Exception as e:
-            log.error(f"  Failed to read story file {story_files[0]}: {e}")
+            log.error(f"  Failed to read story file {story_file}: {e}")
 
     # 3. Read forbidden patterns from AGENTS.md
     forbidden_patterns = "Forbidden patterns section not found in AGENTS.md."
@@ -611,9 +614,12 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                     merge_sha = get_pr_commit(pr_number)
                     final_verdict["merge_sha"] = merge_sha if merge_sha else "unknown"
 
-                    story_paths = glob.glob(f"docs/stories/story_{story}_*.md")
-                    if story_paths:
-                        write_verification_record(story_paths[0], final_verdict)
+                    story_path_result = subprocess.run(
+                        ["python3", "scripts/story.py", "path", str(story)],
+                        capture_output=True, text=True
+                    )
+                    if story_path_result.returncode == 0:
+                        write_verification_record(story_path_result.stdout.strip(), final_verdict)
                     else:
                         log.warning(f"  ❌ Story file for story {story} not found. Cannot write verification record.")
 
