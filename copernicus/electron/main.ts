@@ -253,7 +253,7 @@ async function registerIpcHandlers() {
       }
 
   ipcMain.handle('review:generate-summary', (_e, { diff, storyId, storyTitle }) => handleIpc(async () => {
-    // Fast LLM summary via cloud_agent or simple fallback
+    // Fast LLM summary or simple fallback
     // Truncate diff to 4000 chars
     const truncated = (diff as string).slice(0, 4000)
     // For now: return structured response without LLM (LLM integration is optional)

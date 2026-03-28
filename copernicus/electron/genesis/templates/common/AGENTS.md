@@ -14,7 +14,7 @@
 
 ## Dispatch Protocol
 - Run `bash scripts/jules_assign.sh docs/stories/story_NNN_*.md` for isolated TS/React stories.
-- Run `python3 dev_orchestrator/gemini_session_manager.py spawn --prompt-file /tmp/gemini_prompt.md --stories NNN --direct` for multi-file implementations.
+- Run `gemini -p "$(cat /tmp/prompt.md)" --approval-mode yolo` from a worktree for multi-file implementations.
 
 ## Completion Protocol
 - **`tsc` Gate**: `npx tsc --noEmit` must pass with zero errors.

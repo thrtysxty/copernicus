@@ -131,8 +131,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
-| #571 | Repo Hygiene Ghost Script Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #572 | Generalize Agent Monitor | APPROVED FOR IMPLEMENTATION | P1 |
+| #571 | Repo Hygiene Ghost Script Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
+| #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |

@@ -215,7 +215,7 @@ browser:close     → Session cleanup
 
 - **Kanban** — 9 lanes: Planning → Storyboarding → Sprint Planning → Development → Testing → QA → Documenting → Ready to Build → Done
 - **Agent Queue Scheduler** — Declare story dependencies. Collision guard warns before out-of-order dispatch. Notification fires when blockers clear.
-- **Story Status Automation** — `gemini_session_manager.py` writes status files on spawn (`IN PROGRESS`) and completion (`REVIEW`); Kanban reacts to `stories:status-changed` push events
+- **Story Status Automation** — agent dispatches update story status on spawn (`IN PROGRESS`) and completion (`REVIEW`); Kanban reacts to `stories:status-changed` push events
 - **SQLite + Markdown dual-persistence** — stories live in both SQLite (Kanban) and `docs/stories/*.md` (git-trackable, diffable, agent-readable)
 
 ### IDE Completeness Panels
@@ -360,6 +360,6 @@ scripts/                jules_assign.sh, jules_daemon.py, dev-setup.sh,
 
 **Memory system** — `project_memory` stores learnings with `importance` 1–10 scored against recency decay. Session start retrieves top memories above threshold and injects them as system context. The retrospective pipeline writes importance-9 entries that persist indefinitely.
 
-**Story format** — Markdown files with structured sections (`## Blocks`, `## Blocked By`, `## Acceptance Criteria`, `## Definition of Done`). SQLite Kanban syncs from disk on focus, writes atomically. `gemini_session_manager.py` reads these directly — they are the agent's source of truth.
+**Story format** — Markdown files with structured sections (`## Blocks`, `## Blocked By`, `## Acceptance Criteria`, `## Definition of Done`). SQLite Kanban syncs from disk on focus, writes atomically. Agents read story files directly — they are the agent's source of truth.
 
 **Governance** — `docs/reference/UX_BIBLE.md` and `TECHNICAL_BIBLE.md` define binding constraints. `AGENTS.md` at repo root is read automatically by Jules and updated by the Retrospective workflow. All three documents are the law; the retrospective pipeline keeps them current.

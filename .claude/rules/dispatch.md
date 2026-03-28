@@ -70,9 +70,4 @@ git branch -d story/NNN
    ```
    Always dispatch from a worktree — agent commits to `story/NNN`, opens PR, never touches `main` directly.
 
-### Ghost scripts — DO NOT reference
-- `cloud_agent.py` — does not exist
-- `gemini_session_manager.py` — does not exist
-- `claude_ollama_cli.py` — does not exist
-
 - Always use the most token-efficient subagent capable of the task.

@@ -20,7 +20,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from dev_orchestrator.cloud_agent import StandaloneCloudAgent
+# cloud_agent removed — gateway dispatch routes through scripts/dispatch_claude_ollama.sh (story 600)
 import utils.quality_scorer as quality_scorer
 
 # Path to the Copernicus DB
@@ -143,14 +143,15 @@ def main():
         else:
             print(f"--- [AGENT GATEWAY] Auto-select enabled but no history found for role: {args.role}. Falling back to default. ---", file=sys.stderr)
 
-    # 3. Initialize Engine
-    agent = StandaloneCloudAgent()
-    
-    # 4. Route and Execute
+    # cloud_agent.py removed — use scripts/dispatch_claude_ollama.sh (story 600)
+    print("Error: agent_gateway.py requires cloud_agent engine which has been removed. Use scripts/dispatch_claude_ollama.sh instead.", file=sys.stderr)
+    sys.exit(1)
+
+    # 4. Route and Execute (unreachable until story 600 wires new engine)
     print(f"--- [AGENT GATEWAY] Routing Role: {args.role} (Actual Model: {target_role_or_model}) ---", file=sys.stderr)
-    
+
     start_time = time.time()
-    result = agent.run(target_role_or_model, full_prompt, worktree_branch=args.worktree, stream=args.stream)
+    result = None
     duration_ms = int((time.time() - start_time) * 1000)
 
     # 5. Log Quality Metrics

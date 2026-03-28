@@ -1,6 +1,5 @@
 import os
 import re
-import subprocess
 from datetime import datetime
 from flask import Blueprint, jsonify
 from backend.utils.path_guard import assert_safe_path
@@ -119,18 +118,7 @@ def generate_docs(request_data: GenerateDocsRequest):
         return jsonify({"message": "Implementation report generated", "path": report_path})
 
     elif status == 'DOCUMENTING':
-        # Trigger Scribe Agent
-        try:
-            cli_path = os.path.join(project_root, "scripts/claude_ollama_cli.py")
-            # We use /scribe persona to update docs
-            prompt = f"/scribe Update technical and user documentation for {story_id}. Analyze the latest implementation diff and ensure docs/technical/ and docs/user/ are in sync."
-            
-            # Run in background to avoid blocking the backend
-            subprocess.Popen(["python3", cli_path, prompt], cwd=project_root)
-            
-            return jsonify({"message": "Scribe agent triggered", "status": "queued"})
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+        return jsonify({"message": "Scribe agent not configured", "status": "noop"})
             
     return jsonify({"error": "Invalid status for documentation generation"}), 400
 

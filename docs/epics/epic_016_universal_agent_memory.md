@@ -117,7 +117,7 @@ chat                          — main chat panel
 chat:<panelId>                — named or multi-instance chat panel
 workflow:<workflowId>         — workflow orchestrator
 workflow:node:<nodeId>        — individual workflow agent node
-agent:<name>                  — named agents (Jules, Gemini, cloud_agent)
+agent:<name>                  — named agents (Jules, Gemini)
 orchestrator:<workflowId>     — orchestrator-level records
 ```
 
@@ -258,7 +258,7 @@ This requires the LSP manager to index JSONL files in the watched file set and h
 - [ ] Auto-extraction fires on `chat:done` — at least one memory row written per substantive response without user action
 - [ ] Model switch uses Layer 3 delta summary — `[CONTEXT HANDOFF]` full-history injection is gone
 - [ ] WorkflowEngine writes `session_start`, `decision`, and `session_end` events per node run
-- [ ] Orchestrator writes `agent_spawn` record when dispatching Jules / Gemini / cloud_agent
+- [ ] Orchestrator writes `agent_spawn` record when dispatching Jules / Gemini
 - [ ] `agent_work_log` records `file_edit` events with `meta.file` and `meta.range` populated
 - [ ] `agent_work_log` records `git_commit` events with `meta.sha` and `meta.files[]` populated
 - [ ] MemoryBrowser: clicking a `file_edit` entry opens the file at the correct line

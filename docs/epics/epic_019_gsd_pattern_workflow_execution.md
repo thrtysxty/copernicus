@@ -63,7 +63,7 @@ Recovery context is richer than GSD's fresh context — not noisier, because it'
 | `verifier` | `fast` | Read, Grep, Glob, Bash (no write) | Post-execution AC verification |
 | `auditor` | `fast` | Read, Grep, Glob (no write, no exec) | Test coverage, security, style |
 
-Model tier maps to `cloud_agent.py` roles. Tool policy enforces principle of least privilege — checkers and auditors never write files.
+Model tier maps to agent roles. Tool policy enforces principle of least privilege — checkers and auditors never write files.
 
 ---
 

@@ -134,9 +134,7 @@ def execute_tool(tool_name, arguments):
     elif tool_name == "search_codebase":
         query = arguments.get("query")
         if not query: return "Error: query required"
-        cmd = ["python3", "scripts/claude_ollama_cli.py", f"/senior-dev {query}"]
-        res = subprocess.run(cmd, capture_output=True, text=True)
-        return res.stdout
+        return f"search_codebase via claude_ollama_cli.py is not configured (script removed)"
 
     elif tool_name == "dispatch":
         model = arguments.get("model")

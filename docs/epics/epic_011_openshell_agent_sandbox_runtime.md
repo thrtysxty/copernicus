@@ -14,7 +14,7 @@
 
 ## Context
 
-Copernicus dispatches agents (Gemini, Jules, cloud_agent.py, local Ollama) with broad access to the filesystem and network. There is no containment boundary between agent processes and the host system today. A misbehaving or compromised agent can exfiltrate credentials, mutate files outside its story scope, or exhaust API quotas before Claude can intervene.
+Copernicus dispatches agents (Gemini, Jules, local Ollama) with broad access to the filesystem and network. There is no containment boundary between agent processes and the host system today. A misbehaving or compromised agent can exfiltrate credentials, mutate files outside its story scope, or exhaust API quotas before Claude can intervene.
 
 NVIDIA OpenShell (https://github.com/NVIDIA/OpenShell, Apache 2.0) is a container-native sandbox runtime for autonomous AI agents. It wraps agent subprocesses in an isolated Docker/K3s environment governed by hot-reloadable YAML policies — filesystem access, network egress, process restrictions, and LLM credential injection. GPU passthrough via NVIDIA Container Toolkit is directly compatible with the R620 sovereign brain Ollama inference path.
 
@@ -27,7 +27,7 @@ This epic wires OpenShell into the Copernicus agent dispatch layer as an opt-in 
 
 ## Goals
 
-1. Agent subprocesses (Gemini, Jules, cloud_agent.py) can be dispatched into an OpenShell sandbox rather than as bare host processes.
+1. Agent subprocesses (Gemini, Jules) can be dispatched into an OpenShell sandbox rather than as bare host processes.
 2. Per-story YAML policies scope filesystem writes to the story's declared file list and block all network egress not in an explicit allowlist.
 3. API credentials are injected via OpenShell provider bundles — no agent ever reads `.credentials.json` or `~/.claude` directly.
 4. The Copernicus IDE surfaces sandbox status (running / policy violation / exited) on the Kanban card for the dispatched story.
@@ -47,7 +47,7 @@ This epic wires OpenShell into the Copernicus agent dispatch layer as an opt-in 
 | 425 | Kanban sandbox status surface (lock icon, SANDBOX_VIOLATION badge) | 422, 423 |
 | 426 | R620 remote host support (SSH + GPU passthrough) | 424 |
 | 427 | Sandbox Settings panel (Settings → Sandbox tab) | 420 |
-| 428 | cloud_agent.py sandboxed dispatch | 421 |
+| 428 | Ollama-cloud sandboxed dispatch | 421 |
 
 Stories 422 and 423 can run in parallel once 421 merges.
 Stories 425, 426, 427 can run in parallel once their blockers merge.
@@ -82,7 +82,7 @@ Story 428 is lowest priority — deferred until 422/423 are stable.
 
 - `copernicus/electron/workflow/engine.ts` — add `sandboxed` field to existing event payloads only
 - `copernicus/src/renderer/components/kanban/KanbanBoard.tsx` — lock icon appended to existing card; no layout changes
-- `gemini_session_manager.py` existing `spawn` contract — `--sandbox` is purely additive
+- Gemini dispatch protocol — `--sandbox` flag is purely additive
 
 ---
 

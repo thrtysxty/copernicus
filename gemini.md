@@ -43,7 +43,7 @@ Output `[[SIGNAL_ORCHESTRATOR]]` and stop if:
 
 - **Be direct:** Imperative first. "Implement X" not "Please implement X".
 - **Use delimiters:** Separate instructions from code with `###` or `---`.
-- **Set max_tokens:** Pass an explicit output cap on every `cloud_agent.py` call to prevent over-generation.
+- **Set max_tokens:** Pass an explicit output cap on every cloud dispatch to prevent over-generation.
 - **Stop sequences:** Use `[[DONE]]` or `\n\n` to halt after the answer — not mid-sentence padding.
 - **Skeletonize:** Send function signatures + the target block, not full files. Strip imports not relevant to the task.
 - **Sliding window:** When re-dispatching, include only the last 3 turns + a ≤200-token summary — not the full session.
@@ -67,12 +67,9 @@ Output `[[SIGNAL_ORCHESTRATOR]]` and stop if:
 
 Delegate in this priority order:
 
-1. **Cloud Dispatch — drafting, research, vision (Gemini is the cloud orchestrator):**
-   ```bash
-   python3 dev_orchestrator/cloud_agent.py <role> "<prompt>" --worktree <branch_name>
-   ```
+1. **Cloud Dispatch — drafting, research, vision:**
+   Use `scripts/dispatch_claude_ollama.sh` (story 600) for cloud model dispatch.
    Roles: `thinker`, `coder`, `vision`, `researcher`, `fast`.
-   Always use `--worktree` when the sub-agent drafts or modifies code.
 
 2. **Jules — isolated sub-stories that need a PR:**
    ```bash
@@ -81,9 +78,7 @@ Delegate in this priority order:
    Only dispatch to Jules if Claude has explicitly approved it for the sub-task.
 
 3. **Local Ollama — fallback only (cloud unavailable):**
-   ```bash
-   python3 scripts/claude_ollama_cli.py "/senior-dev <prompt>"
-   ```
+   Use Ollama directly via `ollama run <model> "<prompt>"` or configure via Copernicus provider settings.
 
 ---
 

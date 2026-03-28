@@ -1,16 +1,14 @@
-import { exec, execFile } from 'node:child_process'
+import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import { codebaseIndexer } from '../codebase-indexer'
 import { hybridRetriever } from './hybrid-retrieval'
 import { fsManager } from '../fs-manager'
-import { authManager } from '../auth-manager'
 import { ragInjector, RagChunk } from './RagInjector'
 import { modelRegistry } from '../models/model-registry'
 import { SettingsStore } from '../settings-store'
 import { stateLedger } from '../db/state-ledger'
 
 const execAsync = promisify(exec)
-const execFileAsync = promisify(execFile)
 
 export interface ToolDefinition {
   name: string
@@ -253,23 +251,7 @@ export class ToolExecutor {
       return `To dispatch ${storyId} to Jules: open the Kanban board, find the story card, and click the "→ Jules" button. Jules will create a PR automatically.`
     }
 
-    const role = 'coder'
-    if (!/^[\w\-]+$/.test(storyId)) return 'Error: invalid storyId format'
-
-    const env = { ...process.env }
-    if (provider === 'ollama-cloud') {
-      env['OLLAMA_API_KEY'] = authManager.getApiKey('ollama-cloud') || process.env.OLLAMA_API_KEY || ''
-      env['OLLAMA_CLOUD_HOST'] = authManager.getBaseUrl('ollama-cloud') || process.env.OLLAMA_CLOUD_HOST || 'https://ollama.com'
-      // AC-4 Document how this flows: The cloud_agent.py uses OLLAMA_API_KEY and OLLAMA_CLOUD_HOST
-      // which are sourced from the user-configured Ollama Cloud settings in Copernicus.
-    }
-
-    const { stdout, stderr } = await execFileAsync(
-      'python3',
-      ['dev_orchestrator/cloud_agent.py', role, `Implement ${storyId}`, '--worktree', storyId],
-      { cwd: rootPath, env }
-    )
-    return stdout.trim() || stderr.trim() || `Agent dispatched for ${storyId} via ${provider}`
+    return `Use scripts/dispatch_claude_ollama.sh to dispatch story ${storyId} via ${provider}. Run from the project root.`
   }
 }
 

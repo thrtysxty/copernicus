@@ -41,7 +41,6 @@ Claude's role is **Plan → Delegate → Review**. Not implement.
 
 ## Agent Interaction Commands
 - `/story "Title" [--type story|api|component]`: Scaffolds a new user story and optional boilerplate.
-- `/research "<query>"`: Directs the agent to call `python3 scripts/claude_ollama_cli.py "/senior-dev <query>"` for local RAG.
 - `/rag "<query>"`: Shorthand for semantic search and context injection via the local index.
 - `/pi_check`: Runs the Performance Baseline Audit (Raspberry Pi 3B+ constraints).
 - `/audit`: Triggers the Sentinel Persona to scan staged changes for secrets.

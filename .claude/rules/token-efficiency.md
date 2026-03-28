@@ -18,7 +18,7 @@ description: Token efficiency rules — prompt construction, context discipline,
 - **Strip fluff:** Before a handoff, remove "Thank you", "Got it", and other non-functional turns. Every word sent is a token charged.
 - **Diff-only review:** On Gemini/Jules completion, read `git diff HEAD~1` — not full files. Claude reviews the change, not the context it already knows.
 
-### Technical Controls (for cloud_agent.py and LLMService calls)
+### Technical Controls (for LLMService calls)
 - **max_tokens:** Set a hard output cap on every cloud dispatch. Prevents rambling after the answer is complete.
 - **stop_sequences:** Use `
 

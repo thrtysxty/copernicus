@@ -2,7 +2,7 @@
 """
 PreToolUse hook — delegation reminder (warn, not block).
 
-Claude should delegate primary implementation to Gemini, Jules, or cloud_agent.
+Claude should delegate primary implementation to Gemini, Jules, or Gemini CLI.
 Direct edits by Claude are acceptable for:
   - Merges, PR fixes, cherry-picks
   - Fixing issues surfaced by coding agents
@@ -56,7 +56,7 @@ for impl in IMPL_PATHS:
     if impl in file_path:
         # Warn only — Claude decides whether to proceed
         print(f"[delegation] Editing implementation file: {file_path}")
-        print(f"[delegation] Prefer Jules/Gemini/cloud_agent for primary implementation.")
+        print(f"[delegation] Prefer Jules/Gemini/Gemini CLI for primary implementation.")
         print(f"[delegation] Direct edit is OK for: merges, agent fixes, user-requested work.")
         # exit(0) = allow, exit(1) = block
         sys.exit(0)
