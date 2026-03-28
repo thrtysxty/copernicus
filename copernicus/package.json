@@ -129,6 +129,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@google/generative-ai": "^0.24.1",
     "@google/jules-sdk": "^0.2.0",
+    "@google/stitch-sdk": "^0.0.3",
     "@monaco-editor/react": "^4.6.0",
     "@types/ws": "^8.18.1",
     "@vscode/debugprotocol": "^1.68.0",
