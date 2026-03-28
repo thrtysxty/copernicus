@@ -134,6 +134,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
+| #594 | Auto-Mode Classifier Hit Logger | APPROVED FOR IMPLEMENTATION | P2 |
+| #595 | Fix Ghost Tint Active States — Ux Bible §1.4 Compliance | APPROVED FOR IMPLEMENTATION | P3 |
+| #596 | Refactor Direct Stateledger.Db Access To Api Methods | APPROVED FOR IMPLEMENTATION | P2 |
+| #597 | Remove Stale Column Ids From Layout.Ts | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
 | #168 | Typescript Cleanup | COMPLETE | P0 — Blocks `npx tsc --noEmit` clean exit |
@@ -160,7 +165,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #189 | Lsp Monaco Chatpanel Wiring | COMPLETE | P1 |
 | #190 | Mcp Settings Tab | COMPLETE | P2 |
 | #191 | Context Snapshots Project Memory | COMPLETE | P1 |
-| #192 | Console Log Cleanup | COMPLETE | P2 |
 | #193 | Accessibility Pass | COMPLETE | P2 |
 | #194 | Flask Backend Scaffold | COMPLETE | P1 |
 | #195 | Gemini Cli Pty Agent | COMPLETE | P1 |
