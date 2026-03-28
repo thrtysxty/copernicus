@@ -1,13 +1,12 @@
 import { stateLedger, StoryRecord, JulesSession } from '../db/state-ledger'
 import { generateJulesPrompt } from './prompt-generator'
-
-const JULES_API_BASE = 'https://jules.googleapis.com/v1alpha'
+import { JulesClient } from './jules-client'
 
 export interface DispatchOptions {
   story: StoryRecord
   repo: string           // 'owner/repo' e.g. 'dadmin/agentic-platform'
   branch: string         // target branch, usually 'main'
-  apiKey: string         // Jules API key (from AuthManager)
+  julesClient: JulesClient // Jules Client
   requirePlanApproval?: boolean  // default false for automated dispatch
 }
 
@@ -18,7 +17,7 @@ export interface DispatchResult {
 }
 
 export async function dispatchJulesSession(opts: DispatchOptions): Promise<DispatchResult> {
-  const { story, repo, branch, apiKey, requirePlanApproval = false } = opts
+  const { story, repo, branch, julesClient, requirePlanApproval = false } = opts
 
   const { text: prompt, hash: promptHash } = generateJulesPrompt(story, repo)
 
@@ -30,32 +29,14 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
   }
 
   try {
-    const res = await fetch(`${JULES_API_BASE}/sessions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-      },
-      body: JSON.stringify({
-        title: `Story ${story.id.replace('story_', '')} — ${story.title}`,
-        prompt,
-        sourceContext: {
-          source: `sources/github/${repo}`,
-          githubRepoContext: { startingBranch: branch },
-        },
-        requirePlanApproval,
-        automationMode: requirePlanApproval ? undefined : 'AUTO_CREATE_PR',
-      }),
+    const sessionClient = await julesClient.session({
+      prompt,
+      source: { github: repo, baseBranch: branch },
+      autoPr: !requirePlanApproval
     })
 
-    if (!res.ok) {
-      const body = await res.text()
-      return { ok: false, error: `Jules API ${res.status}: ${body.slice(0, 200)}` }
-    }
-
-    const session = await res.json() as { name: string; [key: string]: any }
-    // Jules session name format: 'sessions/{UUID}'
-    const sessionId = session.name?.split('/').pop() ?? session.name
+    const info = await sessionClient.info()
+    const sessionId = info.id ?? info.name?.split('/').pop()
 
     const record: JulesSession = {
       id: sessionId,
@@ -79,16 +60,17 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
 
 export async function pollJulesSession(
   sessionId: string,
-  apiKey: string
+  client: JulesClient
 ): Promise<Partial<JulesSession>> {
-  const res = await fetch(`${JULES_API_BASE}/sessions/${sessionId}`, {
-    headers: { 'X-Goog-Api-Key': apiKey },
-  })
-  if (!res.ok) throw new Error(`Jules poll ${res.status}`)
+  const sessionClient = client.session(sessionId)
+  const data = await sessionClient.info()
+  const activities = await sessionClient.history()
 
-  const data = await res.json() as any
   const outputs = data.outputs ?? []
-  const pr = outputs.find((o: any) => o.pullRequest)?.pullRequest
+  const prOutput = outputs.find(
+    (o) => 'type' in o && o.type === 'pullRequest'
+  ) as { pullRequest?: { url: string; number: number } } | undefined
+  const pr = prOutput?.pullRequest
 
   // Map Jules state → our status
   // Jules states (inferred from API): PENDING, RUNNING, COMPLETED, FAILED
@@ -102,10 +84,11 @@ export async function pollJulesSession(
     status,
     pr_url:          pr?.url ?? undefined,
     pr_number:       pr?.number ?? undefined,
-    activities_json: JSON.stringify(data.activities ?? []),
+    activities_json: JSON.stringify(activities ?? []),
     completed_at:    status === 'completed' || status === 'failed'
                      ? new Date().toISOString() : undefined,
-    error_message:   status === 'failed'
-                     ? (data.error?.message ?? 'Task failed') : undefined,
+    error_message:   status === 'failed' && 'error' in data
+                     ? (data.error as { message?: string })?.message ?? 'Task failed'
+                     : undefined,
   }
 }

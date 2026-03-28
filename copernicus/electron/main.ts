@@ -31,6 +31,7 @@ import { lspManager } from './lsp/lsp-manager'
 import { backendManager } from './backend-manager'
 import { handleIpc } from './utils/handle-ipc'
 import { socketManager } from './socket-manager'
+import { JulesClient } from './jules/jules-client'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
 import { addRecentProject } from './utils/recent-projects'
@@ -141,7 +142,15 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const authManager = new AuthManager()
-julesMonitor.setApiKey(authManager.getApiKey('jules') ?? '')
+const julesClient = new JulesClient(authManager.getApiKey('jules') ?? '')
+julesMonitor.setClient(julesClient)
+
+ipcMain.on('auth:key-changed', (_e, { provider, key }) => {
+  if (provider === 'jules') {
+    julesClient.reinit(key)
+    julesMonitor.setClient(julesClient)
+  }
+})
 
 const githubManager = new GithubManager(authManager)
 const modelRegistry = new ModelRegistry()
@@ -223,7 +232,7 @@ async function registerIpcHandlers() {
   const globalDeps = {
         authManager, githubManager, modelRegistry, settingsStore, storiesManager, devtimeManager,
         fsManager, workflowEngine, codebaseIndexer, hybridRetriever, browserSession, ptyManager,
-        socketManager, stateLedger, llmService, lspManager, backendManager, julesMonitor, julesManager,
+        socketManager, stateLedger, llmService, lspManager, backendManager, julesClient, julesMonitor, julesManager,
         applyAndVerifyPatch, reversePatch, runRAGBenchmark,
         getPlaywright: async () => await import('playwright-core'), // utility function not a manager
         dispatchJulesSession, createTouchBar, DEFAULT_TOUCH_BAR_CONFIG,

@@ -18,6 +18,7 @@ import { BackendManager } from '../backend-manager'
 import { SocketManager } from '../socket-manager'
 import { GenesisRunner } from '../genesis/genesis-runner'
 import { SnapshotManager } from '../workflow/snapshot-manager'
+import { JulesClient } from '../jules/jules-client'
 
 export interface TerminalSession {
   id: string
@@ -45,6 +46,7 @@ export interface IpcHandlerDeps {  authManager: AuthManager;
   llmService: any; // TODO: Type this
   lspManager: LspManager;
   backendManager: BackendManager;
+  julesClient: JulesClient;
   julesMonitor: JulesMonitor;
   julesManager: JulesManager;
   genesisRunner: GenesisRunner;

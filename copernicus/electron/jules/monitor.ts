@@ -2,24 +2,25 @@ import { BrowserWindow } from 'electron'
 import { stateLedger } from '../db/state-ledger'
 import { pollJulesSession } from './dispatcher'
 import log from '../utils/logger'
+import { JulesClient } from './jules-client'
 
 const POLL_INTERVAL_MS = 30_000
 
 export class JulesMonitor {
   private timers = new Map<string, NodeJS.Timeout>()
   private win: BrowserWindow | null = null
-  private apiKey: string = ''
+  private client: JulesClient | null = null
 
   setWindow(win: BrowserWindow) { this.win = win }
-  setApiKey(key: string) { this.apiKey = key }
+  setClient(client: JulesClient) { this.client = client }
 
   startWatching(sessionId: string): void {
     if (this.timers.has(sessionId)) return  // already watching
 
     const tick = async () => {
-      if (!this.apiKey) return
+      if (!this.client) return
       try {
-        const update = await pollJulesSession(sessionId, this.apiKey)
+        const update = await pollJulesSession(sessionId, this.client)
         // Find existing record to preserve prompt hash etc
         const session = stateLedger.listJulesSessions()
           .find(s => s.id === sessionId)

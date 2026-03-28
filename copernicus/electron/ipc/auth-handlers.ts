@@ -169,7 +169,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   // Auth Handlers
   ipcMain.handle('auth:status', () => handleIpc(async () => authManager.getAuthStatus()));
-  ipcMain.handle('auth:store-api-key', (_, provider: string, apiKey: string, baseUrl?: string) => handleIpc('auth:store-api-key', [provider, apiKey, baseUrl], () => authManager.storeApiKey(provider, apiKey, baseUrl, 'apikey')));
+  ipcMain.handle('auth:store-api-key', (_, provider: string, apiKey: string, baseUrl?: string) => handleIpc('auth:store-api-key', [provider, apiKey, baseUrl], () => {
+    const res = authManager.storeApiKey(provider, apiKey, baseUrl, 'apikey')
+    if (provider === 'jules') {
+      deps.julesClient.reinit(apiKey)
+    }
+    return res
+  }));
   ipcMain.handle('auth:revoke', (_, provider: string) => handleIpc('auth:revoke', [provider], () => authManager.revokeApiKey(provider)));
   ipcMain.handle('auth:get-api-key', (_, provider: string) => handleIpc('auth:get-api-key', [provider], () => {
     if (provider === 'openai' || provider === 'openrouter' || provider === 'deepinfra') {
