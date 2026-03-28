@@ -1,7 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
-import { execFile } from 'child_process'
-import path from 'path'
 
 export interface DiagnosticItem {
   file: string; 
@@ -41,9 +39,6 @@ export function register(_win: BrowserWindow, deps: any) {
   ipcMain.handle('lsp:workspace-check', (_e) =>
     handleIpc('lsp:workspace-check', [], async () => {
       const lspManager = deps.lspManager as any;
-      const fsManager = deps.fsManager as any;
-      const rootPath = fsManager.getRootPath();
-      const copDir = path.join(rootPath, 'copernicus');
 
       const allErrors: DiagnosticItem[] = [];
       let lspWarningCount = 0;
@@ -65,40 +60,6 @@ export function register(_win: BrowserWindow, deps: any) {
               lspWarningCount++;
             }
           }
-        }
-      }
-
-      // 2. Run tsc --noEmit
-      const tscErrors = await new Promise<DiagnosticItem[]>((resolve) => {
-        execFile('npx', ['tsc', '--noEmit', '--pretty', 'false'], { cwd: copDir, shell: true }, (_err, stdout, stderr) => {
-          const diags: DiagnosticItem[] = [];
-          const output = stdout + stderr;
-          for (const line of output.split('\n')) {
-            // Format: "file(line,col): error TSxxxx: msg"
-            const m = line.match(/^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+TS\d+:\s+(.+)$/);
-            if (m && m[1] && m[2] && m[3] && m[4] && m[5]) {
-              diags.push({
-                file: path.resolve(copDir, m[1]),
-                line: parseInt(m[2]),
-                col: parseInt(m[3]),
-                severity: m[4] as 'error' | 'warning',
-                message: m[5]
-              });
-            }
-          }
-          resolve(diags);
-        });
-      });
-
-      // 3. Merge and deduplicate
-      for (const te of tscErrors) {
-        const isDup = allErrors.some(ae => 
-          ae.file === te.file && 
-          ae.line === te.line && 
-          ae.message === te.message
-        );
-        if (!isDup) {
-          allErrors.push(te);
         }
       }
 
