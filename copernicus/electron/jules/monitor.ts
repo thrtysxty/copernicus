@@ -1,52 +1,69 @@
 import { BrowserWindow } from 'electron'
 import { stateLedger } from '../db/state-ledger'
-import { pollJulesSession } from './dispatcher'
 import log from '../utils/logger'
 import { JulesClient } from './jules-client'
 
-const POLL_INTERVAL_MS = 30_000
-
 export class JulesMonitor {
-  private timers = new Map<string, NodeJS.Timeout>()
-  private win: BrowserWindow | null = null
+  private watching = new Set<string>()
   private client: JulesClient | null = null
 
-  setWindow(win: BrowserWindow) { this.win = win }
+  setWindow(_win: BrowserWindow) { /* noop, kept for compat */ }
   setClient(client: JulesClient) { this.client = client }
 
-  startWatching(sessionId: string): void {
-    if (this.timers.has(sessionId)) return  // already watching
+  async startWatching(sessionId: string): Promise<void> {
+    if (this.watching.has(sessionId)) return  // already watching
+    if (!this.client) return
 
-    const tick = async () => {
-      if (!this.client) return
-      try {
-        const update = await pollJulesSession(sessionId, this.client)
-        // Find existing record to preserve prompt hash etc
-        const session = stateLedger.listJulesSessions()
-          .find(s => s.id === sessionId)
-        if (!session) { this.stopWatching(sessionId); return }
+    this.watching.add(sessionId)
 
-        stateLedger.upsertJulesSession({ ...session, ...update } as any)
+    try {
+      for await (const activity of this.client.streamSession(sessionId)) {
+        if (!this.watching.has(sessionId)) break;
 
-        if (this.win && !this.win.isDestroyed()) {
-          this.win.webContents.send('jules:session-update', { sessionId, ...update })
-        }
+        const session = stateLedger.listJulesSessions().find(s => s.id === sessionId)
+        if (!session) { this.stopWatching(sessionId); break; }
 
-        if (update.status === 'completed' || update.status === 'failed') {
+        const activeWin = BrowserWindow.getAllWindows()[0]
+
+        if (activity.type === 'planGenerated') {
+          const sessionInfo = await this.client.getSessionInfo(sessionId)
+          const status = sessionInfo.requirePlanApproval ? 'pending' : 'running'
+          stateLedger.upsertJulesSession({ ...session, status, activities_json: JSON.stringify([activity]) })
+          activeWin?.webContents.send('jules:session-update', { sessionId, status, activities_json: JSON.stringify([activity]) })
+        } else if (activity.type === 'progressUpdated') {
+          stateLedger.upsertJulesSession({ ...session, status: 'running', activities_json: JSON.stringify([activity]) })
+          activeWin?.webContents.send('jules:session-update', { sessionId, status: 'running', activities_json: JSON.stringify([activity]) })
+        } else if (activity.type === 'agentMessaged') {
+          activeWin?.webContents.send('jules:activity', activity)
+        } else if (activity.type === 'sessionCompleted') {
+          const sessionInfo = await this.client.getSessionInfo(sessionId)
+          const prOutput = sessionInfo.outputs?.find(o => 'type' in o && o.type === 'pullRequest') as any
+          const pr_url = prOutput?.pullRequest?.url
+          const pr_number = prOutput?.pullRequest?.number
+
+          stateLedger.upsertJulesSession({ ...session, status: 'completed', pr_url, pr_number, completed_at: new Date().toISOString() })
+          activeWin?.webContents.send('jules:session-update', { sessionId, status: 'completed', pr_url, pr_number })
+          this.stopWatching(sessionId)
+        } else if (activity.type === 'sessionFailed') {
+          const error_message = (activity as any).error?.message || 'Task failed'
+          stateLedger.upsertJulesSession({ ...session, status: 'failed', error_message, completed_at: new Date().toISOString() })
+          activeWin?.webContents.send('jules:session-update', { sessionId, status: 'failed', error_message })
           this.stopWatching(sessionId)
         }
-      } catch (err: unknown) {
-        log.error(`[JulesMonitor] poll error for ${sessionId}:`, (err as Error).message)
       }
+    } catch (err: unknown) {
+      log.error(`[JulesMonitor] stream error for ${sessionId}:`, (err as Error).message)
+      const session = stateLedger.listJulesSessions().find(s => s.id === sessionId)
+      if (session) {
+        stateLedger.upsertJulesSession({ ...session, status: 'failed', error_message: (err as Error).message, completed_at: new Date().toISOString() })
+        BrowserWindow.getAllWindows()[0]?.webContents.send('jules:session-update', { sessionId, status: 'failed', error_message: (err as Error).message })
+      }
+      this.stopWatching(sessionId)
     }
-
-    tick()  // immediate first poll
-    this.timers.set(sessionId, setInterval(tick, POLL_INTERVAL_MS))
   }
 
   stopWatching(sessionId: string): void {
-    const t = this.timers.get(sessionId)
-    if (t) { clearInterval(t); this.timers.delete(sessionId) }
+    this.watching.delete(sessionId)
   }
 
   resumeWatching(): void {

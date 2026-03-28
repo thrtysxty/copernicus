@@ -58,37 +58,3 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
   }
 }
 
-export async function pollJulesSession(
-  sessionId: string,
-  client: JulesClient
-): Promise<Partial<JulesSession>> {
-  const sessionClient = client.session(sessionId)
-  const data = await sessionClient.info()
-  const activities = await sessionClient.history()
-
-  const outputs = data.outputs ?? []
-  const prOutput = outputs.find(
-    (o) => 'type' in o && o.type === 'pullRequest'
-  ) as { pullRequest?: { url: string; number: number } } | undefined
-  const pr = prOutput?.pullRequest
-
-  // Map Jules state → our status
-  // Jules states (inferred from API): PENDING, RUNNING, COMPLETED, FAILED
-  const jState: string = (data.state ?? '').toUpperCase()
-  const status: JulesSession['status'] =
-    jState.includes('COMPLETE') ? 'completed' :
-    jState.includes('FAIL')     ? 'failed' :
-    jState.includes('RUN')      ? 'running' : 'pending'
-
-  return {
-    status,
-    pr_url:          pr?.url ?? undefined,
-    pr_number:       pr?.number ?? undefined,
-    activities_json: JSON.stringify(activities ?? []),
-    completed_at:    status === 'completed' || status === 'failed'
-                     ? new Date().toISOString() : undefined,
-    error_message:   status === 'failed' && 'error' in data
-                     ? (data.error as { message?: string })?.message ?? 'Task failed'
-                     : undefined,
-  }
-}

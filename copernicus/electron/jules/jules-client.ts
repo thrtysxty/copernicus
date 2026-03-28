@@ -1,4 +1,4 @@
-import { connect, JulesClient as SdkJulesClient, SessionConfig, SessionClient } from '@google/jules-sdk';
+import { connect, JulesClient as SdkJulesClient, SessionConfig, SessionClient, Activity, SessionResource as SessionInfo } from '@google/jules-sdk';
 
 const JULES_API_BASE = 'https://jules.googleapis.com/v1alpha';
 
@@ -24,6 +24,14 @@ export class JulesClient {
 
   select(query: Parameters<SdkJulesClient['select']>[0]) {
     return this.client.select(query);
+  }
+
+  streamSession(sessionId: string): AsyncIterableIterator<Activity> {
+    return this.client.session(sessionId).stream() as AsyncIterableIterator<Activity>;
+  }
+
+  getSessionInfo(sessionId: string): Promise<SessionInfo> {
+    return this.client.session(sessionId).info();
   }
 
   async listSources(apiKey: string): Promise<{ name: string, displayName: string }[]> {
