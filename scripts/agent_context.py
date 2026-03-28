@@ -53,5 +53,12 @@ def main():
         print(load_agent(arg))
 
 
+def dispatch_command(story_num: int | str, model: str = "devstral-small-2:cloud") -> str:
+    """Return the shell command to dispatch a story via dispatch_claude_ollama.sh."""
+    prompt_file = f"/tmp/gemini_{story_num}.md"
+    log_file = f"/tmp/gemini_{story_num}.log"
+    return f"bash scripts/dispatch_claude_ollama.sh {prompt_file} --model {model} 2>&1 | tee {log_file}"
+
+
 if __name__ == "__main__":
     main()

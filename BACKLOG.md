@@ -133,6 +133,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #572 | Generalize Agent Monitor | APPROVED FOR IMPLEMENTATION | P1 |
 | #571 | Repo Hygiene Ghost Script Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
+| #572 | Generalize Agent Monitor | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |

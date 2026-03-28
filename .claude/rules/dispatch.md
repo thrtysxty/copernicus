@@ -1,7 +1,7 @@
 ---
-description: Subagent dispatch commands and protocol (Gemini, Jules)
+description: Subagent dispatch commands and protocol (Claude-via-Ollama, Jules)
 ---
-### Dispatch Protocol — Gemini CLI
+### Dispatch Protocol — Claude via Ollama Cloud
 
 ```bash
 # Step 0 — create a worktree so the agent works on a feature branch
@@ -19,19 +19,15 @@ cat >> /tmp/gemini_NNN.md << 'EOF'
 EOF
 
 # Step 3 — run headless from the worktree directory
-(cd .agent-worktrees/story-NNN && gemini -p "$(cat /tmp/gemini_NNN.md)" --approval-mode yolo 2>&1 | tee /tmp/gemini_NNN.log)
+(cd .agent-worktrees/story-NNN && bash scripts/dispatch_claude_ollama.sh /tmp/gemini_NNN.md 2>&1 | tee /tmp/gemini_NNN.log)
 # Use run_in_background: true on the Bash tool call — no terminal tab needed.
 # On completion Claude reads /tmp/gemini_NNN.log to verify output.
 
 # Parallel sessions — run multiple Bash calls with run_in_background: true simultaneously.
 # Each writes to its own log: /tmp/gemini_571.log, /tmp/gemini_572.log, etc.
-```
 
-**Session recovery** (if headless run is interrupted):
-```bash
-gemini --list-sessions          # find the session index
-gemini -r latest                # resume most recent session
-gemini -r 2                     # resume by index
+# Optional: override model (default: devstral-small-2:cloud)
+(cd .agent-worktrees/story-NNN && bash scripts/dispatch_claude_ollama.sh /tmp/gemini_NNN.md --model claude-sonnet-4-6 2>&1 | tee /tmp/gemini_NNN.log)
 ```
 
 **Worktree cleanup** (after PR merge):
@@ -63,10 +59,10 @@ git branch -d story/NNN
    Stories must have `Blocks:` and `Blocked By:` headers **with colons** or validation fails.
    Jules manages its own branch and PR — no worktree needed.
 
-2. **Gemini CLI — Python, shell, multi-file implementation:**
+2. **Claude via Ollama Cloud — Python, shell, multi-file implementation:**
    ```bash
    git worktree add .agent-worktrees/story-NNN story/NNN
-   (cd .agent-worktrees/story-NNN && gemini -p "$(cat /tmp/gemini_NNN.md)" --approval-mode yolo 2>&1 | tee /tmp/gemini_NNN.log)
+   (cd .agent-worktrees/story-NNN && bash scripts/dispatch_claude_ollama.sh /tmp/gemini_NNN.md 2>&1 | tee /tmp/gemini_NNN.log)
    ```
    Always dispatch from a worktree — agent commits to `story/NNN`, opens PR, never touches `main` directly.
 
