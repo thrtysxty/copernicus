@@ -103,7 +103,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
-| #576 | Fix Is Repo Targeted Loop | APPROVED FOR IMPLEMENTATION | N/A |
 | #577 | Wizard Workspace Validation | APPROVED FOR IMPLEMENTATION | N/A |
 | #578 | Wizard Handoff Workingdir Race | APPROVED FOR IMPLEMENTATION | N/A |
 | #579 | Project Selector Dialog Fixes | APPROVED FOR IMPLEMENTATION | N/A |
@@ -114,6 +113,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #576 | Fix Is Repo Targeted Loop | COMPLETE | N/A |
 | #542 | Stitch Sdk Migration | APPROVED FOR IMPLEMENTATION | P2 |
 | #544 | Genesis Rich Scaffold Templates | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #551 | Createstamp Ac Description Fields | APPROVED FOR IMPLEMENTATION | P1 |

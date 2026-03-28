@@ -463,14 +463,13 @@ export default function App() {
         className="h-screen w-screen"
       >
         <Wizard
-          onComplete={() => {
+          onComplete={async () => {
+            const r = await invoke<any>('app:get-root-path').catch(() => null)
+            const root = unwrapIpc<any>(r)
+            if (root) setWorkingDir(root)
             setIsWizard(false)
             setShowGenesis(false)
             setView('planner')
-            invoke<any>('app:get-root-path').then((r: any) => {
-              const root = unwrapIpc<any>(r)
-              if (root) setWorkingDir(root)
-            }).catch(() => {})
           }}
         />
       </motion.div>
