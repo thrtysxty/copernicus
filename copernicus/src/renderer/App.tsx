@@ -1,3 +1,4 @@
+import log from './utils/logger'
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Maximize2, RotateCcw, ChevronDown, Archive,
@@ -184,7 +185,7 @@ export default function App() {
       if (cols && Array.isArray(cols)) {
         useLayoutStore.getState().setColumns(cols.map(c => ({ ...c, label: LABELS[c.id] ?? c.id } as any)))
       }
-    }).catch((e: unknown) => console.error('Failed to init kanban columns', e))
+    }).catch((e: unknown) => log.error('Failed to init kanban columns', e))
   }, [invoke])
 
   // Story 380: Sync fullscreen state from main process

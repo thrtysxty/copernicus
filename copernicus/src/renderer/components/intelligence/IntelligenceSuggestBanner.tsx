@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState } from 'react';
 import { Bot, Plus, X, ShieldAlert, FileText, Wrench, Terminal, Sparkles } from 'lucide-react';
 import { IntelligenceDocSuggestion, IntelligenceDocType, IntelligenceDocument } from '../../../../electron/intelligence/types';
@@ -58,7 +59,7 @@ export const IntelligenceSuggestBanner: React.FC<IntelligenceSuggestBannerProps>
         }
       }
     } catch (e) {
-      console.error('Failed to create doc from suggestion', e);
+      log.error('Failed to create doc from suggestion', e);
     } finally {
       setIsProcessing(false);
     }
@@ -86,7 +87,7 @@ export const IntelligenceSuggestBanner: React.FC<IntelligenceSuggestBannerProps>
       setActiveSuggestions([]);
       onComplete(newCreated);
     } catch (e) {
-      console.error('Failed to create all docs', e);
+      log.error('Failed to create all docs', e);
     } finally {
       setIsProcessing(false);
     }

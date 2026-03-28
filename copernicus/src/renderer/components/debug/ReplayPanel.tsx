@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
@@ -28,7 +29,7 @@ export const ReplayPanel: React.FC = () => {
       const res = await invoke<ReplayRun[]>('replay:list-runs', 50)
       setRuns(unwrapIpc<ReplayRun[]>(res))
     } catch (err) {
-      console.error('Failed to load runs:', err)
+      log.error('Failed to load runs:', err)
     } finally {
       setIsLoading(false)
     }
@@ -40,7 +41,7 @@ export const ReplayPanel: React.FC = () => {
       const res = await invoke<ReplayStep[]>('replay:get-steps', runId)
       setSteps(unwrapIpc<ReplayStep[]>(res))
     } catch (err) {
-      console.error('Failed to load steps:', err)
+      log.error('Failed to load steps:', err)
     }
   }
 
@@ -50,7 +51,7 @@ export const ReplayPanel: React.FC = () => {
       const res = await invoke<ReplayStepDetail>('replay:get-step-detail', stepId)
       setSelectedStepDetail(unwrapIpc<ReplayStepDetail>(res))
     } catch (err) {
-      console.error('Failed to load step detail:', err)
+      log.error('Failed to load step detail:', err)
     }
   }
 

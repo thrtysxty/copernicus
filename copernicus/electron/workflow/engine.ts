@@ -586,7 +586,7 @@ export class WorkflowEngine {
             bankId: `workflow:node:${node.id}`,
             eventType: 'tool_call',
             meta: { tool: 'shell-command', command: d.command, exit_code: 0 }
-          }).catch(console.warn);
+          }).catch(log.warn);
           return result;
         } catch (err: unknown) {
           const { memoryService } = await import('../memory/memoryService');
@@ -597,7 +597,7 @@ export class WorkflowEngine {
             bankId: `workflow:node:${node.id}`,
             eventType: 'tool_call',
             meta: { tool: 'shell-command', command: d.command, exit_code: exitCode }
-          }).catch(console.warn);
+          }).catch(log.warn);
           throw err;
         }
       }

@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { ipcMain } from 'electron';
 import { handleIpc } from '../utils/handle-ipc';
 import { stateLedger } from '../db/state-ledger';
@@ -110,7 +111,7 @@ export function registerIntelHandlers() {
     const rootPath = fsManager.getRootPath();
     if (rootPath) {
       providerSyncEngine.sync(doc, rootPath).catch(err => {
-        console.error('Provider sync failed on create:', err);
+        log.error('Provider sync failed on create:', err);
       });
     }
     return doc;
@@ -122,7 +123,7 @@ export function registerIntelHandlers() {
     const rootPath = fsManager.getRootPath();
     if (rootPath) {
       providerSyncEngine.sync(doc, rootPath).catch(err => {
-        console.error('Provider sync failed on update:', err);
+        log.error('Provider sync failed on update:', err);
       });
     }
     return doc;

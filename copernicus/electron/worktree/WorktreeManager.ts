@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { spawnSync } from 'child_process'
 import path from 'path'
 import fs from 'fs'
@@ -105,12 +106,12 @@ export class WorktreeManager {
     try {
       this.execGit(['worktree', 'remove', '--force', worktreePath])
     } catch (error: any) {
-      console.error(`Error removing worktree ${worktreePath}:`, error.message)
+      log.error(`Error removing worktree ${worktreePath}:`, error.message)
     }
     try {
       this.execGit(['branch', '-D', branch])
     } catch (error: any) {
-      console.error(`Error deleting branch ${branch}:`, error.message)
+      log.error(`Error deleting branch ${branch}:`, error.message)
     }
   }
 
@@ -152,7 +153,7 @@ export class WorktreeManager {
           }
         }
       } catch (error: any) {
-        console.error(`Error polling worktree ${wt.branch}:`, error.message)
+        log.error(`Error polling worktree ${wt.branch}:`, error.message)
         const stmt = this.db.prepare(
           'UPDATE agent_worktrees SET status = ?, completed_at = ? WHERE id = ?',
         )
@@ -180,11 +181,11 @@ export class WorktreeManager {
 
   private execGit(args: string[], cwd?: string): string {
     const root = cwd || this.repoRoot
-    console.log(`Executing: git -C ${root} ${args.join(' ')}`)
+    log.info(`Executing: git -C ${root} ${args.join(' ')}`)
     const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' })
     if (result.status !== 0) {
       const msg = result.stderr?.trim() || result.error?.message || 'unknown error'
-      console.error(`Git command failed: git -C ${root} ${args.join(' ')}`)
+      log.error(`Git command failed: git -C ${root} ${args.join(' ')}`)
       throw new Error(`Git command failed: ${args.join(' ')}. Error: ${msg}`)
     }
     return (result.stdout || '').trim()

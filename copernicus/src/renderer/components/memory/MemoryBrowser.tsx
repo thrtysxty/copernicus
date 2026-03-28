@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc, IpcResult } from '../../types/ipc'
@@ -44,7 +45,7 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
     try {
       await invoke('fs:open-file', { path })
     } catch (err) {
-      console.error('Failed to open file:', err)
+      log.error('Failed to open file:', err)
     }
   }
 

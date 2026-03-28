@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import {
   LoadedExtension,
   WorkflowNodeDefinition,
@@ -45,7 +46,7 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
 
   registerView(def: ViewDefinition): void {
     // TODO: Implement view registration
-    console.log(`View ${def.id} registered (not yet implemented)`)
+    log.info(`View ${def.id} registered (not yet implemented)`)
   }
 
   getExtensions(): LoadedExtension[] {

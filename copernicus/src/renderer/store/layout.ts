@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -337,7 +338,7 @@ stitchTokens: null,
             columns: state.columns.map(c => c.id === id ? { ...c, ...updates } : c)
           }))
         } catch (e) {
-          console.error('Failed to update column', e)
+          log.error('Failed to update column', e)
         }
       },
       setActiveWorkflowTemplate: (id) => set({ activeWorkflowTemplate: id }),

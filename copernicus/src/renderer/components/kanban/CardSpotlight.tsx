@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc';
@@ -26,7 +27,7 @@ export const CardSpotlight: React.FC<CardSpotlightProps> = ({ promptId }) => {
           }
         }
       } catch (err) {
-        console.error('Failed to fetch edit decisions:', err);
+        log.error('Failed to fetch edit decisions:', err);
       }
     };
 

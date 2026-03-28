@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect, useRef } from 'react'
 import { unwrapIpc } from '../../types/ipc'
 import { Message, ModelInfo, AuthStatus } from './useChatPanel'
@@ -57,7 +58,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
           setUIComponents(parsed)
         }
       } catch (e) {
-        console.error('Failed to parse component-update', e)
+        log.error('Failed to parse component-update', e)
       }
     }
   }, [language, code, setUIComponents])

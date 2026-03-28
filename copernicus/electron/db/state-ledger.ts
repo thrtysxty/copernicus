@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import * as crypto from 'crypto';
 import Database from 'better-sqlite3';
 import path from 'path';
@@ -635,7 +636,7 @@ export class StateLedger {
       }
       return result;
     } catch (e) {
-      console.error('Failed to get edit decisions counts', e);
+      log.error('Failed to get edit decisions counts', e);
       return { accept: 0, reject: 0, abort: 0 };
     }
   }

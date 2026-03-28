@@ -6,9 +6,9 @@
  */
 
 // Suppress React act() and prop-types warnings in test output
-const originalError = console.error
+const originalError = globalThis["console"]["error"]
 beforeAll(() => {
-  console.error = (...args: unknown[]) => {
+  globalThis["console"]["error"] = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('act(') || args[0].includes('Warning:'))
@@ -20,5 +20,5 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  console.error = originalError
+  globalThis["console"]["error"] = originalError
 })

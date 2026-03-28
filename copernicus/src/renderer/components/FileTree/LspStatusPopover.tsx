@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useRef } from 'react'
 import { useLayoutStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -34,7 +35,7 @@ export const LspStatusPopover: React.FC<LspStatusPopoverProps> = ({ isOpen, onCl
         const data = unwrapIpc<LspStatus>(result)
         setLspDetailedStatus(data)
       } catch (err) {
-        console.error('Failed to fetch LSP status:', err)
+        log.error('Failed to fetch LSP status:', err)
         setLspDetailedStatus(null)
       }
     }

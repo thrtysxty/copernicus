@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { Diff, Terminal, CheckCircle, RotateCcw, AlertTriangle } from 'lucide-react'
 import { useLayoutStore } from '../../store/layout'
@@ -44,7 +45,7 @@ export const ReviewPanel: React.FC = () => {
       const filtered = allStories.filter(s => pendingReview?.stories.includes(s.id))
       setStories(filtered)
     } catch (err) {
-      console.error('Failed to load stories:', err)
+      log.error('Failed to load stories:', err)
     }
   }
 
@@ -114,7 +115,7 @@ export const ReviewPanel: React.FC = () => {
       }
       setPendingReview(null)
     } catch (err) {
-      console.error('Failed to approve:', err)
+      log.error('Failed to approve:', err)
     }
   }
 

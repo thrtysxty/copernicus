@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import * as os from 'os';
 
 /**
@@ -97,7 +98,7 @@ export function buildSafeEnv(_agentId: string, allowList: string[] = []): NodeJS
       if (pattern && pattern.test(originalEnv[key]!)) {
         safeEnv[key] = originalEnv[key];
       } else {
-        console.warn(`[Security] Environment variable ${key} excluded: ${pattern ? 'invalid value format' : 'no pattern defined'}`);
+        log.warn(`[Security] Environment variable ${key} excluded: ${pattern ? 'invalid value format' : 'no pattern defined'}`);
       }
     }
   }

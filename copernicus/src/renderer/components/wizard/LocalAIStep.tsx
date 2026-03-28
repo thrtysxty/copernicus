@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react';
 import { Zap, Check, ArrowRight, Cpu, Activity, Server } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
@@ -44,7 +45,7 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
         setIsConfigured(true);
       }
     } catch (e) {
-      console.error('Failed to start bundled model', e);
+      log.error('Failed to start bundled model', e);
     } finally {
       setIsStartingBundled(false);
     }
@@ -58,7 +59,7 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
       setActiveModelName(selectedModel);
       setIsConfigured(true);
     } catch (e) {
-      console.error('Failed to set Ollama model', e);
+      log.error('Failed to set Ollama model', e);
     }
   };
 

@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { useState, useEffect } from 'react'
 import { useIpcError } from './useIpcError'
 import { unwrapIpc, IpcResult } from '../types/ipc'
@@ -29,7 +30,7 @@ export function useMemoryRecall(projectId: string, bankId: string, limit = 5) {
           setMemories(data)
         }
       } catch (err) {
-        console.error('Failed to fetch working set memories:', err)
+        log.error('Failed to fetch working set memories:', err)
       } finally {
         if (isMounted) {
           setLoading(false)

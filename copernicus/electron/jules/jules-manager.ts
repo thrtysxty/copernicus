@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { stateLedger, JulesSession } from '../db/state-ledger'
 import { memoryService } from '../memory/memoryService'
 import { fsManager } from '../fs-manager'
@@ -26,7 +27,7 @@ export class JulesManager {
         session_id: sessionId,
         prompt_summary: prompt.slice(0, 200)
       }
-    }).catch(console.warn);
+    }).catch(log.warn);
   }
 }
 

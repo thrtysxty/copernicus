@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { commandRegistry } from '../../commands/registry'
@@ -339,7 +340,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
           }
         }
       } catch (e) {
-        console.error('Failed to get context delta', e);
+        log.error('Failed to get context delta', e);
       }
     }
     if (centerMode === 'builder' && uiComponents.length > 0) enrichedContent += `\n\n<ui-canvas-context>\n${JSON.stringify(uiComponents, null, 2)}\n</ui-canvas-context>`

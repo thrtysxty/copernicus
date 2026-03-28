@@ -1,3 +1,4 @@
+import log from '../../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
@@ -44,7 +45,7 @@ export const RagSection: React.FC = () => {
           if (settings.ragSummariseEnabled !== undefined) setSummariseEnabled(settings.ragSummariseEnabled)
         }
       } catch (err) {
-        console.error('Failed to load RAG settings', err)
+        log.error('Failed to load RAG settings', err)
       } finally {
         setLoading(false)
       }

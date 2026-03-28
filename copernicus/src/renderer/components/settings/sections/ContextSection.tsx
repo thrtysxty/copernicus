@@ -1,3 +1,4 @@
+import log from '../../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
@@ -46,7 +47,7 @@ export const ContextSection: React.FC = () => {
           setAvailableModels(models)
         }
       } catch (err) {
-        console.error('Failed to load context settings', err)
+        log.error('Failed to load context settings', err)
       } finally {
         setLoading(false)
       }

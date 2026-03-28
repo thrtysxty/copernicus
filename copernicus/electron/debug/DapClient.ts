@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { ChildProcess, spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import fs from 'node:fs/promises'
@@ -88,7 +89,7 @@ export class DapClient extends EventEmitter {
         }
       }
       if (!wsUrl) {
-        console.error('[DAP] Failed to connect to node debugger after 10 attempts')
+        log.error('[DAP] Failed to connect to node debugger after 10 attempts')
         throw new Error('Failed to connect to node debugger')
       }
       this.cdpShim.attach(wsUrl)
@@ -110,7 +111,7 @@ export class DapClient extends EventEmitter {
       this.adapterProcess.stdout?.on('data', this.handleData.bind(this))
     }
     this.adapterProcess.stderr?.on('data', (err) => {
-      console.error('[DAP Error]', err.toString())
+      log.error('[DAP Error]', err.toString())
     })
 
     this.adapterProcess.on('exit', () => {
@@ -232,7 +233,7 @@ export class DapClient extends EventEmitter {
   private handleData(data: Buffer) {
     this.rawData = Buffer.concat([this.rawData, data])
     if (this.rawData.length > 10 * 1024 * 1024) {
-      console.warn('[DAP] rawData exceeded 10 MB — resetting buffer')
+      log.warn('[DAP] rawData exceeded 10 MB — resetting buffer')
       this.rawData = Buffer.alloc(0)
       return
     }
@@ -254,7 +255,7 @@ export class DapClient extends EventEmitter {
         const message = JSON.parse(payload.toString('utf-8'))
         this.handleMessage(message)
       } catch (err) {
-        console.error('[DAP] Failed to parse message:', err)
+        log.error('[DAP] Failed to parse message:', err)
       }
     }
   }

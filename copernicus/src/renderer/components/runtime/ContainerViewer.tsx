@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { useLayoutStore } from '../../store/layout';
@@ -28,7 +29,7 @@ export const ContainerViewer: React.FC = () => {
         setContainers(res.data);
       }
     } catch (e) {
-      console.error('Failed to fetch containers', e);
+      log.error('Failed to fetch containers', e);
     } finally {
       setLoading(false);
     }
@@ -48,7 +49,7 @@ export const ContainerViewer: React.FC = () => {
           interval = setInterval(fetchContainers, 5000); // Auto-refresh every 5s
         }
       } catch (e) {
-        console.error('Failed to check docker availability', e);
+        log.error('Failed to check docker availability', e);
         setDockerAvailable(false);
       }
     };
@@ -67,7 +68,7 @@ export const ContainerViewer: React.FC = () => {
         fetchContainers();
       }
     } catch (e) {
-      console.error(`Failed to ${action} container ${id}`, e);
+      log.error(`Failed to ${action} container ${id}`, e);
     }
   };
 

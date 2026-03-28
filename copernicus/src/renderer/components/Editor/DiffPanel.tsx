@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import { useState, useEffect } from 'react'
 import { DiffEditor, useMonaco } from '@monaco-editor/react'
 import { Check, X, CheckCheck, Trash2, Sidebar, LayoutList } from 'lucide-react'
@@ -122,7 +123,7 @@ export default function DiffPanel() {
         setReviewMode(newFiles)
       }
     } catch (err) {
-      console.error('Failed to accept change:', err)
+      log.error('Failed to accept change:', err)
     }
   }
 

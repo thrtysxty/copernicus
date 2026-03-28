@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState } from 'react'
 import { RotateCcw, Brain } from 'lucide-react'
 import { GuideCopernicus } from './GuideCopernicus'
@@ -94,7 +95,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
       setShowSaved(true)
       setTimeout(() => setShowSaved(false), 2000)
     } catch (err) {
-      console.error('Failed to save memory', err)
+      log.error('Failed to save memory', err)
     }
   }
 
@@ -212,7 +213,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
                       await invoke('models:set-active', newModel)
                       setModel(newModel)
                   } catch (err) {
-                      console.error('Failed to set model', err)
+                      log.error('Failed to set model', err)
                   }
                 }}
               >

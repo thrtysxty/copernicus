@@ -1,9 +1,10 @@
+import log from './utils/logger'
 import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {
     if (channel !== 'splash-status') {
-      console.warn(`[splash-preload] Blocked channel: ${channel}`)
+      log.warn(`[splash-preload] Blocked channel: ${channel}`)
       return () => { /* no-op */ }
     }
     ipcRenderer.on(channel, listener)
@@ -12,7 +13,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
   send(channel: string, ...args: unknown[]): void {
     if (channel !== 'splash-ready') {
-      console.warn(`[splash-preload] Blocked send on channel: ${channel}`)
+      log.warn(`[splash-preload] Blocked send on channel: ${channel}`)
       return
     }
     ipcRenderer.send(channel, ...args)

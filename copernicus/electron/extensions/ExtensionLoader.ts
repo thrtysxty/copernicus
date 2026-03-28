@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import path from 'path'
 import fs from 'fs'
 import { ExtensionRegistry } from './ExtensionRegistry'
@@ -30,7 +31,7 @@ export class ExtensionLoader {
   private async loadOne(dir: string): Promise<LoadedExtension | null> {
     const packagePath = path.join(dir, 'package.json')
     if (!fs.existsSync(packagePath)) {
-      console.warn(`Extension directory ${dir} is missing package.json`)
+      log.warn(`Extension directory ${dir} is missing package.json`)
       return null
     }
 
@@ -39,18 +40,18 @@ export class ExtensionLoader {
       const manifest: CopernicusManifest = packageJson.copernicus
 
       if (!manifest) {
-        console.warn(`Extension ${packageJson.name} is missing 'copernicus' key in package.json`)
+        log.warn(`Extension ${packageJson.name} is missing 'copernicus' key in package.json`)
         return null
       }
 
       if (!packageJson.main) {
-        console.warn(`Extension ${packageJson.name} is missing 'main' entry in package.json`)
+        log.warn(`Extension ${packageJson.name} is missing 'main' entry in package.json`)
         return null
       }
 
       const entryPoint = path.join(dir, packageJson.main)
       if (!fs.existsSync(entryPoint)) {
-        console.warn(`Extension ${packageJson.name} entry point ${entryPoint} not found`)
+        log.warn(`Extension ${packageJson.name} entry point ${entryPoint} not found`)
         return null
       }
 
@@ -58,7 +59,7 @@ export class ExtensionLoader {
       const extensionModule = require(entryPoint)
 
       if (typeof extensionModule.activate !== 'function') {
-        console.warn(`Extension ${packageJson.name} is missing 'activate' function`)
+        log.warn(`Extension ${packageJson.name} is missing 'activate' function`)
         return null
       }
 
@@ -80,7 +81,7 @@ export class ExtensionLoader {
           active: true,
         }
       } catch (e: any) {
-        console.error(`Error activating extension ${packageJson.name}:`, e)
+        log.error(`Error activating extension ${packageJson.name}:`, e)
         return {
           name: packageJson.name,
           displayName: manifest.displayName || packageJson.name,
@@ -92,7 +93,7 @@ export class ExtensionLoader {
         }
       }
     } catch (e: any) {
-      console.error(`Error loading extension from ${dir}:`, e)
+      log.error(`Error loading extension from ${dir}:`, e)
       const packageName = path.basename(dir);
       return {
         name: packageName,

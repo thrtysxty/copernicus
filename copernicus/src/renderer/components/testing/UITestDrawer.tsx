@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 
@@ -34,7 +35,7 @@ export const UITestDrawer: React.FC = () => {
         setTestFiles(files)
       }
     } catch (err) {
-      console.error('Failed to load test files', err)
+      log.error('Failed to load test files', err)
     }
   }
 
@@ -48,7 +49,7 @@ export const UITestDrawer: React.FC = () => {
         setResults(data.results)
       }
     } catch (err) {
-      console.error('Failed to run tests', err)
+      log.error('Failed to run tests', err)
     } finally {
       setIsRunning(false)
       setRunningFile(null)

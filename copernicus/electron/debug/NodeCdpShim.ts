@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import WebSocket from 'ws'
 import { EventEmitter } from 'node:events'
 import type { DebugProtocol } from '@vscode/debugprotocol'
@@ -87,7 +88,7 @@ export class NodeCdpShim extends EventEmitter {
         this.ws?.close()
         return {}
       default:
-        console.warn(`[NodeCdpShim] Unhandled DAP request: ${request.command}`)
+        log.warn(`[NodeCdpShim] Unhandled DAP request: ${request.command}`)
         return {}
     }
   }

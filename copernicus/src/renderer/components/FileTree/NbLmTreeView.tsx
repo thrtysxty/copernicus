@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react'
 import { ChevronRight, ChevronDown, Link as LinkIcon, FileText, Wand2 } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -55,7 +56,7 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
         }
       } catch (err) {
         if (active) {
-          console.error(err)
+          log.error(err)
           setError(true)
           setLoading(false)
         }

@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useState, useRef } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
          Image as ImageIcon, Database, Maximize2, Minimize2, RotateCcw, ChevronLeft, BookOpen } from 'lucide-react'
@@ -114,13 +115,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu,
 
         if (finalContent.length > MAX_EDITOR_BYTES) {
           setActiveFileContent(finalContent.slice(0, MAX_EDITOR_BYTES))
-          console.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
+          log.warn(`[FileTree] File truncated at ${MAX_EDITOR_BYTES} bytes: ${node.path}`)
         } else {
           setActiveFileContent(finalContent)
         }
         setActiveFileLanguage(getLanguage(node.path))
       } catch (err) {
-        console.error('[FileTree] Failed to read file content:', err)
+        log.error('[FileTree] Failed to read file content:', err)
       }
     }
   }
@@ -161,7 +162,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu,
          layoutState.openFile(newPath)
       }
     } catch (err) {
-      console.error('Rename failed', err)
+      log.error('Rename failed', err)
       setIsEditing(false)
     }
   }
@@ -284,7 +285,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
         setRootChildren(data)
       }
     } catch (err) {
-      console.error(err)
+      log.error(err)
     }
   }
 
@@ -389,7 +390,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
         loadRoot() 
       }
     } catch (err) {
-      console.error('Failed to create item', err)
+      log.error('Failed to create item', err)
       setCreatingItem(null)
     }
   }

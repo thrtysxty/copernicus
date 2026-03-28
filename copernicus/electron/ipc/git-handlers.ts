@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { ipcMain, BrowserWindow } from 'electron'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -65,7 +66,7 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
         eventType: 'git_commit',
         meta: { sha: commitSha, message, files: changedFiles }
       });
-    }).catch(console.warn);
+    }).catch(log.warn);
 
     return { ok: true }
   }))

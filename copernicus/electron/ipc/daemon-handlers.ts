@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { ipcMain, app } from 'electron'
 import { spawn, execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -94,7 +95,7 @@ async function getMcpHubStatus() {
 
   } catch (error: any) {
     // If command fails, assume hub is not running or encountered an error
-    console.error('Failed to get MCP Hub status:', error.message)
+    log.error('Failed to get MCP Hub status:', error.message)
     return { running: false, error: error.message }
   }
 }

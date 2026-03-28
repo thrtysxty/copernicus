@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { Book, Link as LinkIcon, Trash2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -32,7 +33,7 @@ export const NotebookLMSection: React.FC = () => {
       const data = unwrapIpc<Notebook[]>(res as any)
       if (data) setNotebooks(data)
     } catch (e) {
-      console.error(e)
+      log.error(e)
     }
   }
 
@@ -70,7 +71,7 @@ export const NotebookLMSection: React.FC = () => {
       setNewDesc('')
       fetchNotebooks()
     } catch (e) {
-      console.error(e)
+      log.error(e)
     }
   }
 
@@ -79,7 +80,7 @@ export const NotebookLMSection: React.FC = () => {
       await invoke('nlm:remove-notebook', id)
       fetchNotebooks()
     } catch (e) {
-      console.error(e)
+      log.error(e)
     }
   }
 

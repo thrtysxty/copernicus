@@ -1,5 +1,5 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react';
-import log from 'electron-log/renderer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
          ShieldCheck, Key, Zap, Github, Layout, Sparkles, Loader2 } from 'lucide-react';
@@ -312,7 +312,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke<{ ok: boolean }>('app:start-oauth-listener');
     } catch (e: unknown) {
       const message = e instanceof Error ? (e as any).message : String(e)
-      console.error('OAuth start failed:', message);
+      log.error('OAuth start failed:', message);
     }
   };
 

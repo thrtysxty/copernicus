@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Paperclip, FileText, X, Download } from 'lucide-react'
 import { ContextChip } from './ContextChip'
@@ -85,7 +86,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       setShowStitchModal(false)
       setShowAttachMenu(false)
     } catch (e: any) {
-      console.error(e)
+      log.error(e)
     } finally {
       setIsStitchLoading(false)
     }

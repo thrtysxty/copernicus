@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Plus, Trash2, SplitSquareHorizontal, CheckCircle2, AlertCircle, Clock, Save, FileText, Bot, Wrench, Terminal, ShieldAlert, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -55,12 +56,12 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               setSuggestions(suggs)
             }
           } catch (e) {
-            console.error('Failed to fetch intelligence suggestions', e)
+            log.error('Failed to fetch intelligence suggestions', e)
           }
         }
       }
     } catch (e) {
-      console.error('Failed to fetch intelligence docs', e)
+      log.error('Failed to fetch intelligence docs', e)
     }
   }, [invoke])
 
@@ -117,7 +118,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
         setSaveStatus('syncing')
       }
     } catch (e) {
-      console.error('Failed to update doc', e)
+      log.error('Failed to update doc', e)
       setSaveStatus('error')
     }
   }
@@ -164,7 +165,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
         setNewDocDesc('')
       }
     } catch (e) {
-      console.error('Failed to create doc', e)
+      log.error('Failed to create doc', e)
     }
   }
 
@@ -175,7 +176,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
       setDocuments(prev => prev.filter(d => d.id !== docId))
       if (selectedDocId === docId) setSelectedDocId(null)
     } catch (e) {
-      console.error('Failed to delete doc', e)
+      log.error('Failed to delete doc', e)
     }
   }
 
@@ -225,7 +226,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
             setIsInstructionLong(unwrapped.overThreshold)
           }
         })
-        .catch(err => console.error('Failed to audit length', err))
+        .catch(err => log.error('Failed to audit length', err))
     } else {
       setIsInstructionLong(false)
     }
@@ -308,7 +309,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
       setIsSplitModalOpen(false)
       
     } catch (err) {
-      console.error('Failed to create split docs', err)
+      log.error('Failed to create split docs', err)
     }
   }
 

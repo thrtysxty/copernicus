@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { contextManager } from './ContextManager'
 import { authManager } from '../auth-manager'
 import { modelRegistry } from '../models/model-registry'
@@ -138,7 +139,7 @@ export class RagInjector {
 
       return `[SUMMARY OF ${chunk.filePath}:${chunk.startLine}-${chunk.endLine}]\n${summary.trim()}`
     } catch (err) {
-      console.error('Failed to summarise chunk:', err)
+      log.error('Failed to summarise chunk:', err)
       return `[SUMMARY ERROR]\n${chunk.content.slice(0, 500)}...`
     }
   }

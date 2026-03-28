@@ -1,3 +1,4 @@
+import log from '../../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { Trash2, AlertCircle, Plus, X, Server } from 'lucide-react'
 import { useIpcError } from '../../../hooks/useIpcError'
@@ -42,7 +43,7 @@ export const MCPSection: React.FC = () => {
       }
       setMcpStatus(map)
     } catch (err) {
-      console.error('Failed to load MCP settings:', err)
+      log.error('Failed to load MCP settings:', err)
     } finally {
       setIsLoading(false)
     }

@@ -25,7 +25,7 @@ async function fetchStories() {
   const stories = unwrapIpc<Story[]>(result);
   
   // Use the data safely
-  console.log(stories.length);
+  log.info(stories.length);
 }
 ```
 

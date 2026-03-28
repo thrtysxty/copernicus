@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useLayoutStore } from '../../store/layout'
@@ -54,7 +55,7 @@ export const HeatmapView: React.FC = () => {
 
         setFiles(processed)
       } catch (err) {
-        console.error('Heatmap data fetch failed:', err)
+        log.error('Heatmap data fetch failed:', err)
       } finally {
         setLoading(false)
       }

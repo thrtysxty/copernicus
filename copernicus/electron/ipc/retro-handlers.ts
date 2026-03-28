@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { ipcMain, BrowserWindow } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -81,14 +82,14 @@ export function registerRetroHandlers(deps?: IpcHandlerDeps) {
       if (item.status === 'approved' || item.status === 'edited') {
         if (item.item_type === 'file_patch') {
           if (!item.target) {
-            console.warn(`[RetroCommit] file_patch missing target: ${item.id}`)
+            log.warn(`[RetroCommit] file_patch missing target: ${item.id}`)
             continue
           }
           const content = item.status === 'edited' ? (item.edited_content || item.content) : item.content
           const targetPath = path.resolve(rootPath, item.target)
           
           if (!targetPath.startsWith(rootPath)) {
-            console.warn(`[RetroCommit] file_patch outside root path: ${targetPath}`)
+            log.warn(`[RetroCommit] file_patch outside root path: ${targetPath}`)
             continue
           }
 
@@ -96,7 +97,7 @@ export function registerRetroHandlers(deps?: IpcHandlerDeps) {
           // Match references/gotchas.md, CLAUDE.md, or .claude/rules/*.md
           // Note: using test rather than exact match to account for any .claude/rules/ paths
           if (relativePath !== 'references/gotchas.md' && relativePath !== 'CLAUDE.md' && !relativePath.startsWith('.claude/rules/')) {
-            console.warn(`[RetroCommit] file_patch skipped (not in allowlist): ${relativePath}`)
+            log.warn(`[RetroCommit] file_patch skipped (not in allowlist): ${relativePath}`)
             continue
           }
           
@@ -142,7 +143,7 @@ export function registerRetroHandlers(deps?: IpcHandlerDeps) {
                 const newStoryId = deps.storiesManager.createStory({ title, priority, type: 'Feature', epic: '(none)' })
                 newStoryIds.push(newStoryId)
               } else {
-                console.warn(`[RetroCommit] scaffoldRunner not available for scaffolding`)
+                log.warn(`[RetroCommit] scaffoldRunner not available for scaffolding`)
               }
             }
           }
@@ -188,7 +189,7 @@ export function registerRetroHandlers(deps?: IpcHandlerDeps) {
       })()
 
     } catch (e: any) {
-      console.error(`[RetroCommit] transaction failed`, e)
+      log.error(`[RetroCommit] transaction failed`, e)
       throw new Error(`Commit failed: ${e.message}`)
     }
 

@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
@@ -62,7 +63,7 @@ export const TechnicalPulseOverlay: React.FC<Props> = ({ onClose }) => {
       setHealthChecks(allChecks);
 
     } catch (error) {
-      console.error('Failed to fetch health checks:', error)
+      log.error('Failed to fetch health checks:', error)
       setHealthChecks(prev => prev.map(check => ({ ...check, ok: false, timestamp: 'Error' })))
     } finally {
       setChecking(false)
