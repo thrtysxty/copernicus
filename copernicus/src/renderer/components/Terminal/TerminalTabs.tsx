@@ -135,7 +135,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
           </button>
         </div>
       </div>
-      <div className="flex-grow relative overflow-hidden">
+      <div className="flex-grow relative overflow-hidden z-10">
         {terminals.map((tab) => (
           <div
             key={tab.id}
