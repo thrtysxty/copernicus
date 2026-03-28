@@ -291,7 +291,7 @@ export const GithubDashboard: React.FC = () => {
                         onClick={() => handleSetTarget(repo.full_name)}
                         className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
                           ${isTarget
-                            ? 'text-copernicus-phosphor bg-copernicus-phosphor/10'
+                            ? 'text-black bg-copernicus-phosphor'
                             : 'text-zinc-600 hover:text-copernicus-phosphor hover:bg-copernicus-phosphor/10'}`}
                         title="Set Target"
                       >

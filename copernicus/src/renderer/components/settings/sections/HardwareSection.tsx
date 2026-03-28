@@ -65,7 +65,7 @@ export const HardwareSection: React.FC = () => {
                 onClick={() => setConfig(p => ({ ...p, telemetryMode: mode }))}
                 className={`px-3 py-1 text-[10px] uppercase border transition-colors ${
                   config.telemetryMode === mode
-                    ? 'border-copernicus-phosphor text-copernicus-phosphor bg-copernicus-phosphor/10'
+                    ? 'border-copernicus-phosphor text-black bg-copernicus-phosphor'
                     : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'
                 }`}
               >

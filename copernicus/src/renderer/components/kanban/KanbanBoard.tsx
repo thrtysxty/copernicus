@@ -619,7 +619,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                           <button 
                             onClick={handleCreate} 
                             data-testid="create-story-confirm"
-                            className="px-3 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor rounded text-[8px] font-bold uppercase"
+                            className="px-3 py-1 bg-copernicus-phosphor text-black rounded text-[8px] font-bold uppercase"
                           >
                             Create
                           </button>

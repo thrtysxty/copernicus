@@ -84,7 +84,7 @@ export function CommandDeck() {
             className={`
               h-9 px-2 text-[10px] font-mono border border-copernicus-steel/50 rounded hover:bg-copernicus-steel/20 hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-all text-left truncate uppercase tracking-tight
               ${['test', 'test_e2e', 'backlog', 'git commit'].includes(target) ? 'col-span-2 border-l-2 border-l-copernicus-phosphor' : ''}
-              ${running === target ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor border-copernicus-phosphor animate-pulse' : ''}
+              ${running === target ? 'bg-copernicus-phosphor text-black border-copernicus-phosphor animate-pulse' : ''}
               disabled:opacity-50 disabled:cursor-not-allowed
             `}
           >

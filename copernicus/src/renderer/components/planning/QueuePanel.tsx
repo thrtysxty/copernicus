@@ -33,7 +33,7 @@ export const QueuePanel: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans p-4">
       {pendingReadyStories.length > 0 && (
-        <div className="bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 p-3 mb-4 flex justify-between items-center rounded">
+        <div className="border-l-2 border-copernicus-phosphor bg-zinc-900 border border-copernicus-phosphor/30 p-3 mb-4 flex justify-between items-center rounded">
           <span className="text-copernicus-phosphor font-medium">
             {pendingReadyStories.length} stories unblocked — dispatch?
           </span>

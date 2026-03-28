@@ -95,7 +95,7 @@ export const ContextSection: React.FC = () => {
               <Settings size={14} className="text-zinc-500" />
               <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Compaction Threshold</label>
             </div>
-            <span className="text-[11px] font-mono font-bold text-copernicus-phosphor bg-copernicus-phosphor/10 px-2 py-0.5 rounded">
+            <span className="text-[11px] font-mono font-bold text-copernicus-phosphor bg-copernicus-phosphor text-black px-2 py-0.5 rounded">
               {compactionThreshold}%
             </span>
           </div>

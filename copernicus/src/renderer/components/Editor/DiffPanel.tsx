@@ -157,7 +157,7 @@ export default function DiffPanel() {
       <div className="w-64 border-r border-copernicus-steel flex flex-col shrink-0">
         <div className="h-10 border-b border-copernicus-steel flex items-center px-4 justify-between bg-[#0A0A0A]">
           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Modified Files</span>
-          <span className="text-[10px] font-mono text-copernicus-phosphor bg-copernicus-phosphor/10 px-1.5 py-0.5 rounded">
+          <span className="text-[10px] font-mono text-black bg-copernicus-phosphor px-1.5 py-0.5 rounded">
             {files.length}
           </span>
         </div>

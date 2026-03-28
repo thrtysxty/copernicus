@@ -12,7 +12,7 @@ Claude's role is **Plan → Delegate → Review**. Not implement.
 ### What Claude DOES
 - Reads and understands the codebase
 - Authors stories, identifies bugs, sets AC
-- Dispatches implementation to Gemini via `gemini_session_manager.py`
+- Dispatches implementation to the assigned agent role (coder via `gemini` CLI, autonomous-PR via `jules_assign.sh`)
 - Reviews diffs and tsc output on completion notification
 - Merges or requests re-work
 
@@ -20,7 +20,7 @@ Claude's role is **Plan → Delegate → Review**. Not implement.
 - **Dispatch any story without first running `git log origin/main --oneline --grep="story.NNN"` — if a commit exists, mark it COMPLETE and move on. This has burned tokens twice.**
 - Write implementation code for any story that has a delegation path
 - Implement a fix inline when a story card can be created and dispatched
-- Run `gemini ... &` — use `gemini_session_manager.py spawn` instead
+- Run `gemini ... &` — use `gemini -p "$(cat /tmp/prompt.md)" --approval-mode yolo` with `run_in_background: true` instead
 - Dispatch multiple overlapping stories to Gemini simultaneously if they touch the same files
 - Do Gemini's implementation work because it "seems faster"
 - Make **any** aesthetic, styling, className, or layout change not explicitly listed in the story ACs — frozen surfaces are frozen, full stop

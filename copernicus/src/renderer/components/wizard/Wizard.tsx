@@ -466,7 +466,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
               {step === 1 && (
                 <div className="space-y-6 max-w-2xl mx-auto w-full py-2">
                   {isFastPathReady && (
-                    <div className="flex items-center justify-between p-4 mb-4 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 rounded-lg">
+                    <div className="flex items-center justify-between p-4 mb-4 bg-zinc-900 border border-copernicus-phosphor/30 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Check size={18} className="text-copernicus-phosphor" />
                         <div>
@@ -497,7 +497,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Provider: Anthropic</span>
                         {isAnthropicConfigured && !editAnthropic ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
                             <button onClick={() => setEditAnthropic(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
                           </div>
                         ) : anthropicMethod && (
@@ -510,7 +510,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           <button
                             onClick={() => setAnthropicMethod('cli')}
                             disabled={!claudeDetected}
-                            className={`w-full text-left p-3 rounded border transition-all ${anthropicMethod === 'cli' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 hover:border-zinc-700 opacity-60'}`}
+                            className={`w-full text-left p-3 rounded border transition-all ${anthropicMethod === 'cli' ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black' : 'border-zinc-800 hover:border-zinc-700 opacity-60'}`}
                           >
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Zap size={12} /> Use Claude Code (CLI)</span>
@@ -526,7 +526,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                               onCancel={() => setAnthropicMethod(null)}
                             />
                           ) : (
-                            <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10' : 'border-zinc-800 opacity-60'}`}>
+                            <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black' : 'border-zinc-800 opacity-60'}`}>
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Key size={12} /> Direct API Access</span>
                                 <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[9px] text-zinc-500 hover:text-white underline">Manage Keys</button>
@@ -551,7 +551,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Github size={12}/> Repository Access (GitHub)</span>
                         {isGithubConfigured && !editGithub ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
                             <button onClick={() => setEditGithub(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
                           </div>
                         ) : githubUser && (
@@ -610,7 +610,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                               <div className="flex gap-2">
                                 <button
                                   onClick={handlePatSubmit}
-                                  className="flex-1 py-1.5 bg-copernicus-phosphor/10 text-copernicus-phosphor border border-copernicus-phosphor/30 rounded text-[11px] font-bold uppercase"
+                                  className="flex-1 py-1.5 bg-copernicus-phosphor text-black border border-copernicus-phosphor/30 rounded text-[11px] font-bold uppercase"
                                 >Connect</button>
                                 <button
                                   onClick={() => { setShowPatInput(false); setPatInput(''); setError(null); }}
@@ -634,7 +634,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Zap size={12} className="text-copernicus-phosphor" /> High-Intelligence Tier (Ollama Cloud)</span>
                         {isOllamaConfigured && !editOllama ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
                             <button onClick={() => setEditOllama(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
                           </div>
                         ) : ollamaKey === 'saved' && (
@@ -659,7 +659,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google / Gemini</span>
                         {isGoogleConfigured && !editGoogle ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase bg-copernicus-phosphor/10 px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
                             <button onClick={() => setEditGoogle(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
                           </div>
                         ) : (googleKey === 'saved' || googleKey === 'oauth') ? (
@@ -881,14 +881,14 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                   </div>
                   {/* Mode selector */}
                   <div className="grid grid-cols-2 gap-4">
-                    <button onClick={() => { setWizardMode('existing'); setNewProjectName(''); setError(null); }} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'existing' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}>
+                    <button onClick={() => { setWizardMode('existing'); setNewProjectName(''); setError(null); }} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'existing' ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}>
                       <FolderOpen size={28} className={wizardMode === 'existing' ? 'text-copernicus-phosphor' : ''} />
                       <div className="text-center">
                         <p className="text-[11px] font-black uppercase tracking-widest">Existing Project</p>
                         <p className="text-[9px] mt-1 opacity-60">Open a repository from your workspace</p>
                       </div>
                     </button>
-                    <button onClick={() => { setWizardMode('new'); setSelectedProject(''); setError(null); }} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'new' ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}>
+                    <button onClick={() => { setWizardMode('new'); setSelectedProject(''); setError(null); }} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${wizardMode === 'new' ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black text-white' : 'border-zinc-800 bg-black/30 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'}`}>
                       <Sparkles size={28} className={wizardMode === 'new' ? 'text-copernicus-phosphor' : ''} />
                       <div className="text-center">
                         <p className="text-[11px] font-black uppercase tracking-widest">New Project</p>
@@ -918,7 +918,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                           {repoStatus === 'checking' && <div className="flex items-center gap-2 p-2.5 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-400"><Loader2 size={12} className="animate-spin" /><span className="text-[9px] font-mono uppercase">Checking repo status...</span></div>}
                           {repoStatus === 'has-git' && (
                             <>
-                              <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 rounded-lg text-copernicus-phosphor"><Check size={12} /><span className="text-[9px] font-mono uppercase">Git repository found</span></div>
+                              <div className="flex items-center gap-2 p-2.5 bg-copernicus-phosphor border border-copernicus-phosphor/30 rounded-lg text-black"><Check size={12} /><span className="text-[9px] font-mono uppercase">Git repository found</span></div>
                               {hasHarness === false && (
                                 <div className="flex flex-col gap-2 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg">
                                   <div className="flex items-start gap-2 text-amber-500">
@@ -1000,7 +1000,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       </div>
                       <div className="flex gap-2">
                         {(['CAPEX', 'OPEX', 'NONE'] as const).map(mode => (
-                          <button key={mode} onClick={() => setBillingMode(mode)} className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest transition-all border ${billingMode === mode ? 'border-copernicus-phosphor bg-copernicus-phosphor/10 text-white' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>{mode}</button>
+                          <button key={mode} onClick={() => setBillingMode(mode)} className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest transition-all border ${billingMode === mode ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black text-white' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>{mode}</button>
                         ))}
                       </div>
                     </div>

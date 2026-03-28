@@ -119,7 +119,7 @@ export const AuthSettings: React.FC = () => {
                   {s.baseUrl && <span className="text-[9px] text-zinc-600 truncate max-w-[150px]" title={s.baseUrl}>{s.baseUrl}</span>}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] px-1 rounded ${s.hasKey ? 'bg-copernicus-phosphor/10 text-copernicus-phosphor' : 'bg-red-900/20 text-red-400'}`}>
+                <span className={`text-[10px] px-1 rounded ${s.hasKey ? 'bg-copernicus-phosphor text-black' : 'bg-red-900/20 text-red-400'}`}>
                   {s.hasKey ? 'ACTIVE' : 'MISSING'}
                 </span>
                 <span className="text-[9px] text-zinc-600 uppercase w-12 text-center">[{s.source}]</span>

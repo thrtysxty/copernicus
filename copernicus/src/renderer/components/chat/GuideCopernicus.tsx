@@ -49,7 +49,7 @@ export const GuideCopernicus: React.FC<GuideCopernicusProps> = ({
               </div>
               <div className={`p-3 text-xs border rounded transition-all duration-300 ${
                 m.role === 'user' 
-                  ? 'bg-copernicus-phosphor/10 border-copernicus-phosphor/20 text-zinc-300 rounded-l-md rounded-tr-md'
+                  ? 'bg-copernicus-phosphor border-copernicus-phosphor/20 text-black rounded-l-md rounded-tr-md'
                   : 'bg-zinc-900/50 border-zinc-700 text-zinc-200 rounded-r-md rounded-tl-md'
               }`}>
                 <div className="whitespace-pre-wrap">{typeof m.content === 'string' ? m.content : JSON.stringify(m.content)}</div>
