@@ -463,7 +463,7 @@ stitchTokens: null,
         if (
           !state.columns ||
           state.columns.length !== 9 ||
-          state.columns.some(c => ['blueprint', 'ui-design', 'staging'].includes(c.id))
+          state.columns.some(c => !DEFAULT_COLUMNS.some(dc => dc.id === c.id))
         ) {
           state.columns = DEFAULT_COLUMNS
         }
