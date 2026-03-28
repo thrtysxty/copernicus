@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
+import { useIpcError } from '../../../hooks/useIpcError'
+import { unwrapIpc } from '../../../types/ipc'
 
 interface AuditResult {
   skillName: string
@@ -15,19 +17,17 @@ const ISSUE_LABELS: Record<AuditResult['issue'], string> = {
   'too-short':     'Description too short',
 }
 
-const invoke = (channel: string, ...args: unknown[]) =>
-  (window as any).ipcRenderer.invoke(channel, ...args)
-
 export const SkillsSection: React.FC = () => {
+  const invoke = useIpcError()
   const [results, setResults] = useState<AuditResult[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    invoke('skills:audit')
-      .then((data: AuditResult[]) => setResults(data ?? []))
+    invoke<AuditResult[]>('skills:audit')
+      .then((res) => setResults(unwrapIpc<AuditResult[]>(res) ?? []))
       .catch(() => setResults([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [invoke])
 
   const bySkill = results.reduce<Record<string, AuditResult[]>>((acc, r) => {
     ;(acc[r.skillName] ??= []).push(r)

@@ -119,6 +119,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #582 | Terminal Input Regression | DRAFT | N/A |
 | #583 | Terminal Phantom Tab Prefix | DRAFT | N/A |
 | #584 | Intelligence View Close Button Unresponsive | DRAFT | N/A |
+| #585 | Chat Send Lsp Preflight Blocks | DRAFT | N/A |
+| #586 | Skills Section Ipc Violation | DRAFT | N/A |
 | #542 | Stitch Sdk Migration | APPROVED FOR IMPLEMENTATION | P2 |
 | #544 | Genesis Rich Scaffold Templates | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #551 | Createstamp Ac Description Fields | APPROVED FOR IMPLEMENTATION | P1 |
