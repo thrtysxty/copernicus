@@ -37,23 +37,16 @@ npm run dev --prefix copernicus > /tmp/copernicus_main.log 2>&1 &
 
 ## Session Arc
 
-Walk **USER_WORKFLOW.md** in order. Do not skip sections or reorder.
+**At the start of every session, read `docs/reference/USER_WORKFLOW.md` first.** It is the authoritative arc and is updated progressively as sections are verified. Do not rely on memory or prior session notes — the document reflects current agreed state.
 
-Current canonical arc:
-1. **Splash** — app:ready signal, live status
-2. **Wizard Step 1** — provider selection + CLI auth
-3. **Wizard Step 2** — workspace picker + git validation
-4. **Wizard Step 3** — project selection / new project
-5. **Wizard Confirm** — finish, handoff to IDE
-6. **IDE entry** — file tree, header, workspace context loaded
-7. **Kanban / Planner** — boards load, no overlay flash
-8. **Genesis scaffold** — new project scaffold runs
-9. **Settings** — walk each section
-10. **Intelligence View**
-11. **Terminal**
-12. **Chat panels**
+Walk the arc defined in USER_WORKFLOW.md in order. Do not skip sections or reorder. Pick up from the last unverified section — do not re-walk sections already marked PASS unless a regression is suspected.
 
-Mark each section PASS / FAIL / PARTIAL in session notes. Only write a workflow spec for sections that reach PASS.
+Mark each section PASS / FAIL / PARTIAL in the Current Pair-Test Status table at the bottom of this document after each session. Only write a workflow spec for sections that reach PASS.
+
+**USER_WORKFLOW.md is updated when:**
+- A section reaches PASS in pair-testing (add verified behavior, CLI timing, edge cases observed)
+- A regression changes previously-verified behavior (update or remove the PASS)
+- Product decisions change the intended flow (update before the next session, not after)
 
 ---
 
@@ -83,31 +76,41 @@ Mark each section PASS / FAIL / PARTIAL in session notes. Only write a workflow 
 
 Keep it fast — don't let story filing break the pair-test rhythm.
 
-Minimum required fields (validator will reject without these):
+Use the canonical scaffold exactly — no shortcuts, no section renames. Cutting corners degrades agent output quality.
+
 ```markdown
+# Story NNN — Title
+
 **Status:** DRAFT
 
 ## Story Number
-{NNN}
+
+NNN
 
 ## Narrative
-As a / I want / So that
+**As a** [role]
+**I want** [action]
+**So that** [outcome]
 
 ## Context
-Root cause, observed behavior, why it matters.
+
+Root cause, observed behavior, reproduction steps, why it matters.
+Reference the pair-test session date.
 
 ## Acceptance Criteria
-1. Numbered, testable, specific
+
+1. Numbered, testable, specific — one behavior per item
 
 ## Files in Scope
-- path/to/file.tsx — what changes
+- `path/to/file.tsx` — what changes and why
 
 ## Frozen Surfaces
-- Everything not in Files in Scope
+- Every file and surface NOT listed above
+- All className, layout, and styling not explicitly changed by an AC
 
 ## Definition of Done
-- [ ] Behavioral test
-- [ ] tsc --noEmit passes with zero errors
+- [ ] Specific behavioral test (what to click, what to observe)
+- [ ] `tsc --noEmit` passes with zero errors
 
 ## Blocks:
 ## Blocked By:

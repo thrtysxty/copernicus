@@ -103,9 +103,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
-| #563 | Stitch Setup Doc Sdk Update | APPROVED FOR IMPLEMENTATION | N/A |
 | #564 | Jules Streaming Monitor | APPROVED FOR IMPLEMENTATION | N/A |
-| #581 | Workspace Switch Context Reset | APPROVED FOR IMPLEMENTATION | N/A |
 | #582 | Terminal Input Regression | APPROVED FOR IMPLEMENTATION | N/A |
 | #583 | Terminal Phantom Tab Prefix | APPROVED FOR IMPLEMENTATION | N/A |
 | #585 | Chat Send Lsp Preflight Blocks | APPROVED FOR IMPLEMENTATION | N/A |
@@ -117,10 +115,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #083 | Atlas Telemetry Popout | COMPLETE | N/A |
 | #084 | Atlas Distribution | COMPLETE | N/A |
 | #089 | Atlas Status Bar | COMPLETE | N/A |
+| #563 | Stitch Setup Doc Sdk Update | COMPLETE | N/A |
 | #576 | Fix Is Repo Targeted Loop | COMPLETE | N/A |
 | #577 | Wizard Workspace Validation | COMPLETE | N/A |
 | #578 | Wizard Handoff Workingdir Race | COMPLETE | N/A |
 | #579 | Project Selector Dialog Fixes | COMPLETE | N/A |
+| #581 | Workspace Switch Context Reset | COMPLETE | N/A |
 | #584 | Intelligence View Close Button Unresponsive | COMPLETE | N/A |
 | #586 | Skills Section Ipc Violation | COMPLETE | N/A |
 | #580 | Wizard Auth Provider Step Redesign | DRAFT | N/A |
