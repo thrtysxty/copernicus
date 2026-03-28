@@ -57,11 +57,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             >
               {tab.isBusy ? (
                   <Loader2 size={8} className="animate-spin mr-1.5 text-copernicus-phosphor" />
-                ) : (
-                  <span className={`mr-1.5 font-bold text-zinc-500`}>
-                    {tab.label.charAt(0).toUpperCase()}
-                  </span>
-                )}
+                ) : null}
 
               <span className={`truncate ${tab.isBusy ? 'phosphor-glow font-bold' : ''}`}>
                 {tab.label}
