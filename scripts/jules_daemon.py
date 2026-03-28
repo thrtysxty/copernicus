@@ -189,7 +189,8 @@ def send_message(session_id: str, key: str, prompt: str) -> bool:
 
 
 GH = "/opt/homebrew/bin/gh"
-GH_ENV = {**os.environ, "HOME": str(Path.home()), "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"}
+GH_ENV = {k: v for k, v in os.environ.items() if k != "GITHUB_TOKEN"}
+GH_ENV.update({"HOME": str(Path.home()), "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"})
 
 
 def merge_pr(pr_number: int) -> tuple[bool, str]:

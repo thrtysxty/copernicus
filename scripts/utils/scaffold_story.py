@@ -67,6 +67,10 @@ If a file is in scope but has no frozen surfaces, write "None".
 ## Documentation Impact
 - **New Files:**
 - **Updated Files:**
+
+## Story Number
+
+{number}
 """
 
 

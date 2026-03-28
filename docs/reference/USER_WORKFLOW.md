@@ -1,20 +1,29 @@
 # COPERNICUS IDE — User Workflow Guide
-**Version:** 1.0 | **Date:** 2026-03-01 | **Authority:** Architect
+**Version:** 1.1 | **Date:** 2026-03-26 | **Authority:** The User(Jeremy)
 
 First-time user journey from install to first deployment.
 
 **Assumed setup:**
-- Claude Pro ($20/mo) — web account, no API key, session-limited
-- Google Student Pro (free) — Gemini + Jules via Google account
-- macOS, fresh install
+New User: 
+New users may not have any required accounts or knowledge of proper project
+management or development processes. Copernicus is just as much for them as
+it is for experienced users.
+
+Existing User:
+These users may already have established accounts with API keys or platform 
+login credentials for OAuth. Both paths to access need to be available for 
+establishing access to external services.
+If there is existing git infrastructure, keys/tokens, or envs, the user should 
+be prompted to use them.
 
 ---
 
 ## Act 1 — Install & First Launch
 
 ### Download & Install
-Download the `.dmg`. Drag COPERNICUS to Applications. First launch triggers
-macOS Gatekeeper — click Open.
+Download the install file for the hardware environment (Mac, Linux, Windows). 
+Run the installer or drag the file to Applications folder. First launch triggers
+OS gatekeepers — click Open.
 
 ### Splash Screen
 A splash screen appears immediately — COPERNICUS logo, version number, and a
@@ -32,47 +41,132 @@ The main IDE does not appear yet.
 The Wizard is a focused onboarding sequence. The main IDE is hidden until
 it completes. **Copernicus** (the guide agent — §7.2 GUIDE tab) is already
 active here, greeting the user by name if the system account is readable.
+If the user has prior development setup and keys are available they are 
+prompted to confirm their use.
 
 ### Step 1 — Providers
 
-Copernicus walks through each provider one at a time. No API keys.
-No configuration. Two sign-ins, total.
+If the user confirms use of prior secrets and keys, the providers tab
+indicators are green. The user is then asked to enter credentials for missing 
+providers or advance to the next screen.
+
+For new users, Copernicus provides a provider configuration screen. Users will 
+be able to enter API keys (with walkthrough or as much automation/instruction as possible)
+or use account credentials based on the type of provider accounts offered by the 
+provider. 
+
+> *"Select your account type to access your **Provider** account."*
+The user is presented with the option to use web account credentials for accounts on
+monthly paid subscriptions or to enter their API key for use with token based billing
+from their providers. If the user selects web credentials, the entry field becomes a
+1-line CLI. The CLI is presented with the command to install the provider or package
+and the field label updates with the breadcrumbs describing each step of the process 
+until the account service is installed and the user logs into their account.
+Entering an API key saves the key or token to ~/.secrets and follows the same install 
+process.
+Copernicus confirms:
+> "**Provider**" is connected. I'll keep an eye on your
+> sessions and let you know before you hit a limit."*
 
 **Anthropic (Claude):**
-> *"Sign in with your Claude account to get started."*
+Web credentials
+API Key
 
-A browser window opens to claude.ai. User signs in with their Claude Pro
-email and password (or Google SSO if that's how they registered).
-Window closes. Copernicus confirms:
-> *"Claude is connected. You're on Claude Pro — I'll keep an eye on your
-> session and let you know before you hit the limit."*
+**Google (Gemini):**
+Web credentials
+API Key
 
-**Google (Gemini + Jules):**
-> *"One more — your Google account unlocks Gemini for chat and Jules for
-> autonomous coding."*
+**Google (Jules):**
+API Key
 
-Browser window opens to Google sign-in. User signs in with their student
-Google account. Window closes. Copernicus confirms both services.
+**Google (Stitch):**
+API Key
 
-> *"Gemini and Jules are ready. You can run up to 100 Jules tasks a day
-> with 15 at a time — plenty of runway. I'll make sure they're well-specced
-> before dispatch."*
+**OpenAI (GPT):**
+API Key
 
-**What the user does NOT do:**
-- Paste any API key
-- Configure base URLs or model IDs
-- Open any settings panel
+**Ollama (Agnostic web and local models):**
+API Key
+
+**OpenRouter (Agnostic):**
+API Key
+
+**DeepInfra (Agnostic + cloud compute infra):**
+API Key
+
+**GitHub (Repo Manager):**
+Personal Access Token (PAT)
+
+**Tavily (Web Search MCP):**
+API Key
+
+**Context7 (Dependency Documentation MCP):**
+API Key
+
+**BitNet (Embedded Agent):**
+No key or auth flow. Preinstalled and active by default to drive the scripted workflows
+for both the user onboarding and the integrated help features.
+
 
 ### Step 2 — Workspace
 
-> *"Where's your project? Pick an existing folder or I'll create a new one."*
+> *"Select the directory where you store your project repositories or create a new one"*
+
+File picker appears. User selects a folder (or creates one).
+
+### Step 3 - Project Repository
+
+> *"Select the project directory to open or create a new one"*
 
 File picker appears. User selects a folder (or creates one).
 Copernicus checks for a git repo — if absent:
 > *"No git repo here. Want me to initialise one?"*
+> *"Git repo initialized. Would you like to run the Project Genesis agent to establish your dependency boilerplate?"*
 
-One click. Done.
+Yes - Launches the Genesis project wizard.
+No - Sends the user to Step 4.
 
+#### Step 3a - Project Genesis Agent
+The user is prompted to describe their project:
+
+> *"What are you building?"* - The field has a placeholder that cycles various sofware ideas until the user starts typing.
+> *"Who is if for?"* - Same placeholder behavior - types of users or industries (nurses, teachers, vibe coders, etc.)
+> *"What is the core value?"* - Same placeholder behavior. - helps nurses ensure all checkout procedures are completed..
+> *"Project Name?"* - Same placeholder behavior. - Checkout Champion...
+
+User clicks Next to advance.
+
+#### Step 3b - Project Genesis Stack
+The user is prompted to select the application stack that would like to have scaffoled into their new repo.
+
+Options:
+
+Desktop App: React + Electron
+Web App: React + Flask
+Web or Full Stack: Next.js
+Mobile: React Native
+Scripting or Automation: Python CLI
+Custom: No Scaffold
+
+User clicks Next to advance.
+
+The new project repository is scaffolded into the /Workspace/Project path that the user selected in Steps 2 & 3.
+The Stack chosen by the user is put in place along with the default repository directory structure used by Copernicus for managing agents, stories, history, and anything else there is a dependency on. As the scaffolding runs in the background, the user is moved into Step 4.
+
+### Step 4 - CapEx & Billing
+
+The user is asked to determine if time and token billing are to be tracked within the 
+project and are provided options for: CapEx, OpEx, or None. This value is now tied to this 
+project repository and is in effect every time a project is re-opened until the user changes 
+the repo config.
+
+User clicks Next to advance.
+
+### Step 5 - The Planner (KanBan)
+The user is placed into the Planner view. If the created a new project with the Genesis agent, then there will be at least one epic and several stories present in the view. The existing user will be prompted to create project epics and stories to plan out their sprints.
+
+
+```
 ### Step 3 — Quick Tour (skippable)
 
 A 60-second animated overview of the five main areas:
@@ -235,7 +329,7 @@ User types:
 ```bash
 make deploy
 ```
-
+```
 Or, if the workflow was configured to auto-deploy on merge — it already
 ran. The Command Center shows the deploy task completed.
 
