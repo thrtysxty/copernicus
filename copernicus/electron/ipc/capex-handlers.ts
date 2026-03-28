@@ -4,25 +4,7 @@ import { handleIpc } from '../utils/handle-ipc'
 
 export function registerCapexHandlers() {
   ipcMain.handle('ledger:leaderboard', (_e, days: number | 'all') => handleIpc('ledger:leaderboard', [days], () => {
-    let query = `
-      SELECT 
-        provider,
-        model_id,
-        COUNT(*) as total_calls,
-        SUM(cost_usd) as total_cost,
-        AVG(latency_ms) as avg_latency,
-        SUM(tokens_out) as total_tokens_out,
-        SUM(CASE WHEN tokens_out > 0 THEN 1 ELSE 0 END) as successful_calls
-      FROM model_calls
-    `;
-    const params: any[] = [];
-    if (days !== 'all') {
-      query += ` WHERE created_at >= date('now', '-' || ? || ' days')`;
-      params.push(days);
-    }
-    query += ` GROUP BY provider, model_id`;
-    
-    const rows = stateLedger.db.prepare(query).all(...params) as any[];
+    const rows = stateLedger.getCapexLeaderboard(days);
 
     // Calculate composite score
     // completion rate (40%), cost efficiency (30%), latency (20%), approval rate (10%)

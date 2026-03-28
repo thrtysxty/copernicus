@@ -155,50 +155,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('devtime:test-history', (_e, limit: number = 20) => handleIpc('devtime:test-history', [limit], () => stateLedger.getTestRunHistory(limit)))
 
-  ipcMain.handle('ledger:daily-costs', (_e, days: number = 30) => handleIpc('ledger:daily-costs', [days], () =>
-    stateLedger.db.prepare(`
-      SELECT date(created_at) as day,
-             SUM(cost_usd) as total_cost,
-             SUM(tokens_in + tokens_out) as total_tokens
-      FROM model_calls
-      WHERE created_at >= date('now', '-' || ? || ' days')
-      GROUP BY date(created_at) ORDER BY day ASC
-    `).all(days)
-  ))
+  ipcMain.handle('ledger:daily-costs', (_e, days: number = 30) => handleIpc('ledger:daily-costs', [days], () => stateLedger.getDailyCosts(days)))
 
-  ipcMain.handle('ledger:cost-by-model', () => handleIpc('ledger:cost-by-model', [], () =>
-    stateLedger.db.prepare(`
-      SELECT model_id, provider,
-             SUM(cost_usd) as total_cost,
-             COUNT(*) as call_count,
-             SUM(tokens_in) as tokens_in,
-             SUM(tokens_out) as tokens_out
-      FROM model_calls GROUP BY model_id, provider ORDER BY total_cost DESC
-    `).all()
-  ))
+  ipcMain.handle('ledger:cost-by-model', () => handleIpc('ledger:cost-by-model', [], () => stateLedger.getCostByModel()))
 
-  ipcMain.handle('ledger:cost-by-story', () => handleIpc('ledger:cost-by-story', [], () =>
-    stateLedger.db.prepare(`
-      SELECT panel_id as story_id,
-             SUM(cost_usd) as total_cost,
-             COUNT(*) as call_count,
-             SUM(tokens_in + tokens_out) as total_tokens
-      FROM model_calls
-      WHERE panel_id IS NOT NULL AND panel_id != 'chat'
-      GROUP BY panel_id ORDER BY total_cost DESC LIMIT 50
-    `).all()
-  ))
+  ipcMain.handle('ledger:cost-by-story', () => handleIpc('ledger:cost-by-story', [], () => stateLedger.getCostByStory()))
 
-  ipcMain.handle('devtime:weekly-velocity', (_e, weeks: number = 8) => handleIpc('devtime:weekly-velocity', [weeks], () =>
-    stateLedger.db.prepare(`
-      SELECT strftime('%Y-W%W', start_time) as week,
-             SUM(duration_hours) as hours,
-             COUNT(DISTINCT story_id) as stories
-      FROM dev_sessions
-      WHERE start_time >= date('now', '-' || (? * 7) || ' days')
-      GROUP BY week ORDER BY week ASC
-    `).all(weeks)
-  ))
+  ipcMain.handle('devtime:weekly-velocity', (_e, weeks: number = 8) => handleIpc('devtime:weekly-velocity', [weeks], () => stateLedger.getWeeklyVelocity(weeks)))
 
   // Model Call Ledger — AC-3 (Story 178)
   ipcMain.handle('ledger:session-stats', (_e, session_id: string) => handleIpc('ledger:session-stats', [session_id], () => stateLedger.getSessionStats(session_id))
@@ -209,33 +172,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   )
 
   ipcMain.handle('ledger:heatmap-data', () => handleIpc('ledger:heatmap-data', [], () => {
-    const churn = stateLedger.db.prepare('SELECT changed_files FROM review_sessions').all() as any[]
-    const churnMap: Record<string, number> = {}
-    churn.forEach(s => {
-      try {
-        const files = JSON.parse(s.changed_files) as string[]
-        if (Array.isArray(files)) files.forEach(f => churnMap[f] = (churnMap[f] || 0) + 1)
-      } catch {}
-    })
-
-    const costs = stateLedger.db.prepare(`
-      SELECT mc.cost_usd, rs.changed_files
-      FROM model_calls mc
-      JOIN review_sessions rs ON mc.session_id = rs.session_id
-    `).all() as any[]
-    
-    const costMap: Record<string, number> = {}
-    costs.forEach(c => {
-      try {
-        const files = JSON.parse(c.changed_files) as string[]
-        if (Array.isArray(files)) {
-          const splitCost = c.cost_usd / files.length
-          files.forEach(f => costMap[f] = (costMap[f] || 0) + splitCost)
-        }
-      } catch {}
-    })
-
-    return { churnMap, costMap }
+    return stateLedger.getCostHeatmapData()
   }))
 
   // Splash ready — renderer signals splash/wizard complete

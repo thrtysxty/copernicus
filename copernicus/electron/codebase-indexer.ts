@@ -60,20 +60,7 @@ export class CodebaseIndexer {
   private initSchema() {
     if (!this.isVectorEnabled) return
 
-    stateLedger.db.exec(`
-      CREATE VIRTUAL TABLE IF NOT EXISTS codebase_vec USING vec0(
-        chunk_id TEXT PRIMARY KEY,
-        file_path TEXT,
-        line_start INTEGER,
-        line_end INTEGER,
-        symbols TEXT,
-        symbol_uid TEXT,
-        lsp_metadata TEXT,
-        chunk_index INTEGER,
-        content TEXT,
-        embedding FLOAT[768]
-      );
-    `)
+    stateLedger.initCodebaseVecTable()
   }
 
   private async getSymbols(filePath: string): Promise<any[]> {
@@ -186,22 +173,17 @@ export class CodebaseIndexer {
       }
 
       if (this.isVectorEnabled) {
-        const insertStmt = stateLedger.db.prepare(`
-          INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, symbol_uid, lsp_metadata, chunk_index, content, embedding)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `)
-
-        stateLedger.db.transaction(() => {
-          stateLedger.db.prepare('DELETE FROM codebase_vec WHERE file_path = ?').run(filePath)
-        })()
+        stateLedger.runTransaction(() => {
+          stateLedger.clearCodebaseVecFile(filePath)
+        })
 
         for (const chunk of chunks) {
           try {
             const { embedding, provider } = await this.getEmbedding(chunk.content)
             this.activeProvider = provider
             const normalized = normalizeEmbedding(embedding)
-            stateLedger.db.transaction(() => {
-              insertStmt.run(
+            stateLedger.runTransaction(() => {
+              stateLedger.insertCodebaseVecChunk(
                 chunk.chunk_id,
                 filePath,
                 chunk.line_start,
@@ -213,7 +195,7 @@ export class CodebaseIndexer {
                 chunk.content,
                 new Float32Array(normalized)
               )
-            })()
+            })
           } catch (e) {
             log.error(`Failed to generate embedding for chunk ${chunk.chunk_id}:`, e)
           }
@@ -305,12 +287,7 @@ export class CodebaseIndexer {
   public async searchBySymbol(symbolUid: string): Promise<any[]> {
     if (!this.isVectorEnabled) return []
 
-    const stmt = stateLedger.db.prepare(`
-      SELECT chunk_id, file_path, line_start, line_end, symbols, content
-      FROM codebase_vec
-      WHERE symbol_uid = ?
-    `)
-    const rows = stmt.all(symbolUid) as any[]
+    const rows = stateLedger.searchCodebaseVecBySymbol(symbolUid)
     return rows.map(r => ({
       chunkId: r.chunk_id, path: r.file_path, lineStart: r.line_start, line_end: r.line_end,
       symbols: r.symbols, content: r.content
@@ -343,15 +320,8 @@ export class CodebaseIndexer {
       // LSP may not be running — non-fatal
     }
 
-    const stmt = stateLedger.db.prepare(`
-      SELECT chunk_id, file_path, line_start, line_end, symbols, content, distance
-      FROM codebase_vec
-      WHERE embedding MATCH ?
-      ORDER BY distance
-      LIMIT ?
-    `)
     // Fetch 2× to allow re-ranking with symbol boost
-    const rows = stmt.all(new Float32Array(normalizedQuery), topK * 2) as any[]
+    const rows = stateLedger.searchCodebaseVec(new Float32Array(normalizedQuery), topK * 2)
 
     const ranked = rows.map((r) => {
       let similarity = 1 - r.distance

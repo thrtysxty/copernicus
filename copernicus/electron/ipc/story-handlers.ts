@@ -58,26 +58,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     })
   )
 
-  ipcMain.handle('stories:throughput', () => handleIpc('stories:throughput', [], () =>
-    stateLedger.db.prepare(`
-      SELECT strftime('%Y-W%W', updated_at) as week, COUNT(*) as completed
-      FROM stories WHERE status = 'COMPLETE' AND updated_at >= date('now', '-84 days')
-      GROUP BY week ORDER BY week ASC
-    `).all()
-  ))
+  ipcMain.handle('stories:throughput', () => handleIpc('stories:throughput', [], () => stateLedger.getStoriesThroughput()))
 
-  ipcMain.handle('stories:status-distribution', () => handleIpc('stories:status-distribution', [], () =>
-    stateLedger.db.prepare(`
-      SELECT status, COUNT(*) as count FROM stories GROUP BY status ORDER BY count DESC
-    `).all()
-  ))
+  ipcMain.handle('stories:status-distribution', () => handleIpc('stories:status-distribution', [], () => stateLedger.getStoriesStatusDistribution()))
 
-  ipcMain.handle('stories:bugs-by-assignee', () => handleIpc('stories:bugs-by-assignee', [], () =>
-    stateLedger.db.prepare(`
-      SELECT COALESCE(assigned_to, 'unassigned') as assignee, COUNT(*) as bug_count
-      FROM stories WHERE type = 'bug' GROUP BY assigned_to ORDER BY bug_count DESC
-    `).all()
-  ))
+  ipcMain.handle('stories:bugs-by-assignee', () => handleIpc('stories:bugs-by-assignee', [], () => stateLedger.getStoriesBugsByAssignee()))
 
   ipcMain.handle('stories:set-status', (_e, { storyNumber, status }: { storyNumber: number, status: string }) =>
     handleIpc('stories:set-status', [storyNumber, status], async () => {

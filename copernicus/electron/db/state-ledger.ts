@@ -1297,6 +1297,191 @@ export class StateLedger {
       ORDER BY ts ASC
     `).all(projectId, failedAgentId, failedAgentId, storyId) as any[];
   }
+
+  // Codebase Indexer Vector Search
+
+  initCodebaseVecTable() {
+    this.db.exec(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS codebase_vec USING vec0(
+        chunk_id TEXT PRIMARY KEY,
+        file_path TEXT,
+        line_start INTEGER,
+        line_end INTEGER,
+        symbols TEXT,
+        symbol_uid TEXT,
+        lsp_metadata TEXT,
+        chunk_index INTEGER,
+        content TEXT,
+        embedding FLOAT[768]
+      );
+    `);
+  }
+
+  clearCodebaseVecFile(filePath: string) {
+    this.db.prepare('DELETE FROM codebase_vec WHERE file_path = ?').run(filePath);
+  }
+
+  insertCodebaseVecChunk(
+    chunkId: string,
+    filePath: string,
+    lineStart: number,
+    lineEnd: number,
+    symbols: string,
+    symbolUid: string | null,
+    lspMetadata: string | null,
+    chunkIndex: number,
+    content: string,
+    embedding: Float32Array
+  ) {
+    this.db.prepare(`
+      INSERT INTO codebase_vec(chunk_id, file_path, line_start, line_end, symbols, symbol_uid, lsp_metadata, chunk_index, content, embedding)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(chunkId, filePath, lineStart, lineEnd, symbols, symbolUid, lspMetadata, chunkIndex, content, embedding);
+  }
+
+  searchCodebaseVecBySymbol(symbolUid: string): any[] {
+    return this.db.prepare(`
+      SELECT chunk_id, file_path, line_start, line_end, symbols, content
+      FROM codebase_vec
+      WHERE symbol_uid = ?
+    `).all(symbolUid) as any[];
+  }
+
+  searchCodebaseVec(embedding: Float32Array, topK: number): any[] {
+    return this.db.prepare(`
+      SELECT chunk_id, file_path, line_start, line_end, symbols, content, distance
+      FROM codebase_vec
+      WHERE embedding MATCH ?
+      ORDER BY distance
+      LIMIT ?
+    `).all(embedding, topK) as any[];
+  }
+
+  // General App Queries
+
+  getDailyCosts(days: number): any[] {
+    return this.db.prepare(`
+      SELECT date(created_at) as day,
+             SUM(cost_usd) as total_cost,
+             SUM(tokens_in + tokens_out) as total_tokens
+      FROM model_calls
+      WHERE created_at >= date('now', '-' || ? || ' days')
+      GROUP BY date(created_at) ORDER BY day ASC
+    `).all(days) as any[];
+  }
+
+  getCostByModel(): any[] {
+    return this.db.prepare(`
+      SELECT model_id, provider,
+             SUM(cost_usd) as total_cost,
+             COUNT(*) as call_count,
+             SUM(tokens_in) as tokens_in,
+             SUM(tokens_out) as tokens_out
+      FROM model_calls GROUP BY model_id, provider ORDER BY total_cost DESC
+    `).all() as any[];
+  }
+
+  getCostByStory(): any[] {
+    return this.db.prepare(`
+      SELECT panel_id as story_id,
+             SUM(cost_usd) as total_cost,
+             COUNT(*) as call_count,
+             SUM(tokens_in + tokens_out) as total_tokens
+      FROM model_calls
+      WHERE panel_id IS NOT NULL AND panel_id != 'chat'
+      GROUP BY panel_id ORDER BY total_cost DESC LIMIT 50
+    `).all() as any[];
+  }
+
+  getWeeklyVelocity(weeks: number): any[] {
+    return this.db.prepare(`
+      SELECT strftime('%Y-W%W', start_time) as week,
+             SUM(duration_hours) as hours,
+             COUNT(DISTINCT story_id) as stories
+      FROM dev_sessions
+      WHERE start_time >= date('now', '-' || (? * 7) || ' days')
+      GROUP BY week ORDER BY week ASC
+    `).all(weeks) as any[];
+  }
+
+  getCostHeatmapData(): { churnMap: Record<string, number>, costMap: Record<string, number> } {
+    const churn = this.db.prepare('SELECT changed_files FROM review_sessions').all() as any[];
+    const churnMap: Record<string, number> = {};
+    churn.forEach(s => {
+      try {
+        const files = JSON.parse(s.changed_files) as string[];
+        if (Array.isArray(files)) files.forEach(f => churnMap[f] = (churnMap[f] || 0) + 1);
+      } catch {}
+    });
+
+    const costs = this.db.prepare(`
+      SELECT mc.cost_usd, rs.changed_files
+      FROM model_calls mc
+      JOIN review_sessions rs ON mc.session_id = rs.session_id
+    `).all() as any[];
+
+    const costMap: Record<string, number> = {};
+    costs.forEach(c => {
+      try {
+        const files = JSON.parse(c.changed_files) as string[];
+        if (Array.isArray(files)) {
+          const splitCost = c.cost_usd / files.length;
+          files.forEach(f => costMap[f] = (costMap[f] || 0) + splitCost);
+        }
+      } catch {}
+    });
+
+    return { churnMap, costMap };
+  }
+
+  // CapEx Analytics
+  getCapexLeaderboard(days: number | 'all'): any[] {
+    let query = `
+      SELECT
+        provider,
+        model_id,
+        COUNT(*) as total_calls,
+        SUM(cost_usd) as total_cost,
+        AVG(latency_ms) as avg_latency,
+        SUM(tokens_out) as total_tokens_out,
+        SUM(CASE WHEN tokens_out > 0 THEN 1 ELSE 0 END) as successful_calls
+      FROM model_calls
+    `;
+    const params: any[] = [];
+    if (days !== 'all') {
+      query += ` WHERE created_at >= date('now', '-' || ? || ' days')`;
+      params.push(days);
+    }
+    query += ` GROUP BY provider, model_id`;
+    return this.db.prepare(query).all(...params) as any[];
+  }
+
+  // Stories
+  getStoriesThroughput(): any[] {
+    return this.db.prepare(`
+      SELECT strftime('%Y-W%W', updated_at) as week, COUNT(*) as completed
+      FROM stories WHERE status = 'COMPLETE' AND updated_at >= date('now', '-84 days')
+      GROUP BY week ORDER BY week ASC
+    `).all() as any[];
+  }
+
+  getStoriesStatusDistribution(): any[] {
+    return this.db.prepare(`
+      SELECT status, COUNT(*) as count FROM stories GROUP BY status ORDER BY count DESC
+    `).all() as any[];
+  }
+
+  getStoriesBugsByAssignee(): any[] {
+    return this.db.prepare(`
+      SELECT COALESCE(assigned_to, 'unassigned') as assignee, COUNT(*) as bug_count
+      FROM stories WHERE type = 'bug' GROUP BY assigned_to ORDER BY bug_count DESC
+    `).all() as any[];
+  }
+
+  // Transactions
+  runTransaction(fn: () => void): void {
+    this.db.transaction(fn)();
+  }
 }
 
 // Module-level singleton for use across main-process modules

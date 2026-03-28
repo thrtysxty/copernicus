@@ -108,7 +108,7 @@ export function registerRetroHandlers(deps?: IpcHandlerDeps) {
 
     let serializedPath = ''
     try {
-      stateLedger.db.transaction(() => {
+      stateLedger.runTransaction(() => {
         for (const item of items) {
           if (item.status === 'approved' || item.status === 'edited') {
             if (item.item_type === 'memory_fact') {
@@ -186,7 +186,7 @@ export function registerRetroHandlers(deps?: IpcHandlerDeps) {
         const reportMarkdown = `# Retro ${retroId}\n\n${formattedItems}`
         fs.writeFileSync(serializedPath, reportMarkdown, 'utf8')
 
-      })()
+      })
 
     } catch (e: any) {
       log.error(`[RetroCommit] transaction failed`, e)
