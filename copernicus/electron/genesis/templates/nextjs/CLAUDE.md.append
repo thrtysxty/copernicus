@@ -1,0 +1,9 @@
+## Next.js Architecture
+- App Router is used for rendering and API routes.
+- Component level data fetching.
+
+## Next.js Commands
+```bash
+npm install
+npm run build
+```

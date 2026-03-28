@@ -26,7 +26,8 @@
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*"
+      "dist-electron/**/*",
+      "electron/genesis/templates/**/*"
     ],
     "asar": true,
     "asarUnpack": [

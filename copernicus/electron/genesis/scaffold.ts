@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { spawnSync } from 'child_process';
+import { app } from 'electron';
 import { GenesisPayload, SynthesisResult } from './types';
 import { assertSafePath } from '../utils/path-guard';
 import log from '../utils/logger';
@@ -154,54 +155,100 @@ Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/compl
   private writeAgentConfig(payload: GenesisPayload): void {
     const { repoPath, projectName, idea, audience, coreValue, stack, isNewRepo } = payload;
 
-    const agentsContent = `# AGENTS.md — ${projectName}
+    const templatesDir = path.join(app.getAppPath(), 'electron', 'genesis', 'templates');
 
-## Project
-${idea}
+    const commonDir = path.join(templatesDir, 'common');
+    const stackDir = path.join(templatesDir, stack);
 
-**For:** ${audience}
-**Core value:** ${coreValue}
-**Stack:** ${stack}
+    // Default fallbacks in case templates are somehow missing
+    let agentsContent = '';
+    let claudeContent = '';
 
-## Role Boundaries
-- Plan → Delegate → Review
-- Do not implement inline when a story can be dispatched
+    try {
+      const agentsTemplatePath = path.join(commonDir, 'AGENTS.md');
+      if (fs.existsSync(agentsTemplatePath)) {
+        let tpl = fs.readFileSync(agentsTemplatePath, 'utf8');
+        tpl = tpl.replace(/\{\{projectName\}\}/g, projectName);
+        tpl = tpl.replace(/\{\{idea\}\}/g, idea);
+        tpl = tpl.replace(/\{\{audience\}\}/g, audience);
+        tpl = tpl.replace(/\{\{coreValue\}\}/g, coreValue);
+        tpl = tpl.replace(/\{\{stack\}\}/g, stack);
+        agentsContent = tpl;
+      } else {
+        log.warn(`[ScaffoldRunner] Missing AGENTS.md template at ${agentsTemplatePath}`);
+      }
 
-## Key Constraints
-- Follow IPC error handling standard (handleIpc + useIpcError + unwrapIpc)
-- No secrets in committed files
-- Run tsc --noEmit before marking story complete
+      const claudeTemplatePath = path.join(commonDir, 'CLAUDE.md');
+      if (fs.existsSync(claudeTemplatePath)) {
+        let tpl = fs.readFileSync(claudeTemplatePath, 'utf8');
+        tpl = tpl.replace(/\{\{projectName\}\}/g, projectName);
+        tpl = tpl.replace(/\{\{stack\}\}/g, stack);
 
-## Stories
-Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/completed/\`.
-`;
+        // Append stack specific content if exists
+        const stackClaudePath = path.join(stackDir, 'CLAUDE.md.append');
+        if (fs.existsSync(stackClaudePath)) {
+          const appendContent = fs.readFileSync(stackClaudePath, 'utf8');
+          tpl += '\n' + appendContent;
+        }
 
-    const claudeContent = `# CLAUDE.md
-**Project:** ${projectName}
-**Stack:** ${stack}
-
-## Role Boundaries — ENFORCED
-Claude's role is Plan → Delegate → Review. Not implement.
-
-## Common Commands
-\`\`\`bash
-# Add project-specific commands here
-\`\`\`
-
-## Architecture
-- Defined as project develops
-`;
+        claudeContent = tpl;
+      } else {
+        log.warn(`[ScaffoldRunner] Missing CLAUDE.md template at ${claudeTemplatePath}`);
+      }
+    } catch (err: any) {
+      log.error(`[ScaffoldRunner] Failed to read templates: ${err.message}`);
+    }
 
     const agentsPath = path.join(repoPath, 'AGENTS.md');
     const claudePath = path.join(repoPath, 'CLAUDE.md');
 
     if (isNewRepo) {
-      fs.writeFileSync(agentsPath, agentsContent);
-      fs.writeFileSync(claudePath, claudeContent);
+      if (agentsContent) fs.writeFileSync(agentsPath, agentsContent);
+      if (claudeContent) fs.writeFileSync(claudePath, claudeContent);
+
+      try {
+        // Copy .claude directory
+        const claudeRulesSrc = path.join(commonDir, '.claude');
+        if (fs.existsSync(claudeRulesSrc)) {
+          this.copyDirSync(claudeRulesSrc, path.join(repoPath, '.claude'));
+        }
+
+        // Copy .rtk.config
+        const rtkSrc = path.join(commonDir, '.rtk.config');
+        if (fs.existsSync(rtkSrc)) {
+          fs.copyFileSync(rtkSrc, path.join(repoPath, '.rtk.config'));
+        }
+
+        // Append .gitignore_append
+        const gitignoreAppendSrc = path.join(commonDir, '.gitignore_append');
+        const gitignoreTarget = path.join(repoPath, '.gitignore');
+        if (fs.existsSync(gitignoreAppendSrc) && fs.existsSync(gitignoreTarget)) {
+          const appendContent = fs.readFileSync(gitignoreAppendSrc, 'utf8');
+          fs.appendFileSync(gitignoreTarget, '\n' + appendContent);
+        }
+      } catch (err: any) {
+        log.error(`[ScaffoldRunner] Failed to copy extended templates: ${err.message}`);
+      }
     } else {
       // For existing repos, append if they exist, or create if they don't
-      this.appendOrCreate(agentsPath, agentsContent, '## Genesis Addition');
-      this.appendOrCreate(claudePath, claudeContent, '## Genesis Addition');
+      if (agentsContent) this.appendOrCreate(agentsPath, agentsContent, '## Genesis Addition');
+      if (claudeContent) this.appendOrCreate(claudePath, claudeContent, '## Genesis Addition');
+    }
+  }
+
+  private copyDirSync(src: string, dest: string): void {
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      if (entry.isDirectory()) {
+        this.copyDirSync(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
     }
   }
 

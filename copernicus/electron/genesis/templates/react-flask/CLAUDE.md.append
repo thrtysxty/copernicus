@@ -1,0 +1,8 @@
+## React-Flask Architecture
+- Frontend communicates via REST API to Backend.
+- Flask handles server-side logic and database interactions.
+
+## React-Flask Commands
+```bash
+# setup virtual environment
+```

@@ -1,0 +1,9 @@
+## React-Native Architecture
+- Uses React Native to build mobile applications.
+- Components are shared between iOS and Android where possible.
+
+## React-Native Commands
+```bash
+# setup virtual environment
+npm install
+```

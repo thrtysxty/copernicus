@@ -1,0 +1,10 @@
+## React-Electron Architecture
+- Main process handles OS and native APIs (Node.js).
+- Renderer process uses React without Node integration.
+- IPC is strictly defined and handled centrally.
+
+## React-Electron Commands
+```bash
+npx tsc --noEmit
+# run dev mode in background or separate terminal
+```

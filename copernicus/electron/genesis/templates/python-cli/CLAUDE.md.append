@@ -1,0 +1,8 @@
+## Python CLI Architecture
+- Uses argparse or click for command-line parsing.
+- Modularized structure.
+
+## Python CLI Commands
+```bash
+# setup virtual environment
+```
