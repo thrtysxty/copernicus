@@ -226,6 +226,7 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   setSessionEnded: (v: boolean) => void
 
   // Workspace Switch
+  workspaceKey: number
   resetForWorkspaceSwitch: () => void
 }
 
@@ -446,12 +447,14 @@ stitchTokens: null,
       isSessionEnded: false,
       setSessionEnded: (v) => set({ isSessionEnded: v }),
 
-      resetForWorkspaceSwitch: () => set({
+      workspaceKey: 0,
+      resetForWorkspaceSwitch: () => set((state) => ({
         openFiles: [],
         activeFilePath: null,
         activeView: 'planner',
-        isSessionEnded: false
-      })
+        isSessionEnded: false,
+        workspaceKey: (state.workspaceKey || 0) + 1
+      }))
     }),
     {
       name: 'copernicus-layout-storage',

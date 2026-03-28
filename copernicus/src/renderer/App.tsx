@@ -115,6 +115,7 @@ export default function App() {
   
   // Selective subscriptions for primitives
   const activeView = useLayoutStore(s => s.activeView)
+  const workspaceKey = useLayoutStore(s => s.workspaceKey)
   const sidebarOpen = useLayoutStore(s => s.sidebarOpen)
   const terminalOpen = useLayoutStore(s => s.terminalOpen)
   const showArchive = useLayoutStore(s => s.showArchive)
@@ -492,7 +493,7 @@ export default function App() {
         <ActivityBar />
 
         {/* Main Content Area */}
-        <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
+        <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative" key={workspaceKey}>
           <div className="flex-1 flex overflow-hidden">
             {/* Solo full-screen views */}
             {activeView === 'command-center' && <CommandCenter />}
