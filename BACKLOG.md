@@ -479,6 +479,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #572 | Generalize Agent Monitor | DRAFT | P1 |
 | #573 | Episodic Memory | DRAFT | P1 |
 | #574 | Agent Selector | DRAFT | P1 |
+| #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
