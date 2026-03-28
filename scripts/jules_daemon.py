@@ -276,6 +276,12 @@ def review_pr(pr_number: int, story_id: int) -> dict:
     prompt = f"""
 You are a senior code reviewer. Review this PR diff against the story's Acceptance Criteria and the project's forbidden patterns.
 
+REVIEW SCOPE RULES (apply these before evaluating):
+1. Evaluate whether the code changes correctly implement each AC — not whether runtime evidence was produced. The implementer is a headless agent that cannot run the app or produce log output. Do NOT require screenshots, log samples, test run output, or benchmark results.
+2. AC ordering in a story describes logical sequence within the implementation, not a requirement for separate commits or PRs. A single PR that implements AC1 + AC2 together is acceptable as long as both are correctly implemented in the code.
+3. Correction Notes in the story describe what was wrong in a previous PR. They guide what the implementer should fix — they are not additional ACs. Do not add new blocking requirements based on Correction Note wording unless they map to a stated AC.
+4. Only block on issues that are verifiable from the diff itself: missing code, wrong logic, forbidden patterns, TypeScript errors, IPC violations. Do not block on hypothetical runtime behavior or missing evidence the agent cannot provide.
+
 STORY ACCEPTANCE CRITERIA:
 {story_content}
 
