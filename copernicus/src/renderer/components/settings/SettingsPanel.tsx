@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { 
   X, Shield, Key, Layout, Cpu, 
   Settings, GitBranch, Workflow, FileText, 
-  Terminal, Database, User, Layers, Search, Zap, Puzzle
+  Terminal, Database, User, Layers, Search, Zap, Puzzle, DollarSign
 } from 'lucide-react'
 
 // Import Sections
@@ -23,6 +23,7 @@ import { HardwareSection } from './sections/HardwareSection'
 import { LocalModelSection } from './sections/LocalModelSection'
 import { ExtensionsSection } from './sections/ExtensionsSection'
 import { SkillsSection } from './sections/SkillsSection'
+import { BillingSection } from './sections/BillingSection'
 
 type TabId =
   | 'providers'
@@ -43,6 +44,7 @@ type TabId =
   | 'hardware'
   | 'extensions'
   | 'skills'
+  | 'billing'
 
 interface SettingsPanelProps {
   onClose: () => void
@@ -70,6 +72,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'hardware':    return <HardwareSection />
       case 'extensions':  return <ExtensionsSection />
       case 'skills':      return <SkillsSection />
+      case 'billing':     return <BillingSection />
       default:            return <ProvidersSection />
     }
   }
@@ -111,6 +114,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <TabButton id="rag" label="RAG Tuning" icon={<Search size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="templates" label="Templates" icon={<FileText size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="skills" label="Skills" icon={<Zap size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="billing" label="Billing" icon={<DollarSign size={14} />} active={activeTab} onClick={setActiveTab} />
 
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
             <TabButton id="security" label="Security" icon={<Shield size={14} />} active={activeTab} onClick={setActiveTab} />
