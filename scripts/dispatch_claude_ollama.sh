@@ -50,4 +50,4 @@ if [ ! -f "$PROMPT_FILE" ]; then
 fi
 
 # Run claude command
-claude -p "$(cat "$PROMPT_FILE")" --model "$MODEL" 2>&1
+claude --dangerously-skip-permissions -p "$(cat "$PROMPT_FILE")" --model "$MODEL" 2>&1
