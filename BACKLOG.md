@@ -134,7 +134,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #572 | Generalize Agent Monitor | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #601 | Agent Monitor: Write Complete Status After Merge | APPROVED FOR IMPLEMENTATION | P1 |
-| #602 | Capex Billing Toggle Per Workspace | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -480,6 +479,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #597 | Remove Stale Column Ids From Layout.Ts | COMPLETE | P2 |
 | #598 | Complete Console.Log Cleanup — Renderer And New Electron Files (192 Continuation) | COMPLETE | P2 |
 | #599 | Session Archive And Nightly Digest Pipeline | COMPLETE | P1 |
+| #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
