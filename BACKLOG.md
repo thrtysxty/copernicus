@@ -132,9 +132,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #572 | Generalize Agent Monitor | APPROVED FOR IMPLEMENTATION | P1 |
-| #571 | Repo Hygiene Ghost Script Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
-| #572 | Generalize Agent Monitor | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
+| #601 | Agent Monitor: Write Complete Status After Merge | APPROVED FOR IMPLEMENTATION | P1 |
+| #602 | Capex Billing Toggle Per Workspace | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -497,6 +497,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #144 | Image Splash And Icon | COMPLETED | P1 — User Experience |
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
+| #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
 | #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
 | #565 | Kb Activity Bar View Scaffold | DRAFT | P1 |
 | #566 | Kb Content Storage Seeding | DRAFT | P1 |
@@ -506,6 +507,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #573 | Episodic Memory | DRAFT | P1 |
 | #574 | Agent Selector | DRAFT | P1 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
+| #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
