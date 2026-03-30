@@ -81,7 +81,7 @@ export async function registerAllIpcHandlers(
     scaffoldRunner,
     snapshotManager,
     touchBarCleanup,
-    worktreeManager: worktreeManager as any,
+    worktreeManager,
     win: win as any,
     extensionRegistry: extensionRegistry as any,
     spawn: spawn as any,

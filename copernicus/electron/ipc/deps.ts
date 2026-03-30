@@ -19,6 +19,7 @@ import { SocketManager } from '../socket-manager'
 import { GenesisRunner } from '../genesis/genesis-runner'
 import { SnapshotManager } from '../workflow/snapshot-manager'
 import { JulesClient } from '../jules/jules-client'
+import { WorktreeManager } from '../worktree/WorktreeManager'
 
 export interface TerminalSession {
   id: string
@@ -28,7 +29,9 @@ export interface TerminalSession {
   cwd?: string
 }
 
-export interface IpcHandlerDeps {  authManager: AuthManager;
+export interface IpcHandlerDeps {
+  worktreeManager: WorktreeManager;
+  authManager: AuthManager;
   githubManager: GithubManager;
   modelRegistry: ModelRegistry;
   settingsStore: SettingsStore;

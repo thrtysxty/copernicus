@@ -75,6 +75,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const applied: string[] = []
 
     try {
+      // Story 616: Stop worktree manager polling before switch
+      if (deps.worktreeManager) {
+        deps.worktreeManager.stop()
+      }
+
       // Step 1: Validate path
       if (!fs.existsSync(dirPath)) {
         throw new Error('Path does not exist')
@@ -136,6 +141,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       // Get LSP status
       const lspStatus = (lspManager as any).getStatus?.() ?? { running: false }
 
+      // Story 616: Restart worktree polling with new path
+      if (deps.worktreeManager) {
+        deps.worktreeManager.setRepoRoot(dirPath)
+      }
+
       // Build WorkspaceState
       const workspaceState: WorkspaceState = {
         path: dirPath,
@@ -145,6 +155,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         gitRepoFound: gitState.gitRepoFound,
         projectId: path.resolve(dirPath), // TODO story-614: replace with memoryService.activeProjectId
         lspStatus: lspStatus.running ? 'running' : 'stopped',
+        worktreePolling: deps.worktreeManager && !deps.worktreeManager.isPollingStopped ? 'active' : 'stopped',
         drift: [],
       }
 
@@ -201,6 +212,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const dirPath = settingsStore.get('workspace') as string | null
 
     const lspStatus = (lspManager as any).getStatus?.() ?? { running: false }
+    const worktreePolling = deps.worktreeManager && !deps.worktreeManager.isPollingStopped ? 'active' : 'stopped'
 
     if (!dirPath) {
       return {
@@ -211,6 +223,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         gitRepoFound: false,
         projectId: '',
         lspStatus: lspStatus.running ? 'running' : 'stopped',
+        worktreePolling,
         drift: ['no-workspace-set'],
       }
     }
@@ -245,6 +258,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       gitRepoFound: gitState.gitRepoFound,
       projectId: path.resolve(dirPath), // TODO story-614: replace with memoryService.activeProjectId
       lspStatus: lspStatus.running ? 'running' : 'stopped',
+      worktreePolling,
       drift: drift.length > 0 ? drift : undefined,
     }
   }

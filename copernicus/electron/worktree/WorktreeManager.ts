@@ -12,6 +12,7 @@ export class WorktreeManager {
   private worktreesDir: string
   private pollingInterval: NodeJS.Timeout | null = null
   private mainWindow: BrowserWindow | null = null
+  private isStopped: boolean = false
 
   constructor(db: Database.Database, repoRoot: string) {
     this.db = db
@@ -116,9 +117,12 @@ export class WorktreeManager {
   }
 
   poll() {
+    if (this.isStopped) return
+    const currentRepoRoot = this.repoRoot
     const activeWorktrees = this.list().filter((wt) => wt.status === 'active')
 
     for (const wt of activeWorktrees) {
+      if (this.isStopped || this.repoRoot !== currentRepoRoot) return
       try {
         const logOutput = this.execGit(
           ['log', `main..${wt.branch}`, '--oneline'],
@@ -165,6 +169,7 @@ export class WorktreeManager {
 
   startPolling(win: BrowserWindow, intervalMs = 30000) {
     this.mainWindow = win
+    this.isStopped = false
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval)
     }
@@ -177,6 +182,27 @@ export class WorktreeManager {
       clearInterval(this.pollingInterval)
       this.pollingInterval = null
     }
+  }
+
+  stop() {
+    this.stopPolling()
+    this.isStopped = true
+  }
+
+  setRepoRoot(newPath: string) {
+    this.repoRoot = newPath
+    this.worktreesDir = newPath ? path.join(newPath, '.agent-worktrees') : ''
+    if (this.worktreesDir) {
+      fs.mkdirSync(this.worktreesDir, { recursive: true })
+    }
+    this.isStopped = false
+    if (this.mainWindow) {
+      this.startPolling(this.mainWindow)
+    }
+  }
+
+  get isPollingStopped(): boolean {
+    return this.isStopped
   }
 
   private execGit(args: string[], cwd?: string): string {

@@ -27,6 +27,7 @@ export interface WorkspaceState {
   gitRepoFound: boolean
   projectId: string // TODO story-614: replace with memoryService.activeProjectId
   lspStatus?: 'running' | 'stopped' | 'dead'
+  worktreePolling?: 'active' | 'stopped'
   drift?: string[] // non-empty if any of the 5 state sources disagree
 }
 
