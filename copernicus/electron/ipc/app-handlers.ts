@@ -6,6 +6,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
+import { memoryService } from '../memory/memoryService'
 import { assertSafePath } from '../utils/path-guard'
 import { setupCommandHandlers as setupDispatcherHandlers } from '../commands/dispatcher'
 import { addRecentProject } from '../utils/recent-projects'
@@ -111,6 +112,8 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       storiesManager.setProjectRoot(dirPath)
       applied.push('storiesManager.projectRoot')
 
+      memoryService.setActiveProject(dirPath)
+
       // Step 4: Start background services
       codebaseIndexer.startIndexing(dirPath).catch(log.error)
       applied.push('codebaseIndexer')
@@ -153,7 +156,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         isDirty: gitState.isDirty,
         storiesCount,
         gitRepoFound: gitState.gitRepoFound,
-        projectId: path.resolve(dirPath), // TODO story-614: replace with memoryService.activeProjectId
+        projectId: memoryService.activeProjectId,
         lspStatus: lspStatus.running ? 'running' : 'stopped',
         worktreePolling: deps.worktreeManager && !deps.worktreeManager.isPollingStopped ? 'active' : 'stopped',
         drift: [],
@@ -256,7 +259,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       isDirty: gitState.isDirty,
       storiesCount,
       gitRepoFound: gitState.gitRepoFound,
-      projectId: path.resolve(dirPath), // TODO story-614: replace with memoryService.activeProjectId
+      projectId: memoryService.activeProjectId,
       lspStatus: lspStatus.running ? 'running' : 'stopped',
       worktreePolling,
       drift: drift.length > 0 ? drift : undefined,

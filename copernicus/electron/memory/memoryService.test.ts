@@ -56,7 +56,33 @@ describe('MemoryService TDD', () => {
     expect(recent?.score).toBeGreaterThan(old?.score as number);
   });
 
+  test('writing without activeProjectId fails', async () => {
+    memoryService.setActiveProject('');
+
+    const id = await memoryService.addMemory({
+      projectId: 'p3', // should be ignored
+      bankId: 'b3',
+      eventType: 'fact',
+      content: 'this should fail',
+      importance: 5
+    });
+
+    expect(id).toBe('');
+
+    const logId = await memoryService.logWork({
+      projectId: 'p3',
+      bankId: 'b3',
+      eventType: 'work',
+      meta: {}
+    });
+
+    expect(logId).toBe('');
+  });
+
   test('supersede(oldId, newId) sets old row importance = 1', async () => {
+    memoryService.setActiveProject('p2');
+    const p2AbsPath = memoryService.activeProjectId; // get absolute path
+
     const oldId = await memoryService.addMemory({
       projectId: 'p2',
       bankId: 'b2',
@@ -75,7 +101,7 @@ describe('MemoryService TDD', () => {
 
     await memoryService.supersede(oldId, newId);
 
-    const workingSet = await memoryService.getWorkingSet('p2', 'b2');
+    const workingSet = await memoryService.getWorkingSet(p2AbsPath, 'b2');
     const oldRow = workingSet.find(m => m.id === oldId);
     
     expect(oldRow).toBeDefined();

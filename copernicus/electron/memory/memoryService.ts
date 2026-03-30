@@ -1,5 +1,6 @@
 import log from '../utils/logger'
 import * as crypto from 'crypto';
+import path from 'node:path';
 import { stateLedger } from '../db/state-ledger';
 import { MemoryRow, WorkLogRow } from '../../src/renderer/types/memory';
 import { retroTrigger } from '../retro/retro-trigger';
@@ -23,8 +24,22 @@ export interface LogWorkParams {
 }
 
 export class MemoryService {
+  public activeProjectId: string = '';
+
+  public setActiveProject(dirPath: string): void {
+    if (!dirPath) {
+      this.activeProjectId = '';
+    } else {
+      this.activeProjectId = path.resolve(dirPath);
+    }
+  }
 
   async addMemory(params: AddMemoryParams): Promise<string> {
+    if (!this.activeProjectId) {
+      log.error('Memory write rejected: activeProjectId is empty');
+      return '';
+    }
+
     const id = crypto.randomUUID();
     const ts = Math.floor(Date.now() / 1000);
     const tagsStr = params.tags ? JSON.stringify(params.tags) : null;
@@ -33,7 +48,7 @@ export class MemoryService {
 
     stateLedger.addAgentMemory({
       id,
-      projectId: params.projectId,
+      projectId: this.activeProjectId,
       bankId: params.bankId,
       eventType: params.eventType,
       content: params.content,
@@ -45,7 +60,7 @@ export class MemoryService {
     });
 
     if (params.eventType === 'session_start') {
-      retroTrigger.checkAndTrigger(params.projectId).catch(err => {
+      retroTrigger.checkAndTrigger(this.activeProjectId).catch(err => {
         log.error('Failed to check and trigger retro:', err);
       });
     }
@@ -77,13 +92,18 @@ export class MemoryService {
   }
 
   async logWork(params: LogWorkParams): Promise<string> {
+    if (!this.activeProjectId) {
+      log.error('Memory write rejected: activeProjectId is empty');
+      return '';
+    }
+
     const id = crypto.randomUUID();
     const ts = Math.floor(Date.now() / 1000);
     const metaStr = JSON.stringify(params.meta);
 
     stateLedger.logAgentWork({
       id,
-      projectId: params.projectId,
+      projectId: this.activeProjectId,
       bankId: params.bankId,
       eventType: params.eventType,
       meta: metaStr,

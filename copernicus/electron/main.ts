@@ -46,6 +46,7 @@ import { auditSkillDescriptions } from './skills/description-auditor'
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
 import { jsonlExporter } from './memory/jsonl-exporter'
+import { memoryService } from './memory/memoryService'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -299,6 +300,8 @@ async function registerIpcHandlers() {
 
     return { collectorRunning, settingsWritten };
   }))
+
+  ipcMain.handle('memory:get-active-project', (_e) => handleIpc(() => memoryService.activeProjectId))
 
   ipcMain.handle('health:check-all', (_e) => handleIpc(async () => {
     const checks = await Promise.allSettled([

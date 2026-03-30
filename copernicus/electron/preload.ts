@@ -38,7 +38,7 @@ const SEND_CHANNELS = new Set([
   'db:add-memory', 'db:search-memory', 'db:vacuum', 'db:get-edit-decisions',
   
   // Agent Memory
-  'memory:add', 'memory:get-working-set', 'memory:supersede', 'memory:log-work', 'memory:get-work-log', 'memory:export-now',
+  'memory:add', 'memory:get-working-set', 'memory:supersede', 'memory:log-work', 'memory:get-work-log', 'memory:export-now', 'memory:get-active-project',
   'snapshot:save', 'snapshot:restore', // Context Snapshots (Story 157)
   // Recent projects & workspace switching
   'app:get-recent-projects', 'app:switch-workspace', 'app:open-folder-dialog',
