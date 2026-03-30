@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow, shell, app, dialog } from 'electron'
 import path from 'node:path'
-import { spawn, execFile } from 'node:child_process'
+import { spawn, execFile, execSync } from 'node:child_process'
 import { promisify } from 'node:util'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -9,10 +9,32 @@ import { handleIpc } from '../utils/handle-ipc'
 import { assertSafePath } from '../utils/path-guard'
 import { setupCommandHandlers as setupDispatcherHandlers } from '../commands/dispatcher'
 import { addRecentProject } from '../utils/recent-projects'
+import type { WorkspaceState } from '../../src/renderer/types/ipc'
 
 import { IpcHandlerDeps } from './deps'
 
 const execFileAsync = promisify(execFile)
+
+// Story 613: Helper to get git state for a directory
+function getGitState(dirPath: string): { branch: string; isDirty: boolean; gitRepoFound: boolean } {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: dirPath, encoding: 'utf8' }).trim()
+    const status = execSync('git status --porcelain', { cwd: dirPath, encoding: 'utf8' }).trim()
+    return { branch, isDirty: status.length > 0, gitRepoFound: true }
+  } catch {
+    return { branch: 'unknown', isDirty: false, gitRepoFound: false }
+  }
+}
+
+// Story 613: Helper to count stories in a workspace
+async function getStoriesCount(storiesManager: any): Promise<number> {
+  try {
+    const stories = await storiesManager.list?.() ?? []
+    return Array.isArray(stories) ? stories.length : 0
+  } catch {
+    return 0
+  }
+}
 
 function computeCoveragePct(coverageMap: Record<string, any>): number {
   const files = Object.values(coverageMap)
@@ -24,12 +46,12 @@ function computeCoveragePct(coverageMap: Record<string, any>): number {
 
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const {
-    settingsStore, 
-    LOG_DIR, 
-    devtimeManager, 
-    storiesManager, 
-    stateLedger, 
-    fsManager, 
+    settingsStore,
+    LOG_DIR,
+    devtimeManager,
+    storiesManager,
+    stateLedger,
+    fsManager,
     workflowEngine,
     authManager,
     codebaseIndexer,
@@ -37,6 +59,193 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     ptyManager, // Re-added ptyManager
     createTouchBar,
   } = deps
+
+  // Story 613: Transactional workspace coordinator
+  // This is the ONLY place that updates all workspace state locations
+  async function applyWorkspace(dirPath: string, options?: { autoInitGit?: boolean }): Promise<WorkspaceState> {
+    // Snapshot current state for rollback
+    const snapshot = {
+      workspace: settingsStore.get('workspace') as string | null,
+      workingDir: settingsStore.get('workingDir') as string | null,
+      rootPath: fsManager.getRootPath?.() ?? null,
+      projectRoot: (storiesManager as any).getProjectRoot?.() ?? null,
+    }
+
+    // Track which steps succeeded for partial rollback
+    const applied: string[] = []
+
+    try {
+      // Step 1: Validate path
+      if (!fs.existsSync(dirPath)) {
+        throw new Error('Path does not exist')
+      }
+      assertSafePath(dirPath)
+
+      // Step 2: Check for .git dir (log warning but don't block)
+      const gitDir = path.join(dirPath, '.git')
+      const gitRepoFound = fs.existsSync(gitDir)
+      if (!gitRepoFound) {
+        log.warn(`No .git directory found in workspace: ${dirPath}`)
+      }
+
+      // Step 3: Update all state locations
+      addRecentProject(dirPath, settingsStore)
+      applied.push('recentProjects')
+
+      settingsStore.set('workspace', dirPath)
+      applied.push('settingsStore.workspace')
+
+      settingsStore.set('workingDir', dirPath)
+      applied.push('settingsStore.workingDir')
+
+      fsManager.setRootPath(dirPath)
+      applied.push('fsManager.rootPath')
+
+      storiesManager.setProjectRoot(dirPath)
+      applied.push('storiesManager.projectRoot')
+
+      // Step 4: Start background services
+      codebaseIndexer.startIndexing(dirPath).catch(log.error)
+      applied.push('codebaseIndexer')
+
+      lspManager.stop()
+      lspManager.start(dirPath)
+      applied.push('lspManager')
+
+      // Step 5: Auto-init git if requested and not present
+      if (options?.autoInitGit && !gitRepoFound) {
+        try {
+          await execFileAsync('git', ['init'], { cwd: dirPath, shell: false })
+        } catch {
+          /* non-fatal */
+        }
+      }
+
+      // Step 6: Update window title
+      const name = path.basename(dirPath) || dirPath
+      win.setTitle(name)
+
+      // Step 7: Get git state
+      const gitState = getGitState(dirPath)
+
+      // Step 8: Get stories count
+      const storiesCount = await getStoriesCount(storiesManager)
+
+      // Get LSP status
+      const lspStatus = (lspManager as any).getStatus?.() ?? { running: false }
+
+      // Build WorkspaceState
+      const workspaceState: WorkspaceState = {
+        path: dirPath,
+        branch: gitState.branch,
+        isDirty: gitState.isDirty,
+        storiesCount,
+        gitRepoFound: gitState.gitRepoFound,
+        projectId: path.resolve(dirPath), // TODO story-614: replace with memoryService.activeProjectId
+        lspStatus: lspStatus.running ? 'running' : 'stopped',
+        drift: [],
+      }
+
+      // Step 9: Notify renderer
+      win.webContents.send('app:workspace-changed', workspaceState)
+
+      // Step 10: Log state snapshot and check for drift
+      const allSources = {
+        settingsWorkspace: settingsStore.get('workspace'),
+        settingsWorkingDir: settingsStore.get('workingDir'),
+        fsManagerRoot: fsManager.getRootPath?.(),
+        storiesManagerRoot: (storiesManager as any).projectRoot ?? null,
+        appliedPath: dirPath,
+      }
+
+      const drift: string[] = []
+      if (allSources.settingsWorkspace !== dirPath) drift.push('settingsStore.workspace')
+      if (allSources.settingsWorkingDir !== dirPath) drift.push('settingsStore.workingDir')
+      if (allSources.fsManagerRoot !== dirPath) drift.push('fsManager.rootPath')
+      if (allSources.storiesManagerRoot !== dirPath) drift.push('storiesManager.projectRoot')
+
+      const logData = { workspace: dirPath, sources: allSources, drift }
+      if (drift.length > 0) {
+        log.warn('[applyWorkspace] State drift detected:', logData)
+        workspaceState.drift = drift
+      } else {
+        log.info('[applyWorkspace] Workspace applied successfully:', logData)
+      }
+
+      return workspaceState
+    } catch (error) {
+      // Rollback on failure
+      log.error('[applyWorkspace] Failed to apply workspace, rolling back:', error)
+
+      if (applied.includes('settingsStore.workspace') && snapshot.workspace !== null) {
+        settingsStore.set('workspace', snapshot.workspace)
+      }
+      if (applied.includes('settingsStore.workingDir') && snapshot.workingDir !== null) {
+        settingsStore.set('workingDir', snapshot.workingDir)
+      }
+      if (applied.includes('fsManager.rootPath') && snapshot.rootPath !== null) {
+        fsManager.setRootPath(snapshot.rootPath)
+      }
+      if (applied.includes('storiesManager.projectRoot') && snapshot.projectRoot !== null) {
+        storiesManager.setProjectRoot(snapshot.projectRoot)
+      }
+
+      throw error
+    }
+  }
+
+  // Story 613: Get current environmental state from all sources
+  async function getEnvState(): Promise<WorkspaceState> {
+    const dirPath = settingsStore.get('workspace') as string | null
+
+    const lspStatus = (lspManager as any).getStatus?.() ?? { running: false }
+
+    if (!dirPath) {
+      return {
+        path: '',
+        branch: 'unknown',
+        isDirty: false,
+        storiesCount: 0,
+        gitRepoFound: false,
+        projectId: '',
+        lspStatus: lspStatus.running ? 'running' : 'stopped',
+        drift: ['no-workspace-set'],
+      }
+    }
+
+    // Read all 5 state sources
+    const sources = {
+      settingsWorkspace: settingsStore.get('workspace'),
+      settingsWorkingDir: settingsStore.get('workingDir'),
+      fsManagerRoot: fsManager.getRootPath?.(),
+      storiesManagerRoot: (storiesManager as any).projectRoot ?? null,
+      appliedPath: dirPath,
+    }
+
+    // Detect drift
+    const drift: string[] = []
+    if (sources.settingsWorkspace !== dirPath) drift.push('settingsStore.workspace')
+    if (sources.settingsWorkingDir !== dirPath) drift.push('settingsStore.workingDir')
+    if (sources.fsManagerRoot !== dirPath) drift.push('fsManager.rootPath')
+    if (sources.storiesManagerRoot !== dirPath) drift.push('storiesManager.projectRoot')
+
+    // Get git state
+    const gitState = getGitState(dirPath)
+
+    // Get stories count
+    const storiesCount = await getStoriesCount(storiesManager)
+
+    return {
+      path: dirPath,
+      branch: gitState.branch,
+      isDirty: gitState.isDirty,
+      storiesCount,
+      gitRepoFound: gitState.gitRepoFound,
+      projectId: path.resolve(dirPath), // TODO story-614: replace with memoryService.activeProjectId
+      lspStatus: lspStatus.running ? 'running' : 'stopped',
+      drift: drift.length > 0 ? drift : undefined,
+    }
+  }
 
   ipcMain.handle('settings:save', (_event, patch: unknown) => handleIpc('settings:save', [patch], async () => {
     if (typeof patch === 'object' && patch !== null) settingsStore.setAll(patch as Record<string, any>)
@@ -213,32 +422,8 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('app:switch-workspace', (_e, { path: dirPath }: { path: string }) => handleIpc('app:switch-workspace', [dirPath], async () => {
-    if (!fs.existsSync(dirPath)) throw new Error('Path does not exist')
-    
-    assertSafePath(dirPath);
-    
-    // Check for .git dir - log warning but don't block
-    if (!fs.existsSync(path.join(dirPath, '.git'))) {
-      log.warn(`No .git directory found in workspace: ${dirPath}`);
-    }
-
-    addRecentProject(dirPath, settingsStore);
-    settingsStore.set('workspace', dirPath);
-    settingsStore.set('workingDir', dirPath);
-    fsManager.setRootPath(dirPath);
-    storiesManager.setProjectRoot(dirPath);
-    
-    // Derived from app:set-root-path
-    codebaseIndexer.startIndexing(dirPath).catch(log.error)
-    lspManager.stop()
-    lspManager.start(dirPath)
-    
-    const name = path.basename(dirPath) || dirPath
-    win.setTitle(name)
-    
-    // Notify renderer so workingDir stays in sync
-    win.webContents.send('app:workspace-changed', { path: dirPath, name })
-    return true
+    const workspaceState = await applyWorkspace(dirPath)
+    return workspaceState
   }))
 
   // Command Center (Story 184)
@@ -363,22 +548,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('app:set-root-path', (_e, dirPath: string) => handleIpc('app:set-root-path', [dirPath], async () => {
-    assertSafePath(dirPath);
-    settingsStore.set('workspace', dirPath);
-    fsManager.setRootPath(dirPath);
-    storiesManager.setProjectRoot(dirPath);
-    // Immediately start indexing and LSP for the new workspace
-    codebaseIndexer.startIndexing(dirPath).catch(log.error)
-    lspManager.stop()
-    lspManager.start(dirPath)
-    // Auto-init git if not already a repo
-    const gitDir = path.join(dirPath, '.git')
-    if (!fs.existsSync(gitDir)) {
-      try { await execFileAsync('git', ['init'], { cwd: dirPath, shell: false }) } catch { /* non-fatal */ }
-    }
-    // Notify renderer so workingDir stays in sync
-    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('app:workspace-changed', { path: dirPath }))
-    return true;
+    const workspaceState = await applyWorkspace(dirPath, { autoInitGit: true })
+    return workspaceState
+  }));
+
+  // Story 613: Get current environmental state snapshot
+  ipcMain.handle('app:get-env-state', () => handleIpc('app:get-env-state', [], async () => {
+    return await getEnvState()
   }));
 
   ipcMain.handle('app:get-root-path', () => handleIpc('app:get-root-path', [], () => {

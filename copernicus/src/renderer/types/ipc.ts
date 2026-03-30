@@ -8,14 +8,26 @@ export interface IpcResult<T = undefined> {
 /** Unwrap the {ok, data} envelope returned by handleIpc() */
 export function unwrapIpc<T>(result: unknown): T {
   if (!result || typeof result !== 'object') return result as T
-  
+
   const res = result as IpcResult<T>
   if (res.ok === undefined) return result as T // Not an IpcResult envelope
-  
+
   if (!res.ok) {
     throw new Error(res.error || 'IPC call failed')
   }
   return res.data as T
+}
+
+// Story 613: Workspace Environmental State
+export interface WorkspaceState {
+  path: string
+  branch: string
+  isDirty: boolean
+  storiesCount: number
+  gitRepoFound: boolean
+  projectId: string // TODO story-614: replace with memoryService.activeProjectId
+  lspStatus?: 'running' | 'stopped' | 'dead'
+  drift?: string[] // non-empty if any of the 5 state sources disagree
 }
 
 // === Generic types ===

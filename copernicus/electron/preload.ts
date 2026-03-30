@@ -1,4 +1,3 @@
-import log from './utils/logger'
 import { contextBridge, ipcRenderer } from 'electron'
 
 /** Channels the renderer may SEND to main (ipcMain.on / ipcMain.handle) */
@@ -43,6 +42,7 @@ const SEND_CHANNELS = new Set([
   'snapshot:save', 'snapshot:restore', // Context Snapshots (Story 157)
   // Recent projects & workspace switching
   'app:get-recent-projects', 'app:switch-workspace', 'app:open-folder-dialog',
+  'app:get-env-state', // Story 613: Environmental state snapshot
   // Model Call Ledger (Story 156)
   'ledger:session-stats', 'ledger:recent-calls', 'ledger:all-time-cost',
   // Layout / telemetry
@@ -184,6 +184,8 @@ const LISTEN_CHANNELS = new Set([
   'gemini:output',
   // LSP diagnostics (Story 176 + 189)
   'lsp:diagnostics-update',
+  // Story 615 prep: LSP status changes
+  'lsp:status-changed',
   // Command Center (Story 184)
   'command:telemetry-update',
   // Workflow engine state push (Story 186)
@@ -209,7 +211,7 @@ const LISTEN_CHANNELS = new Set([
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {
     if (!LISTEN_CHANNELS.has(channel)) {
-      log.warn(`[preload] Blocked unauthorised listen on channel: ${channel}`)
+      console.warn(`[preload] Blocked unauthorised listen on channel: ${channel}`)
       return () => { /* no-op */ }
     }
     ipcRenderer.on(channel, listener)
@@ -222,7 +224,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
   send(channel: string, ...args: unknown[]): void {
     if (!SEND_CHANNELS.has(channel)) {
-      log.warn(`[preload] Blocked unauthorised send on channel: ${channel}`)
+      console.warn(`[preload] Blocked unauthorised send on channel: ${channel}`)
       return
     }
     ipcRenderer.send(channel, ...args)
@@ -230,7 +232,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
   invoke(channel: string, ...args: unknown[]): Promise<unknown> {
     if (!SEND_CHANNELS.has(channel)) {
-      log.warn(`[preload] Blocked unauthorised invoke on channel: ${channel}`)
+      console.warn(`[preload] Blocked unauthorised invoke on channel: ${channel}`)
       return Promise.reject(new Error(`Channel not allowed: ${channel}`))
     }
     return ipcRenderer.invoke(channel, ...args)

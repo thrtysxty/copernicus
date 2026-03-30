@@ -13,7 +13,7 @@ import { ApplicationHeader } from './components/layout/ApplicationHeader'
 import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog'
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
-import { unwrapIpc, IpcResult } from './types/ipc'
+import { unwrapIpc, IpcResult, WorkspaceState } from './types/ipc'
 import { useExtensionStore } from './store/extensionStore'
 import { FileTree } from './components/FileTree/FileTree'
 import { ChatPanel } from './components/chat/ChatPanel'
@@ -148,6 +148,7 @@ export default function App() {
   const toggleFlip = useLayoutStore(s => s.toggleFlip)
   const setWorkingDir = useLayoutStore(s => s.setWorkingDir)
   const setGitBranch = useLayoutStore(s => s.setGitBranch)
+  const setGitDirty = useLayoutStore(s => s.setGitDirty)
   const addTerminal = useLayoutStore(s => s.addTerminal)
   const removeTerminal = useLayoutStore(s => s.removeTerminal)
   const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy)
@@ -242,11 +243,21 @@ export default function App() {
       setIsWizard(true)
     }
 
-    const removeWorkspaceChanged = window.ipcRenderer.on('app:workspace-changed', (_e, { path }: { path: string }) => {
-      setWorkingDir(path)
+    const removeWorkspaceChanged = window.ipcRenderer.on('app:workspace-changed', (_e, workspaceState: WorkspaceState) => {
+      setWorkingDir(workspaceState.path)
+      setGitBranch(workspaceState.branch)
+      setGitDirty(workspaceState.isDirty)
       // AC4: Context reset on switch
       useLayoutStore.getState().resetForWorkspaceSwitch()
-      
+
+      // Verify env state consistency
+      invoke<IpcResult<WorkspaceState>>('app:get-env-state').then((r) => {
+        const envState = unwrapIpc<WorkspaceState>(r)
+        if (envState?.drift?.length) {
+          console.warn('[workspace] State drift detected after switch:', envState.drift)
+        }
+      }).catch(() => {})
+
       // Re-fetch stories for new workspace
       invoke<IpcResult<{ status: string }[]>>('stories:list').then((r) => {
         const list = unwrapIpc<{ status: string }[]>(r) ?? []
@@ -369,7 +380,7 @@ export default function App() {
       removeReviewSession()
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [invoke, setWorkingDir, setGitBranch, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView, setPendingReview])
+  }, [invoke, setWorkingDir, setGitBranch, setGitDirty, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView, setPendingReview])
 
   // Story 209: Auto-collapse explorer on designer view entry
   useEffect(() => {
