@@ -328,7 +328,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       isFirstCallAfterSwitch.current = false;
       try {
         const sinceTs = lastSeenTs.current.get(modelInner) ?? 0;
-        const res = await invoke<any>('memory:get-working-set', { projectId: activeProjectId, bankId: 'chat', limit: 10 });
+        const res = await invoke<any>('memory:get-working-set', activeProjectId, 'chat', 10);
         const rows = unwrapIpc<any[]>(res) ?? [];
         const deltaRows = rows.filter((r: any) => (r.ts * 1000) > sinceTs);
         

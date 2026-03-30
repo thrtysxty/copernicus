@@ -24,7 +24,7 @@ export function useMemoryRecall(projectId: string, bankId: string, limit = 5) {
     const fetchMemories = async () => {
       try {
         setLoading(true)
-        const result = await invoke<IpcResult<MemoryRow[]>>('memory:get-working-set', { projectId, bankId, limit })
+        const result = await invoke<IpcResult<MemoryRow[]>>('memory:get-working-set', projectId, bankId, limit)
         const data = unwrapIpc<MemoryRow[]>(result)
         if (isMounted && data) {
           setMemories(data)
