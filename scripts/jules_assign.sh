@@ -23,6 +23,74 @@ DRY_RUN=false
 VERBOSE=false
 SKIP_VALIDATION=false # Added this line
 
+# ── Helper Functions ────────────────────────────────────────────────────────────
+
+# Atomically update **Status:** in a story file with retry logic
+update_story_status() {
+  local story_file="$1"
+  local new_status="$2"
+  local retries=3
+  local retry_delay=2
+  local attempt=0
+
+  # Skip if story is already archived
+  if [[ "$story_file" == */completed/* ]]; then
+    echo "  Status: $story_file already archived — skipping status update"
+    return 0
+  fi
+
+  if [ ! -f "$story_file" ]; then
+    echo "  Status: File not found: $story_file"
+    return 1
+  fi
+
+  while [ $attempt -lt $retries ]; do
+    attempt=$((attempt + 1))
+
+    # Create temp file with updated status
+    local tmp_file="${story_file}.tmp"
+
+    # Use sed to replace **Status:** line atomically
+    if sed -E "s/^\*\*Status:\*\*.*/\*\*Status:\*\* $new_status/" "$story_file" > "$tmp_file" 2>/dev/null; then
+      # Verify the replacement actually happened
+      if grep -q "^\*\*Status:\*\* $new_status" "$tmp_file"; then
+        # Atomic move
+        if mv "$tmp_file" "$story_file" 2>/dev/null; then
+          echo "  Status: Updated $story_file to $new_status"
+          return 0
+        fi
+      else
+        rm -f "$tmp_file"
+        echo "  Status: No **Status:** line found in $story_file"
+        return 1
+      fi
+    fi
+
+    rm -f "$tmp_file"
+
+    if [ $attempt -lt $retries ]; then
+      echo "  Status: Attempt $attempt failed — retrying in ${retry_delay}s"
+      sleep "$retry_delay"
+    fi
+  done
+
+  # All retries exhausted — create sentinel file
+  echo "  Status: All $retries retries failed for $story_file" >&2
+
+  # Extract story number from filename
+  local story_num=$(basename "$story_file" | grep -oE '^story_[0-9]+' | grep -oE '[0-9]+')
+  if [ -n "$story_num" ]; then
+    local sentinel_dir="$REPO_ROOT/docs/stories/.needs_status_update"
+    mkdir -p "$sentinel_dir"
+    local sentinel_file="$sentinel_dir/story_$story_num"
+    if echo "Failed to update $story_file to $new_status" > "$sentinel_file" 2>/dev/null; then
+      echo "  Status: Sentinel file created at $sentinel_file" >&2
+    fi
+  fi
+
+  return 1
+}
+
 # ── Parse Args ────────────────────────────────────────────────────────────────
 
 while [[ "$#" -gt 0 ]]; do
@@ -297,6 +365,12 @@ if $DRY_RUN; then
   echo "✓ DRY RUN — prompt built successfully. Not dispatching."
   echo "  To dispatch: remove --dry-run flag"
   exit 0
+fi
+
+# Update story status to IN PROGRESS before dispatch
+echo "📝 Updating story status..."
+if ! update_story_status "$STORY_PATH" "IN PROGRESS"; then
+  echo "⚠️  Status update failed but continuing with dispatch..."
 fi
 
 echo "🚀 Dispatching Story ${STORY_NUMBER} to Jules API..."

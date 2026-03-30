@@ -20,18 +20,30 @@ export default defineConfig({
         },
       },
       {
-        // Preload scripts — multiple inputs require inlineDynamicImports: false
-        entry: {
-          preload: path.join(__dirname, 'electron/preload.ts'),
-          'splash-preload': path.join(__dirname, 'electron/splash-preload.ts'),
-        },
+        // Preload — single entry so inlineDynamicImports: true produces one self-contained bundle
+        entry: path.join(__dirname, 'electron/preload.ts'),
         vite: {
           build: {
             outDir: 'dist-electron',
             rollupOptions: {
               output: {
                 format: 'cjs',
-                inlineDynamicImports: false,
+                inlineDynamicImports: true,
+              },
+            },
+          },
+        },
+      },
+      {
+        // Splash preload — same: single entry, fully inlined
+        entry: path.join(__dirname, 'electron/splash-preload.ts'),
+        vite: {
+          build: {
+            outDir: 'dist-electron',
+            rollupOptions: {
+              output: {
+                format: 'cjs',
+                inlineDynamicImports: true,
               },
             },
           },

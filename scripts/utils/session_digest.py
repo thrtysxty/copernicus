@@ -79,9 +79,13 @@ def parse_secrets_file(filepath: str) -> dict:
 
 
 def generate_transcript(jsonl_path: str, transcript_path: str):
+    # Only skip if the transcript already has actual conversation content
     if os.path.exists(transcript_path):
-        print(f"Transcript already exists: {transcript_path}. Skipping.")
-        return
+        with open(transcript_path, "r") as f:
+            existing = f.read()
+        if "**Human:**" in existing or "**Assistant:**" in existing:
+            print(f"Transcript already exists: {transcript_path}. Skipping.")
+            return
 
     session_id = os.path.basename(jsonl_path).replace("session_", "").replace(".jsonl", "")
     date_str = os.path.basename(os.path.dirname(jsonl_path))
@@ -94,36 +98,52 @@ def generate_transcript(jsonl_path: str, transcript_path: str):
         "",
     ]
 
+    # Claude Code JSONL: events have top-level type "user" or "assistant".
+    # The same message.id may appear multiple times (streaming snapshots) —
+    # deduplicate by keeping the last event per message ID, preserving order.
     try:
+        ordered_ids: list = []
+        events_by_id: dict = {}
         with open(jsonl_path, "r") as f:
             for line in f:
                 try:
                     event = json.loads(line)
-                    if event.get("type") == "message":
-                        message = event.get("message", {})
-                        role = message.get("role")
-                        content_blocks = message.get("content", [])
-
-                        if role == "human":
-                            parts = []
-                            for block in content_blocks:
-                                if isinstance(block, dict) and block.get("type") == "text":
-                                    parts.append(block.get("text", ""))
-                                elif isinstance(block, str):
-                                    parts.append(block)
-                            if parts:
-                                transcript_lines.append(f"**Human:** {''.join(parts).strip()}")
-                                transcript_lines.append("")
-                        elif role == "assistant":
-                            parts = []
-                            for block in content_blocks:
-                                if isinstance(block, dict) and block.get("type") == "text":
-                                    parts.append(block.get("text", ""))
-                            if parts:
-                                transcript_lines.append(f"**Assistant:** {''.join(parts).strip()}")
-                                transcript_lines.append("")
+                    role = event.get("message", {}).get("role")
+                    if role not in ("user", "assistant"):
+                        continue
+                    msg_id = event.get("message", {}).get("id") or event.get("uuid", "")
+                    if msg_id and msg_id not in events_by_id:
+                        ordered_ids.append(msg_id)
+                    if msg_id:
+                        events_by_id[msg_id] = event
                 except json.JSONDecodeError:
                     continue
+
+        for msg_id in ordered_ids:
+            event = events_by_id[msg_id]
+            message = event.get("message", {})
+            role = message.get("role")
+            content_blocks = message.get("content", [])
+
+            if role == "user":
+                parts = []
+                for block in content_blocks:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        parts.append(block.get("text", ""))
+                    elif isinstance(block, str):
+                        parts.append(block)
+                if parts:
+                    transcript_lines.append(f"**Human:** {''.join(parts).strip()}")
+                    transcript_lines.append("")
+            elif role == "assistant":
+                parts = []
+                for block in content_blocks:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        parts.append(block.get("text", ""))
+                if parts:
+                    transcript_lines.append(f"**Assistant:** {''.join(parts).strip()}")
+                    transcript_lines.append("")
+
     except FileNotFoundError:
         print(f"JSONL file not found: {jsonl_path}")
         return

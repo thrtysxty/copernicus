@@ -29,6 +29,7 @@ function writeFileAtomic(targetPath: string, content: string): void {
 export class StoriesManager {
   private storiesPath: string = ''
   private projectRoot: string = ''
+  private activeProjectId: string = ''
   private window: BrowserWindow | null = null
   private watcher: fs.FSWatcher | null = null
   private ledger: StateLedger
@@ -52,7 +53,8 @@ export class StoriesManager {
   }
 
   targetProject(projectPath: string): number {
-    this.storiesPath = path.join(projectPath, 'docs/stories')
+    this.activeProjectId = path.resolve(projectPath)
+    this.storiesPath = path.join(this.activeProjectId, 'docs/stories')
     log.info(`[StoriesManager] Project stories targeted: ${this.storiesPath}`)
 
     if (this.watcher) {
@@ -83,12 +85,15 @@ export class StoriesManager {
     const files = fs.readdirSync(this.storiesPath)
       .filter(f => f.endsWith('.md') && !f.endsWith('.tmp'))
 
-    const allInDb = this.ledger.listStoriesFromDb()
+    const validFilePaths: string[] = []
+
+    const allInDb = this.ledger.listStoriesFromDb(this.activeProjectId)
     const dbMap = new Map(allInDb.map(s => [s.id, s]))
 
     for (const file of files) {
       const id = file.replace('.md', '')
       const filePath = path.join(this.storiesPath, file)
+      validFilePaths.push(filePath)
 
       try {
         const existing = dbMap.get(id)
@@ -110,11 +115,14 @@ export class StoriesManager {
       }
     }
 
+    // Cleanup pass: remove stories that belong to the active project but no longer exist on disk
+    this.ledger.deleteOrphanedStories(this.activeProjectId, validFilePaths)
+
     return count
   }
 
   listStories(filter?: { status?: string }): Story[] {
-    const all = this.ledger.listStoriesFromDb()
+    const all = this.ledger.listStoriesFromDb(this.activeProjectId)
     const rows = filter?.status
       ? all.filter(r => r.status === filter.status)
       : all
@@ -193,7 +201,7 @@ export class StoriesManager {
     const flagged = flaggedMatch ? flaggedMatch[1]!.trim().toLowerCase() === 'true' : false
 
     return {
-      id, title, status,
+      id, title, status, project_id: this.activeProjectId,
       priority, type, epic: epic ?? undefined,
       assigned_to,
       workflow_id,
@@ -284,7 +292,7 @@ export class StoriesManager {
       fs.mkdirSync(this.storiesPath, { recursive: true })
     }
 
-    const rows = this.ledger.listStoriesFromDb()
+    const rows = this.ledger.listStoriesFromDb(this.activeProjectId)
     const maxId = rows.reduce((max, r) => {
       const m = r.id.match(/story_(\d+)/)
       return m ? Math.max(max, parseInt(m[1]!, 10)) : max
@@ -328,7 +336,7 @@ ${ac ? ac : `- [ ] Implement ${title}`}
 `
 
     this.ledger.upsertStory({
-      id, slug, title, status: type === 'Epic' ? 'EPIC' : 'PLANNING', priority, type, epic,
+      id, slug, title, project_id: this.activeProjectId, status: type === 'Epic' ? 'EPIC' : 'PLANNING', priority, type, epic,
       workflow_id: null,
       blocked_by: [], blocks: [], body_md: body, file_path: filepath, date: dateStr,
       flagged: false,

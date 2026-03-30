@@ -16,6 +16,7 @@ export const SCHEMA = {
       id            TEXT PRIMARY KEY,       -- 'story_159'
       slug          TEXT UNIQUE,            -- 'story_159_settings_panel_rebuild'
       title         TEXT NOT NULL,
+      project_id    TEXT NOT NULL DEFAULT '',
       status        TEXT NOT NULL DEFAULT 'DRAFT',
       priority      TEXT,
       type          TEXT,

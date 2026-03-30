@@ -45,6 +45,7 @@ export interface StoryRecord {
   id: string
   slug?: string
   title: string
+  project_id: string
   status: string
   priority?: string
   type?: string
@@ -739,6 +740,7 @@ export class StateLedger {
 
   private migrateStories(): void {
     const newCols: string[] = [
+      'ALTER TABLE stories ADD COLUMN project_id TEXT NOT NULL DEFAULT \'\'',
       'ALTER TABLE stories ADD COLUMN slug TEXT',
       'ALTER TABLE stories ADD COLUMN assigned_to TEXT',
       'ALTER TABLE stories ADD COLUMN blocked_by TEXT DEFAULT \'[]\'',
@@ -771,6 +773,7 @@ export class StateLedger {
               id             TEXT PRIMARY KEY,
               slug           TEXT UNIQUE,
               title          TEXT NOT NULL,
+              project_id     TEXT NOT NULL DEFAULT '',
               status         TEXT NOT NULL DEFAULT 'DRAFT',
               priority       TEXT,
               type           TEXT,
@@ -787,7 +790,7 @@ export class StateLedger {
               last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             INSERT INTO stories_rebuilt SELECT
-              id, slug, title, status, priority, type, epic, assigned_to,
+              id, slug, title, project_id, status, priority, type, epic, assigned_to,
               blocked_by, blocks, workflow_id, body_md, file_path, date,
               flagged, updated_at, last_synced_at
             FROM stories;
@@ -879,13 +882,14 @@ export class StateLedger {
   upsertStory(s: Omit<StoryRecord, 'updated_at' | 'last_synced_at'>): void {
     this.db.prepare(`
       INSERT INTO stories
-        (id, slug, title, status, priority, type, epic, assigned_to,
+        (id, slug, title, project_id, status, priority, type, epic, assigned_to,
          blocked_by, blocks, workflow_id, body_md, file_path, date, flagged,
          updated_at, last_synced_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         slug           = excluded.slug,
         title          = excluded.title,
+        project_id     = excluded.project_id,
         status         = excluded.status,
         priority       = excluded.priority,
         type           = excluded.type,
@@ -901,7 +905,7 @@ export class StateLedger {
         updated_at     = CURRENT_TIMESTAMP,
         last_synced_at = CURRENT_TIMESTAMP
     `).run(
-      s.id, s.slug ?? null, s.title, s.status,
+      s.id, s.slug ?? null, s.title, s.project_id, s.status,
       s.priority ?? null, s.type ?? null, s.epic ?? null, s.assigned_to ?? null,
       JSON.stringify(s.blocked_by ?? []), JSON.stringify(s.blocks ?? []),
       s.workflow_id ?? null,
@@ -910,11 +914,29 @@ export class StateLedger {
     )
   }
 
-  listStoriesFromDb(): StoryRecord[] {
-    const rows = this.db.prepare(
-      'SELECT * FROM stories ORDER BY id DESC'
-    ).all() as any[]
-    return rows.map(r => this._deserializeStory(r))
+  listStoriesFromDb(projectId?: string): StoryRecord[] {
+    let stmt;
+    if (projectId !== undefined) {
+      stmt = this.db.prepare('SELECT * FROM stories WHERE project_id = ? ORDER BY id DESC')
+      const rows = stmt.all(projectId) as any[]
+      return rows.map(r => this._deserializeStory(r))
+    } else {
+      stmt = this.db.prepare('SELECT * FROM stories ORDER BY id DESC')
+      const rows = stmt.all() as any[]
+      return rows.map(r => this._deserializeStory(r))
+    }
+  }
+
+  deleteOrphanedStories(projectId: string, validFilePaths: string[]): void {
+    if (validFilePaths.length === 0) {
+      this.db.prepare('DELETE FROM stories WHERE project_id = ?').run(projectId)
+      return
+    }
+
+    // SQLite limits parameters, but usually up to 999. In this simple case we map them dynamically.
+    const placeholders = validFilePaths.map(() => '?').join(',')
+    const sql = `DELETE FROM stories WHERE project_id = ? AND file_path NOT IN (${placeholders})`
+    this.db.prepare(sql).run(projectId, ...validFilePaths)
   }
 
   getStoryById(id: string): StoryRecord | null {

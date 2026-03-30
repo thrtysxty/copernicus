@@ -4,6 +4,10 @@
   "main": "dist-electron/main.js",
   "description": "The COPERNICUS IDE - Professional Phosphor Edition",
   "author": "COPERNICUS IDE Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JMThiessen/copernicus.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",

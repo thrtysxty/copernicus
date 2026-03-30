@@ -163,7 +163,7 @@ the repo config.
 User clicks Next to advance.
 
 ### Step 5 - The Planner (KanBan)
-The user is placed into the Planner view. If the created a new project with the Genesis agent, then there will be at least one epic and several stories present in the view. The existing user will be prompted to create project epics and stories to plan out their sprints.
+The user is placed into the Planner view. If they have created a new project with the Genesis agent, then there will be at least one epic and several stories present in the view. The existing user will be prompted to create project epics and stories to plan out their sprints.
 
 
 ```

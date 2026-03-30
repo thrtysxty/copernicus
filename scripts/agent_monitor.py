@@ -426,6 +426,90 @@ Make sure the JSON is properly formatted within the ```json block.
 
 # ── Poll cycle ────────────────────────────────────────────────────────────────
 
+def write_status(story_path: str, new_status: str, retries: int = 3, retry_delay: int = 2) -> bool:
+    """
+    Atomically updates the **Status:** line in a story file.
+
+    Args:
+        story_path: Path to the story markdown file
+        new_status: New status value (e.g. "COMPLETE", "IN PROGRESS")
+        retries: Number of retry attempts on failure (default 3)
+        retry_delay: Delay in seconds between retries (default 2)
+
+    Returns:
+        True if successful, False otherwise
+
+    On unrecoverable failure, creates a sentinel file at
+    docs/stories/.needs_status_update/story_{NNN} for manual recovery.
+    """
+    if not Path(story_path).is_file():
+        log.warning(f"write_status: Story file not found at {story_path}")
+        return False
+
+    # Skip if story is already in completed folder
+    if "completed" in str(story_path):
+        log.info(f"write_status: Story {story_path} already archived — skipping")
+        return True
+
+    attempt = 0
+    last_error = None
+
+    while attempt < retries:
+        try:
+            with open(story_path, "r") as f:
+                content = f.read()
+
+            # Update status line (regex to match **Status:** followed by anything on that line)
+            import re as regex_module
+            updated_content = regex_module.sub(
+                r"^\*\*Status:\*\*.*$",
+                f"**Status:** {new_status}",
+                content,
+                count=1,
+                flags=regex_module.MULTILINE
+            )
+
+            if updated_content == content:
+                log.warning(f"write_status: No **Status:** line found in {story_path}")
+                return False
+
+            # Atomic write with temp file
+            tmp_path = Path(story_path).with_suffix(".md.tmp")
+            with open(tmp_path, "w") as f:
+                f.write(updated_content)
+            os.replace(tmp_path, story_path)
+
+            log.info(f"write_status: Updated {story_path} to {new_status}")
+            return True
+
+        except Exception as e:
+            last_error = e
+            attempt += 1
+            if attempt < retries:
+                log.warning(f"write_status: Attempt {attempt} failed: {e} — retrying in {retry_delay}s")
+                time.sleep(retry_delay)
+
+    # All retries exhausted — create sentinel file for manual recovery
+    log.error(f"write_status: All {retries} retries failed for {story_path}: {last_error}")
+
+    # Extract story number from path
+    match = re.search(r"story_(\d+)", str(story_path))
+    if match:
+        story_num = match.group(1)
+        sentinel_dir = Path("docs/stories/.needs_status_update")
+        sentinel_dir.mkdir(parents=True, exist_ok=True)
+        sentinel_file = sentinel_dir / f"story_{story_num}"
+        try:
+            sentinel_file.write_text(
+                f"Failed to update {story_path} to {new_status}\nLast error: {last_error}\n"
+            )
+            log.error(f"write_status: Sentinel file created at {sentinel_file}")
+        except Exception as e:
+            log.error(f"write_status: Failed to create sentinel file: {e}")
+
+    return False
+
+
 def write_verification_record(story_path: str, verdict: dict) -> None:
     """
     Reads the story file, appends (or replaces if '## Verification Record' already present)
@@ -455,14 +539,14 @@ def write_verification_record(story_path: str, verdict: dict) -> None:
                 while i < len(lines) and not lines[i].startswith("## "):
                     i += 1
                 continue
-            
+
             if not status_line_found_and_updated and line.startswith("**Status:**"):
                 output_lines.append("**Status:** COMPLETE\n")
                 status_line_found_and_updated = True
             else:
                 output_lines.append(line)
             i += 1
-        
+
         # If status line was not found, append it at the end of the initial content if needed
         if not status_line_found_and_updated:
             pass # We'll append the new record, which will contain status as well if it's new.
@@ -684,7 +768,10 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                         capture_output=True, text=True
                     )
                     if story_path_result.returncode == 0:
-                        write_verification_record(story_path_result.stdout.strip(), final_verdict)
+                        story_path = story_path_result.stdout.strip()
+                        write_verification_record(story_path, final_verdict)
+                        # Update status to COMPLETE
+                        write_status(story_path, "COMPLETE")
                     else:
                         log.warning(f"  ❌ Story file for story {story} not found. Cannot write verification record.")
 
@@ -788,7 +875,10 @@ def review_gemini_session(session_id: str, story_id: int, log_file_path: Path, c
                     capture_output=True, text=True
                 )
                 if story_path_result.returncode == 0:
-                    write_verification_record(story_path_result.stdout.strip(), final_verdict)
+                    story_path = story_path_result.stdout.strip()
+                    write_verification_record(story_path, final_verdict)
+                    # Update status to COMPLETE
+                    write_status(story_path, "COMPLETE")
                 else:
                     log.warning(f"  ❌ Story file for story {story_id} not found. Cannot write verification record.")
 

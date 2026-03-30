@@ -8,7 +8,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, List, Optional, Callable
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent

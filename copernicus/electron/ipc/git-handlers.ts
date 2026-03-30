@@ -1,8 +1,9 @@
 import log from '../utils/logger'
 import { ipcMain, BrowserWindow } from 'electron'
-import { exec } from 'node:child_process'
+import { exec, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 const execAsync = promisify(exec)
+const execFileAsync = promisify(execFile)
 import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
 import { memoryService } from '../memory/memoryService'
@@ -97,16 +98,12 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('git:checkout', (_e, { branch }: { branch: string }) => handleIpc('git:checkout', [branch], async () => {
-    // Basic validation to prevent shell injection, though execSync child_process needs it when passing directly into shell without an array
-    if (/[^a-zA-Z0-9_\-./]/.test(branch)) {
-      throw new Error('Invalid branch name')
-    }
-    await execAsync(`git checkout ${branch}`, { cwd: cwd() })
+    await execFileAsync('git', ['checkout', branch], { cwd: cwd() })
     return { ok: true }
   }))
 
   ipcMain.handle('git:new-branch', (_e, { name }: { name: string }) => handleIpc('git:new-branch', [name], async () => {
-    await execAsync(`git checkout -b ${name}`, { cwd: cwd() })
+    await execFileAsync('git', ['checkout', '-b', name], { cwd: cwd() })
     return { ok: true }
   }))
 
