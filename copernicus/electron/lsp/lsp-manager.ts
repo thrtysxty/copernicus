@@ -33,6 +33,8 @@ function getLspScriptPath(): string {
   throw new Error(`[LSP] Cannot locate typescript-language-server entry in ${base}`)
 }
 
+export type LspProcessStatus = 'running' | 'restarting' | 'dead' | 'stopped'
+
 export class LspManager {
   private proc: ChildProcess | null = null
   private nextId = 1
@@ -42,11 +44,27 @@ export class LspManager {
   private fileVersions = new Map<string, number>()
   public diagnosticsCache = new Map<string, any[]>()
 
+  private status: LspProcessStatus = 'stopped'
+  private rootPath: string | null = null
+  private healthPollTimer: ReturnType<typeof setInterval> | null = null
+  private restartAttempt = 0
+  private expectedExit = false
+
   setWindow(win: BrowserWindow) {
     this.win = win
   }
 
+  private setStatus(newStatus: LspProcessStatus, metadata?: any) {
+    this.status = newStatus
+    if (this.win && !this.win.isDestroyed()) {
+      this.win.webContents.send('lsp:status-changed', { status: newStatus, ...metadata })
+    }
+  }
+
   start(rootPath: string) {
+    this.rootPath = rootPath
+    this.expectedExit = false
+
     if (this.proc) return
     let script: string
     try {
@@ -54,6 +72,10 @@ export class LspManager {
     } catch (err) {
       log.warn('[LSP] typescript-language-server not found — LSP features unavailable:', err)
       return
+    }
+
+    if (!this.healthPollTimer) {
+      this.healthPollTimer = setInterval(() => this.checkHealth(), 15000)
     }
     this.proc = spawn(process.execPath, [script, '--stdio'], {
       cwd: rootPath,
@@ -66,6 +88,12 @@ export class LspManager {
       this.proc = null
       this.pending.forEach(p => p.reject(new Error('LSP process exited')))
       this.pending.clear()
+
+      if (!this.expectedExit) {
+        // Unexpected exit before the poll loop caught it
+        // Check health immediately to trigger recovery
+        this.checkHealth()
+      }
     })
 
     this.sendRequest('initialize', {
@@ -84,7 +112,47 @@ export class LspManager {
     }).then(() => {
       this.sendNotify('initialized', {})
       log.info('[LSP] Server ready')
+      this.restartAttempt = 0
+      this.setStatus('running')
     }).catch(err => log.error(err))
+  }
+
+  private checkHealth() {
+    if (this.expectedExit) return
+
+    // Determine if process is dead
+    // We check this.proc AND this.proc.killed/exitCode
+    const isDead = !this.proc || this.proc.killed || this.proc.exitCode !== null
+
+    if (isDead) {
+      log.warn(`[LSP] Server process death detected by health check. Restart attempt ${this.restartAttempt + 1}/3`)
+
+      if (this.restartAttempt < 3) {
+        this.restartAttempt++
+        this.setStatus('restarting', { attempt: this.restartAttempt })
+
+        // Ensure process is fully cleaned up before restart
+        if (this.proc) {
+          try {
+            this.proc.kill()
+          } catch { /* ignore */ }
+          this.proc = null
+        }
+
+        setTimeout(() => {
+          if (!this.expectedExit && this.rootPath) {
+            this.start(this.rootPath)
+          }
+        }, 5000)
+      } else {
+        log.error('[LSP] Server failed to restart after 3 attempts. Marking as dead.')
+        this.setStatus('dead', { reason: 'Max retries reached' })
+        if (this.healthPollTimer) {
+          clearInterval(this.healthPollTimer)
+          this.healthPollTimer = null
+        }
+      }
+    }
   }
 
   openFile(filePath: string, content: string) {
@@ -128,6 +196,15 @@ export class LspManager {
   }
 
   stop() {
+    this.expectedExit = true
+    this.status = 'stopped'
+    this.restartAttempt = 0
+
+    if (this.healthPollTimer) {
+      clearInterval(this.healthPollTimer)
+      this.healthPollTimer = null
+    }
+
     if (!this.proc) return
     this.sendRequest('shutdown', {})
       .then(() => this.sendNotify('exit', {}))
@@ -135,8 +212,12 @@ export class LspManager {
     setTimeout(() => { this.proc?.kill(); this.proc = null }, 2000)
   }
 
-  getStatus(): { running: boolean; pid: number | null } {
-    return { running: !!this.proc, pid: this.proc?.pid ?? null }
+  getStatus(): { running: boolean; status: LspProcessStatus; pid: number | null } {
+    return {
+      running: !!this.proc,
+      status: this.status,
+      pid: this.proc?.pid ?? null
+    }
   }
 
   async workspaceCheck(): Promise<{ errorCount: number; diagnostics: any[] }> {

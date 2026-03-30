@@ -18,6 +18,7 @@ export interface ActiveTaskEntry {
 
 export interface LspState {
   running: boolean
+  status: 'running' | 'restarting' | 'dead' | 'stopped'
   serverName: string
   openFiles: number
   errorCount: number

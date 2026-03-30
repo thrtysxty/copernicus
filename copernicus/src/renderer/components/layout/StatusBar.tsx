@@ -52,6 +52,24 @@ export const StatusBar: React.FC = () => {
       const state = unwrapIpc<LspState>(r)
       if (state) setLocalLspState(state)
     }).catch(() => {})
+
+    if (!window.ipcRenderer) return
+    const removeStatusListener = window.ipcRenderer.on('lsp:status-changed', (_e: Electron.IpcRendererEvent, update: any) => {
+      setLocalLspState(prev => {
+        if (!prev) return prev
+        const isRunning = update.status === 'running'
+        return {
+          ...prev,
+          running: isRunning,
+          status: update.status,
+          // You might want to also track 'reason' or 'attempt' if you want to show it in the UI
+          ...(update.attempt ? { attempt: update.attempt } : {}),
+          ...(update.reason ? { reason: update.reason } : {})
+        } as LspState
+      })
+    })
+
+    return () => removeStatusListener()
   }, [invoke])
 
   const [securityScore, setSecurityScore] = useState<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number } | null>(null)
@@ -232,20 +250,34 @@ export const StatusBar: React.FC = () => {
         )}
 
         {/* LSP Status Indicator */}
-        {(localLspState ?? lspState) && (
-          <Tooltip
-            content={`${(localLspState ?? lspState)!.serverName ?? 'LSP'} — ${(localLspState ?? lspState)!.running ? 'Running' : 'Stopped'} | ${(localLspState ?? lspState)!.openFiles} files | ${(localLspState ?? lspState)!.errorCount} errors | ${(localLspState ?? lspState)!.warningCount} warnings`}
-          >
-            <div className="flex items-center gap-1.5 px-3 cursor-help">
-              <span className={`text-[8px] ${(localLspState ?? lspState)!.running ? 'text-green-500' : 'text-red-500'}`}>●</span>
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                {((localLspState ?? lspState)!.serverName ?? 'LS').substring(0, 2).toUpperCase()}
-                {(localLspState ?? lspState)!.errorCount > 0 && <span className="text-red-400"> {(localLspState ?? lspState)!.errorCount}e</span>}
-                {(localLspState ?? lspState)!.warningCount > 0 && <span className="text-amber-400"> {(localLspState ?? lspState)!.warningCount}w</span>}
-              </span>
-            </div>
-          </Tooltip>
-        )}
+        {(localLspState ?? lspState) && (() => {
+          const lsp = (localLspState ?? lspState)!;
+          let color = 'text-red-500';
+          let statusText = 'Stopped';
+
+          if (lsp.status === 'running') { color = 'text-green-500'; statusText = 'Running'; }
+          else if (lsp.status === 'restarting') { color = 'text-yellow-500 animate-pulse'; statusText = 'Restarting'; }
+          else if (lsp.status === 'dead') { color = 'text-red-600'; statusText = 'Dead'; }
+
+          // Use the dynamic type from state if it exists (added by listener)
+          const attemptText = (lsp as any).attempt ? ` (Retry ${(lsp as any).attempt}/3)` : '';
+          const reasonText = (lsp as any).reason ? ` - ${(lsp as any).reason}` : '';
+
+          return (
+            <Tooltip
+              content={`${lsp.serverName ?? 'LSP'} — ${statusText}${attemptText}${reasonText} | ${lsp.openFiles} files | ${lsp.errorCount} errors | ${lsp.warningCount} warnings`}
+            >
+              <div className="flex items-center gap-1.5 px-3 cursor-help">
+                <span className={`text-[8px] ${color}`}>●</span>
+                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                  {(lsp.serverName ?? 'LS').substring(0, 2).toUpperCase()}
+                  {lsp.errorCount > 0 && <span className="text-red-400"> {lsp.errorCount}e</span>}
+                  {lsp.warningCount > 0 && <span className="text-amber-400"> {lsp.warningCount}w</span>}
+                </span>
+              </div>
+            </Tooltip>
+          );
+        })()}
 
         {/* Security Posture Score */}
         {securityScore && (
@@ -295,14 +327,22 @@ export const StatusBar: React.FC = () => {
         {/* LSP indicator */}
         <Tooltip content={(localLspState ?? lspState) ? `Language server: ${(localLspState ?? lspState)?.serverName ?? 'LSP'}` : "Language server — click for details"}>
           <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer">
-            {(localLspState ?? lspState) && (
-              <div className="flex items-center gap-1 mr-2 border-r border-copernicus-steel/30 pr-3">
-                <span className="text-zinc-500 font-bold uppercase tracking-tighter">
-                  {((localLspState ?? lspState)?.serverName ?? 'LS').substring(0, 2).toUpperCase()}
-                </span>
-                <div className={`w-1.5 h-1.5 rounded-full ${(localLspState ?? lspState)?.running ? 'bg-green-500' : 'bg-red-500'}`} />
-              </div>
-            )}
+            {(localLspState ?? lspState) && (() => {
+              const lsp = (localLspState ?? lspState)!;
+              let bgColor = 'bg-red-500';
+              if (lsp.status === 'running') bgColor = 'bg-green-500';
+              else if (lsp.status === 'restarting') bgColor = 'bg-yellow-500 animate-pulse';
+              else if (lsp.status === 'dead') bgColor = 'bg-red-600';
+
+              return (
+                <div className="flex items-center gap-1 mr-2 border-r border-copernicus-steel/30 pr-3">
+                  <span className="text-zinc-500 font-bold uppercase tracking-tighter">
+                    {(lsp.serverName ?? 'LS').substring(0, 2).toUpperCase()}
+                  </span>
+                  <div className={`w-1.5 h-1.5 rounded-full ${bgColor}`} />
+                </div>
+              );
+            })()}
             {indexStatus && indexStatus.provider !== 'none' ? (
               indexStatus.indexing ? (
                 <span className="text-zinc-500 animate-pulse uppercase tracking-tighter">

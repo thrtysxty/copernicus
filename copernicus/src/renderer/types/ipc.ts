@@ -78,6 +78,7 @@ export interface AuthGetApiKeyResponse extends IpcResponseBase {
 
 export interface LspStatusResponse extends IpcResponseBase {
   running: boolean;
+  status: 'running' | 'restarting' | 'dead' | 'stopped';
   version?: string;
 }
 

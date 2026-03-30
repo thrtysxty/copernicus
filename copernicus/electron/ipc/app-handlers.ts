@@ -142,7 +142,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       const storiesCount = await getStoriesCount(storiesManager)
 
       // Get LSP status
-      const lspStatus = (lspManager as any).getStatus?.() ?? { running: false }
+      const lspStatusInfo = (lspManager as any).getStatus?.() ?? { running: false, status: 'stopped' }
 
       // Story 616: Restart worktree polling with new path
       if (deps.worktreeManager) {
@@ -157,7 +157,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         storiesCount,
         gitRepoFound: gitState.gitRepoFound,
         projectId: memoryService.activeProjectId,
-        lspStatus: lspStatus.running ? 'running' : 'stopped',
+        lspStatus: lspStatusInfo.status,
         worktreePolling: deps.worktreeManager && !deps.worktreeManager.isPollingStopped ? 'active' : 'stopped',
         drift: [],
       }
@@ -214,7 +214,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   async function getEnvState(): Promise<WorkspaceState> {
     const dirPath = settingsStore.get('workspace') as string | null
 
-    const lspStatus = (lspManager as any).getStatus?.() ?? { running: false }
+    const lspStatusInfo = (lspManager as any).getStatus?.() ?? { running: false, status: 'stopped' }
     const worktreePolling = deps.worktreeManager && !deps.worktreeManager.isPollingStopped ? 'active' : 'stopped'
 
     if (!dirPath) {
@@ -225,7 +225,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         storiesCount: 0,
         gitRepoFound: false,
         projectId: '',
-        lspStatus: lspStatus.running ? 'running' : 'stopped',
+        lspStatus: lspStatusInfo.status,
         worktreePolling,
         drift: ['no-workspace-set'],
       }
@@ -260,7 +260,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       storiesCount,
       gitRepoFound: gitState.gitRepoFound,
       projectId: memoryService.activeProjectId,
-      lspStatus: lspStatus.running ? 'running' : 'stopped',
+      lspStatus: lspStatusInfo.status,
       worktreePolling,
       drift: drift.length > 0 ? drift : undefined,
     }
