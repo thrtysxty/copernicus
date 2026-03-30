@@ -92,7 +92,9 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       addRecentProject(dirPath, settingsStore)
       applied.push('recentProjects')
 
-      settingsStore.set('workspace', dirPath)
+      if (!settingsStore.setAndVerify('workspace', dirPath)) {
+        throw new Error('Failed to persist workspace setting')
+      }
       applied.push('settingsStore.workspace')
 
       settingsStore.set('workingDir', dirPath)
@@ -215,7 +217,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
     // Read all 5 state sources
     const sources = {
-      settingsWorkspace: settingsStore.get('workspace'),
+      settingsWorkspace: settingsStore.get('workspace', undefined, true),
       settingsWorkingDir: settingsStore.get('workingDir'),
       fsManagerRoot: fsManager.getRootPath?.(),
       storiesManagerRoot: (storiesManager as any).projectRoot ?? null,

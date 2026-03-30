@@ -99,13 +99,49 @@ export class SettingsStore {
     }
   }
 
-  get<T>(key: string, defaultValue?: T): T {
+  get<T>(key: string, defaultValue?: T, fromDisk: boolean = false): T {
+    if (fromDisk) {
+      try {
+        if (fs.existsSync(this.configPath)) {
+          const fileData = fs.readFileSync(this.configPath, 'utf-8');
+          const parsed = JSON.parse(fileData);
+          if (key in parsed) {
+            return parsed[key] as T;
+          }
+        }
+      } catch (e) {
+        log.error(`Failed to read ${key} from disk:`, e);
+      }
+      return defaultValue as T;
+    }
     return (this.data[key] as T) ?? (defaultValue as T);
   }
 
   set(key: string, value: unknown) {
     this.data[key] = value;
     this.save();
+  }
+
+  setAndVerify(key: string, value: unknown): boolean {
+    this.set(key, value);
+    try {
+      if (fs.existsSync(this.configPath)) {
+        const fileData = fs.readFileSync(this.configPath, 'utf-8');
+        const parsed = JSON.parse(fileData);
+        if (JSON.stringify(parsed[key]) === JSON.stringify(value)) {
+          return true;
+        } else {
+          log.error(`[SettingsStore] setAndVerify failed for key "${key}". Expected: ${JSON.stringify(value)}, Actual persisted: ${JSON.stringify(parsed[key])} in ${this.configPath}`);
+          return false;
+        }
+      } else {
+        log.error(`[SettingsStore] setAndVerify failed: Config file ${this.configPath} does not exist after write.`);
+        return false;
+      }
+    } catch (e) {
+      log.error(`[SettingsStore] setAndVerify error:`, e);
+      return false;
+    }
   }
 
   getAll(): Settings {
