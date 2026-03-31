@@ -121,6 +121,8 @@ const SEND_CHANNELS = new Set([
   'command:request-telemetry',
   // Project Billing (Story 211)
   'project:save-billing', 'project:get-billing',
+  // Project Config (Story 606)
+  'project:get-config', 'project:save-config',
   // Splash / wizard
   'genesis:run', 'genesis:scaffold-harness', 'genesis:check-harness',
   'wizard:get-username', 'wizard:spawn-auth-pty',
