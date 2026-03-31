@@ -135,12 +135,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
-| #610 | Working Set Memory Fetch Fails With Too Few Parameter Values On Startup | APPROVED FOR IMPLEMENTATION | P2 |
-| #613 | Workspace Environmental State Consolidation | APPROVED FOR IMPLEMENTATION | P0 |
-| #614 | Memory Service Project Id Validation | APPROVED FOR IMPLEMENTATION | P1 |
-| #615 | Lsp Health Monitor And Recovery | APPROVED FOR IMPLEMENTATION | P1 |
-| #616 | Worktree Manager Lifecycle Coordination | APPROVED FOR IMPLEMENTATION | P2 |
-| #617 | Settings Store Write Confirmation | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -486,7 +480,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #599 | Session Archive And Nightly Digest Pipeline | COMPLETE | P1 |
 | #601 | Agent Monitor: Write Complete Status After Merge | COMPLETE | P1 |
 | #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
+| #610 | Working Set Memory Fetch Fails With Too Few Parameter Values On Startup | COMPLETE | P2 |
 | #612 | Stories Db Project Scoping | COMPLETE | P0 |
+| #613 | Workspace Environmental State Consolidation | COMPLETE | P0 |
+| #614 | Memory Service Project Id Validation | COMPLETE | P1 |
+| #615 | Lsp Health Monitor And Recovery | COMPLETE | P1 |
+| #616 | Worktree Manager Lifecycle Coordination | COMPLETE | P2 |
+| #617 | Settings Store Write Confirmation | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -517,10 +517,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #574 | Agent Selector | DRAFT | P1 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
-| #606 | Project Target Device Configuration | DRAFT | P1 |
-| #607 | Agent Daemon Jules Sdk Handler | DRAFT | P1 |
-| #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
-| #609 | Intel View Has No Escape Or Back Navigation | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

@@ -28,14 +28,26 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 import re
+from typing import Literal
+
+import ollama
+from pydantic import BaseModel
+
+
+class ReviewVerdict(BaseModel):
+    verdict: Literal["APPROVED", "BLOCKED", "REQUEST_CHANGES"]
+    acs_met: list[str]
+    acs_missing: list[str]
+    summary: str
+    reviewer_model: str
+    reviewed_at: str
+    merge_sha: str
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
 DB_PATH = Path.home() / "Library" / "Application Support" / "copernicus" / "jules.db"
 LOG_PATH = Path("/tmp/jules-daemon.log")
 JULES_API = "https://jules.googleapis.com/v1alpha"
-ANTHROPIC_API = "https://api.anthropic.com/v1"
-ANTHROPIC_VERSION = "2023-06-01" # Required for Anthropic API
 RETRY_REVIEW_AFTER = 3600 # seconds (1 hour) for re-reviewing BLOCKED/REQUEST_CHANGES sessions
 POLL_INTERVAL = 30  # seconds between full cycles
 GITHUB_REPO = "JMThiessen/Copernicus"
@@ -144,20 +156,6 @@ def jules_api_key() -> str:
         raise RuntimeError("JULES_API_KEY not set — add it to ~/.secrets")
     return key
 
-def anthropic_api_key() -> str:
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not key:
-        # Try sourcing ~/.secrets
-        result = subprocess.run(
-            ["bash", "-c", "source ~/.secrets 2>/dev/null && echo $ANTHROPIC_API_KEY"],
-            capture_output=True, text=True
-        )
-        key = result.stdout.strip()
-    if not key:
-        raise RuntimeError("ANTHROPIC_API_KEY not set — add it to ~/.secrets")
-    return key
-
-
 def curl_get(url: str, key: str) -> dict:
     result = subprocess.run(
         ["curl", "-s", url, "-H", f"x-goog-api-key: {key}"],
@@ -253,20 +251,18 @@ def get_pr_commit(pr_number: int) -> str | None:
 
 def review_pr(pr_number: int, story_id: int) -> dict:
     """
-    Reviews a PR using the Anthropic API.
+    Reviews a PR using Ollama structured output.
     Returns a dictionary with review verdict and details.
     """
-    anthropic_key = anthropic_api_key()
-    model = "claude-sonnet-4-6"
-    reviewer_model = model # Store the actual model used
+    model = "deepseek-v3.1:671b-cloud"
 
     # Default verdict structure for fallbacks
     default_verdict = {
         "verdict": "BLOCKED",
         "acs_met": [],
         "acs_missing": [],
-        "summary": "Failed to get a valid review verdict from Claude.",
-        "reviewer_model": reviewer_model,
+        "summary": "Failed to get a valid review verdict from Ollama.",
+        "reviewer_model": model,
         "reviewed_at": now_iso(),
         "merge_sha": "unknown"
     }
@@ -319,6 +315,7 @@ REVIEW SCOPE RULES (apply these before evaluating):
 2. AC ordering in a story describes logical sequence within the implementation, not a requirement for separate commits or PRs. A single PR that implements AC1 + AC2 together is acceptable as long as both are correctly implemented in the code.
 3. Correction Notes in the story describe what was wrong in a previous PR. They guide what the implementer should fix — they are not additional ACs. Do not add new blocking requirements based on Correction Note wording unless they map to a stated AC.
 4. Only block on issues that are verifiable from the diff itself: missing code, wrong logic, forbidden patterns, TypeScript errors, IPC violations. Do not block on hypothetical runtime behavior or missing evidence the agent cannot provide.
+5. Do NOT request Playwright test runs, E2E test execution, browser automation, or any script execution from Jules. Jules is a headless code-writing agent — it cannot run interactive applications, start servers, or execute test frameworks. Any verdict that requires Jules to run Playwright or any other runtime test is invalid.
 
 STORY ACCEPTANCE CRITERIA:
 {story_content}
@@ -328,99 +325,27 @@ FORBIDDEN PATTERNS (never allowed):
 
 PR DIFF:
 {diff}
-
-Respond with a JSON object only:
-```json
-{{
-  "verdict": "APPROVED" | "BLOCKED" | "REQUEST_CHANGES",
-  "acs_met": ["AC text or ID"],
-  "acs_missing": ["AC text or ID"],
-  "summary": "one-paragraph prose",
-  "reviewer_model": "{reviewer_model}",
-  "reviewed_at": "{now_iso()}",
-  "merge_sha": "unknown"
-}}
-```
-Make sure the JSON is properly formatted within the ```json block.
 """
-    messages = [{"role": "user", "content": prompt}]
-    headers = {
-        "x-api-key": anthropic_key,
-        "anthropic-version": ANTHROPIC_VERSION,
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": model,
-        "max_tokens": 2000, # A reasonable max_tokens for a review
-        "messages": messages
-    }
 
-    # 5. Make the API call to Claude
-    log.info("  Calling Claude for PR review...")
+    # 5. Make the API call via Ollama structured output
+    log.info("  Calling Ollama for PR review...")
     try:
-        # Using subprocess curl for direct HTTP POST, similar to curl_post for Jules API
-        cmd = [
-            "curl", "-s", "-w", "\\n__HTTP_CODE__%{http_code}",
-            "-X", "POST", f"{ANTHROPIC_API}/messages",
-        ]
-        for header, value in headers.items():
-            cmd.extend(["-H", f"{header}: {value}"])
-        cmd.extend(["-d", json.dumps(payload)])
-
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60) # 60s timeout
-        parts = result.stdout.rsplit("__HTTP_CODE__", 1)
-        response_body_text = parts[0].strip()
-        status_code = int(parts[1].strip()) if len(parts) > 1 else 0
-
-        if status_code != 200:
-            log.error(f"  Claude API error (status {status_code}): {response_body_text}")
-            default_verdict["summary"] = f"Claude API error: {status_code}"
-            return default_verdict
-
-        # 6. Parse the response
-        response_data = json.loads(response_body_text)
-        
-        # Claude 3.5 returns an array of content blocks, pick the first text block
-        verdict_content = ""
-        if 'content' in response_data and isinstance(response_data['content'], list):
-            for block in response_data['content']:
-                if block.get('type') == 'text':
-                    verdict_content = block['text']
-                    break
-
-        if not verdict_content:
-            log.error("  Claude API response missing text content.")
-            default_verdict["summary"] = "Claude API response missing text content."
-            return default_verdict
-
-        # Extract JSON from markdown code block if present
-        if verdict_content.strip().startswith("```json"):
-            verdict_content = verdict_content.split("```json", 1)[1].split("```", 1)[0].strip()
-
-        try:
-            verdict_json = json.loads(verdict_content)
-            # Merge with default to ensure all keys are present
-            final_verdict = {**default_verdict, **verdict_json}
-            # Ensure acs_met and acs_missing are lists
-            final_verdict["acs_met"] = final_verdict.get("acs_met", [])
-            final_verdict["acs_missing"] = final_verdict.get("acs_missing", [])
-            return final_verdict
-        except json.JSONDecodeError as e:
-            log.error(f"  Failed to parse Claude API response JSON: {e}. Content: {verdict_content}")
-            default_verdict["summary"] = f"Failed to parse Claude API response JSON: {e}. Raw content: {verdict_content}"
-            return default_verdict
-
-    except subprocess.TimeoutExpired:
-        log.error("  Claude API call timed out after 60 seconds.")
-        default_verdict["summary"] = "Claude API call timed out."
-        return default_verdict
-    except json.JSONDecodeError as e:
-        log.error(f"  Failed to parse Claude API response JSON (outer): {e}")
-        default_verdict["summary"] = f"Failed to parse Claude API response JSON (outer): {e}"
-        return default_verdict
+        response = ollama.chat(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            format=ReviewVerdict.model_json_schema(),
+            options={"temperature": 0},
+        )
+        verdict = ReviewVerdict.model_validate_json(response.message.content)
+        return {
+            **verdict.model_dump(),
+            "reviewer_model": model,
+            "reviewed_at": now_iso(),
+            "merge_sha": "unknown",
+        }
     except Exception as e:
-        log.error(f"  An unexpected error occurred during Claude API call: {e}")
-        default_verdict["summary"] = f"An unexpected error occurred during Claude API call: {e}"
+        log.error(f"  Ollama PR review error: {e}")
+        default_verdict["summary"] = f"Ollama PR review error: {e}"
         return default_verdict
 
 
@@ -905,9 +830,8 @@ def review_gemini_session(session_id: str, story_id: int, log_file_path: Path, c
             conn.commit()
     else: # No PR found in log, review the log content directly
         log.info(f"  No PR found in log. Reviewing Gemini log content directly for story {story_id}.")
-        anthropic_key = anthropic_api_key()
-        model = "claude-sonnet-4-6"
-        
+        model = "deepseek-v3.1:671b-cloud"
+
         # 2. Read story file
         story_content = "Story file not found."
         story_path_result = subprocess.run(
@@ -952,78 +876,24 @@ GEMINI AGENT EXECUTION LOG (last ~200 lines if full log is too large):
 ```
 {log_content[-10000:]}
 ```
-
-Respond with a JSON object only:
-```json
-{{
-  "verdict": "APPROVED" | "BLOCKED" | "REQUEST_CHANGES",
-  "acs_met": ["AC text or ID"],
-  "acs_missing": ["AC text or ID"],
-  "summary": "one-paragraph prose explaining the verdict, especially if BLOCKED/REQUEST_CHANGES",
-  "reviewer_model": "{model}",
-  "reviewed_at": "{now_iso()}",
-  "merge_sha": "n/a"
-}}
-```
-Make sure the JSON is properly formatted within the ```json block.
 """
-        messages = [{"role": "user", "content": prompt}]
-        headers = {
-            "x-api-key": anthropic_key,
-            "anthropic-version": ANTHROPIC_VERSION,
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": model,
-            "max_tokens": 2000,
-            "messages": messages
-        }
 
-        log.info("  Calling Claude for Gemini log review...")
+        log.info("  Calling Ollama for Gemini log review...")
         try:
-            cmd = [
-                "curl", "-s", "-w", "\\n__HTTP_CODE__%{http_code}",
-                "-X", "POST", f"{ANTHROPIC_API}/messages",
-            ]
-            for header, value in headers.items():
-                cmd.extend(["-H", f"{header}: {value}"])
-            cmd.extend(["-d", json.dumps(payload)])
-
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=90) # Increased timeout
-            parts = result.stdout.rsplit("__HTTP_CODE__", 1)
-            response_body_text = parts[0].strip()
-            status_code = int(parts[1].strip()) if len(parts) > 1 else 0
-
-            if status_code != 200:
-                log.error(f"  Claude API error (status {status_code}): {response_body_text}")
-                final_verdict["summary"] = f"Claude API error: {status_code}"
-            else:
-                response_data = json.loads(response_body_text)
-                verdict_content = ""
-                if 'content' in response_data and isinstance(response_data['content'], list):
-                    for block in response_data['content']:
-                        if block.get('type') == 'text':
-                            verdict_content = block['text']
-                            break
-
-                if verdict_content.strip().startswith("```json"):
-                    verdict_content = verdict_content.split("```json", 1)[1].split("```", 1)[0].strip()
-
-                try:
-                    claude_verdict = json.loads(verdict_content)
-                    final_verdict.update(claude_verdict)
-                    final_verdict["reviewer_model"] = model # Ensure this is set correctly
-                except json.JSONDecodeError as e:
-                    log.error(f"  Failed to parse Claude API response JSON: {e}. Content: {verdict_content}")
-                    final_verdict["summary"] = f"Failed to parse Claude API response JSON: {e}. Raw content: {verdict_content}"
-
-        except subprocess.TimeoutExpired:
-            log.error("  Claude API call timed out.")
-            final_verdict["summary"] = "Claude API call timed out."
+            response = ollama.chat(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                format=ReviewVerdict.model_json_schema(),
+                options={"temperature": 0},
+            )
+            verdict = ReviewVerdict.model_validate_json(response.message.content)
+            final_verdict.update(verdict.model_dump())
+            final_verdict["reviewer_model"] = model
+            final_verdict["reviewed_at"] = now_iso()
         except Exception as e:
-            log.error(f"  An unexpected error occurred during Claude API call: {e}")
-            final_verdict["summary"] = f"An unexpected error occurred during Claude API call: {e}"
-        
+            log.error(f"  Ollama Gemini log review error: {e}")
+            final_verdict["summary"] = f"Ollama Gemini log review error: {e}"
+
         final_verdict_str = json.dumps(final_verdict)
         conn.execute(
             """UPDATE jules_sessions SET
