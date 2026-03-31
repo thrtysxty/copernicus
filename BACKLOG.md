@@ -137,6 +137,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #610 | Working Set Memory Fetch Fails With Too Few Parameter Values On Startup | APPROVED FOR IMPLEMENTATION | P2 |
 | #613 | Workspace Environmental State Consolidation | APPROVED FOR IMPLEMENTATION | P0 |
+| #614 | Memory Service Project Id Validation | APPROVED FOR IMPLEMENTATION | P1 |
+| #615 | Lsp Health Monitor And Recovery | APPROVED FOR IMPLEMENTATION | P1 |
+| #616 | Worktree Manager Lifecycle Coordination | APPROVED FOR IMPLEMENTATION | P2 |
+| #617 | Settings Store Write Confirmation | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -513,14 +517,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #574 | Agent Selector | DRAFT | P1 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
-| #606 | Project Target Device Configuration | DRAFT | P1 |
-| #607 | Agent Daemon Jules Sdk Handler | DRAFT | P1 |
-| #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
-| #609 | Intel View Has No Escape Or Back Navigation | DRAFT | P2 |
-| #614 | Memory Service Project Id Validation | IN PROGRESS | P1 |
-| #615 | Lsp Health Monitor And Recovery | IN PROGRESS | P1 |
-| #616 | Worktree Manager Lifecycle Coordination | IN PROGRESS | P2 |
-| #617 | Settings Store Write Confirmation | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
