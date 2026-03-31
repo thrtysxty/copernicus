@@ -64,6 +64,16 @@ GEMINI_COMPLETION_MARKERS = (
 GEMINI_INACTIVITY_TIMEOUT_SECONDS = 60
 GEMINI_MIN_LINES_FOR_INACTIVITY = 20
 
+REVIEW_PROVIDER = os.environ.get("REVIEW_PROVIDER", "ollama")  # "ollama" | "openrouter"
+OPENROUTER_API = "https://openrouter.ai/api/v1"
+# Good reviewer choices (cost-effective, large context, strong reasoning):
+#   qwen/qwen3-235b-a22b-instruct-2507   — $0.071 in / $0.10 out, 262k ctx
+#   mistralai/mistral-small-3.2-24b-instruct — $0.09 in / $0.25 out, 256k ctx
+#   mistralai/devstral-2512              — $0.40 in / $2.00 out, 262k ctx, agentic coder
+#   minimax/minimax-m2.5                 — $0.90 in / $3.60 out, strong structured output
+#   minimax/minimax-m2.5:free            — free tier, rate-limited
+REVIEW_MODEL_OPENROUTER = os.environ.get("REVIEW_MODEL_OPENROUTER", "qwen/qwen3-235b-a22b-instruct-2507")
+
 # Dictionary to store last known state of Gemini log files for inactivity detection
 _gemini_log_states = {}
 
@@ -156,6 +166,19 @@ def jules_api_key() -> str:
         raise RuntimeError("JULES_API_KEY not set — add it to ~/.secrets")
     return key
 
+
+def openrouter_api_key() -> str:
+    key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not key:
+        result = subprocess.run(
+            ["bash", "-c", "source ~/.secrets 2>/dev/null && echo $OPENROUTER_API_KEY"],
+            capture_output=True, text=True
+        )
+        key = result.stdout.strip()
+    if not key:
+        raise RuntimeError("OPENROUTER_API_KEY not set — add it to ~/.secrets")
+    return key
+
 def curl_get(url: str, key: str) -> dict:
     result = subprocess.run(
         ["curl", "-s", url, "-H", f"x-goog-api-key: {key}"],
@@ -186,7 +209,7 @@ def get_session(session_id: str, key: str) -> dict:
     return curl_get(f"{JULES_API}/sessions/{session_id}", key)
 
 
-def get_plan(session_id: str, key: str) -> dict | None:
+def get_plan(session_id: str) -> dict | None:
     data = curl_get(f"{JULES_API}/sessions/{session_id}/activities", jules_api_key())
     for activity in data.get("activities", []):
         if "planGenerated" in activity:
@@ -194,7 +217,7 @@ def get_plan(session_id: str, key: str) -> dict | None:
     return None
 
 
-def approve_plan(session_id: str, key: str) -> bool:
+def approve_plan(session_id: str) -> bool:
     status, _ = curl_post(f"{JULES_API}/sessions/{session_id}:approvePlan", jules_api_key())
     return status == 200
 
@@ -327,26 +350,57 @@ PR DIFF:
 {diff}
 """
 
-    # 5. Make the API call via Ollama structured output
-    log.info("  Calling Ollama for PR review...")
-    try:
-        response = ollama.chat(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            format=ReviewVerdict.model_json_schema(),
-            options={"temperature": 0},
-        )
-        verdict = ReviewVerdict.model_validate_json(response.message.content)
-        return {
-            **verdict.model_dump(),
-            "reviewer_model": model,
-            "reviewed_at": now_iso(),
-            "merge_sha": "unknown",
-        }
-    except Exception as e:
-        log.error(f"  Ollama PR review error: {e}")
-        default_verdict["summary"] = f"Ollama PR review error: {e}"
-        return default_verdict
+    # 5. Make the API call — branch on REVIEW_PROVIDER
+    if REVIEW_PROVIDER == "openrouter":
+        log.info("  Calling OpenRouter for PR review...")
+        try:
+            import openai  # noqa: PLC0415
+            or_client = openai.OpenAI(api_key=openrouter_api_key(), base_url=OPENROUTER_API)
+            or_response = or_client.chat.completions.create(
+                model=REVIEW_MODEL_OPENROUTER,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "ReviewVerdict",
+                        "strict": True,
+                        "schema": ReviewVerdict.model_json_schema(),
+                    },
+                },
+                temperature=0,
+            )
+            verdict = ReviewVerdict.model_validate_json(or_response.choices[0].message.content or "")
+            return {
+                **verdict.model_dump(),
+                "reviewer_model": REVIEW_MODEL_OPENROUTER,
+                "reviewed_at": now_iso(),
+                "merge_sha": "unknown",
+            }
+        except Exception as e:
+            log.error(f"  OpenRouter PR review error: {e}")
+            default_verdict["summary"] = f"OpenRouter PR review error: {e}"
+            default_verdict["reviewer_model"] = REVIEW_MODEL_OPENROUTER
+            return default_verdict
+    else:
+        log.info("  Calling Ollama for PR review...")
+        try:
+            response = ollama.chat(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                format=ReviewVerdict.model_json_schema(),
+                options={"temperature": 0},
+            )
+            verdict = ReviewVerdict.model_validate_json(response.message.content or "")
+            return {
+                **verdict.model_dump(),
+                "reviewer_model": model,
+                "reviewed_at": now_iso(),
+                "merge_sha": "unknown",
+            }
+        except Exception as e:
+            log.error(f"  Ollama PR review error: {e}")
+            default_verdict["summary"] = f"Ollama PR review error: {e}"
+            return default_verdict
 
 
 # ── Poll cycle ────────────────────────────────────────────────────────────────
@@ -450,7 +504,6 @@ def write_verification_record(story_path: str, verdict: dict) -> None:
             lines = f.readlines()
 
         output_lines = []
-        in_existing_verification_block = False
         status_line_found_and_updated = False
 
         # Find and skip existing verification record, and update status line
@@ -458,7 +511,6 @@ def write_verification_record(story_path: str, verdict: dict) -> None:
         while i < len(lines):
             line = lines[i]
             if line.strip() == "## Verification Record":
-                in_existing_verification_block = True
                 # Skip all lines until next top-level heading or EOF
                 i += 1
                 while i < len(lines) and not lines[i].startswith("## "):
@@ -578,14 +630,14 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
     log.info(f"Story {story} [{session_id[:12]}...] {row['state']} → {state}")
 
     if state == "AWAITING_PLAN_APPROVAL":
-        plan = get_plan(session_id, key)
+        plan = get_plan(session_id)
         if plan:
             steps = plan.get("steps", [])
             log.info(f"  Plan ({len(steps)} steps):")
             for s in steps:
                 log.info(f"    {s.get('index', 0) + 1}. {s['title']}")
 
-        ok = approve_plan(session_id, key)
+        ok = approve_plan(session_id)
         if ok:
             log.info(f"  ✓ Plan approved")
             conn.execute(
@@ -878,21 +930,48 @@ GEMINI AGENT EXECUTION LOG (last ~200 lines if full log is too large):
 ```
 """
 
-        log.info("  Calling Ollama for Gemini log review...")
-        try:
-            response = ollama.chat(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                format=ReviewVerdict.model_json_schema(),
-                options={"temperature": 0},
-            )
-            verdict = ReviewVerdict.model_validate_json(response.message.content)
-            final_verdict.update(verdict.model_dump())
-            final_verdict["reviewer_model"] = model
-            final_verdict["reviewed_at"] = now_iso()
-        except Exception as e:
-            log.error(f"  Ollama Gemini log review error: {e}")
-            final_verdict["summary"] = f"Ollama Gemini log review error: {e}"
+        if REVIEW_PROVIDER == "openrouter":
+            log.info("  Calling OpenRouter for Gemini log review...")
+            try:
+                import openai  # noqa: PLC0415
+                or_client = openai.OpenAI(api_key=openrouter_api_key(), base_url=OPENROUTER_API)
+                or_response = or_client.chat.completions.create(
+                    model=REVIEW_MODEL_OPENROUTER,
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "ReviewVerdict",
+                            "strict": True,
+                            "schema": ReviewVerdict.model_json_schema(),
+                        },
+                    },
+                    temperature=0,
+                )
+                verdict = ReviewVerdict.model_validate_json(or_response.choices[0].message.content or "")
+                final_verdict.update(verdict.model_dump())
+                final_verdict["reviewer_model"] = REVIEW_MODEL_OPENROUTER
+                final_verdict["reviewed_at"] = now_iso()
+            except Exception as e:
+                log.error(f"  OpenRouter Gemini log review error: {e}")
+                final_verdict["summary"] = f"OpenRouter Gemini log review error: {e}"
+                final_verdict["reviewer_model"] = REVIEW_MODEL_OPENROUTER
+        else:
+            log.info("  Calling Ollama for Gemini log review...")
+            try:
+                response = ollama.chat(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}],
+                    format=ReviewVerdict.model_json_schema(),
+                    options={"temperature": 0},
+                )
+                verdict = ReviewVerdict.model_validate_json(response.message.content or "")
+                final_verdict.update(verdict.model_dump())
+                final_verdict["reviewer_model"] = model
+                final_verdict["reviewed_at"] = now_iso()
+            except Exception as e:
+                log.error(f"  Ollama Gemini log review error: {e}")
+                final_verdict["summary"] = f"Ollama Gemini log review error: {e}"
 
         final_verdict_str = json.dumps(final_verdict)
         conn.execute(
@@ -1094,7 +1173,7 @@ def main():
 
     # Graceful shutdown
     running = True
-    def _stop(_sig, _frame):
+    def _stop(*_: object) -> None:
         nonlocal running
         log.info("Shutting down...")
         running = False

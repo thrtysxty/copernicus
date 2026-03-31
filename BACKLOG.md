@@ -132,9 +132,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #572 | Generalize Agent Monitor | APPROVED FOR IMPLEMENTATION | P1 |
+| #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #565 | Kb Activity Bar View Scaffold | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
+| #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
+| #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #606 | Project Target Device Configuration | APPROVED FOR IMPLEMENTATION | P1 |
+| #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -480,6 +484,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #599 | Session Archive And Nightly Digest Pipeline | COMPLETE | P1 |
 | #601 | Agent Monitor: Write Complete Status After Merge | COMPLETE | P1 |
 | #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
+| #604 | Replace Anthropic Pr Review With Ollama Structured Output | COMPLETE | P1 |
+| #609 | Intel View Has No Escape Or Back Navigation | COMPLETE | P2 |
 | #610 | Working Set Memory Fetch Fails With Too Few Parameter Values On Startup | COMPLETE | P2 |
 | #612 | Stories Db Project Scoping | COMPLETE | P0 |
 | #613 | Workspace Environmental State Consolidation | COMPLETE | P0 |

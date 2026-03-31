@@ -35,6 +35,43 @@ def _load_api_key() -> None:
         pass  # Proceed without a key; ollama may not require one for local hosts
 
 
+def _load_openrouter_key() -> None:
+    """Load OPENROUTER_API_KEY from env, falling back to ~/.secrets if not set."""
+    if os.environ.get("OPENROUTER_API_KEY"):
+        return
+    try:
+        result = subprocess.run(
+            ["bash", "-c", "source ~/.secrets && echo $OPENROUTER_API_KEY"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        key = result.stdout.strip()
+        if key:
+            os.environ["OPENROUTER_API_KEY"] = key
+    except Exception:
+        pass
+
+
+def _to_openai_tools(tools_list: list) -> list:
+    """Convert a list of Python functions to OpenAI tool schema dicts."""
+    result = []
+    for fn in tools_list:
+        result.append({
+            "type": "function",
+            "function": {
+                "name": fn.__name__,
+                "description": fn.__doc__.strip() if fn.__doc__ else "",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": True,
+                },
+            },
+        })
+    return result
+
+
 def _make_tools(repo_root: Path):
     """Return the four tool functions, closed over repo_root."""
 
@@ -140,20 +177,16 @@ def main() -> int:
         dest="repo_root",
         help="Working directory root for file tools (default: cwd at invocation)",
     )
+    parser.add_argument(
+        "--provider",
+        choices=["ollama", "openrouter"],
+        default="ollama",
+        help="Inference provider: ollama (default) or openrouter",
+    )
     args = parser.parse_args()
 
     # Resolve repo root
     repo_root = Path(args.repo_root).resolve() if args.repo_root else Path.cwd().resolve()
-
-    # Load API key before importing ollama (some SDK versions check at import)
-    _load_api_key()
-
-    # Import ollama after env setup
-    try:
-        import ollama  # noqa: PLC0415
-    except ImportError:
-        print("ERROR: ollama Python SDK not installed. Run: pip install ollama", file=sys.stderr)
-        return 1
 
     # Read prompt file
     prompt_path = Path(args.prompt_file)
@@ -172,6 +205,106 @@ def main() -> int:
     tools_list = [read_file, write_file, run_bash, list_directory]
     tools_map = {fn.__name__: fn for fn in tools_list}
 
+    print(f"[ollama_coder] provider={args.provider}  model={args.model}  max_turns={args.max_turns}  repo_root={repo_root}", file=sys.stderr)
+
+    # ── OpenRouter path ───────────────────────────────────────────────────────
+    if args.provider == "openrouter":
+        _load_openrouter_key()
+        try:
+            import openai  # noqa: PLC0415
+        except ImportError:
+            print("ERROR: openai Python SDK not installed. Run: pip install openai", file=sys.stderr)
+            return 1
+
+        api_key = os.environ.get("OPENROUTER_API_KEY", "")
+        if not api_key:
+            print("ERROR: OPENROUTER_API_KEY not set — add it to ~/.secrets", file=sys.stderr)
+            return 1
+
+        client = openai.OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
+        openai_tools = _to_openai_tools(tools_list)
+
+        messages: list[Any] = [{"role": "user", "content": prompt}]
+        turn = 0
+
+        try:
+            while turn < args.max_turns:
+                print(f"[ollama_coder] turn {turn + 1}/{args.max_turns} — calling model ...", file=sys.stderr)
+                response = client.chat.completions.create(
+                    model=args.model,
+                    messages=messages,
+                    tools=openai_tools,
+                )
+                msg = response.choices[0].message
+
+                # Append assistant message in OpenAI format
+                assistant_entry: dict[str, Any] = {
+                    "role": "assistant",
+                    "content": msg.content or "",
+                }
+                if msg.tool_calls:
+                    assistant_entry["tool_calls"] = [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": getattr(getattr(tc, "function", None), "name", ""),
+                                "arguments": getattr(getattr(tc, "function", None), "arguments", "{}"),
+                            },
+                        }
+                        for tc in msg.tool_calls
+                    ]
+                messages.append(assistant_entry)
+
+                if not msg.tool_calls:
+                    print("[ollama_coder] no tool_calls — agent finished.", file=sys.stderr)
+                    break
+
+                for tc in msg.tool_calls:
+                    fn = getattr(tc, "function", None)
+                    name = getattr(fn, "name", "") if fn else ""
+                    try:
+                        import json as _json
+                        raw_args = getattr(fn, "arguments", None) if fn else None
+                        arguments = _json.loads(raw_args) if raw_args else {}
+                    except Exception:
+                        arguments = {}
+                    print(f"[ollama_coder]   tool: {name}({list(arguments.keys())})", file=sys.stderr)
+                    result = _dispatch_tool(name, arguments, tools_map)
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": str(result),
+                    })
+
+                turn += 1
+            else:
+                print(f"[ollama_coder] max_turns ({args.max_turns}) reached — stopping.", file=sys.stderr)
+
+        except Exception as exc:
+            print(f"ERROR: API error: {exc}", file=sys.stderr)
+            return 1
+
+        # Print final assistant content
+        final_content = ""
+        for msg in reversed(messages):
+            if isinstance(msg, dict) and msg.get("role") == "assistant":
+                final_content = msg.get("content", "") or ""
+                break
+        print(final_content)
+        return 0
+
+    # ── Ollama path (default) ─────────────────────────────────────────────────
+    # Load API key before importing ollama (some SDK versions check at import)
+    _load_api_key()
+
+    # Import ollama after env setup
+    try:
+        import ollama  # noqa: PLC0415
+    except ImportError:
+        print("ERROR: ollama Python SDK not installed. Run: pip install ollama", file=sys.stderr)
+        return 1
+
     # Determine whether to pass think=True
     use_think = any(kw in args.model.lower() for kw in ("deepseek", "qwen"))
 
@@ -181,10 +314,8 @@ def main() -> int:
         chat_kwargs["think"] = True
 
     # Agent loop
-    messages: list[Any] = [{"role": "user", "content": prompt}]
+    messages = [{"role": "user", "content": prompt}]
     turn = 0
-
-    print(f"[ollama_coder] model={args.model}  max_turns={args.max_turns}  repo_root={repo_root}", file=sys.stderr)
 
     try:
         while turn < args.max_turns:
