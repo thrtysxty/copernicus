@@ -64,15 +64,19 @@ GEMINI_COMPLETION_MARKERS = (
 GEMINI_INACTIVITY_TIMEOUT_SECONDS = 60
 GEMINI_MIN_LINES_FOR_INACTIVITY = 20
 
-REVIEW_PROVIDER = os.environ.get("REVIEW_PROVIDER", "ollama")  # "ollama" | "openrouter"
+REVIEW_PROVIDER = os.environ.get("REVIEW_PROVIDER", "openrouter")  # "ollama" | "openrouter"
 OPENROUTER_API = "https://openrouter.ai/api/v1"
 # Good reviewer choices (cost-effective, large context, strong reasoning):
+# FREE tier (use while available):
+#   qwen/qwen3.6-plus-preview:free       — FREE preview
+#   nvidia/nemotron-3-super-120b-a12b:free — FREE, 120B, Nvidia supervised
+#   minimax/minimax-m2.5:free            — FREE tier, rate-limited
+# Paid:
 #   qwen/qwen3-235b-a22b-instruct-2507   — $0.071 in / $0.10 out, 262k ctx
 #   mistralai/mistral-small-3.2-24b-instruct — $0.09 in / $0.25 out, 256k ctx
 #   mistralai/devstral-2512              — $0.40 in / $2.00 out, 262k ctx, agentic coder
 #   minimax/minimax-m2.5                 — $0.90 in / $3.60 out, strong structured output
-#   minimax/minimax-m2.5:free            — free tier, rate-limited
-REVIEW_MODEL_OPENROUTER = os.environ.get("REVIEW_MODEL_OPENROUTER", "qwen/qwen3-235b-a22b-instruct-2507")
+REVIEW_MODEL_OPENROUTER = os.environ.get("REVIEW_MODEL_OPENROUTER", "qwen/qwen3.6-plus-preview:free")
 
 # Dictionary to store last known state of Gemini log files for inactivity detection
 _gemini_log_states = {}
@@ -138,8 +142,147 @@ def init_db():
             conn.execute("UPDATE jules_sessions SET agent = 'jules' WHERE agent IS NULL")
         except sqlite3.OperationalError:
             pass
+
+        # Episodes table (Story 573)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS episodes (
+                episode_id     TEXT PRIMARY KEY,
+                timestamp      TEXT NOT NULL,
+                story_id       TEXT REFERENCES stories(id),
+                agent          TEXT NOT NULL DEFAULT 'jules',
+                task           TEXT NOT NULL DEFAULT '',
+                approach       TEXT NOT NULL DEFAULT '',
+                outcome        TEXT NOT NULL DEFAULT '',
+                duration_ms    INTEGER DEFAULT 0,
+                quality_score  REAL NOT NULL DEFAULT 0.0,
+                revision_count INTEGER NOT NULL DEFAULT 0,
+                blocked_reasons TEXT NOT NULL DEFAULT '[]',
+                files_touched  TEXT NOT NULL DEFAULT '[]',
+                memory_ids     TEXT NOT NULL DEFAULT '[]',
+                notes          TEXT NOT NULL DEFAULT '',
+                commit_sha     TEXT DEFAULT NULL,
+                embedding_id   TEXT DEFAULT NULL
+            )
+        """)
+        try:
+            conn.execute("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS episodes_vec USING vec0(
+                    embedding FLOAT[1536]
+                )
+            """)
+        except sqlite3.OperationalError:
+            pass  # sqlite-vec may not be loaded
+
         conn.commit()
     log.info(f"DB ready at {DB_PATH}")
+
+
+# ── Episode Writing (Story 573) ────────────────────────────────────────────────
+
+_QUALITY_SCORE_MAP = {0: 1.0, 1: 0.7, 2: 0.4}
+
+
+def _write_episode(session_id: str, conn: sqlite3.Connection) -> None:
+    """Write an episode record after successful story completion. Retries 3×."""
+    row = conn.execute(
+        "SELECT * FROM jules_sessions WHERE session_id = ?", (session_id,)
+    ).fetchone()
+    if not row:
+        log.warning(f"[episode] session {session_id} not found — skipping")
+        return
+
+    verdict_data = json.loads(row["review_verdict"]) if row["review_verdict"] else {}
+    revision_count = row.get("revision_count") or 0
+    quality_score = _QUALITY_SCORE_MAP.get(int(revision_count), 0.2)
+    blocked_reasons = verdict_data.get("acs_missing", [])
+    episode_id = f"ep_{datetime.now().strftime('%Y%m%d')}_{session_id[:8]}"
+    embed_text = " ".join(filter(None, [
+        row["title"] or "",
+        row.get("agent", "jules"),
+        verdict_data.get("summary", ""),
+        " ".join(blocked_reasons),
+    ]))
+
+    embedding: list | None = None
+    try:
+        import openai as _openai  # noqa: PLC0415
+        api_key = os.environ.get("ANTHROPIC_API_KEY") or openrouter_api_key()
+        base_url = "https://api.anthropic.com/v1" if os.environ.get("ANTHROPIC_API_KEY") else OPENROUTER_API
+        emb_client = _openai.OpenAI(api_key=api_key, base_url=base_url)
+        emb_resp = emb_client.embeddings.create(model="text-embedding-3-small", input=embed_text)
+        embedding = emb_resp.data[0].embedding
+    except Exception as e:
+        log.warning(f"[episode] embedding failed for {episode_id}: {e}")
+
+    for attempt in range(1, 4):
+        try:
+            with conn:
+                conn.execute(
+                    """INSERT INTO episodes
+                       (episode_id, timestamp, story_id, agent, task, approach,
+                        outcome, quality_score, revision_count, blocked_reasons,
+                        files_touched, memory_ids, notes, commit_sha)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        episode_id,
+                        datetime.now(timezone.utc).isoformat(),
+                        str(row["story"]),
+                        row.get("agent", "jules"),
+                        row["title"] or "",
+                        row.get("agent", "jules"),
+                        verdict_data.get("verdict", "UNKNOWN"),
+                        quality_score,
+                        revision_count,
+                        json.dumps(blocked_reasons),
+                        "[]",
+                        "[]",
+                        verdict_data.get("summary", ""),
+                        row["commit_sha"],
+                    ),
+                )
+                if embedding:
+                    conn.execute(
+                        "INSERT INTO episodes_vec (embedding) VALUES (?)",
+                        (json.dumps(embedding),),
+                    )
+                    rowid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                    conn.execute(
+                        "UPDATE episodes SET embedding_id = ? WHERE episode_id = ?",
+                        (rowid, episode_id),
+                    )
+            log.info(f"[episode] wrote {episode_id} (quality={quality_score})")
+            return
+        except Exception as exc:
+            wait = 5 * attempt
+            if attempt < 3:
+                log.warning(f"[episode] write attempt {attempt} failed: {exc} — retry in {wait}s")
+                time.sleep(wait)
+            else:
+                log.error(f"[episode] all retries exhausted for {episode_id}: {exc}")
+                try:
+                    conn.execute(
+                        "INSERT INTO agent_work_log (id, project_id, bank_id, event_type, meta, ts) VALUES (?,?,?,?,?,?)",
+                        (f"epfail_{episode_id}", "copernicus", "jules", "episode_write_failed",
+                         json.dumps({"error": str(exc), "session_id": session_id}), int(time.time())),
+                    )
+                    conn.commit()
+                except Exception:
+                    pass
+
+
+def show_episodes() -> None:
+    """Print last 20 episodes sorted by timestamp DESC."""
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT episode_id, story_id, outcome, quality_score, timestamp FROM episodes ORDER BY timestamp DESC LIMIT 20"
+        ).fetchall()
+    if not rows:
+        print("No episodes recorded yet.")
+        return
+    print(f"{'Episode':<28} {'Story':<12} {'Outcome':<20} {'Q':>5}  {'Timestamp'}")
+    print("-" * 80)
+    for r in rows:
+        print(f"{r['episode_id']:<28} {str(r['story_id']):<12} {r['outcome']:<20} {r['quality_score']:>5.1f}  {r['timestamp'][:19]}")
 
 
 def get_active_sessions(conn: sqlite3.Connection) -> list[sqlite3.Row]:
@@ -367,6 +510,7 @@ PR DIFF:
                         "schema": ReviewVerdict.model_json_schema(),
                     },
                 },
+                extra_body={"structured_outputs": True, "verbosity": "low"},
                 temperature=0,
             )
             verdict = ReviewVerdict.model_validate_json(or_response.choices[0].message.content or "")
@@ -866,6 +1010,7 @@ def review_gemini_session(session_id: str, story_id: int, log_file_path: Path, c
                     (merge_ts, final_verdict["merge_sha"], merge_ts, session_id)
                 )
                 stamp_story_id(str(story_id), session_record["dispatched"] or merge_ts, merge_ts)
+                _write_episode(session_id, conn)
             else:
                 log.warning(f"  ❌ Merge failed for PR #{pr_number}: {err}")
                 conn.execute(
@@ -946,6 +1091,7 @@ GEMINI AGENT EXECUTION LOG (last ~200 lines if full log is too large):
                             "schema": ReviewVerdict.model_json_schema(),
                         },
                     },
+                    extra_body={"structured_outputs": True, "verbosity": "low"},
                     temperature=0,
                 )
                 verdict = ReviewVerdict.model_validate_json(or_response.choices[0].message.content or "")
@@ -1141,12 +1287,17 @@ def main():
     parser.add_argument("--status", action="store_true", help="Show all sessions in db.")
     parser.add_argument("--skip-review", action="store_true", help="Bypass PR review and merge directly (emergency use).")
     parser.add_argument("--retry-review", type=str, metavar="SESSION_ID", help="Reset review state for a session to force re-review.")
+    parser.add_argument("--episodes", action="store_true", help="Show last 20 episode records.")
     args = parser.parse_args()
 
     init_db()
 
     if args.status:
         show_status()
+        return
+
+    if args.episodes:
+        show_episodes()
         return
 
     if args.retry_review:
