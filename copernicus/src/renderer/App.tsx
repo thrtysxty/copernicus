@@ -197,17 +197,21 @@ export default function App() {
     })
   }, [])
 
-  // Story 380: ESC exits native fullscreen safely
+  // Story 380 & 609: ESC exits native fullscreen safely and closes intelligence view
   useEffect(() => {
-    if (!isFullscreen) return
+    if (!isFullscreen && !agentsOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !e.defaultPrevented) {
-        invoke('window:exit-fullscreen')
+        if (agentsOpen) {
+          setAgentsOpen(false)
+        } else if (isFullscreen) {
+          invoke('window:exit-fullscreen')
+        }
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isFullscreen, invoke])
+  }, [isFullscreen, agentsOpen, invoke, setAgentsOpen])
 
   // Load extensions on mount
   useEffect(() => {

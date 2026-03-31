@@ -327,7 +327,15 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
       <div className="w-64 flex flex-col border-r border-white/5 bg-zinc-950 shrink-0">
         <div className="p-3 border-b border-white/5 flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Intelligence</h2>
-          {onClose && <button onClick={onClose} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider font-bold">Close</button>}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider font-bold transition-colors"
+              title="Close"
+            >
+              <X size={14} /> Close
+            </button>
+          )}
         </div>
         
         <div className="p-2 border-b border-white/5">
