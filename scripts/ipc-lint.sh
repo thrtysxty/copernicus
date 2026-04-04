@@ -113,7 +113,7 @@ GHOST_TINT=$(grep -rn "bg-copernicus-phosphor/10" "$COPERNICUS/src/renderer/" 2>
   | grep -v "^\s*//" || true)
 
 if [ -n "$GHOST_TINT" ]; then
-  warn "Ghost tint active state found (forbidden — use solid VT block instead):"
+  fail "Ghost tint active state found (forbidden — use solid VT block instead):"
   echo "$GHOST_TINT" | while IFS= read -r line; do echo "    $line"; done
   if $FIX_HINTS; then
     echo -e "    ${YELLOW}Fix: replace with 'bg-copernicus-phosphor text-[\#050505] rounded-none'${RESET}"

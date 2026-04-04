@@ -213,7 +213,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                                                     setFormData({...formData, repo_name: r.name, repo_path: r.path});
                                                     setShowRepoDropdown(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-2 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors truncate ${formData.repo_path === r.path ? 'bg-copernicus-phosphor/5 text-copernicus-phosphor' : 'text-zinc-400'}`}
+                                                className={`w-full text-left px-3 py-2 text-[10px] hover:text-zinc-300 transition-colors truncate ${formData.repo_path === r.path ? 'bg-copernicus-phosphor/5 text-copernicus-phosphor' : 'text-zinc-400'}`}
                                             >
                                                 {r.name}
                                             </button>

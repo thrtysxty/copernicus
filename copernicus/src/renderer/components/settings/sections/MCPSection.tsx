@@ -134,7 +134,7 @@ export const MCPSection: React.FC = () => {
         {!showAddForm && (
           <button 
             onClick={() => setShowAddForm(true)} 
-            className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-copernicus-phosphor hover:bg-copernicus-phosphor/10 px-2 py-1 rounded border border-copernicus-phosphor/20 transition-all"
+            className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-copernicus-phosphor hover:text-zinc-300 px-2 py-1 rounded border border-copernicus-phosphor/20 transition-all"
           >
             <Plus size={12} />
             Add Server

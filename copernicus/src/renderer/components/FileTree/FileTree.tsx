@@ -175,7 +175,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu,
   return (
     <div>
       <div
-        className="flex items-center gap-1 px-1 py-[2px] cursor-pointer hover:bg-copernicus-phosphor/10 rounded text-[11px] select-none"
+        className="flex items-center gap-1 px-1 py-[2px] cursor-pointer hover:text-zinc-300 rounded text-[11px] select-none"
         style={{ paddingLeft: `${4 + depth * 12}px` }}
         onClick={handleClick}
         onContextMenu={handleContextMenu}

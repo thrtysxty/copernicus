@@ -422,7 +422,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
                     ? 'opacity-40 cursor-not-allowed border-zinc-800 text-zinc-600'
                     : workflowStatus === 'RUNNING'
                       ? 'border-red-500/50 text-red-400 hover:bg-red-500/10'
-                      : 'border-copernicus-phosphor/50 text-copernicus-phosphor hover:bg-copernicus-phosphor/10'
+                      : 'border-copernicus-phosphor/50 text-copernicus-phosphor hover:text-zinc-300'
                 }`}
               >
                 {workflowStatus === 'RUNNING' ? <><span>⏹</span> Stop</> : <><span>▶</span> Run</>}

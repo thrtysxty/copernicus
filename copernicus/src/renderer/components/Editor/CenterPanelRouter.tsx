@@ -236,7 +236,7 @@ function CenterPanelHeader({
         <button
           onClick={() => setSpotlight(isSpotlightActive ? null : 'editor')}
           aria-pressed={isSpotlightActive}
-          className={`p-1.5 rounded transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isSpotlightActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-400 hover:text-zinc-300'}`}
+          className={`p-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${isSpotlightActive ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-400 hover:text-zinc-300 rounded'}`}
           title="Spotlight"
           aria-label={isSpotlightActive ? 'Minimize Spotlight' : 'Maximize Spotlight'}
         >

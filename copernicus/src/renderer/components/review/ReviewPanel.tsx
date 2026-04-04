@@ -162,7 +162,7 @@ export const ReviewPanel: React.FC = () => {
 
           <button 
             onClick={handleApprove}
-            className="flex items-center gap-2 px-3 py-1 bg-copernicus-phosphor/10 text-copernicus-phosphor border border-copernicus-phosphor/30 hover:bg-copernicus-phosphor/20 text-[10px] uppercase tracking-wider transition-colors"
+            className="flex items-center gap-2 px-3 py-1 bg-copernicus-phosphor text-[#050505] rounded-none border border-copernicus-phosphor/30 hover:opacity-90 text-[10px] uppercase tracking-wider transition-opacity"
           >
             <CheckCircle size={12} />
             Approve & Close
@@ -222,7 +222,7 @@ export const ReviewPanel: React.FC = () => {
                   key={file}
                   onClick={() => setSelectedFile(file)}
                   className={`w-full text-left p-2 border-b border-zinc-900/50 transition-colors ${
-                    isSelected ? 'bg-copernicus-phosphor/10' : 'hover:bg-zinc-900/30'
+                    isSelected ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'hover:bg-zinc-900/30'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-0.5">

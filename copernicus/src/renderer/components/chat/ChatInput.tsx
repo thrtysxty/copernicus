@@ -182,7 +182,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               {slashSuggestions.map(cmd => (
                 <button
                   key={cmd.name}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex items-center gap-3"
+                  className="w-full text-left px-3 py-2 text-xs hover:text-zinc-300 transition-colors flex items-center gap-3"
                   onClick={() => {
                     setInput(cmd.name + ' ')
                     setShowSuggestions(false)
@@ -215,7 +215,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               {pickerResults.map(item => (
                 <button
                   key={item.value}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-copernicus-phosphor/10 transition-colors flex flex-col"
+                  className="w-full text-left px-3 py-2 text-xs hover:text-zinc-300 transition-colors flex flex-col"
                   onClick={() => handlePickerSelect(item)}
                 >
                   <span className="text-zinc-300 font-bold">{item.label}</span>

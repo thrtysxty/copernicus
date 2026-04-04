@@ -167,7 +167,7 @@ export default function DiffPanel() {
               key={file.path}
               onClick={() => setActiveFileIndex(idx)}
               className={`w-full text-left px-4 py-2 flex items-center gap-3 transition-colors ${
-                activeFileIndex === idx ? 'bg-copernicus-phosphor/10 border-l-2 border-copernicus-phosphor' : 'hover:bg-white/5 border-l-2 border-transparent'
+                activeFileIndex === idx ? 'bg-copernicus-phosphor text-[#050505] rounded-none border-l-2 border-copernicus-phosphor' : 'hover:bg-white/5 border-l-2 border-transparent'
               }`}
             >
               <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
@@ -217,7 +217,7 @@ export default function DiffPanel() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSideBySide(!isSideBySide)}
-              className={`p-1.5 rounded transition-colors ${isSideBySide ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+              className={`p-1.5 transition-colors ${isSideBySide ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300 rounded'}`}
               title={isSideBySide ? "Switch to Inline View" : "Switch to Side-by-Side View"}
             >
               {isSideBySide ? <Sidebar size={14} /> : <LayoutList size={14} />}

@@ -291,8 +291,8 @@ export const GithubDashboard: React.FC = () => {
                         onClick={() => handleSetTarget(repo.full_name)}
                         className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
                           ${isTarget
-                            ? 'text-black bg-copernicus-phosphor'
-                            : 'text-zinc-600 hover:text-copernicus-phosphor hover:bg-copernicus-phosphor/10'}`}
+                            ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
+                            : 'text-zinc-600 hover:text-zinc-300'}`}
                         title="Set Target"
                       >
                         <Target className="w-3 h-3" />
@@ -301,7 +301,7 @@ export const GithubDashboard: React.FC = () => {
                         onClick={() => handleSetTrust(repo.name, !isTrusted)}
                         className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
                           ${isTrusted
-                            ? 'text-copernicus-phosphor bg-copernicus-phosphor/10 hover:bg-copernicus-phosphor/20'
+                            ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
                             : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800'}`}
                         title={isTrusted ? 'Revoke trust' : 'Trust this repo'}
                       >
@@ -354,7 +354,7 @@ export const GithubDashboard: React.FC = () => {
                 <button
                   onClick={handleAddRepo}
                   disabled={!addRepoInput.trim()}
-                  className="px-3 py-1.5 bg-copernicus-phosphor/10 hover:bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/40 text-[10px] font-mono uppercase rounded transition-colors disabled:opacity-40"
+                  className="px-3 py-1.5 bg-zinc-900 hover:text-zinc-300 text-copernicus-phosphor border border-copernicus-phosphor/40 text-[10px] font-mono uppercase rounded transition-colors disabled:opacity-40"
                 >
                   Add
                 </button>
@@ -476,7 +476,7 @@ export const GithubDashboard: React.FC = () => {
               <button
                 onClick={handleCreateRepo}
                 disabled={creating || !newRepoName.trim()}
-                className="px-3 py-1 bg-copernicus-phosphor/10 hover:bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/50 text-xs rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-mono uppercase tracking-wide"
+                className="px-3 py-1 bg-zinc-900 hover:text-zinc-300 text-copernicus-phosphor border border-copernicus-phosphor/50 text-xs rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-mono uppercase tracking-wide"
               >
                 {creating ? 'Creating...' : 'Confirm'}
               </button>

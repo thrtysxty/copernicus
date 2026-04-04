@@ -34,7 +34,7 @@ export class ErrorBoundary extends React.Component<
             {this.state.message}
           </p>
           <button
-            className="border border-copernicus-phosphor/40 px-6 py-2 text-sm hover:bg-copernicus-phosphor/10 transition-colors"
+            className="border border-copernicus-phosphor/40 px-6 py-2 text-sm hover:text-zinc-300 transition-colors"
             onClick={() => window.location.reload()}
           >
             Reload

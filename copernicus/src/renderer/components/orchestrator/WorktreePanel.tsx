@@ -142,13 +142,13 @@ export const WorktreePanel: React.FC = () => {
                   <>
                     <button
                       onClick={() => handleReview(wt.id)}
-                      className="text-[9px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:bg-copernicus-phosphor/10 mr-2"
+                      className="text-[9px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:text-zinc-300 mr-2"
                     >
                       Review
                     </button>
                     <button
                       onClick={() => handleMerge(wt.id)}
-                      className="text-[9px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:bg-copernicus-phosphor/10 mr-2"
+                      className="text-[9px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:text-zinc-300 mr-2"
                     >
                       Merge
                     </button>

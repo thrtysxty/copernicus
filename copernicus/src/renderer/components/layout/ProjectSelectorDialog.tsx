@@ -189,7 +189,7 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
               <button
                 onClick={createProject}
                 disabled={!newName.trim() || creating}
-                className="w-full flex items-center justify-center gap-2 h-9 bg-copernicus-phosphor/10 border border-copernicus-phosphor/30 text-copernicus-phosphor text-[11px] font-mono uppercase tracking-widest rounded hover:bg-copernicus-phosphor/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 h-9 bg-copernicus-phosphor text-[#050505] rounded-none text-[11px] font-mono uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creating ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
                 {creating ? 'Creating…' : 'Create & Open'}

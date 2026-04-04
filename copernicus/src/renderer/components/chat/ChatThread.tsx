@@ -327,7 +327,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
                         pModels.map(m => (
                           <button
                             key={m.id}
-                            className={`w-full text-left px-3 py-1.5 text-[10px] hover:bg-copernicus-phosphor/10 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor/5 border-l-2 border-copernicus-phosphor' : ''}`}
+                            className={`w-full text-left px-3 py-1.5 text-[10px] hover:text-zinc-300 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor text-[#050505] rounded-none border-l-2 border-copernicus-phosphor' : 'border-l-2 border-transparent'}`}
                             onClick={() => {
                                 if (model !== m.id) {
                                   invoke('snapshot:save', { panel_id: 'chat', model_id: m.id, provider: m.provider, messages: messages.filter(msg => msg.role !== 'copernicus') }).catch(() => {})

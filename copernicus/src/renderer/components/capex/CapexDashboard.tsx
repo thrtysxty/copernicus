@@ -94,7 +94,7 @@ function DashboardPanel({
           {actions}
           <button 
             onClick={() => setSpotlightId(isSpotlit ? null : id)} 
-            className={`p-1 rounded ${isSpotlit ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-600 hover:text-zinc-300'}`}
+            className={`p-1 ${isSpotlit ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-600 hover:text-zinc-300 rounded'}`}
             title={isSpotlit ? "Minimize" : "Spotlight"}
           >
             {isSpotlit ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
@@ -413,7 +413,7 @@ export const CapexDashboard: React.FC = () => {
               {!spotlightId && (
                 <div className="flex items-center gap-4 mb-4">
                   <button onClick={runTests} disabled={testRunning}
-                    className="flex items-center gap-2 px-3 py-1.5 text-[10px] uppercase font-bold border border-copernicus-phosphor/30 text-copernicus-phosphor hover:bg-copernicus-phosphor/10 transition-colors disabled:opacity-50">
+                    className="flex items-center gap-2 px-3 py-1.5 text-[10px] uppercase font-bold border border-copernicus-phosphor/30 text-copernicus-phosphor hover:text-zinc-300 transition-colors disabled:opacity-50">
                     {testRunning ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
                     {testRunning ? 'RUNNING...' : 'EXECUTE_SUITE'}
                   </button>

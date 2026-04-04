@@ -88,7 +88,7 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
 
   const SectionHeader = ({ title, isOpen, onToggle }: { title: string, isOpen: boolean, onToggle: () => void }) => (
     <div
-      className="flex items-center gap-1 px-1 py-[4px] cursor-pointer hover:bg-copernicus-phosphor/10 rounded text-[11px] select-none text-zinc-300 font-semibold"
+      className="flex items-center gap-1 px-1 py-[4px] cursor-pointer hover:text-zinc-300 rounded text-[11px] select-none text-zinc-300 font-semibold"
       onClick={onToggle}
     >
       {isOpen ? <ChevronDown size={14} className="text-zinc-500" /> : <ChevronRight size={14} className="text-zinc-500" />}
@@ -109,7 +109,7 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
               contents.sources.map(src => (
                 <div
                   key={src.id}
-                  className="flex items-center gap-1 px-1 py-[2px] cursor-pointer hover:bg-copernicus-phosphor/10 rounded text-[11px] select-none text-zinc-400 group"
+                  className="flex items-center gap-1 px-1 py-[2px] cursor-pointer hover:text-zinc-300 rounded text-[11px] select-none text-zinc-400 group"
                   onClick={() => copyToClipboard(src.title)}
                   title="Click to copy title"
                 >
@@ -135,7 +135,7 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
               contents.studio.map(art => (
                 <div
                   key={art.id}
-                  className="flex items-center gap-1 px-1 py-[2px] cursor-pointer hover:bg-copernicus-phosphor/10 rounded text-[11px] select-none text-zinc-400 group"
+                  className="flex items-center gap-1 px-1 py-[2px] cursor-pointer hover:text-zinc-300 rounded text-[11px] select-none text-zinc-400 group"
                   onClick={() => copyToClipboard(art.title)}
                   title="Click to copy title"
                 >

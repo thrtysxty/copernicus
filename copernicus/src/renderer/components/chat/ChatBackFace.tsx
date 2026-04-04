@@ -264,7 +264,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
               <button
                 onClick={() => setIsSavingPrompt(true)}
                 disabled={!input.trim()}
-                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-50"
+                className="w-full bg-zinc-900 hover:text-zinc-300 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-50"
               >
                 + Save Current Input
               </button>
@@ -307,7 +307,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
             <div className="flex flex-col gap-2">
               <button
                 onClick={exportChat}
-                className="w-full bg-zinc-900 hover:bg-copernicus-phosphor/10 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider"
+                className="w-full bg-zinc-900 hover:text-zinc-300 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 Export Chat (.txt)
               </button>
@@ -315,7 +315,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
               <button
                 onClick={handleSaveToMemory}
                 disabled={!lastAssistantMsg}
-                className={`w-full bg-zinc-900 border border-copernicus-steel text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider ${!lastAssistantMsg ? 'opacity-40 cursor-not-allowed' : 'hover:bg-copernicus-phosphor/10 hover:border-copernicus-phosphor'}`}
+                className={`w-full bg-zinc-900 border border-copernicus-steel text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider ${!lastAssistantMsg ? 'opacity-40 cursor-not-allowed' : 'hover:text-zinc-300 hover:border-copernicus-phosphor'}`}
               >
                 <Brain size={12} className={lastAssistantMsg ? 'text-copernicus-phosphor' : ''} />
                 {showSaved ? 'Saved ✓' : 'Save to Memory'}

@@ -111,7 +111,7 @@ export const LocalModelSection: React.FC = () => {
               className={`px-6 py-2 rounded text-[10px] font-bold uppercase transition-all flex items-center gap-2 border ${
                 status.running 
                   ? 'bg-red-950/20 border-red-900/30 text-red-400 hover:bg-red-900/30' 
-                  : 'bg-copernicus-phosphor text-[#050505] rounded-none hover:brightness-110 border-transparent'
+                  : 'bg-copernicus-phosphor text-[#050505] rounded-none hover:brightness-110 border-copernicus-phosphor/30'
               } disabled:opacity-50`}
             >
               {loading ? (

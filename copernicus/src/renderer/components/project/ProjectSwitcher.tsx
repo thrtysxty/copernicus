@@ -92,7 +92,7 @@ export const ProjectSwitcher: React.FC<Props> = ({ onClose }) => {
       <div className="p-1 bg-black/20 border-t border-copernicus-steel/20">
         <button
           onClick={handleOpenFolder}
-          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-copernicus-phosphor/10 text-zinc-400 hover:text-copernicus-phosphor transition-colors rounded"
+          className="w-full flex items-center gap-2 px-3 py-2 hover:text-zinc-300 text-zinc-400 transition-colors rounded"
         >
           <FolderOpen size={12} />
           <span className="text-[10px] uppercase tracking-wider font-bold">Open Folder...</span>
