@@ -131,14 +131,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
-| #543 | Uibuilder Stitch Progressive Enhancement | APPROVED FOR IMPLEMENTATION | P2 — Feature |
-| #573 | Episodic Memory | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #619 | Ghost Tint Active State Css Violations | APPROVED FOR IMPLEMENTATION | P2 |
-| #622 | Replace Bitnet With Gemma4 Mlx Local Model | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -458,6 +454,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #540 | Github Pat 401 Wizard And Startup | COMPLETE | P1 — Onboarding |
 | #541 | Lsp Server Packaging | COMPLETE | P2 — Developer Experience |
 | #542 | Stitch Sdk Migration | COMPLETE | P2 |
+| #543 | Uibuilder Stitch Progressive Enhancement | COMPLETE | P2 — Feature |
 | #544 | Genesis Rich Scaffold Templates | COMPLETE | P2 — Feature |
 | #545 | Docker Poller Enoent Flood | COMPLETE | P1 |
 | #546 | Otel Collector Startup Crash | COMPLETE | P2 |
@@ -477,8 +474,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #560 | Wizard Copernicus Narration Scaffold | COMPLETE | P3 |
 | #561 | Wizard Embedded Cli Terminal | COMPLETE | P3 |
 | #562 | Jules Sdk Client Migration | COMPLETE | P2 |
+| #565 | Kb Activity Bar View Scaffold | COMPLETE | P1 |
 | #570 | Story Inspector Chat Scoping | COMPLETE | P2 |
 | #572 | Generalize Agent Monitor | COMPLETE | P1 |
+| #573 | Episodic Memory | COMPLETE | P1 |
 | #595 | Fix Ghost Tint Active States — Ux Bible §1.4 Compliance | COMPLETE | P3 |
 | #596 | Refactor Direct Stateledger.Db Access To Api Methods | COMPLETE | P2 |
 | #597 | Remove Stale Column Ids From Layout.Ts | COMPLETE | P2 |
@@ -488,6 +487,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #601 | Agent Monitor: Write Complete Status After Merge | COMPLETE | P1 |
 | #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | COMPLETE | P1 |
+| #606 | Project Target Device Configuration | COMPLETE | P1 |
 | #609 | Intel View Has No Escape Or Back Navigation | COMPLETE | P2 |
 | #610 | Working Set Memory Fetch Fails With Too Few Parameter Values On Startup | COMPLETE | P2 |
 | #612 | Stories Db Project Scoping | COMPLETE | P0 |
@@ -497,8 +497,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #616 | Worktree Manager Lifecycle Coordination | COMPLETE | P2 |
 | #617 | Settings Store Write Confirmation | COMPLETE | P2 |
 | #618 | Openrouter Provider Flag | COMPLETE | P1 |
+| #619 | Ghost Tint Active State Css Violations | COMPLETE | P2 |
 | #620 | Console Log Lint False Positives And App Tsx Fix | COMPLETE | P2 |
 | #621 | Pty Auditor Shell Injection Hardening | COMPLETE | P1 |
+| #622 | Replace Bitnet With Gemma4 Mlx Local Model | COMPLETE | P1 |
+| #623 | Openrouter Sdk Provider | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -526,8 +529,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #574 | Agent Selector | DRAFT | P1 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
-| #565 | Kb Activity Bar View Scaffold | IN PROGRESS | P1 |
-| #606 | Project Target Device Configuration | IN PROGRESS | P1 |
+| #607 | Agent Daemon Jules Sdk Handler | DRAFT | P1 |
+| #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
+| #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
+| #625 | Roca Contract Validation Draft | DRAFT | P3 |
+| #626 | Provider Registry Abstraction | DRAFT | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
