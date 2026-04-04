@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { MessageSquare, Code, Workflow, GripVertical, Info, Search } from 'lucide-react'
-import { SettingsLoadResponse } from '../../../types/ipc'
+import { MessageSquare, Code, Workflow, GripVertical, Info, Search, Copy } from 'lucide-react'
+import { SettingsLoadResponse, unwrapIpc } from '../../../types/ipc'
 import log from '../../../utils/logger'
 
 interface Model {
@@ -15,6 +15,13 @@ interface Model {
 interface ModelOption {
   label: string
   value: string
+}
+
+interface OpenRouterModel {
+  id: string
+  name: string
+  contextLength: number
+  pricing: { prompt: number; completion: number }
 }
 
 interface AuthStatus {
@@ -55,6 +62,12 @@ export const ModelsSection: React.FC = () => {
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
+  // OpenRouter models state
+  const [openRouterModels, setOpenRouterModels] = useState<OpenRouterModel[]>([])
+  const [openRouterSearch, setOpenRouterSearch] = useState('')
+  const [loadingOpenRouter, setLoadingOpenRouter] = useState(false)
+  const [errorOpenRouter, setErrorOpenRouter] = useState(false)
+
   const loadData = async () => {
     setLoading(true)
     setError(false)
@@ -84,6 +97,19 @@ export const ModelsSection: React.FC = () => {
           ...(s.modelDefaults as any)
         }))
       }
+
+      const hasOpenRouter = auth?.find(a => a.provider === 'openrouter')?.hasKey
+      if (hasOpenRouter) {
+        setLoadingOpenRouter(true)
+        invoke('openrouter:list-models')
+          .then(raw => {
+            const models = unwrapIpc<OpenRouterModel[]>(raw)
+            setOpenRouterModels(models)
+          })
+          .catch(() => setErrorOpenRouter(true))
+          .finally(() => setLoadingOpenRouter(false))
+      }
+
     } catch (e) {
       log.error('Failed to load models/settings', e)
       setError(true)
@@ -257,6 +283,72 @@ export const ModelsSection: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {authStatus.find(a => a.provider === 'openrouter')?.hasKey && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <h3 className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">OpenRouter Models</h3>
+            <span className="text-[9px] text-zinc-600 font-mono italic">Browse and copy model IDs</span>
+          </div>
+
+          <div className="bg-[#0F0F0F] border border-zinc-800 rounded-lg overflow-hidden flex flex-col">
+            <div className="p-3 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
+              <Search size={14} className="text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Search OpenRouter models..."
+                value={openRouterSearch}
+                onChange={e => setOpenRouterSearch(e.target.value)}
+                className="bg-transparent text-xs text-zinc-300 placeholder:text-zinc-600 outline-none w-full font-mono"
+              />
+            </div>
+
+            <div className="max-h-[300px] overflow-y-auto custom-scrollbar bg-zinc-950/50">
+              {loadingOpenRouter ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-5 h-5 border-2 border-copernicus-phosphor border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : errorOpenRouter ? (
+                <div className="p-4 text-center text-[10px] text-red-400 font-mono">Could not fetch models</div>
+              ) : (
+                <div className="divide-y divide-zinc-800/50">
+                  {openRouterModels
+                    .filter(m => m.name.toLowerCase().includes(openRouterSearch.toLowerCase()) || m.id.toLowerCase().includes(openRouterSearch.toLowerCase()))
+                    .map(m => (
+                      <div key={m.id} className="p-3 flex items-center justify-between hover:bg-zinc-900/50 transition-colors group">
+                        <div className="min-w-0 pr-4">
+                          <div className="text-xs font-bold text-zinc-300 truncate">{m.name}</div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <div className="text-[9px] text-zinc-500 font-mono truncate">{m.id}</div>
+                            <div className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400 flex-shrink-0">
+                              {Math.round(m.contextLength / 1000)}K
+                            </div>
+                            <div className="text-[9px] text-zinc-600 flex-shrink-0">
+                              ${(m.pricing?.prompt * 1000000 || 0).toFixed(2)} / ${(m.pricing?.completion * 1000000 || 0).toFixed(2)} per 1M
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(m.id)
+                            addToast('Model ID copied to clipboard', 'success')
+                          }}
+                          className="flex-shrink-0 p-1.5 rounded bg-zinc-900 text-zinc-500 hover:text-copernicus-phosphor hover:bg-zinc-800 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Copy Model ID"
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  {openRouterModels.length > 0 && openRouterModels.filter(m => m.name.toLowerCase().includes(openRouterSearch.toLowerCase()) || m.id.toLowerCase().includes(openRouterSearch.toLowerCase())).length === 0 && (
+                    <div className="p-4 text-center text-[10px] text-zinc-500 font-mono">No models matching search</div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { useLayoutStore } from '../../../store/layout'
+import { unwrapIpc } from '../../../types/ipc'
 import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
   ShieldCheck, Loader2, GripVertical, Zap, Check,
@@ -48,6 +49,7 @@ export const ProvidersSection: React.FC = () => {
   const [authFailed, setAuthFailed] = useState<Set<string>>(new Set())
   const [claudeCliAvailable, setClaudeCliAvailable] = useState(false)
   const [anthropicMethod, setAnthropicMethod] = useState<'cli' | 'apikey' | null>(null)
+  const [openRouterCredits, setOpenRouterCredits] = useState<number | null>(null)
 
   // Custom provider state
   const [showAddCustom, setShowAddCustom] = useState(false)
@@ -69,6 +71,15 @@ export const ProvidersSection: React.FC = () => {
           if (s.baseUrl) urls[s.provider] = s.baseUrl
           if (s.provider === 'anthropic' && s.type === 'cli') setAnthropicMethod('cli')
           else if (s.provider === 'anthropic' && s.hasKey) setAnthropicMethod('apikey')
+
+          if (s.provider === 'openrouter' && s.hasKey) {
+            invoke('openrouter:get-credits')
+              .then(raw => {
+                const credits = unwrapIpc<number>(raw)
+                setOpenRouterCredits(credits)
+              })
+              .catch(() => setOpenRouterCredits(null))
+          }
         })
         setBaseUrlDraft(prev => ({ ...urls, ...prev }))
       }
@@ -355,6 +366,11 @@ export const ProvidersSection: React.FC = () => {
                         <span className="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded flex items-center gap-1">
                           <ShieldCheck size={8} className="text-copernicus-phosphor" />
                           {s.source.toUpperCase()}
+                        </span>
+                      )}
+                      {id === 'openrouter' && s?.hasKey && (
+                        <span className="text-[10px] text-zinc-500 font-mono ml-2">
+                          {openRouterCredits !== null ? `$${openRouterCredits.toFixed(2)} remaining` : '—'}
                         </span>
                       )}
                     </div>
