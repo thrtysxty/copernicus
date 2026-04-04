@@ -131,8 +131,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
-| #573 | Episodic Memory | APPROVED FOR IMPLEMENTATION | P1 |
-| #619 | Ghost Tint Active State Css Violations | APPROVED FOR IMPLEMENTATION | P2 |
+| #543 | Uibuilder Stitch Progressive Enhancement | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -513,7 +512,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
-| #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
 | #566 | Kb Content Storage Seeding | DRAFT | P1 |
 | #567 | Kb Browse Article View | DRAFT | P1 |
 | #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
@@ -523,8 +521,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
 | #607 | Agent Daemon Jules Sdk Handler | DRAFT | P1 |
 | #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
+| #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
+| #625 | Roca Contract Validation Draft | DRAFT | P3 |
+| #626 | Provider Registry Abstraction | DRAFT | P2 |
 | #565 | Kb Activity Bar View Scaffold | IN PROGRESS | P1 |
+| #573 | Episodic Memory | IN PROGRESS | P1 |
 | #606 | Project Target Device Configuration | IN PROGRESS | P1 |
+| #619 | Ghost Tint Active State Css Violations | IN PROGRESS | P2 |
 | #622 | Replace Bitnet With Gemma4 Mlx Local Model | IN PROGRESS | P1 |
 | #623 | Openrouter Sdk Provider | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
