@@ -131,6 +131,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
+| #543 | Uibuilder Stitch Progressive Enhancement | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #573 | Episodic Memory | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
@@ -518,7 +519,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
-| #543 | Uibuilder Stitch Progressive Enhancement | DRAFT | P2 — Feature |
 | #566 | Kb Content Storage Seeding | DRAFT | P1 |
 | #567 | Kb Browse Article View | DRAFT | P1 |
 | #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
@@ -526,14 +526,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #574 | Agent Selector | DRAFT | P1 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
-| #607 | Agent Daemon Jules Sdk Handler | DRAFT | P1 |
-| #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
-| #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
-| #625 | Roca Contract Validation Draft | DRAFT | P3 |
-| #626 | Provider Registry Abstraction | DRAFT | P2 |
 | #565 | Kb Activity Bar View Scaffold | IN PROGRESS | P1 |
 | #606 | Project Target Device Configuration | IN PROGRESS | P1 |
-| #623 | Openrouter Sdk Provider | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

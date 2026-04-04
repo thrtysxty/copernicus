@@ -3,7 +3,9 @@ import { useUIBuilderStore } from '../../../store/uiBuilderStore'
 import { useLayoutStore } from '../../../store/layout'
 import { UIComponent, UIComponentType } from './types'
 import { renderComponentTree } from './render'
+import { unwrapIpc } from '../../../types/ipc'
 import { UIComponentInspector } from './UIComponentInspector'
+import { StitchVariantPanel } from './StitchVariantPanel'
 import { Rnd } from 'react-rnd'
 import {
   Layout, GripVertical,
@@ -64,7 +66,9 @@ export const UIBuilderCanvas: React.FC = () => {
     stitchImportOpen, setStitchImportOpen,
     stitchVerifyOpen, setStitchVerifyOpen,
     setStitchTokens,
-    activeFilePath
+    activeFilePath,
+    stitchScreenId,
+    setStitchScreenId
   } = useLayoutStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
@@ -75,7 +79,63 @@ export const UIBuilderCanvas: React.FC = () => {
   const [stitchGhostHtml, setStitchGhostHtml] = useState<string | null>(null)
   const [stitchGhostCss, setStitchGhostCss] = useState<string | null>(null)
 
+  const [stitchAvailable, setStitchAvailable] = useState(false)
+  const [projectId, setProjectId] = useState<string | null>(null)
+  const [deviceType, setDeviceType] = useState<'MOBILE' | 'DESKTOP' | 'TABLET' | 'AGNOSTIC'>('AGNOSTIC')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [showVariantsPanel, setShowVariantsPanel] = useState(false)
+  const [editPrompt, setEditPrompt] = useState('')
+
   const selectedComponent = uiComponents.find(c => c.id === selectedId)
+
+  const handleStitchEdit = async () => {
+    if (!editPrompt.trim() || !projectId || !stitchScreenId) return
+    setIsGenerating(true)
+    try {
+      const data = unwrapIpc<{ screenId: string }>(await invoke('stitch:edit', { projectId, screenId: stitchScreenId, prompt: editPrompt }))
+      if (data?.screenId) {
+        setStitchScreenId(data.screenId)
+        addToast('Screen updated successfully', 'success')
+        setEditPrompt('')
+
+        // Fetch new html
+        const htmlData = unwrapIpc<{ html: string, css: string }>(await invoke('stitch:extract-design', { projectId, screenId: data.screenId }))
+        if (htmlData) {
+          setStitchGhostHtml(htmlData.html)
+          setStitchGhostCss(htmlData.css)
+        }
+      }
+    } catch (e: unknown) {
+      // useIpcError handles the toast
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  React.useEffect(() => {
+    async function initStitch() {
+      try {
+        const authData = unwrapIpc<{ status: { provider: string; hasKey: boolean }[] }>(await invoke('auth:status'))
+        if (authData?.status) {
+          const stitchAuth = authData.status.find((s) => s.provider === 'stitch')
+          if (stitchAuth?.hasKey) {
+            setStitchAvailable(true)
+          }
+        }
+
+        const configData = unwrapIpc<{ projectId: string; deviceType?: string }>(await invoke('project:get-config'))
+        if (configData) {
+          setProjectId(configData.projectId)
+          if (configData.deviceType) {
+            setDeviceType(configData.deviceType as any)
+          }
+        }
+      } catch (err) {
+        // Suppress errors during mount detection
+      }
+    }
+    initStitch()
+  }, [])
 
 
 
@@ -125,11 +185,11 @@ export const UIBuilderCanvas: React.FC = () => {
   const handleExportJSX = async () => {
     const jsx = exportToJSX(uiComponents)
     try {
-      const rootPath = await invoke<string>('app:get-root-path')
-      const srcDir = `${rootPath}/src`
-      
+      const rootDir = unwrapIpc<string>(await invoke('app:get-root-path')) ?? ''
+      const srcDir = `${rootDir}/src`
+
       const filePath = `${srcDir}/GeneratedUI.tsx`
-      await invoke('fs:save-file', { filePath, content: jsx })
+      unwrapIpc(await invoke('fs:save-file', { filePath, content: jsx }))
       addToast(`Exported to ${filePath}`, 'success')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
@@ -138,12 +198,22 @@ export const UIBuilderCanvas: React.FC = () => {
   }
 
   const handleExportHTML = async () => {
-    const html = renderComponentTree(uiComponents)
+    let html = renderComponentTree(uiComponents)
     try {
-      const rootPath = await invoke<string>('app:get-root-path')
-      const filePath = `${rootPath}/preview.html`
-      await invoke('fs:save-file', { filePath, content: html })
-      addToast(`Exported to ${filePath}`, 'success')
+      if (stitchAvailable && stitchScreenId && projectId) {
+        const htmlResult = await invoke<{ html: string, css: string }>('stitch:extract-design', { projectId, screenId: stitchScreenId })
+        const htmlData = unwrapIpc<{ html: string, css: string }>(htmlResult)
+        if (htmlData) {
+          html = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n${htmlData.css}\n</style>\n</head>\n<body>\n${htmlData.html}\n</body>\n</html>`
+        }
+      }
+
+      const rootDir = unwrapIpc<string>(await invoke('app:get-root-path')) ?? ''
+      const filePath2 = `${rootDir}/preview.html`
+
+      unwrapIpc(await invoke('fs:save-file', { filePath: filePath2, content: html }))
+
+      addToast(`Exported to ${filePath2}`, 'success')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
       addToast(`Export failed: ${message}`, 'error')
@@ -329,7 +399,109 @@ Identify visual discrepancies, missing tokens, and suggest the minimum changes n
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#050505] overflow-hidden" ref={containerRef}>
+      {/* Stitch Toolbar */}
+      {stitchAvailable && (
+        <div className="h-12 border-b border-zinc-800 bg-[#080808] flex items-center px-4 justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (!projectId) return
+                const canvasContext = uiComponents.length > 0
+                  ? `${uiComponents.length} component(s): ${uiComponents.map(c => c.type).join(', ')}`
+                  : 'Empty canvas'
+                const seededPrompt = `Generate UI. Canvas: ${canvasContext}. Device: ${deviceType}.`
+                import('../../../store/commandRegistry').then(({ commandRegistry }) => {
+                  commandRegistry.unregisterCommand('stitch-generate')
+                  commandRegistry.registerCommand({
+                    id: 'stitch-generate',
+                    label: `Stitch: Generate — ${canvasContext}`,
+                    action: () => {
+                      setIsGenerating(true)
+                      invoke('stitch:generate', { projectId, prompt: seededPrompt, deviceType })
+                        .then(async (result) => {
+                          const data = unwrapIpc<{ screenId: string }>(result)
+                          if (data?.screenId) {
+                            setStitchScreenId(data.screenId)
+                            addToast('Screen generated successfully', 'success')
+                            const htmlData = unwrapIpc<{ html: string, css: string }>(
+                              await invoke('stitch:extract-design', { projectId, screenId: data.screenId })
+                            )
+                            if (htmlData) {
+                              setStitchGhostHtml(htmlData.html)
+                              setStitchGhostCss(htmlData.css)
+                            }
+                          }
+                        })
+                        .catch(() => {})
+                        .finally(() => setIsGenerating(false))
+                    }
+                  })
+                  window.ipcRenderer.send('layout:open-palette')
+                })
+              }}
+              disabled={isGenerating}
+              className="px-3 py-1.5 text-xs font-medium text-black bg-copernicus-phosphor hover:bg-copernicus-phosphor/80 rounded disabled:opacity-50"
+            >
+              {isGenerating ? 'Generating...' : 'Generate with Stitch'}
+            </button>
+            {stitchScreenId && (
+              <button
+                onClick={() => setShowVariantsPanel(!showVariantsPanel)}
+                disabled={isGenerating}
+                className="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 disabled:opacity-50"
+              >
+                Variants
+              </button>
+            )}
+            {stitchScreenId && (
+              <button
+                onClick={() => {
+                  setStitchScreenId(null)
+                  setStitchGhostHtml(null)
+                  setStitchGhostCss(null)
+                }}
+                disabled={isGenerating}
+                className="px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white"
+              >
+                Clear Screen
+              </button>
+            )}
+          </div>
+          {stitchScreenId && (
+            <div className="text-xs text-zinc-500 font-mono">
+              Screen ID: {stitchScreenId}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex-1 flex overflow-hidden relative">
+        {showVariantsPanel && stitchAvailable && stitchScreenId && projectId && (
+          <StitchVariantPanel
+            projectId={projectId}
+            baseScreenId={stitchScreenId}
+            onClose={() => setShowVariantsPanel(false)}
+            onSelectVariant={async (newScreenId) => {
+              setStitchScreenId(newScreenId)
+              setShowVariantsPanel(false)
+              addToast('Variant applied', 'success')
+
+              // Fetch new html for the selected variant
+              try {
+                const htmlData = unwrapIpc<{ html: string, css: string }>(
+                  await invoke('stitch:extract-design', { projectId, screenId: newScreenId })
+                )
+                if (htmlData) {
+                  setStitchGhostHtml(htmlData.html)
+                  setStitchGhostCss(htmlData.css)
+                }
+              } catch (e) {
+                // ignore
+              }
+            }}
+          />
+        )}
+
         {/* Palette */}
         {paletteOpen && (
           <div className="w-44 border-r border-zinc-800 bg-[#080808] flex flex-col overflow-y-auto no-scrollbar animate-in slide-in-from-left duration-200">
@@ -422,15 +594,31 @@ Identify visual discrepancies, missing tokens, and suggest the minimum changes n
         )}
       </div>
 
-      {/* Ghost Suggestion Display */}
-      {(stitchGhostHtml || stitchGhostCss) && (
-        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-          {stitchGhostHtml && (
-            <div dangerouslySetInnerHTML={{ __html: stitchGhostHtml }} />
-          )}
-          {stitchGhostCss && (
-            <style dangerouslySetInnerHTML={{ __html: stitchGhostCss }} />
-          )}
+      {/* Edit Prompt Bar */}
+      {stitchAvailable && stitchScreenId && (
+        <div className="h-12 border-t border-zinc-800 bg-[#080808] shrink-0 flex items-center px-4 relative z-20">
+          <input
+            type="text"
+            value={editPrompt}
+            onChange={(e) => setEditPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleStitchEdit()
+            }}
+            disabled={isGenerating}
+            placeholder="Type a refinement and press Enter to edit the screen..."
+            className="w-full bg-zinc-900 border border-zinc-700 text-sm text-white rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-copernicus-phosphor disabled:opacity-50"
+          />
+        </div>
+      )}
+
+      {/* Stitch Active IFrame Overlay */}
+      {stitchScreenId && stitchGhostHtml && (
+        <div className="absolute inset-0 z-40 bg-white">
+          <iframe
+            title={`Stitch Screen ${stitchScreenId}`}
+            className="w-full h-full border-none"
+            srcDoc={`<!DOCTYPE html><html><head><style>${stitchGhostCss || ''}</style></head><body>${stitchGhostHtml}</body></html>`}
+          />
         </div>
       )}
 

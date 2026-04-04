@@ -67,6 +67,8 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   setStitchImportOpen: (open: boolean) => void
   stitchVerifyOpen: boolean
   setStitchVerifyOpen: (open: boolean) => void
+  stitchScreenId: string | null
+  setStitchScreenId: (id: string | null) => void
   spotlightPane: PaneId | null
   spotlightLane: string | null
   activeStoryId: string | null
@@ -242,6 +244,8 @@ stitchTokens: null,
       setStitchImportOpen: (open) => set({ stitchImportOpen: open }),
       stitchVerifyOpen: false,
       setStitchVerifyOpen: (open) => set({ stitchVerifyOpen: open }),
+      stitchScreenId: null,
+      setStitchScreenId: (id) => set({ stitchScreenId: id }),
       isFlipped: {
         sidebar: false,
         chat: false,
