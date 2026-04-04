@@ -103,6 +103,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
+| #580 | Wizard Auth Provider Step Redesign | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -124,7 +125,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #586 | Skills Section Ipc Violation | COMPLETE | N/A |
 | #587 | Templates Section Ux And Content | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
-| #580 | Wizard Auth Provider Step Redesign | DRAFT | N/A |
 | #588 | Unify Provider Auth Surface | DRAFT | N/A |
 | #589 | Notebooklm Webview Embed | DRAFT | N/A |
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
@@ -135,7 +135,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #626 | Provider Registry Abstraction | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -534,6 +533,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
+| #626 | Provider Registry Abstraction | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
