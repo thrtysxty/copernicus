@@ -56,6 +56,20 @@ export const RISK_PATTERNS: RiskPattern[] = [
     label: 'Force push to main/master',
     detail: 'Agent is force-pushing to a protected branch.',
   },
+  {
+    id: 'zsh-equals-exec',
+    severity: 'CRITICAL',
+    pattern: /=(?:curl|wget|bash|sh|zsh|python3?|ruby|node|nc|ncat|netcat)\b/,
+    label: 'Zsh equals-expansion execution bypass',
+    detail: '=cmd syntax executes the cmd binary via Zsh PATH lookup, bypassing curl/wget patterns.',
+  },
+  {
+    id: 'backtick-subshell',
+    severity: 'CRITICAL',
+    pattern: /`[^`]{1,500}`/,
+    label: 'Backtick subshell execution',
+    detail: 'Backtick form of $() — executes a subshell command.',
+  },
 
   // HIGH — potentially harmful, requires attention
   {
@@ -99,6 +113,27 @@ export const RISK_PATTERNS: RiskPattern[] = [
     pattern: /git\s+remote\s+add\s+/,
     label: 'New git remote added',
     detail: 'Agent is adding a new git remote. Verify the destination.',
+  },
+  {
+    id: 'process-substitution',
+    severity: 'HIGH',
+    pattern: /(?:source|\.) +<\(/,
+    label: 'source <() process substitution',
+    detail: 'Sourcing from a process substitution executes arbitrary code from a command.',
+  },
+  {
+    id: 'ifs-manipulation',
+    severity: 'HIGH',
+    pattern: /\bIFS\s*=/,
+    label: 'IFS variable manipulation',
+    detail: 'Redefining IFS can split blocked command tokens to evade pattern detection.',
+  },
+  {
+    id: 'ansi-c-quoting',
+    severity: 'HIGH',
+    pattern: /\$'[^']*'/,
+    label: "ANSI-C quoting ($'...')",
+    detail: "ANSI-C quoted strings can inject escape sequences or splice blocked command names.",
   },
 
   // MEDIUM — noteworthy, probably fine
@@ -159,14 +194,20 @@ export class PatternDetector extends EventEmitter {
   }
 
   public detect(agentId: string, chunk: string): void {
+    // Normalize input to prevent Unicode-based bypasses
+    // Strip Unicode zero-width characters and directional overrides
+    const normalizedChunk = chunk
+      .replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, '')
+      .replace(/[\u202A-\u202E\u2066-\u2069]/g, '');
+
     for (const pattern of RISK_PATTERNS) {
-      if (pattern.pattern.test(chunk)) {
+      if (pattern.pattern.test(normalizedChunk)) {
         const alert: SecurityAlert = {
           ts: new Date().toISOString(),
           agent: agentId,
           patternId: pattern.id,
           severity: pattern.severity,
-          context: chunk.trim().substring(0, 200), // Limit context size
+          context: chunk.trim().substring(0, 200), // Limit context size (use raw chunk for audit)
         };
 
         this.emit('alert', alert);
