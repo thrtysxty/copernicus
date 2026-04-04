@@ -76,7 +76,7 @@ OPENROUTER_API = "https://openrouter.ai/api/v1"
 #   mistralai/mistral-small-3.2-24b-instruct — $0.09 in / $0.25 out, 256k ctx
 #   mistralai/devstral-2512              — $0.40 in / $2.00 out, 262k ctx, agentic coder
 #   minimax/minimax-m2.5                 — $0.90 in / $3.60 out, strong structured output
-REVIEW_MODEL_OPENROUTER = os.environ.get("REVIEW_MODEL_OPENROUTER", "qwen/qwen3.6-plus-preview:free")
+REVIEW_MODEL_OPENROUTER = os.environ.get("REVIEW_MODEL_OPENROUTER", "mistralai/devstral-small")
 
 # Dictionary to store last known state of Gemini log files for inactivity detection
 _gemini_log_states = {}
@@ -206,9 +206,10 @@ def _write_episode(session_id: str, conn: sqlite3.Connection) -> None:
     embedding: list | None = None
     try:
         import openai as _openai  # noqa: PLC0415
-        api_key = os.environ.get("ANTHROPIC_API_KEY") or openrouter_api_key()
-        base_url = "https://api.anthropic.com/v1" if os.environ.get("ANTHROPIC_API_KEY") else OPENROUTER_API
-        emb_client = _openai.OpenAI(api_key=api_key, base_url=base_url)
+        emb_client = _openai.OpenAI(
+            api_key=openrouter_api_key(),
+            base_url="https://openrouter.ai/api/v1"
+        )
         emb_resp = emb_client.embeddings.create(model="text-embedding-3-small", input=embed_text)
         embedding = emb_resp.data[0].embedding
     except Exception as e:
@@ -839,6 +840,7 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                             (pr_state, session_id)
                         )
                         conn.commit()
+                        _write_episode(session_id, conn)
                     elif row["reviewed"]:
                         last_reviewed_dt = datetime.fromisoformat(row["reviewed"].replace("Z", "+00:00"))
                         time_since_review = (datetime.now(timezone.utc) - last_reviewed_dt).total_seconds()
@@ -903,6 +905,7 @@ def process_session(row: sqlite3.Row, key: str, conn: sqlite3.Connection, skip_r
                         (merge_ts, final_verdict["merge_sha"], merge_ts, session_id)
                     )
                     stamp_story_id(str(story), row["dispatched"], merge_ts)
+                    _write_episode(session_id, conn)
                 else:
                     log.warning(f"  ❌ Merge failed: {err}")
 

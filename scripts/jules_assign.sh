@@ -263,6 +263,38 @@ fi
 
 echo "📖 Building prompt for: $STORY_TITLE"
 
+# ── Retrieve Episodes ──────────────────────────────────────────────────────────
+echo "🔍 Retrieving relevant past episodes..."
+EPISODES_JSON=$(python3 "$REPO_ROOT/scripts/retrieve_episodes.py" "$STORY_TITLE" --limit 3 2>/dev/null || echo "[]")
+
+EPISODES_TEXT=""
+if [ "$EPISODES_JSON" != "[]" ] && [ -n "$EPISODES_JSON" ]; then
+  EPISODES_TEXT=$(python3 -c "
+import sys, json
+try:
+    episodes = json.loads(sys.stdin.read())
+    if episodes:
+        print('## Relevant Past Episodes')
+        for ep in episodes:
+            story_id = ep.get('story_id', 'Unknown')
+            outcome = ep.get('outcome', 'UNKNOWN')
+            score = ep.get('quality_score', 0)
+            reasons = ', '.join(ep.get('blocked_reasons', [])) or 'None'
+            files = ', '.join(ep.get('files_touched', [])) or 'None'
+            print(f'- Story {story_id}: Outcome={outcome}, Quality={score:.1f}')
+            print(f'  Blocked Reasons: {reasons}')
+            print(f'  Files Touched: {files}')
+except Exception:
+    pass
+" <<< "$EPISODES_JSON")
+fi
+
+if [ -n "$EPISODES_TEXT" ]; then
+  echo "✓ Found relevant past episodes to inject."
+else
+  echo "  No relevant past episodes found."
+fi
+
 # ── Build Prompt ───────────────────────────────────────────────────────────────
 
 TMPFILE=$(mktemp /tmp/jules-prompt.XXXXXX)
@@ -300,6 +332,15 @@ printf '%s
 ' "$(printf '━%.0s' {1..54})" >> "$TMPFILE"
 printf '%s
 ' "$STORY_CONTENT" >> "$TMPFILE"
+
+if [ -n "$EPISODES_TEXT" ]; then
+  printf '
+%s
+' "$(printf '━%.0s' {1..54})" >> "$TMPFILE"
+  printf '%s
+' "$EPISODES_TEXT" >> "$TMPFILE"
+fi
+
 printf '
 %s
 ' "$(printf '━%.0s' {1..54})" >> "$TMPFILE"

@@ -288,6 +288,31 @@ export const SCHEMA = {
   )`,
   workflow_snapshots: `CREATE TABLE IF NOT EXISTS workflow_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workflow_id TEXT NOT NULL, node_id TEXT NOT NULL, git_sha TEXT NOT NULL, workflow_state TEXT NOT NULL DEFAULT '{}', captured_at TEXT DEFAULT (datetime('now')))`,
   workflow_snapshots_idx: `CREATE INDEX IF NOT EXISTS idx_ws_workflow_id ON workflow_snapshots(workflow_id)`,
+  episodes: `
+    CREATE TABLE IF NOT EXISTS episodes (
+      episode_id     TEXT PRIMARY KEY,
+      timestamp      TEXT NOT NULL,
+      story_id       TEXT REFERENCES stories(id),
+      agent          TEXT NOT NULL DEFAULT 'jules',
+      task           TEXT NOT NULL DEFAULT '',
+      approach       TEXT NOT NULL DEFAULT '',
+      outcome        TEXT NOT NULL DEFAULT '',
+      duration_ms    INTEGER DEFAULT 0,
+      quality_score  REAL NOT NULL DEFAULT 0.0,
+      revision_count INTEGER NOT NULL DEFAULT 0,
+      blocked_reasons TEXT NOT NULL DEFAULT '[]',
+      files_touched  TEXT NOT NULL DEFAULT '[]',
+      memory_ids     TEXT NOT NULL DEFAULT '[]',
+      notes          TEXT NOT NULL DEFAULT '',
+      commit_sha     TEXT DEFAULT NULL,
+      embedding_id   TEXT DEFAULT NULL
+    );
+  `,
+  episodes_vec: `
+    CREATE VIRTUAL TABLE IF NOT EXISTS episodes_vec USING vec0(
+      embedding FLOAT[1536]
+    );
+  `,
   agent_worktrees: `CREATE TABLE IF NOT EXISTS agent_worktrees (
     id           TEXT PRIMARY KEY,
     branch       TEXT NOT NULL UNIQUE,
