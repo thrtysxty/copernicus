@@ -133,7 +133,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #573 | Episodic Memory | APPROVED FOR IMPLEMENTATION | P1 |
 | #619 | Ghost Tint Active State Css Violations | APPROVED FOR IMPLEMENTATION | P2 |
-| #623 | Openrouter Sdk Provider | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -527,6 +526,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #565 | Kb Activity Bar View Scaffold | IN PROGRESS | P1 |
 | #606 | Project Target Device Configuration | IN PROGRESS | P1 |
 | #622 | Replace Bitnet With Gemma4 Mlx Local Model | IN PROGRESS | P1 |
+| #623 | Openrouter Sdk Provider | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
