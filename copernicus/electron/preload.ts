@@ -112,7 +112,7 @@ const SEND_CHANNELS = new Set([
   // Jules (Story 161)
   'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session', 'jules:list-sources', 'jules:approve-plan', 'jules:list-activities',
   // Local Model (Story 361)
-  'localmodel:start', 'localmodel:stop', 'localmodel:status',
+  'localmodel:start', 'localmodel:stop', 'localmodel:status', 'localmodel:is-cached',
   // Gemini PTY agent (Story 195)
   'gemini:spawn', 'gemini:send-prompt', 'gemini:close', 'gemini:status',
   // Touch Bar
