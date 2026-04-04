@@ -47,6 +47,7 @@ import { registerJulesHandlers } from './jules-handlers'
 import * as notebooklmHandlers from './notebooklm-handlers'
 import { registerDaemonHandlers } from './daemon-handlers'
 import { registerWizardPtyHandlers } from './wizard-pty-handlers'
+import { registerProjectHandlers } from './project-handlers'
 
 
 export async function registerAllIpcHandlers(
@@ -120,6 +121,7 @@ export async function registerAllIpcHandlers(
   notebooklmHandlers.register(deps)
   registerDaemonHandlers()
   registerWizardPtyHandlers()
+  registerProjectHandlers()
 
   ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {
     const projectId = fsManager.getRootPath()

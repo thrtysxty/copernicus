@@ -2,7 +2,7 @@ import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
-         ShieldCheck, Key, Zap, Github, Layout, Sparkles, Loader2 } from 'lucide-react';
+         ShieldCheck, Key, Zap, Github, Layout, Sparkles, Loader2, Monitor } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc, IpcResult } from '../../types/ipc'
 import GenesisWizard from '../genesis/GenesisWizard';
@@ -36,6 +36,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [genesisAudience, _setGenesisAudience] = useState('');
   const [genesisCoreValue, _setGenesisCoreValue] = useState('');
   const [genesisStack, _setGenesisStack] = useState('react-electron');
+  const [genesisTargetDevice, setGenesisTargetDevice] = useState('AGNOSTIC');
   const [genesisProgress, setGenesisProgress] = useState<'pending' | 'complete' | 'failed' | null>(null);
 
   const [showGenesisModal, setShowGenesisModal] = useState(false);
@@ -224,6 +225,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       stack: genesisStack,
       repoPath: fullPath,
       isNewRepo: true,
+      targetDevice: genesisTargetDevice,
     }).then(res => {
       if (!res.ok) {
         setGenesisProgress('failed');
@@ -992,6 +994,19 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       <button onClick={startGenesisBackground} className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-colors">Retry</button>
                     </div>
                   )}
+                  <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-copernicus-phosphor">
+                        <Monitor size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Target Device</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {(['MOBILE', 'DESKTOP', 'TABLET', 'AGNOSTIC'] as const).map(device => (
+                          <button key={device} onClick={() => setGenesisTargetDevice(device)} className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest transition-all border ${genesisTargetDevice === device ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black text-white' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>{device}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                   <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-6 space-y-4 shadow-2xl">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-copernicus-phosphor">

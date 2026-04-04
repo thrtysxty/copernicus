@@ -97,4 +97,23 @@ describe('StateLedger', () => {
     // Re-open to prevent double-close in afterEach
     ledger = new StateLedger(testDbPath);
   });
+
+  describe('Project Management', () => {
+    it('should manage target_device for projects', () => {
+      ledger.upsertProject({
+        id: 'owner/repo',
+        path: '/tmp/repo',
+        billing_mode: 'CAPEX',
+        target_device: 'MOBILE',
+      });
+
+      let p = ledger.getProjectByPath('/tmp/repo');
+      expect(p).not.toBeNull();
+      expect(p?.target_device).toBe('MOBILE');
+
+      ledger.updateProjectTargetDevice('/tmp/repo', 'TABLET');
+      p = ledger.getProjectByPath('/tmp/repo');
+      expect(p?.target_device).toBe('TABLET');
+    });
+  });
 });

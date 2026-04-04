@@ -42,6 +42,7 @@ export const SCHEMA = {
       path          TEXT UNIQUE NOT NULL,    -- local filesystem path
       billing_mode  TEXT DEFAULT 'NONE',    -- 'CAPEX', 'OPEX', 'NONE'
       billing_details TEXT,                 -- JSON string for specific billing info
+      target_device TEXT NOT NULL DEFAULT 'AGNOSTIC',
       created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
     );

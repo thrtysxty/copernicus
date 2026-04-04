@@ -76,6 +76,7 @@ export interface ProjectRecord {
   path: string;          // local filesystem path
   billing_mode: string;  // 'CAPEX', 'OPEX', 'NONE'
   billing_details?: string; // JSON string
+  target_device?: string;   // 'MOBILE' | 'DESKTOP' | 'TABLET' | 'AGNOSTIC'
   created_at?: string;
   updated_at?: string;
 }
@@ -191,6 +192,7 @@ export class StateLedger {
 
     // Projects & Epics (Story 211)
     this.db.exec(SCHEMA.projects);
+    try { this.db.exec("ALTER TABLE projects ADD COLUMN target_device TEXT NOT NULL DEFAULT 'AGNOSTIC'") } catch (e) { /* column already exists */ }
     this.db.exec(SCHEMA.epics);
 
     // Dev Sessions (from DevtimeManager integration)
@@ -524,14 +526,23 @@ export class StateLedger {
 
   upsertProject(p: ProjectRecord): void {
     this.db.prepare(`
-      INSERT INTO projects (id, path, billing_mode, billing_details, updated_at)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO projects (id, path, billing_mode, billing_details, target_device, updated_at)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(path) DO UPDATE SET
         id = excluded.id,
         billing_mode = excluded.billing_mode,
         billing_details = excluded.billing_details,
+        target_device = excluded.target_device,
         updated_at = CURRENT_TIMESTAMP
-    `).run(p.id, p.path, p.billing_mode, p.billing_details ?? null)
+    `).run(p.id, p.path, p.billing_mode, p.billing_details ?? null, p.target_device ?? 'AGNOSTIC')
+  }
+
+  updateProjectTargetDevice(path: string, targetDevice: string): void {
+    this.db.prepare(`
+      UPDATE projects
+      SET target_device = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE path = ?
+    `).run(targetDevice, path)
   }
 
   getProjectByPath(path: string): ProjectRecord | null {

@@ -111,6 +111,10 @@ Produce 3-5 stories. Stories should be the minimum viable first sprint.`;
       // Story 288: Call ScaffoldRunner
       await this.scaffoldRunner.run(payload, synthesisResult);
 
+      // Story 606: Persist target device
+      const { stateLedger } = require('../db/state-ledger');
+      stateLedger.updateProjectTargetDevice(payload.repoPath, payload.targetDevice ?? 'AGNOSTIC');
+
       return { ok: true, epicId, storyIds };
     } catch (err: any) {
       log.error(`[GenesisRunner] Failed to populate Kanban or scaffold: ${err.message}`);

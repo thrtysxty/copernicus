@@ -6,6 +6,7 @@ export interface GenesisPayload {
   stack: string;
   repoPath: string;
   isNewRepo: boolean;
+  targetDevice?: string;
 }
 
 export interface SynthesisResult {
