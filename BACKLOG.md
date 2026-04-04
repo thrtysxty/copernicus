@@ -130,7 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #192 | Console Log Cleanup | APPROVED FOR IMPLEMENTATION | P2 |
 | #605 | Ollama Native Coder Agent With Tool Loop | APPROVED FOR IMPLEMENTATION | P1 |
 | #573 | Episodic Memory | APPROVED FOR IMPLEMENTATION | P1 |
 | #619 | Ghost Tint Active State Css Violations | APPROVED FOR IMPLEMENTATION | P2 |
@@ -161,6 +160,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #189 | Lsp Monaco Chatpanel Wiring | COMPLETE | P1 |
 | #190 | Mcp Settings Tab | COMPLETE | P2 |
 | #191 | Context Snapshots Project Memory | COMPLETE | P1 |
+| #192 | Console Log Cleanup | COMPLETE | P2 |
 | #193 | Accessibility Pass | COMPLETE | P2 |
 | #194 | Flask Backend Scaffold | COMPLETE | P1 |
 | #195 | Gemini Cli Pty Agent | COMPLETE | P1 |
