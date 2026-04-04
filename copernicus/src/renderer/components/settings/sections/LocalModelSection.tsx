@@ -17,9 +17,11 @@ export const LocalModelSection: React.FC = () => {
 
   const fetchStatus = async () => {
     try {
-      const result = await invoke<{ running: boolean, port: number | null }>('localmodel:status');
-      const data = unwrapIpc<{ running: boolean, port: number | null }>(result);
-      if (data) setStatus(data);
+      const result = await invoke<any>('localmodel:status');
+      if (result.ok) {
+        const data = unwrapIpc<{ running: boolean, port: number | null }>(result);
+        if (data) setStatus(data);
+      }
     } catch (e) {
       log.error('Failed to fetch local model status', e);
     }
@@ -34,14 +36,16 @@ export const LocalModelSection: React.FC = () => {
   const handleStart = async () => {
     setLoading(true);
     try {
-      const result = await invoke<{ running: boolean, port: number | null }>('localmodel:start');
-      const data = unwrapIpc<{ running: boolean, port: number | null }>(result);
-      if (data) {
-        setStatus(data);
-        if (data.running) {
-          addToast('Local model server started successfully', 'success');
-        } else {
-          addToast('BitNet server failed to start. Check that llama-server binary is present in resources/.', 'error');
+      const result = await invoke<any>('localmodel:start');
+      if (result.ok) {
+        const data = unwrapIpc<{ running: boolean, port: number | null }>(result);
+        if (data) {
+          setStatus(data);
+          if (data.running) {
+            addToast('Local model server started successfully', 'success');
+          } else {
+            addToast('Local model failed to start. Ensure Python and mlx_lm are installed (pip install mlx_lm).', 'error');
+          }
         }
       }
     } catch (e: unknown) {
@@ -55,11 +59,13 @@ export const LocalModelSection: React.FC = () => {
   const handleStop = async () => {
     setLoading(true);
     try {
-      const result = await invoke<{ running: boolean, port: number | null }>('localmodel:stop');
-      const data = unwrapIpc<{ running: boolean, port: number | null }>(result);
-      if (data) {
-        setStatus(data);
-        addToast('Local model server stopped', 'info');
+      const result = await invoke<any>('localmodel:stop');
+      if (result.ok) {
+        const data = unwrapIpc<{ running: boolean, port: number | null }>(result);
+        if (data) {
+          setStatus(data);
+          addToast('Local model server stopped', 'info');
+        }
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -89,7 +95,7 @@ export const LocalModelSection: React.FC = () => {
                 <Zap size={20} className={status.running ? 'animate-pulse' : ''} />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-tight">BitNet B1.58 2B</h4>
+                <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-tight">Gemma 4 e4b (MLX)</h4>
                 <div className="flex items-center gap-2 mt-1">
                   <div className={`w-1.5 h-1.5 rounded-full ${status.running ? 'bg-copernicus-phosphor shadow-[0_0_5px_rgba(74,222,128,0.5)]' : 'bg-red-500'}`} />
                   <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
@@ -105,7 +111,7 @@ export const LocalModelSection: React.FC = () => {
               className={`px-6 py-2 rounded text-[10px] font-bold uppercase transition-all flex items-center gap-2 border ${
                 status.running 
                   ? 'bg-red-950/20 border-red-900/30 text-red-400 hover:bg-red-900/30' 
-                  : 'bg-copernicus-phosphor/10 border-copernicus-phosphor/30 text-copernicus-phosphor hover:bg-copernicus-phosphor/20'
+                  : 'bg-copernicus-phosphor text-[#050505] rounded-none hover:brightness-110 border-transparent'
               } disabled:opacity-50`}
             >
               {loading ? (
@@ -119,8 +125,7 @@ export const LocalModelSection: React.FC = () => {
 
           <div className="px-6 py-3 bg-zinc-900/30 border-t border-zinc-800/50">
             <p className="text-[9px] text-zinc-500 font-mono italic leading-relaxed">
-              This model runs entirely on your CPU and requires no internet connection. 
-              It is optimized for efficiency and is registered as an Ollama-compatible provider.
+              Google Gemma 4 (8B, 128K context). GPU-accelerated via Metal on Apple Silicon. Downloaded once, runs offline.
             </p>
           </div>
         </div>

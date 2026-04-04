@@ -14,4 +14,8 @@ export function register() {
   ipcMain.handle('localmodel:status', () => 
     handleIpc('localmodel:status', [], () => localModelManager.getStatus())
   );
+
+  ipcMain.handle('localmodel:is-cached', () =>
+    handleIpc('localmodel:is-cached', [], () => localModelManager.isModelCached())
+  );
 }

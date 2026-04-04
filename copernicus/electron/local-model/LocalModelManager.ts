@@ -1,4 +1,5 @@
-import { app } from 'electron';
+import * as os from 'os';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as net from 'net';
 import { ChildProcess, spawn } from 'child_process';
@@ -10,6 +11,15 @@ export class LocalModelManager {
   private childProcess: ChildProcess | null = null;
   private port: number | null = null;
 
+  public isModelCached(): boolean {
+    try {
+      const cacheDir = path.join(os.homedir(), '.cache', 'huggingface', 'hub', 'models--mlx-community--gemma-4-8b-it-4bit');
+      return fs.existsSync(cacheDir) && fs.readdirSync(cacheDir).length > 0;
+    } catch (e) {
+      return false;
+    }
+  }
+
   public async start(): Promise<{ running: boolean, port: number | null }> {
     if (this.childProcess) {
       return this.getStatus();
@@ -18,16 +28,11 @@ export class LocalModelManager {
     try {
       this.port = await this.findEphemeralPort();
       
-      const resourcesDir = app.isPackaged
-        ? process.resourcesPath
-        : path.join(app.getAppPath(), '..', 'resources');
-      const binaryPath = path.join(resourcesDir, 'llama-server');
-      const modelPath  = path.join(resourcesDir, 'models', 'bitnet-b158-2b.gguf');
-      
       log.info(`Starting local model server on port ${this.port}...`);
       
-      this.childProcess = spawn(binaryPath, [
-        '--model', modelPath,
+      this.childProcess = spawn('python3', [
+        '-m', 'mlx_lm.server',
+        '--model', 'mlx-community/gemma-4-8b-it-4bit',
         '--port', String(this.port),
         '--host', '127.0.0.1'
       ], {
@@ -47,19 +52,6 @@ export class LocalModelManager {
         this.port = null;
       });
 
-      // Register the model in the registry
-      modelRegistry.registerModel({
-        id: 'bitnet-b158-2b',
-        provider: 'ollama', // Using ollama provider for compatibility
-        name: 'BitNet B1.58 2B (Local)',
-        contextWindow: 4096,
-        costPer1kIn: 0,
-        costPer1kOut: 0
-      });
-
-      // Update authManager to point ollama at our local server
-      authManager.setBaseUrl('ollama', `http://localhost:${this.port}`);
-
       // Poll /health until server is ready (max 30s)
       const maxAttempts = 60;
       for (let i = 0; i < maxAttempts; i++) {
@@ -68,7 +60,19 @@ export class LocalModelManager {
         }
         try {
           const res = await fetch(`http://127.0.0.1:${this.port}/health`);
-          if (res.ok) break;
+          if (res.ok) {
+            // Register model and update authManager only after server is confirmed healthy
+            modelRegistry.registerModel({
+              id: 'gemma4-e4b',
+              provider: 'ollama', // Using ollama provider for compatibility
+              name: 'Gemma 4 e4b (MLX)',
+              contextWindow: 131072,
+              costPer1kIn: 0,
+              costPer1kOut: 0
+            });
+            authManager.setBaseUrl('ollama', `http://localhost:${this.port}`);
+            break;
+          }
         } catch {
           // not ready yet
         }

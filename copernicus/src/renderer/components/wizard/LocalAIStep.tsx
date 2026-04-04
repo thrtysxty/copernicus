@@ -16,33 +16,45 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
   const [isStartingBundled, setIsStartingBundled] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
   const [activeModelName, setActiveModelName] = useState('');
+  const [isCached, setIsCached] = useState(false);
 
   useEffect(() => {
+    // Check if model is cached
+    invoke('localmodel:is-cached')
+      .then(raw => { setIsCached(unwrapIpc<boolean>(raw) ?? false); })
+      .catch(() => {});
+
     // Check if Ollama is reachable
-    invoke<any>('workflow:ollama-status').then(res => {
-      const status = unwrapIpc<any>(res);
-      if (status?.ok || status === true) {
-        setOllamaReachable(true);
-        // If reachable, fetch models
-        invoke<any>('models:list-ollama').then(modelsRes => {
-          const mData = unwrapIpc<any>(modelsRes);
-          if (mData?.ok && mData.models?.length > 0) {
-            setOllamaModels(mData.models);
-            setSelectedModel(mData.models[0].id);
-          }
-        });
-      }
-    }).catch(() => setOllamaReachable(false));
+    invoke('workflow:ollama-status')
+      .then(raw => {
+        const status = unwrapIpc<any>(raw);
+        if (status?.ok || status === true) {
+          setOllamaReachable(true);
+          // If reachable, fetch models
+          invoke('models:list-ollama')
+            .then(modelsRaw => {
+              const mData = unwrapIpc<any>(modelsRaw);
+              if (mData?.models?.length > 0) {
+                setOllamaModels(mData.models);
+                setSelectedModel(mData.models[0].id);
+              }
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => setOllamaReachable(false));
   }, [invoke]);
 
   const handleUseBundled = async () => {
     setIsStartingBundled(true);
     try {
-      const res = await invoke<{ running: boolean, port: number | null }>('localmodel:start');
-      const data = unwrapIpc<{ running: boolean, port: number | null }>(res);
-      if (data?.running) {
-        setActiveModelName('BitNet B1.58 2B');
-        setIsConfigured(true);
+      const res = await invoke<any>('localmodel:start');
+      if (res.ok) {
+        const data = unwrapIpc<{ running: boolean, port: number | null }>(res);
+        if (data?.running) {
+          setActiveModelName('Gemma 4 e4b (MLX)');
+          setIsConfigured(true);
+        }
       }
     } catch (e) {
       log.error('Failed to start bundled model', e);
@@ -130,7 +142,7 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
           </div>
         </div>
 
-        {/* BitNet card — always visible */}
+        {/* MLX card — always visible */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
             <div className="flex items-center gap-3">
@@ -141,10 +153,9 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
           </div>
           <div className="space-y-4">
             <div className="p-4 bg-zinc-900/30 border border-zinc-800 rounded-lg">
-              <h4 className="text-xs font-bold text-white uppercase mb-1">BitNet B1.58 2B</h4>
+              <h4 className="text-xs font-bold text-white uppercase mb-1">Gemma 4 e4b (MLX)</h4>
               <p className="text-[10px] text-zinc-500 leading-relaxed font-mono italic">
-                An efficient 2B parameter model optimized for local CPU inference.
-                Ships with COPERNICUS and starts immediately.
+                Google Gemma 4 (8B, 128K context). GPU-accelerated via Metal on Apple Silicon. Downloaded once, runs offline.
               </p>
             </div>
             <button
@@ -152,8 +163,10 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
               disabled={isStartingBundled}
               className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 flex items-center justify-center gap-2"
             >
-              {isStartingBundled ? <Activity size={14} className="animate-spin" /> : <PlayIcon />}
-              {isStartingBundled ? 'Starting Inference Server...' : 'Start Bundled Model'}
+              {isStartingBundled ? <Activity size={14} className="animate-spin" /> : (!isCached ? null : <PlayIcon />)}
+              {isStartingBundled
+                ? (isCached ? 'Starting Inference Server...' : 'Downloading model… (~9.6 GB)')
+                : (isCached ? 'Start Gemma 4' : 'Download Gemma 4 e4b')}
             </button>
           </div>
         </div>

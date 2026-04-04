@@ -14,3 +14,4 @@ flask-limiter>=3.0.0
 pytest-mock>=3.10.0
 notebooklm-py>=0.1.2
 playwright>=1.40.0
+mlx-lm>=0.22.0
