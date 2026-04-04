@@ -10,6 +10,7 @@ import { FSManager } from '../fs-manager'
 import { WorkflowEngine } from '../workflow/engine'
 import { CodebaseIndexer } from '../codebase-indexer'
 import { HybridRetriever } from '../llm/hybrid-retrieval'
+import { LLMService } from '../llm/service'
 import { BrowserSession } from '../browser-session'
 import { JulesMonitor } from '../jules/monitor'
 import { JulesManager } from '../jules/jules-manager'
@@ -46,7 +47,7 @@ export interface IpcHandlerDeps {
   ptyManager: typeof ptyManager;
   socketManager: SocketManager;
   stateLedger: typeof stateLedger;
-  llmService: any; // TODO: Type this
+  llmService: LLMService;
   lspManager: LspManager;
   backendManager: BackendManager;
   julesClient: JulesClient;
