@@ -1,7 +1,7 @@
 import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
-  Activity, Brain, Settings, FolderPlus,
+  Activity, Brain, Settings, Wand2, BookOpen,
   Diff, GitBranch, FlaskConical, Bug,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
@@ -142,10 +142,17 @@ export const ActivityBar: React.FC = () => {
       {/* Bottom Tools */}
       <div className="flex flex-col items-center w-full pb-2">
         <NavItem
-          icon={FolderPlus}
+          icon={Wand2}
           label="New Project"
           testId="nav-genesis"
           onClick={() => useLayoutStore.getState().setShowGenesis(true)}
+        />
+        <NavItem
+          id="knowledge-base"
+          icon={BookOpen}
+          label="Knowledge Base"
+          testId="nav-kb"
+          onClick={() => setView('knowledge-base')}
         />
         <NavItem
           icon={Settings}

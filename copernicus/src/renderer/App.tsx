@@ -39,6 +39,7 @@ import { DebugPanel } from './components/debug/DebugPanel'
 import { SourceControlView } from './components/source-control/SourceControlView'
 import { MemoryReplayView } from './components/memory/MemoryReplayView'
 import { OutputView } from './components/output/OutputView'
+import { KnowledgeBaseView } from './components/kb/KnowledgeBaseView'
 
 // The following panels are still rendered directly as they are not part of the new tiled views
 import { SearchPanel } from './components/search/SearchPanel'
@@ -531,6 +532,7 @@ export default function App() {
             {activeView === 'search' && <SearchPanel />}
             {activeView === 'review' && <ReviewPanel />}
             {activeView === 'debug' && <DebugPanel />}
+            {activeView === 'knowledge-base' && <KnowledgeBaseView />}
             {(activeView === 'designer' || activeView === 'editor') && (
 
               <>
