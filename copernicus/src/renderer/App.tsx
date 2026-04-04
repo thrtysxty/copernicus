@@ -258,7 +258,7 @@ export default function App() {
       invoke<IpcResult<WorkspaceState>>('app:get-env-state').then((r) => {
         const envState = unwrapIpc<WorkspaceState>(r)
         if (envState?.drift?.length) {
-          console.warn('[workspace] State drift detected after switch:', envState.drift)
+          log.warn('[workspace] State drift detected after switch:', envState.drift)
         }
       }).catch(() => {})
 

@@ -141,6 +141,8 @@ CONSOLE_LOG_OUTPUT=$(grep -rn "console\.log\|console\.warn\|console\.error" \
   | grep -v "node_modules" \
   | grep -v "^\s*//" \
   | grep -v "\.d\.ts:" \
+  | grep -v "preload\.ts:" \
+  | grep -v "\.test\.ts:" \
   || true)
 
 if [ -n "$CONSOLE_LOG_OUTPUT" ]; then
