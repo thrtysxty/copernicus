@@ -41,7 +41,7 @@ export const ProvidersSection: React.FC = () => {
   const [status, setStatus] = useState<AuthStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
-  const [providers, setProviders] = useState<string[]>(['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama', 'ollama-cloud'])
+  const [providers, setProviders] = useState<string[]>([])
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [keyDraft, setKeyDraft] = useState<Record<string, string>>({})
@@ -88,9 +88,22 @@ export const ProvidersSection: React.FC = () => {
       const cliData = await invoke<any>('check-cli-tools')
       setClaudeCliAvailable(!!(cliData as any)?.claude)
 
+      // Fetch provider registry list
+      const providerListRes = await invoke<{ ok: boolean; data?: any[] }>('providers:list')
+      const registryProviders = providerListRes.ok && Array.isArray(providerListRes.data)
+        ? providerListRes.data.map(p => p.id)
+        : ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama', 'ollama-cloud']
+
       const settings = await invoke<any>('settings:load')
       const savedOrder = (settings as any)?.providerOrder
-      if (savedOrder && Array.isArray(savedOrder)) setProviders(savedOrder)
+
+      if (savedOrder && Array.isArray(savedOrder)) {
+        // Merge saved order with newly registered providers
+        const missing = registryProviders.filter(p => !savedOrder.includes(p))
+        setProviders([...savedOrder, ...missing])
+      } else {
+        setProviders(registryProviders)
+      }
 
       setNbChecking(true)
       const nbStatus = await invoke<{ credentialsCached: boolean }>('notebooklm:status')

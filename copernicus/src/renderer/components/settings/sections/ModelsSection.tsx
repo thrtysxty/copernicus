@@ -72,24 +72,53 @@ export const ModelsSection: React.FC = () => {
     setLoading(true)
     setError(false)
     try {
-      const [mCloud, mOllama, s, auth] = await Promise.all([
+      const [mCloud, mOllama, s, auth, providersRes] = await Promise.all([
         invoke<Model[]>('models:list'),
         invoke<{ ok: boolean, models: Model[] }>('models:list-ollama'),
         invoke<SettingsLoadResponse>('settings:load'),
-        invoke<AuthStatus[]>('auth:status')
+        invoke<AuthStatus[]>('auth:status'),
+        invoke<{ ok: boolean, data?: any[] }>('providers:list')
       ])
 
       if (Array.isArray(auth)) setAuthStatus(auth)
 
       const allModels: Model[] = []
+
+      // Load static models first
       if (Array.isArray(mCloud)) allModels.push(...mCloud)
       if (mOllama?.ok && Array.isArray(mOllama.models)) allModels.push(...mOllama.models)
 
-      const opts = allModels.map(m => ({
-        label: `${m.provider.toUpperCase()} — ${m.name || m.id}`,
-        value: `${m.provider}:${m.id}`
-      }))
-      setOptions(opts)
+      // Dynamic models from registry
+      if (providersRes.ok && Array.isArray(providersRes.data)) {
+        for (const provider of providersRes.data) {
+          if (provider.hasKey && provider.supportsToolCalling) {
+            try {
+              const res = await invoke<{ ok: boolean, data?: any[] }>('providers:list-models', provider.id)
+              if (res.ok && Array.isArray(res.data)) {
+                allModels.push(...res.data.map(m => ({
+                  id: m.id,
+                  name: m.name,
+                  provider: provider.id,
+                  contextWindow: m.contextLength
+                })))
+              }
+            } catch (err) {
+              log.error(`Failed to fetch models for registry provider ${provider.id}`, err)
+            }
+          }
+        }
+      }
+
+      // Deduplicate options by value (provider:id) to prevent duplicate renders
+      const optsMap = new Map<string, ModelOption>()
+      for (const m of allModels) {
+        const value = `${m.provider}:${m.id}`
+        optsMap.set(value, {
+          label: `${m.provider.toUpperCase()} — ${m.name || m.id}`,
+          value
+        })
+      }
+      setOptions(Array.from(optsMap.values()))
 
       if (s?.modelDefaults) {
         setDefaults(prev => ({
