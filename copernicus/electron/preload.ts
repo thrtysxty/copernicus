@@ -137,6 +137,8 @@ const SEND_CHANNELS = new Set([
   'app:start-oauth-listener',
   // OpenRouter (Story 623)
   'openrouter:list-models', 'openrouter:get-credits',
+  // Provider Registry (Story 626)
+  'providers:list', 'providers:list-models',
   // Auth revoke
   'auth:revoke', 'auth:revoke-key', 'auth:validate-ollama-cloud',
   // Canvas interaction (Story 153)
