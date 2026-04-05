@@ -220,7 +220,7 @@ def _write_episode(session_id: str, conn: sqlite3.Connection) -> None:
         try:
             with conn:
                 conn.execute(
-                    """INSERT INTO episodes
+                    """INSERT OR IGNORE INTO episodes
                        (episode_id, timestamp, story_id, agent, task, approach,
                         outcome, quality_score, revision_count, blocked_reasons,
                         files_touched, memory_ids, notes, commit_sha)
@@ -242,17 +242,22 @@ def _write_episode(session_id: str, conn: sqlite3.Connection) -> None:
                         row["commit_sha"],
                     ),
                 )
-                if embedding:
-                    conn.execute(
-                        "INSERT INTO episodes_vec (embedding) VALUES (?)",
-                        (json.dumps(embedding),),
-                    )
-                    rowid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-                    conn.execute(
-                        "UPDATE episodes SET embedding_id = ? WHERE episode_id = ?",
-                        (rowid, episode_id),
-                    )
             log.info(f"[episode] wrote {episode_id} (quality={quality_score})")
+            # Vector embedding is best-effort — don't let it block or retry
+            if embedding:
+                try:
+                    with conn:
+                        conn.execute(
+                            "INSERT INTO episodes_vec (embedding) VALUES (?)",
+                            (json.dumps(embedding),),
+                        )
+                        rowid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                        conn.execute(
+                            "UPDATE episodes SET embedding_id = ? WHERE episode_id = ?",
+                            (rowid, episode_id),
+                        )
+                except Exception as vec_exc:
+                    log.debug(f"[episode] vector insert skipped for {episode_id}: {vec_exc}")
             return
         except Exception as exc:
             wait = 5 * attempt
