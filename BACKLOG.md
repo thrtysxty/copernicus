@@ -104,8 +104,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
 | #577 | Wizard Workspace Validation | APPROVED FOR IMPLEMENTATION | N/A |
-| #578 | Wizard Handoff Workingdir Race | APPROVED FOR IMPLEMENTATION | N/A |
-| #579 | Project Selector Dialog Fixes | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -116,6 +114,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #563 | Stitch Setup Doc Sdk Update | COMPLETE | N/A |
 | #564 | Jules Streaming Monitor | COMPLETE | N/A |
 | #576 | Fix Is Repo Targeted Loop | COMPLETE | N/A |
+| #579 | Project Selector Dialog Fixes | COMPLETE | N/A |
 | #580 | Wizard Auth Provider Step Redesign | COMPLETE | N/A |
 | #581 | Workspace Switch Context Reset | COMPLETE | N/A |
 | #582 | Terminal Input Regression | COMPLETE | N/A |
@@ -124,12 +123,13 @@ This file is auto-generated. Run `make backlog` to update.
 | #585 | Chat Send Lsp Preflight Blocks | COMPLETE | N/A |
 | #586 | Skills Section Ipc Violation | COMPLETE | N/A |
 | #587 | Templates Section Ux And Content | COMPLETE | N/A |
+| #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #578 | Wizard Handoff Workingdir Race | IN PROGRESS | N/A |
 | #588 | Unify Provider Auth Surface | IN PROGRESS | N/A |
-| #589 | Notebooklm Webview Embed | IN PROGRESS | N/A |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
@@ -476,6 +476,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #570 | Story Inspector Chat Scoping | COMPLETE | P2 |
 | #572 | Generalize Agent Monitor | COMPLETE | P1 |
 | #573 | Episodic Memory | COMPLETE | P1 |
+| #574 | Agent Selector | COMPLETE | P1 |
 | #595 | Fix Ghost Tint Active States — Ux Bible §1.4 Compliance | COMPLETE | P3 |
 | #596 | Refactor Direct Stateledger.Db Access To Api Methods | COMPLETE | P2 |
 | #597 | Remove Stale Column Ids From Layout.Ts | COMPLETE | P2 |
@@ -532,8 +533,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #627 | Provider Config File | DRAFT | P2 |
+| #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | DRAFT | P1 |
 | #566 | Kb Content Storage Seeding | IN PROGRESS | P1 |
-| #574 | Agent Selector | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
