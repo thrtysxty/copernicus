@@ -103,7 +103,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
-| #589 | Notebooklm Webview Embed | APPROVED FOR IMPLEMENTATION | N/A |
+| #577 | Wizard Workspace Validation | APPROVED FOR IMPLEMENTATION | N/A |
+| #578 | Wizard Handoff Workingdir Race | APPROVED FOR IMPLEMENTATION | N/A |
+| #579 | Project Selector Dialog Fixes | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -114,9 +116,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #563 | Stitch Setup Doc Sdk Update | COMPLETE | N/A |
 | #564 | Jules Streaming Monitor | COMPLETE | N/A |
 | #576 | Fix Is Repo Targeted Loop | COMPLETE | N/A |
-| #577 | Wizard Workspace Validation | COMPLETE | N/A |
-| #578 | Wizard Handoff Workingdir Race | COMPLETE | N/A |
-| #579 | Project Selector Dialog Fixes | COMPLETE | N/A |
 | #580 | Wizard Auth Provider Step Redesign | COMPLETE | N/A |
 | #581 | Workspace Switch Context Reset | COMPLETE | N/A |
 | #582 | Terminal Input Regression | COMPLETE | N/A |
@@ -130,8 +129,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #588 | Unify Provider Auth Surface | IN PROGRESS | N/A |
-| #566 | Kb Content Storage Seeding | APPROVED FOR IMPLEMENTATION | P1 |
-| #574 | Agent Selector | APPROVED FOR IMPLEMENTATION | P1 |
+| #589 | Notebooklm Webview Embed | IN PROGRESS | N/A |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
@@ -533,6 +531,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
+| #627 | Provider Config File | DRAFT | P2 |
+| #566 | Kb Content Storage Seeding | IN PROGRESS | P1 |
+| #574 | Agent Selector | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
