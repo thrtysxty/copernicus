@@ -113,6 +113,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #563 | Stitch Setup Doc Sdk Update | COMPLETE | N/A |
 | #564 | Jules Streaming Monitor | COMPLETE | N/A |
 | #576 | Fix Is Repo Targeted Loop | COMPLETE | N/A |
+| #577 | Wizard Workspace Validation | COMPLETE | N/A |
 | #578 | Wizard Handoff Workingdir Race | COMPLETE | N/A |
 | #579 | Project Selector Dialog Fixes | COMPLETE | N/A |
 | #580 | Wizard Auth Provider Step Redesign | COMPLETE | N/A |
@@ -129,7 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #577 | Wizard Workspace Validation | IN PROGRESS | N/A |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
