@@ -130,9 +130,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #577 | Wizard Workspace Validation | IN PROGRESS | N/A |
+| #567 | Kb Browse Article View | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
+| #627 | Provider Config File | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -489,6 +492,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | COMPLETE | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | COMPLETE | P1 |
 | #606 | Project Target Device Configuration | COMPLETE | P1 |
+| #607 | Agent Daemon Jules Sdk Handler | COMPLETE | P1 |
 | #609 | Intel View Has No Escape Or Back Navigation | COMPLETE | P2 |
 | #610 | Working Set Memory Fetch Fails With Too Few Parameter Values On Startup | COMPLETE | P2 |
 | #612 | Stories Db Project Scoping | COMPLETE | P0 |
@@ -524,7 +528,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
-| #567 | Kb Browse Article View | DRAFT | P1 |
 | #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
 | #569 | Kb Local Voting | DRAFT | P3 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
@@ -532,9 +535,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
-| #627 | Provider Config File | DRAFT | P2 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | DRAFT | P1 |
-| #607 | Agent Daemon Jules Sdk Handler | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

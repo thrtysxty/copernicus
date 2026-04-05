@@ -139,8 +139,12 @@ const SEND_CHANNELS = new Set([
   'openrouter:list-models', 'openrouter:get-credits',
   // Provider Registry (Story 626)
   'providers:list', 'providers:list-models',
+  // Provider Config File (Story 627)
+  'providers:reload',
   // Knowledge Base (Story 566)
   'kb:list-articles', 'kb:get-article', 'kb:search',
+  // KB deep link (Story 567)
+  'kb:open-article',
   // Auth revoke
   'auth:revoke', 'auth:revoke-key', 'auth:validate-ollama-cloud',
   // Canvas interaction (Story 153)
