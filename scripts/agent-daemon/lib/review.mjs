@@ -51,7 +51,7 @@ export async function reviewPr(prNumber, storyId) {
   const storyFile = getStoryPath(storyId);
   if (storyFile) {
     try {
-      storyContent = readFileSync(storyFile, 'utf8');
+      storyContent = readFileSync(join(REPO_ROOT, storyFile), 'utf8');
     } catch (e) {
       console.error(`  Failed to read story file ${storyFile}: ${e.message}`);
     }
