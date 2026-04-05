@@ -1,3 +1,61 @@
+import { Brain, Bot, Globe, HardDrive, ArrowLeftRight, Cpu, Github, Plug } from 'lucide-react';
+import React from 'react';
+
+export const CANONICAL_PROVIDERS = [
+  'anthropic',
+  'openai',
+  'google',
+  'github',
+  'openrouter',
+  'deepinfra',
+  'ollama',
+  'ollama-cloud',
+  'jules',
+  'stitch',
+  'tavily',
+  'context7'
+];
+
+export const PROVIDER_ICONS: Record<string, React.FC<any>> = {
+  anthropic:   Brain,
+  openai:      Bot,
+  google:      Globe,
+  github:      Github,
+  ollama:      HardDrive,
+  'ollama-cloud': HardDrive,
+  openrouter:  ArrowLeftRight,
+  deepinfra:   Cpu,
+  jules:       Globe, // Assuming Globe for Google Jules based on existing UI
+  stitch:      Plug,
+  tavily:      Plug,
+  context7:    Plug,
+};
+
+export const getProviderIcon = (id: string): React.FC<any> => {
+  return PROVIDER_ICONS[id] ?? Plug;
+};
+
+export interface ProviderMetadata {
+  id: string;
+  displayName: string;
+  description: string;
+}
+
+export const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
+  anthropic: { id: 'anthropic', displayName: 'Anthropic', description: 'Provider: Anthropic' },
+  openai: { id: 'openai', displayName: 'OpenAI', description: 'OpenAI' },
+  google: { id: 'google', displayName: 'Google / Gemini', description: 'Google / Gemini' },
+  github: { id: 'github', displayName: 'Repository Access (GitHub)', description: 'Repository Access (GitHub)' },
+  openrouter: { id: 'openrouter', displayName: 'OpenRouter', description: 'OpenRouter' },
+  deepinfra: { id: 'deepinfra', displayName: 'DeepInfra', description: 'DeepInfra' },
+  ollama: { id: 'ollama', displayName: 'Local Inference (Ollama)', description: 'Local Inference (Ollama)' },
+  'ollama-cloud': { id: 'ollama-cloud', displayName: 'High-Intelligence Tier (Ollama Cloud)', description: 'High-Intelligence Tier (Ollama Cloud)' },
+  jules: { id: 'jules', displayName: 'Google Jules', description: 'Google Jules' },
+  stitch: { id: 'stitch', displayName: 'Google Stitch', description: 'Google Stitch' },
+  tavily: { id: 'tavily', displayName: 'Tavily', description: 'Tavily' },
+  context7: { id: 'context7', displayName: 'Context7', description: 'Context7' },
+};
+
 export interface AuthCliConfig {
   providerId: string;
   detectCmd: string;

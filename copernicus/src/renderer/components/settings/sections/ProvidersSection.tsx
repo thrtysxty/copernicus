@@ -5,24 +5,14 @@ import { useLayoutStore } from '../../../store/layout'
 import { unwrapIpc } from '../../../types/ipc'
 import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
-  ShieldCheck, Loader2, GripVertical, Zap, Check,
-  Brain, Bot, HardDrive, ArrowLeftRight, Plug
+  ShieldCheck, Loader2, GripVertical, Zap, Check
 } from 'lucide-react'
 import log from '../../../utils/logger'
-
-const PROVIDER_ICONS: Record<string, React.FC<any>> = {
-  anthropic:   Brain,
-  openai:      Bot,
-  google:      Globe,
-  ollama:      HardDrive,
-  'ollama-cloud': HardDrive,
-  openrouter:  ArrowLeftRight,
-  deepinfra:   Cpu,
-
-}
+import AuthCliWidget from '../../wizard/AuthCliWidget'
+import { CANONICAL_PROVIDERS, getProviderIcon, AUTH_CLI_CONFIGS } from '../../wizard/providerRegistry'
 
 const ProviderIcon: React.FC<{ provider: string }> = ({ provider }) => {
-  const Icon = PROVIDER_ICONS[provider] ?? Plug
+  const Icon = getProviderIcon(provider)
   return <Icon size={16} className="shrink-0" />
 }
 
@@ -47,8 +37,8 @@ export const ProvidersSection: React.FC = () => {
   const [keyDraft, setKeyDraft] = useState<Record<string, string>>({})
   const [baseUrlDraft, setBaseUrlDraft] = useState<Record<string, string>>({})
   const [authFailed, setAuthFailed] = useState<Set<string>>(new Set())
-  const [claudeCliAvailable, setClaudeCliAvailable] = useState(false)
-  const [anthropicMethod, setAnthropicMethod] = useState<'cli' | 'apikey' | null>(null)
+  const [providerMethod, setProviderMethod] = useState<Record<string, 'cli' | 'apikey'>>({})
+  const [activeCliWidget, setActiveCliWidget] = useState<string | null>(null)
   const [openRouterCredits, setOpenRouterCredits] = useState<number | null>(null)
 
   // Custom provider state
@@ -69,8 +59,12 @@ export const ProvidersSection: React.FC = () => {
         const urls: Record<string, string> = {}
         data.forEach((s: AuthStatus) => {
           if (s.baseUrl) urls[s.provider] = s.baseUrl
-          if (s.provider === 'anthropic' && s.type === 'cli') setAnthropicMethod('cli')
-          else if (s.provider === 'anthropic' && s.hasKey) setAnthropicMethod('apikey')
+
+          if (s.type === 'cli') {
+            setProviderMethod(prev => ({ ...prev, [s.provider]: 'cli' }))
+          } else if (s.hasKey) {
+            setProviderMethod(prev => ({ ...prev, [s.provider]: 'apikey' }))
+          }
 
           if (s.provider === 'openrouter' && s.hasKey) {
             invoke('openrouter:get-credits')
@@ -84,25 +78,26 @@ export const ProvidersSection: React.FC = () => {
         setBaseUrlDraft(prev => ({ ...urls, ...prev }))
       }
 
-      // Check Claude CLI availability
-      const cliData = await invoke<any>('check-cli-tools')
-      setClaudeCliAvailable(!!(cliData as any)?.claude)
-
-      // Fetch provider registry list
+      // The single source of truth for standard UI is CANONICAL_PROVIDERS.
+      // We still support custom user-added providers from the API.
       const providerListRes = await invoke<{ ok: boolean; data?: any[] }>('providers:list')
-      const registryProviders = providerListRes.ok && Array.isArray(providerListRes.data)
+      const dynamicProviders = providerListRes.ok && Array.isArray(providerListRes.data)
         ? providerListRes.data.map(p => p.id)
-        : ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama', 'ollama-cloud']
+        : []
 
       const settings = await invoke<any>('settings:load')
       const savedOrder = (settings as any)?.providerOrder
 
+      // The full set is the canonical set + any custom providers that exist in DB
+      const allProvidersSet = new Set([...CANONICAL_PROVIDERS, ...dynamicProviders])
+      const allProviders = Array.from(allProvidersSet)
+
       if (savedOrder && Array.isArray(savedOrder)) {
-        // Merge saved order with newly registered providers
-        const missing = registryProviders.filter(p => !savedOrder.includes(p))
+        // Merge saved order with missing canonical/custom providers
+        const missing = allProviders.filter(p => !savedOrder.includes(p))
         setProviders([...savedOrder, ...missing])
       } else {
-        setProviders(registryProviders)
+        setProviders(allProviders)
       }
 
       setNbChecking(true)
@@ -119,11 +114,11 @@ export const ProvidersSection: React.FC = () => {
     }
   }
 
-  const setAnthropicCli = async () => {
+  const setProviderCli = async (providerId: string) => {
     try {
-      await invoke('auth:store-api-key', 'anthropic', '__cli__', undefined, 'cli')
-      setAnthropicMethod('cli')
-      addToast('Anthropic: using Claude Code CLI', 'success')
+      await invoke('auth:store-api-key', providerId, '__cli__', undefined, 'cli')
+      setProviderMethod(prev => ({ ...prev, [providerId]: 'cli' }))
+      addToast(`${providerId}: using CLI session`, 'success')
       fetchStatus()
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
@@ -420,55 +415,61 @@ export const ProvidersSection: React.FC = () => {
                 </div>
               </div>
 
-              {/* Anthropic: CLI toggle */}
-              {id === 'anthropic' && (
+              {/* Dynamic CLI Config Toggle */}
+              {AUTH_CLI_CONFIGS[id] && (
                 <div className="mt-3 pt-3 border-t border-zinc-800/50 space-y-2">
                   <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Connection Method</p>
                   <div className="flex gap-2">
                     <button
-                      onClick={setAnthropicCli}
-                      disabled={!claudeCliAvailable}
+                      onClick={() => {
+                        setProviderMethod(prev => ({ ...prev, [id]: 'cli' }))
+                        setActiveCliWidget(id)
+                      }}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase border transition-all ${
-                        anthropicMethod === 'cli'
+                        providerMethod[id] === 'cli'
                           ? 'border-copernicus-phosphor bg-copernicus-phosphor text-[#050505] rounded-none'
-                          : claudeCliAvailable
-                            ? 'border-zinc-700 text-zinc-400 hover:border-zinc-500 rounded'
-                            : 'border-zinc-800 text-zinc-700 cursor-not-allowed rounded'
+                          : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 rounded'
                       }`}
-                      title={claudeCliAvailable ? 'Use Claude Code CLI session' : 'Claude CLI not found'}
                     >
                       <Zap size={9} />
-                      Claude Code CLI
-                      {anthropicMethod === 'cli' && <Check size={9} />}
-                      {!claudeCliAvailable && <span className="ml-1">(not found)</span>}
+                      Use CLI
+                      {providerMethod[id] === 'cli' && <Check size={9} />}
                     </button>
                     <button
-                      onClick={() => setAnthropicMethod('apikey')}
+                      onClick={() => {
+                        setProviderMethod(prev => ({ ...prev, [id]: 'apikey' }))
+                        setActiveCliWidget(null)
+                      }}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase border transition-all ${
-                        anthropicMethod === 'apikey'
+                        providerMethod[id] === 'apikey'
                           ? 'border-copernicus-phosphor bg-copernicus-phosphor text-[#050505] rounded-none'
                           : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 rounded'
                       }`}
                     >
                       <Key size={9} />
                       API Key
-                      {anthropicMethod === 'apikey' && <Check size={9} />}
+                      {providerMethod[id] === 'apikey' && <Check size={9} />}
                     </button>
                   </div>
-                  {!claudeCliAvailable && (
-                    <p className="text-[9px] text-zinc-600">
-                      Install{' '}
-                      <button onClick={() => invoke('app:open-external', 'https://claude.ai/download')} className="text-copernicus-phosphor hover:underline">
-                        Claude Code
-                      </button>
-                      {' '}then run <code className="text-zinc-400">claude login</code> to enable CLI mode.
-                    </p>
+
+                  {providerMethod[id] === 'cli' && activeCliWidget === id && (
+                    <AuthCliWidget
+                      config={AUTH_CLI_CONFIGS[id]}
+                      onComplete={() => {
+                        setProviderCli(id)
+                        setActiveCliWidget(null)
+                      }}
+                      onCancel={() => {
+                        setActiveCliWidget(null)
+                        setProviderMethod(prev => ({ ...prev, [id]: 'apikey' }))
+                      }}
+                    />
                   )}
                 </div>
               )}
               {/* Input row: API key + base URL */}
               <div className="mt-3 pt-3 border-t border-zinc-800/50 grid gap-2" style={{ gridTemplateColumns: (id === 'openrouter' || isOllamaCloud) ? '1fr 1fr' : '1fr' }}>
-                {!isOllama && (
+                {(!isOllama && (!AUTH_CLI_CONFIGS[id] || providerMethod[id] !== 'cli')) && (
                   <input
                     type="password"
                     value={keyDraft[id] ?? ''}

@@ -2,12 +2,12 @@ import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
-         ShieldCheck, Key, Zap, Github, Layout, Sparkles, Loader2, Monitor } from 'lucide-react';
+         ShieldCheck, Key, Zap, Layout, Sparkles, Loader2, Monitor } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc, IpcResult } from '../../types/ipc'
 import GenesisWizard from '../genesis/GenesisWizard';
 import AuthCliWidget from './AuthCliWidget';
-import { AUTH_CLI_CONFIGS } from './authCliConfigs';
+import { AUTH_CLI_CONFIGS, PROVIDER_METADATA, getProviderIcon } from './providerRegistry';
 import { WizardNarration } from './WizardNarration';
 
 interface WizardProps {
@@ -85,6 +85,9 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   const isFastPathReady = isAnthropicConfigured || isGoogleConfigured;
 
+  // Local Ollama (missing from explicit UI)
+  const [localOllamaKey, setLocalOllamaKey] = useState('');
+
   // Fetch CLI status in background
   useEffect(() => {
     invoke<any>('check-cli-tools').then((result) => {
@@ -145,10 +148,14 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       });
     });
     
-    // 3. Check Ollama separately
-    invoke<any>('auth:get-api-key', 'ollama').then((res: any) => {
+    // 3. Check Ollamas separately
+    invoke<any>('auth:get-api-key', 'ollama-cloud').then((res: any) => {
       const key = unwrapIpc<any>(res);
       if (key) setOllamaKey('saved');
+    }).catch(() => {});
+    invoke<any>('auth:get-api-key', 'ollama').then((res: any) => {
+      const key = unwrapIpc<any>(res);
+      if (key) setLocalOllamaKey('saved');
     }).catch(() => {});
   }, [invoke]);
 
@@ -387,7 +394,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       await invoke('auth:store-api-key', 'anthropic', anthropicKey).catch(() => {})
     }
     if (ollamaKey && ollamaKey !== 'saved') {
-      await invoke('auth:store-api-key', 'ollama', ollamaKey).catch(() => {})
+      await invoke('auth:store-api-key', 'ollama-cloud', ollamaKey).catch(() => {})
+    }
+    if (localOllamaKey && localOllamaKey !== 'saved') {
+      await invoke('auth:store-api-key', 'ollama', localOllamaKey).catch(() => {})
     }
     if (googleKey && googleKey !== 'saved' && googleKey !== 'oauth') {
       await invoke('auth:store-api-key', 'google', googleKey).catch(() => {})
@@ -507,7 +517,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* Anthropic / Claude */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Provider: Anthropic</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('anthropic'), { size: 12 })}
+                          {PROVIDER_METADATA['anthropic']?.displayName || 'Anthropic'}
+                        </span>
                         {isAnthropicConfigured && !editAnthropic ? (
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {anthropicMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
@@ -561,7 +574,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* GitHub Connection */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Github size={12}/> Repository Access (GitHub)</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('github'), { size: 12 })}
+                          {PROVIDER_METADATA['github']?.displayName || 'GitHub'}
+                        </span>
                         {isGithubConfigured && !editGithub ? (
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {githubMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
@@ -647,10 +663,31 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       )}
                     </div>
 
+                    {/* Local Ollama */}
+                    <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('ollama'), { size: 12 })}
+                          {PROVIDER_METADATA['ollama']?.displayName || 'Local Inference (Ollama)'}
+                        </span>
+                        {localOllamaKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
+                        placeholder={localOllamaKey === 'saved' ? 'http://localhost:11434' : 'http://localhost:11434'}
+                        value={localOllamaKey === 'saved' ? '' : localOllamaKey}
+                        onChange={(e) => setLocalOllamaKey(e.target.value)}
+                      />
+                    </div>
+
                     {/* Ollama Cloud */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 transition-all duration-300">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2 mb-3">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Zap size={12} className="text-copernicus-phosphor" /> High-Intelligence Tier (Ollama Cloud)</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('ollama-cloud'), { size: 12 })}
+                          {PROVIDER_METADATA['ollama-cloud']?.displayName || 'High-Intelligence Tier (Ollama Cloud)'}
+                        </span>
                         {isOllamaConfigured && !editOllama ? (
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
@@ -675,7 +712,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* Google / Gemini */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google / Gemini</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('google'), { size: 12 })}
+                          {PROVIDER_METADATA['google']?.displayName || 'Google / Gemini'}
+                        </span>
                         {isGoogleConfigured && !editGoogle ? (
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {googleMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
@@ -720,7 +760,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* Google Jules */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">Google Jules <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span></span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('jules'), { size: 12 })}
+                          {PROVIDER_METADATA['jules']?.displayName || 'Google Jules'}
+                          <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span>
+                        </span>
                         {julesKey === 'saved' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span> : (googleKey === 'saved' || googleKey === 'oauth' || googleKey === 'cli') ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SAME ACCOUNT AS GEMINI — INHERITED</span> : null}
                       </div>
                       <input
@@ -736,7 +780,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* Google Stitch */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">Google Stitch <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span></span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('stitch'), { size: 12 })}
+                          {PROVIDER_METADATA['stitch']?.displayName || 'Google Stitch'}
+                          <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span>
+                        </span>
                         {stitchKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
                       </div>
                       <input
@@ -751,7 +799,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* OpenAI */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">OpenAI</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('openai'), { size: 12 })}
+                          {PROVIDER_METADATA['openai']?.displayName || 'OpenAI'}
+                        </span>
                         {openaiKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
                       </div>
                       <input
@@ -766,7 +817,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* OpenRouter */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">OpenRouter</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('openrouter'), { size: 12 })}
+                          {PROVIDER_METADATA['openrouter']?.displayName || 'OpenRouter'}
+                        </span>
                         {openrouterKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
                       </div>
                       <input
@@ -781,7 +835,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* DeepInfra */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">DeepInfra</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('deepinfra'), { size: 12 })}
+                          {PROVIDER_METADATA['deepinfra']?.displayName || 'DeepInfra'}
+                        </span>
                         {deepinfraKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
                       </div>
                       <input
@@ -796,7 +853,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* Tavily */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Tavily</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('tavily'), { size: 12 })}
+                          {PROVIDER_METADATA['tavily']?.displayName || 'Tavily'}
+                        </span>
                         {tavilyKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
                       </div>
                       <input
@@ -811,7 +871,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                     {/* Context7 */}
                     <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Context7</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          {React.createElement(getProviderIcon('context7'), { size: 12 })}
+                          {PROVIDER_METADATA['context7']?.displayName || 'Context7'}
+                        </span>
                         {context7Key === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
                       </div>
                       <input

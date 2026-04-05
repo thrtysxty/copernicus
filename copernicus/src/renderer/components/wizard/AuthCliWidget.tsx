@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc, IpcResult } from '../../types/ipc';
-import { AuthCliConfig } from './authCliConfigs';
+import { AuthCliConfig } from './providerRegistry';
 import { Loader2, X, TerminalSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
