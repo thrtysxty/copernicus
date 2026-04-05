@@ -2,6 +2,7 @@ import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { getDb, getActiveSessions, showStatus } from './lib/db.mjs';
+import { getActiveTokens } from './lib/registry.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -12,6 +13,35 @@ async function main() {
 
   if (args.includes('--status')) {
     showStatus(db);
+
+    console.log('\nACTIVE TOKENS');
+    console.log('-'.repeat(99));
+    const tokens = getActiveTokens(db);
+    if (!tokens.length) {
+       console.log('No active tokens.');
+    } else {
+       console.log(
+         'AGENT'.padEnd(8),
+         'STORY'.padEnd(8),
+         'SCORE'.padEnd(6),
+         'CAPABILITIES'.padEnd(35),
+         'EXPIRES'
+       );
+       for (const t of tokens) {
+         console.log(
+           t.agent_name.padEnd(8),
+           String(t.story_id || '').padEnd(8),
+           String(t.difficulty_score || '').padEnd(6),
+           t.capabilities.join(',').padEnd(35),
+           t.expires_at
+         );
+         const nearCeilingLogs = t.actions_log.filter(a => a.nearCeiling);
+         if (nearCeilingLogs.length > 0) {
+           console.log(`    ⚠️  [near_ceiling] exercised ${nearCeilingLogs.length} times near ceiling.`);
+         }
+       }
+    }
+
     process.exit(0);
   }
 

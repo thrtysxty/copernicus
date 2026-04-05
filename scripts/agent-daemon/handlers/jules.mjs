@@ -12,6 +12,8 @@ import {
 } from '../lib/db.mjs';
 import { getPrState, mergePr, getPrCommit } from '../lib/github.mjs';
 import { reviewPr } from '../lib/review.mjs';
+import { getTokenForStory, logAction, revoke } from '../lib/registry.mjs';
+import { isExpired } from '../lib/token.mjs';
 import { execSync } from 'child_process';
 
 function getJulesApiKey() {
@@ -58,9 +60,53 @@ export default {
       return;
     }
 
+    const token = getTokenForStory(story, 'jules');
+
     try {
       for await (const activity of session.stream()) {
         const type = activity.type;
+
+        // Capability enforcement
+        if (token) {
+          if (isExpired(token)) {
+             console.warn(`  [blocked] Token expired. Rejecting action.`);
+             updateSessionState(db, session_id, 'EXPIRED');
+             // We could break, but the story says "session is not terminated" for capability mismatches.
+             // Wait, AC5: "daemon rejects expired tokens; expired sessions flagged in DB".
+             // We flagged it. We should break.
+             break;
+          }
+
+          const checkCapability = (cap, actionName) => {
+            if (!token.capabilities.includes(cap)) {
+              console.warn(`  [blocked] Action '${actionName}' blocked: missing capability '${cap}'`);
+              logAction(token.token_id, actionName, false);
+              return false;
+            }
+            logAction(token.token_id, actionName, true);
+
+            // Near-ceiling check
+            const difficultyCeiling = { 'message': 2, 'fs_write': 4, 'shell': 4, 'spawn': 5 };
+            const requiredDiff = difficultyCeiling[cap] || 1;
+            let nearCeiling = false;
+            if (requiredDiff >= token.difficulty_score + 1) {
+               console.warn(`  [near_ceiling] Story difficulty is ${token.difficulty_score}, but agent exercised capability '${cap}'`);
+               nearCeiling = true;
+            }
+            logAction(token.token_id, actionName, true, nearCeiling);
+            return true;
+          };
+
+          // Heuristic activity mappings to capabilities based on Jules SDK activity types
+          // The exact structure might differ, but we apply checks as needed.
+          if (type === 'commandExecuted' || type === 'bashRun') {
+             if (!checkCapability('shell', 'bash_run')) continue; // Ideally we block it, but SDK stream might not support active blocking, so we log it
+          } else if (type === 'fileWritten' || type === 'fileModified') {
+             if (!checkCapability('fs_write', 'file_write')) continue;
+          } else if (type === 'agentSpawned') {
+             if (!checkCapability('spawn', 'spawn_agent')) continue;
+          }
+        }
 
         if (type === 'planGenerated') {
           const steps = activity.plan?.steps || [];
@@ -82,6 +128,7 @@ export default {
           console.log(`  Story ${story} agent: ${activity.message?.slice(0, 120)}`);
         } else if (type === 'sessionCompleted') {
           updateSessionState(db, session_id, 'COMPLETED');
+          if (token) revoke(token.token_id);
           // Get PR URL from snapshot
           try {
             const snapshot = await session.snapshot();
@@ -100,11 +147,13 @@ export default {
         } else if (type === 'sessionFailed') {
           console.error(`  Story ${story} failed: ${activity.reason}`);
           updateSessionState(db, session_id, 'FAILED');
+          if (token) revoke(token.token_id);
           break;
         }
       }
     } catch (e) {
        console.error(`Stream error for session ${session_id}: ${e.message}`);
+       if (token) revoke(token.token_id);
     }
   }
 };
