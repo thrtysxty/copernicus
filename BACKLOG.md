@@ -103,6 +103,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
+| #588 | Unify Provider Auth Surface | APPROVED FOR IMPLEMENTATION | N/A |
 | #589 | Notebooklm Webview Embed | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
@@ -117,6 +118,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #577 | Wizard Workspace Validation | COMPLETE | N/A |
 | #578 | Wizard Handoff Workingdir Race | COMPLETE | N/A |
 | #579 | Project Selector Dialog Fixes | COMPLETE | N/A |
+| #580 | Wizard Auth Provider Step Redesign | COMPLETE | N/A |
 | #581 | Workspace Switch Context Reset | COMPLETE | N/A |
 | #582 | Terminal Input Regression | COMPLETE | N/A |
 | #583 | Terminal Phantom Tab Prefix | COMPLETE | N/A |
@@ -125,11 +127,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #586 | Skills Section Ipc Violation | COMPLETE | N/A |
 | #587 | Templates Section Ux And Content | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
-| #588 | Unify Provider Auth Surface | DRAFT | N/A |
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #580 | Wizard Auth Provider Step Redesign | IN PROGRESS | N/A |
 | #566 | Kb Content Storage Seeding | APPROVED FOR IMPLEMENTATION | P1 |
 | #574 | Agent Selector | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
