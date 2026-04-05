@@ -131,12 +131,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #577 | Wizard Workspace Validation | IN PROGRESS | N/A |
-| #568 | Kb Chat Contextual Suggestions | APPROVED FOR IMPLEMENTATION | P2 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
-| #608 | Agent Registry Capability Gated Tokens | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
+| #632 | Agent Socket Bus — Real-Time Inter-Agent Communication Layer | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -494,6 +492,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #605 | Ollama Native Coder Agent With Tool Loop | COMPLETE | P1 |
 | #606 | Project Target Device Configuration | COMPLETE | P1 |
 | #607 | Agent Daemon Jules Sdk Handler | COMPLETE | P1 |
+| #608 | Agent Registry Capability Gated Tokens | COMPLETE | P1 |
 | #609 | Intel View Has No Escape Or Back Navigation | COMPLETE | P2 |
 | #610 | Working Set Memory Fetch Fails With Too Few Parameter Values On Startup | COMPLETE | P2 |
 | #612 | Stories Db Project Scoping | COMPLETE | P0 |
@@ -538,7 +537,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #629 | Agent Harness Self-Improvement Loop | DRAFT | P2 |
 | #630 | Agent Browser — In-Session Ui Verification Mcp | DRAFT | P1 |
 | #631 | Genai Toolbox — Database Mcp For Agent Intelligence | DRAFT | P2 |
+| #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
+| #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
+| #568 | Kb Chat Contextual Suggestions | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

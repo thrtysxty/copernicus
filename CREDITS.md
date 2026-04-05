@@ -30,6 +30,8 @@ A one-command CLI installer that configures the full Claude Code developer tooli
 
 A token-optimized CLI proxy used throughout the Copernicus development workflow. RTK rewrites common shell commands (`git status`, `ls`, `find`, etc.) to return token-efficient output before Claude ever sees it — delivering 60–90% token savings on routine dev operations. Integrated via Claude Code pre-tool-use hook in `.claude/settings.local.json`.
 
+**Issue #538** *(architectural analysis by roman-rr)* — Identified the structural gap: Claude Code's native Read/Grep/Glob tools bypass the Bash hook entirely, so their output hits the context window unfiltered. The analysis points toward a PostToolUse hook as the correct interception point for native tool output compression. RTK solves 60–90% of the token waste; the remaining surface is the native tools.
+
 ---
 
 ## Hindsight
@@ -57,3 +59,25 @@ Zero-server codebase intelligence via Tree-sitter AST knowledge graphs. Exposes 
 **https://www.cred.ninja** *(under evaluation — Story 390)*
 
 OAuth token delegation middleware for AI agents. Short-lived scoped tokens, AES-256-GCM vault, Ed25519-signed audit receipts per issuance, and instant revocation. MCP SDK available. Earmarked as the endgame for `AuthManager` when Copernicus agents need to call external APIs (GitHub, Linear, Slack) without holding raw long-lived keys. Pending self-host feasibility evaluation (R620 vault, no AWS KMS dependency) — see `docs/stories/story_390_cred_agent_oauth_delegation_—_research_spike.md`.
+
+---
+
+## av/harbor
+**https://github.com/av/harbor**
+
+A CLI orchestrator that spins up a complete local LLM stack via Docker Compose — Ollama, vLLM, llama.cpp backends wired to Open WebUI, SearXNG, voice frontends, all auto-discovering each other on startup. Profile-based config switching, traefik proxy built in. Earmarked on two fronts: as the deployment layer for the ML350 Gen9 local inference server, and as the architectural model for Story 633 — Harbor-style containerized agent sandboxing for Copernicus. Once agents are centralized on the socket bus, running each in its own container (explicit volume mounts instead of `--dangerously-skip-permissions`, resource caps, clean restart semantics) is the natural next step.
+
+---
+
+## apfel
+**https://github.com/Arthur-Ficial/apfel**
+
+A CLI wrapper for Apple's FoundationModels framework that exposes an OpenAI-compatible API at `localhost:11434`. Runs natively on macOS 26 (Darwin 25+) against on-device Apple Intelligence models — zero API cost, zero network latency, no quota. Earmarked as the local inference path for Copernicus on developer machines once macOS 26 ships broadly: cheap model calls for break room chess moves, IPC channel classification, and lightweight agent tasks that don't need cloud-scale reasoning.
+
+---
+
+## gitreverse
+**https://github.com/filiksyos/gitreverse**
+
+A repo-to-prompt reverse engineering tool: give it a GitHub URL, get back a scaffolding prompt that would generate a structurally similar project from scratch. Inspired the `/gitreverse` skill in `.claude/skills/gitreverse/` — a novice onboarding path for Copernicus users who want to learn from an existing repo without cloning it.
+
