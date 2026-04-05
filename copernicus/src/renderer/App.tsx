@@ -481,10 +481,8 @@ export default function App() {
         className="h-screen w-screen"
       >
         <Wizard
-          onComplete={async () => {
-            const r = await invoke<any>('app:get-root-path').catch(() => null)
-            const root = unwrapIpc<any>(r)
-            if (root) setWorkingDir(root)
+          onComplete={async (workspacePath: string) => {
+            setWorkingDir(workspacePath)
             setIsWizard(false)
             setShowGenesis(false)
             setView('planner')

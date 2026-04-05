@@ -11,7 +11,7 @@ import { AUTH_CLI_CONFIGS, PROVIDER_METADATA, getProviderIcon } from './provider
 import { WizardNarration } from './WizardNarration';
 
 interface WizardProps {
-  onComplete: () => void;
+  onComplete: (workspacePath: string) => void;
 }
 
 const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
@@ -448,7 +448,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
       await invoke('github:set-target-repo', `${githubUser?.login || 'local'}/${projectName}`).catch(() => {});
 
-      onWizardComplete();
+      onWizardComplete(fullPath);
     } catch (err: unknown) {
       setError(`Initialization failed: ${(err as Error).message}`);
     }
