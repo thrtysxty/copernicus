@@ -9,19 +9,18 @@ One-liner index of every script in this directory.
 | `agent_context.py` | Prepends role-specific system context to dispatch prompts |
 | `agent_gateway.py` | HTTP gateway for agent session routing |
 | `agent_harness.py` | Test harness for running agent sessions in isolation |
-| `agent_monitor.py` | Background daemon: polls Jules sessions, watches Gemini logs, runs Claude review gate, auto-merges on APPROVE |
+| `agent-daemon/index.mjs` | Node daemon: handles Jules SDK streams, Anthropic PR review, auto-merge |
 | `agent_tui.py` | Terminal UI for monitoring active agent sessions |
 | `cloud_orchestrator.py` | Orchestration logic for cloud model routing |
 | `copernicus_assign.sh` | Internal assignment helper (used by Kanban dispatch button) |
 | `dev-setup.sh` | One-command development environment setup |
 | `devtime_manager.py` | Tracks developer time allocation across stories |
 | `generate_repo_index.py` | Generates semantic codebase index for RAG queries |
-| `install-daemon.ps1` | Windows: installs `agent_monitor.py` as a system service |
-| `install-daemon.sh` | Unix: installs `agent_monitor.py` as a launchd/systemd service |
+| `install-daemon.ps1` | Windows: installs daemon as a system service |
+| `install-daemon.sh` | Unix: installs daemon as a launchd/systemd service |
 | `ipc-lint.sh` | IPC compliance checker — run before dispatch and after merge |
 | `jules-preflight.sh` | Validates a story file before `jules_assign.sh` dispatch |
 | `jules_assign.sh` | Dispatches a story to Jules (async PR agent) |
-| `jules_poll.sh` | One-shot poll of active Jules sessions (for manual checks) |
 | `mcp_hub.py` | MCP server hub — aggregates multiple MCP servers |
 | `mcp_server.py` | Standalone MCP server for Copernicus codebase tools |
 | `migrate_platform_assets.sh` | Migrates assets between platform versions |

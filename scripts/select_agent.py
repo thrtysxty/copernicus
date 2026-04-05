@@ -55,10 +55,9 @@ def check_jules_availability() -> bool:
     if not api_key:
         return False
 
-    url = "https://jules.googleapis.com/v1alpha/sessions" # Just a ping, expecting 4xx/2xx if reachable
+    url = "https://google.com" # Just a ping
     try:
         req = request.Request(url, method="GET")
-        req.add_header("x-goog-api-key", api_key)
         try:
             with request.urlopen(req, timeout=3) as _:
                 return True

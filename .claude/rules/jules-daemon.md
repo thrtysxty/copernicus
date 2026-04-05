@@ -2,7 +2,7 @@
 description: Jules daemon — start on session load if active sessions exist
 paths:
   - "scripts/jules_assign.sh"
-  - "scripts/jules_daemon.py"
+  - "scripts/agent-daemon/index.mjs"
   - "docs/stories/**/*.md"
 ---
 ## Jules Daemon — Always Running During Active Sessions
@@ -21,23 +21,22 @@ fi
 If not running and there are active (unmerged) sessions in `jules.db`, start it:
 
 ```bash
-nohup python3 /Users/dadmin/Projects/copernicus/scripts/jules_daemon.py \
-  >> /tmp/jules_daemon.log 2>&1 &
+node /Users/dadmin/Projects/copernicus/scripts/agent-daemon/index.mjs \
+  >> /tmp/agent-daemon.log 2>&1 &
 echo $! > /tmp/jules_daemon.pid
 ```
 
 ## What the daemon handles automatically
-- **Plan approval** — `POST /v1alpha/sessions/{id}:approvePlan` when state = `AWAITING_PLAN_APPROVAL`
-- **Course correction** — `POST /v1alpha/sessions/{id}:sendMessage` to steer Jules mid-task
-- **PR review** — Claude (claude-sonnet-4-6) reviews diff against story ACs + AGENTS.md patterns
+- **Plan approval** — via `@google/jules-sdk` when state = `awaitingPlanApproval`
+- **Course correction** — via `@google/jules-sdk` `session.ask()`
+- **PR review** — Claude reviews diff against story ACs + AGENTS.md patterns via Anthropic API
 - **Auto-merge** — `gh pr merge --squash` on APPROVE verdict
 
 ## Key commands
 ```bash
-python3 scripts/jules_daemon.py --status          # show all sessions + review state
-python3 scripts/jules_daemon.py --once            # single poll cycle (for manual check)
-python3 scripts/jules_daemon.py --skip-review     # emergency bypass
-cat /tmp/jules_daemon.log                         # live daemon output
+node scripts/agent-daemon/index.mjs --status          # show all sessions + review state
+node scripts/agent-daemon/index.mjs --once            # single loop cycle (for manual check)
+cat /tmp/agent-daemon.log                             # live daemon output
 ```
 
 ## jules_assign.sh already auto-starts the daemon

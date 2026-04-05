@@ -453,70 +453,7 @@ if ! update_story_status "$STORY_PATH" "IN PROGRESS"; then
   echo "⚠️  Status update failed but continuing with dispatch..."
 fi
 
-echo "🚀 Dispatching Story ${STORY_NUMBER} to Jules API..."
-
-# Build JSON payload using python3 to safely handle special characters in prompt
-PAYLOAD=$(python3 -c "
-import json, sys
-prompt = sys.stdin.read()
-payload = {
-    'prompt': prompt,
-    'title': 'Story ${STORY_NUMBER}: ${STORY_TITLE}',
-    'sourceContext': {
-        'source': 'sources/github/JMThiessen/Copernicus',
-        'githubRepoContext': {
-            'startingBranch': 'main'
-        }
-    },
-    'automationMode': 'AUTO_CREATE_PR',
-    'requirePlanApproval': False
-}
-print(json.dumps(payload))
-" <<< "$PROMPT")
-
-RESPONSE=$(curl -s -X POST \
-  'https://jules.googleapis.com/v1alpha/sessions' \
-  -H "Content-Type: application/json" \
-  -H "x-goog-api-key: ${JULES_API_KEY}" \
-  -d "$PAYLOAD")
-
-# Extract session ID
-SESSION_ID=$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" <<< "$RESPONSE" 2>/dev/null || echo "")
-
-if [ -z "$SESSION_ID" ]; then
-  echo "❌ Dispatch failed. API response:"
-  echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
-  exit 1
-fi
-
-echo "✓ Dispatched — session ${SESSION_ID}"
-echo "  https://jules.google.com/session/${SESSION_ID}"
-echo "  PR will be auto-created on completion (AUTO_CREATE_PR mode)."
-
-# ── Register session in jules.db ──────────────────────────────────────────────
-python3 -c "
-import sqlite3, datetime
-from pathlib import Path
-db_path = Path.home() / 'Library' / 'Application Support' / 'copernicus' / 'jules.db'
-conn = sqlite3.connect(db_path)
-conn.execute('''
-    CREATE TABLE IF NOT EXISTS jules_sessions (
-        session_id TEXT PRIMARY KEY, story INTEGER, title TEXT,
-        state TEXT DEFAULT 'QUEUED', pr_url TEXT, pr_number INTEGER,
-        commit_sha TEXT, branch TEXT, dispatched TEXT,
-        plan_approved TEXT, pr_opened TEXT, merged TEXT, updated TEXT
-    )
-''')
-conn.execute(
-    'INSERT OR IGNORE INTO jules_sessions (session_id, story, title, state, dispatched, updated) VALUES (?,?,?,?,?,?)',
-    ('${SESSION_ID}', '${STORY_NUMBER}', '''${STORY_TITLE}''', 'QUEUED',
-     datetime.datetime.utcnow().isoformat()+'Z', datetime.datetime.utcnow().isoformat()+'Z')
-)
-conn.commit()
-count = conn.execute('SELECT COUNT(*) FROM jules_sessions WHERE merged IS NULL').fetchone()[0]
-print(f'  Registered in jules.db ({count} active session(s))')
-conn.close()
-"
+node "$REPO_ROOT/scripts/agent-daemon/dispatch.mjs" "$STORY_NUMBER" "$STORY_TITLE" < "$TMPFILE"
 
 # ── Start Jules daemon if not already running ─────────────────────────────────
 DAEMON_PIDFILE="/tmp/jules_daemon.pid"
@@ -530,10 +467,10 @@ fi
 
 if [ "$DAEMON_RUNNING" = false ]; then
   echo "🔄 Starting Jules daemon (plan approval + PR review + auto-merge)..."
-  nohup python3 "$REPO_ROOT/scripts/agent_monitor.py" \
-    >> /tmp/jules_daemon.log 2>&1 &
+  nohup node "$REPO_ROOT/scripts/agent-daemon/index.mjs" \
+    >> /tmp/agent-daemon.log 2>&1 &
   echo $! > "$DAEMON_PIDFILE"
-  echo "  Daemon PID $(cat $DAEMON_PIDFILE) — logs at /tmp/jules_daemon.log"
+  echo "  Daemon PID $(cat $DAEMON_PIDFILE) — logs at /tmp/agent-daemon.log"
 else
   echo "  Jules daemon already running (PID $DAEMON_PID)"
 fi

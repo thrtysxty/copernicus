@@ -59,13 +59,13 @@ if [[ "$platform" == "Darwin" ]]; then
   </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string>/tmp/jules-daemon.log</string>
-  <key>StandardErrorPath</key><string>/tmp/jules-daemon.log</string>
+  <key>StandardOutPath</key><string>/tmp/agent-daemon.log</string>
+  <key>StandardErrorPath</key><string>/tmp/agent-daemon.log</string>
 </dict>
 </plist>
 PLIST_EOF
     # Replace placeholders with actual paths
-    sed -i '' "s|PYTHON_PATH|$PYTHON|g; s|DAEMON_PATH|$DAEMON_PY|g" "$PLIST"
+    sed -i '' "s|PYTHON_PATH|$(which node)|g; s|DAEMON_PATH|$REPO_ROOT/scripts/agent-daemon/index.mjs|g" "$PLIST"
     launchctl load "$PLIST"
     echo "Jules daemon registered — starts at login"
   elif [[ "$SERVICE" == "flask" ]]; then
@@ -157,7 +157,7 @@ elif [[ "$platform" == "Linux" ]]; then
 Description=Copernicus Jules Daemon
 
 [Service]
-ExecStart=$PYTHON $DAEMON_PY
+ExecStart=$(which node) $REPO_ROOT/scripts/agent-daemon/index.mjs
 Restart=on-failure
 
 [Install]
