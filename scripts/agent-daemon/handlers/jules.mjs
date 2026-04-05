@@ -76,7 +76,7 @@ export default {
             console.warn(`  ❌ Plan approval failed: ${e.message}`);
           }
         } else if (type === 'progressUpdated') {
-          console.log(`  Story ${story} progress: ${activity.title}`);
+          console.log(`  Story ${story} progress: ${activity.title ?? '(no title)'}`);
           updateSessionState(db, session_id, 'inProgress');
         } else if (type === 'agentMessaged') {
           console.log(`  Story ${story} agent: ${activity.message?.slice(0, 120)}`);

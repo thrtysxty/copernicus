@@ -105,9 +105,11 @@ export function updateSessionMerged(db, sessionId, mergeSha) {
     .run(updated, mergeSha, updated, sessionId);
 }
 
+const REPO_ROOT = new URL('../../..', import.meta.url).pathname;
+
 export function getStoryPath(storyId) {
   try {
-    const result = execSync(`python3 scripts/story.py path ${storyId}`, { encoding: 'utf-8' });
+    const result = execSync(`python3 "${REPO_ROOT}/scripts/story.py" path ${storyId}`, { encoding: 'utf-8', cwd: REPO_ROOT });
     return result.trim();
   } catch (e) {
     console.error(`Failed to get story path for ${storyId}:`, e.message);

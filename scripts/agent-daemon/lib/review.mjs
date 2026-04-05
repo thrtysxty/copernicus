@@ -1,26 +1,27 @@
 import { readFileSync } from 'fs';
 import { getStoryPath } from './db.mjs';
 import { getPrDiff } from './github.mjs';
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { execSync } from 'child_process';
+// Note: openai package is in agent-daemon/node_modules (installed as dep)
 
-function getAnthropicApiKey() {
-  let key = process.env.ANTHROPIC_API_KEY;
+function getOpenRouterApiKey() {
+  let key = process.env.OPENROUTER_API_KEY;
   if (!key) {
     try {
-      const out = execSync('bash -c "source ~/.secrets 2>/dev/null && echo $ANTHROPIC_API_KEY"', { encoding: 'utf-8' });
+      const out = execSync('bash -c "source ~/.secrets 2>/dev/null && echo $OPENROUTER_API_KEY"', { encoding: 'utf-8' });
       key = out.trim();
     } catch (e) {
       // ignore
     }
   }
   if (!key) {
-    throw new Error("ANTHROPIC_API_KEY not set — add it to ~/.secrets");
+    throw new Error("OPENROUTER_API_KEY not set — add it to ~/.secrets");
   }
   return key;
 }
 
-const REVIEW_MODEL = 'claude-3-5-sonnet-20241022';
+const REVIEW_MODEL = 'mistralai/devstral-small';
 
 export async function reviewPr(prNumber, storyId) {
   const defaultVerdict = {
@@ -84,15 +85,25 @@ PR DIFF:
 ${diff}
 `;
 
-  console.log("  Calling Anthropic API for PR review...");
+  console.log(`  Calling OpenRouter (${REVIEW_MODEL}) for PR review...`);
   try {
-    const anthropic = new Anthropic({ apiKey: getAnthropicApiKey() });
+    const client = new OpenAI({
+      apiKey: getOpenRouterApiKey(),
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': 'https://github.com/JMThiessen/Copernicus',
+        'X-Title': 'Copernicus Agent Daemon',
+      }
+    });
 
-    const response = await anthropic.messages.create({
+    const response = await client.chat.completions.create({
       model: REVIEW_MODEL,
       max_tokens: 2000,
       temperature: 0,
-      system: `You are an expert code reviewer evaluating a headless agent's work. Output ONLY a valid JSON object matching this schema exactly, with NO markdown formatting, NO backticks, and NO conversational text:
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert code reviewer evaluating a headless agent's work. Output ONLY a valid JSON object matching this schema exactly, with NO markdown formatting, NO backticks, and NO conversational text:
 {
   "verdict": "APPROVED" | "BLOCKED" | "REQUEST_CHANGES",
   "acs_met": ["list", "of", "met", "ACs"],
@@ -100,15 +111,14 @@ ${diff}
   "summary": "Brief summary of your review"
 }
 
-If the code looks correct based on the diff alone and there are no forbidden patterns, approve it.`,
-      messages: [
+If the code looks correct based on the diff alone and there are no forbidden patterns, approve it.`
+        },
         { role: 'user', content: prompt }
       ]
     });
 
-    const responseText = response.content[0].text.trim();
-    // Anthropic sometimes still wraps in markdown despite instructions
-    const jsonMatch = responseText.match(/\\{.*\\}/s);
+    const responseText = response.choices[0].message.content.trim();
+    const jsonMatch = responseText.match(/\{.*\}/s);
     const jsonStr = jsonMatch ? jsonMatch[0] : responseText;
 
     const verdict = JSON.parse(jsonStr);
@@ -123,8 +133,8 @@ If the code looks correct based on the diff alone and there are no forbidden pat
       merge_sha: "unknown"
     };
   } catch (e) {
-    console.error(`  Anthropic PR review error: ${e.message}`);
-    defaultVerdict.summary = `Anthropic PR review error: ${e.message}`;
+    console.error(`  OpenRouter PR review error: ${e.message}`);
+    defaultVerdict.summary = `OpenRouter PR review error: ${e.message}`;
     return defaultVerdict;
   }
 }

@@ -534,6 +534,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | DRAFT | P1 |
+| #629 | Agent Harness Self-Improvement Loop | DRAFT | P2 |
+| #630 | Agent Browser — In-Session Ui Verification Mcp | DRAFT | P1 |
+| #631 | Genai Toolbox — Database Mcp For Agent Intelligence | DRAFT | P2 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
 | #627 | Provider Config File | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
