@@ -273,6 +273,10 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('settings:load', () => handleIpc('settings:load', [], () => settingsStore.getAll()))
 
+  ipcMain.handle('fs:path-has-git', (_e, dirPath: string) => handleIpc('fs:path-has-git', [dirPath], () => {
+    return fs.existsSync(path.join(dirPath, '.git'))
+  }))
+
   ipcMain.handle('app:open-log', () => handleIpc('app:open-log', [], () => {
     const logFilePath = path.join(LOG_DIR, 'copernicus.log')
     return shell.openPath(logFilePath)

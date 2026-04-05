@@ -308,10 +308,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       }
       const selectedPath = unwrapIpc<string | null>(result);
       if (selectedPath) {
-        // Step 2 Advisory: warn if selected path is itself a git repo, but allow it
+        // Step 2 Validation: Check if the selected path contains a .git directory
         const gitRes = await invoke<any>('fs:path-has-git', selectedPath);
         if (gitRes.ok && unwrapIpc<boolean>(gitRes)) {
-          setError('Note: this folder is a git repository. If it contains your projects as subdirectories that is fine — otherwise select its parent folder.');
+          // If it is a git repo, display an inline warning and clear workspacePath
+          setError('This directory is a git repository. COPERNICUS needs the parent folder that contains your projects, not the project itself.');
+          setWorkspacePath('');
+          return;
         } else {
           setError(null);
         }
