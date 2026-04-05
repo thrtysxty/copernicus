@@ -137,11 +137,12 @@ async function handleCompletedPr(row, db, prNumber, storyId, session) {
       const lastReviewed = new Date(row.reviewed).getTime();
       const now = Date.now();
       const timeSince = (now - lastReviewed) / 1000;
-      if (timeSince > 3600) {
+      const retryAfter = 300; // 5 minutes
+      if (timeSince > retryAfter) {
          console.log(`  PR #${prNumber} was ${row.review_state}, retrying review.`);
          doReview = true;
       } else {
-         console.log(`  PR #${prNumber} ${row.review_state}. Skipping merge. Will re-review in ${Math.round((3600 - timeSince)/60)} min.`);
+         console.log(`  PR #${prNumber} ${row.review_state}. Skipping merge. Will re-review in ${Math.round((retryAfter - timeSince)/60)} min.`);
       }
     } else {
       doReview = true;

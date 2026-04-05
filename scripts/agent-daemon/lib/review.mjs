@@ -1,9 +1,12 @@
 import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { getStoryPath } from './db.mjs';
 import { getPrDiff } from './github.mjs';
 import OpenAI from 'openai';
 import { execSync } from 'child_process';
-// Note: openai package is in agent-daemon/node_modules (installed as dep)
+
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 function getOpenRouterApiKey() {
   let key = process.env.OPENROUTER_API_KEY;
@@ -56,7 +59,7 @@ export async function reviewPr(prNumber, storyId) {
 
   let forbiddenPatterns = "Forbidden patterns section not found in AGENTS.md.";
   try {
-    const agentsMdContent = readFileSync('AGENTS.md', 'utf8');
+    const agentsMdContent = readFileSync(join(REPO_ROOT, 'AGENTS.md'), 'utf8');
     const startIdx = agentsMdContent.indexOf('## Forbidden');
     if (startIdx !== -1) {
       forbiddenPatterns = agentsMdContent.slice(startIdx).trim();
