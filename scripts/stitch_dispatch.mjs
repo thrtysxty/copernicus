@@ -47,36 +47,35 @@ function parseStory(filePath) {
   const titleMatch = raw.match(/^# Story \d+[:\s—–-]+(.+)$/m);
   const title = titleMatch ? titleMatch[1].trim() : 'Untitled';
 
-  // Extract Files in Scope section
-  const scopeMatch = raw.match(/^## Files in Scope\s+([\s\S]*?)(?=^## |\Z)/m);
+  // Extract Files in Scope section (handles both "## Scope" and "## Files in Scope")
+  const scopeMatch = raw.match(/^## (?:Files in )?Scope\s+([\s\S]*?)(?=^## )/m);
   const scopeText = scopeMatch ? scopeMatch[1] : '';
 
-  // Find .tsx files listed in scope
+  // Find .tsx files listed in scope — handles both:
+  //   - `path.tsx` — description
+  //   1. **`path.tsx`** (new — ...) — description block follows
   const tsxFiles = [];
-  const tsxPattern = /`([^`]+\.tsx)`[^-\n]*(?:[-–—]\s*(.+))?/g;
-  let m;
-  while ((m = tsxPattern.exec(scopeText)) !== null) {
+  const lines = scopeText.split('\n');
+  for (const line of lines) {
+    const m = line.match(/`([^`]+\.tsx)`/);
+    if (!m) continue;
     const filePath = m[1];
     const baseName = filePath.split('/').pop().replace('.tsx', '');
-    // Look for the description block that follows this file mention
-    const fileIdx = scopeText.indexOf(m[0]);
-    const blockEnd = scopeText.indexOf('\n`', fileIdx + 1);
-    const desc = blockEnd > -1
-      ? scopeText.slice(fileIdx + m[0].length, blockEnd).trim()
-      : (m[2] || '').trim();
+    const descMatch = line.match(/`[^`]+\.tsx`[^—–-]*[-–—]\s*(.+)/);
+    const desc = descMatch ? descMatch[1].trim() : '';
     tsxFiles.push({ path: filePath, name: baseName, description: desc });
   }
 
   // Extract Acceptance Criteria
-  const acMatch = raw.match(/^## Acceptance Criteria\s+([\s\S]*?)(?=^## |\Z)/m);
+  const acMatch = raw.match(/^## Acceptance Criteria\s+([\s\S]*?)(?=^## )/m);
   const acs = acMatch ? acMatch[1].trim() : '';
 
   // Extract Frozen Surfaces
-  const frozenMatch = raw.match(/^## Frozen Surfaces?\s+([\s\S]*?)(?=^## |\Z)/m);
+  const frozenMatch = raw.match(/^## Frozen Surfaces?\s+([\s\S]*?)(?=^## )/m);
   const frozen = frozenMatch ? frozenMatch[1].trim() : '';
 
   // Full scope section for context
-  const scopeFull = scopeMatch ? scopeMatch[1].trim() : '';
+  const scopeFull = scopeText.trim();
 
   return { storyNumber, title, tsxFiles, acs, frozen, scopeFull, raw };
 }
@@ -123,7 +122,8 @@ async function main() {
     process.exit(1);
   }
 
-  const story = parseStory(join(REPO_ROOT, storyFile));
+  const resolvedStoryFile = storyFile.startsWith('/') ? storyFile : join(REPO_ROOT, storyFile);
+  const story = parseStory(resolvedStoryFile);
   console.log(`\nStitch dispatch — Story ${story.storyNumber}: ${story.title}`);
   console.log(`Model: ${modelArg}`);
 
@@ -145,17 +145,34 @@ async function main() {
   process.env.STITCH_API_KEY = getStitchApiKey();
   const { stitch } = await import(stitchSdkPath);
 
+  // Filter out frozen/already-implemented components (no-touch files)
+  const frozenNames = ['ChatPanel', 'App', 'Sidebar', 'TopBar', 'StatusBar'];
+  const components = story.tsxFiles.filter(f => !frozenNames.includes(f.name));
+  if (components.length < story.tsxFiles.length) {
+    const skipped = story.tsxFiles.filter(f => frozenNames.includes(f.name)).map(f => f.name);
+    console.log(`Skipping frozen components: ${skipped.join(', ')}`);
+  }
+
+  if (components.length === 0) {
+    console.error('No generatable components after filtering frozen surfaces.');
+    process.exit(1);
+  }
+
   // Get or create Copernicus project
   console.log('\nConnecting to Stitch...');
   let project;
   try {
     const projects = await stitch.projects();
-    project = projects.find(p => p.data?.title === 'Copernicus IDE');
+    console.log(`Found ${projects.length} existing project(s)`);
+    project = projects.find(p => p.data?.title === 'Copernicus IDE' || p.data?.title === 'copernicus');
     if (!project) {
-      console.log('Creating Stitch project "Copernicus IDE"...');
-      project = await stitch.createProject({ title: 'Copernicus IDE' });
+      console.log('Creating Stitch project...');
+      // Try with title, fall back to no title
+      project = await stitch.createProject('Copernicus IDE');
+      // Brief settle delay after creation before first generate()
+      await new Promise(r => setTimeout(r, 2000));
     }
-    console.log(`Project: ${project.id}`);
+    console.log(`Project ID: ${project.id}`);
   } catch (e) {
     console.error(`Failed to connect to Stitch: ${e.message}`);
     process.exit(1);
@@ -167,23 +184,46 @@ async function main() {
 
   // Generate each component
   const results = [];
-  for (const component of story.tsxFiles) {
+  for (const component of components) {
     console.log(`\nGenerating ${component.name}...`);
     const prompt = buildScreenPrompt(story, component);
 
-    try {
-      const screen = await project.generate(prompt, 'DESKTOP', modelArg);
-      console.log(`  Screen ID: ${screen.id}`);
+    // Skip if already generated
+    const outPath = join(outDir, `${component.name}.html`);
+    if (existsSync(outPath)) {
+      console.log(`  Skipping — already exists: docs/stitch/story-${story.storyNumber}/${component.name}.html`);
+      results.push({ component: component.name, outPath, ok: true, skipped: true });
+      continue;
+    }
 
-      const html = await screen.getHtml();
-      const outPath = join(outDir, `${component.name}.html`);
-      writeFileSync(outPath, html);
-      console.log(`  Saved: docs/stitch/story-${story.storyNumber}/${component.name}.html`);
-
-      results.push({ component: component.name, screenId: screen.id, outPath, ok: true });
-    } catch (e) {
-      console.error(`  ❌ Failed to generate ${component.name}: ${e.message}`);
-      results.push({ component: component.name, ok: false, error: e.message });
+    let attempt = 0;
+    let lastErr;
+    while (attempt < 2) {
+      try {
+        const screen = await project.generate(prompt, 'DESKTOP', modelArg);
+        console.log(`  Screen ID: ${screen.id}`);
+        const htmlUrl = await screen.getHtml();
+        console.log(`  Fetching HTML from: ${htmlUrl.slice(0, 80)}...`);
+        const res = await fetch(htmlUrl);
+        if (!res.ok) throw new Error(`Failed to fetch HTML: ${res.status}`);
+        const html = await res.text();
+        writeFileSync(outPath, html);
+        console.log(`  Saved: docs/stitch/story-${story.storyNumber}/${component.name}.html`);
+        results.push({ component: component.name, screenId: screen.id, outPath, ok: true });
+        lastErr = null;
+        break;
+      } catch (e) {
+        lastErr = e;
+        attempt++;
+        if (attempt < 2) {
+          console.warn(`  Retry ${attempt}/1 after error: ${e.message}`);
+          await new Promise(r => setTimeout(r, 3000));
+        }
+      }
+    }
+    if (lastErr) {
+      console.error(`  ❌ Failed to generate ${component.name}: ${lastErr.message}`);
+      results.push({ component: component.name, ok: false, error: lastErr.message });
     }
   }
 
