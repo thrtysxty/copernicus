@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { FolderOpen, Plus, X, Loader2 } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc, type IpcResult } from '../../types/ipc'
 import { useLayoutStore } from '../../store/layout'
 
 interface FileNode {
@@ -34,10 +34,14 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
   useEffect(() => {
     if (open) {
       setIsSettingsLoaded(false)
-      invoke<any>('settings:load')
+      invoke<IpcResult<{ workspace?: string }>>('settings:load')
         .then(result => {
-          if (!result.ok) { setWorkspaceRoot(PROJECTS_ROOT); setUsingFallback(true); return; }
-          const settings = unwrapIpc<any>(result)
+          if (!result.ok) {
+            setWorkspaceRoot(PROJECTS_ROOT)
+            setUsingFallback(true)
+            return
+          }
+          const settings = unwrapIpc<{ workspace?: string }>(result)
           if (settings?.workspace) {
             setWorkspaceRoot(settings.workspace)
             setUsingFallback(false)
@@ -60,8 +64,11 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
     setLoading(true)
     setError(null)
     try {
-      const result = await invoke<any>('fs:list-dir', workspaceRoot)
-      const entries: FileNode[] = unwrapIpc<any>(result) ?? []
+      const result = await invoke<IpcResult<FileNode[]>>('fs:list-dir', workspaceRoot)
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to load directories')
+      }
+      const entries: FileNode[] = unwrapIpc<FileNode[]>(result) ?? []
       setDirs(
         entries.filter(
           e => e.isDir && !e.name.startsWith('.') && e.name !== 'node_modules'
