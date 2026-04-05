@@ -42,6 +42,12 @@ export class SystemPromptBuilder {
       sections.push(conventions.trim());
     }
 
+    if (ctx.bankId === 'chat') {
+      let kbInstruction = '## Knowledge Base\n';
+      kbInstruction += 'When answering a question covered by a KB article, append a suggestion line in format: `[KB: <article title>](<article-id>)` at the end of the response.';
+      sections.push(kbInstruction.trim());
+    }
+
     // Current Task
     if (ctx.taskDescription) {
       let task = '## Current Task\n';

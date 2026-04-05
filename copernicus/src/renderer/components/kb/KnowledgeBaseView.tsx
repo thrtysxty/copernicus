@@ -75,6 +75,9 @@ export const KnowledgeBaseView: React.FC = () => {
               style={{ height: `${100 - splitHeight}%` }}
               className="flex flex-col overflow-hidden relative"
             >
+              {/* Snapshot restore: useChatPanel fires invoke('snapshot:restore', panelId)
+                  automatically when panelId changes (useChatPanel.ts:97). The panelId
+                  below ensures context from the main chat is restored on article open. */}
               <ChatPanel panelId={`kb:${activeKbArticleId}`} />
             </div>
           </>

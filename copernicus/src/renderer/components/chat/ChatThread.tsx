@@ -2,7 +2,7 @@ import log from '../../utils/logger'
 import React, { useState, useEffect, useRef } from 'react'
 import { unwrapIpc } from '../../types/ipc'
 import { Message, ModelInfo, AuthStatus } from './useChatPanel'
-import { Save, Hash, ChevronDown, Minimize2, Maximize2, RotateCcw, ChevronRight } from 'lucide-react'
+import { Save, Hash, ChevronDown, Minimize2, Maximize2, RotateCcw, ChevronRight, BookOpen } from 'lucide-react'
 import { ChatMessage } from './ChatMessage'
 import { UIUpdateChip } from './UIUpdateChip'
 import { DiffViewer } from '../Editor/DiffViewer'
@@ -256,7 +256,49 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
               />
             )
           }
-          return <span key={i} className="whitespace-pre-wrap">{part}</span>
+
+          // Parse for KB links within text nodes
+          const textParts = part.split(/(\[KB:[^\]]+\]\([^)]+\))/g)
+
+          return <span key={i} className="whitespace-pre-wrap">
+            {textParts.map((tPart: string, tIndex: number) => {
+              const kbMatch = tPart.match(/^\[KB:([^\]]+)\]\(([^)]+)\)$/)
+              if (kbMatch) {
+                const [_, title, id] = kbMatch
+                return (
+                  <button
+                    key={tIndex}
+                    onClick={async () => {
+                      const deltaMessages = messages.slice(-5).map(m => ({
+                        ...m,
+                        content: (typeof m.content === 'string' ? m.content : '').slice(0, 40)
+                      }))
+
+                      const result = await invoke('snapshot:save', {
+                        panel_id: `kb:${id}`,
+                        messages: deltaMessages
+                      })
+
+                      if (!result.ok) { /* non-fatal — proceed anyway */ }
+
+                      // Dispatch to open article
+                      window.dispatchEvent(new CustomEvent('kb:open-article', { detail: id }))
+
+                      useLayoutStore.getState().setView('knowledge-base')
+                      if (id) {
+                        useLayoutStore.getState().setActiveKbArticleId(id)
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-1 bg-transparent text-copernicus-phosphor hover:bg-copernicus-phosphor hover:text-[#050505] rounded-none border border-copernicus-phosphor transition-colors align-middle text-[10px] font-bold"
+                  >
+                    <BookOpen size={10} />
+                    {title}
+                  </button>
+                )
+              }
+              return tPart
+            })}
+          </span>
         })}
         {activeStoryId && msg?.role === 'assistant' && (
           <button
