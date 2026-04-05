@@ -502,6 +502,23 @@ app.whenReady().then(async () => {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [`default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; ${connectSrc}; worker-src 'self' blob: file:;`] } })
   })
+
+  // Story 589: Strip headers for NotebookLM webview
+  session.fromPartition('persist:notebooklm').webRequest.onHeadersReceived(
+    { urls: ['*://notebooklm.google.com/*'] },
+    (details, callback) => {
+      const { responseHeaders } = details
+      if (responseHeaders) {
+        // Strip X-Frame-Options and Content-Security-Policy: frame-ancestors
+        for (const header of Object.keys(responseHeaders)) {
+          if (header.toLowerCase() === 'x-frame-options' || header.toLowerCase() === 'content-security-policy') {
+            delete responseHeaders[header]
+          }
+        }
+      }
+      callback({ cancel: false, responseHeaders })
+    }
+  )
   // Only configure workspace if it was already saved — new users go through the wizard
   const existingWorkspace = (settingsStore.getAll().workspace as string) || (settingsStore.getAll().workingDir as string)
   if (existingWorkspace) {

@@ -12,7 +12,12 @@ interface Notebook {
   created_at: number
 }
 
-export const NotebookLMSection: React.FC = () => {
+interface NotebookLMSectionProps {
+  selectedNotebookId?: string | null
+  onSelectNotebook?: (id: string) => void
+}
+
+export const NotebookLMSection: React.FC<NotebookLMSectionProps> = ({ selectedNotebookId, onSelectNotebook }) => {
   const invoke = useIpcError()
   const [notebooks, setNotebooks] = useState<Notebook[]>([])
   const [isAdding, setIsAdding] = useState(false)
@@ -99,20 +104,30 @@ export const NotebookLMSection: React.FC = () => {
       </div>
 
       <div className="space-y-2">
-        {notebooks.map(nb => (
-          <div key={nb.id} className="flex items-center justify-between p-2 bg-zinc-900/50 border border-white/5 rounded">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-zinc-200">{nb.name}</span>
-                <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">{nb.domain}</span>
+        {notebooks.map(nb => {
+          const active = selectedNotebookId === nb.id
+          return (
+            <div
+              key={nb.id}
+              className={`flex items-center justify-between p-2 cursor-pointer transition-colors ${active ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'bg-zinc-900/50 border border-white/5 rounded hover:bg-zinc-800/50'}`}
+              onClick={() => onSelectNotebook && onSelectNotebook(nb.id)}
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold ${active ? 'text-[#050505]' : 'text-zinc-200'}`}>{nb.name}</span>
+                  <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${active ? 'bg-[#050505]/20 text-[#050505]' : 'bg-blue-500/20 text-blue-400'}`}>{nb.domain}</span>
+                </div>
+                <div className={`text-[10px] mt-0.5 ${active ? 'text-[#050505]/70' : 'text-zinc-500'}`}>{nb.description}</div>
               </div>
-              <div className="text-[10px] text-zinc-500 mt-0.5">{nb.description}</div>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleRemove(nb.id); }}
+                className={`p-1 transition-colors ${active ? 'text-[#050505]/60 hover:text-red-700' : 'text-zinc-600 hover:text-red-400'}`}
+              >
+                <Trash2 size={12} />
+              </button>
             </div>
-            <button onClick={() => handleRemove(nb.id)} className="p-1 text-zinc-600 hover:text-red-400 transition-colors">
-              <Trash2 size={12} />
-            </button>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {isAdding ? (

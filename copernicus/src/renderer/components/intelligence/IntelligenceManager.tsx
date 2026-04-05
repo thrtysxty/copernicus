@@ -26,6 +26,8 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
   const invoke = useIpcError()
   const [documents, setDocuments] = useState<IntelligenceDocument[]>([])
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null)
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(null)
+  const [showNlmBanner, setShowNlmBanner] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [newDocType, setNewDocType] = useState<IntelligenceDocType>('instruction')
   const [newDocTitle, setNewDocTitle] = useState('')
@@ -393,7 +395,10 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                     {docs.map(doc => (
                       <div
                         key={doc.id}
-                        onClick={() => setSelectedDocId(doc.id)}
+                        onClick={() => {
+                          setSelectedDocId(doc.id)
+                          setSelectedNotebookId(null)
+                        }}
                         className={`group flex items-center gap-2 px-3 py-2 cursor-pointer border-l-2 transition-colors ${selectedDocId === doc.id ? 'border-copernicus-phosphor bg-zinc-900' : 'border-transparent hover:bg-zinc-900/50'}`}
                       >
                         <div className={`p-1 rounded ${TYPE_COLORS[doc.type].bg} ${TYPE_COLORS[doc.type].text}`}>
@@ -418,7 +423,13 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
             })}
           </div>
 
-          <NotebookLMSection />
+          <NotebookLMSection
+            selectedNotebookId={selectedNotebookId}
+            onSelectNotebook={(id) => {
+              setSelectedDocId(null)
+              setSelectedNotebookId(id)
+            }}
+          />
         </div>
       </div>
 
@@ -434,7 +445,37 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
             }}
           />
         )}
-        {selectedDoc ? (
+        {selectedNotebookId ? (
+          <div className="flex-1 relative flex flex-col">
+            {showNlmBanner && (
+              <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2 text-amber-400 text-xs">
+                  <AlertCircle size={14} />
+                  <span>Sign in to your Google account to connect NotebookLM. This session is stored locally and will not be shared.</span>
+                </div>
+              </div>
+            )}
+            <webview
+              src={`https://notebooklm.google.com/notebook/${selectedNotebookId}`}
+              partition="persist:notebooklm"
+              className="flex-1"
+              allowpopups="true"
+              style={{ display: 'flex', width: '100%', height: '100%' }}
+              ref={(wv: any) => {
+                if (wv && !wv.dataset.eventsAttached) {
+                  wv.dataset.eventsAttached = 'true'
+                  const handleNav = (e: any) => {
+                    if (e.url && e.url.startsWith('https://notebooklm.google.com/notebook/')) {
+                      setShowNlmBanner(false)
+                    }
+                  }
+                  wv.addEventListener('did-navigate', handleNav)
+                  wv.addEventListener('did-navigate-in-page', handleNav)
+                }
+              }}
+            />
+          </div>
+        ) : selectedDoc ? (
           <>
             <div className="p-4 border-b border-white/5 space-y-3 shrink-0">
               <div className="flex items-center gap-3">
