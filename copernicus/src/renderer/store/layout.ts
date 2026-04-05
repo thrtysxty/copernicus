@@ -72,6 +72,8 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   spotlightPane: PaneId | null
   spotlightLane: string | null
   activeStoryId: string | null
+  activeKbArticleId: string | null
+  setActiveKbArticleId: (id: string | null) => void
   drawerStoryId: string | null
   activeRetroId: string | null
   phosphorColor: PhosphorColor
@@ -254,6 +256,8 @@ stitchTokens: null,
       spotlightPane: null,
       spotlightLane: null,
       activeStoryId: null,
+      activeKbArticleId: null,
+      setActiveKbArticleId: (id) => set({ activeKbArticleId: id }),
       drawerStoryId: null,
       activeRetroId: null,
       phosphorColor: 'green',

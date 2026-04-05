@@ -18,7 +18,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
 
   return (
     <FlippablePanel
-      id="chat"
+      id={panelId === 'chat' ? 'chat' : `chat-${panelId}`}
       front={
         <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono min-w-0 overflow-hidden">
           <ChatThread

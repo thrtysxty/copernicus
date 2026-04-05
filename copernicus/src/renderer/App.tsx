@@ -312,6 +312,11 @@ export default function App() {
       setView(viewId as StoryboardView)
     })
 
+    const removeKbOpenArticleListener = window.ipcRenderer.on('kb:open-article', (_e, articleId: string) => {
+      useLayoutStore.getState().setView('knowledge-base')
+      useLayoutStore.getState().setActiveKbArticleId(articleId)
+    })
+
     const removeReviewSession = window.ipcRenderer.on('review:session-complete', (_e, data: any) => {
       // New logic for story 334:
       const storyId = data.stories && data.stories.length > 0 ? data.stories[0].toString() : 'UNKNOWN'
@@ -383,6 +388,7 @@ export default function App() {
       removePaletteListener()
       removeSetViewListener()
       removeReviewSession()
+      removeKbOpenArticleListener()
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [invoke, setWorkingDir, setGitBranch, setGitDirty, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView, setPendingReview])

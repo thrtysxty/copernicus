@@ -219,6 +219,8 @@ const LISTEN_CHANNELS = new Set([
   'daemon:prompt-install',
   // Wizard PTY auth widget (Story 561)
   'wizard:pty-data', 'wizard:pty-exit',
+  // Deep linking to KB article (Story 567)
+  'kb:open-article',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {
