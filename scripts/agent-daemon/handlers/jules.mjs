@@ -33,7 +33,7 @@ function getJulesApiKey() {
 export default {
   name: 'jules',
   owns(row) {
-    return row.agent === 'jules';
+    return row.agent === 'jules' || row.agent == null;
   },
   async attach(row, db) {
     const { session_id, story, title, state, review_state } = row;
@@ -62,43 +62,45 @@ export default {
       for await (const activity of session.stream()) {
         const type = activity.type;
 
-        if (type === 'stateChange') {
-          sessionState = activity.stateChange.newState;
-          console.log(`Story ${story} [${session_id.substring(0,12)}...] state changed: ${sessionState}`);
-
-          if (sessionState === 'awaitingPlanApproval') {
-            try {
-              const res = await session.approve();
-              console.log(`  ✓ Plan approved`);
-              updateSessionState(db, session_id, sessionState, true);
-            } catch (e) {
-              console.warn(`  ❌ Plan approval failed: ${e.message}`);
-              updateSessionState(db, session_id, sessionState);
-            }
-          } else if (sessionState === 'sessionCompleted') {
-             updateSessionState(db, session_id, 'COMPLETED');
-          } else {
-             updateSessionState(db, session_id, sessionState);
-          }
-        } else if (type === 'pullRequest') {
-           prUrl = activity.pullRequest.url;
-           prNumber = parseInt(prUrl.replace(/\/$/, '').split('/').pop(), 10);
-           console.log(`  PR ready: ${prUrl}`);
-           updateSessionPr(db, session_id, sessionState, prUrl, prNumber);
-        } else if (type === 'planGenerated') {
-          const steps = activity.planGenerated.plan?.steps || [];
-          console.log(`  Plan (${steps.length} steps):`);
+        if (type === 'planGenerated') {
+          const steps = activity.plan?.steps || [];
+          console.log(`  Story ${story}: Plan (${steps.length} steps):`);
           for (const s of steps) {
             console.log(`    ${s.index + 1}. ${s.title}`);
           }
-        }
-
-        // If completed and we have a PR, handle review
-        if ((sessionState === 'sessionCompleted' || sessionState === 'COMPLETED') && prNumber && !row.merged) {
-          // Re-fetch row state before reviewing to get freshest data
+          try {
+            await session.approve();
+            console.log(`  ✓ Plan approved`);
+            updateSessionState(db, session_id, 'awaitingPlanApproval', true);
+          } catch (e) {
+            console.warn(`  ❌ Plan approval failed: ${e.message}`);
+          }
+        } else if (type === 'progressUpdated') {
+          console.log(`  Story ${story} progress: ${activity.title}`);
+          updateSessionState(db, session_id, 'inProgress');
+        } else if (type === 'agentMessaged') {
+          console.log(`  Story ${story} agent: ${activity.message?.slice(0, 120)}`);
+        } else if (type === 'sessionCompleted') {
+          updateSessionState(db, session_id, 'COMPLETED');
+          // Get PR URL from snapshot
+          try {
+            const snapshot = await session.snapshot();
+            if (snapshot.pr) {
+              prUrl = snapshot.pr.url;
+              prNumber = parseInt(prUrl.replace(/\/$/, '').split('/').pop(), 10);
+              console.log(`  PR ready: ${prUrl}`);
+              updateSessionPr(db, session_id, 'COMPLETED', prUrl, prNumber);
+            }
+          } catch (e) {
+            console.warn(`  snapshot() failed: ${e.message}`);
+          }
           const freshRow = db.prepare('SELECT * FROM jules_sessions WHERE session_id=?').get(session_id);
-          await handleCompletedPr(freshRow, db, prNumber, story, session);
-          break; // Done watching this stream
+          if (prNumber) await handleCompletedPr(freshRow, db, prNumber, story, session);
+          break;
+        } else if (type === 'sessionFailed') {
+          console.error(`  Story ${story} failed: ${activity.reason}`);
+          updateSessionState(db, session_id, 'FAILED');
+          break;
         }
       }
     } catch (e) {
