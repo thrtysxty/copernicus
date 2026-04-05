@@ -132,6 +132,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
+| #607 | Agent Daemon Jules Sdk Handler | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
@@ -529,7 +530,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #569 | Kb Local Voting | DRAFT | P3 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
-| #607 | Agent Daemon Jules Sdk Handler | DRAFT | P1 |
 | #608 | Agent Registry Capability Gated Tokens | DRAFT | P1 |
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |

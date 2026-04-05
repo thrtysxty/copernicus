@@ -1,0 +1,10 @@
+{
+  "name": "agent-daemon",
+  "type": "module",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/jules-sdk": "^0.2.0",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "better-sqlite3": "^12.6.0"
+  }
+}
