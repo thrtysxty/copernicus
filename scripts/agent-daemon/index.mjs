@@ -3,6 +3,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { getDb, getActiveSessions, showStatus } from './lib/db.mjs';
 import { getActiveTokens } from './lib/registry.mjs';
+import { startServer, getConnectedAgents } from './lib/bus.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -42,8 +43,60 @@ async function main() {
        }
     }
 
-    process.exit(0);
+    // Bus integration: fetch connected agents if daemon is running.
+    // If daemon is not running, we'd need to connect and ask, but status usually prints db state.
+    // However, --status might be running in a separate process!
+    // Since AC says: "--status shows connected agents", we can either print from in-memory if we are the server,
+    // or we might need to connect to the bus and ask.
+    // Wait, `node scripts/agent-daemon/index.mjs --status` runs as a separate process. It reads `jules.db`.
+    // The server is in the main daemon process!
+    // Let's implement a simple IPC over the bus to query status, or just print them if it's the same process (it's not).
+    console.log('\nCONNECTED AGENTS');
+    console.log('-'.repeat(99));
+
+    // We'll try to connect to the bus socket and send a status request.
+    const net = await import('net');
+    try {
+        const client = net.createConnection('/tmp/copernicus-agent-bus.sock');
+        client.on('connect', () => {
+            client.write(JSON.stringify({ type: 'ask', from: 'status-cli', to: 'daemon', payload: { action: 'status' }, ts: new Date().toISOString() }) + '\n');
+        });
+        client.on('data', (data) => {
+            const lines = data.toString().split('\n');
+            for(let line of lines) {
+                if(!line.trim()) continue;
+                try {
+                    const msg = JSON.parse(line);
+                    if(msg.type === 'reply' && msg.to === 'status-cli') {
+                        const agents = msg.payload.agents || [];
+                        if (agents.length === 0) {
+                            console.log('No agents connected.');
+                        } else {
+                            console.log('ID'.padEnd(30), 'STORY'.padEnd(8), 'CAPABILITIES');
+                            for(const a of agents) {
+                                console.log(a.id.padEnd(30), String(a.story_id || '').padEnd(8), a.capabilities.join(','));
+                            }
+                        }
+                        client.end();
+                    }
+                } catch(e){}
+            }
+        });
+        client.on('error', () => {
+            console.log('Daemon socket not reachable.');
+        });
+        client.on('close', () => {
+             process.exit(0);
+        });
+        return; // Don't process.exit(0) immediately, wait for reply
+    } catch(e) {
+        console.log('Daemon socket not reachable.');
+        process.exit(0);
+    }
   }
+
+  // Start the socket bus server
+  startServer(db);
 
   const handlersPath = join(__dirname, 'handlers');
   const handlerFiles = readdirSync(handlersPath).filter(f => f.endsWith('.mjs'));
