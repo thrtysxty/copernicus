@@ -103,7 +103,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
-| #580 | Wizard Auth Provider Step Redesign | APPROVED FOR IMPLEMENTATION | N/A |
+| #589 | Notebooklm Webview Embed | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -126,10 +126,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #587 | Templates Section Ux And Content | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #588 | Unify Provider Auth Surface | DRAFT | N/A |
-| #589 | Notebooklm Webview Embed | DRAFT | N/A |
 | #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #580 | Wizard Auth Provider Step Redesign | IN PROGRESS | N/A |
+| #566 | Kb Content Storage Seeding | APPROVED FOR IMPLEMENTATION | P1 |
+| #574 | Agent Selector | APPROVED FOR IMPLEMENTATION | P1 |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
@@ -522,11 +524,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
-| #566 | Kb Content Storage Seeding | DRAFT | P1 |
 | #567 | Kb Browse Article View | DRAFT | P1 |
 | #568 | Kb Chat Contextual Suggestions | DRAFT | P2 |
 | #569 | Kb Local Voting | DRAFT | P3 |
-| #574 | Agent Selector | DRAFT | P1 |
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #603 | Extract App Tsx Ipc And Command Hooks | DRAFT | P2 |
 | #607 | Agent Daemon Jules Sdk Handler | DRAFT | P1 |
