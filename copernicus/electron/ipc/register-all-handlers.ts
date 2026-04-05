@@ -50,6 +50,7 @@ import { registerWizardPtyHandlers } from './wizard-pty-handlers'
 import { registerProjectHandlers } from './project-handlers'
 import { registerOpenRouterHandlers } from './openrouter-handlers'
 import { registerProviderHandlers } from './provider-handlers'
+import { registerKbHandlers } from './kb-handlers'
 
 export async function registerAllIpcHandlers(
   win: BrowserWindow,
@@ -125,6 +126,7 @@ export async function registerAllIpcHandlers(
   registerProjectHandlers()
   registerOpenRouterHandlers()
   registerProviderHandlers()
+  registerKbHandlers()
 
   ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {
     const projectId = fsManager.getRootPath()

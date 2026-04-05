@@ -42,6 +42,7 @@ import { WorktreeManager } from './worktree/WorktreeManager' // Added this back 
 import { detectStack } from './skills/stack-detector'
 import { providerSyncEngine } from './intelligence/provider-sync-engine'
 import { auditSkillDescriptions } from './skills/description-auditor'
+import { loadKnowledgeBase } from './kb/kb-loader'
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
@@ -585,6 +586,9 @@ app.whenReady().then(async () => {
 
   const startupTasks = async () => {
     try {
+      if (win) win.webContents.send('app:ready-status', 'Loading knowledge base...')
+      loadKnowledgeBase()
+
       if (win) win.webContents.send('app:ready-status', 'Starting workspace index...')
       await codebaseIndexer.startIndexing(fsManager.getRootPath()).catch(err => {
         log.error('Index failed:', err)

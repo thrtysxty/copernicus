@@ -186,6 +186,9 @@ export class StateLedger {
     try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN response_text TEXT`) } catch (e) {}
     try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN context_json TEXT`) } catch (e) {}
 
+    // Knowledge Base migrations (Story 566)
+    this.migrateKnowledgeBase();
+
     // Model Calls schema migration for Story 456
     try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN IF NOT EXISTS prompt_id TEXT`) } catch (e) {}
     try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN IF NOT EXISTS commit_sha TEXT`) } catch (e) {}
@@ -1150,6 +1153,114 @@ export class StateLedger {
       WHERE id = ?
     `).run(id);
     return true;
+  }
+
+  // ── Knowledge Base (Story 566) ────────────────────────────────────────────
+
+  private migrateKnowledgeBase(): void {
+    const newCols = [
+      'ALTER TABLE intelligence_documents ADD COLUMN section TEXT',
+      'ALTER TABLE intelligence_documents ADD COLUMN tags TEXT',
+      'ALTER TABLE intelligence_documents ADD COLUMN source TEXT NOT NULL DEFAULT \'curated\'',
+      'ALTER TABLE intelligence_documents ADD COLUMN version INTEGER NOT NULL DEFAULT 1',
+      'ALTER TABLE intelligence_documents ADD COLUMN excerpt TEXT'
+    ];
+    for (const sql of newCols) {
+      try { this.db.exec(sql); } catch { /* column already exists */ }
+    }
+  }
+
+  upsertKbArticle(doc: {
+    id: string;
+    title: string;
+    section: string;
+    tags: string[];
+    source: string;
+    version: number;
+    content: string;
+    excerpt?: string;
+  }): void {
+    const ts = Date.now();
+    // Use an INSERT OR REPLACE or handle it manually if we need to check version
+    const existing = this.db.prepare('SELECT version FROM intelligence_documents WHERE id = ?').get(doc.id) as { version: number } | undefined;
+
+    if (existing) {
+      if (doc.version > existing.version) {
+        this.db.prepare(`
+          UPDATE intelligence_documents
+          SET title = ?, section = ?, tags = ?, source = ?, version = ?, content = ?, excerpt = ?, ts = ?
+          WHERE id = ?
+        `).run(doc.title, doc.section, JSON.stringify(doc.tags), doc.source, doc.version, doc.content, doc.excerpt || '', ts, doc.id);
+      }
+    } else {
+      this.db.prepare(`
+        INSERT INTO intelligence_documents (
+          id, project_id, type, title, description, content, section, tags, source, version, excerpt, ts
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        doc.id,
+        'default', // project_id
+        'kb_article', // type
+        doc.title,
+        '', // description
+        doc.content,
+        doc.section,
+        JSON.stringify(doc.tags),
+        doc.source,
+        doc.version,
+        doc.excerpt || '',
+        ts
+      );
+    }
+  }
+
+  listKbArticles(): Record<string, any[]> {
+    const rows = this.db.prepare(`
+      SELECT id, title, section, tags
+      FROM intelligence_documents
+      WHERE source = 'curated'
+      ORDER BY section ASC, title ASC
+    `).all() as any[];
+
+    const mapped = rows.map(r => ({
+      ...r,
+      tags: r.tags ? JSON.parse(r.tags) : []
+    }));
+
+    return mapped.reduce((acc, curr) => {
+      const sec = curr.section || 'uncategorized';
+      if (!acc[sec]) {
+        acc[sec] = [];
+      }
+      acc[sec].push(curr);
+      return acc;
+    }, {} as Record<string, any[]>);
+  }
+
+  getKbArticle(id: string): any {
+    const row = this.db.prepare(`
+      SELECT *
+      FROM intelligence_documents
+      WHERE id = ?
+    `).get(id) as any;
+
+    if (!row) return null;
+    return {
+      ...row,
+      tags: row.tags ? JSON.parse(row.tags) : []
+    };
+  }
+
+  searchKbArticles(query: string): any[] {
+    const searchPattern = `%${query}%`;
+    const rows = this.db.prepare(`
+      SELECT id, title, section, excerpt
+      FROM intelligence_documents
+      WHERE source IN ('curated', 'user', 'community')
+      AND (title LIKE ? OR content LIKE ?)
+      ORDER BY ts DESC
+    `).all(searchPattern, searchPattern) as any[];
+    return rows;
   }
 
   // ── Intelligence Documents ────────────────────────────────────────────────

@@ -400,6 +400,11 @@ export const SCHEMA = {
       content     TEXT NOT NULL DEFAULT '',
       path_scope  TEXT,                       -- JSON array of glob strings, nullable
       tool_restrictions TEXT,                 -- JSON array, nullable
+      section     TEXT,
+      tags        TEXT,
+      source      TEXT NOT NULL DEFAULT 'curated',
+      version     INTEGER NOT NULL DEFAULT 1,
+      excerpt     TEXT,
       preferred_model TEXT,
       providers   TEXT NOT NULL DEFAULT '[]', -- JSON array of ProviderTarget
       sync_status TEXT NOT NULL DEFAULT '{}', -- JSON Record<ProviderKey, SyncStatusValue>
