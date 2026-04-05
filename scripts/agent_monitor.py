@@ -25,7 +25,7 @@ import sqlite3
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import re
 from typing import Literal
@@ -1265,6 +1265,60 @@ def poll_cycle(skip_review: bool = False):
 
 # ── Status display ────────────────────────────────────────────────────────────
 
+def show_routing_report():
+    """Outputs a 30-day performance table: agent × story type × avg quality score × dispatch count."""
+    thirty_days_ago = (datetime.now() - timedelta(days=30)).isoformat()
+    with get_db() as conn:
+        # We classify story type simply using basic heuristics on 'task' or 'files_touched'
+        # Or fall back to grouping by a simplified type if we want to add an inline CASE statement.
+        # Fallback to check if `task` exists, as my previous DB creation in this test env didn't include it.
+        # It's in the actual schema initialized by `init_db`.
+        try:
+            rows = conn.execute("""
+                SELECT agent,
+                       CASE
+                           WHEN task LIKE '%frontend%' OR files_touched LIKE '%.tsx%' THEN 'frontend'
+                           WHEN task LIKE '%backend%' OR files_touched LIKE '%.py%' THEN 'backend'
+                           WHEN task LIKE '%ipc%' THEN 'ipc'
+                           ELSE 'general'
+                       END as story_type,
+                       AVG(quality_score) as avg_score,
+                       COUNT(*) as cnt
+                FROM episodes
+                WHERE timestamp >= ?
+                GROUP BY agent, story_type
+                ORDER BY agent, cnt DESC
+            """, (thirty_days_ago,)).fetchall()
+        except sqlite3.OperationalError:
+             # Fallback if DB is missing columns like 'task' (e.g. test environments)
+             rows = conn.execute("""
+                SELECT agent,
+                       'general' as story_type,
+                       AVG(quality_score) as avg_score,
+                       COUNT(*) as cnt
+                FROM episodes
+                WHERE timestamp >= ?
+                GROUP BY agent
+                ORDER BY agent, cnt DESC
+            """, (thirty_days_ago,)).fetchall()
+
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print(" ROUTING REPORT (Last 30 Days) ")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    if not rows:
+        print("No episode data in the last 30 days.")
+        return
+
+    print(f"{'AGENT':<12} | {'STORY TYPE':<12} | {'AVG QUALITY':<12} | {'DISPATCHES':<10}")
+    print("-" * 57)
+    for r in rows:
+        agent = r["agent"] or "unknown"
+        story_type = r["story_type"] or "general"
+        avg_score = r["avg_score"] or 0.0
+        cnt = r["cnt"] or 0
+        print(f"{agent:<12} | {story_type:<12} | {avg_score:<12.2f} | {cnt:<10}")
+
+
 def show_status():
     with get_db() as conn:
         rows = conn.execute(
@@ -1291,9 +1345,14 @@ def main():
     parser.add_argument("--skip-review", action="store_true", help="Bypass PR review and merge directly (emergency use).")
     parser.add_argument("--retry-review", type=str, metavar="SESSION_ID", help="Reset review state for a session to force re-review.")
     parser.add_argument("--episodes", action="store_true", help="Show last 20 episode records.")
+    parser.add_argument("--routing-report", action="store_true", help="Outputs 30-day performance table.")
     args = parser.parse_args()
 
     init_db()
+
+    if args.routing_report:
+        show_routing_report()
+        return
 
     if args.status:
         show_status()

@@ -22,6 +22,8 @@ IDENTITY_HEADER=""
 DRY_RUN=false
 VERBOSE=false
 SKIP_VALIDATION=false # Added this line
+AUTO_SELECT=false
+MANUAL_AGENT=""
 
 # ── Helper Functions ────────────────────────────────────────────────────────────
 
@@ -95,6 +97,11 @@ update_story_status() {
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
+    --agent)
+      MANUAL_AGENT="$2"
+      shift ;;
+    --auto-select)
+      AUTO_SELECT=true ;;
     --as)
       case $2 in
         bolt)     IDENTITY_HEADER="PERSONA OVERLAY: BOLT ⚡ — Performance Mode
@@ -127,7 +134,7 @@ done
 # ── Validation ────────────────────────────────────────────────────────────────
 
 if [ -z "$STORY_PATH" ]; then
-  echo "Usage: ./scripts/jules_assign.sh [--as bolt|palette|sentinel] [--dry-run] [--skip-validation] <story.md>" # Updated usage
+  echo "Usage: ./scripts/jules_assign.sh [--agent <name>] [--auto-select] [--as bolt|palette|sentinel] [--dry-run] [--skip-validation] <story.md>"
   exit 1
 fi
 
@@ -293,6 +300,38 @@ if [ -n "$EPISODES_TEXT" ]; then
   echo "✓ Found relevant past episodes to inject."
 else
   echo "  No relevant past episodes found."
+fi
+
+# ── Select Agent ───────────────────────────────────────────────────────────────
+
+RECOMMENDED_AGENT="jules"
+if [ -n "$MANUAL_AGENT" ]; then
+  RECOMMENDED_AGENT="$MANUAL_AGENT"
+  echo "✓ Manual agent override: $RECOMMENDED_AGENT"
+else
+  echo "🔍 Agent Selector evaluating story characteristics..."
+  SELECTOR_OUT=$(python3 "$REPO_ROOT/scripts/select_agent.py" "$STORY_PATH" 2>/dev/null || echo "{}")
+  RECOMMENDED_AGENT=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('recommended_agent', 'jules'))" <<< "$SELECTOR_OUT" 2>/dev/null || echo "jules")
+  CONFIDENCE=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('confidence', 0.0))" <<< "$SELECTOR_OUT" 2>/dev/null || echo "0.0")
+  REASONING=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('reasoning', ''))" <<< "$SELECTOR_OUT" 2>/dev/null || echo "")
+
+  if [ "$RECOMMENDED_AGENT" != "jules" ]; then
+    echo "💡 Agent Selector recommends: ${RECOMMENDED_AGENT^^} (confidence: ${CONFIDENCE})"
+    echo "   Reason: $REASONING"
+
+    if [ "$AUTO_SELECT" = false ]; then
+      read -p "Proceed with $RECOMMENDED_AGENT instead of default jules? [Y/n] " -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Nn]$ ]]; then
+        echo "Reverting to default agent: jules"
+        RECOMMENDED_AGENT="jules"
+      fi
+    else
+      echo "✓ Auto-select enabled. Using $RECOMMENDED_AGENT"
+    fi
+  else
+    echo "✓ Agent Selector recommends: JULES (confidence: ${CONFIDENCE})"
+  fi
 fi
 
 # ── Build Prompt ───────────────────────────────────────────────────────────────

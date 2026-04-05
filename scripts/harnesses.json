@@ -1,1 +1,8 @@
-{}
+{
+  "jules": {
+    "capabilities": ["pty", "typescript", "ipc", "backend", "frontend", "infra", "multi-file"]
+  },
+  "gemini": {
+    "capabilities": ["git", "typescript", "backend", "frontend", "infra", "multi-file"]
+  }
+}
