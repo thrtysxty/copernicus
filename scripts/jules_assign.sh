@@ -316,11 +316,11 @@ else
   REASONING=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('reasoning', ''))" <<< "$SELECTOR_OUT" 2>/dev/null || echo "")
 
   if [ "$RECOMMENDED_AGENT" != "jules" ]; then
-    echo "💡 Agent Selector recommends: ${RECOMMENDED_AGENT^^} (confidence: ${CONFIDENCE})"
+    echo "💡 Agent Selector recommends: $(echo "$RECOMMENDED_AGENT" | tr '[:lower:]' '[:upper:]') (confidence: ${CONFIDENCE})"
     echo "   Reason: $REASONING"
 
     if [ "$AUTO_SELECT" = false ]; then
-      read -p "Proceed with $RECOMMENDED_AGENT instead of default jules? [Y/n] " -n 1 -r
+      read -p "Proceed with $RECOMMENDED_AGENT instead of default jules? [Y/n] " -n 1 -r || true
       echo
       if [[ $REPLY =~ ^[Nn]$ ]]; then
         echo "Reverting to default agent: jules"

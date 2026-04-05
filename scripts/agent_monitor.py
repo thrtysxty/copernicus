@@ -199,7 +199,7 @@ def _write_episode(session_id: str, conn: sqlite3.Connection) -> None:
     episode_id = f"ep_{datetime.now().strftime('%Y%m%d')}_{session_id[:8]}"
     embed_text = " ".join(filter(None, [
         row["title"] or "",
-        row.get("agent", "jules"),
+        row.get("agent") or "jules",
         verdict_data.get("summary", ""),
         " ".join(blocked_reasons),
     ]))
@@ -229,9 +229,9 @@ def _write_episode(session_id: str, conn: sqlite3.Connection) -> None:
                         episode_id,
                         datetime.now(timezone.utc).isoformat(),
                         str(row["story"]),
-                        row.get("agent", "jules"),
+                        row.get("agent") or "jules",
                         row["title"] or "",
-                        row.get("agent", "jules"),
+                        row.get("agent") or "jules",
                         verdict_data.get("verdict", "UNKNOWN"),
                         quality_score,
                         revision_count,
