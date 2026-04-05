@@ -41,6 +41,9 @@ export const ProvidersSection: React.FC = () => {
   const [activeCliWidget, setActiveCliWidget] = useState<string | null>(null)
   const [openRouterCredits, setOpenRouterCredits] = useState<number | null>(null)
 
+  // Config error state
+  const [configError, setConfigError] = useState<string | null>(null)
+
   // Custom provider state
   const [showAddCustom, setShowAddCustom] = useState(false)
   const [customName, setCustomName] = useState('')
@@ -53,6 +56,23 @@ export const ProvidersSection: React.FC = () => {
 
   const fetchStatus = async () => {
     try {
+      // Reload providers.json
+      const reloadRes = await invoke<{ ok: boolean, count?: number, error?: string }>('providers:reload')
+      if (!reloadRes.ok) {
+        // The envelope or IPC call itself failed
+        setConfigError(reloadRes.error || 'Failed to reload config')
+        addToast(reloadRes.error || 'Failed to reload config', 'error')
+      } else {
+        // Unpack the data payload
+        const data = unwrapIpc<{ ok: boolean, count?: number, error?: string }>(reloadRes)
+        if (data && !data.ok) {
+          setConfigError(data.error || 'Failed to parse config')
+          addToast(data.error || 'Failed to parse providers.json', 'error')
+        } else {
+          setConfigError(null)
+        }
+      }
+
       const data = await invoke<AuthStatus[]>('auth:status')
       if (Array.isArray(data)) {
         setStatus(data)
@@ -280,7 +300,15 @@ export const ProvidersSection: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono">AI Provider Registry</h2>
+          <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono flex items-center gap-2">
+            AI Provider Registry
+            {configError && (
+              <span className="text-[10px] bg-red-950/50 text-red-400 px-2 py-0.5 rounded border border-red-900/50 flex items-center gap-1 font-sans capitalize tracking-normal">
+                <ShieldCheck size={10} className="text-red-500" />
+                Config Error: {configError}
+              </span>
+            )}
+          </h2>
           <p className="text-[10px] text-zinc-500 font-mono mt-1">Manage API keys and local inference connectivity.</p>
         </div>
         <button 

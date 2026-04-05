@@ -23,6 +23,8 @@ import { fsManager } from './fs-manager'
 import { workflowEngine } from './workflow/engine'
 import { codebaseIndexer } from './codebase-indexer'
 import { hybridRetriever } from './llm/hybrid-retrieval'
+import { initModelsCache } from './llm/models-cache'
+import { loadProvidersConfig } from './llm/config-loader'
 import { browserSession } from './browser-session'
 import { dispatchJulesSession } from './jules/dispatcher'
 import { julesMonitor } from './jules/monitor'
@@ -586,6 +588,10 @@ app.whenReady().then(async () => {
 
   const startupTasks = async () => {
     try {
+      // Story 627 — Provider Config File
+      await initModelsCache()
+      loadProvidersConfig()
+
       if (win) win.webContents.send('app:ready-status', 'Loading knowledge base...')
       loadKnowledgeBase()
 
