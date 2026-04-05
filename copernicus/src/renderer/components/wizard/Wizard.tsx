@@ -48,6 +48,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   // Other providers
   const [googleKey, setGoogleKey] = useState('');
+  const [googleMethod, setGoogleMethod] = useState<'cli' | 'apikey' | null>(null);
   const [ollamaKey, setOllamaKey] = useState('');
   const [openaiKey, setOpenaiKey] = useState('');
   const [openrouterKey, setOpenrouterKey] = useState('');
@@ -62,6 +63,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   // GitHub
   const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string } | null>(null);
+  const [githubMethod, setGithubMethod] = useState<'cli' | 'apikey' | null>(null);
   const [showPatInput, setShowPatInput] = useState(false);
   const [patInput, setPatInput] = useState('');
 
@@ -70,6 +72,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const [editGoogle, setEditGoogle] = useState(false);
   const [editGithub, setEditGithub] = useState(false);
   const [editOllama, setEditOllama] = useState(false);
+
+  // Widget active states
+  const [activeAnthropicWidget, setActiveAnthropicWidget] = useState(false);
+  const [activeGoogleWidget, setActiveGoogleWidget] = useState(false);
+  const [activeGithubWidget, setActiveGithubWidget] = useState(false);
 
   const isAnthropicConfigured = anthropicMethod === 'cli' || anthropicKey === 'saved';
   const isGoogleConfigured = googleKey === 'saved' || googleKey === 'oauth';
@@ -112,7 +119,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
             if (p.type === 'cli') setAnthropicMethod('cli')
             else { setAnthropicMethod('apikey'); setAnthropicKey('saved') }
           }
-          if (p.provider === 'google') setGoogleKey('saved');
+          if (p.provider === 'google') {
+            setGoogleKey('saved');
+            setGoogleMethod(p.type === 'cli' ? 'cli' : 'apikey');
+          }
           if (p.provider === 'openai') setOpenaiKey('saved');
           if (p.provider === 'openrouter') setOpenrouterKey('saved');
           if (p.provider === 'deepinfra') setDeepinfraKey('saved');
@@ -123,6 +133,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
           if (p.provider === 'github') {
              // Only test connection if it's explicitly saved or env, preventing 401 on missing file credentials
              if (p.source !== 'none' && p.type !== 'none') {
+               setGithubMethod(p.type === 'cli' ? 'cli' : 'apikey');
                invoke<IpcResult<{ login: string; avatar_url: string }>>('github:test-connection').then(res => {
                  if (!res.ok) return;
                  const user = unwrapIpc<{ login: string; avatar_url: string }>(res);
@@ -346,7 +357,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
   useEffect(() => {
     const removeGoogle = window.ipcRenderer.on('oauth:google-complete', (_event: any, data: any) => {
-      if (data.ok) { setGoogleKey('oauth'); }
+      if (data.ok) { setGoogleKey('oauth'); setGoogleMethod('apikey'); }
     });
     return () => { removeGoogle(); };
   }, []);
@@ -499,8 +510,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Provider: Anthropic</span>
                         {isAnthropicConfigured && !editAnthropic ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
-                            <button onClick={() => setEditAnthropic(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {anthropicMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
+                            <button onClick={() => { setEditAnthropic(true); setActiveAnthropicWidget(false); }} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
                           </div>
                         ) : anthropicMethod && (
                           <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> Selected</span>
@@ -510,7 +521,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       {(!isAnthropicConfigured || editAnthropic) && (
                         <div className="grid grid-cols-1 gap-3">
                           <button
-                            onClick={() => setAnthropicMethod('cli')}
+                            onClick={() => { setAnthropicMethod('cli'); setActiveAnthropicWidget(true); }}
                             disabled={!claudeDetected}
                             className={`w-full text-left p-3 rounded border transition-all ${anthropicMethod === 'cli' ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black' : 'border-zinc-800 hover:border-zinc-700 opacity-60'}`}
                           >
@@ -521,11 +532,11 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                             <p className="text-[10px] text-zinc-500 leading-tight">Leverages existing <code className="text-zinc-400">claude login</code> credentials.</p>
                           </button>
 
-                          {anthropicMethod === 'cli' && AUTH_CLI_CONFIGS['anthropic'] ? (
+                          {anthropicMethod === 'cli' && activeAnthropicWidget && AUTH_CLI_CONFIGS['anthropic'] ? (
                             <AuthCliWidget
                               config={AUTH_CLI_CONFIGS['anthropic']}
-                              onComplete={() => { setAnthropicMethod('cli'); setAnthropicKey('saved'); setEditAnthropic(false); }}
-                              onCancel={() => setAnthropicMethod(null)}
+                              onComplete={() => { setAnthropicMethod('cli'); setAnthropicKey('saved'); setEditAnthropic(false); setActiveAnthropicWidget(false); }}
+                              onCancel={() => { setAnthropicMethod(null); setActiveAnthropicWidget(false); }}
                             />
                           ) : (
                             <div className={`p-3 rounded border transition-all ${anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black' : 'border-zinc-800 opacity-60'}`}>
@@ -553,8 +564,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2"><Github size={12}/> Repository Access (GitHub)</span>
                         {isGithubConfigured && !editGithub ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
-                            <button onClick={() => setEditGithub(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {githubMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
+                            <button onClick={() => { setEditGithub(true); setActiveGithubWidget(false); }} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
                           </div>
                         ) : githubUser && (
                           <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> {githubUser.login}</span>
@@ -565,13 +576,13 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <>
                           {!showPatInput && (
                             <button
-                              onClick={() => setPatInput('cli')}
+                              onClick={() => { setPatInput('cli'); setActiveGithubWidget(true); }}
                               className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all mb-2"
                             >
                               Use CLI
                             </button>
                           )}
-                          {patInput === 'cli' && AUTH_CLI_CONFIGS['github'] && (
+                          {patInput === 'cli' && activeGithubWidget && AUTH_CLI_CONFIGS['github'] && (
                             <AuthCliWidget
                               config={AUTH_CLI_CONFIGS['github']}
                               onComplete={() => {
@@ -579,15 +590,18 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                                   if (!res.ok) return;
                                   const user = unwrapIpc<{ login: string; avatar_url: string }>(res);
                                   if (user && user.login) {
+                                    setGithubMethod('cli');
                                     setGithubUser(user);
                                     setEditGithub(false);
+                                    setActiveGithubWidget(false);
+                                    setPatInput('');
                                   }
                                 }).catch(() => {});
                               }}
-                              onCancel={() => setPatInput('')}
+                              onCancel={() => { setPatInput(''); setActiveGithubWidget(false); }}
                             />
                           )}
-                          {patInput !== 'cli' && (
+                          {(!activeGithubWidget) && (
                             <button
                               onClick={() => setShowPatInput(true)}
                               className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all"
@@ -611,7 +625,10 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                               />
                               <div className="flex gap-2">
                                 <button
-                                  onClick={handlePatSubmit}
+                                  onClick={() => {
+                                    setGithubMethod('apikey');
+                                    handlePatSubmit();
+                                  }}
                                   className="flex-1 py-1.5 bg-copernicus-phosphor text-black border border-copernicus-phosphor/30 rounded text-[11px] font-bold uppercase"
                                 >Connect</button>
                                 <button
@@ -661,8 +678,8 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Google / Gemini</span>
                         {isGoogleConfigured && !editGoogle ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
-                            <button onClick={() => setEditGoogle(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                            <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {googleMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
+                            <button onClick={() => { setEditGoogle(true); setActiveGoogleWidget(false); }} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
                           </div>
                         ) : (googleKey === 'saved' || googleKey === 'oauth') ? (
                           <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SESSION ACTIVE</span>
@@ -673,16 +690,16 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
 
                       {(!isGoogleConfigured || editGoogle) && (
                         <>
-                          {googleKey === 'cli' && AUTH_CLI_CONFIGS['google'] ? (
+                          {googleKey === 'cli' && activeGoogleWidget && AUTH_CLI_CONFIGS['google'] ? (
                             <AuthCliWidget
                               config={AUTH_CLI_CONFIGS['google']}
-                              onComplete={() => { setGoogleKey('saved'); setEditGoogle(false); }}
-                              onCancel={() => setGoogleKey('')}
+                              onComplete={() => { setGoogleKey('saved'); setGoogleMethod('cli'); setEditGoogle(false); setActiveGoogleWidget(false); }}
+                              onCancel={() => { setGoogleKey(''); setActiveGoogleWidget(false); }}
                             />
                           ) : (
                             <>
                               <button
-                                onClick={() => setGoogleKey('cli')}
+                                onClick={() => { setGoogleKey('cli'); setActiveGoogleWidget(true); }}
                                 className="w-full bg-white/5 hover:bg-white/10 border border-zinc-800 hover:border-zinc-700 text-white py-2.5 rounded text-[11px] font-bold uppercase tracking-[0.2em] transition-all mb-2"
                               >
                                 Use CLI
@@ -692,7 +709,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                                 className="w-full bg-black/40 border border-copernicus-steel/30 rounded p-2 text-sm text-white outline-none focus:border-copernicus-phosphor transition-colors font-mono"
                                 placeholder={googleKey === 'saved' || googleKey === 'oauth' ? 'OAUTH CREDENTIALS ACTIVE' : 'API Key Override (Optional)'}
                                 value={googleKey === 'saved' || googleKey === 'oauth' ? '' : googleKey}
-                                onChange={(e) => setGoogleKey(e.target.value)}
+                                onChange={(e) => { setGoogleKey(e.target.value); setGoogleMethod('apikey'); }}
                               />
                             </>
                           )}

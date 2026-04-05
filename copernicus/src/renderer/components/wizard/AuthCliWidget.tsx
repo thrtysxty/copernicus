@@ -11,7 +11,7 @@ interface AuthCliWidgetProps {
   onCancel: () => void;
 }
 
-type Stage = 'detecting' | 'installing' | 'authenticating' | 'done';
+type Stage = 'detecting' | 'installing' | 'detecting_again' | 'manual_auth' | 'done';
 
 const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCancel }) => {
   const invoke = useIpcError();
@@ -49,17 +49,6 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
 
       setOutput(newOutput);
 
-      // Check success patterns based on current stage
-      const currentStage = stageRef.current;
-      const combinedOutput = data;
-
-      if (currentStage === 'detecting' && config.detectSuccessPattern.test(combinedOutput)) {
-        // Handled via exit code usually
-      } else if (currentStage === 'authenticating' && config.authSuccessPattern.test(combinedOutput)) {
-        setStage('done');
-        invoke('auth:store-api-key', config.providerId, '__cli__', undefined, 'cli').catch(() => {});
-        onComplete();
-      }
     });
 
     const unsubExit = window.ipcRenderer.on('wizard:pty-exit', (_e: any, { sessionId, code }: { sessionId: string; code: number }) => {
@@ -69,9 +58,11 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
 
       if (currentStage === 'detecting') {
         if (code === 0) {
-          // Detected -> Authenticate
-          setStage('authenticating');
-          runCommand('authenticating');
+          // Detected -> Done
+          setOutput((prev) => [...prev, 'Detected.']);
+          setStage('done');
+          invoke('auth:store-api-key', config.providerId, '__cli__', undefined, 'cli').catch(() => {});
+          onComplete();
         } else {
           // Not detected -> Install
           setStage('installing');
@@ -79,21 +70,19 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
         }
       } else if (currentStage === 'installing') {
         if (code === 0) {
-          // Installed -> Authenticate
-          setStage('authenticating');
-          runCommand('authenticating');
+          // Installed -> Detect again
+          setStage('detecting_again');
+          runCommand('detecting_again');
         } else {
           // Install failed
           setOutput((prev) => [...prev, '\x1b[31m[ERROR] Installation failed.\x1b[0m']);
         }
-      } else if (currentStage === 'authenticating') {
+      } else if (currentStage === 'detecting_again') {
         if (code === 0) {
-          // Auth Success
-          setStage('done');
-          invoke('auth:store-api-key', config.providerId, '__cli__', undefined, 'cli').catch(() => {});
-          onComplete();
+          // Detected -> Manual Auth
+          setStage('manual_auth');
         } else {
-           setOutput((prev) => [...prev, '\x1b[31m[ERROR] Authentication failed.\x1b[0m']);
+          setOutput((prev) => [...prev, '\x1b[31m[ERROR] CLI not detected after installation.\x1b[0m']);
         }
       }
     });
@@ -109,13 +98,13 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
     let cmd = '';
     if (nextStage === 'detecting') cmd = config.detectCmd;
     if (nextStage === 'installing') cmd = config.installCmd;
-    if (nextStage === 'authenticating') cmd = config.authCmd;
+    if (nextStage === 'detecting_again') cmd = config.detectCmd;
 
     if (!cmd) {
       if (nextStage === 'installing') {
         // If there's no install command (e.g. key only, though key-only shouldn't use this widget)
-        setStage('authenticating');
-        runCommand('authenticating');
+        setStage('detecting_again');
+        runCommand('detecting_again');
       }
       return;
     }
@@ -153,7 +142,7 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
              <TerminalSquare size={12} className="text-copernicus-phosphor" />
           )}
           <span className="text-[10px] font-mono text-zinc-300 uppercase tracking-widest">
-            {config.breadcrumbs[stage]}
+            {stage === 'detecting_again' || stage === 'manual_auth' ? config.breadcrumbs['authenticating'] : config.breadcrumbs[stage]}
           </span>
         </div>
         <button
@@ -172,6 +161,25 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
         {output.length === 0 && <span className="opacity-50">Waiting for CLI output...</span>}
         <div ref={outputEndRef} />
       </div>
+
+      {stage === 'manual_auth' && (
+        <div className="p-3 bg-zinc-900/50 border-t border-zinc-800 flex flex-col gap-2">
+          <p className="text-[10px] text-zinc-400">Please authenticate in your terminal:</p>
+          <div className="bg-black border border-zinc-800 rounded p-2 text-copernicus-phosphor font-mono text-[10px]">
+            {config.authCmd}
+          </div>
+          <button
+            onClick={() => {
+              setStage('done');
+              invoke('auth:store-api-key', config.providerId, '__cli__', undefined, 'cli').catch(() => {});
+              onComplete();
+            }}
+            className="mt-2 w-full bg-copernicus-phosphor text-black py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-all hover:brightness-110 active:scale-95"
+          >
+            Done — I've logged in
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 };
