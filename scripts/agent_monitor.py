@@ -190,6 +190,7 @@ def _write_episode(session_id: str, conn: sqlite3.Connection) -> None:
     if not row:
         log.warning(f"[episode] session {session_id} not found — skipping")
         return
+    row = dict(row)
 
     verdict_data = json.loads(row["review_verdict"]) if row["review_verdict"] else {}
     revision_count = row.get("revision_count") or 0
