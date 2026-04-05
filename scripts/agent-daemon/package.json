@@ -3,6 +3,8 @@
   "type": "module",
   "version": "1.0.0",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
+    "@google/generative-ai": "^0.24.1",
     "@google/jules-sdk": "^0.2.0",
     "better-sqlite3": "^12.6.0",
     "openai": "^4.0.0"

@@ -3,26 +3,9 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { getStoryPath } from './db.mjs';
 import { getPrDiff } from './github.mjs';
-import OpenAI from 'openai';
-import { execSync } from 'child_process';
+import { callStructured, ReviewVerdictSchema } from './llm.mjs';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
-
-function getOpenRouterApiKey() {
-  let key = process.env.OPENROUTER_API_KEY;
-  if (!key) {
-    try {
-      const out = execSync('bash -c "source ~/.secrets 2>/dev/null && echo $OPENROUTER_API_KEY"', { encoding: 'utf-8' });
-      key = out.trim();
-    } catch (e) {
-      // ignore
-    }
-  }
-  if (!key) {
-    throw new Error("OPENROUTER_API_KEY not set — add it to ~/.secrets");
-  }
-  return key;
-}
 
 const REVIEW_MODEL = 'mistralai/devstral-small';
 
@@ -31,7 +14,7 @@ export async function reviewPr(prNumber, storyId) {
     verdict: "BLOCKED",
     acs_met: [],
     acs_missing: [],
-    summary: "Failed to get a valid review verdict from Anthropic.",
+    summary: "Failed to get a valid review verdict.",
     reviewer_model: REVIEW_MODEL,
     reviewed_at: new Date().toISOString(),
     merge_sha: "unknown"
@@ -88,43 +71,22 @@ PR DIFF:
 ${diff}
 `;
 
-  console.log(`  Calling OpenRouter (${REVIEW_MODEL}) for PR review...`);
+  console.log(`  Calling LLM (${REVIEW_MODEL}) for PR review...`);
   try {
-    const client = new OpenAI({
-      apiKey: getOpenRouterApiKey(),
-      baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: {
-        'HTTP-Referer': 'https://github.com/JMThiessen/Copernicus',
-        'X-Title': 'Copernicus Agent Daemon',
-      }
-    });
-
-    const response = await client.chat.completions.create({
-      model: REVIEW_MODEL,
-      max_tokens: 2000,
-      temperature: 0,
-      messages: [
+    const messages = [
         {
           role: 'system',
-          content: `You are an expert code reviewer evaluating a headless agent's work. Output ONLY a valid JSON object matching this schema exactly, with NO markdown formatting, NO backticks, and NO conversational text:
-{
-  "verdict": "APPROVED" | "BLOCKED" | "REQUEST_CHANGES",
-  "acs_met": ["list", "of", "met", "ACs"],
-  "acs_missing": ["list", "of", "missing", "ACs"],
-  "summary": "Brief summary of your review"
-}
-
-If the code looks correct based on the diff alone and there are no forbidden patterns, approve it.`
+          content: `You are an expert code reviewer evaluating a headless agent's work. Output ONLY a valid JSON object matching the provided schema.`
         },
         { role: 'user', content: prompt }
-      ]
+    ];
+
+    const verdict = await callStructured({
+        model: REVIEW_MODEL,
+        messages: messages,
+        schema: ReviewVerdictSchema,
+        provider: 'openrouter' // Use explicit provider or let it resolve
     });
-
-    const responseText = response.choices[0].message.content.trim();
-    const jsonMatch = responseText.match(/\{.*\}/s);
-    const jsonStr = jsonMatch ? jsonMatch[0] : responseText;
-
-    const verdict = JSON.parse(jsonStr);
 
     return {
       verdict: verdict.verdict,
@@ -136,8 +98,8 @@ If the code looks correct based on the diff alone and there are no forbidden pat
       merge_sha: "unknown"
     };
   } catch (e) {
-    console.error(`  OpenRouter PR review error: ${e.message}`);
-    defaultVerdict.summary = `OpenRouter PR review error: ${e.message}`;
+    console.error(`  LLM PR review error: ${e.message}`);
+    defaultVerdict.summary = `LLM PR review error: ${e.message}`;
     return defaultVerdict;
   }
 }
