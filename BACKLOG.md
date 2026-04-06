@@ -533,6 +533,21 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
+| #634 | Agent Hub — Token Schema And Core Interface | DRAFT | P1 |
+| #635 | Agent Hub — State Store Loop Controller And Story Queue | DRAFT | P1 |
+| #636 | Agent Hub — Role Contract Schema | DRAFT | P1 |
+| #637 | Agent Hub — Org Chart Configuration | DRAFT | P1 |
+| #638 | Agent Hub — Constitutional Safety Layer | DRAFT | P1 |
+| #639 | Agent Hub — Hub Enforcement Replacing Classifier | DRAFT | P1 |
+| #640 | Agent Hub — Universal Attribution Ledger Sources | DRAFT | P1 |
+| #641 | Agent Hub — User As Agent Kanban Sync | DRAFT | P1 |
+| #642 | Agent Hub — Token Health Monitoring And Loop Operator | DRAFT | P1 |
+| #643 | Agent Hub — Data-Driven Model Selection At Mint | DRAFT | P2 |
+| #644 | Agent Hub — Jules Adapter | DRAFT | P1 |
+| #645 | Agent Hub — Ccr Adapter | DRAFT | P1 |
+| #646 | Agent Hub — Org Chart Ui | DRAFT | P2 |
+| #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
+| #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
