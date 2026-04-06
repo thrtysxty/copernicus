@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { getStoryPath } from './db.mjs';
-import { getPrDiff } from './github.mjs';
+import { getPrDiff, getPrBody } from './github.mjs';
 import { callStructured, ReviewVerdictSchema } from './llm.mjs';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -21,12 +21,14 @@ export async function reviewPr(prNumber, storyId) {
   };
 
   let diff;
+  let prBody = "";
   try {
     console.log(`  Fetching PR #${prNumber} diff...`);
     diff = getPrDiff(prNumber);
+    prBody = getPrBody(prNumber);
   } catch (e) {
-    console.error(`  Failed to fetch PR diff: ${e.message}`);
-    defaultVerdict.summary = "Failed to fetch PR diff.";
+    console.error(`  Failed to fetch PR diff/body: ${e.message}`);
+    defaultVerdict.summary = "Failed to fetch PR diff/body.";
     return defaultVerdict;
   }
 
@@ -51,6 +53,40 @@ export async function reviewPr(prNumber, storyId) {
     console.error(`  Failed to read AGENTS.md or extract forbidden patterns: ${e.message}`);
   }
 
+  let stitchContent = "";
+  // Check if a Stitch reference design exists
+  // storyFile is typically something like "docs/stories/story_630_agent_browser.md"
+  // We want to find if there is a docs/stitch/story-<num>/*.html
+  const storyMatch = storyFile ? storyFile.match(/story_(\d+)/) : null;
+  if (storyMatch) {
+    const storyNum = storyMatch[1];
+    const stitchDir = join(REPO_ROOT, `docs/stitch/story-${storyNum}`);
+    try {
+      // We already imported readFileSync, just need readdirSync and existsSync
+      const { existsSync, readdirSync } = await import('node:fs');
+      if (existsSync(stitchDir)) {
+        const files = readdirSync(stitchDir);
+        const htmlFiles = files.filter(f => f.endsWith('.html'));
+        if (htmlFiles.length > 0) {
+          const stitchFile = join(stitchDir, htmlFiles[0]);
+          const stitchHtml = readFileSync(stitchFile, 'utf8');
+          stitchContent = `\nSTITCH REFERENCE DESIGN (${htmlFiles[0]}):\n${stitchHtml}\n`;
+        }
+      }
+    } catch (e) {
+      console.error(`  Failed to read Stitch reference: ${e.message}`);
+    }
+  }
+
+  // Extract screenshot from PR body if available
+  let screenshotContent = "";
+  if (prBody) {
+    const screenshotMatch = prBody.match(/## Screenshots\n([\s\S]*)/i);
+    if (screenshotMatch) {
+      screenshotContent = `\nPR SCREENSHOTS / UI OUTPUT:\n${screenshotMatch[1]}\n`;
+    }
+  }
+
   const prompt = `
 You are a senior code reviewer. Review this PR diff against the story's Acceptance Criteria and the project's forbidden patterns.
 
@@ -66,7 +102,7 @@ ${storyContent}
 
 FORBIDDEN PATTERNS (never allowed):
 ${forbiddenPatterns}
-
+${stitchContent}${screenshotContent}
 PR DIFF:
 ${diff}
 `;

@@ -48,3 +48,12 @@ export function getPrDiff(prNumber) {
     throw new Error(`Failed to fetch PR diff: ${e.message}`);
   }
 }
+
+export function getPrBody(prNumber) {
+  try {
+    const out = execSync(`${GH} pr view ${prNumber} --repo ${GITHUB_REPO} --json body --jq .body`, { env: getEnv(), encoding: 'utf-8' });
+    return out;
+  } catch (e) {
+    return "";
+  }
+}

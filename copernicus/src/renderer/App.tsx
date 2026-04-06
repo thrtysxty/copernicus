@@ -44,6 +44,7 @@ import { KnowledgeBaseView } from './components/kb/KnowledgeBaseView'
 // The following panels are still rendered directly as they are not part of the new tiled views
 import { SearchPanel } from './components/search/SearchPanel'
 import { ReviewPanel } from './components/review/ReviewPanel'
+import { BrowserPanel } from './components/browser/BrowserPanel'
 
 
 const TERMINAL_HEIGHT = 200
@@ -537,6 +538,7 @@ export default function App() {
             {activeView === 'review' && <ReviewPanel />}
             {activeView === 'debug' && <DebugPanel />}
             {activeView === 'knowledge-base' && <KnowledgeBaseView />}
+            {activeView === 'browser' && <BrowserPanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
 
               <>

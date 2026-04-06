@@ -399,7 +399,16 @@ printf '%s
 ' "  If there are TypeScript errors: FIX THEM. Do not submit with TS errors." >> "$TMPFILE"
 printf '
 %s
-' "STEP 3 — Check AGENTS.md Forbidden Patterns. For every new ipcMain.handle():" >> "$TMPFILE"
+' "STEP 3 — UI Verification (Agent Browser):" >> "$TMPFILE"
+printf '%s
+' "  After \`tsc --noEmit\` passes, call \`browser:snapshot\` on the running app and confirm target component renders." >> "$TMPFILE"
+printf '%s
+' "  Graceful skip if app not running." >> "$TMPFILE"
+printf '%s
+' "  Call \`browser:screenshot\` and include screenshot under \`## Screenshots\` in PR body." >> "$TMPFILE"
+printf '
+%s
+' "STEP 4 — Check AGENTS.md Forbidden Patterns. For every new ipcMain.handle():" >> "$TMPFILE"
 printf '%s
 ' "  - Is handleIpc() wrapping the body? -> if not, add it" >> "$TMPFILE"
 printf '%s
@@ -412,12 +421,12 @@ printf '%s
 ' "  - Is result.data accessed (not the whole result)? -> check after result.ok" >> "$TMPFILE"
 printf '
 %s
-' "STEP 4 — Verify: cd copernicus && npx tsc --noEmit AGAIN after all changes." >> "$TMPFILE"
+' "STEP 5 — Verify: cd copernicus && npx tsc --noEmit AGAIN after all changes." >> "$TMPFILE"
 printf '%s
 ' "  Zero errors = ready. Any errors = do not submit." >> "$TMPFILE"
 printf '
 %s
-' "STEP 5 — Commit message format:" >> "$TMPFILE"
+' "STEP 6 — Commit message format:" >> "$TMPFILE"
 printf '%s
 ' "  feat(story-${STORY_NUMBER}): <short description matching story title>" >> "$TMPFILE"
 printf '

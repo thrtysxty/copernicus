@@ -108,7 +108,7 @@ const SEND_CHANNELS = new Set([
   'templates:list', 'templates:save', 'templates:reset',
   // Browser (Story 155)
   'browser:launch', 'browser:navigate', 'browser:screenshot',
-  'browser:click', 'browser:fill', 'browser:evaluate', 'browser:close',
+  'browser:click', 'browser:fill', 'browser:evaluate', 'browser:close', 'browser:snapshot',
   // Jules (Story 161)
   'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session', 'jules:list-sources', 'jules:approve-plan', 'jules:list-activities',
   // Local Model (Story 361)
