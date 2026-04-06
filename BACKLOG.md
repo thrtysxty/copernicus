@@ -548,6 +548,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | DRAFT | P1 |
+| #650 | Github Repo Hygiene And Onboarding Readiness | DRAFT | P1 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
