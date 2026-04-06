@@ -3,17 +3,16 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   Maximize2, RotateCcw, ChevronDown, Archive,
 } from 'lucide-react'
-import { useLayoutStore, StoryboardView } from './store/layout'
+import { useLayoutStore } from './store/layout'
 import { useUIBuilderStore } from './store/uiBuilderStore'
 import { useTelemetryStore } from './store/telemetryStore'
-import { useToastStore } from './store/toastStore'
 import { motion } from 'framer-motion'
 import { ActivityBar } from './components/layout/ActivityBar'
 import { ApplicationHeader } from './components/layout/ApplicationHeader'
 import { ProjectSelectorDialog } from './components/layout/ProjectSelectorDialog'
 import { CommandCenter } from './components/command/CommandCenter'
 import { useIpcError } from './hooks/useIpcError'
-import { unwrapIpc, IpcResult, WorkspaceState } from './types/ipc'
+import { unwrapIpc, IpcResult } from './types/ipc'
 import { useExtensionStore } from './store/extensionStore'
 import { FileTree } from './components/FileTree/FileTree'
 import { ChatPanel } from './components/chat/ChatPanel'
@@ -27,7 +26,6 @@ import WorkflowCanvas from './components/workflow/WorkflowCanvas'
 import { TileInspector } from './components/orchestrator/TileInspector'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { CommandPalette } from './components/layout/CommandPalette'
-import { commandRegistry } from './store/commandRegistry'
 import Wizard from './components/wizard/Wizard'
 import GenesisWizard from './components/genesis/GenesisWizard'
 import { IntelligenceManager } from './components/intelligence/IntelligenceManager'
@@ -35,6 +33,9 @@ import SplashScreen from './components/layout/SplashScreen'
 import { CRTOverlay } from './components/effects/CRTOverlay'
 import { ContainerViewer } from './components/runtime/ContainerViewer'
 import { DebugPanel } from './components/debug/DebugPanel'
+
+import { useAppIpcListeners } from './hooks/useAppIpcListeners'
+import { useCommandRegistration } from './hooks/useCommandRegistration'
 
 import { SourceControlView } from './components/source-control/SourceControlView'
 import { MemoryReplayView } from './components/memory/MemoryReplayView'
@@ -159,7 +160,6 @@ export default function App() {
   const setTourHighlight = useLayoutStore(s => s.setTourHighlight)
   const setChatPanelTab = useLayoutStore(s => s.setChatPanelTab)
   const setInProgressCount = useLayoutStore(s => s.setInProgressCount)
-  const setPendingReview = useLayoutStore(s => s.setPendingReview)
   const setPendingSystemMessage = useLayoutStore(s => s.setPendingSystemMessage)
   const setSettingsOpen = useLayoutStore(s => s.setSettingsOpen)
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen)
@@ -235,164 +235,33 @@ export default function App() {
     loadExtensions()
   }, [invoke])
 
-  // Initial setup and IPC listeners
-  useEffect(() => {
-    commandRegistry.registerCommand({ id: 'open-settings', label: 'Open Settings', shortcut: '⌘,', action: () => setSettingsOpen(true) })
-    commandRegistry.registerCommand({ id: 'open-planner', label: 'Open Planner', shortcut: '', action: () => setView('planner') })
-    commandRegistry.registerCommand({ id: 'open-terminal', label: 'Open Terminal', shortcut: '', action: () => setTerminalOpen(true) })
-    commandRegistry.registerCommand({ id: 'toggle-spotlight', label: 'Toggle Explorer Spotlight', shortcut: '', action: () => setSpotlight(spotlightPane ? null : 'explorer') })
-    commandRegistry.registerCommand({ id: 'new-story', label: 'New Story', shortcut: '', action: () => { /* open story form */ } })
-    commandRegistry.registerCommand({ id: 'switch-model', label: 'Switch Model', shortcut: '', action: () => setSettingsOpen(true) })
+  useCommandRegistration({
+    setIsWizard,
+    setSettingsOpen,
+    setView,
+    setTerminalOpen,
+    setSpotlight,
+    spotlightPane,
+  })
 
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('window') === 'wizard') {
-      setIsWizard(true)
-    }
-
-    const removeWorkspaceChanged = window.ipcRenderer.on('app:workspace-changed', (_e, workspaceState: WorkspaceState) => {
-      setWorkingDir(workspaceState.path)
-      setGitBranch(workspaceState.branch)
-      setGitDirty(workspaceState.isDirty)
-      // AC4: Context reset on switch
-      useLayoutStore.getState().resetForWorkspaceSwitch()
-
-      // Verify env state consistency
-      invoke<IpcResult<WorkspaceState>>('app:get-env-state').then((r) => {
-        const envState = unwrapIpc<WorkspaceState>(r)
-        if (envState?.drift?.length) {
-          log.warn('[workspace] State drift detected after switch:', envState.drift)
-        }
-      }).catch(() => {})
-
-      // Re-fetch stories for new workspace
-      invoke<IpcResult<{ status: string }[]>>('stories:list').then((r) => {
-        const list = unwrapIpc<{ status: string }[]>(r) ?? []
-        setInProgressCount(list.filter((s) => s.status === 'IN PROGRESS').length)
-      }).catch(() => {})
-    })
-
-    const removeActivateTab = window.ipcRenderer.on('terminal:activate-tab', (_e, { agentId }: { agentId: string }) => {
-      addTerminal(`terminal-${agentId}`, agentId.toUpperCase())
-    })
-
-    const removeSpawnTerminal = window.ipcRenderer.on('terminal:spawn', (_e, { id, label, ephemeral }: { id: string; label: string; ephemeral?: boolean }) => {
-      addTerminal(id, label, ephemeral ?? false)
-    })
-
-    const removeBusyState = window.ipcRenderer.on('terminal:set-busy', (_e, { id, busy }: { id: string; busy: boolean }) => {
-      setTerminalBusy(id, busy)
-    })
-
-    const removeTerminalClosed = window.ipcRenderer.on('terminal-closed', (_e, { id }: { id: string }) => {
-      removeTerminal(id)
-    })
-
-    const removeTerminalRemove = window.ipcRenderer.on('terminal:remove', (_e, { id }: { id: string }) => {
-      removeTerminal(id)
-    })
-
-    const removeFlipListener = window.ipcRenderer.on('layout:toggle-flip', () => {
-      const target = useLayoutStore.getState().spotlightPane ?? 'chat'
-      toggleFlip(target as 'editor' | 'chat')
-    })
-
-    const removeSpotListener = window.ipcRenderer.on('layout:toggle-spotlight', () => {
-      const current = useLayoutStore.getState().spotlightPane
-      setSpotlight(current ? null : 'editor')
-    })
-
-    const removeUiBuilderListener = window.ipcRenderer.on('layout:toggle-ui-builder', () => {
-      toggleUIBuilder()
-    })
-
-    const removePaletteListener = window.ipcRenderer.on('layout:open-palette', () => {
-      setCommandPaletteOpen(true)
-    })
-
-    const removeSetViewListener = window.ipcRenderer.on('layout:set-view', (_e, viewId: string) => {
-      setView(viewId as StoryboardView)
-    })
-
-    const removeKbOpenArticleListener = window.ipcRenderer.on('kb:open-article', (_e, articleId: string) => {
-      useLayoutStore.getState().setView('knowledge-base')
-      useLayoutStore.getState().setActiveKbArticleId(articleId)
-    })
-
-    const removeReviewSession = window.ipcRenderer.on('review:session-complete', (_e, data: any) => {
-      // New logic for story 334:
-      const storyId = data.stories && data.stories.length > 0 ? data.stories[0].toString() : 'UNKNOWN'
-      const storyTitle = data.stories && data.stories.length > 0 ? `Story ${data.stories[0]}` : 'Untitled Story'
-
-      setPendingSystemMessage({
-        type: 'review-summary',
-        storyId,
-        storyTitle,
-        changedFiles: data.changedFiles ? data.changedFiles.slice(0, 10) : [],
-        summary: `Story ${storyId} implementation complete. ${data.changedFiles ? data.changedFiles.length : 0} file(s) changed.`,
-        timestamp: new Date().toISOString()
-      })
-      // The generic chat message is no longer needed as the ReviewSummaryCard handles display
-      // invoke('chat:send-system', message)
-    })
-
-    const views = ['planner', 'editor', 'designer', 'orchestrator', 'reporter', 'command-center', 'memory', 'review', 'git'] as const
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); setCommandPaletteOpen(true) }
-      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '9') {
-        e.preventDefault()
-        const v = views[parseInt(e.key) - 1]
-        if (v) {
-          setView(v)
-          if (v === 'editor') setCenterMode('code')
-          else if (v === 'designer') setCenterMode('canvas')
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-
-    // Fetch initial state
-    invoke<IpcResult<string | null>>('app:get-root-path').then((r) => {
-      const root = unwrapIpc<string | null>(r)
-      if (root) {
-        setWorkingDir(root)
-      } else {
-        setShowGenesis(true)
-      }
-    }).catch(() => setShowGenesis(true))
-    invoke<IpcResult<string>>('git:branch').then((r) => setGitBranch(unwrapIpc<string>(r))).catch(() => {})
-    invoke<IpcResult<{ status: string }[]>>('stories:list').then((r) => {
-      const list = unwrapIpc<{ status: string }[]>(r) ?? []
-      setInProgressCount(list.filter((s) => s.status === 'IN PROGRESS').length)
-    }).catch(() => {})
-
-    const removeStoriesUpdated = window.ipcRenderer.on('stories:updated', (_e, stories: { status: string }[]) => {
-      setInProgressCount(stories.filter((s) => s.status === 'IN PROGRESS').length)
-    })
-
-    const removeCriticalError = window.ipcRenderer.on('app:critical-error', (_e, payload) => {
-      const p = payload as { type: string; message: string }
-      useToastStore.getState().addToast(`[Main] ${p.type}: ${p.message}`, 'error')
-    })
-
-    return () => {
-      removeCriticalError()
-      removeStoriesUpdated()
-      removeWorkspaceChanged()
-      removeActivateTab()
-      removeSpawnTerminal()
-      removeBusyState()
-      removeTerminalClosed()
-      removeTerminalRemove()
-      removeFlipListener()
-      removeSpotListener()
-      removeUiBuilderListener()
-      removePaletteListener()
-      removeSetViewListener()
-      removeReviewSession()
-      removeKbOpenArticleListener()
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [invoke, setWorkingDir, setGitBranch, setGitDirty, addTerminal, setTerminalBusy, removeTerminal, toggleFlip, setSpotlight, toggleUIBuilder, setView, setPendingReview])
+  useAppIpcListeners({
+    invoke,
+    setWorkingDir,
+    setGitBranch,
+    setGitDirty,
+    addTerminal,
+    setTerminalBusy,
+    removeTerminal,
+    toggleFlip,
+    setSpotlight,
+    toggleUIBuilder,
+    setCommandPaletteOpen,
+    setView,
+    setCenterMode,
+    setPendingSystemMessage,
+    setShowGenesis,
+    setInProgressCount,
+  })
 
   // Story 209: Auto-collapse explorer on designer view entry
   useEffect(() => {
