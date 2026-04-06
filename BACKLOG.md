@@ -535,8 +535,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
-| #630 | Agent Browser — In-Session Ui Verification Mcp | IN PROGRESS | P1 |
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
+| #630 | Agent Browser — In-Session Ui Verification Mcp | IN PROGRESS | P1 |
 | #631 | Genai Toolbox — Database Mcp For Agent Intelligence | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
