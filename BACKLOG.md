@@ -132,9 +132,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #577 | Wizard Workspace Validation | IN PROGRESS | N/A |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
-| #603 | Extract App Tsx Ipc And Command Hooks | APPROVED FOR IMPLEMENTATION | P2 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
+| #629 | Agent Harness Self-Improvement Loop | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -489,6 +489,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | COMPLETE | P1 |
 | #601 | Agent Monitor: Write Complete Status After Merge | COMPLETE | P1 |
 | #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
+| #603 | Extract App Tsx Ipc And Command Hooks | COMPLETE | P2 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | COMPLETE | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | COMPLETE | P1 |
 | #606 | Project Target Device Configuration | COMPLETE | P1 |
@@ -535,7 +536,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
-| #629 | Agent Harness Self-Improvement Loop | DRAFT | P2 |
 | #631 | Genai Toolbox — Database Mcp For Agent Intelligence | DRAFT | P2 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |

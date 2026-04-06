@@ -166,6 +166,8 @@ const SEND_CHANNELS = new Set([
   'daemon:install', 'daemon:is-registered',
   // Agent Browser (Story 630)
   'browser:navigate', 'browser:snapshot', 'browser:screenshot', 'browser:click',
+  // Harness Self-Improvement (Story 629)
+  'daemon:improvement-log',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
