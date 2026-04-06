@@ -127,4 +127,16 @@ export function registerDaemonHandlers(): void {
   ipcMain.handle('daemon:status', (_e) => handleIpc(async () => {
     return getMcpHubStatus()
   }))
+
+  ipcMain.handle('daemon:improvement-log', (_e) => handleIpc(async () => {
+    const logPath = path.join(app.getAppPath(), '..', 'scripts', 'agent-daemon', 'programs', 'improvement_log.md')
+    if (!fs.existsSync(logPath)) {
+      return []
+    }
+    const content = fs.readFileSync(logPath, 'utf8')
+    const runs = content.split('## Run: ').filter(Boolean)
+    // The first item is likely the header
+    const validRuns = runs.filter(r => r.includes('- **Timestamp:**')).slice(-20)
+    return validRuns.map(r => '## Run: ' + r)
+  }))
 }

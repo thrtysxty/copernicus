@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { getDb, getActiveSessions, showStatus } from './lib/db.mjs';
 import { getActiveTokens } from './lib/registry.mjs';
 import { startServer, getConnectedAgents } from './lib/bus.mjs';
+import { maybeImprove } from './lib/improver.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -126,10 +127,16 @@ async function main() {
 
   if (args.includes('--once')) {
     console.log('--once flag provided, exiting after attach phase.');
+    // Run improver once
+    maybeImprove(db);
     // Give streams a brief moment to connect before exiting for tests
     setTimeout(() => process.exit(0), 1000);
   } else {
     console.log('Daemon running. Press Ctrl+C to exit.');
+    // Periodically run the improver to check for new completed sessions
+    setInterval(() => {
+      maybeImprove(db);
+    }, 60 * 1000); // Check every minute
   }
 }
 

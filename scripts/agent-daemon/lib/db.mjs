@@ -43,6 +43,26 @@ export function getDb() {
     // Column might already exist
   }
 
+  try {
+    db.exec("ALTER TABLE jules_sessions ADD COLUMN quality_score REAL DEFAULT NULL");
+  } catch (e) {
+    // Column might already exist
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS improvement_runs (
+      run_id TEXT PRIMARY KEY,
+      timestamp TEXT NOT NULL,
+      role TEXT NOT NULL,
+      episodes_analyzed INTEGER,
+      change_proposed TEXT,
+      score_before REAL,
+      score_after REAL,
+      kept INTEGER DEFAULT 0,
+      notes TEXT
+    )
+  `);
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS episodes (
         episode_id     TEXT PRIMARY KEY,
@@ -203,11 +223,30 @@ export function writeEpisode(db, sessionId) {
     const verdictData = row.review_verdict ? JSON.parse(row.review_verdict) : {};
     const revisionCount = row.revision_count || 0;
     const qsMap = { 0: 1.0, 1: 0.7, 2: 0.4 };
-    const qualityScore = qsMap[revisionCount] || 0.2;
+
+    // AC pass rate from review verdict + revision count + tsc clean
+    let ac_pass_rate = 1.0;
+    const acs_met_count = verdictData.acs_met?.length || 0;
+    const acs_missing_count = verdictData.acs_missing?.length || 0;
+    const total_acs = acs_met_count + acs_missing_count;
+    if (total_acs > 0) {
+      ac_pass_rate = acs_met_count / total_acs;
+    }
+
+    // Assume tsc_clean is 1 if APPROVED
+    const tsc_clean = (verdictData.verdict === 'APPROVED' && acs_missing_count === 0) ? 1.0 : 0.0;
+
+    // Score Formula: score = ac_pass_rate * 0.6 + (1 / (1 + revision_count)) * 0.3 + tsc_clean * 0.1
+    let qualityScore = ac_pass_rate * 0.6 + (1 / (1 + revisionCount)) * 0.3 + tsc_clean * 0.1;
+
     const blockedReasons = verdictData.acs_missing || [];
 
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const episodeId = `ep_${dateStr}_${sessionId.substring(0, 8)}`;
+
+    // Also save quality_score to jules_sessions
+    db.prepare('UPDATE jules_sessions SET quality_score=? WHERE session_id=?')
+      .run(qualityScore, sessionId);
 
     db.prepare(`
       INSERT INTO episodes
@@ -291,4 +330,21 @@ export function registerSession(db, sessionId, storyId, title, prompt) {
       (session_id, story, title, state, dispatched, updated)
     VALUES (?, ?, ?, 'QUEUED', ?, ?)
   `).run(sessionId, storyId, title, now, now);
+}
+
+export function logImprovementRun(db, runId, role, episodesAnalyzed, changeProposed, scoreBefore, scoreAfter, kept, notes) {
+  db.prepare(`
+    INSERT INTO improvement_runs (run_id, timestamp, role, episodes_analyzed, change_proposed, score_before, score_after, kept, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    runId,
+    new Date().toISOString(),
+    role,
+    episodesAnalyzed,
+    changeProposed,
+    scoreBefore,
+    scoreAfter,
+    kept ? 1 : 0,
+    notes
+  );
 }
