@@ -168,6 +168,8 @@ const SEND_CHANNELS = new Set([
   'browser:navigate', 'browser:snapshot', 'browser:screenshot', 'browser:click',
   // Harness Self-Improvement (Story 629)
   'daemon:improvement-log',
+  // Database MCP (Story 631)
+  'db:query', 'db:list-tables', 'db:story-status',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */

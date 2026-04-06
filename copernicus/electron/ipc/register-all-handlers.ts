@@ -52,6 +52,7 @@ import { registerOpenRouterHandlers } from './openrouter-handlers'
 import { registerProviderHandlers } from './provider-handlers'
 import { registerKbHandlers } from './kb-handlers'
 import { registerBrowserHandlers } from './browser-handlers'
+import { registerDbMcpHandlers } from './db-mcp-handlers'
 
 export async function registerAllIpcHandlers(
   win: BrowserWindow,
@@ -129,6 +130,7 @@ export async function registerAllIpcHandlers(
   registerProviderHandlers()
   registerKbHandlers()
   registerBrowserHandlers()
+  registerDbMcpHandlers()
 
   ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {
     const projectId = fsManager.getRootPath()
