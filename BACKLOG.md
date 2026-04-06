@@ -131,9 +131,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
-| #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #631 | Genai Toolbox — Database Mcp For Agent Intelligence | APPROVED FOR IMPLEMENTATION | P2 |
+| #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -485,7 +484,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #597 | Remove Stale Column Ids From Layout.Ts | COMPLETE | P2 |
 | #598 | Complete Console.Log Cleanup — Renderer And New Electron Files (192 Continuation) | COMPLETE | P2 |
 | #599 | Session Archive And Nightly Digest Pipeline | COMPLETE | P1 |
-| #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | COMPLETE | P1 |
 | #601 | Agent Monitor: Write Complete Status After Merge | COMPLETE | P1 |
 | #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
 | #603 | Extract App Tsx Ipc And Command Hooks | COMPLETE | P2 |
@@ -502,7 +500,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #615 | Lsp Health Monitor And Recovery | COMPLETE | P1 |
 | #616 | Worktree Manager Lifecycle Coordination | COMPLETE | P2 |
 | #617 | Settings Store Write Confirmation | COMPLETE | P2 |
-| #618 | Openrouter Provider Flag | COMPLETE | P1 |
 | #619 | Ghost Tint Active State Css Violations | COMPLETE | P2 |
 | #620 | Console Log Lint False Positives And App Tsx Fix | COMPLETE | P2 |
 | #621 | Pty Auditor Shell Injection Hardening | COMPLETE | P1 |
@@ -540,6 +537,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
 | #630 | Agent Browser — In-Session Ui Verification Mcp | IN PROGRESS | P1 |
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
+| #631 | Genai Toolbox — Database Mcp For Agent Intelligence | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
