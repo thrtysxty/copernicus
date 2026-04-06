@@ -131,8 +131,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
-| #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
+| #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -487,7 +487,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #601 | Agent Monitor: Write Complete Status After Merge | COMPLETE | P1 |
 | #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
 | #603 | Extract App Tsx Ipc And Command Hooks | COMPLETE | P2 |
-| #604 | Replace Anthropic Pr Review With Ollama Structured Output | COMPLETE | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | COMPLETE | P1 |
 | #606 | Project Target Device Configuration | COMPLETE | P1 |
 | #607 | Agent Daemon Jules Sdk Handler | COMPLETE | P1 |
