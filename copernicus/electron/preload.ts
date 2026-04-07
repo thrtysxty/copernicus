@@ -169,7 +169,7 @@ const SEND_CHANNELS = new Set([
   // Harness Self-Improvement (Story 629)
   'daemon:improvement-log',
   // Database MCP (Story 631)
-  'db:query', 'db:list-tables', 'db:story-status',
+  'db:query', 'db:list-tables', 'db:search-episodes', 'db:story-status', 'db:recent-episodes', 'db:quality-summary',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */

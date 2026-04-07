@@ -46,6 +46,7 @@ import { KnowledgeBaseView } from './components/kb/KnowledgeBaseView'
 import { SearchPanel } from './components/search/SearchPanel'
 import { ReviewPanel } from './components/review/ReviewPanel'
 import { BrowserPanel } from './components/browser/BrowserPanel'
+import DatabasePanel from './components/database/DatabasePanel'
 
 
 const TERMINAL_HEIGHT = 200
@@ -408,6 +409,7 @@ export default function App() {
             {activeView === 'debug' && <DebugPanel />}
             {activeView === 'knowledge-base' && <KnowledgeBaseView />}
             {activeView === 'browser' && <BrowserPanel />}
+            {activeView === 'database' && <DatabasePanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
 
               <>

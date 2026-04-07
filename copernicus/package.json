@@ -9,6 +9,7 @@
     "url": "https://github.com/JMThiessen/copernicus.git"
   },
   "scripts": {
+    "prepare": "bash scripts/download-toolbox.sh",
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
     "build:debug": "cross-env COPERNICUS_DEBUG=true tsc && vite build && electron-builder",
@@ -134,6 +135,7 @@
     "@google/generative-ai": "^0.24.1",
     "@google/jules-sdk": "^0.2.0",
     "@google/stitch-sdk": "^0.0.3",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@monaco-editor/react": "^4.6.0",
     "@openrouter/sdk": "^0.11.2",
     "@types/ws": "^8.18.1",
