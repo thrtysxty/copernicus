@@ -8,6 +8,16 @@ You write stories. Agents implement them. Copernicus tracks cost, quality, and v
 
 ---
 
+## What Makes This Different
+
+Individual pieces of the agentic development puzzle exist elsewhere: episodic memory systems, token authority frameworks, loop controllers, behavioral contracts. Copernicus is the first integration of all of them into a governed agentic IDE — a single environment where planning, delegation, financial accountability, verification, and retrospective learning are connected rather than scattered across separate tools and manual process.
+
+Copernicus is built using its own methodology. Every feature in this README was implemented by an agent working a story with defined acceptance criteria, reviewed by Claude against those ACs, and merged only on a passing tsc gate. The agents are not a curiosity bolted onto the side of the product — they are the development team.
+
+**AI contributors:** [Claude](https://anthropic.com) (Anthropic) — architecture, planning, code review throughout. [Jules](https://jules.google) (Google) — implementation across 30+ merged PRs. Named in commits, named here.
+
+---
+
 ## Why Copernicus Exists
 
 Every current LLM coding tool has the same problem: the agent gets context from you, makes a guess, and disappears. You have no idea what it cost, whether it broke anything, or how to route the next task to a better model.
@@ -289,12 +299,16 @@ bash scripts/jules_assign.sh docs/stories/story_NNN_title.md
 # Dry run — print prompt size without dispatching
 bash scripts/jules_assign.sh --dry-run docs/stories/story_NNN_title.md
 
-# Jules daemon — polls active sessions, reviews PRs, auto-merges on APPROVE
-python3 scripts/jules_daemon.py           # run continuously
-python3 scripts/jules_daemon.py --status  # show all sessions + review state
+# Agent daemon — polls active Jules sessions, reviews PRs, auto-merges on APPROVE
+node scripts/agent-daemon/index.mjs           # run continuously
+node scripts/agent-daemon/index.mjs --status  # show all sessions + review state
+node scripts/agent-daemon/index.mjs --once    # single poll cycle
 
-# Gemini dispatch (write prompt to file first)
-gemini -p "$(cat /tmp/prompt.md)" --approval-mode yolo 2>&1 | tee /tmp/gemini_NNN.log
+# CCR dispatch (Claude Code Router — for Python, shell, multi-file implementation)
+# From a worktree: create it first, then dispatch in background
+git worktree add .agent-worktrees/story-NNN story/NNN
+(cd .agent-worktrees/story-NNN && ccr code --dangerously-skip-permissions \
+  -p "$(cat /tmp/prompt_NNN.md)" 2>&1 | tee /tmp/cc_NNN.log)
 
 # 10-point IPC compliance scan
 make ipc-lint
@@ -354,7 +368,7 @@ scripts/                jules_assign.sh, jules_daemon.py, dev-setup.sh,
 
 **IPC envelope** — Every `ipcMain.handle` uses `handleIpc()` returning `{ ok: true, data }` or `{ ok: false, error }`. Every renderer call uses `useIpcError()` + `unwrapIpc()`. Enforced by `make ipc-lint` and TypeScript types. No exceptions.
 
-**Agent dispatch** — Claude runs in-process (streaming). Gemini runs via the `gemini` CLI in yolo mode (`--approval-mode yolo`). Jules dispatches async to GitHub; `jules_daemon.py` polls for completion, runs a Claude Sonnet 4.6 review against story ACs and forbidden patterns, and auto-merges only on an explicit APPROVE verdict. All three log to `model_calls` and surface in the terminal tab strip.
+**Agent dispatch** — Claude runs in-process (streaming). CCR (Claude Code Router, port 9669) handles Python, shell, and multi-file implementation stories from isolated git worktrees. Jules dispatches async to GitHub; `scripts/agent-daemon/index.mjs` polls for completion, runs a Claude Sonnet 4.6 review against story ACs and forbidden patterns, and auto-merges only on an explicit APPROVE verdict. All channels log to `model_calls` and surface in the terminal tab strip.
 
 **Semantic search architecture** — LSP provides symbol boundaries → chunks stored in `sqlite-vec` with 768-dim embeddings → queries combine cosine similarity with symbol name boost → results returned as `{ file, line, col, symbol, score }[]`. No external dependencies beyond an embedding provider.
 
@@ -363,3 +377,77 @@ scripts/                jules_assign.sh, jules_daemon.py, dev-setup.sh,
 **Story format** — Markdown files with structured sections (`## Blocks`, `## Blocked By`, `## Acceptance Criteria`, `## Definition of Done`). SQLite Kanban syncs from disk on focus, writes atomically. Agents read story files directly — they are the agent's source of truth.
 
 **Governance** — `docs/reference/UX_BIBLE.md` and `TECHNICAL_BIBLE.md` define binding constraints. `AGENTS.md` at repo root is read automatically by Jules and updated by the Retrospective workflow. All three documents are the law; the retrospective pipeline keeps them current.
+
+---
+
+## Roadmap
+
+The active backlog is in [`docs/stories/`](docs/stories/). What follows is a high-level view of current initiatives, organized by phase.
+
+### Phase 6 — Configurable Agent Hub
+
+The biggest architectural initiative underway. The Agent Hub replaces the current pattern-matched classifier hook with a structural authority layer: every agent that executes work holds a minted employment credential token, and every action is checked against that token's scope before proceeding. Authority flows from a single auditable source rather than from ad-hoc allow lists.
+
+| Story | Title | What it delivers |
+|-------|-------|-----------------|
+| 634 | Token schema and core interface | `mint`, `check`, `revoke` — the three atomic Hub operations; token carries identity, role, scope, expiry |
+| 635 | State store, loop controller, story queue | In-memory Hub state; loop detection; story queue with priority ordering |
+| 636 | Role contract schema | Structured role definitions: name, class (regulatory/operational), authority level, capability list |
+| 637 | Org chart configuration | YAML org chart: declare who reports to whom, what capabilities each role has |
+| 638 | Constitutional safety layer | Hard limits no token can override — mandatory tsc gate, no main-branch direct commits, no credential writes |
+| 639 | Hub enforcement replacing classifier | Classifier hook retired; all authority checks flow through Hub token scope |
+| 640 | Universal attribution ledger | Every tool call attributed to the token that authorized it — full audit trail |
+| 641 | User-as-agent / Kanban sync | The human operator represented as a Hub agent with elevated authority; story status synced from Hub state |
+| 642 | Token health monitoring and loop operator | Detects stalled and runaway sessions; escalates to operator; loop budget per token |
+| 643 | Data-driven model selection at mint | Hub selects provider:model at token mint time based on role, story context, and cost constraints |
+| 644 | Jules adapter | Jules sessions governed by Hub tokens — dispatch, plan approval, and merge authority all enforced |
+| 645 | CCR adapter | CCR sessions governed by Hub tokens — worktree scope, allowed shell commands, and file write paths enforced |
+| 646 | Org chart UI | Visual org chart in the IDE: see active agents, their roles, token expiry, and current task |
+| 647 | Hub ledger view | Dashboard tab showing all token events — mints, checks, revocations, violations |
+| 648 | Self-improvement loop integration | Retrospective pipeline writes Hub role reinforcements: successful routing decisions promoted to org chart defaults |
+
+Full specification: [`docs/reference/PHASE6_AGENT_HUB.md`](docs/reference/PHASE6_AGENT_HUB.md)
+
+---
+
+### Intelligence View
+
+Agents as first-class entities you configure, not black boxes you prompt:
+
+| Story | Title | What it delivers |
+|-------|-------|-----------------|
+| 590 | agent.yaml schema | Standard schema for defining agents as documents — model, persona, tools, constraints |
+| 591 | soul.md instruction format | Freeform behavioral instruction layer for agents; composable with agent.yaml |
+| 592 | Provider injection and sync retarget | Swap an agent's provider or model without recreating the agent; live retarget during a session |
+
+---
+
+### Infrastructure and Providers
+
+| Story | Title | What it delivers |
+|-------|-------|-----------------|
+| 631 | GenAI Toolbox — database MCP | Google's open-source database MCP server as an agent intelligence backend; structured agent memory via SQL |
+| 633 | Harbor-style containerized sandboxing | Per-agent Docker containers with explicit filesystem mounts and resource caps; `--dangerously-skip-permissions` becomes unnecessary |
+| 649 | Package age gate — supply chain security | Block agent-driven installs of packages under 6 months old; CVE scan before any `npm install` or `pip install`; kills a known supply-chain attack vector |
+| 652 | MLX native inference — Apple Silicon | `mlx_lm.server` as an OpenAI-compatible local provider; native Neural Engine inference at $0/token for M-series users; the commercial differentiator for the platform |
+
+---
+
+### Ship Readiness
+
+| Story | Title | What it delivers |
+|-------|-------|-----------------|
+| 650 | Repo hygiene and onboarding readiness | LICENSE (MIT), CONTRIBUTING.md, AGENTS.md, real PR and issue templates, stale PR cleanup — the gap between "working repo" and "welcoming repo" |
+| 651 | Ship-ready defaults and Gemma4 onboarding guide | Safe zero-config defaults; embedded `node-llama-cpp` inference engine for an in-app Gemma4 guide that walks new users from install to first dispatch without requiring cloud keys |
+
+---
+
+### Delight
+
+| Story | Title | What it delivers |
+|-------|-------|-----------------|
+| 575 | Agent Break Room | Hidden animated leisure space for agents between tasks; social identity layer; self-authored persona files. Never advertised — discovery is the feature. |
+
+---
+
+*This roadmap reflects the active backlog as of April 2026. Story status and priority are tracked in [`docs/stories/`](docs/stories/); completed work is archived in [`docs/stories/completed/`](docs/stories/completed/).*

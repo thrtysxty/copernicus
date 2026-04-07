@@ -133,7 +133,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #631 | Genai Toolbox — Database Mcp For Agent Intelligence | APPROVED FOR IMPLEMENTATION | P2 |
+| #650 | Github Repo Hygiene And Onboarding Readiness | APPROVED FOR IMPLEMENTATION | P1 |
+| #656 | Daemon Merge Gate Human Review | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -507,7 +508,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #623 | Openrouter Sdk Provider | COMPLETE | P1 |
 | #626 | Provider Registry Abstraction | COMPLETE | P1 |
 | #627 | Provider Config File | COMPLETE | P2 |
+| #631 | Genai Toolbox — Database Mcp For Agent Intelligence | COMPLETE | P2 |
 | #632 | Agent Socket Bus — Real-Time Inter-Agent Communication Layer | COMPLETE | P1 |
+| #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -549,14 +552,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | DRAFT | P1 |
-| #650 | Github Repo Hygiene And Onboarding Readiness | DRAFT | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
+| #654 | Jules Dispatch Branch Aware | DRAFT | P1 |
+| #655 | Fix 631 Genai Toolbox Rework | DRAFT | P0 |
+| #657 | Turso Libsql State Ledger | DRAFT | P1 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
 | #630 | Agent Browser — In-Session Ui Verification Mcp | IN PROGRESS | P1 |
-| #653 | Dead Code And Artifact Purge | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
