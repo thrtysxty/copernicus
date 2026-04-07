@@ -17,8 +17,7 @@ help:
 	@echo ""
 	@echo "Utilities:"
 	@echo "  backlog      - Generate the master backlog document"
-	@echo "make import-data TYPE=<type> - Import CSV data (sets, checklists, inventory, all)"
-	@echo "make db-deploy - Deploy database schema to Core"
+		@echo "make db-deploy - Deploy database schema to Core"
 	@echo "make db-migrate - Run pending database migrations on Core"
 	@echo "  clean        - Clean build artifacts"
 	@echo "  reset        - Wipe all app state (DB, settings, logs) - triggers setup wizard on next launch"
@@ -80,19 +79,16 @@ jules-preflight:
 tsc:
 	@cd copernicus && npx tsc --noEmit
 
-import-data:
-	$(PYTHON) scripts/utils/import_data.py --type $(TYPE)
-
 deploy:
 	git push origin main
-	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/high-plains-hipster && git pull && docker compose -f docker/docker-compose.yml restart'
+	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/copernicus && git pull && docker compose -f docker/docker-compose.yml restart'
 
 db-deploy:
-	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/high-plains-hipster && ./scripts/deployment/deploy_database.sh'
+	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/copernicus && ./scripts/deployment/deploy_database.sh'
 
 db-migrate:
 	@echo "Running database migration on Core Server..."
-	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/high-plains-hipster && source .venv/bin/activate && python scripts/migrations/backfill_card_inventory.py --execute'
+	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/copernicus && source .venv/bin/activate && python scripts/migrations/run_migrations.py --execute'
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true # nosec
@@ -111,8 +107,8 @@ reset-db:
 
 ## ── Ollama Inference Server (Dell R210ii Core) ────────────────────────
 ollama-deploy:
-	ssh core "cd agentic-platform && docker compose -f docker-compose.ollama.yml up -d"
-	ssh core "cd agentic-platform && bash scripts/setup_ollama_server.sh"
+	ssh core "cd copernicus && docker compose -f docker-compose.ollama.yml up -d"
+	ssh core "cd copernicus && bash scripts/setup_ollama_server.sh"
 
 ollama-status:
 	@echo "=== Ollama on Core ==="

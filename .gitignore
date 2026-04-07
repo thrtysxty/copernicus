@@ -43,6 +43,23 @@ copernicus/out/
 .claude/tasks/
 .claude/worktrees/
 
+# Agent worktrees and state
+.agent-worktrees/
+.agents/
+
+# IDE extensions (machine-specific)
+.continue/
+.playwright-mcp/
+
+# Compiled native binaries (platform-specific)
+copernicus/better_sqlite3.node
+
+# Session logs
+docs/sessions/
+
+# Jules daemon state
+scripts/agent-daemon/.jules/
+
 # Databases
 *.db
 *.sqlite3
