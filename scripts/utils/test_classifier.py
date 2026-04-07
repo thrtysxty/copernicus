@@ -164,7 +164,7 @@ def call_classifier(system_prompt: str, transcript: str, action: str, api_key: s
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/high-plains-hipster",
+            "HTTP-Referer": "https://github.com/JMThiessen/Copernicus",
             "X-Title": "COPERNICUS classifier",
         },
         json=payload,

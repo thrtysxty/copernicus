@@ -21,7 +21,7 @@ class OpenRouterClient:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/high-plains-hipster",
+            "HTTP-Referer": "https://github.com/JMThiessen/Copernicus",
             "X-Title": "COPERNICUS IDE Agent",
         }
 
