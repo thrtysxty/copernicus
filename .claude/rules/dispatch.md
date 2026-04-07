@@ -19,7 +19,7 @@ cat >> /tmp/gemini_NNN.md << 'EOF'
 EOF
 
 # Step 3 — run headless from the worktree directory
-(cd .agent-worktrees/story-NNN && bash scripts/dispatch_claude_ollama.sh /tmp/gemini_NNN.md 2>&1 | tee /tmp/gemini_NNN.log)
+(cd .agent-worktrees/story-NNN && bash scripts/appropriate_dispatch.sh /tmp/gemini_NNN.md 2>&1 | tee /tmp/gemini_NNN.log)
 # Use run_in_background: true on the Bash tool call — no terminal tab needed.
 # On completion Claude reads /tmp/gemini_NNN.log to verify output.
 
@@ -27,7 +27,7 @@ EOF
 # Each writes to its own log: /tmp/gemini_571.log, /tmp/gemini_572.log, etc.
 
 # Optional: override model (default: devstral-small-2:cloud)
-(cd .agent-worktrees/story-NNN && bash scripts/dispatch_claude_ollama.sh /tmp/gemini_NNN.md --model claude-sonnet-4-6 2>&1 | tee /tmp/gemini_NNN.log)
+(cd .agent-worktrees/story-NNN && bash scripts/appropriate_dispatch.sh /tmp/gemini_NNN.md --model claude-sonnet-4-6 2>&1 | tee /tmp/gemini_NNN.log)
 ```
 
 **Worktree cleanup** (after PR merge):
@@ -62,7 +62,7 @@ git branch -d story/NNN
 2. **Claude via Ollama Cloud — Python, shell, multi-file implementation:**
    ```bash
    git worktree add .agent-worktrees/story-NNN story/NNN
-   (cd .agent-worktrees/story-NNN && bash scripts/dispatch_claude_ollama.sh /tmp/gemini_NNN.md 2>&1 | tee /tmp/gemini_NNN.log)
+   (cd .agent-worktrees/story-NNN && bash scripts/appropriate_dispatch.sh /tmp/gemini_NNN.md 2>&1 | tee /tmp/gemini_NNN.log)
    ```
    Always dispatch from a worktree — agent commits to `story/NNN`, opens PR, never touches `main` directly.
 

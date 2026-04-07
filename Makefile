@@ -114,10 +114,6 @@ reset-db:
 	@echo "Done."
 
 ## ── Ollama Inference Server (Dell R210ii Core) ────────────────────────
-ollama-deploy:
-	ssh core "cd copernicus && docker compose -f docker-compose.ollama.yml up -d"
-	ssh core "cd copernicus && bash scripts/setup_ollama_server.sh"
-
 ollama-status:
 	@echo "=== Ollama on Core ==="
 	@curl -sf http://$(CORE_SERVER_IP):11434/api/tags | python3 -m json.tool 2>/dev/null 
@@ -125,11 +121,3 @@ ollama-status:
 
 ollama-stop:
 	ssh core "docker stop copernicus-ollama || true"
-
-## ── Local Ollama CLI Helpers ────────────────────────────────────────────────
-# Ask a local Ollama model a question about a file. Requires `ollama` CLI to be installed.
-# Usage: make ollama-ask FILE=<path> PROMPT=<prompt> [MODEL=scribe]
-ollama-ask:
-	@if [ -z "$(FILE)" ]; then echo "[!] Usage: make ollama-ask FILE=<path> PROMPT=<prompt>"; exit 1; fi
-	@if [ -z "$(PROMPT)" ]; then echo "[!] Usage: make ollama-ask FILE=<path> PROMPT=<prompt>"; exit 1; fi
-	@bash scripts/ollama_ask.sh "$(PROMPT)" "$(FILE)" "$(MODEL)"

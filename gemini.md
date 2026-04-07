@@ -68,7 +68,6 @@ Output `[[SIGNAL_ORCHESTRATOR]]` and stop if:
 Delegate in this priority order:
 
 1. **Cloud Dispatch — drafting, research, vision:**
-   Use `scripts/dispatch_claude_ollama.sh` (story 600) for cloud model dispatch.
    Roles: `thinker`, `coder`, `vision`, `researcher`, `fast`.
 
 2. **Jules — isolated sub-stories that need a PR:**

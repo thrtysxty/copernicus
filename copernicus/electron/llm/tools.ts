@@ -251,7 +251,7 @@ export class ToolExecutor {
       return `To dispatch ${storyId} to Jules: open the Kanban board, find the story card, and click the "→ Jules" button. Jules will create a PR automatically.`
     }
 
-    return `Use scripts/dispatch_claude_ollama.sh to dispatch story ${storyId} via ${provider}. Run from the project root.`
+    return `Use appropriate dispatch scripts to dispatch story ${storyId} via ${provider}. Run from the project root.`
   }
 }
 
