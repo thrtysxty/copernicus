@@ -38,6 +38,11 @@ copernicus/dist-electron/
 copernicus/out/
 .gemini/
 
+# Claude Code — personal session state (not shared)
+.claude/projects/
+.claude/tasks/
+.claude/worktrees/
+
 # Databases
 *.db
 *.sqlite3

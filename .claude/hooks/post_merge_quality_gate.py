@@ -14,7 +14,11 @@ import subprocess
 import os
 import re
 
-REPO_ROOT = '/Users/dadmin/Projects/agentic-platform'
+REPO_ROOT = subprocess.check_output(
+    ['git', 'rev-parse', '--show-toplevel'],
+    text=True,
+    cwd=os.path.dirname(os.path.abspath(__file__)),
+).strip()
 COPERNICUS_DIR = os.path.join(REPO_ROOT, 'copernicus')
 
 MERGE_PATTERNS = [
