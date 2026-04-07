@@ -98,7 +98,41 @@ The Jules monitor polls for PR status. Allow 30–60 seconds. If the card doesn'
 
 ---
 
+## 8. Collaborative Workflow (Multi-Contributor Repos)
+
+This repo uses a **PR-first** workflow for all changes — including story files. Jules, human contributors, and Claude all operate on the same rule: nothing lands on `main` except through a reviewed pull request.
+
+### The dispatch sequence
+
+```
+1. Write or update a story file
+2. Open a PR with the story file → get it merged to main
+3. Dispatch Jules (via Kanban board or CLI: bash scripts/jules_assign.sh docs/stories/story_NNN_*.md)
+4. Jules creates its own implementation PR from a feature branch
+5. Claude reviews the diff against story ACs → APPROVE or REQUEST CHANGES
+6. On APPROVE: PR merges, story moves to completed/
+```
+
+**Why the story must be on `main` first:** Jules fetches the repo from GitHub origin. If your story file hasn't merged, Jules won't see it.
+
+### CLI dispatch (for contributors without Copernicus running)
+
+```bash
+# From the repo root after your story PR has merged:
+bash scripts/jules_assign.sh docs/stories/story_NNN_your_story_title.md
+```
+
+The dispatch script validates the story spec, checks that it's not already implemented, and registers the session with the Jules daemon. The daemon handles plan approval and auto-merges on APPROVE.
+
+### Review expectations
+
+Jules PRs are reviewed against the story's Acceptance Criteria — not just for correctness, but for IPC contract compliance (`handleIpc`/`useIpcError`/`unwrapIpc`), TypeScript cleanliness (`tsc --noEmit`), and scope (no changes outside the story's `## Files in Scope`). See `docs/reference/TECHNICAL_BIBLE.md` for the full standard.
+
+---
+
 ## Related
 
 - `docs/reference/STITCH_SETUP.md` — Design-to-code integration
 - `docs/reference/USER_WORKFLOW.md` — Full sprint workflow including Jules dispatch
+- `docs/reference/TECHNICAL_BIBLE.md` — IPC standards and code review criteria
+- `docs/guides/JULES_ENGINEERING_STANDARDS.md` — What Jules is expected to produce
