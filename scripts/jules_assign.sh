@@ -122,6 +122,7 @@ Focus: Hardening, secret detection, IPC surface minimization.
     --dry-run) DRY_RUN=true ;;
     --verbose) VERBOSE=true ;;
     --skip-validation) SKIP_VALIDATION=true ;; # Added this line
+    --force-dispatch) FORCE_DISPATCH=true ;;
     -*) echo "❌ Unknown flag: $1"; exit 1 ;;
     *)
       if [ -z "$STORY_PATH" ]; then STORY_PATH="$1"
@@ -200,12 +201,16 @@ if [ -z "$EXISTING_COMMIT" ]; then
   EXISTING_COMMIT=$(git log origin/main --oneline --grep="feat.*story.${STORY_NUMBER}[^0-9]" -i 2>/dev/null | head -1)
 fi
 if [ -n "$EXISTING_COMMIT" ]; then
-  echo ""
-  echo "❌ DISPATCH BLOCKED — story ${STORY_NUMBER} already has an implementation commit on main:"
-  echo "   $EXISTING_COMMIT"
-  echo ""
-  echo "   Mark the story COMPLETE and move on."
-  exit 1
+  if [ "${FORCE_DISPATCH:-false}" = "true" ]; then
+    echo "⚠️  --force-dispatch: ignoring commit match (false positive): $EXISTING_COMMIT"
+  else
+    echo ""
+    echo "❌ DISPATCH BLOCKED — story ${STORY_NUMBER} already has an implementation commit on main:"
+    echo "   $EXISTING_COMMIT"
+    echo ""
+    echo "   Mark the story COMPLETE and move on. Use --force-dispatch to override (false positives)."
+    exit 1
+  fi
 fi
 echo "✓ No prior implementation commit found — safe to dispatch"
 

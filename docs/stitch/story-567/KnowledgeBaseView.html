@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Kinetic Archive - Copernicus IDE Knowledge Base</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#8a95ff",
+                        "inverse-on-surface": "#555458",
+                        "tertiary-fixed": "#ced6f5",
+                        "on-surface-variant": "#abaab4",
+                        "on-background": "#e6e4ef",
+                        "secondary-dim": "#8a95ff",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "surface-tint": "#c0c1ff",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "surface-container-low": "#131317",
+                        "error-dim": "#b95463",
+                        "surface": "#0e0e11",
+                        "secondary-container": "#222d97",
+                        "primary-dim": "#b0b2ff",
+                        "primary": "#c0c1ff",
+                        "on-secondary-container": "#b4baff",
+                        "on-primary-fixed": "#2622b7",
+                        "tertiary-dim": "#c0c9e6",
+                        "on-tertiary-container": "#424a63",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "tertiary": "#dee5ff",
+                        "surface-bright": "#2a2b35",
+                        "on-secondary": "#000974",
+                        "inverse-primary": "#494bd7",
+                        "surface-container-lowest": "#000000",
+                        "surface-container": "#19191e",
+                        "on-secondary-fixed-variant": "#4650b9",
+                        "on-primary-container": "#ccccff",
+                        "error": "#ec7c8a",
+                        "surface-dim": "#0e0e11",
+                        "outline-variant": "#474750",
+                        "surface-variant": "#24252d",
+                        "on-tertiary-fixed": "#2f384f",
+                        "on-primary": "#2724b8",
+                        "inverse-surface": "#fbf8fc",
+                        "secondary-fixed": "#e0e0ff",
+                        "primary-container": "#2f2ebe",
+                        "on-secondary-fixed": "#27319b",
+                        "on-error": "#490013",
+                        "surface-container-highest": "#24252d",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "tertiary-container": "#ced6f5",
+                        "secondary-fixed-dim": "#ced1ff",
+                        "primary-fixed": "#e1e0ff",
+                        "outline": "#75757e",
+                        "error-container": "#7f2737",
+                        "on-tertiary": "#4a536c",
+                        "background": "#0e0e11",
+                        "on-error-container": "#ff97a3",
+                        "surface-container-high": "#1f1f26",
+                        "on-surface": "#e6e4ef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 1.25rem;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0e0e11;
+            color: #e6e4ef;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #131317;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #24252d;
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #474750;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(135deg, #c0c1ff 0%, #2f2ebe 100%);
+        }
+    </style>
+</head>
+<body class="flex overflow-hidden h-screen">
+<!-- SideNavBar (Authority JSON) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col bg-zinc-900 h-screen w-64 border-r-0 font-sans text-[0.6875rem] tracking-tight z-50">
+<div class="p-4 flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-zinc-100 uppercase tracking-widest">Knowledge Base</span>
+<span class="text-[10px] text-zinc-500">v2.4.0-stable</span>
+</div>
+<button class="material-symbols-outlined text-zinc-400 hover:text-white transition-colors">unfold_more</button>
+</div>
+<div class="px-4 mb-6">
+<button class="kinetic-gradient w-full py-2 rounded-lg text-on-primary font-bold shadow-lg transition-transform scale-95 active:scale-90 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Article
+            </button>
+</div>
+<nav class="flex-1 flex flex-col bg-zinc-950 p-[1px] gap-1 overflow-y-auto">
+<!-- Navigation Items (Mapping JSON) -->
+<div class="bg-zinc-800 text-indigo-300 border-l-2 border-indigo-400 flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors duration-150">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span>Explorer</span>
+</div>
+<div class="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors duration-150">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span>Search</span>
+</div>
+<div class="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors duration-150">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Documentation</span>
+</div>
+<div class="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors duration-150">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span>Community</span>
+</div>
+<div class="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors duration-150">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</div>
+</nav>
+<div class="p-4 bg-zinc-950/50 flex flex-col gap-1">
+<div class="text-zinc-400 hover:text-zinc-200 flex items-center gap-3 px-2 py-1.5 cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="help_outline">help_outline</span>
+<span>Help</span>
+</div>
+<div class="text-zinc-400 hover:text-zinc-200 flex items-center gap-3 px-2 py-1.5 cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="chat_bubble_outline">chat_bubble_outline</span>
+<span>Feedback</span>
+</div>
+</div>
+</aside>
+<main class="flex-1 ml-64 flex flex-col h-full bg-surface">
+<!-- TopNavBar (Authority JSON) -->
+<header class="flex justify-between items-center px-6 w-full h-12 sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b-0">
+<div class="flex items-center gap-6">
+<div class="text-lg font-black text-zinc-100 italic">The Kinetic Archive</div>
+<nav class="flex gap-4">
+<span class="text-indigo-300 font-semibold text-xs font-medium uppercase tracking-wider cursor-pointer">Docs</span>
+<span class="text-zinc-500 hover:text-zinc-100 transition-opacity text-xs font-medium uppercase tracking-wider cursor-pointer">API</span>
+<span class="text-zinc-500 hover:text-zinc-100 transition-opacity text-xs font-medium uppercase tracking-wider cursor-pointer">Changelog</span>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-2 text-zinc-500 text-sm">search</span>
+<input class="bg-surface-container-highest border-none rounded text-[10px] pl-8 pr-4 py-1.5 w-64 focus:ring-1 focus:ring-primary/40 transition-all" placeholder="Global search..." type="text"/>
+</div>
+<div class="flex items-center gap-3 text-zinc-400">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="dark_mode">dark_mode</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="account_tree">account_tree</span>
+<div class="w-6 h-6 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Close up professional headshot of a developer in a dark studio setting with soft cyan ambient light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe4EgWPg8hFi75aYTiPrrSUYD7jlaph_IREgWHw1UwbOk93EUcieIZ06gaoaKUToawdSsQRorAT-PQZj9vQfFEvotzRUUxFHKwkj6WvC0jcBn7kA9ez4s3M2NZdeYRpGvIGi1gS67_Z-9mkG90jsQOF1qjhxO4hAMHpJv0CZ5hjrU8NBFnI8Ko-RYZSsXE1ahLvSOk40KwV14pBzgkUzfD5ml2Lqe50BkpdwaS2atYJI0tiyomZd5xH8YZqbETnA_GDOa-sSb4u6c"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Content Left Column: Navigation Tree -->
+<div class="w-72 bg-surface-container-low flex flex-col h-full overflow-y-auto">
+<div class="p-4 border-b border-transparent">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">search</span>
+<input class="w-full bg-surface-container-lowest border-none rounded-lg pl-9 text-xs py-2 text-on-surface focus:ring-1 focus:ring-primary/40" placeholder="Search knowledge..." type="text"/>
+</div>
+</div>
+<div class="px-2 py-4 space-y-1">
+<!-- Section: Foundations -->
+<div class="mb-4">
+<button class="w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold text-zinc-500 uppercase tracking-tighter">
+<span>Foundations</span>
+<span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+<div class="mt-1 space-y-0.5">
+<a class="flex items-center gap-3 px-4 py-1.5 text-xs text-indigo-300 bg-surface-container-highest border-l-2 border-primary group" href="#">
+<span class="material-symbols-outlined text-[16px] text-primary">article</span>
+                                Core Architecture
+                            </a>
+<a class="flex items-center gap-3 px-4 py-1.5 text-xs text-zinc-400 hover:bg-surface-variant hover:text-zinc-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">article</span>
+                                Design Tokens
+                            </a>
+<a class="flex items-center gap-3 px-4 py-1.5 text-xs text-zinc-400 hover:bg-surface-variant hover:text-zinc-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">article</span>
+                                System Lifecycles
+                            </a>
+</div>
+</div>
+<!-- Section: Copernicus IDE -->
+<div class="mb-4">
+<button class="w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold text-zinc-500 uppercase tracking-tighter">
+<span>Copernicus IDE</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+<!-- Section: Providers & Agents -->
+<div class="mb-4">
+<button class="w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold text-zinc-500 uppercase tracking-tighter">
+<span>Providers &amp; Agents</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Side: Content & Chat -->
+<div class="flex-1 flex flex-col overflow-hidden relative">
+<!-- Article Reader (Top 60%) -->
+<div class="h-[60%] flex flex-col overflow-y-auto bg-surface relative">
+<div class="px-10 py-8 max-w-4xl mx-auto w-full">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-[10px] text-zinc-500 uppercase tracking-widest mb-6">
+<span>Foundations</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span class="text-indigo-400">Core Architecture</span>
+</nav>
+<div class="flex justify-between items-start mb-8">
+<h1 class="text-4xl font-extrabold text-on-surface tracking-tight">Core Architecture</h1>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded hover:bg-surface-variant text-zinc-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">thumb_up</span>
+</button>
+<button class="p-2 rounded hover:bg-surface-variant text-zinc-500 hover:text-error transition-colors">
+<span class="material-symbols-outlined">thumb_down</span>
+</button>
+</div>
+</div>
+<!-- Markdown-styled body text -->
+<div class="prose prose-invert max-w-none space-y-6 text-on-surface-variant leading-relaxed">
+<p class="text-lg text-zinc-300">
+                                The Copernicus IDE is built on a high-concurrency, event-driven engine designed to handle massive telemetry flows from integrated autonomous agents.
+                            </p>
+<div class="bg-zinc-950 p-[1px] rounded-lg overflow-hidden my-6 border border-outline-variant/20">
+<div class="bg-zinc-900 px-4 py-2 text-[10px] text-zinc-500 flex justify-between items-center font-mono">
+<span>architecture.config.ts</span>
+<span class="material-symbols-outlined text-[14px] cursor-pointer">content_copy</span>
+</div>
+<div class="p-4 font-mono text-xs bg-surface-container-lowest text-indigo-200">
+<pre><code>export const EngineConfig = {
+  threading: 'kinetic-hybrid',
+  memoryLease: '32GB',
+  latencyTarget: '0.4ms',
+  protocol: 'ARCHIVE_SYNC_v2'
+};</code></pre>
+</div>
+</div>
+<h3 class="text-xl font-bold text-on-surface pt-4">Key Principles</h3>
+<ul class="list-disc list-inside space-y-3 pl-4">
+<li><strong class="text-on-surface">Atomic Synchronization:</strong> State is propagated through a zero-copy shared memory buffer.</li>
+<li><strong class="text-on-surface">Predictive Indexing:</strong> The Archive predicts user navigation patterns using the Kinetic Markov model.</li>
+<li><strong class="text-on-surface">Isolation Tiers:</strong> Agent runtimes are isolated via high-density micro-containers.</li>
+</ul>
+<p>
+                                Every interaction within the editor triggers a "Kinetic Pulse" which is verified against the local knowledge graph before being persisted to the global archive.
+                            </p>
+</div>
+</div>
+</div>
+<!-- Draggable Divider Simulation -->
+<div class="h-[2px] bg-outline-variant/30 hover:bg-primary transition-colors cursor-ns-resize group relative z-10">
+<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-zinc-700 rounded-full group-hover:bg-primary"></div>
+</div>
+<!-- Chat Panel (Bottom 40%) -->
+<div class="h-[40%] flex flex-col bg-surface-container-lowest border-t border-transparent shadow-inner">
+<div class="px-6 py-3 bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-indigo-400" data-weight="fill">chat_bubble</span>
+<span class="text-xs font-bold text-zinc-200 uppercase tracking-widest">Discussing Core Architecture</span>
+</div>
+<div class="flex gap-4">
+<span class="text-[10px] text-zinc-500">3 Experts Online</span>
+<span class="material-symbols-outlined text-sm text-zinc-500 hover:text-zinc-200 cursor-pointer">close</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- Message History -->
+<div class="flex gap-4 max-w-2xl">
+<div class="w-8 h-8 rounded bg-primary-container flex-shrink-0 flex items-center justify-center text-on-primary-container text-[10px] font-bold">AI</div>
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-indigo-300">Copernicus Assistant</span>
+<span class="text-[10px] text-zinc-600">10:42 AM</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed bg-surface-container px-3 py-2 rounded-lg border border-outline-variant/10">
+                                    I see you're reading about the Core Architecture. Would you like to know more about how the <strong>Kinetic Markov</strong> model handles high-latency providers?
+                                </p>
+</div>
+</div>
+<div class="flex gap-4 max-w-2xl ml-auto flex-row-reverse">
+<div class="w-8 h-8 rounded bg-zinc-800 flex-shrink-0 border border-zinc-700 overflow-hidden">
+<img alt="Me" class="w-full h-full object-cover" data-alt="Close up professional headshot of a developer in a dark studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtfsqNNqjUl4yeNrXV0z6rJbylq91ZIQjFdOrQ4KVY722FLTcULA8BiCU5p--0_CJY_SOvDCrSiH9RHuy3kKGP65yBYeCIF0u4VknJcW3uhsvLGMVXrEAxMtoNAUfLxkXUwfL3KZAKel4nTik3gANXEDjIQ1DLhMIx4ZMR1ETeLO76Z_YrV0mSiIoxylaq42bNknV15G3iq2V9VafhBASF4ok7JUuOxnW9RVnjk_fzTzmqNUVScAhIGITvdRm46dIz94sfc-UgLLk"/>
+</div>
+<div class="space-y-1 text-right">
+<div class="flex items-center gap-2 justify-end">
+<span class="text-[10px] text-zinc-600">10:45 AM</span>
+<span class="text-xs font-bold text-zinc-400">You</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed bg-primary-container/20 px-3 py-2 rounded-lg border border-primary/10">
+                                    Yes, specifically how it mitigates state divergence when an agent goes offline.
+                                </p>
+</div>
+</div>
+</div>
+<!-- Chat Input Bar -->
+<div class="p-4">
+<div class="max-w-4xl mx-auto relative">
+<input class="w-full bg-surface-container-highest border-none rounded-xl py-3 px-4 pr-12 text-sm text-on-surface focus:ring-1 focus:ring-primary/40 shadow-2xl" placeholder="Type a message or use '/' for commands..." type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary text-on-primary transition-transform active:scale-90">
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- BottomNavBar (Authority JSON) -->
+<footer class="fixed bottom-0 right-0 flex items-center h-8 z-40 bg-zinc-950 w-[calc(100%-16rem)] border-t-0 font-mono text-[10px] uppercase">
+<div class="bg-zinc-900 text-indigo-300 px-3 h-full flex items-center border-t border-indigo-500 cursor-pointer transition-all duration-150">
+<span class="material-symbols-outlined text-[14px] mr-2" data-icon="terminal">terminal</span>
+                Terminal
+            </div>
+<div class="text-zinc-500 px-3 h-full flex items-center hover:bg-zinc-900/50 hover:text-zinc-300 cursor-pointer transition-all duration-150">
+<span class="material-symbols-outlined text-[14px] mr-2" data-icon="list_alt">list_alt</span>
+                Output
+            </div>
+<div class="text-zinc-500 px-3 h-full flex items-center hover:bg-zinc-900/50 hover:text-zinc-300 cursor-pointer transition-all duration-150">
+<span class="material-symbols-outlined text-[14px] mr-2" data-icon="bug_report">bug_report</span>
+                Debug Console
+            </div>
+<div class="text-zinc-500 px-3 h-full flex items-center hover:bg-zinc-900/50 hover:text-zinc-300 cursor-pointer transition-all duration-150">
+<span class="material-symbols-outlined text-[14px] mr-2" data-icon="question_answer">question_answer</span>
+                Chat
+            </div>
+<div class="flex-1"></div>
+<div class="px-4 text-[9px] text-zinc-600 flex items-center gap-4">
+<span>UTF-8</span>
+<span>Spaces: 2</span>
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Connected</span>
+</div>
+</footer>
+</main>
+</body></html>

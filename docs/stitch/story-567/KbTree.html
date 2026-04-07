@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#490013",
+                        "on-secondary-fixed-variant": "#4650b9",
+                        "primary": "#c0c1ff",
+                        "secondary-fixed-dim": "#ced1ff",
+                        "surface-bright": "#2a2b35",
+                        "surface-container": "#19191e",
+                        "on-secondary": "#000974",
+                        "on-tertiary-container": "#424a63",
+                        "on-surface-variant": "#abaab4",
+                        "inverse-surface": "#fbf8fc",
+                        "tertiary-dim": "#c0c9e6",
+                        "on-tertiary": "#4a536c",
+                        "surface-dim": "#0e0e11",
+                        "surface-container-highest": "#24252d",
+                        "inverse-on-surface": "#555458",
+                        "tertiary": "#dee5ff",
+                        "on-tertiary-fixed": "#2f384f",
+                        "error-dim": "#b95463",
+                        "tertiary-container": "#ced6f5",
+                        "secondary-dim": "#8a95ff",
+                        "outline": "#75757e",
+                        "on-error-container": "#ff97a3",
+                        "on-primary": "#2724b8",
+                        "outline-variant": "#474750",
+                        "surface-container-high": "#1f1f26",
+                        "error": "#ec7c8a",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "secondary-fixed": "#e0e0ff",
+                        "primary-fixed": "#e1e0ff",
+                        "inverse-primary": "#494bd7",
+                        "on-primary-fixed": "#2622b7",
+                        "surface-variant": "#24252d",
+                        "secondary": "#8a95ff",
+                        "on-background": "#e6e4ef",
+                        "on-primary-container": "#ccccff",
+                        "surface": "#0e0e11",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "error-container": "#7f2737",
+                        "secondary-container": "#222d97",
+                        "background": "#0e0e11",
+                        "primary-dim": "#b0b2ff",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "surface-tint": "#c0c1ff",
+                        "on-secondary-container": "#b4baff",
+                        "tertiary-fixed": "#ced6f5",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "on-secondary-fixed": "#27319b",
+                        "on-surface": "#e6e4ef",
+                        "primary-container": "#2f2ebe",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-low": "#131317"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            font-size: 18px;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #24252d; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #474750; }
+        .kb-content h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #e6e4ef; }
+        .kb-content h2 { font-size: 1.1rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #c0c1ff; }
+        .kb-content p { font-size: 0.8125rem; line-height: 1.6; margin-bottom: 1rem; color: #abaab4; }
+        .kb-content pre { background: #000000; padding: 1rem; border-radius: 4px; margin: 1rem 0; overflow-x: auto; }
+        .kb-content code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body antialiased selection:bg-primary/30">
+<!-- Top Navigation Bar -->
+<header class="w-full h-12 flex items-center border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl flex justify-between items-center px-4 w-full sticky top-0 z-50 font-sans text-sm tracking-tight">
+<div class="flex items-center gap-4">
+<span class="text-lg font-bold tracking-tighter text-zinc-100">Copernicus</span>
+<div class="flex items-center bg-zinc-900 border border-zinc-800 rounded px-2 py-1 gap-2">
+<span class="material-symbols-outlined text-zinc-500" style="font-size: 16px;">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-[11px] w-48 text-zinc-300 placeholder-zinc-600" placeholder="Quick open..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="hover:bg-zinc-800/50 transition-colors p-1.5 rounded"><span class="material-symbols-outlined text-zinc-400">help</span></button>
+<button class="hover:bg-zinc-800/50 transition-colors p-1.5 rounded"><span class="material-symbols-outlined text-zinc-400">settings</span></button>
+<button class="hover:bg-zinc-800/50 transition-colors p-1.5 rounded"><span class="material-symbols-outlined text-zinc-400">account_circle</span></button>
+</div>
+</header>
+<div class="flex h-[calc(100vh-80px)] overflow-hidden">
+<!-- Side Navigation Bar (KbTree Sidebar) -->
+<aside class="h-screen w-64 border-r border-zinc-800/40 bg-zinc-900 flex flex-col h-full overflow-y-auto shrink-0">
+<div class="p-4 flex flex-col gap-1">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h2 class="label-sm font-sans text-[11px] uppercase tracking-widest text-indigo-400">KNOWLEDGE BASE</h2>
+<p class="text-[10px] text-zinc-500 font-mono">Copernicus Docs</p>
+</div>
+<span class="material-symbols-outlined text-zinc-500">menu_book</span>
+</div>
+<div class="space-y-1">
+<!-- Section: Foundations -->
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-400 hover:bg-zinc-800/50 cursor-pointer rounded transition-all duration-200">
+<span class="material-symbols-outlined transition-transform rotate-90" style="font-size: 14px;">chevron_right</span>
+<span class="label-sm font-sans text-[11px] uppercase tracking-widest">Foundations</span>
+</div>
+<div class="pl-6 space-y-0.5">
+<div class="text-indigo-300 border-l-2 border-indigo-500 bg-indigo-500/5 px-3 py-1.5 text-[12px] flex items-center gap-2 cursor-pointer">
+<span class="material-symbols-outlined" style="font-size: 14px;">article</span>
+                            Core Architecture
+                        </div>
+<div class="text-zinc-500 hover:text-zinc-300 px-3 py-1.5 text-[12px] flex items-center gap-2 cursor-pointer transition-all duration-200">
+<span class="material-symbols-outlined" style="font-size: 14px;">article</span>
+                            System Design
+                        </div>
+</div>
+<!-- Section: Explorer (Top Tab) -->
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-400 hover:bg-zinc-800/50 cursor-pointer rounded mt-4">
+<span class="material-symbols-outlined" style="font-size: 14px;">folder</span>
+<span class="label-sm font-sans text-[11px] uppercase tracking-widest">Explorer</span>
+</div>
+<!-- Section: The Copernicus IDE -->
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-400 hover:bg-zinc-800/50 cursor-pointer rounded mt-4">
+<span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+<span class="label-sm font-sans text-[11px] uppercase tracking-widest">The Copernicus IDE</span>
+</div>
+<!-- Section: Providers & Agents -->
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-400 hover:bg-zinc-800/50 cursor-pointer rounded mt-2">
+<span class="material-symbols-outlined" style="font-size: 14px;">smart_toy</span>
+<span class="label-sm font-sans text-[11px] uppercase tracking-widest">Providers</span>
+</div>
+</div>
+</div>
+<div class="mt-auto p-4 border-t border-zinc-800/30">
+<button class="w-full py-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 rounded text-[11px] font-medium hover:bg-indigo-500/20 transition-colors">
+                    Submit Article
+                </button>
+<div class="flex mt-4 gap-4 px-2">
+<span class="material-symbols-outlined text-zinc-500 hover:text-zinc-300 cursor-pointer" title="Terminal">terminal</span>
+<span class="material-symbols-outlined text-zinc-500 hover:text-zinc-300 cursor-pointer" title="Debug">bug_report</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col bg-zinc-950 relative overflow-hidden">
+<!-- Content Header -->
+<div class="h-14 flex items-center justify-between px-8 border-b border-zinc-800/30">
+<div>
+<div class="flex items-center gap-2 text-[10px] text-zinc-500 uppercase tracking-tight mb-0.5">
+<span>Foundations</span>
+<span class="material-symbols-outlined" style="font-size: 10px;">chevron_right</span>
+<span class="text-zinc-400">Core Architecture</span>
+</div>
+<h1 class="text-lg font-bold text-zinc-100 tracking-tight">Core Architecture</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 bg-zinc-900 rounded-lg p-1 border border-zinc-800">
+<button class="p-1.5 hover:bg-zinc-800 rounded transition-colors group">
+<span class="material-symbols-outlined text-zinc-500 group-hover:text-primary" style="font-size: 16px;">thumb_up</span>
+</button>
+<div class="w-px h-3 bg-zinc-800"></div>
+<button class="p-1.5 hover:bg-zinc-800 rounded transition-colors group">
+<span class="material-symbols-outlined text-zinc-500 group-hover:text-error" style="font-size: 16px;">thumb_down</span>
+</button>
+</div>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+                        Edit
+                    </button>
+</div>
+</div>
+<!-- Scrollable Content Body -->
+<div class="flex-1 overflow-y-auto p-8 max-w-4xl mx-auto w-full kb-content">
+<section>
+<h2>Overview of the System Engine</h2>
+<p>
+                        The Copernicus IDE architecture is built upon a distributed agentic framework. Unlike traditional IDEs that rely on a single process, our architecture leverages a multi-tenant provider model where every task is offloaded to specialized micro-agents.
+                    </p>
+<p>
+                        This approach ensures high performance and low latency even during complex code generation tasks. The "Core" manages state persistence and the <strong>Kinetic Synchronizer</strong>, which handles real-time updates across the workspace.
+                    </p>
+</section>
+<section>
+<h2>State Management Schema</h2>
+<p>We utilize a strictly typed state registry. Below is an example of the TSX context wrapper used to manage workspace providers.</p>
+<div class="relative group">
+<div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-zinc-500 cursor-pointer hover:text-zinc-200" style="font-size: 16px;">content_copy</span>
+</div>
+<pre><code class="text-indigo-300">export const <span class="text-secondary">WorkspaceProvider</span> = ({ children }: { children: ReactNode }) =&gt; {
+  const [state, dispatch] = useReducer(workspaceReducer, initialState);
+  
+  return (
+    &lt;<span class="text-secondary">StateContext.Provider</span> value={{ state, dispatch }}&gt;
+      {children}
+    &lt;/<span class="text-secondary">StateContext.Provider</span>&gt;
+  );
+};</code></pre>
+</div>
+</section>
+<section>
+<h2>Integration Pipeline</h2>
+<p>The configuration for the provider agent requires a <code>config.yaml</code> mapping for proper orchestration.</p>
+<pre><code class="text-on-surface-variant"><span class="text-indigo-400">version:</span> "2.1"
+<span class="text-indigo-400">agents:</span>
+  <span class="text-indigo-400">- name:</span> "Copernicus_Linguist"
+    <span class="text-indigo-400">role:</span> "Syntax Analysis"
+    <span class="text-indigo-400">capabilities:</span> [typescript, rust, go]
+<span class="text-indigo-400">settings:</span>
+  <span class="text-indigo-400">auto_scale:</span> true</code></pre>
+</section>
+<div class="mt-12 pt-8 border-t border-zinc-800/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-indigo-400" style="font-size: 18px;">history_edu</span>
+</div>
+<div>
+<p class="text-[11px] text-zinc-500 font-medium uppercase tracking-widest">Last Updated</p>
+<p class="text-[12px] text-zinc-300">October 24, 2023 by system_admin</p>
+</div>
+</div>
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full border-2 border-zinc-950 bg-zinc-800 flex items-center justify-center text-[10px] text-zinc-400">JD</div>
+<div class="w-7 h-7 rounded-full border-2 border-zinc-950 bg-zinc-800 flex items-center justify-center text-[10px] text-zinc-400">AS</div>
+<div class="w-7 h-7 rounded-full border-2 border-zinc-950 bg-indigo-500 flex items-center justify-center text-[10px] text-indigo-950 font-bold">+4</div>
+</div>
+</div>
+</div>
+<!-- Bottom Chat Panel -->
+<div class="h-16 border-t border-zinc-800 bg-zinc-950/50 backdrop-blur-md px-6 flex items-center gap-4">
+<div class="flex items-center gap-3 flex-1 bg-zinc-900/50 border border-zinc-800/50 rounded-lg px-4 py-2 hover:border-indigo-500/30 transition-colors">
+<span class="material-symbols-outlined text-zinc-500" style="font-size: 18px;">message</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-full text-zinc-300 placeholder-zinc-600" placeholder="Ask a question about Core Architecture..." type="text"/>
+<div class="flex items-center gap-2">
+<kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 text-[10px] border border-zinc-700">Ctrl</kbd>
+<kbd class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 text-[10px] border border-zinc-700">Enter</kbd>
+</div>
+</div>
+<button class="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-indigo-400 transition-colors">
+<span class="material-symbols-outlined">history</span>
+</button>
+</div>
+</main>
+</div>
+<!-- Bottom Status Bar -->
+<footer class="fixed bottom-0 left-0 w-full flex justify-start items-center z-50 bg-zinc-950 w-full h-8 border-t border-zinc-800 font-mono text-[10px] px-4 text-zinc-500">
+<div class="flex items-center gap-4 h-full">
+<div class="text-zinc-100 bg-zinc-800 px-3 h-full flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 12px;">chat_bubble</span>
+                Article Context: Active
+            </div>
+<div class="text-zinc-500 px-3 h-full flex items-center gap-2 hover:text-zinc-300 cursor-pointer transition-all duration-100 scale-95">
+<span class="material-symbols-outlined" style="font-size: 12px;">history_edu</span>
+                Agent Log
+            </div>
+<div class="text-zinc-500 px-3 h-full flex items-center gap-2 hover:text-zinc-300 cursor-pointer transition-all duration-100 scale-95">
+<span class="material-symbols-outlined" style="font-size: 12px;">code</span>
+                Terminal
+            </div>
+</div>
+<div class="ml-auto flex items-center gap-4">
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-emerald-500/50"></span>
+                Ready
+            </div>
+<span>UTF-8</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size: 12px;">share</span> v1.0.4-stable</span>
+</div>
+</footer>
+</body></html>

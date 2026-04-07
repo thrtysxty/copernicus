@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Copernicus IDE - Knowledge Base</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#4650b9",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "surface": "#0e0e11",
+                        "surface-container": "#19191e",
+                        "surface-container-low": "#131317",
+                        "background": "#0e0e11",
+                        "on-tertiary-fixed": "#2f384f",
+                        "tertiary": "#dee5ff",
+                        "surface-container-high": "#1f1f26",
+                        "on-background": "#e6e4ef",
+                        "primary-container": "#2f2ebe",
+                        "on-error-container": "#ff97a3",
+                        "surface-bright": "#2a2b35",
+                        "surface-dim": "#0e0e11",
+                        "tertiary-container": "#ced6f5",
+                        "on-surface": "#e6e4ef",
+                        "error-dim": "#b95463",
+                        "secondary-fixed": "#e0e0ff",
+                        "outline-variant": "#474750",
+                        "on-secondary-container": "#b4baff",
+                        "on-primary-container": "#ccccff",
+                        "on-primary": "#2724b8",
+                        "secondary-fixed-dim": "#ced1ff",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "primary-fixed": "#e1e0ff",
+                        "on-tertiary-container": "#424a63",
+                        "secondary-dim": "#8a95ff",
+                        "secondary-container": "#222d97",
+                        "secondary": "#8a95ff",
+                        "on-surface-variant": "#abaab4",
+                        "on-tertiary": "#4a536c",
+                        "outline": "#75757e",
+                        "error": "#ec7c8a",
+                        "inverse-surface": "#fbf8fc",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "on-primary-fixed": "#2622b7",
+                        "error-container": "#7f2737",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "inverse-primary": "#494bd7",
+                        "on-error": "#490013",
+                        "surface-container-highest": "#24252d",
+                        "on-secondary": "#000974",
+                        "tertiary-fixed": "#ced6f5",
+                        "inverse-on-surface": "#555458",
+                        "primary": "#c0c1ff",
+                        "tertiary-dim": "#c0c9e6",
+                        "surface-container-lowest": "#000000",
+                        "surface-variant": "#24252d",
+                        "on-secondary-fixed": "#27319b",
+                        "primary-dim": "#b0b2ff",
+                        "surface-tint": "#c0c1ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 18px;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #24252d; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #474750; }
+        .code-block { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- Sidebar Shell -->
+<aside class="w-64 flex flex-col bg-zinc-900 border-r border-zinc-800/40 shrink-0">
+<!-- Sidebar Header -->
+<div class="p-4 flex items-center gap-3">
+<div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="terminal">terminal</span>
+</div>
+<div>
+<h1 class="text-sm font-black text-zinc-100 tracking-tight leading-none uppercase">Copernicus IDE</h1>
+<p class="text-[10px] text-zinc-500 font-medium">Technical Archive</p>
+</div>
+</div>
+<!-- Search Area -->
+<div class="px-3 pb-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" data-icon="search">search</span>
+<input class="w-full bg-zinc-800 border-none text-xs text-zinc-300 pl-9 pr-3 py-2 rounded focus:ring-1 focus:ring-indigo-500 placeholder:text-zinc-500" placeholder="Search knowledge..." type="text"/>
+</div>
+</div>
+<!-- Scrollable Tree View -->
+<nav class="flex-1 overflow-y-auto px-2 space-y-0.5">
+<!-- Foundations (Expanded) -->
+<div>
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-400 hover:text-zinc-200 cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] transition-transform duration-200" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+<span class="text-[11px] font-semibold tracking-tight uppercase">Foundations</span>
+</div>
+<div class="ml-4 space-y-0.5">
+<div class="flex items-center gap-2 px-3 py-1.5 text-indigo-300 bg-zinc-800/50 border-l-2 border-indigo-500 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]" data-icon="account_tree">account_tree</span>
+<span class="text-[11px] font-medium leading-tight tracking-tight">Core Architecture</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30 cursor-pointer transition-colors duration-150">
+<span class="material-symbols-outlined text-[14px]" data-icon="settings_suggest">settings_suggest</span>
+<span class="text-[11px] font-medium leading-tight tracking-tight">Workspace Setup</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30 cursor-pointer transition-colors duration-150">
+<span class="material-symbols-outlined text-[14px]" data-icon="key">key</span>
+<span class="text-[11px] font-medium leading-tight tracking-tight">Authentication Flow</span>
+</div>
+</div>
+</div>
+<!-- Other Sections (Collapsed) -->
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-500 hover:text-zinc-300 cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] -rotate-90" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+<span class="text-[11px] font-semibold tracking-tight uppercase">The Copernicus IDE</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-500 hover:text-zinc-300 cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] -rotate-90" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+<span class="text-[11px] font-semibold tracking-tight uppercase">Providers &amp; Agents</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-500 hover:text-zinc-300 cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] -rotate-90" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+<span class="text-[11px] font-semibold tracking-tight uppercase">Advanced Techniques</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-500 hover:text-zinc-300 cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] -rotate-90" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+<span class="text-[11px] font-semibold tracking-tight uppercase">Workflows &amp; Patterns</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 text-zinc-500 hover:text-zinc-300 cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] -rotate-90" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+<span class="text-[11px] font-semibold tracking-tight uppercase">Integrations</span>
+</div>
+</nav>
+<!-- Sidebar Footer -->
+<div class="p-2 border-t border-zinc-800/40">
+<div class="flex items-center justify-between px-2 py-2">
+<div class="flex items-center gap-2">
+<img alt="Profile" class="w-6 h-6 rounded-full object-cover" data-alt="professional male portrait with neutral expression in soft studio lighting against a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzeiQ5Bn985CJDu6_lopxiuHb1ch5OkurkZZ24Df1ITQaJg8qzx-E2EMpnTx6ocVHnFOYcrYgyIj-Q6dvRWU23akthy8g1awwzYigVKg8GrjefbBo2rgI_cuk8xuoY2UtyORpRG6c69WQQKGp9s2MA2ia_cqf7vy1GYpZiSKF4pbxFFZaVzsVbgrY8MZtT9moxMmhT__0WANpOPV24t7S_dFXxBDCztFObjwFV-S_0auMkW-Du0bWb71oKpLhvSjkAs2OhHcPnL0g"/>
+<span class="text-[11px] font-medium text-zinc-400">Settings</span>
+</div>
+<span class="material-symbols-outlined text-zinc-500 text-sm" data-icon="help_outline">help_outline</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface">
+<!-- Top Navbar -->
+<header class="h-12 flex items-center justify-between px-6 bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800/40 z-40">
+<div class="flex items-center gap-3">
+<nav class="flex items-center gap-2 text-xs">
+<span class="text-zinc-500">Foundations</span>
+<span class="material-symbols-outlined text-[12px] text-zinc-600" data-icon="chevron_right">chevron_right</span>
+<span class="text-zinc-300 font-medium">Core Architecture</span>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 text-zinc-400 bg-zinc-800/50 px-3 py-1 rounded-full border border-zinc-700/30">
+<span class="text-[11px] font-medium">Helpful?</span>
+<div class="flex items-center gap-1.5 border-l border-zinc-700 pl-3">
+<button class="hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="thumb_up">thumb_up</span>
+</button>
+<button class="hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="thumb_down">thumb_down</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-zinc-400" data-icon="history">history</span>
+<span class="material-symbols-outlined text-zinc-400" data-icon="notifications">notifications</span>
+</div>
+</div>
+</header>
+<!-- Knowledge Base Article -->
+<div class="flex-1 overflow-y-auto">
+<article class="max-w-4xl mx-auto px-12 py-12">
+<header class="mb-10">
+<h2 class="text-3xl font-bold text-zinc-100 tracking-tight mb-4">Core Architecture</h2>
+<div class="flex items-center gap-4 text-xs text-zinc-500">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="calendar_today">calendar_today</span>
+                                Updated 2 days ago
+                            </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+                                8 min read
+                            </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]" data-icon="person_outline">person_outline</span>
+                                Engineering Team
+                            </span>
+</div>
+</header>
+<section class="space-y-8 prose prose-invert prose-zinc max-w-none">
+<div class="space-y-4">
+<p class="text-zinc-300 leading-relaxed text-lg">
+                                The Copernicus IDE operates on a distributed multi-agent system designed for extreme scalability and precision. Unlike monolithic IDE architectures, Copernicus utilizes a <span class="text-indigo-400 font-semibold italic">Mesh Orchestrator</span> that manages concurrent reasoning cycles across various LLM providers.
+                            </p>
+</div>
+<!-- Code Block -->
+<div class="rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/60 shadow-2xl">
+<div class="bg-zinc-900 px-4 py-2 flex items-center justify-between border-b border-zinc-800/40">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-indigo-400 text-sm" data-icon="description">description</span>
+<span class="text-[11px] font-mono text-zinc-400">engine/orchestrator.ts</span>
+</div>
+<button class="text-zinc-500 hover:text-zinc-300">
+<span class="material-symbols-outlined text-[16px]" data-icon="content_copy">content_copy</span>
+</button>
+</div>
+<div class="p-6 overflow-x-auto">
+<pre class="code-block text-[13px] leading-6"><span class="text-indigo-400">interface</span> <span class="text-primary">AgentTask</span> {
+  <span class="text-zinc-500">readonly</span> id: <span class="text-amber-200">string</span>;
+  priority: <span class="text-amber-200">number</span>;
+  payload: {
+    context: <span class="text-amber-200">string</span>[];
+    constraints: <span class="text-amber-200">ConstraintSet</span>;
+  };
+  <span class="text-zinc-500">/** @consensus High-availability voting mechanism */</span>
+  consensus_threshold: <span class="text-amber-200">number</span>;
+}
+
+<span class="text-zinc-500">// Initialize the Mesh Orchestrator instance</span>
+<span class="text-indigo-400">export const</span> <span class="text-zinc-200">Orchestrator</span> = <span class="text-indigo-400">new</span> <span class="text-primary">MeshOrchestrator</span>({
+  retry_policy: <span class="text-amber-200">'exponential-backoff'</span>,
+  max_concurrency: <span class="text-primary">128</span>,
+});</pre>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-8 py-4">
+<div class="space-y-3">
+<h3 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+<span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
+                                    Consensus-Based Tasking (CBT)
+                                </h3>
+<p class="text-sm text-zinc-400 leading-relaxed">
+                                    Our proprietary CBT layer ensures that non-deterministic outputs from providers are cross-validated through a weighted voting protocol before being committed to the workspace.
+                                </p>
+</div>
+<div class="space-y-3">
+<h3 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+<span class="w-1.5 h-6 bg-primary rounded-full"></span>
+                                    The Mesh Orchestrator
+                                </h3>
+<p class="text-sm text-zinc-400 leading-relaxed">
+                                    The Mesh acts as the traffic controller, distributing token budgets and managing latency spikes across global endpoints to maintain 200ms IDE responsiveness.
+                                </p>
+</div>
+</div>
+<div class="bg-indigo-900/10 border-l-4 border-indigo-500/50 p-6 rounded-r-xl">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-indigo-400" data-icon="lightbulb">lightbulb</span>
+<div>
+<h4 class="text-sm font-bold text-indigo-200 mb-1">Architecture Pro-Tip</h4>
+<p class="text-sm text-indigo-300/80 leading-relaxed">
+                                        For local testing, you can swap the Mesh Orchestrator for the <code class="bg-indigo-900/40 px-1 rounded text-indigo-100">LocalRunner</code> to reduce API costs during initial workspace setup.
+                                    </p>
+</div>
+</div>
+</div>
+</section>
+</article>
+</div>
+<!-- Bottom Chat Panel -->
+<footer class="bg-zinc-900 border-t border-zinc-700/50 shadow-[0_-4px_24px_-10px_rgba(0,0,0,0.5)]">
+<!-- Status Bar -->
+<div class="px-4 py-2 bg-zinc-950 flex items-center justify-between border-b border-zinc-800/40">
+<div class="flex items-center gap-2">
+<div class="flex gap-0.5">
+<span class="w-1 h-1 rounded-full bg-indigo-500"></span>
+<span class="w-1 h-1 rounded-full bg-indigo-500 animate-pulse"></span>
+<span class="w-1 h-1 rounded-full bg-indigo-500"></span>
+</div>
+<span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Assistant Status:</span>
+<span class="text-[10px] font-medium text-indigo-400">Discussing Core Architecture with Assistant</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-[10px] text-zinc-600 font-mono">TS v5.2.2</span>
+<span class="material-symbols-outlined text-[14px] text-zinc-500" data-icon="expand_less">expand_less</span>
+</div>
+</div>
+<!-- Chat Input Area -->
+<div class="p-4 relative">
+<div class="flex items-end gap-3 max-w-5xl mx-auto bg-zinc-800 p-1.5 rounded-lg border border-zinc-700/50 shadow-inner group focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all">
+<div class="flex-1">
+<textarea class="w-full bg-transparent border-none text-sm text-zinc-200 resize-none py-2 px-3 focus:ring-0 placeholder:text-zinc-600" placeholder="Ask a question about the Core Architecture..." rows="1"></textarea>
+</div>
+<div class="flex items-center gap-1 pb-1 pr-1">
+<button class="p-2 text-zinc-500 hover:text-zinc-300 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="attach_file">attach_file</span>
+</button>
+<button class="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors shadow-lg shadow-indigo-600/20">
+<span class="material-symbols-outlined text-[18px]" data-icon="send">send</span>
+</button>
+</div>
+</div>
+<!-- Quick Suggestions -->
+<div class="flex gap-2 mt-3 max-w-5xl mx-auto px-1">
+<button class="text-[10px] font-medium text-zinc-500 hover:text-zinc-300 px-2 py-1 bg-zinc-800/40 rounded border border-zinc-700/30 transition-all">How does CBT handle conflict?</button>
+<button class="text-[10px] font-medium text-zinc-500 hover:text-zinc-300 px-2 py-1 bg-zinc-800/40 rounded border border-zinc-700/30 transition-all">Show Mesh implementation details</button>
+<button class="text-[10px] font-medium text-zinc-500 hover:text-zinc-300 px-2 py-1 bg-zinc-800/40 rounded border border-zinc-700/30 transition-all">Explain AgentTask priority</button>
+</div>
+</div>
+</footer>
+</main>
+<!-- Command Palette (Absolute Floating for Density feel) -->
+<div class="hidden absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-surface-container-highest/80 backdrop-blur-2xl p-4 rounded-xl border border-outline-variant/20 shadow-2xl z-50">
+<div class="flex items-center gap-3 border-b border-outline-variant/30 pb-3">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+<input class="w-full bg-transparent border-none text-lg text-on-surface focus:ring-0 placeholder:text-zinc-600" placeholder="Go to file, run command, or ask AI..." type="text"/>
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] text-zinc-400 font-mono">⌘</span>
+<span class="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] text-zinc-400 font-mono">P</span>
+</div>
+</div>
+</div>
+</div>
+</body></html>
