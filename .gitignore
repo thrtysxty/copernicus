@@ -77,3 +77,4 @@ copernicus/e2e/test-results/
 copernicus/e2e/report/
 .gitnexus
 /copernicus/scripts/agent-daemon/bin/toolbox
+*_debug.log

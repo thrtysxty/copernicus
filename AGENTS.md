@@ -4,6 +4,22 @@
 
 ---
 
+## AI-Assisted Workflow & Public Preamble
+
+**What this is** — Copernicus uses AI agents (Claude, Jules, CCR) as development contributors on a structured sprint system. Not vibe-coding. Structured PM principles.
+
+**How agents are used** — Stories define scope and acceptance criteria. Agents implement. The daemon monitors sessions. Claude reviews diffs against ACs before merge. Human approval is the final gate on every PR.
+
+**What agents are NOT allowed to do** — modify main directly, skip tests, declare stories complete without passing verification, touch frozen surfaces.
+
+**How to read AI-generated PRs** — every AI PR has a story reference, every AC is verifiable, `tsc --noEmit` is a hard gate.
+
+**Co-authorship** — AI contributors are attributed in commit messages with `Co-Authored-By`. This is intentional and reflects the collaborative reality of the work.
+
+**Governance** — Phase 6 Hub architecture (see `docs/reference/PHASE6_AGENT_HUB.md`) will formalize agent authority, token scope, and audit trail. Currently enforced via classifier hook and review protocol.
+
+---
+
 ## STEP ZERO — Before Anything Else
 
 **Before reading the story, before opening any file, run this:**

@@ -4,6 +4,48 @@ COPERNICUS IDE was built on original engineering, but several open-source projec
 
 ---
 
+## Google Agentic AI research
+The paper that directly identified the episodic memory gap, inspiring stories 572–574. We credit the research that named the problem.
+
+---
+
+## MLX (Apple)
+The Neural Engine software layer that makes local inference viable on Apple Silicon (Story 652).
+
+---
+
+## mlx-community (HuggingFace)
+The community that converts and maintains models in MLX format. The catalog that makes story 652's model selection possible.
+
+---
+
+## genai-toolbox (Google / googleapis)
+The MCP database server (Story 631).
+
+---
+
+## Model Context Protocol / `@modelcontextprotocol/sdk` (Anthropic)
+The agent communication standard that MCP tools across Copernicus are built on.
+
+---
+
+## node-llama-cpp
+llama.cpp compiled as a native Node.js addon, the cross-platform inference foundation for story 651.
+
+---
+
+## Playwright (Microsoft)
+The behavioral test runner that becomes the language-agnostic code contract in stories 635/636.
+
+---
+
+## AI contributors
+- **Claude (Anthropic)**: architecture, planning, code review throughout.
+- **Jules (Google)**: implementation across 30+ merged PRs.
+Named in commits, named here.
+
+---
+
 ## obra/superpowers
 **https://github.com/obra/superpowers** — MIT
 
@@ -80,4 +122,3 @@ A CLI wrapper for Apple's FoundationModels framework that exposes an OpenAI-comp
 **https://github.com/filiksyos/gitreverse**
 
 A repo-to-prompt reverse engineering tool: give it a GitHub URL, get back a scaffolding prompt that would generate a structurally similar project from scratch. Inspired the `/gitreverse` skill in `.claude/skills/gitreverse/` — a novice onboarding path for Copernicus users who want to learn from an existing repo without cloning it.
-

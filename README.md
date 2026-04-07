@@ -41,7 +41,7 @@ Copernicus is not wired to specific models — it exposes three execution channe
 | Channel | How it works | What occupies it today |
 |---------|-------------|------------------------|
 | **In-process streaming** | Direct API call from the Electron main process; response streams live to the chat panel | Any provider — Anthropic, Google, OpenAI, OpenRouter, DeepInfra, Ollama |
-| **PTY session** | Shell process with filesystem access; agent reads/writes files, runs tsc, calls tools autonomously | Gemini CLI (`--approval-mode yolo`) |
+| **PTY session** | Shell process with filesystem access; agent reads/writes files, runs tsc, calls tools autonomously | CCR (Claude Code Router) |
 | **Async PR agent** | Fire-and-forget to a remote agent; result is a GitHub branch + PR, reviewed by Claude before merge | Jules (Google) |
 
 Any model can be promoted into any channel. You could run Claude Sonnet as a PTY session, route Llama 3 through the async PR channel, or wire a Gemini API call in-process. The channel is the interface; the model is a configuration choice.
@@ -63,7 +63,7 @@ Any model can be promoted into any channel. You could run Claude Sonnet as a PTY
 ### Three Ways to Start
 
 **Free tier — zero API spend**
-Gemini CLI (free tier) handles multi-file implementation as a PTY session. Jules (free tier) handles async PR stories. Ollama runs local embeddings and inference. Full spec-driven development workflow, no credit card.
+CCR handles multi-file implementation as a PTY session. Jules (free tier) handles async PR stories. Ollama runs local embeddings and inference. Full spec-driven development workflow, no credit card.
 
 **Anthropic-first — the full review loop**
 Claude as architect and reviewer (in-process, streaming). Jules for async implementation. Claude Sonnet 4.6 reviews every PR diff against story ACs before `jules_daemon.py` merges. The complete Plan → Delegate → Review loop.
@@ -326,7 +326,7 @@ make tsc
 ```
 copernicus/
   electron/
-    agents/             GeminiAgent (PTY session management)
+    agents/             PTY session management
     db/                 StateLedger — model_calls, review_sessions,
                         dispatch_queue, project_memory, context_snapshots…
     ipc/                13 modular handler files (app, git, search,
