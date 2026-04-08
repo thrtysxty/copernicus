@@ -85,6 +85,20 @@ export async function reviewPr(prNumber, storyId) {
     if (screenshotMatch) {
       screenshotContent = `\nPR SCREENSHOTS / UI OUTPUT:\n${screenshotMatch[1]}\n`;
     }
+
+    // Check for runtime errors
+    const errorsMatch = prBody.match(/## Runtime Errors\n([\s\S]*)/i);
+    if (errorsMatch && errorsMatch[1].trim().length > 0) {
+      return {
+        verdict: "BLOCK",
+        acs_met: [],
+        acs_missing: ["Zero runtime errors in browser:console"],
+        summary: "Blocked due to runtime errors reported in PR description.",
+        reviewer_model: REVIEW_MODEL,
+        reviewed_at: new Date().toISOString(),
+        merge_sha: "unknown"
+      };
+    }
   }
 
   const prompt = `

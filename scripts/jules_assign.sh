@@ -411,6 +411,10 @@ printf '%s
 ' "  Graceful skip if app not running." >> "$TMPFILE"
 printf '%s
 ' "  Call \`browser:screenshot\` and include screenshot under \`## Screenshots\` in PR body." >> "$TMPFILE"
+printf '%s
+' "  Call browser:console and assert zero entries with level \"error\"." >> "$TMPFILE"
+printf '%s
+' "  If errors exist, include them verbatim under ## Runtime Errors in the PR description." >> "$TMPFILE"
 printf '
 %s
 ' "STEP 4 — Check AGENTS.md Forbidden Patterns. For every new ipcMain.handle():" >> "$TMPFILE"

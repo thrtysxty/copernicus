@@ -33,4 +33,25 @@ export function registerBrowserHandlers() {
     if (stderr) log.warn(`[Browser] stderr: ${stderr}`)
     return JSON.parse(stdout)
   }))
+
+  ipcMain.handle('browser:console', (_e) => handleIpc(async () => {
+    log.info(`[Browser] Fetching console output`)
+    const { stdout, stderr } = await execFileAsync('npx', ['-y', 'chrome-devtools-axi', 'console', '--json', '--limit', '50'])
+    if (stderr) log.warn(`[Browser] stderr: ${stderr}`)
+    return JSON.parse(stdout)
+  }))
+
+  ipcMain.handle('browser:eval', (_e, expression: string) => handleIpc(async () => {
+    log.info(`[Browser] Evaluating expression: ${expression}`)
+    const { stdout, stderr } = await execFileAsync('npx', ['-y', 'chrome-devtools-axi', 'eval', expression, '--json'])
+    if (stderr) log.warn(`[Browser] stderr: ${stderr}`)
+    return JSON.parse(stdout)
+  }))
+
+  ipcMain.handle('browser:network', (_e) => handleIpc(async () => {
+    log.info(`[Browser] Fetching network requests`)
+    const { stdout, stderr } = await execFileAsync('npx', ['-y', 'chrome-devtools-axi', 'network', '--json', '--limit', '50'])
+    if (stderr) log.warn(`[Browser] stderr: ${stderr}`)
+    return JSON.parse(stdout)
+  }))
 }

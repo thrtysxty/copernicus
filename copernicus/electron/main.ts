@@ -145,6 +145,10 @@ if (process.env.NODE_ENV === 'development') {
   process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 }
 
+if (!app.isPackaged) {
+  app.commandLine.appendSwitch('remote-debugging-port', '9223');
+}
+
 const authManager = new AuthManager()
 const julesClient = new JulesClient(authManager.getApiKey('jules') ?? '')
 julesMonitor.setClient(julesClient)
