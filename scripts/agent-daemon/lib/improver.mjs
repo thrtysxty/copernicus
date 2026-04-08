@@ -37,6 +37,11 @@ export function maybeImprove(db) {
 }
 
 function runMetaAgent(db, role, sessions) {
+  if (!process.env.CLAUDE_CODE_SESSION_ACCESS_TOKEN) {
+    console.log(`[improver] Skipping meta-agent for ${role} — CLAUDE_CODE_SESSION_ACCESS_TOKEN not set.`);
+    return;
+  }
+
   const runId = 'run_' + crypto.randomBytes(4).toString('hex');
   const programPath = join(__dirname, '..', 'programs', `${role}.md`);
   const logPath = join(__dirname, '..', 'programs', 'improvement_log.md');

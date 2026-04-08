@@ -138,7 +138,7 @@ def main():
     sys.path.insert(0, str(project_root))
 
     number = get_next_number(project_root)
-    slug = args.title.lower().replace(" ", "_")
+    slug = re.sub(r'[^a-z0-9]+', '_', args.title.lower()).strip('_')
     filename = stories_dir / f"story_{number}_{slug}.md"
 
     # Create the story file

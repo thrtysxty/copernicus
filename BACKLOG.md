@@ -133,9 +133,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #650 | Github Repo Hygiene And Onboarding Readiness | APPROVED FOR IMPLEMENTATION | P1 |
-| #655 | Fix 631 Genai Toolbox Rework | APPROVED FOR IMPLEMENTATION | P0 |
-| #656 | Daemon Merge Gate Human Review | APPROVED FOR IMPLEMENTATION | P0 |
+| #658 | Daemon Blocked Pr Notification And Async Review Check | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -511,7 +509,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #627 | Provider Config File | COMPLETE | P2 |
 | #631 | Genai Toolbox — Database Mcp For Agent Intelligence | COMPLETE | P2 |
 | #632 | Agent Socket Bus — Real-Time Inter-Agent Communication Layer | COMPLETE | P1 |
+| #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
+| #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
+| #656 | Daemon Merge Gate Human Review | COMPLETE | P0 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
