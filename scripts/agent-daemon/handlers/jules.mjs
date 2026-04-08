@@ -164,11 +164,28 @@ async function handleCompletedPr(row, db, prNumber, storyId, session) {
 
   // Human Review Gate (Story 656)
   // Must be first check so it overrides AI verdicts
-  if (row.review_state !== 'FORCE_APPROVED' && hasHumanReworkRequest(prNumber)) {
+  if (row.review_state !== 'FORCE_APPROVED' && await hasHumanReworkRequest(prNumber)) {
     console.log(`  ❌ PR #${prNumber} is blocked by a human review (CHANGES_REQUESTED or comment).`);
+
+    // Operator notification on block
+    process.stderr.write(`
+============================================================
+⚠️  PR BLOCKED BY HUMAN REVIEW
+PR Number : ${prNumber}
+Session ID: ${sessionId}
+Story     : ${storyId}
+
+To unblock, resolve the comments and run:
+  gh pr review ${prNumber} --dismiss
+OR force merge it via daemon:
+  node scripts/agent-daemon/index.mjs --force-merge ${sessionId}
+============================================================
+`);
+
     const blockedVerdict = { verdict: 'BLOCKED', summary: 'Human review requested changes', reviewer_model: 'human', reviewed_at: new Date().toISOString() };
     updateSessionReview(db, sessionId, blockedVerdict);
     // DO NOT change session state from COMPLETED to BLOCKED, just the review state!
+    // The session will remain COMPLETED and we will re-evaluate on the next poll cycle.
     return;
   }
 

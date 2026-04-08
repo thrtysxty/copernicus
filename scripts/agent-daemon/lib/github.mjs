@@ -1,5 +1,8 @@
-import { execSync } from 'child_process';
+import { execSync, execFile } from 'child_process';
 import { homedir } from 'os';
+import { promisify } from 'util';
+
+const execFileAsync = promisify(execFile);
 
 const GH = '/opt/homebrew/bin/gh';
 const GITHUB_REPO = 'JMThiessen/Copernicus';
@@ -58,10 +61,10 @@ export function getPrBody(prNumber) {
   }
 }
 
-export function hasHumanReworkRequest(prNumber) {
+export async function hasHumanReworkRequest(prNumber) {
   try {
     // 1. Check for CHANGES_REQUESTED review state
-    const reviewsOut = execSync(`${GH} pr reviews ${prNumber} --repo ${GITHUB_REPO} --json state`, { env: getEnv(), encoding: 'utf-8' });
+    const { stdout: reviewsOut } = await execFileAsync(GH, ['pr', 'reviews', String(prNumber), '--repo', GITHUB_REPO, '--json', 'state'], { env: getEnv(), encoding: 'utf-8' });
     const reviews = JSON.parse(reviewsOut);
     for (const review of reviews) {
       if (review.state === 'CHANGES_REQUESTED') {
@@ -70,7 +73,7 @@ export function hasHumanReworkRequest(prNumber) {
     }
 
     // 2. Check comments for rework language
-    const commentsOut = execSync(`${GH} pr view ${prNumber} --repo ${GITHUB_REPO} --json comments`, { env: getEnv(), encoding: 'utf-8' });
+    const { stdout: commentsOut } = await execFileAsync(GH, ['pr', 'view', String(prNumber), '--repo', GITHUB_REPO, '--json', 'comments'], { env: getEnv(), encoding: 'utf-8' });
     const viewData = JSON.parse(commentsOut);
     const comments = viewData.comments || [];
 
