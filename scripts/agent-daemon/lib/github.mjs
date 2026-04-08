@@ -61,6 +61,19 @@ export function getPrBody(prNumber) {
   }
 }
 
+export function deleteRemoteBranch(branch) {
+  if (!branch || (!branch.startsWith('jules/') && !branch.startsWith('feat/story-'))) {
+    return { ok: true, skipped: true };
+  }
+
+  try {
+    execSync(`${GH} api repos/${GITHUB_REPO}/git/refs/heads/${branch} -X DELETE`, { env: getEnv(), stdio: 'ignore' });
+    return { ok: true, error: '' };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 export async function hasHumanReworkRequest(prNumber) {
   try {
     // 1. Check for CHANGES_REQUESTED review state

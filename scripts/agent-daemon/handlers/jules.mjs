@@ -10,7 +10,7 @@ import {
   writeEpisode,
   stampStoryId
 } from '../lib/db.mjs';
-import { getPrState, mergePr, getPrCommit, hasHumanReworkRequest } from '../lib/github.mjs';
+import { getPrState, mergePr, getPrCommit, hasHumanReworkRequest, deleteRemoteBranch } from '../lib/github.mjs';
 import { reviewPr } from '../lib/review.mjs';
 import { getTokenForStory, logAction, revoke } from '../lib/registry.mjs';
 import { isExpired } from '../lib/token.mjs';
@@ -302,6 +302,17 @@ async function performMerge(row, db, prNumber, storyId, verdictObj = null) {
 
     console.log(`  ✓ Merged PR #${prNumber} ${mergeSha ? `(${mergeSha.substring(0,8)})` : ''}`);
     updateSessionMerged(db, row.session_id, mergeSha);
+
+    if (mergeSha && row.branch) {
+      const result = deleteRemoteBranch(row.branch);
+      if (result.ok) {
+        if (!result.skipped) {
+          console.log(`  ✓ Deleted remote branch ${row.branch}`);
+        }
+      } else {
+        console.warn(`  ⚠️ Could not delete remote branch ${row.branch}: ${result.error}`);
+      }
+    }
 
     const mergeTs = new Date().toISOString();
     stampStoryId(storyId.toString(), row.dispatched || mergeTs, mergeTs);
