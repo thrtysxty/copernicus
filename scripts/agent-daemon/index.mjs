@@ -110,20 +110,28 @@ async function main() {
     }
   }
 
-  const activeSessions = getActiveSessions(db);
-  console.log(`Found ${activeSessions.length} active sessions.`);
+  const attachedSessionIds = new Set();
 
-  for (const session of activeSessions) {
-    const handler = handlers.find(h => h.owns(session));
-    if (handler) {
-      // Don't await, let them run concurrently
-      handler.attach(session, db).catch(e => {
-        console.error(`Handler ${handler.name} failed for session ${session.session_id}: ${e.message}`);
-      });
-    } else {
-      console.warn(`No handler found for session ${session.session_id} (agent: ${session.agent})`);
+  function attachNewSessions() {
+    const activeSessions = getActiveSessions(db);
+    for (const session of activeSessions) {
+      if (attachedSessionIds.has(session.session_id)) continue;
+      const handler = handlers.find(h => h.owns(session));
+      if (handler) {
+        attachedSessionIds.add(session.session_id);
+        handler.attach(session, db).catch(e => {
+          console.error(`Handler ${handler.name} failed for session ${session.session_id}: ${e.message}`);
+          attachedSessionIds.delete(session.session_id); // allow retry on next poll
+        });
+      } else {
+        console.warn(`No handler found for session ${session.session_id} (agent: ${session.agent})`);
+      }
     }
   }
+
+  const activeSessions = getActiveSessions(db);
+  console.log(`Found ${activeSessions.length} active sessions.`);
+  attachNewSessions();
 
   if (args.includes('--once')) {
     console.log('--once flag provided, exiting after attach phase.');
@@ -133,10 +141,14 @@ async function main() {
     setTimeout(() => process.exit(0), 1000);
   } else {
     console.log('Daemon running. Press Ctrl+C to exit.');
+    // Poll for new sessions every 30 seconds
+    setInterval(() => {
+      attachNewSessions();
+    }, 30 * 1000);
     // Periodically run the improver to check for new completed sessions
     setInterval(() => {
       maybeImprove(db);
-    }, 60 * 1000); // Check every minute
+    }, 60 * 1000);
   }
 }
 
