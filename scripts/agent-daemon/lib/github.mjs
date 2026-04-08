@@ -57,3 +57,33 @@ export function getPrBody(prNumber) {
     return "";
   }
 }
+
+export function hasHumanReworkRequest(prNumber) {
+  try {
+    // 1. Check for CHANGES_REQUESTED review state
+    const reviewsOut = execSync(`${GH} pr reviews ${prNumber} --repo ${GITHUB_REPO} --json state`, { env: getEnv(), encoding: 'utf-8' });
+    const reviews = JSON.parse(reviewsOut);
+    for (const review of reviews) {
+      if (review.state === 'CHANGES_REQUESTED') {
+        return true;
+      }
+    }
+
+    // 2. Check comments for rework language
+    const commentsOut = execSync(`${GH} pr view ${prNumber} --repo ${GITHUB_REPO} --json comments`, { env: getEnv(), encoding: 'utf-8' });
+    const viewData = JSON.parse(commentsOut);
+    const comments = viewData.comments || [];
+
+    for (const comment of comments) {
+      const body = (comment.body || '').toLowerCase();
+      if (body.includes('changes requested') || body.includes('re-work request') || body.includes('request changes')) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (e) {
+    console.warn(`Failed to check human reviews for PR ${prNumber}: ${e.message}`);
+    return false; // Fail open or closed? AC says if found, treat as block. If it fails, assume false, but log.
+  }
+}

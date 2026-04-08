@@ -13,6 +13,41 @@ async function main() {
   const args = process.argv.slice(2);
   const db = getDb();
 
+  const forceMergeIdx = args.indexOf('--force-merge');
+  if (forceMergeIdx !== -1 && args.length > forceMergeIdx + 1) {
+    const sessionId = args[forceMergeIdx + 1];
+    console.log(`⚠️  WARNING: You are about to forcefully bypass human review gates for session ${sessionId}.`);
+
+    // We import readline for prompt
+    const readline = await import('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    const question = (q) => new Promise(resolve => rl.question(q, resolve));
+
+    const answer = await question("Type 'Jeremy' to confirm force merge: ");
+    if (answer.trim() === 'Jeremy') {
+      console.log(`Force merge confirmed for ${sessionId}. Performing merge now.`);
+      const row = db.prepare('SELECT pr_number, story, title FROM jules_sessions WHERE session_id=?').get(sessionId);
+      if (row && row.pr_number) {
+        // Just set it to APPROVED and let the daemon handle it via the normal process by skipping human checks if we set a flag.
+        // Or we can import github.mjs directly and merge it here.
+        // A better hack: set review_state to 'FORCE_APPROVED', and in jules.mjs bypass the check.
+        db.prepare("UPDATE jules_sessions SET state='COMPLETED', review_state='FORCE_APPROVED', reviewed=NULL WHERE session_id=?").run(sessionId);
+        console.log('Session state updated to FORCE_APPROVED. The daemon will bypass human checks and merge on the next cycle.');
+      } else {
+        console.error('Session not found or has no PR number.');
+      }
+    } else {
+      console.log('Confirmation failed. Aborting force merge.');
+    }
+    rl.close();
+    process.exit(0);
+  }
+
+
   if (args.includes('--status')) {
     showStatus(db);
 

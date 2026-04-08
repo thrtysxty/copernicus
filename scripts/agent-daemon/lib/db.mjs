@@ -310,12 +310,18 @@ export function showStatus(db) {
     const pr = r.pr_number ? `#${r.pr_number}` : '';
     let reviewState = r.review_state || '—';
     if (reviewState === 'REQUEST_CHANGES') reviewState = 'REQ_CHANGES';
+    if (reviewState === 'BLOCKED' && r.state === 'COMPLETED') {
+        const rowData = r.review_verdict ? JSON.parse(r.review_verdict) : {};
+        if (rowData.reviewer_model === 'human') reviewState = 'BLOCKED (human review)';
+    }
+
+    let displayState = r.state || '';
 
     console.log(
       (r.agent || '—').padEnd(8),
       String(r.story || '').padEnd(8),
-      (r.state || '').padEnd(22),
-      reviewState.padEnd(14),
+      displayState.padEnd(13),
+      reviewState.padEnd(25),
       pr.padEnd(8),
       sha.padEnd(10),
       (r.title || '')

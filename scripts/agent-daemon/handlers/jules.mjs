@@ -10,7 +10,7 @@ import {
   writeEpisode,
   stampStoryId
 } from '../lib/db.mjs';
-import { getPrState, mergePr, getPrCommit } from '../lib/github.mjs';
+import { getPrState, mergePr, getPrCommit, hasHumanReworkRequest } from '../lib/github.mjs';
 import { reviewPr } from '../lib/review.mjs';
 import { getTokenForStory, logAction, revoke } from '../lib/registry.mjs';
 import { isExpired } from '../lib/token.mjs';
@@ -162,7 +162,17 @@ async function handleCompletedPr(row, db, prNumber, storyId, session) {
   const sessionId = row.session_id;
   console.log(`Handling completed PR #${prNumber} for story ${storyId}`);
 
-  if (row.review_state === 'APPROVED') {
+  // Human Review Gate (Story 656)
+  // Must be first check so it overrides AI verdicts
+  if (row.review_state !== 'FORCE_APPROVED' && hasHumanReworkRequest(prNumber)) {
+    console.log(`  ❌ PR #${prNumber} is blocked by a human review (CHANGES_REQUESTED or comment).`);
+    const blockedVerdict = { verdict: 'BLOCKED', summary: 'Human review requested changes', reviewer_model: 'human', reviewed_at: new Date().toISOString() };
+    updateSessionReview(db, sessionId, blockedVerdict);
+    // DO NOT change session state from COMPLETED to BLOCKED, just the review state!
+    return;
+  }
+
+  if (row.review_state === 'APPROVED' || row.review_state === 'FORCE_APPROVED') {
     console.log(`  ✓ PR #${prNumber} already APPROVED. Proceeding to merge.`);
     await performMerge(row, db, prNumber, storyId);
     return;
