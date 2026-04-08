@@ -38,12 +38,12 @@ export default {
     return row.agent === 'jules' || row.agent == null;
   },
   async attach(row, db) {
-    const { session_id, story, title, state, review_state } = row;
+    const { session_id, story, title, state } = row;
     console.log(`Attaching Jules handler to session ${session_id} (Story ${story}: ${title})`);
 
     let client;
     try {
-      client = await connect({ apiKey: getJulesApiKey() });
+      client = connect({ apiKey: getJulesApiKey() });
     } catch (e) {
       console.error(`Failed to connect to Jules SDK: ${e.message}`);
       return;
