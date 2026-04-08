@@ -140,7 +140,7 @@
     "@openrouter/sdk": "^0.11.2",
     "@types/ws": "^8.18.1",
     "@vscode/debugprotocol": "^1.68.0",
-    "better-sqlite3": "^12.6.2",
+    "better-sqlite3": "^12.8.0",
     "chokidar": "^3.6.0",
     "clsx": "^2.1.1",
     "electron-log": "^5.4.3",
