@@ -60,6 +60,21 @@ export default {
       return;
     }
 
+    // Pre-stream plan approval: session.stream() is a HOT stream — it only delivers
+    // future events. If Jules generated the plan before the daemon attached, the
+    // planGenerated event is already gone. Check current state and approve immediately.
+    try {
+      const info = await session.info();
+      if (info.state === 'awaitingPlanApproval') {
+        console.log(`  Story ${story}: Plan already pending — approving immediately (pre-stream)`);
+        await session.approve();
+        console.log(`  ✓ Plan approved (pre-stream)`);
+        updateSessionState(db, session_id, 'awaitingPlanApproval', true);
+      }
+    } catch (e) {
+      console.warn(`  ⚠️ Pre-stream plan check failed: ${e.message}`);
+    }
+
     const token = getTokenForStory(story, 'jules');
 
     try {
