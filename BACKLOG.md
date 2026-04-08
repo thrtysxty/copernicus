@@ -133,7 +133,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #659 | Agent Browser Chrome Devtools Runtime Introspection Via Chrome Devtools Axi | APPROVED FOR IMPLEMENTATION | P1 |
+| #660 | Daemon Post Merge Branch Reaper | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -563,6 +563,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
 | #630 | Agent Browser — In-Session Ui Verification Mcp | IN PROGRESS | P1 |
 | #658 | Daemon Blocked Pr Notification And Async Review Check | IN PROGRESS | P1 |
+| #659 | Agent Browser Chrome Devtools Runtime Introspection Via Chrome Devtools Axi | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
