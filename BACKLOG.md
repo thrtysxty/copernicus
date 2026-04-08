@@ -134,6 +134,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
 | #650 | Github Repo Hygiene And Onboarding Readiness | APPROVED FOR IMPLEMENTATION | P1 |
+| #655 | Fix 631 Genai Toolbox Rework | APPROVED FOR IMPLEMENTATION | P0 |
 | #656 | Daemon Merge Gate Human Review | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
@@ -555,7 +556,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
 | #654 | Jules Dispatch Branch Aware | DRAFT | P1 |
-| #655 | Fix 631 Genai Toolbox Rework | DRAFT | P0 |
 | #657 | Turso Libsql State Ledger | DRAFT | P1 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
