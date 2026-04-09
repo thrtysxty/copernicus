@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import splashImg from '../../assets/splash.png';
 
 // Mock ipcRenderer for development if not in Electron context
@@ -84,7 +85,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
     };
   }, [onComplete]);
 
-  const imageVariants = {
+  const imageVariants: Variants = {
     off: {
       opacity: 0.1,
       filter: 'grayscale(100%) brightness(0.2) contrast(1.2)',
