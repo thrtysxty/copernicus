@@ -133,7 +133,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
-| #657 | Turso Libsql State Ledger | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -513,9 +512,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
 | #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
 | #656 | Daemon Merge Gate Human Review | COMPLETE | P0 |
-| #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
-| #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
-| #656 | Daemon Merge Gate Human Review | COMPLETE | P0 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -564,6 +560,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
 | #630 | Agent Browser — In-Session Ui Verification Mcp | IN PROGRESS | P1 |
+| #657 | Turso Libsql State Ledger | IN PROGRESS | P1 |
 | #658 | Daemon Blocked Pr Notification And Async Review Check | IN PROGRESS | P1 |
 | #659 | Agent Browser Chrome Devtools Runtime Introspection Via Chrome Devtools Axi | IN PROGRESS | P1 |
 | #660 | Daemon Post Merge Branch Reaper | IN PROGRESS | P2 |
