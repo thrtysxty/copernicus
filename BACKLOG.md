@@ -133,6 +133,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
+| #657 | Turso Libsql State Ledger | APPROVED FOR IMPLEMENTATION | P1 |
 | #661 | Upgrade Framer Motion To V12 Fix Splashscreen Ease Type | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
@@ -557,7 +558,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
 | #654 | Jules Dispatch Branch Aware | DRAFT | P1 |
-| #657 | Turso Libsql State Ledger | DRAFT | P1 |
 | #567 | Kb Browse Article View | IN PROGRESS | P1 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
 | #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
