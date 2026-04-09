@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/renderer/test/setup.ts'],
     // Scope tests to project source only — excludes release/ and node_modules/.
-    // state-ledger.test.ts is excluded because better-sqlite3 is compiled for Electron's Node
+    // state-ledger.test.ts is excluded because libsql is compiled for Electron's Node
     // ABI (119) and cannot run under system Node.js vitest (141). Needs electron-mocha.
     include: ['{electron,src}/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'release', '**/electron/db/state-ledger.test.ts'],
@@ -23,8 +23,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       // Stub Electron APIs for main-process unit tests (jsdom has no Electron runtime)
       'electron': path.resolve(__dirname, './src/renderer/test/mocks/electron.ts'),
-      // better-sqlite3 is compiled for Electron's Node ABI and cannot load under system Node
-      'better-sqlite3': path.resolve(__dirname, './src/renderer/test/mocks/better-sqlite3.ts'),
+
+
     },
   },
 })

@@ -1,4 +1,5 @@
-import Database from 'better-sqlite3';
+import type { Database } from 'libsql';
+import DatabaseConstructor from 'libsql';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -16,7 +17,7 @@ export interface DevSession {
 }
 
 export class DevtimeManager {
-  private db: Database.Database;
+  private db: Database;
   private activeSession: DevSession | null = null;
   private timerInterval: NodeJS.Timeout | null = null;
   private readonly DB_DIR = path.join(os.homedir(), '.copernicus');
@@ -27,7 +28,7 @@ export class DevtimeManager {
     if (!fs.existsSync(this.DB_DIR)) {
       fs.mkdirSync(this.DB_DIR, { recursive: true });
     }
-    this.db = new Database(this.DB_PATH);
+    this.db = new DatabaseConstructor(this.DB_PATH);
     this.init();
     this.recoverSession();
     // registerHandlers moved to main.ts orchestration or explicit call

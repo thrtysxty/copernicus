@@ -5,7 +5,7 @@
  *   npm run test:electron
  *
  * This config is executed via `ELECTRON_RUN_AS_NODE=1 electron ./node_modules/vitest/vitest.mjs`
- * so better-sqlite3 (compiled for Electron's Node ABI) loads correctly.
+ * so libsql (compiled for Electron's Node ABI) loads correctly.
  *
  * Uses `pool: 'forks'` — required for native .node modules which are not thread-safe.
  */

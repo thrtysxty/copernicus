@@ -1,5 +1,5 @@
 import { execFileSync } from 'child_process'
-import Database from 'better-sqlite3'
+import type { Database } from 'libsql'
 
 export interface WorkflowSnapshot {
   id: number
@@ -13,7 +13,7 @@ export interface WorkflowSnapshot {
 export class SnapshotManager {
   private cachedSha: string | null = null
 
-  constructor(private db: Database.Database, private repoPath: string) {}
+  constructor(private db: Database, private repoPath: string) {}
 
   beginRun(): void {
     this.cachedSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: this.repoPath }).toString().trim()

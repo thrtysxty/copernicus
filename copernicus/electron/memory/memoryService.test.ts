@@ -9,7 +9,7 @@ describe('MemoryService TDD', () => {
 
   beforeAll(() => {
     // Override the DB instance directly for tests
-    stateLedger.db = new (require('better-sqlite3'))(':memory:');
+    stateLedger.db = new (require('libsql'))(':memory:');
     (stateLedger as any).init();
   });
 
@@ -112,7 +112,7 @@ describe('MemoryService TDD', () => {
   test('Migration: project_memory rows present in agent_memory after restart', () => {
     // Note: StateLedger is already imported, we'll instantiate it directly.
     // Use an uninitialized StateLedger to mock an app restart
-    const MockDb = require('better-sqlite3');
+    const MockDb = require('libsql');
     const mockDb = new MockDb(':memory:');
     
     // Create the old schema manually, without running new schema setup

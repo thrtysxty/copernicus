@@ -2,19 +2,19 @@ import log from '../utils/logger'
 import { spawnSync } from 'child_process'
 import path from 'path'
 import fs from 'fs'
-import Database from 'better-sqlite3'
+import type { Database } from 'libsql'
 import { BrowserWindow } from 'electron'
 import { AgentWorktree } from '../../src/renderer/types/worktree'
 
 export class WorktreeManager {
-  private db: Database.Database
+  private db: Database
   private repoRoot: string
   private worktreesDir: string
   private pollingInterval: NodeJS.Timeout | null = null
   private mainWindow: BrowserWindow | null = null
   private isStopped: boolean = false
 
-  constructor(db: Database.Database, repoRoot: string) {
+  constructor(db: Database, repoRoot: string) {
     this.db = db
     this.repoRoot = repoRoot
     this.worktreesDir = repoRoot ? path.join(this.repoRoot, '.agent-worktrees') : ''

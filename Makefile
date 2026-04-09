@@ -31,7 +31,7 @@ PYTHON := $(shell [ -f $(VENV)/bin/python3 ] && echo $(VENV)/bin/python3 || echo
 setup:
 	python3 -m venv $(VENV)
 	$(VENV)/bin/pip install -r backend/requirements.txt
-	cd copernicus && npm install && npm rebuild better-sqlite3
+	cd copernicus && npm install
 
 dev:
 	(trap 'kill 0' SIGINT; $(PYTHON) backend/app.py & cd copernicus && npm run dev)

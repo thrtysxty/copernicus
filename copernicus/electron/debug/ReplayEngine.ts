@@ -1,4 +1,4 @@
-import { Database } from 'better-sqlite3'
+import type { Database } from 'libsql'
 
 export interface ReplayRun {
   run_id: string        // workflow_run_id or session_id

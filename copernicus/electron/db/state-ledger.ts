@@ -1,6 +1,7 @@
 import log from '../utils/logger'
 import * as crypto from 'crypto';
-import Database from 'better-sqlite3';
+import type { Database } from 'libsql';
+import DatabaseConstructor from 'libsql';
 import path from 'path';
 import fs from 'fs';
 import { app } from 'electron';
@@ -137,7 +138,7 @@ export interface JulesSession {
 }
 
 export class StateLedger {
-  public db: Database.Database;
+  public db: Database;
 
   constructor(dbPath?: string) {
     const finalPath = dbPath ?? path.join(app.getPath('userData'), 'copernicus.db');
@@ -147,7 +148,7 @@ export class StateLedger {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    this.db = new Database(finalPath);
+    this.db = new DatabaseConstructor(finalPath);
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('synchronous = NORMAL');
