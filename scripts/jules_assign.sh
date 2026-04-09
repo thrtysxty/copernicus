@@ -404,17 +404,41 @@ printf '%s
 ' "  If there are TypeScript errors: FIX THEM. Do not submit with TS errors." >> "$TMPFILE"
 printf '
 %s
-' "STEP 3 — UI Verification (Agent Browser):" >> "$TMPFILE"
+' "STEP 3 — Verification (select the tier that matches your change risk):" >> "$TMPFILE"
 printf '%s
-' "  After \`tsc --noEmit\` passes, call \`browser:snapshot\` on the running app and confirm target component renders." >> "$TMPFILE"
+' "  TIER 1 — Quick Smoke (type fixes, single-file edits, copy changes):" >> "$TMPFILE"
 printf '%s
-' "  Graceful skip if app not running." >> "$TMPFILE"
+' "    - tsc --noEmit exits 0 (already done in STEP 2)" >> "$TMPFILE"
 printf '%s
-' "  Call \`browser:screenshot\` and include screenshot under \`## Screenshots\` in PR body." >> "$TMPFILE"
+' "    - Read the changed code path end-to-end and confirm no logic errors" >> "$TMPFILE"
 printf '%s
-' "  Call browser:console and assert zero entries with level \"error\"." >> "$TMPFILE"
+' "  TIER 2 — Targeted Regression (multi-file edits, logic changes in existing flows):" >> "$TMPFILE"
 printf '%s
-' "  If errors exist, include them verbatim under ## Runtime Errors in the PR description." >> "$TMPFILE"
+' "    - All Tier 1 checks" >> "$TMPFILE"
+printf '%s
+' "    - Identify one adjacent behavior likely to regress (caller, sibling, IPC consumer) — read it" >> "$TMPFILE"
+printf '%s
+' "    - Confirm error handling in the changed path covers at least one failure case" >> "$TMPFILE"
+printf '%s
+' "  TIER 3 — Deep Verification (IPC contracts, auth, migrations, broad refactors):" >> "$TMPFILE"
+printf '%s
+' "    - All Tier 2 checks" >> "$TMPFILE"
+printf '%s
+' "    - Trace every IPC channel touched: preload.ts registration -> ipcMain handler -> renderer call" >> "$TMPFILE"
+printf '%s
+' "    - Verify no AGENTS.md forbidden patterns introduced" >> "$TMPFILE"
+printf '%s
+' "    - Document what breaks if this PR is reverted" >> "$TMPFILE"
+printf '%s
+' "  UI VERIFICATION (all tiers — skip gracefully if Electron app not running):" >> "$TMPFILE"
+printf '%s
+' "    Call browser:snapshot — confirm target component renders in accessibility tree." >> "$TMPFILE"
+printf '%s
+' "    Call browser:screenshot — include under ## Screenshots in PR body." >> "$TMPFILE"
+printf '%s
+' "    Call browser:console — assert zero entries with level \"error\"." >> "$TMPFILE"
+printf '%s
+' "    If console errors exist, include them verbatim under ## Runtime Errors in PR body." >> "$TMPFILE"
 printf '
 %s
 ' "STEP 4 — Check AGENTS.md Forbidden Patterns. For every new ipcMain.handle():" >> "$TMPFILE"

@@ -104,12 +104,25 @@ export async function reviewPr(prNumber, storyId) {
   const prompt = `
 You are a senior code reviewer. Review this PR diff against the story's Acceptance Criteria and the project's forbidden patterns.
 
+ANTI-RATIONALIZATION RULES — ENFORCED:
+These phrases are NOT verification and must not appear in your reasoning:
+- "The code looks correct"
+- "This should work"
+- "The logic appears sound"
+- "I believe this is right"
+Every AC verdict must cite a specific line or block from the diff as evidence.
+
 REVIEW SCOPE RULES (apply these before evaluating):
 1. Evaluate whether the code changes correctly implement each AC — not whether runtime evidence was produced. The implementer is a headless agent that cannot run the app or produce log output. Do NOT require screenshots, log samples, test run output, or benchmark results.
 2. AC ordering in a story describes logical sequence within the implementation, not a requirement for separate commits or PRs. A single PR that implements AC1 + AC2 together is acceptable as long as both are correctly implemented in the code.
 3. Correction Notes in the story describe what was wrong in a previous PR. They guide what the implementer should fix — they are not additional ACs. Do not add new blocking requirements based on Correction Note wording unless they map to a stated AC.
 4. Only block on issues that are verifiable from the diff itself: missing code, wrong logic, forbidden patterns, TypeScript errors, IPC violations. Do not block on hypothetical runtime behavior or missing evidence the agent cannot provide.
 5. Do NOT request Playwright test runs, E2E test execution, browser automation, or any script execution from Jules. Jules is a headless code-writing agent — it cannot run interactive applications, start servers, or execute test frameworks. Any verdict that requires Jules to run Playwright or any other runtime test is invalid.
+
+REQUIRED CHECK FORMAT — for each AC, structure your internal reasoning as:
+### AC: <ac text>
+**Evidence:** <diff line/block that implements it, or "not found">
+**Result:** MET | NOT MET | PARTIAL
 
 STORY ACCEPTANCE CRITERIA:
 ${storyContent}

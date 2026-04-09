@@ -134,7 +134,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
 | #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
 | #657 | Turso Libsql State Ledger | APPROVED FOR IMPLEMENTATION | P1 |
-| #661 | Upgrade Framer Motion To V12 Fix Splashscreen Ease Type | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -514,6 +513,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
 | #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
 | #656 | Daemon Merge Gate Human Review | COMPLETE | P0 |
+| #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
+| #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
+| #656 | Daemon Merge Gate Human Review | COMPLETE | P0 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -565,6 +567,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #658 | Daemon Blocked Pr Notification And Async Review Check | IN PROGRESS | P1 |
 | #659 | Agent Browser Chrome Devtools Runtime Introspection Via Chrome Devtools Axi | IN PROGRESS | P1 |
 | #660 | Daemon Post Merge Branch Reaper | IN PROGRESS | P2 |
+| #661 | Upgrade Framer Motion To V12 Fix Splashscreen Ease Type | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
