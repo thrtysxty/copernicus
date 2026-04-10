@@ -103,7 +103,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
-| #590 | Intelligence Agent Yaml Schema | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -130,6 +129,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #590 | Intelligence Agent Yaml Schema | IN PROGRESS | N/A |
 | #634 | Agent Hub — Token Schema And Core Interface | APPROVED FOR IMPLEMENTATION | P1 |
 | #635 | Agent Hub — State Store Loop Controller And Story Queue | APPROVED FOR IMPLEMENTATION | P1 |
 | #636 | Agent Hub — Role Contract Schema | APPROVED FOR IMPLEMENTATION | P1 |

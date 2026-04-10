@@ -248,8 +248,9 @@ git fetch origin "${TARGET_BRANCH}" --quiet 2>/dev/null || {
   echo "⚠️  Could not fetch origin/${TARGET_BRANCH} — skipping check (no network?)"
 }
 
-# Use ls-tree to verify the file exists at this path on the target branch
-if ! git ls-tree -r "origin/${TARGET_BRANCH}" --name-only 2>/dev/null | grep -q "^${STORY_PATH}$"; then
+# Use git cat-file to verify the file exists at this path on the target branch
+# (avoids git ls-tree octal-escaping non-ASCII filenames like em-dashes)
+if ! git cat-file -e "origin/${TARGET_BRANCH}:${STORY_PATH}" 2>/dev/null; then
   echo ""
   echo "❌ DISPATCH BLOCKED — story file not found on origin/${TARGET_BRANCH}."
   echo "   Jules fetches from origin and won't see this story file."
