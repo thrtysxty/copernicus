@@ -24,6 +24,7 @@ VERBOSE=false
 SKIP_VALIDATION=false # Added this line
 AUTO_SELECT=false
 MANUAL_AGENT=""
+TARGET_BRANCH="main"
 
 # ── Helper Functions ────────────────────────────────────────────────────────────
 
@@ -123,6 +124,9 @@ Focus: Hardening, secret detection, IPC surface minimization.
     --verbose) VERBOSE=true ;;
     --skip-validation) SKIP_VALIDATION=true ;; # Added this line
     --force-dispatch) FORCE_DISPATCH=true ;;
+    --branch)
+      TARGET_BRANCH="$2"
+      shift ;;
     -*) echo "❌ Unknown flag: $1"; exit 1 ;;
     *)
       if [ -z "$STORY_PATH" ]; then STORY_PATH="$1"
@@ -135,7 +139,7 @@ done
 # ── Validation ────────────────────────────────────────────────────────────────
 
 if [ -z "$STORY_PATH" ]; then
-  echo "Usage: ./scripts/jules_assign.sh [--agent <name>] [--auto-select] [--as bolt|palette|sentinel] [--dry-run] [--skip-validation] <story.md>"
+  echo "Usage: ./scripts/jules_assign.sh [--agent <name>] [--auto-select] [--as bolt|palette|sentinel] [--dry-run] [--skip-validation] [--branch <name>] <story.md>"
   exit 1
 fi
 
@@ -200,6 +204,14 @@ if [ -z "$EXISTING_COMMIT" ]; then
   # Broaden search: also catch feat: prefixes and direct feat commits
   EXISTING_COMMIT=$(git log origin/main --oneline --grep="feat.*story.${STORY_NUMBER}[^0-9]" -i 2>/dev/null | head -1)
 fi
+
+if [ "$TARGET_BRANCH" != "main" ] && [ -z "$EXISTING_COMMIT" ]; then
+  EXISTING_COMMIT=$(git log origin/${TARGET_BRANCH} --oneline --grep="feat(story-${STORY_NUMBER})" -i 2>/dev/null | head -1)
+  if [ -z "$EXISTING_COMMIT" ]; then
+    EXISTING_COMMIT=$(git log origin/${TARGET_BRANCH} --oneline --grep="feat.*story.${STORY_NUMBER}[^0-9]" -i 2>/dev/null | head -1)
+  fi
+fi
+
 if [ -n "$EXISTING_COMMIT" ]; then
   if [ "${FORCE_DISPATCH:-false}" = "true" ]; then
     echo "⚠️  --force-dispatch: ignoring commit match (false positive): $EXISTING_COMMIT"
@@ -228,28 +240,26 @@ if [ -z "${JULES_API_KEY:-}" ]; then
   exit 1
 fi
 
-# ── Check origin/main is up to date ───────────────────────────────────────────
-# Jules fetches from origin/main — if local main is ahead, Jules can't see those
-# files and will report "file not found" errors mid-session.
+# ── Check story file exists on origin ─────────────────────────────────────────
+# Jules fetches from origin — it must be able to read the story file there.
 
-echo "Checking origin/main is in sync with local main..."
-git fetch origin main --quiet 2>/dev/null || {
-  echo "⚠️  Could not fetch origin/main — skipping sync check (no network?)"
+echo "Checking story file exists on origin/${TARGET_BRANCH}..."
+git fetch origin "${TARGET_BRANCH}" --quiet 2>/dev/null || {
+  echo "⚠️  Could not fetch origin/${TARGET_BRANCH} — skipping check (no network?)"
 }
 
-UNPUSHED=$(git log origin/main..main --oneline 2>/dev/null)
-if [ -n "$UNPUSHED" ]; then
+# Use ls-tree to verify the file exists at this path on the target branch
+if ! git ls-tree -r "origin/${TARGET_BRANCH}" --name-only 2>/dev/null | grep -q "^${STORY_PATH}$"; then
   echo ""
-  echo "❌ DISPATCH BLOCKED — local main is ahead of origin/main."
-  echo "   Jules fetches from origin and won't see these commits:"
-  echo "$UNPUSHED" | sed 's/^/   /'
+  echo "❌ DISPATCH BLOCKED — story file not found on origin/${TARGET_BRANCH}."
+  echo "   Jules fetches from origin and won't see this story file."
   echo ""
-  echo "   Fix: git push origin main"
-  echo "   Then re-run this dispatch."
+  echo "   Fix: git push origin ${TARGET_BRANCH}"
+  echo "   Then re-run this dispatch, or ensure PR is merged."
   exit 1
 fi
 
-echo "✓ origin/main is in sync"
+echo "✓ Story file exists on origin/${TARGET_BRANCH}"
 
 # ── Run pre-flight IPC lint ────────────────────────────────────────────────────
 
@@ -495,7 +505,7 @@ if ! update_story_status "$STORY_PATH" "IN PROGRESS"; then
   echo "⚠️  Status update failed but continuing with dispatch..."
 fi
 
-node "$REPO_ROOT/scripts/agent-daemon/dispatch.mjs" "$STORY_NUMBER" "$STORY_TITLE" < "$TMPFILE"
+env DISPATCH_BRANCH="${TARGET_BRANCH}" node "$REPO_ROOT/scripts/agent-daemon/dispatch.mjs" "$STORY_NUMBER" "$STORY_TITLE" < "$TMPFILE"
 
 # ── Start Jules daemon if not already running ─────────────────────────────────
 DAEMON_PIDFILE="/tmp/jules_daemon.pid"

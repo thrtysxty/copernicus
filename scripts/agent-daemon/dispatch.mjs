@@ -81,9 +81,11 @@ async function main() {
   // but it's primarily an external API. We will append it to the log file.
   appendFileSync('/tmp/agent-daemon.log', `[${new Date().toISOString()}] Issued token ${token.token_id.substring(0, 8)}... (Score: ${difficultyScore}, Caps: ${capabilities.join(',')})\n`);
 
+  const dispatchBranch = process.env.DISPATCH_BRANCH || 'main';
+
   const session = await client.session({
     prompt,
-    source: { github: 'JMThiessen/Copernicus', baseBranch: 'main' },
+    source: { github: 'JMThiessen/Copernicus', baseBranch: dispatchBranch },
     autoPr: true,
     // Add the token to the env if the sdk supports it, or it will be ignored safely
     env: { AGENT_TOKEN: token.token_id }

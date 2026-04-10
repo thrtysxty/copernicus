@@ -104,6 +104,10 @@ This repo uses a **PR-first** workflow for all changes — including story files
 
 ### The dispatch sequence
 
+There are two valid dispatch paths: standard (after PR merge) and fast path (from a feature branch before merge).
+Standard is preferred for shared repos.
+
+**Standard Path (main)**
 ```
 1. Write or update a story file
 2. Open a PR with the story file → get it merged to main
@@ -113,13 +117,24 @@ This repo uses a **PR-first** workflow for all changes — including story files
 6. On APPROVE: PR merges, story moves to completed/
 ```
 
-**Why the story must be on `main` first:** Jules fetches the repo from GitHub origin. If your story file hasn't merged, Jules won't see it.
+**Fast Path (feature branch)**
+```
+1. Write or update a story file on a feature branch
+2. Push your feature branch to GitHub origin (e.g., git push origin feat/story-NNN-prep)
+3. Dispatch Jules against that branch: bash scripts/jules_assign.sh docs/stories/story_NNN_*.md --branch feat/story-NNN-prep
+4. Jules fetches from that branch, creates an implementation PR, and targets that branch
+```
+
+**Why the story must be on GitHub origin first:** Jules fetches the repo from GitHub origin. If your story file hasn't been pushed (either to `main` or a feature branch), Jules won't see it.
 
 ### CLI dispatch (for contributors without Copernicus running)
 
 ```bash
-# From the repo root after your story PR has merged:
+# Standard path: From the repo root after your story PR has merged:
 bash scripts/jules_assign.sh docs/stories/story_NNN_your_story_title.md
+
+# Fast path: From a feature branch that has been pushed to origin:
+bash scripts/jules_assign.sh docs/stories/story_NNN_your_story_title.md --branch my-feature-branch
 ```
 
 The dispatch script validates the story spec, checks that it's not already implemented, and registers the session with the Jules daemon. The daemon handles plan approval and auto-merges on APPROVE.
