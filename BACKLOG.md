@@ -127,12 +127,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #588 | Unify Provider Auth Surface | COMPLETE | N/A |
 | #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
-| #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | APPROVED FOR IMPLEMENTATION | P1 |
-| #604 | Replace Anthropic Pr Review With Ollama Structured Output | APPROVED FOR IMPLEMENTATION | P1 |
-| #618 | Openrouter Provider Flag | APPROVED FOR IMPLEMENTATION | P1 |
+| #634 | Agent Hub — Token Schema And Core Interface | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -474,6 +471,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #562 | Jules Sdk Client Migration | COMPLETE | P2 |
 | #565 | Kb Activity Bar View Scaffold | COMPLETE | P1 |
 | #566 | Kb Content Storage Seeding | COMPLETE | P1 |
+| #567 | Kb Browse Article View | COMPLETE | P1 |
 | #568 | Kb Chat Contextual Suggestions | COMPLETE | P2 |
 | #570 | Story Inspector Chat Scoping | COMPLETE | P2 |
 | #572 | Generalize Agent Monitor | COMPLETE | P1 |
@@ -484,9 +482,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #597 | Remove Stale Column Ids From Layout.Ts | COMPLETE | P2 |
 | #598 | Complete Console.Log Cleanup — Renderer And New Electron Files (192 Continuation) | COMPLETE | P2 |
 | #599 | Session Archive And Nightly Digest Pipeline | COMPLETE | P1 |
+| #600 | Replace Gemini Cli Dispatch With Claude-Via-Ollama Cloud | COMPLETE | P1 |
 | #601 | Agent Monitor: Write Complete Status After Merge | COMPLETE | P1 |
 | #602 | Capex Billing Toggle Per Workspace | COMPLETE | P1 |
 | #603 | Extract App Tsx Ipc And Command Hooks | COMPLETE | P2 |
+| #604 | Replace Anthropic Pr Review With Ollama Structured Output | COMPLETE | P1 |
 | #605 | Ollama Native Coder Agent With Tool Loop | COMPLETE | P1 |
 | #606 | Project Target Device Configuration | COMPLETE | P1 |
 | #607 | Agent Daemon Jules Sdk Handler | COMPLETE | P1 |
@@ -499,6 +499,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #615 | Lsp Health Monitor And Recovery | COMPLETE | P1 |
 | #616 | Worktree Manager Lifecycle Coordination | COMPLETE | P2 |
 | #617 | Settings Store Write Confirmation | COMPLETE | P2 |
+| #618 | Openrouter Provider Flag | COMPLETE | P1 |
 | #619 | Ghost Tint Active State Css Violations | COMPLETE | P2 |
 | #620 | Console Log Lint False Positives And App Tsx Fix | COMPLETE | P2 |
 | #621 | Pty Auditor Shell Injection Hardening | COMPLETE | P1 |
@@ -506,12 +507,21 @@ This file is auto-generated. Run `make backlog` to update.
 | #623 | Openrouter Sdk Provider | COMPLETE | P1 |
 | #626 | Provider Registry Abstraction | COMPLETE | P1 |
 | #627 | Provider Config File | COMPLETE | P2 |
+| #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | COMPLETE | P1 |
+| #629 | Agent Harness Self-Improvement Loop | COMPLETE | P2 |
+| #630 | Agent Browser — In-Session Ui Verification Mcp | COMPLETE | P1 |
 | #631 | Genai Toolbox — Database Mcp For Agent Intelligence | COMPLETE | P2 |
 | #632 | Agent Socket Bus — Real-Time Inter-Agent Communication Layer | COMPLETE | P1 |
 | #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
 | #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
 | #656 | Daemon Merge Gate Human Review | COMPLETE | P0 |
+| #657 | Turso Libsql State Ledger | COMPLETE | P1 |
+| #658 | Daemon Blocked Pr Notification And Async Review Check | COMPLETE | P1 |
+| #659 | Agent Browser Chrome Devtools Runtime Introspection Via Chrome Devtools Axi | COMPLETE | P1 |
+| #660 | Daemon Post Merge Branch Reaper | COMPLETE | P2 |
+| #661 | Upgrade Framer Motion To V12 Fix Splashscreen Ease Type | COMPLETE | P1 |
+| #662 | Fix Daemon Getstorypath Story Py Missing Review Falls Back To Blocked | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -537,7 +547,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
-| #634 | Agent Hub — Token Schema And Core Interface | DRAFT | P1 |
 | #635 | Agent Hub — State Store Loop Controller And Story Queue | DRAFT | P1 |
 | #636 | Agent Hub — Role Contract Schema | DRAFT | P1 |
 | #637 | Agent Hub — Org Chart Configuration | DRAFT | P1 |
@@ -555,16 +564,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | DRAFT | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
-| #654 | Jules Dispatch Branch Aware | DRAFT | P1 |
-| #567 | Kb Browse Article View | IN PROGRESS | P1 |
-| #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | IN PROGRESS | P1 |
-| #629 | Agent Harness Self-Improvement Loop | IN PROGRESS | P2 |
-| #630 | Agent Browser — In-Session Ui Verification Mcp | IN PROGRESS | P1 |
-| #657 | Turso Libsql State Ledger | IN PROGRESS | P1 |
-| #658 | Daemon Blocked Pr Notification And Async Review Check | IN PROGRESS | P1 |
-| #659 | Agent Browser Chrome Devtools Runtime Introspection Via Chrome Devtools Axi | IN PROGRESS | P1 |
-| #660 | Daemon Post Merge Branch Reaper | IN PROGRESS | P2 |
-| #661 | Upgrade Framer Motion To V12 Fix Splashscreen Ease Type | IN PROGRESS | P1 |
+| #590 | Intelligence Agent Yaml Schema | IN PROGRESS | P1 |
+| #654 | Jules Dispatch Branch Aware | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
