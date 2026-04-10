@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
 import { execSync } from 'child_process';
 
 const DB_DIR = join(homedir(), 'Library', 'Application Support', 'copernicus');
@@ -129,12 +129,20 @@ const REPO_ROOT = new URL('../../..', import.meta.url).pathname;
 
 export function getStoryPath(storyId) {
   try {
-    const result = execSync(`python3 "${REPO_ROOT}/scripts/story.py" path ${storyId}`, { encoding: 'utf-8', cwd: REPO_ROOT });
-    return result.trim();
+    const activeDir = join(REPO_ROOT, 'docs/stories');
+    const activeFiles = readdirSync(activeDir);
+    const activeMatch = activeFiles.find(f => f.startsWith(`story_${storyId}_`) && f.endsWith('.md'));
+    if (activeMatch) return `docs/stories/${activeMatch}`;
+
+    const completedDir = join(activeDir, 'completed');
+    const completedFiles = readdirSync(completedDir);
+    const completedMatch = completedFiles.find(f => f.startsWith(`story_${storyId}_`) && f.endsWith('.md'));
+    if (completedMatch) return `docs/stories/completed/${completedMatch}`;
+
   } catch (e) {
     console.error(`Failed to get story path for ${storyId}:`, e.message);
-    return null;
   }
+  return null;
 }
 
 export function writeVerificationRecord(storyPath, verdict) {
