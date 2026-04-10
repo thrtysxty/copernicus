@@ -131,8 +131,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #634 | Agent Hub — Token Schema And Core Interface | APPROVED FOR IMPLEMENTATION | P1 |
-| #642 | Agent Hub — Token Health Monitoring And Loop Operator | APPROVED FOR IMPLEMENTATION | P1 |
+| #635 | Agent Hub — State Store Loop Controller And Story Queue | APPROVED FOR IMPLEMENTATION | P1 |
+| #636 | Agent Hub — Role Contract Schema | APPROVED FOR IMPLEMENTATION | P1 |
+| #638 | Agent Hub — Constitutional Safety Layer | APPROVED FOR IMPLEMENTATION | P1 |
 | #654 | Jules Dispatch Branch Aware | APPROVED FOR IMPLEMENTATION | P1 |
+| #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -563,9 +566,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | DRAFT | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
-| #635 | Agent Hub — State Store Loop Controller And Story Queue | IN PROGRESS | P1 |
-| #636 | Agent Hub — Role Contract Schema | IN PROGRESS | P1 |
-| #638 | Agent Hub — Constitutional Safety Layer | IN PROGRESS | P1 |
+| #642 | Agent Hub — Token Health Monitoring And Loop Operator | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
