@@ -14,6 +14,39 @@ export function getDb() {
 
   // init tables if not exist (similar to agent_monitor.py init_db)
   db.exec(`
+    CREATE TABLE IF NOT EXISTS hub_tokens (
+      token_id     TEXT PRIMARY KEY,
+      issued_at    TEXT NOT NULL,
+      expires_at   TEXT NOT NULL,
+      issued_by    TEXT NOT NULL,
+      role_name    TEXT NOT NULL,
+      role_class   TEXT NOT NULL,
+      authority_level INTEGER NOT NULL,
+      story_id     TEXT,
+      worktree     TEXT,
+      capabilities TEXT NOT NULL,
+      scope        TEXT NOT NULL,
+      budget       TEXT NOT NULL,
+      health       TEXT NOT NULL,
+      state        TEXT NOT NULL DEFAULT 'ACTIVE',
+      parent_token TEXT,
+      notes        TEXT
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hub_events (
+      event_id   TEXT PRIMARY KEY,
+      timestamp  TEXT NOT NULL,
+      token_id   TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      action     TEXT,
+      result     TEXT,
+      notes      TEXT
+    )
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS jules_sessions (
         session_id    TEXT PRIMARY KEY,
         story         INTEGER,
