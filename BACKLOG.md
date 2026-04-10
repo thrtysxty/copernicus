@@ -127,6 +127,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #588 | Unify Provider Auth Surface | COMPLETE | N/A |
 | #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
+| #590 | Intelligence Agent Yaml Schema | DRAFT | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
 | #634 | Agent Hub — Token Schema And Core Interface | APPROVED FOR IMPLEMENTATION | P1 |
@@ -564,8 +565,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | DRAFT | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
-| #590 | Intelligence Agent Yaml Schema | IN PROGRESS | P1 |
-| #654 | Jules Dispatch Branch Aware | IN PROGRESS | P1 |
+| #654 | Jules Dispatch Branch Aware | DRAFT | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
