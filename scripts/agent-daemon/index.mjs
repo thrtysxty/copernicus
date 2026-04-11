@@ -154,7 +154,7 @@ async function main() {
       const handler = handlers.find(h => h.owns(session));
       if (handler) {
         attachedSessionIds.add(session.session_id);
-        handler.attach(session, db).catch(e => {
+        handler.attach(session, db, attachedSessionIds).catch(e => {
           console.error(`Handler ${handler.name} failed for session ${session.session_id}: ${e.message}`);
           attachedSessionIds.delete(session.session_id); // allow retry on next poll
         });

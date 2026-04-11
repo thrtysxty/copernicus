@@ -37,7 +37,7 @@ export default {
   owns(row) {
     return row.agent === 'jules' || row.agent == null;
   },
-  async attach(row, db) {
+  async attach(row, db, attachedSessionIds) {
     const { session_id, story, title, state } = row;
     console.log(`Attaching Jules handler to session ${session_id} (Story ${story}: ${title})`);
 
@@ -167,8 +167,89 @@ export default {
         }
       }
     } catch (e) {
-       console.error(`Stream error for session ${session_id}: ${e.message}`);
-       if (token) revoke(token.token_id);
+      if (e.message && (e.message.includes('404') || e.message.includes('NOT_FOUND'))) {
+        console.log(`  Stream 404 for session ${session_id} - falling back to polling.`);
+
+        const pollInterval = parseInt(process.env.DAEMON_POLL_INTERVAL_SECONDS || '30', 10) * 1000;
+
+        while (true) {
+          await new Promise(resolve => setTimeout(resolve, pollInterval));
+
+          try {
+            const info = await session.info();
+            const currentToken = getTokenForStory(story, 'jules');
+
+            if (currentToken && currentToken.expires_at) {
+              const expiresAt = new Date(currentToken.expires_at).getTime();
+              const now = Date.now();
+              const msUntilExpiry = expiresAt - now;
+              if (msUntilExpiry > 0 && msUntilExpiry <= 15 * 60 * 1000) {
+                console.warn(`  Story ${story}: Token expiring in ${Math.round(msUntilExpiry / 60000)} min — consider renewing.`);
+              }
+            }
+
+            // Check human intervention first to prevent auto-approving if human intervened
+            let humanIntervened = false;
+            try {
+              const snapshot = await session.snapshot();
+              if (snapshot.activityCounts && snapshot.activityCounts.userMessaged > 0) {
+                console.log(`  Story ${story}: Human intervention detected — pausing daemon poll. Resume manually if needed.`);
+                if (attachedSessionIds) attachedSessionIds.delete(session_id);
+                humanIntervened = true;
+              }
+            } catch (snapErr) {
+              // Ignore snapshot errors in intermediate states
+            }
+
+            if (humanIntervened) break;
+
+            if (info.state === 'awaitingPlanApproval') {
+              try {
+                await session.approve();
+                console.log(`  Story ${story}: Plan approved (poll loop)`);
+                updateSessionState(db, session_id, 'awaitingPlanApproval', true);
+              } catch (approveErr) {
+                console.warn(`  ❌ Plan approval failed (poll loop): ${approveErr.message}`);
+              }
+            } else if (info.state === 'completed') {
+              updateSessionState(db, session_id, 'COMPLETED');
+              if (currentToken) revoke(currentToken.token_id);
+
+              let pUrl, pNum;
+              try {
+                const snapshot = await session.snapshot();
+                if (snapshot.pr) {
+                  pUrl = snapshot.pr.url;
+                  pNum = parseInt(pUrl.replace(/\/$/, '').split('/').pop(), 10);
+                  console.log(`  PR ready: ${pUrl}`);
+                  updateSessionPr(db, session_id, 'COMPLETED', pUrl, pNum);
+                }
+              } catch (snapErr) {
+                console.warn(`  snapshot() failed: ${snapErr.message}`);
+              }
+              const freshRow = db.prepare('SELECT * FROM jules_sessions WHERE session_id=?').get(session_id);
+              if (pNum) await handleCompletedPr(freshRow, db, pNum, story, session);
+
+              if (attachedSessionIds) attachedSessionIds.delete(session_id);
+              break;
+            } else if (info.state === 'failed' || info.state === 'cancelled') {
+              console.error(`  Story ${story} failed (poll loop): ${info.state}`);
+              updateSessionState(db, session_id, 'FAILED');
+              if (currentToken) revoke(currentToken.token_id);
+              if (attachedSessionIds) attachedSessionIds.delete(session_id);
+              break;
+            }
+          } catch (pollErr) {
+            console.error(`  Poll error for session ${session_id}: ${pollErr.message}`);
+            if (attachedSessionIds) attachedSessionIds.delete(session_id);
+            break;
+          }
+        }
+      } else {
+        console.error(`Stream error for session ${session_id}: ${e.message}`);
+        if (token) revoke(token.token_id);
+        if (attachedSessionIds) attachedSessionIds.delete(session_id);
+      }
     }
   }
 };
