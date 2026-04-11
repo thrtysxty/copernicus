@@ -135,8 +135,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #636 | Agent Hub — Role Contract Schema | APPROVED FOR IMPLEMENTATION | P1 |
 | #637 | Agent Hub — Org Chart Configuration | APPROVED FOR IMPLEMENTATION | P1 |
 | #638 | Agent Hub — Constitutional Safety Layer | APPROVED FOR IMPLEMENTATION | P1 |
+| #639 | Agent Hub — Hub Enforcement Replacing Classifier | APPROVED FOR IMPLEMENTATION | P1 |
 | #640 | Agent Hub — Universal Attribution Ledger Sources | APPROVED FOR IMPLEMENTATION | P1 |
+| #641 | Agent Hub — User As Agent Kanban Sync | APPROVED FOR IMPLEMENTATION | P1 |
 | #642 | Agent Hub — Token Health Monitoring And Loop Operator | APPROVED FOR IMPLEMENTATION | P1 |
+| #644 | Agent Hub — Jules Adapter | APPROVED FOR IMPLEMENTATION | P1 |
 | #654 | Jules Dispatch Branch Aware | APPROVED FOR IMPLEMENTATION | P1 |
 | #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -556,10 +559,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
-| #639 | Agent Hub — Hub Enforcement Replacing Classifier | DRAFT | P1 |
-| #641 | Agent Hub — User As Agent Kanban Sync | DRAFT | P1 |
 | #643 | Agent Hub — Data-Driven Model Selection At Mint | DRAFT | P2 |
-| #644 | Agent Hub — Jules Adapter | DRAFT | P1 |
 | #645 | Agent Hub — Ccr Adapter | DRAFT | P1 |
 | #646 | Agent Hub — Org Chart Ui | DRAFT | P2 |
 | #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
