@@ -47,6 +47,39 @@ export function getDb() {
   `);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS hub_story_state (
+      story_id          TEXT PRIMARY KEY,
+      phase             TEXT NOT NULL DEFAULT 'BACKLOG',
+      loop_iteration    INTEGER DEFAULT 0,
+      entered_phase     TEXT NOT NULL,
+      closing_condition TEXT,
+      blocking_reason   TEXT,
+      last_advanced     TEXT,
+      advanced_by       TEXT
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hub_queue (
+      queue_id      TEXT PRIMARY KEY,
+      story_id      TEXT NOT NULL,
+      phase         TEXT NOT NULL,
+      role_required TEXT NOT NULL,
+      priority      INTEGER DEFAULT 5,
+      enqueued_at   TEXT NOT NULL,
+      claimed_at    TEXT,
+      claimed_by    TEXT,
+      state         TEXT NOT NULL DEFAULT 'PENDING'
+    )
+  `);
+
+  try {
+    db.exec("ALTER TABLE hub_story_state ADD COLUMN evidence_artifacts TEXT");
+  } catch (e) {
+    // Column might already exist
+  }
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS jules_sessions (
         session_id    TEXT PRIMARY KEY,
         story         INTEGER,
