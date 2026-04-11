@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 import { IntelligenceDocument, IntelligenceDocType, ProviderKey } from './types';
 import { BrowserWindow } from 'electron';
 import { stateLedger } from '../db/state-ledger';
@@ -89,6 +90,10 @@ export class ProviderSyncEngine {
   }
 
   resolvePath(docType: IntelligenceDocType, provider: ProviderKey, slug: string): string | null {
+    if (docType === 'agent') {
+      return `.copernicus/agents/${slug}/agent.yaml`;
+    }
+
     if (docType === 'instruction') {
       switch (provider) {
         case 'claude': return 'CLAUDE.md';
@@ -111,11 +116,6 @@ export class ProviderSyncEngine {
       }
     }
 
-    if (docType === 'agent') {
-      if (provider === 'claude') return `.claude/agents/${slug}.md`;
-      return null;
-    }
-
     if (docType === 'skill') {
       if (provider === 'claude') return `.claude/skills/${slug}/SKILL.md`;
       return null;
@@ -130,6 +130,22 @@ export class ProviderSyncEngine {
   }
 
   formatContent(doc: IntelligenceDocument, provider: ProviderKey): string {
+    if (doc.type === 'agent') {
+      // Serialize to agent.yaml
+      const agentYaml: any = {
+        name: doc.title,
+        description: doc.description || doc.content || ''
+      };
+
+      if (doc.agentModel) agentYaml.model = doc.agentModel;
+      if (doc.agentMaxTokens !== undefined && doc.agentMaxTokens !== null) agentYaml.max_tokens = doc.agentMaxTokens;
+      if (doc.agentTemperature !== undefined && doc.agentTemperature !== null) agentYaml.temperature = doc.agentTemperature;
+      if (doc.agentSkills && doc.agentSkills.length > 0) agentYaml.skills = doc.agentSkills;
+      if (doc.agentTools && doc.agentTools.length > 0) agentYaml.tools = doc.agentTools;
+
+      return yaml.dump(agentYaml);
+    }
+
     let content = doc.content || '';
     
     if (doc.type === 'rule' && doc.pathScope && doc.pathScope.length > 0) {

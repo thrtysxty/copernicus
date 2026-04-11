@@ -6,6 +6,7 @@ import { unwrapIpc } from '../../types/ipc'
 import { IntelligenceDocument, IntelligenceDocType, SyncStatusValue, ProviderKey, IntelligenceDocSuggestion } from '../../../../electron/intelligence/types'
 import { IntelligenceSuggestBanner } from './IntelligenceSuggestBanner'
 import { NotebookLMSection } from './NotebookLMSection'
+import { CANONICAL_PROVIDERS, PROVIDER_METADATA } from '../wizard/providerRegistry'
 
 const TYPE_ORDER: IntelligenceDocType[] = ['instruction', 'rule', 'agent', 'skill', 'command']
 const TYPE_COLORS: Record<IntelligenceDocType, { bg: string, text: string, icon: React.ReactNode }> = {
@@ -580,8 +581,115 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               </div>
             )}
 
+            {selectedDoc.type === 'agent' && (
+              <div className="shrink-0 p-4 border-b border-white/5 bg-zinc-900/50 flex flex-col gap-4">
+                <div className="flex gap-4">
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Model</label>
+                    <select
+                      className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
+                      value={selectedDoc.agentModel || ''}
+                      onChange={(e) => {
+                        const val = e.target.value || null
+                        setSaveStatus('saving')
+                        setDocuments(prev => prev.map(d => d.id === selectedDoc.id ? { ...d, agentModel: val } : d))
+                        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+                        saveTimerRef.current = setTimeout(() => {
+                          handleUpdate(selectedDoc.id, { agentModel: val })
+                        }, 800)
+                      }}
+                    >
+                      <option value="">(None)</option>
+                      {CANONICAL_PROVIDERS.map(p => (
+                        <option key={p} value={p}>{PROVIDER_METADATA[p]?.displayName || p}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Max Tokens</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 4096"
+                      className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
+                      value={selectedDoc.agentMaxTokens ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value ? parseInt(e.target.value, 10) : null
+                        setSaveStatus('saving')
+                        setDocuments(prev => prev.map(d => d.id === selectedDoc.id ? { ...d, agentMaxTokens: val } : d))
+                        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+                        saveTimerRef.current = setTimeout(() => {
+                          handleUpdate(selectedDoc.id, { agentMaxTokens: val })
+                        }, 800)
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Temperature</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="1"
+                      placeholder="0.0 - 1.0"
+                      className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
+                      value={selectedDoc.agentTemperature ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value ? parseFloat(e.target.value) : null
+                        setSaveStatus('saving')
+                        setDocuments(prev => prev.map(d => d.id === selectedDoc.id ? { ...d, agentTemperature: val } : d))
+                        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+                        saveTimerRef.current = setTimeout(() => {
+                          handleUpdate(selectedDoc.id, { agentTemperature: val })
+                        }, 800)
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Skills (comma-separated)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. typescript, python, react"
+                      className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
+                      value={selectedDoc.agentSkills?.join(', ') || ''}
+                      onChange={(e) => {
+                        const val = e.target.value ? e.target.value.split(',').map(s => s.trim()).filter(Boolean) : null
+                        setSaveStatus('saving')
+                        setDocuments(prev => prev.map(d => d.id === selectedDoc.id ? { ...d, agentSkills: val } : d))
+                        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+                        saveTimerRef.current = setTimeout(() => {
+                          handleUpdate(selectedDoc.id, { agentSkills: val })
+                        }, 800)
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Tools (comma-separated)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. browser, terminal, fs"
+                      className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
+                      value={selectedDoc.agentTools?.join(', ') || ''}
+                      onChange={(e) => {
+                        const val = e.target.value ? e.target.value.split(',').map(s => s.trim()).filter(Boolean) : null
+                        setSaveStatus('saving')
+                        setDocuments(prev => prev.map(d => d.id === selectedDoc.id ? { ...d, agentTools: val } : d))
+                        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+                        saveTimerRef.current = setTimeout(() => {
+                          handleUpdate(selectedDoc.id, { agentTools: val })
+                        }, 800)
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <div className="flex-1 p-4 relative">
+            <div className="flex-1 p-4 relative flex flex-col gap-2">
+              {selectedDoc.type === 'agent' && (
+                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Description / System Prompt</label>
+              )}
               <textarea
                 className="w-full h-full bg-transparent text-zinc-300 font-mono text-xs outline-none resize-none scrollbar-thin scrollbar-thumb-zinc-800"
                 value={editorContent}

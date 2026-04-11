@@ -23,6 +23,13 @@ export interface IntelligenceDocument {
   providers: ProviderTarget[];
   syncStatus: Record<ProviderKey, SyncStatusValue>;
   ts: number;
+
+  // Agent schema fields (Story 590)
+  agentModel?: string | null;
+  agentMaxTokens?: number | null;
+  agentTemperature?: number | null;
+  agentSkills?: string[] | null;
+  agentTools?: string[] | null;
 }
 
 export interface IntelligenceDocSuggestion {

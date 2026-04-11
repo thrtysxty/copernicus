@@ -1164,7 +1164,14 @@ export class StateLedger {
       'ALTER TABLE intelligence_documents ADD COLUMN tags TEXT',
       'ALTER TABLE intelligence_documents ADD COLUMN source TEXT NOT NULL DEFAULT \'curated\'',
       'ALTER TABLE intelligence_documents ADD COLUMN version INTEGER NOT NULL DEFAULT 1',
-      'ALTER TABLE intelligence_documents ADD COLUMN excerpt TEXT'
+      'ALTER TABLE intelligence_documents ADD COLUMN excerpt TEXT',
+
+      // Story 590: Agent YAML Schema
+      'ALTER TABLE intelligence_documents ADD COLUMN agent_model TEXT',
+      'ALTER TABLE intelligence_documents ADD COLUMN agent_max_tokens INTEGER',
+      'ALTER TABLE intelligence_documents ADD COLUMN agent_temperature REAL',
+      'ALTER TABLE intelligence_documents ADD COLUMN agent_skills TEXT',
+      'ALTER TABLE intelligence_documents ADD COLUMN agent_tools TEXT'
     ];
     for (const sql of newCols) {
       try { this.db.exec(sql); } catch { /* column already exists */ }
@@ -1281,13 +1288,23 @@ export class StateLedger {
         toolRestrictions: r.tool_restrictions ? JSON.parse(r.tool_restrictions) : null,
         preferredModel: r.preferred_model,
         providers: r.providers ? JSON.parse(r.providers) : [],
-        syncStatus: r.sync_status ? JSON.parse(r.sync_status) : {}
+        syncStatus: r.sync_status ? JSON.parse(r.sync_status) : {},
+        agentModel: r.agent_model,
+        agentMaxTokens: r.agent_max_tokens,
+        agentTemperature: r.agent_temperature,
+        agentSkills: r.agent_skills ? JSON.parse(r.agent_skills) : null,
+        agentTools: r.agent_tools ? JSON.parse(r.agent_tools) : null
       };
       delete mapped.project_id;
       delete mapped.path_scope;
       delete mapped.tool_restrictions;
       delete mapped.preferred_model;
       delete mapped.sync_status;
+      delete mapped.agent_model;
+      delete mapped.agent_max_tokens;
+      delete mapped.agent_temperature;
+      delete mapped.agent_skills;
+      delete mapped.agent_tools;
       return mapped;
     });
   }
@@ -1307,7 +1324,12 @@ export class StateLedger {
       toolRestrictions: row.tool_restrictions ? JSON.parse(row.tool_restrictions) : null,
       preferredModel: row.preferred_model,
       providers: row.providers ? JSON.parse(row.providers) : [],
-      syncStatus: row.sync_status ? JSON.parse(row.sync_status) : {}
+      syncStatus: row.sync_status ? JSON.parse(row.sync_status) : {},
+      agentModel: row.agent_model,
+      agentMaxTokens: row.agent_max_tokens,
+      agentTemperature: row.agent_temperature,
+      agentSkills: row.agent_skills ? JSON.parse(row.agent_skills) : null,
+      agentTools: row.agent_tools ? JSON.parse(row.agent_tools) : null
     };
 
     delete mapped.project_id;
@@ -1315,6 +1337,11 @@ export class StateLedger {
     delete mapped.tool_restrictions;
     delete mapped.preferred_model;
     delete mapped.sync_status;
+    delete mapped.agent_model;
+    delete mapped.agent_max_tokens;
+    delete mapped.agent_temperature;
+    delete mapped.agent_skills;
+    delete mapped.agent_tools;
 
     return mapped;
   }
@@ -1368,7 +1395,11 @@ export class StateLedger {
 
   updateIntelDoc(id: string, partial: any): any {
     const ts = Date.now();
-    const allowed = ['title', 'description', 'content', 'pathScope', 'toolRestrictions', 'preferredModel', 'providers', 'syncStatus'];
+    const allowed = [
+      'title', 'description', 'content', 'pathScope', 'toolRestrictions',
+      'preferredModel', 'providers', 'syncStatus',
+      'agentModel', 'agentMaxTokens', 'agentTemperature', 'agentSkills', 'agentTools'
+    ];
     const sets: string[] = ['ts = ?'];
     const vals: any[] = [ts];
 
@@ -1377,7 +1408,12 @@ export class StateLedger {
       pathScope: 'path_scope',
       toolRestrictions: 'tool_restrictions',
       preferredModel: 'preferred_model',
-      syncStatus: 'sync_status'
+      syncStatus: 'sync_status',
+      agentModel: 'agent_model',
+      agentMaxTokens: 'agent_max_tokens',
+      agentTemperature: 'agent_temperature',
+      agentSkills: 'agent_skills',
+      agentTools: 'agent_tools'
     };
 
     for (const [k, v] of Object.entries(partial)) {
@@ -1385,7 +1421,7 @@ export class StateLedger {
         const dbKey = keyMap[k] || k;
         sets.push(`${dbKey} = ?`);
         
-        if (['pathScope', 'toolRestrictions', 'providers', 'syncStatus'].includes(k)) {
+        if (['pathScope', 'toolRestrictions', 'providers', 'syncStatus', 'agentSkills', 'agentTools'].includes(k)) {
            vals.push(v ? JSON.stringify(v) : null);
         } else {
            vals.push(v);
