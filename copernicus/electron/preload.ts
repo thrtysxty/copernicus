@@ -164,7 +164,7 @@ const SEND_CHANNELS = new Set([
   'debug:set-breakpoints', 'debug:get-call-stack', 'debug:get-scopes', 'debug:get-variables',
   'debug:evaluate',
   // Daemon (Story 524)
-  'daemon:install', 'daemon:is-registered', 'hub:attribute',
+  'daemon:install', 'daemon:is-registered', 'hub:attribute', 'hub:user-sync',
   // Agent Browser (Story 630)
   'browser:navigate', 'browser:snapshot', 'browser:screenshot', 'browser:click',
   // Harness Self-Improvement (Story 629)

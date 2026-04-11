@@ -91,7 +91,7 @@ class StoryValidator:
             line = line.strip()
             # Regex to find paths like 'path/to/file.ts', 'path/to/file.py', etc.
             # Handles markdown list items like - `path/to/file.ts`
-            match = re.search(r"[`]?([\w./_-]+\.(?:tsx|jsx|json|ts|js|py|html|md|sh|ps1|yaml|yml|css|scss|txt|xml|java|cs|go|cpp|hpp|vue|svelte|c|h))[`]?", line)
+            match = re.search(r"[`]?(~?[\w./_-]+\.(?:tsx|jsx|json|ts|js|py|html|md|sh|ps1|yaml|yml|css|scss|txt|xml|java|cs|go|cpp|hpp|vue|svelte|c|h))[`]?", line)
             if match:
                 path = match.group(1)
                 is_new = "(new)" in line.lower()
@@ -102,7 +102,12 @@ class StoryValidator:
             return
 
         for path, is_new, original_line in file_paths:
-            full_path = os.path.join(self.repo_root, path)
+            if path.startswith('~'):
+                full_path = os.path.expanduser(path)
+            elif os.path.isabs(path):
+                full_path = path
+            else:
+                full_path = os.path.join(self.repo_root, path)
             if is_new:
                 if os.path.exists(full_path):
                     self._add_warning(f"File marked (new) already exists: {path}")
@@ -121,13 +126,17 @@ class StoryValidator:
 
         ipc_content = (self._extract_section_content("Acceptance Criteria") + "\n" +
                        self._extract_section_content("IPC Channels Used"))
-        
+
         if not ipc_content.strip():
             self._add_warning("No IPC channel references found in 'Acceptance Criteria' or 'IPC Channels Used'.")
             return
 
+        # Strip fenced code blocks before scanning for channel names to avoid
+        # false positives from action_type / enum values inside code examples.
+        ipc_content_no_code = re.sub(r"```[\s\S]*?```", "", ipc_content)
+
         # Regex to find 'channel:name' or "channel:name"
-        channel_matches = re.findall("['\"]([a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+)['\"]", ipc_content)
+        channel_matches = re.findall("['\"]([a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+)['\"]", ipc_content_no_code)
         if not channel_matches:
             self._add_warning("No IPC channel patterns ('channel:name') found in story content.")
             return

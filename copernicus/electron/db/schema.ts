@@ -408,7 +408,12 @@ export const SCHEMA = {
       preferred_model TEXT,
       providers   TEXT NOT NULL DEFAULT '[]', -- JSON array of ProviderTarget
       sync_status TEXT NOT NULL DEFAULT '{}', -- JSON Record<ProviderKey, SyncStatusValue>
-      ts          INTEGER NOT NULL
+      ts          INTEGER NOT NULL,
+      agent_model       TEXT,
+      agent_max_tokens  INTEGER,
+      agent_temperature REAL,
+      agent_skills      TEXT,
+      agent_tools       TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_intel_docs_project ON intelligence_documents(project_id);
     CREATE INDEX IF NOT EXISTS idx_intel_docs_type    ON intelligence_documents(project_id, type);
