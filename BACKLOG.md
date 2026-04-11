@@ -103,6 +103,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #162 | Capex Intelligence V2 Recharts And Analytics Suite | COMPLETED | Medium |
 | #203 | Move Lsp Indicator To Statusbar | COMPLETE | Low |
 | #213 | Optimize Reports View Justification | COMPLETE | Low |
+| #590 | Intelligence Agent Yaml Schema | APPROVED FOR IMPLEMENTATION | N/A |
 | #078 | Atlas Slash Commands | COMPLETE | N/A |
 | #079 | Atlas Planning Chat | COMPLETE | N/A |
 | #080 | Atlas Capex Tracker | COMPLETE | N/A |
@@ -129,13 +130,15 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #590 | Intelligence Agent Yaml Schema | IN PROGRESS | N/A |
 | #634 | Agent Hub — Token Schema And Core Interface | APPROVED FOR IMPLEMENTATION | P1 |
 | #635 | Agent Hub — State Store Loop Controller And Story Queue | APPROVED FOR IMPLEMENTATION | P1 |
 | #636 | Agent Hub — Role Contract Schema | APPROVED FOR IMPLEMENTATION | P1 |
+| #637 | Agent Hub — Org Chart Configuration | APPROVED FOR IMPLEMENTATION | P1 |
 | #638 | Agent Hub — Constitutional Safety Layer | APPROVED FOR IMPLEMENTATION | P1 |
+| #640 | Agent Hub — Universal Attribution Ledger Sources | APPROVED FOR IMPLEMENTATION | P1 |
 | #642 | Agent Hub — Token Health Monitoring And Loop Operator | APPROVED FOR IMPLEMENTATION | P1 |
 | #654 | Jules Dispatch Branch Aware | APPROVED FOR IMPLEMENTATION | P1 |
+| #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -553,9 +556,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
-| #637 | Agent Hub — Org Chart Configuration | DRAFT | P1 |
 | #639 | Agent Hub — Hub Enforcement Replacing Classifier | DRAFT | P1 |
-| #640 | Agent Hub — Universal Attribution Ledger Sources | DRAFT | P1 |
 | #641 | Agent Hub — User As Agent Kanban Sync | DRAFT | P1 |
 | #643 | Agent Hub — Data-Driven Model Selection At Mint | DRAFT | P2 |
 | #644 | Agent Hub — Jules Adapter | DRAFT | P1 |
@@ -566,7 +567,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | DRAFT | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
-| #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | IN PROGRESS | P0 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
