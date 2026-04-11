@@ -9,11 +9,32 @@ describe('Hub Token Module', () => {
   before(() => {
     db = getDb();
     // Clean up any existing test data to ensure isolation
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_update');
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_delete');
+    db.exec('DROP TRIGGER IF EXISTS hub_tokens_no_delete');
     db.prepare('DELETE FROM hub_events').run();
     db.prepare('DELETE FROM hub_tokens').run();
+    db.exec(`
+      CREATE TRIGGER IF NOT EXISTS hub_events_no_update BEFORE UPDATE ON hub_events
+      BEGIN SELECT RAISE(ABORT, 'hub_events is append-only'); END;
+    `);
+    db.exec(`
+      CREATE TRIGGER IF NOT EXISTS hub_events_no_delete BEFORE DELETE ON hub_events
+      BEGIN SELECT RAISE(ABORT, 'hub_events is append-only'); END;
+    `);
+    db.exec(`
+      CREATE TRIGGER IF NOT EXISTS hub_tokens_no_delete BEFORE DELETE ON hub_tokens
+      BEGIN SELECT RAISE(ABORT, 'hub_tokens records are immutable'); END;
+    `);
   });
 
   after(() => {
+    // Cannot delete from tables because of append-only triggers,
+    // so we can drop triggers, delete, and recreate triggers to clean up,
+    // or just leave the data since it's a test db.
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_update');
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_delete');
+    db.exec('DROP TRIGGER IF EXISTS hub_tokens_no_delete');
     db.prepare('DELETE FROM hub_events').run();
     db.prepare('DELETE FROM hub_tokens').run();
   });

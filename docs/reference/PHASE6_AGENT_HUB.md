@@ -238,6 +238,16 @@ token:retired           normal task completion
 
 ---
 
+## Hub Process File Permissions
+
+To ensure the Constitutional Safety Layer operates properly, the operator must set appropriate OS-level file permissions.
+Since the Agent Hub code executes checks for its own integrity, modifying these files bypasses the safety mechanism.
+
+**Recommended Hardening:**
+- `scripts/agent-daemon/lib/hub.mjs` and `scripts/agent-daemon/lib/db.mjs` must be read-only for any OS-level user accounts that agent processes might run under.
+- The `~/.copernicus/hub-witness.log` file should be append-only or only writable by the daemon process.
+- The `~/.copernicus/hub-integrity.json` file must only be modifiable by the system operator. Agents should not have OS-level write permissions to the `.copernicus` config directory.
+
 ## The Configurable Org Chart
 
 The org chart is a user artifact. Copernicus ships with sensible defaults. Users amend.

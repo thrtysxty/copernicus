@@ -80,6 +80,21 @@ export function getDb() {
   }
 
   db.exec(`
+    CREATE TRIGGER IF NOT EXISTS hub_events_no_update BEFORE UPDATE ON hub_events
+    BEGIN SELECT RAISE(ABORT, 'hub_events is append-only'); END;
+  `);
+
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS hub_events_no_delete BEFORE DELETE ON hub_events
+    BEGIN SELECT RAISE(ABORT, 'hub_events is append-only'); END;
+  `);
+
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS hub_tokens_no_delete BEFORE DELETE ON hub_tokens
+    BEGIN SELECT RAISE(ABORT, 'hub_tokens records are immutable'); END;
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS jules_sessions (
         session_id    TEXT PRIMARY KEY,
         story         INTEGER,

@@ -1,6 +1,91 @@
-import { randomUUID } from 'crypto';
-import { readFileSync } from 'fs';
+import { randomUUID, createHash } from 'crypto';
 import { getDb } from './db.mjs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { homedir } from 'os';
+
+class ConstitutionalViolation extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ConstitutionalViolation';
+  }
+}
+
+const COPERNICUS_DIR = join(homedir(), '.copernicus');
+const WITNESS_LOG_PATH = join(COPERNICUS_DIR, 'hub-witness.log');
+const INTEGRITY_FILE_PATH = join(COPERNICUS_DIR, 'hub-integrity.json');
+
+function writeWitnessLog(event) {
+  if (!existsSync(COPERNICUS_DIR)) {
+    mkdirSync(COPERNICUS_DIR, { recursive: true });
+  }
+  const timestamp = new Date().toISOString();
+  const logEntry = `[${timestamp}] ${event}\n`;
+  appendFileSync(WITNESS_LOG_PATH, logEntry);
+}
+
+function computeFileHash(filePath) {
+  try {
+    const content = readFileSync(filePath);
+    return createHash('sha256').update(content).digest('hex');
+  } catch (e) {
+    return null;
+  }
+}
+
+function checkIntegrity() {
+  const currentDir = dirname(fileURLToPath(import.meta.url));
+  const hubPath = join(currentDir, 'hub.mjs');
+  const dbPath = join(currentDir, 'db.mjs');
+
+  const hubHash = computeFileHash(hubPath);
+  const dbHash = computeFileHash(dbPath);
+
+  if (!hubHash || !dbHash) {
+    writeWitnessLog('CONSTITUTIONAL INTEGRITY FAILURE: Missing source files for hash check');
+    console.error('CONSTITUTIONAL INTEGRITY FAILURE: Missing source files for hash check');
+    process.exit(2);
+  }
+
+  if (!existsSync(INTEGRITY_FILE_PATH)) {
+    if (!existsSync(COPERNICUS_DIR)) {
+      mkdirSync(COPERNICUS_DIR, { recursive: true });
+    }
+    writeFileSync(INTEGRITY_FILE_PATH, JSON.stringify({
+      'hub.mjs': hubHash,
+      'db.mjs': dbHash
+    }, null, 2));
+    writeWitnessLog('Hub integrity established (first startup).');
+  } else {
+    try {
+      const storedHashes = JSON.parse(readFileSync(INTEGRITY_FILE_PATH, 'utf8'));
+      if (storedHashes['hub.mjs'] !== hubHash || storedHashes['db.mjs'] !== dbHash) {
+        writeWitnessLog('CONSTITUTIONAL INTEGRITY FAILURE: Source file hashes do not match stored hashes.');
+        console.error('CONSTITUTIONAL INTEGRITY FAILURE: Source file hashes do not match stored hashes.');
+        process.exit(2);
+      }
+      // writeWitnessLog('Hub startup: integrity check passed.');
+    } catch (e) {
+      writeWitnessLog('CONSTITUTIONAL INTEGRITY FAILURE: Could not read integrity file.');
+      console.error('CONSTITUTIONAL INTEGRITY FAILURE: Could not read integrity file.');
+      process.exit(2);
+    }
+  }
+}
+
+// Perform integrity check strictly on load (unless running in tests where we might not want to exit?
+// The AC says "startup integrity check is non-optional - there is no --skip-integrity flag"
+// and "Integrity mismatch on startup: Hub refuses to start, writes to witness log"
+// So we must call it here on module load if we're not inside a test harness? Wait, AC 9 tests:
+// "integrity mismatch exits with code 2" so the test itself will trigger it or mock process.exit.
+// If we call it on module load, it makes testing difficult because `import` will exit.
+// Let's call it immediately.
+checkIntegrity();
+
+/**
+ * @constitutional authority_level and class in org.yaml have no write API path anywhere in the codebase.
+ */
 
 /**
  * Mints a new token based on role config, story ID, and worktree.
@@ -10,6 +95,23 @@ import { getDb } from './db.mjs';
  * @returns {Object} token object
  */
 export function mint(roleConfig, storyId, worktree) {
+  if (roleConfig.scope && roleConfig.scope.folder) {
+    for (const folderPattern of roleConfig.scope.folder) {
+      // Any scope folder that might include hub source files or the copernicus config dir
+      if (
+        folderPattern.includes('scripts/agent-daemon/lib/hub') ||
+        folderPattern.includes('scripts/agent-daemon/lib/db.mjs') ||
+        folderPattern.includes('~/.copernicus') ||
+        folderPattern.includes('.copernicus') ||
+        folderPattern === '*' ||
+        folderPattern === '/'
+      ) {
+        writeWitnessLog(`ConstitutionalViolation: Attempted to mint token with protected scope ${folderPattern}`);
+        throw new ConstitutionalViolation(`Scope contains constitutionally protected path: ${folderPattern}`);
+      }
+    }
+  }
+
   const db = getDb();
   const tokenId = `token-${randomUUID()}`;
   const now = Date.now();
@@ -175,6 +277,7 @@ export function revoke(tokenId, reason = 'Revoked by system') {
   const db = getDb();
   db.prepare('UPDATE hub_tokens SET state = ? WHERE token_id = ?').run('REVOKED', tokenId);
   logEvent(db, tokenId, 'token:revoked', null, false, reason);
+  writeWitnessLog(`token:revoked - Token ${tokenId} revoked. Reason: ${reason}`);
   // Optional: In a full event-bus system, emit `token:revoked` here.
 }
 
