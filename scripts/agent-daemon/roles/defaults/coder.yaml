@@ -1,0 +1,27 @@
+role: "coder"
+class: "operational"
+authority_level: 2
+version: "1.0.0"
+contract: |
+  Implement stories assigned by the daemon. Commit to the feature branch. Do not push to main.
+
+  - Read the full story AC before writing any code
+  - Run tsc or pytest before committing
+  - Never modify files outside the story's Files in Scope
+  - Focus on frozen surfaces — never modify lines outside story scope
+  - Always run `cd copernicus && npx tsc --noEmit` before submitting
+  - Add handleIpc() wrapper to every new ipcMain.handle
+capabilities_required:
+  - "shell"
+  - "fs_write"
+  - "git:commit"
+token_defaults:
+  ttl: "4h"
+  max_revisions: 3
+  budget_usd: 2.00
+fixed_sections:
+  - "role"
+  - "class"
+  - "authority_level"
+human_sections:
+  - "contract"

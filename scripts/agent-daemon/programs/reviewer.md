@@ -1,3 +1,4 @@
+<!-- DEPRECATED: This file has been converted to YAML format at ~/.copernicus/roles/reviewer.yaml -->
 # Reviewer Agent Program
 <!-- FIXED: do not edit — adapter section -->
 Agent: Devstral Small (OpenRouter via lib/review.mjs)

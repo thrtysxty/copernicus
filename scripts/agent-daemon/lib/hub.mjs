@@ -4,6 +4,11 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } fr
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import yaml from 'js-yaml';
+import { z } from 'zod';
 
 class ConstitutionalViolation extends Error {
   constructor(message) {
@@ -87,6 +92,47 @@ checkIntegrity();
  * @constitutional authority_level and class in org.yaml have no write API path anywhere in the codebase.
  */
 
+const RoleContractSchema = z.object({
+  role: z.string(),
+  class: z.enum(['regulatory', 'operational']),
+  authority_level: z.number().int().min(1).max(5),
+  version: z.string(),
+  contract: z.string(),
+  constraints: z.object({
+    output_format: z.string().optional(),
+    never_modify: z.array(z.string()).optional(),
+    required_checks: z.array(z.string()).optional(),
+  }).optional(),
+  capabilities_required: z.array(z.string()),
+  token_defaults: z.object({
+    ttl: z.string(),
+    max_revisions: z.number().int(),
+    budget_usd: z.number(),
+  }),
+  behavioral_tests: z.object({
+    required: z.boolean(),
+    runner: z.enum(['playwright', 'jest', 'pytest', 'custom']),
+    pattern: z.string(),
+    log_pattern: z.string(),
+    gate: z.string().default('TESTING_LOOP_CLOSE'),
+    record_by_agent: z.boolean().optional(),
+  }).optional(),
+  fixed_sections: z.array(z.string()).optional(),
+  human_sections: z.array(z.string()).optional(),
+});
+
+const ROLES_DIR = path.join(os.homedir(), '.copernicus', 'roles');
+const DEFAULTS_DIR = path.join(
+  path.dirname(new URL(import.meta.url).pathname),
+  '..',
+  'roles',
+  'defaults'
+);
+
+export function getRoleContractSchema() {
+  return RoleContractSchema;
+}
+
 /**
  * Mints a new token based on role config, story ID, and worktree.
  * @param {Object} roleConfig
@@ -116,6 +162,22 @@ export function mint(roleConfig, storyId, worktree) {
   const tokenId = `token-${randomUUID()}`;
   const now = Date.now();
 
+  let roleVersion = 'unknown';
+  try {
+      let roleNameToLoad = 'default';
+      if (typeof roleConfig.role === 'string') {
+          roleNameToLoad = roleConfig.role;
+      } else if (roleConfig.role && roleConfig.role.name) {
+          roleNameToLoad = roleConfig.role.name;
+      }
+      const contract = loadContract(roleNameToLoad);
+      roleVersion = contract.version;
+  } catch(e) {
+      // Enforce AC2: Invalid contract = Hub refuses to mint tokens
+      throw new Error(`Cannot mint token: ${e.message}`);
+  }
+
+
   const token = {
     identity: roleConfig.identity || 'unknown',
     role: {
@@ -143,7 +205,7 @@ export function mint(roleConfig, storyId, worktree) {
     issued_at: new Date(now).toISOString(),
     issued_by: roleConfig.issued_by || 'user:system',
     parent_token: roleConfig.parent_token || null,
-    notes: roleConfig.notes || ''
+    notes: (roleConfig.notes || '') + ` (Contract version: ${roleVersion})`
   };
 
   db.prepare(`
@@ -586,4 +648,77 @@ function logEvent(db, tokenId, eventType, action, allowed, reason, resultNote = 
     resultStr,
     notesStr
   );
+}
+/**
+ * Loads and validates a role contract.
+ * @param {string} roleName
+ * @returns {Object}
+ */
+export function loadContract(roleName) {
+  if (!fs.existsSync(ROLES_DIR)) {
+    fs.mkdirSync(ROLES_DIR, { recursive: true });
+    if (fs.existsSync(DEFAULTS_DIR)) {
+      const files = fs.readdirSync(DEFAULTS_DIR);
+      for (const file of files) {
+        if (file.endsWith('.yaml')) {
+          fs.copyFileSync(path.join(DEFAULTS_DIR, file), path.join(ROLES_DIR, file));
+        }
+      }
+    }
+  }
+
+  const contractPath = path.join(ROLES_DIR, `${roleName}.yaml`);
+  if (!fs.existsSync(contractPath)) {
+    throw new Error(`Contract for role '${roleName}' not found.`);
+  }
+
+  const content = fs.readFileSync(contractPath, 'utf8');
+  let parsed;
+  try {
+    parsed = yaml.load(content);
+  } catch (e) {
+    throw new Error(`Invalid YAML in contract '${roleName}': ${e.message}`);
+  }
+
+  const result = RoleContractSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error(`Contract '${roleName}' failed schema validation: ${result.error.message}`);
+  }
+
+  return result.data;
+}
+
+/**
+ * Gets the natural language behavioral directive for a role.
+ * @param {string} roleName
+ * @returns {string}
+ */
+export function getContractDirective(roleName) {
+  const contract = loadContract(roleName);
+  return contract.contract;
+}
+
+// Initialize watcher at the module level but make it safe for tests
+if (process.env.NODE_ENV !== 'test') {
+  if (fs.existsSync(DEFAULTS_DIR)) {
+    const defaultRoles = ['architect', 'product-owner', 'designer', 'researcher', 'coder', 'tester', 'git-manager', 'deploy', 'reviewer', 'sentinel', 'compliance', 'classifier', 'loop-operator', 'meta-agent'];
+    for (const role of defaultRoles) {
+      try {
+        loadContract(role);
+      } catch (e) {
+        console.error(`Startup validation failed for ${role}: ${e.message}`);
+      }
+    }
+  }
+
+  fs.watch(ROLES_DIR, (eventType, filename) => {
+    if (filename && filename.endsWith('.yaml')) {
+      const roleName = path.basename(filename, '.yaml');
+      try {
+        loadContract(roleName);
+      } catch (e) {
+        console.error(`Validation failed on change for ${roleName}: ${e.message}`);
+      }
+    }
+  });
 }

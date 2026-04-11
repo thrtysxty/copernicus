@@ -1,3 +1,4 @@
+<!-- DEPRECATED: This file has been converted to YAML format at ~/.copernicus/roles/coder.yaml -->
 # Jules Agent Program
 <!-- FIXED: do not edit — adapter section -->
 Agent: Jules (Google Jules API)
