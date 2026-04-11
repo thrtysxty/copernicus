@@ -14,6 +14,15 @@ async function main() {
   const args = process.argv.slice(2);
   const db = getDb();
 
+  const { EventEmitter } = await import('events');
+  const eventBus = new EventEmitter();
+
+  const { JulesAdapter } = await import('./adapters/jules.mjs');
+  const julesAdapter = new JulesAdapter(db, await import('./lib/hub.mjs'), eventBus);
+  const { registerAdapter } = await import('./lib/hub.mjs');
+  registerAdapter(julesAdapter);
+
+
   const forceMergeIdx = args.indexOf('--force-merge');
   if (forceMergeIdx !== -1 && args.length > forceMergeIdx + 1) {
     const sessionId = args[forceMergeIdx + 1];
@@ -169,6 +178,7 @@ async function main() {
   const activeSessions = getActiveSessions(db);
   console.log(`Found ${activeSessions.length} active sessions.`);
   attachNewSessions();
+  await julesAdapter.poll();
 
   if (args.includes('--once')) {
     console.log('--once flag provided, exiting after attach phase.');
@@ -181,6 +191,7 @@ async function main() {
     // Poll for new sessions every 30 seconds
     setInterval(() => {
       attachNewSessions();
+      julesAdapter.poll();
     }, 30 * 1000);
     // Periodically run the improver to check for new completed sessions
     setInterval(() => {

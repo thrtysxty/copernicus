@@ -324,7 +324,7 @@ export function mint(roleConfig, storyId, worktree) {
     issued_at: new Date(now).toISOString(),
     issued_by: roleConfig.issued_by || 'user:system',
     parent_token: roleConfig.parent_token || null,
-    notes: (roleConfig.notes || '') + ` (Contract version: ${roleVersion})`
+    notes: JSON.stringify({ notes: (roleConfig.notes || '') + ` (Contract version: ${roleVersion})`, identity: { adapter: provider } })
   };
 
   db.prepare(`
@@ -1221,6 +1221,82 @@ export function assessHealth(tokenId) {
     notes: notes.join('. ')
   };
 }
+
+
+const adapters = new Map();
+
+export function registerAdapter(adapter) {
+  adapters.set(adapter.name(), adapter);
+}
+
+export async function dispatch(tokenId) {
+  const { getDb, getStoryPath, logEvent } = await import('./db.mjs');
+  const db = getDb();
+  const token = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(tokenId);
+
+  if (!token) {
+    throw new Error('Token not found');
+  }
+
+  if (token.state !== 'ACTIVE') {
+    throw new Error('Token is not ACTIVE');
+  }
+
+  let identity = {};
+  if (token.notes) {
+      try {
+          const parsed = JSON.parse(token.notes);
+          if (parsed && parsed.identity) {
+              identity = parsed.identity;
+          }
+      } catch(e) {}
+  }
+
+  let adapterName = identity.adapter;
+  if (!adapterName) {
+      try {
+          const { loadOrgChart, getOrgChart } = await import('../utils/doc_factory.mjs');
+          let chart;
+          try { chart = getOrgChart(); } catch(e) { chart = loadOrgChart(); }
+          const roleConfig = chart.roles[token.role_name];
+          adapterName = roleConfig?.assigned_to?.provider || 'jules';
+      } catch(e) {
+          adapterName = 'jules';
+      }
+  }
+
+  if (!adapterName) {
+    throw new Error('AdapterNotFound: No adapter defined in token identity');
+  }
+
+  const adapter = adapters.get(adapterName);
+  if (!adapter) {
+    throw new Error(`AdapterNotFound: Adapter '${adapterName}' not registered`);
+  }
+
+  let scope = {};
+  if (token.scope) {
+    try {
+      scope = JSON.parse(token.scope);
+    } catch(e){}
+  }
+
+  let storyPath = scope.task;
+  if (!storyPath || (!storyPath.includes('/') && !storyPath.includes('.'))) {
+      storyPath = getStoryPath(scope.task) || scope.task;
+  } else if (storyPath && !storyPath.includes('/')) {
+      storyPath = getStoryPath(storyPath) || storyPath;
+  } else if (!storyPath) {
+      storyPath = getStoryPath(token.story_id) || token.story_id;
+  }
+
+  const result = await adapter.dispatch(token, storyPath);
+
+  logEvent(db, tokenId, 'token:dispatched', { adapter: adapterName, result }, true, 'Token dispatched to adapter');
+
+  return result;
+}
+
 
 export function runHealthSweep() {
   const db = getDb();
