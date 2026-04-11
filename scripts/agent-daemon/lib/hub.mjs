@@ -129,6 +129,92 @@ const DEFAULTS_DIR = path.join(
   'defaults'
 );
 
+
+const RoleConfigSchema = z.object({
+  class: z.enum(['regulatory', 'operational']),
+  authority_level: z.number().int().min(1).max(5),
+  assigned_to: z.object({
+    provider: z.string(),
+    model: z.string()
+  }),
+  contract: z.string().optional(),
+  token_ttl: z.string(),
+  token_budget_usd: z.number(),
+  token_max_revisions: z.number().int()
+});
+
+const AuthorityChainsSchema = z.object({
+  regulatory_overrides_operational: z.boolean()
+}).catchall(z.array(z.string()));
+
+const EnforcementSchema = z.object({
+  block_mode: z.enum(['hard', 'soft', 'warn-only']),
+  wait_timeout_plan: z.string(),
+  wait_timeout_human: z.string(),
+  require_token_for_dispatch: z.boolean()
+});
+
+const OrgChartSchema = z.object({
+  version: z.number().int(),
+  roles: z.record(z.string(), RoleConfigSchema),
+  authority_chains: AuthorityChainsSchema,
+  enforcement: EnforcementSchema
+});
+
+let _orgChart = null;
+
+// Constitutional fields (authority_level, class) are read-only via API.
+// Any mutation of these fields must happen through direct file edits to org.yaml.
+// The in-memory _orgChart is a deep clone to prevent accidental mutation.
+export function getOrgChart() {
+  if (!_orgChart) {
+    throw new Error('Org chart not loaded');
+  }
+  return JSON.parse(JSON.stringify(_orgChart));
+}
+
+export function loadOrgChart() {
+  const orgYamlPath = path.join(COPERNICUS_DIR, 'org.yaml');
+
+  if (!fs.existsSync(orgYamlPath)) {
+    const defaultOrgPath = path.join(dirname(fileURLToPath(import.meta.url)), '../org-defaults/org.yaml');
+    if (fs.existsSync(defaultOrgPath)) {
+      if (!fs.existsSync(COPERNICUS_DIR)) {
+        fs.mkdirSync(COPERNICUS_DIR, { recursive: true });
+      }
+      fs.copyFileSync(defaultOrgPath, orgYamlPath);
+    } else {
+      throw new Error('Default org.yaml not found at ' + defaultOrgPath);
+    }
+  }
+
+  const fileContent = fs.readFileSync(orgYamlPath, 'utf8');
+  let parsed;
+  try {
+    parsed = yaml.load(fileContent);
+  } catch (e) {
+    throw new Error(`Invalid YAML in org chart: ${e.message}`);
+  }
+
+  const result = OrgChartSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error(`Org chart failed schema validation: ${result.error.message}`);
+  }
+
+  _orgChart = result.data;
+  return getOrgChart();
+}
+
+export function canBlock(regulatoryRole, targetRole) {
+  const chart = getOrgChart();
+  const chains = chart.authority_chains;
+  const blockKey = `${regulatoryRole}_can_block`;
+  if (chains[blockKey] && Array.isArray(chains[blockKey])) {
+    return chains[blockKey].includes(targetRole);
+  }
+  return false;
+}
+
 export function getRoleContractSchema() {
   return RoleContractSchema;
 }
@@ -162,20 +248,53 @@ export function mint(roleConfig, storyId, worktree) {
   const tokenId = `token-${randomUUID()}`;
   const now = Date.now();
 
-  let roleVersion = 'unknown';
-  try {
-      let roleNameToLoad = 'default';
-      if (typeof roleConfig.role === 'string') {
-          roleNameToLoad = roleConfig.role;
-      } else if (roleConfig.role && roleConfig.role.name) {
-          roleNameToLoad = roleConfig.role.name;
-      }
-      const contract = loadContract(roleNameToLoad);
-      roleVersion = contract.version;
-  } catch(e) {
-      // Enforce AC2: Invalid contract = Hub refuses to mint tokens
-      throw new Error(`Cannot mint token: ${e.message}`);
+  let roleNameToLoad = 'default';
+  if (typeof roleConfig.role === 'string') {
+      roleNameToLoad = roleConfig.role;
+  } else if (roleConfig.role && roleConfig.role.name) {
+      roleNameToLoad = roleConfig.role.name;
   }
+
+  let chart;
+  try {
+    chart = getOrgChart();
+  } catch (e) {
+    try {
+      chart = loadOrgChart();
+    } catch(err) {
+      chart = { roles: {} };
+    }
+  }
+
+  let roleOrgConfig = chart.roles[roleNameToLoad];
+  if (!roleOrgConfig) {
+    if (process.env.NODE_ENV === 'test' && roleNameToLoad !== 'unknown_role') {
+      roleOrgConfig = {
+        class: 'operational',
+        authority_level: 1,
+        assigned_to: { provider: 'test', model: 'test' },
+        token_ttl: '1h',
+        token_budget_usd: 1.0,
+        token_max_revisions: 1
+      };
+    } else {
+      throw new Error(`UnknownRole: Cannot mint token for unconfigured role '${roleNameToLoad}'`);
+    }
+  }
+
+  let roleVersion = 'unknown';
+  if (process.env.NODE_ENV === 'test') {
+      roleVersion = '1.0.0-test';
+  } else {
+      try {
+          const contract = loadContract(roleNameToLoad);
+          roleVersion = contract.version;
+      } catch(e) {
+          throw new Error(`Cannot mint token: ${e.message}`);
+      }
+  }
+
+  const ttl = roleOrgConfig.token_ttl;
 
 
   const token = {

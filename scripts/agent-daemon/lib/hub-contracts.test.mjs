@@ -1,3 +1,5 @@
+import { test, describe, before, after } from 'node:test';
+import assert from 'node:assert';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -7,36 +9,36 @@ const ROLES_DIR = path.join(os.homedir(), '.copernicus', 'roles');
 
 describe('hub contracts', () => {
   // Clear roles dir for tests
-  beforeAll(() => {
+  before(() => {
     if (fs.existsSync(ROLES_DIR)) {
       fs.rmSync(ROLES_DIR, { recursive: true, force: true });
     }
   });
 
-  it('default copy-on-first-run', () => {
-    expect(fs.existsSync(ROLES_DIR)).toBe(false);
+  test('default copy-on-first-run', () => {
+    assert.strictEqual(fs.existsSync(ROLES_DIR), false);
     const contract = loadContract('architect');
-    expect(fs.existsSync(ROLES_DIR)).toBe(true);
-    expect(contract.role).toBe('architect');
+    assert.strictEqual(fs.existsSync(ROLES_DIR), true);
+    assert.strictEqual(contract.role, 'architect');
   });
 
-  it('valid contract loads', () => {
+  test('valid contract loads', () => {
     const contract = loadContract('coder');
-    expect(contract.role).toBe('coder');
-    expect(contract.authority_level).toBe(2);
+    assert.strictEqual(contract.role, 'coder');
+    assert.strictEqual(contract.authority_level, 2);
   });
 
-  it('missing required field throws', () => {
+  test('missing required field throws', () => {
     const invalidPath = path.join(ROLES_DIR, 'invalid1.yaml');
     fs.writeFileSync(invalidPath, `
 role: "invalid1"
 class: "operational"
 # missing authority_level and others
     `.trim());
-    expect(() => loadContract('invalid1')).toThrow(/failed schema validation/);
+    assert.throws(() => loadContract('invalid1'), /failed schema validation/);
   });
 
-  it('invalid authority_level throws', () => {
+  test('invalid authority_level throws', () => {
     const invalidPath = path.join(ROLES_DIR, 'invalid2.yaml');
     fs.writeFileSync(invalidPath, `
 role: "invalid2"
@@ -50,23 +52,23 @@ token_defaults:
   max_revisions: 2
   budget_usd: 1.00
     `.trim());
-    expect(() => loadContract('invalid2')).toThrow(/failed schema validation/);
+    assert.throws(() => loadContract('invalid2'), /failed schema validation/);
   });
 
-  it('getContractDirective returns behavioral directive only', () => {
+  test('getContractDirective returns behavioral directive only', () => {
     const directive = getContractDirective('reviewer');
-    expect(typeof directive).toBe('string');
-    expect(directive).toContain('Review PR diffs');
+    assert.strictEqual(typeof directive, 'string');
+    assert.ok(directive.includes('Review PR diffs'));
   });
 
-  it('contract with behavioral_tests.required: true', () => {
+  test('contract with behavioral_tests.required: true', () => {
     const contract = loadContract('tester');
-    expect(contract.behavioral_tests.required).toBe(true);
-    expect(contract.behavioral_tests.gate).toBe('TESTING_LOOP_CLOSE');
+    assert.strictEqual(contract.behavioral_tests.required, true);
+    assert.strictEqual(contract.behavioral_tests.gate, 'TESTING_LOOP_CLOSE');
   });
 
-  it('contract without behavioral_tests block is valid', () => {
+  test('contract without behavioral_tests block is valid', () => {
     const contract = loadContract('architect');
-    expect(contract.behavioral_tests).toBeUndefined();
+    assert.strictEqual(contract.behavioral_tests, undefined);
   });
 });

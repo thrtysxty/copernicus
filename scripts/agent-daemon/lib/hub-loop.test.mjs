@@ -18,6 +18,9 @@ describe('Hub Loop Controller', () => {
 
   before(() => {
     db = getDb();
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_update');
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_delete');
+    db.exec('DROP TRIGGER IF EXISTS hub_tokens_no_delete');
     db.prepare('DELETE FROM hub_events').run();
     db.prepare('DELETE FROM hub_tokens').run();
     db.prepare('DELETE FROM hub_story_state').run();
@@ -25,6 +28,9 @@ describe('Hub Loop Controller', () => {
   });
 
   after(() => {
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_update');
+    db.exec('DROP TRIGGER IF EXISTS hub_events_no_delete');
+    db.exec('DROP TRIGGER IF EXISTS hub_tokens_no_delete');
     db.prepare('DELETE FROM hub_events').run();
     db.prepare('DELETE FROM hub_tokens').run();
     db.prepare('DELETE FROM hub_story_state').run();
