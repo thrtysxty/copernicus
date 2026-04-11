@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } fr
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
-import fs from 'fs';
+
 import path from 'path';
 import os from 'os';
 import yaml from 'js-yaml';
@@ -361,6 +361,68 @@ export function mint(roleConfig, storyId, worktree) {
  * @param {Object} action { type: 'shell' | 'fs_write' | 'git:commit', path?: string, command?: string }
  * @returns {Object} { allowed: boolean, reason: string }
  */
+
+import net from 'net';
+import fs from 'fs';
+
+
+const HUB_SOCKET_PATH = '/tmp/copernicus-hub-check.sock';
+
+export function startHubCheckServer() {
+  if (process.platform !== 'win32') {
+    try {
+      if (fs.existsSync(HUB_SOCKET_PATH)) {
+        fs.unlinkSync(HUB_SOCKET_PATH);
+      }
+    } catch(e) {}
+  } else {
+      console.warn('Hub check server on Unix sockets not supported on Windows.');
+      return;
+  }
+
+  const server = net.createServer((socket) => {
+    let buffer = '';
+    socket.on('data', (data) => {
+      buffer += data.toString();
+      let newlineIdx;
+      while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+        const line = buffer.slice(0, newlineIdx).trim();
+        buffer = buffer.slice(newlineIdx + 1);
+        if (!line) continue;
+
+        try {
+          const payload = JSON.parse(line);
+          const { token_id, action } = payload;
+          const start = process.hrtime.bigint();
+          const result = check(token_id, action);
+          const end = process.hrtime.bigint();
+          // We can optionally log the duration here
+          socket.write(JSON.stringify(result) + '\n');
+        } catch(e) {
+          socket.write(JSON.stringify({ allowed: false, reason: 'Invalid JSON payload: ' + e.message }) + '\n');
+        }
+      }
+    });
+
+    socket.on('error', (err) => {
+      // ignore
+    });
+  });
+
+  server.listen(HUB_SOCKET_PATH, () => {
+    // Make sure other users can write to it if needed
+    try {
+        fs.chmodSync(HUB_SOCKET_PATH, 0o666);
+    } catch(e) {}
+    console.log(`Hub check server listening on ${HUB_SOCKET_PATH}`);
+  });
+
+  server.on('error', (err) => {
+    console.error(`Hub check server error: ${err.message}`);
+  });
+}
+
+
 export function check(tokenId, action) {
   const db = getDb();
 
@@ -369,17 +431,29 @@ export function check(tokenId, action) {
   let allowed = false;
   let reason = '';
   let eventType = 'token:checked';
+  let authorityLevel = 0;
 
   if (!tokenRow) {
     reason = 'Token not found';
     logEvent(db, tokenId, eventType, action, false, reason);
-    return { allowed: false, reason };
+    return { allowed: false, reason, authority_level: authorityLevel };
+  }
+
+  const roleName = tokenRow.role_name;
+  let roleConfig;
+  try {
+      roleConfig = loadContract(roleName);
+      if (roleConfig && roleConfig.role && roleConfig.role.authority_level) {
+          authorityLevel = roleConfig.role.authority_level;
+      }
+  } catch (e) {
+      // ignore
   }
 
   if (tokenRow.state !== 'ACTIVE') {
     reason = `Token is ${tokenRow.state}`;
     logEvent(db, tokenId, eventType, action, false, reason);
-    return { allowed: false, reason };
+    return { allowed: false, reason, authority_level: authorityLevel };
   }
 
   const expiresAtMs = new Date(tokenRow.expires_at).getTime();
@@ -387,14 +461,27 @@ export function check(tokenId, action) {
     reason = 'expired';
     eventType = 'token:expired';
     logEvent(db, tokenId, eventType, action, false, reason);
-    return { allowed: false, reason };
+    return { allowed: false, reason, authority_level: authorityLevel };
   }
 
+  // Verify capabilities (AC 1 & AC 7: denial reason must be factual e.g. "capability 'git:push:main' not in token tok_a1b2c3 for role 'coder'")
   const capabilities = JSON.parse(tokenRow.capabilities);
-  if (!capabilities.includes(action.type)) {
-    reason = 'Capability not allowed';
+  const actionCapability = action.capability || action.type; // Fallback to action type if capability not specified
+  if (!capabilities.includes(actionCapability)) {
+    reason = `capability '${actionCapability}' not in token ${tokenId} for role '${roleName}'`;
     logEvent(db, tokenId, eventType, action, false, reason);
-    return { allowed: false, reason };
+    return { allowed: false, reason, authority_level: authorityLevel };
+  }
+
+  // Regulatory role enforcement (AC 5)
+  if (['reviewer', 'sentinel', 'classifier'].includes(roleName)) {
+      if (action.target_domain) {
+          if (!canBlock(roleName, action.target_domain)) {
+              reason = `Regulatory role '${roleName}' does not have authority over domain '${action.target_domain}'`;
+              logEvent(db, tokenId, eventType, action, false, reason);
+              return { allowed: false, reason, authority_level: authorityLevel };
+          }
+      }
   }
 
   const scope = JSON.parse(tokenRow.scope);
@@ -412,13 +499,13 @@ export function check(tokenId, action) {
     if (!pathAllowed) {
       reason = 'Path out of scope';
       logEvent(db, tokenId, eventType, action, false, reason);
-      return { allowed: false, reason };
+      return { allowed: false, reason, authority_level: authorityLevel };
     }
   } else if (action.path) {
       // No folder scope given = strict deny
       reason = 'Path out of scope';
       logEvent(db, tokenId, eventType, action, false, reason);
-      return { allowed: false, reason };
+      return { allowed: false, reason, authority_level: authorityLevel };
   }
 
   // Command scope check
@@ -434,19 +521,19 @@ export function check(tokenId, action) {
     if (!cmdAllowed) {
       reason = 'Command out of scope';
       logEvent(db, tokenId, eventType, action, false, reason);
-      return { allowed: false, reason };
+      return { allowed: false, reason, authority_level: authorityLevel };
     }
   } else if (action.command) {
       reason = 'Command out of scope';
       logEvent(db, tokenId, eventType, action, false, reason);
-      return { allowed: false, reason };
+      return { allowed: false, reason, authority_level: authorityLevel };
   }
 
   allowed = true;
   reason = 'ok';
   logEvent(db, tokenId, eventType, action, allowed, reason);
 
-  return { allowed, reason };
+  return { allowed, reason, authority_level: authorityLevel };
 }
 
 /**

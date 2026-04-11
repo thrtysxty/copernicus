@@ -5,7 +5,7 @@ import { getDb, getActiveSessions, showStatus } from './lib/db.mjs';
 import { getActiveTokens } from './lib/registry.mjs';
 import { startServer, getConnectedAgents } from './lib/bus.mjs';
 import { maybeImprove } from './lib/improver.mjs';
-import { runHealthSweep } from './lib/hub.mjs';
+import { runHealthSweep, startHubCheckServer } from './lib/hub.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -134,6 +134,7 @@ async function main() {
 
   // Start the socket bus server
   startServer(db);
+  startHubCheckServer();
 
   const handlersPath = join(__dirname, 'handlers');
   const handlerFiles = readdirSync(handlersPath).filter(f => f.endsWith('.mjs'));
