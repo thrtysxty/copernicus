@@ -1,6 +1,6 @@
 import log from '../utils/logger'
 import { ipcMain, app } from 'electron'
-import { spawn, execSync } from 'node:child_process'
+import { spawn, execSync, execFile } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { handleIpc } from '../utils/handle-ipc'
@@ -101,6 +101,27 @@ async function getMcpHubStatus() {
 }
 
 export function registerDaemonHandlers(): void {
+
+  ipcMain.handle('hub:attribute', (_e, record: any) => handleIpc(async () => {
+    // minimal validation only - surface, executing_actor, action_type required
+    if (!record?.surface || !record?.executing_actor || !record?.action_type) {
+      return { ok: false, reason: 'missing required fields' };
+    }
+
+    const scriptPath = path.join(app.getAppPath(), '..', 'scripts', 'agent-daemon', 'lib', 'hub.mjs')
+
+    // fire-and-forget - do NOT await
+    execFile(process.execPath, [
+      scriptPath,
+      'attribute',
+      JSON.stringify(record)
+    ], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }, (err) => {
+      if (err) log.warn('[hub:attribute] write failed (non-fatal):', err.message);
+    });
+
+    return { ok: true };
+  }))
+
   ipcMain.handle('daemon:install', (_e) => handleIpc(async () => {
     const scriptPath = getDaemonScriptPath()
     if (!fs.existsSync(scriptPath)) {

@@ -47,6 +47,22 @@ export function getDb() {
   `);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS hub_attribution (
+      attr_id       TEXT PRIMARY KEY,
+      timestamp     TEXT NOT NULL,
+      surface       TEXT NOT NULL,
+      instructing_actor TEXT,
+      executing_actor   TEXT NOT NULL,
+      authority_level   INTEGER NOT NULL,
+      action_type   TEXT NOT NULL,
+      target        TEXT,
+      summary       TEXT,
+      git_sha       TEXT,
+      token_id      TEXT
+    )
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS hub_story_state (
       story_id          TEXT PRIMARY KEY,
       phase             TEXT NOT NULL DEFAULT 'BACKLOG',

@@ -773,6 +773,54 @@ function logEvent(db, tokenId, eventType, action, allowed, reason, resultNote = 
  * @param {string} roleName
  * @returns {Object}
  */
+
+/**
+ * Write a universal attribution record to the hub_attribution table.
+ * All fields are validated. This is a non-blocking method; failed writes
+ * log a warning and return false.
+ * @param {Object} record
+ * @returns {boolean} True if successful, false otherwise.
+ */
+export function attribute(record) {
+  try {
+
+    const db = getDb();
+
+    // Validate required fields
+    if (!record.surface || !record.executing_actor || record.authority_level === undefined || !record.action_type) {
+      console.warn('[hub] attribute() failed: missing required fields', record);
+      return false;
+    }
+
+    const attrId = record.attr_id || `attr-${randomUUID()}`;
+    const timestamp = record.timestamp || new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO hub_attribution (
+        attr_id, timestamp, surface, instructing_actor, executing_actor,
+        authority_level, action_type, target, summary, git_sha, token_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      attrId,
+      timestamp,
+      record.surface,
+      record.instructing_actor || null,
+      record.executing_actor,
+      record.authority_level,
+      record.action_type,
+      record.target || null,
+      record.summary || null,
+      record.git_sha || null,
+      record.token_id || null
+    );
+
+    return true;
+  } catch (e) {
+    console.warn(`[hub] attribute() failed to write: ${e.message}`);
+    return false;
+  }
+}
+
 export function loadContract(roleName) {
   if (!fs.existsSync(ROLES_DIR)) {
     fs.mkdirSync(ROLES_DIR, { recursive: true });
@@ -1185,4 +1233,15 @@ export function renewToken(tokenId, requestedBy) {
 
   logEvent(db, tokenId, 'token:renewed', { requestedBy, new_expires_at: newExpiresAt }, true, 'Token renewed');
   return { renewed: true, new_expires_at: newExpiresAt, reason: 'Renewed successfully' };
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  if (process.argv[2] === 'attribute' && process.argv[3]) {
+    try {
+      const record = JSON.parse(process.argv[3]);
+      attribute(record);
+    } catch (e) {
+      console.error('Failed to parse attribute record:', e);
+    }
+  }
 }
