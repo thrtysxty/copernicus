@@ -722,3 +722,348 @@ if (process.env.NODE_ENV !== 'test') {
     }
   });
 }
+
+
+export function updateHealth(tokenId, updates) {
+  const db = getDb();
+  const token = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(tokenId);
+  if (!token) return;
+
+  let health = {};
+  if (token.health) {
+    try { health = JSON.parse(token.health); } catch (e) {}
+  }
+
+  const notes = [];
+
+  if (updates.retry_count !== undefined) {
+    health.retry_count = (health.retry_count || 0) + updates.retry_count;
+    notes.push(`retry_count += ${updates.retry_count}`);
+  }
+  if (updates.revision_count !== undefined) {
+    health.revision_count = (health.revision_count || 0) + updates.revision_count;
+    notes.push(`revision_count += ${updates.revision_count}`);
+  }
+  if (updates.last_progress_at === true) {
+    health.last_progress_at = new Date().toISOString();
+    notes.push('last_progress_at = now()');
+  }
+
+  db.prepare('UPDATE hub_tokens SET health = ? WHERE token_id = ?').run(JSON.stringify(health), tokenId);
+
+  let storyId = null;
+  const queueRow = db.prepare('SELECT story_id FROM hub_queue WHERE claimed_by = ?').get(tokenId);
+  if (queueRow) {
+    storyId = queueRow.story_id;
+  }
+
+  if (updates.agent_state) {
+    if (storyId) {
+      db.prepare('UPDATE hub_story_state SET agent_state = ? WHERE story_id = ?').run(updates.agent_state, storyId);
+    }
+    notes.push(`agent_state = ${updates.agent_state}`);
+  }
+
+  logEvent(db, tokenId, 'token:health_updated', null, true, 'Health updated', notes.join(', '));
+}
+
+export function declareWait(tokenId, reason, timeout_minutes) {
+  const db = getDb();
+  const queueRow = db.prepare('SELECT story_id FROM hub_queue WHERE claimed_by = ?').get(tokenId);
+  if (!queueRow) return;
+
+  const storyId = queueRow.story_id;
+  const now = new Date();
+  const timeoutAt = new Date(now.getTime() + timeout_minutes * 60000);
+
+  db.prepare(`
+    UPDATE hub_story_state
+    SET agent_state = 'WAITING', waiting_reason = ?, waiting_since = ?, wait_timeout_at = ?
+    WHERE story_id = ?
+  `).run(reason, now.toISOString(), timeoutAt.toISOString(), storyId);
+
+  logEvent(db, tokenId, 'token:waiting', { reason, timeout_minutes }, true, `Declared wait for ${reason}`);
+}
+
+function getWorktreePath(storyId) {
+  return path.join(process.cwd(), '.agent-worktrees', `story-${storyId}`);
+}
+
+function getCommitInfo(storyId) {
+  const wtPath = getWorktreePath(storyId);
+  if (!fs.existsSync(wtPath)) {
+    // If worktrees not used, use main repo
+    return getCommitInfoFromPath(process.cwd(), storyId);
+  }
+  return getCommitInfoFromPath(wtPath, storyId);
+}
+
+function getCommitInfoFromPath(repoPath, storyId) {
+  try {
+    const gitLog = execSync(`git -C "${repoPath}" log -1 --format="%at" --grep="story-${storyId}"`, { encoding: 'utf8' }).trim();
+    if (!gitLog) return { ageMinutes: null, filesModified: 0 };
+
+    const timestamp = parseInt(gitLog, 10);
+    const ageMinutes = Math.floor((Date.now() - timestamp * 1000) / 60000);
+
+    const diffStat = execSync(`git -C "${repoPath}" diff --name-only origin/main...`, { encoding: 'utf8' }).trim();
+    const filesModified = diffStat ? diffStat.split('\n').length : 0;
+
+    return { ageMinutes, filesModified };
+  } catch (e) {
+    return { ageMinutes: null, filesModified: 0 };
+  }
+}
+
+export function assessHealth(tokenId) {
+  const db = getDb();
+  const token = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(tokenId);
+  if (!token) return null;
+
+  const queueRow = db.prepare('SELECT story_id FROM hub_queue WHERE claimed_by = ?').get(tokenId);
+  const storyId = queueRow ? queueRow.story_id : null;
+
+  let agentState = 'WORKING';
+  let waitingReason = null;
+  let waitTimeoutAt = null;
+
+  if (storyId) {
+    const stateRow = db.prepare('SELECT agent_state, waiting_reason, wait_timeout_at FROM hub_story_state WHERE story_id = ?').get(storyId);
+    if (stateRow) {
+      agentState = stateRow.agent_state || 'WORKING';
+      waitingReason = stateRow.waiting_reason;
+      waitTimeoutAt = stateRow.wait_timeout_at;
+    }
+  }
+
+  let health = {};
+  if (token.health) {
+    try { health = JSON.parse(token.health); } catch (e) {}
+  }
+
+  const now = new Date();
+
+  let evidence = {
+    last_commit_ago_minutes: null,
+    files_modified_count: 0,
+    llm_call_count_recent: 0,
+    identical_recent_calls: false,
+    cost_usd: null,
+    budget_max_usd: token.budget_max || null,
+    wait_timeout_exceeded: false,
+    test_log_path: null,
+    test_log_age_minutes: null,
+    test_log_tail: null,
+    test_output_advancing: false
+  };
+
+  const recentCallsStr = db.prepare(`
+    SELECT action FROM hub_events
+    WHERE token_id = ? AND event_type = 'jules:tool_call' AND timestamp >= ?
+    ORDER BY timestamp DESC
+  `).all(tokenId, new Date(now.getTime() - 30 * 60000).toISOString());
+
+  evidence.llm_call_count_recent = recentCallsStr.length;
+
+  if (recentCallsStr.length >= 5) {
+    const firstAction = recentCallsStr[0].action;
+    evidence.identical_recent_calls = recentCallsStr.slice(0, 5).every(r => r.action === firstAction);
+  }
+
+  let condition = 'HEALTHY';
+  let recommendation = 'CONTINUE';
+  let renewalBlocked = false;
+  let notes = [];
+
+  if (storyId) {
+    const commitInfo = getCommitInfo(storyId);
+    evidence.last_commit_ago_minutes = commitInfo.ageMinutes;
+    evidence.files_modified_count = commitInfo.filesModified;
+  }
+
+  // Cost tracking
+  const eventCosts = db.prepare(`
+    SELECT json_extract(action, '$.cost') as cost
+    FROM hub_events
+    WHERE token_id = ? AND json_extract(action, '$.cost') IS NOT NULL
+  `).all(tokenId);
+
+  evidence.cost_usd = eventCosts.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
+
+  if (token.budget_max && evidence.cost_usd >= token.budget_max) {
+      condition = 'BUDGET_WARNING';
+      recommendation = 'ALERT_HUMAN';
+      notes.push(`Cost $${evidence.cost_usd.toFixed(2)} / $${token.budget_max.toFixed(2)} (${Math.round(evidence.cost_usd / token.budget_max * 100)}%)`);
+  }
+
+  if (agentState === 'WAITING' && waitTimeoutAt) {
+    if (now > new Date(waitTimeoutAt)) {
+      evidence.wait_timeout_exceeded = true;
+      condition = 'WAIT_TIMEOUT';
+      recommendation = 'ALERT_HUMAN';
+      notes.push(`Wait timeout exceeded. Waiting for: ${waitingReason}`);
+    }
+  } else if (agentState !== 'WAITING') {
+    // Check stall
+    let isStalled = false;
+    let stallReason = '';
+
+    if (token.role_name === 'tester' && storyId) {
+      const logPath = path.join('/tmp', `cc_${storyId}.log`);
+      evidence.test_log_path = logPath;
+      if (fs.existsSync(logPath)) {
+        const stats = fs.statSync(logPath);
+        evidence.test_log_age_minutes = Math.floor((now - stats.mtime) / 60000);
+        const tail = execSync(`tail -n 20 "${logPath}"`, { encoding: 'utf8' }).trim();
+        evidence.test_log_tail = tail;
+
+        if (evidence.test_log_age_minutes > 5) {
+          isStalled = true;
+          stallReason = `Last test log activity: ${evidence.test_log_age_minutes}m ago. Last 3 log lines: ${tail.split('\n').slice(-3).join(' ')}`;
+        } else {
+            evidence.test_output_advancing = true;
+        }
+      } else {
+          isStalled = true;
+          stallReason = `Test log ${logPath} does not exist or has no activity.`;
+      }
+    } else {
+      // General stall check based on last_progress_at
+      if (health.last_progress_at) {
+        const idleMinutes = Math.floor((now - new Date(health.last_progress_at)) / 60000);
+        if (idleMinutes > 15) {
+          isStalled = true;
+          let wtInfo = storyId ? `[git log .agent-worktrees/story-${storyId}]` : '';
+          stallReason = `No observable progress in ${idleMinutes}m. ${wtInfo}`;
+        }
+      } else if (evidence.last_commit_ago_minutes !== null && evidence.last_commit_ago_minutes > 30) {
+          isStalled = true;
+          stallReason = `Last commit: ${evidence.last_commit_ago_minutes}m ago [git log .agent-worktrees/story-${storyId}]`;
+      }
+    }
+
+    if (isStalled) {
+      condition = 'STALLED';
+      recommendation = 'DENY_RENEWAL';
+      renewalBlocked = true;
+      notes.push(stallReason);
+
+      if (evidence.identical_recent_calls) {
+          condition = 'LOOPING';
+          notes.push(`Recent LLM calls: last 5 identical [hub_events action column]`);
+      }
+    }
+  }
+
+  return {
+    token_id: tokenId,
+    role_name: token.role_name,
+    story_id: storyId,
+    agent_state: agentState,
+    condition,
+    evidence,
+    recommendation,
+    renewal_blocked: renewalBlocked,
+    notes: notes.join('. ')
+  };
+}
+
+export function runHealthSweep() {
+  const db = getDb();
+  const now = new Date();
+  const activeTokens = db.prepare('SELECT token_id, expires_at, health FROM hub_tokens WHERE expires_at > ?').all(now.toISOString());
+
+  const reports = [];
+
+  for (const t of activeTokens) {
+    const report = assessHealth(t.token_id);
+    if (!report) continue;
+    reports.push(report);
+
+    let health = {};
+    if (t.health) {
+      try { health = JSON.parse(t.health); } catch (e) {}
+    }
+    const maxRetries = health.max_retries || 3;
+    const retryCount = health.retry_count || 0;
+
+    if (report.condition === 'STALLED' && retryCount >= maxRetries) {
+      report.condition = 'LOOPING';
+      report.recommendation = 'DENY_RENEWAL';
+      logEvent(db, t.token_id, 'token:loop_suspected', report, false, 'Stalled and exceeded max retries');
+      if (report.story_id) {
+          db.prepare('UPDATE hub_story_state SET agent_state = ? WHERE story_id = ?').run('LOOPING', report.story_id);
+      }
+
+      const logMsg = [
+        `TOKEN HEALTH ALERT — ${t.token_id} (${report.role_name} / story-${report.story_id})`,
+        `  Last commit:      ${report.evidence.last_commit_ago_minutes !== null ? report.evidence.last_commit_ago_minutes + 'm ago' : 'N/A'}  [git log .agent-worktrees/story-${report.story_id}]`,
+        `  Files modified:   ${report.evidence.files_modified_count} unique    [git diff --stat]`,
+        `  Recent LLM calls: ${report.evidence.identical_recent_calls ? 'last 5 identical' : 'normal'}  [hub_events action column]`,
+        report.evidence.test_log_path ? `  Test log:         ${report.evidence.test_log_path}, last write ${report.evidence.test_log_age_minutes}m ago, tail: "${report.evidence.test_log_tail ? report.evidence.test_log_tail.substring(0, 50).replace(/\n/g, ' ') : ''}"` : `  Test log:         N/A`,
+        `  Cost:             $${(report.evidence.cost_usd || 0).toFixed(2)} / $${(report.evidence.budget_max_usd || 0).toFixed(2)}  [hub_events.action.cost]`,
+        `CONDITION: ${report.condition}`,
+        `ACTION: ${report.recommendation}`
+      ].join('\n');
+      console.warn(logMsg);
+    } else if (report.condition === 'WAIT_TIMEOUT') {
+      const stateRow = report.story_id ? db.prepare('SELECT waiting_reason FROM hub_story_state WHERE story_id = ?').get(report.story_id) : null;
+      const waitingReason = stateRow ? stateRow.waiting_reason : '';
+
+      if (waitingReason && waitingReason.includes('human')) {
+        logEvent(db, t.token_id, 'token:wait_timeout', report, true, 'Timeout waiting for human');
+      } else if (waitingReason && waitingReason.startsWith('dependency-')) {
+         // Mock dependency check
+         const depStoryId = waitingReason.split('dependency-')[1];
+         const depState = db.prepare('SELECT phase FROM hub_story_state WHERE story_id = ?').get(depStoryId);
+         if (depState && depState.phase === 'VERIFIED') {
+            db.prepare('UPDATE hub_story_state SET agent_state = ?, waiting_reason = NULL, wait_timeout_at = NULL WHERE story_id = ?').run('WORKING', report.story_id);
+            logEvent(db, t.token_id, 'token:wait_cleared', { reason: waitingReason }, true, 'Dependency resolved');
+         }
+      }
+    }
+
+    const expiresAt = new Date(t.expires_at);
+    const minRemaining = (expiresAt - now) / 60000;
+    if (minRemaining > 0 && minRemaining <= 15) {
+      logEvent(db, t.token_id, 'token:expiring', { expires_at: t.expires_at, minutes_remaining: Math.round(minRemaining), recommendation: report.recommendation }, true, 'Token expiring soon');
+      console.warn(`Token ${t.token_id} expiring in ${Math.round(minRemaining)} minutes. Recommendation: ${report.recommendation}`);
+    }
+  }
+
+  return reports;
+}
+
+export function renewToken(tokenId, requestedBy) {
+  const db = getDb();
+  const token = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(tokenId);
+  if (!token) return { renewed: false, reason: 'Token not found' };
+
+  const report = assessHealth(tokenId);
+  if (report && report.renewal_blocked) {
+    logEvent(db, tokenId, 'token:renewal_denied', { requestedBy }, false, `Renewal denied: ${report.condition}`);
+    return { renewed: false, reason: report.notes };
+  }
+
+  let contractTtl = 60; // default 1 hour
+  try {
+    const contract = loadContract(token.role_name);
+    if (contract.ttl) {
+      const ttlMatch = contract.ttl.match(/^(\d+)h$/);
+      if (ttlMatch) contractTtl = parseInt(ttlMatch[1], 10) * 60;
+    }
+  } catch (e) {}
+
+  const newExpiresAt = new Date(Date.now() + contractTtl * 60000).toISOString();
+
+  let health = {};
+  if (token.health) {
+    try { health = JSON.parse(token.health); } catch (e) {}
+  }
+  health.max_renewals = (health.max_renewals || 0) + 1;
+
+  db.prepare('UPDATE hub_tokens SET expires_at = ?, health = ? WHERE token_id = ?').run(newExpiresAt, JSON.stringify(health), tokenId);
+
+  logEvent(db, tokenId, 'token:renewed', { requestedBy, new_expires_at: newExpiresAt }, true, 'Token renewed');
+  return { renewed: true, new_expires_at: newExpiresAt, reason: 'Renewed successfully' };
+}

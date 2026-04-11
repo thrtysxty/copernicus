@@ -79,6 +79,28 @@ export function getDb() {
     // Column might already exist
   }
 
+  try {
+    db.exec("ALTER TABLE hub_story_state ADD COLUMN agent_state TEXT DEFAULT 'WORKING'");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    db.exec("ALTER TABLE hub_story_state ADD COLUMN waiting_reason TEXT");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    db.exec("ALTER TABLE hub_story_state ADD COLUMN waiting_since TEXT");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    db.exec("ALTER TABLE hub_story_state ADD COLUMN wait_timeout_at TEXT");
+  } catch (e) {
+    // Column might already exist
+  }
+
+
   db.exec(`
     CREATE TRIGGER IF NOT EXISTS hub_events_no_update BEFORE UPDATE ON hub_events
     BEGIN SELECT RAISE(ABORT, 'hub_events is append-only'); END;

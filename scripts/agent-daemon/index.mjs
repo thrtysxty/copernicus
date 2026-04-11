@@ -5,6 +5,7 @@ import { getDb, getActiveSessions, showStatus } from './lib/db.mjs';
 import { getActiveTokens } from './lib/registry.mjs';
 import { startServer, getConnectedAgents } from './lib/bus.mjs';
 import { maybeImprove } from './lib/improver.mjs';
+import { runHealthSweep } from './lib/hub.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -184,6 +185,18 @@ async function main() {
     setInterval(() => {
       maybeImprove(db);
     }, 60 * 1000);
+
+    const healthSweepInterval = parseInt(process.env.HUB_HEALTH_SWEEP_INTERVAL_SECONDS || '60', 10) * 1000;
+    setInterval(() => {
+      try {
+        const reports = runHealthSweep();
+        if (reports.length > 0) {
+           console.log(`[HealthSweep] Checked ${reports.length} tokens.`);
+        }
+      } catch (e) {
+        console.error('Error during health sweep:', e);
+      }
+    }, healthSweepInterval);
   }
 }
 
