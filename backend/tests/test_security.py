@@ -1,10 +1,7 @@
 import pytest
-import json
-import os
 import pydantic
 from backend.app import app, validate_origin
 from backend.schemas.agents import AgentRunRequest
-from backend.utils.errors import AppError
 
 
 @pytest.fixture
@@ -105,7 +102,7 @@ class TestResearchEndpointSecurity:
         assert response.status_code == 200
         json_data = response.get_json()
         assert json_data["data"]["result"] == "Success response"
-        
+
         # Verify prompt was NOT passed as positional arg
         args, kwargs = mock_run.call_args
         cmd_args = args[0]

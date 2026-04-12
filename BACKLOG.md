@@ -522,6 +522,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #630 | Agent Browser — In-Session Ui Verification Mcp | COMPLETE | P1 |
 | #631 | Genai Toolbox — Database Mcp For Agent Intelligence | COMPLETE | P2 |
 | #632 | Agent Socket Bus — Real-Time Inter-Agent Communication Layer | COMPLETE | P1 |
+| #645 | Agent Hub — Ccr Adapter | COMPLETE | P1 |
 | #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
 | #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
@@ -532,6 +533,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #660 | Daemon Post Merge Branch Reaper | COMPLETE | P2 |
 | #661 | Upgrade Framer Motion To V12 Fix Splashscreen Ease Type | COMPLETE | P1 |
 | #662 | Fix Daemon Getstorypath Story Py Missing Review Falls Back To Blocked | COMPLETE | P1 |
+| #665 | Add Tests For Health Check Endpoint In Backend | COMPLETE | P3 |
+| #666 | Remove Unused Imports From Backend Test Security Py | COMPLETE | P3 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -566,7 +569,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #639 | Agent Hub — Hub Enforcement Replacing Classifier | IN PROGRESS | P1 |
 | #641 | Agent Hub — User As Agent Kanban Sync | IN PROGRESS | P1 |
 | #644 | Agent Hub — Jules Adapter | IN PROGRESS | P1 |
-| #645 | Agent Hub — Ccr Adapter | IN PROGRESS | P1 |
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
