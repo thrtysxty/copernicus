@@ -6,7 +6,7 @@
     "@anthropic-ai/sdk": "^0.82.0",
     "@google/generative-ai": "^0.24.1",
     "@google/jules-sdk": "^0.2.0",
-    "better-sqlite3": "^12.6.0",
+    "better-sqlite3": "^12.8.0",
     "js-yaml": "^4.1.1",
     "openai": "^4.0.0",
     "zod": "^3.25.76"

@@ -86,7 +86,9 @@ function checkIntegrity() {
 // "integrity mismatch exits with code 2" so the test itself will trigger it or mock process.exit.
 // If we call it on module load, it makes testing difficult because `import` will exit.
 // Let's call it immediately.
-checkIntegrity();
+if (process.env.NODE_ENV !== 'test') {
+  checkIntegrity();
+}
 
 /**
  * @constitutional authority_level and class in org.yaml have no write API path anywhere in the codebase.
@@ -1406,5 +1408,101 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     } catch (e) {
       console.error('Failed to parse attribute record:', e);
     }
+  }
+}
+
+
+export function syncUserAction(action) {
+  const db = getDb();
+  const username = os.userInfo().username;
+  const userActor = `user:${username}`;
+
+  try {
+    db.prepare(`
+      INSERT INTO hub_attribution (attr_id, timestamp, surface, instructing_actor, executing_actor, authority_level, action_type, target, summary, token_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
+    `).run(
+      'attr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+      new Date().toISOString(),
+      action.surface,
+      userActor,
+      userActor,
+      5,
+      action.action_type,
+      action.story_id || null,
+      action.notes || null
+    );
+  } catch (e) {
+    console.error('Failed to sync user action:', e);
+  }
+}
+
+export function syncStoryState(storyId, updates) {
+  const db = getDb();
+  const username = os.userInfo().username;
+  const userActor = `user:${username}`;
+
+  if (!storyId || !updates.status) return;
+
+  let phase = 'BACKLOG';
+  const status = updates.status.toUpperCase();
+  if (status === 'DRAFT') phase = 'PLANNING';
+  else if (status === 'APPROVED FOR IMPLEMENTATION') phase = 'IMPLEMENTING';
+  else if (status === 'IN PROGRESS') phase = 'IMPLEMENTING';
+  else if (status === 'REVIEW') phase = 'REVIEWING';
+  else if (status === 'COMPLETE') phase = 'VERIFIED';
+  else phase = status;
+
+  try {
+    const existing = db.prepare('SELECT * FROM hub_story_state WHERE story_id = ?').get(storyId);
+    if (!existing) {
+      db.prepare(`
+        INSERT INTO hub_story_state (story_id, phase, entered_phase, advanced_by)
+        VALUES (?, ?, ?, ?)
+      `).run(storyId, phase, new Date().toISOString(), userActor);
+    } else {
+      if (existing.phase !== phase) {
+        db.prepare(`
+          UPDATE hub_story_state
+          SET phase = ?, entered_phase = ?, advanced_by = ?
+          WHERE story_id = ?
+        `).run(phase, new Date().toISOString(), userActor, storyId);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to sync story state:', e);
+  }
+}
+
+export function reconcileStoryState() {
+  const db = getDb();
+  const username = os.userInfo().username;
+  const userActor = `user:${username}`;
+
+  try {
+    const activeDir = path.join(process.cwd(), process.cwd().endsWith('agent-daemon') ? '../../docs/stories' : 'docs/stories');
+    let activeFiles = [];
+    try { activeFiles = readdirSync(activeDir).filter(f => f.endsWith('.md')); } catch(e){}
+
+    const completedDir = path.join(activeDir, 'completed');
+    let completedFiles = [];
+    try { completedFiles = readdirSync(completedDir).filter(f => f.endsWith('.md')); } catch(e){}
+
+    const allFiles = [...activeFiles.map(f => path.join(activeDir, f)), ...completedFiles.map(f => path.join(completedDir, f))];
+
+    for (const file of allFiles) {
+      const match = path.basename(file).match(/^story_(\d+)_/);
+      if (match) {
+        const storyId = match[1];
+        const fileContent = readFileSync(file, 'utf8');
+        const statusMatch = fileContent.match(/^\*\*Status:\*\*\s*(.*)\r?$/m);
+        if (statusMatch) {
+          const status = statusMatch[1].trim();
+          syncStoryState(storyId, { status });
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to reconcile story state:', e);
   }
 }

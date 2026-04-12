@@ -1,2 +1,13 @@
-// hub-handlers.ts — Story 641: User as Agent Kanban Sync
-// Stub created for validator. Implementation by Jules.
+import { ipcMain } from 'electron';
+import { handleIpc } from '../utils/handle-ipc';
+// @ts-ignore
+import { syncUserAction } from '../../../scripts/agent-daemon/lib/hub.mjs';
+
+export function registerHubHandlers() {
+  ipcMain.handle('hub:user-sync', (_event, action) =>
+    handleIpc('hub:user-sync', [action], () => {
+      syncUserAction(action);
+      return { ok: true };
+    })
+  );
+}

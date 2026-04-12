@@ -53,6 +53,10 @@ import { registerProviderHandlers } from './provider-handlers'
 import { registerKbHandlers } from './kb-handlers'
 import { registerBrowserHandlers } from './browser-handlers'
 import { registerDbMcpHandlers } from './db-mcp-handlers'
+// @ts-ignore
+import { syncUserAction, syncStoryState } from '../../../scripts/agent-daemon/lib/hub.mjs';
+import { registerHubHandlers } from './hub-handlers';
+
 
 export async function registerAllIpcHandlers(
   win: BrowserWindow,
@@ -142,7 +146,25 @@ export async function registerAllIpcHandlers(
 
   // Kanban Columns (Story 428)
   ipcMain.handle('kanban:get-columns', () => handleIpc(() => stateLedger.getKanbanColumns()))
-  ipcMain.handle('kanban:set-column', (_e, id: string, updates: Record<string, unknown>) => handleIpc(() => stateLedger.setKanbanColumn(id, updates)))
+  ipcMain.handle('kanban:set-column', (_e, id: string, updates: Record<string, unknown>) => handleIpc(() => {
+    const res = stateLedger.setKanbanColumn(id, updates);
+    Promise.resolve().then(() => {
+      try {
+        syncUserAction({
+          surface: 'kanban',
+          action_type: 'card:moved',
+          story_id: id,
+          from_state: null,
+          to_state: null,
+          notes: 'Card moved/updated column'
+        });
+        syncStoryState(id, updates);
+      } catch (e) { console.error(e); }
+    });
+    return res;
+  }))
+
+  registerHubHandlers()
 
   return { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager }
 }

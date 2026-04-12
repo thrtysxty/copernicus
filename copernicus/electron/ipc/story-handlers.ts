@@ -2,6 +2,9 @@ import { ipcMain, BrowserWindow } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
 
 import { IpcHandlerDeps } from './deps'
+// @ts-ignore
+import { syncUserAction, syncStoryState } from '../../../scripts/agent-daemon/lib/hub.mjs';
+
 
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   const { storiesManager, stateLedger } = deps
@@ -26,7 +29,23 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
   ipcMain.handle('stories:update', (_event, id: string, status: string) => handleIpc('stories:update', [id, status], () => {
     if (!/^story_\d+$/.test(id)) return;
-    return storiesManager.updateStoryStatus(id, status)
+    const res = storiesManager.updateStoryStatus(id, status);
+    Promise.resolve().then(() => {
+      try {
+        const match = id.match(/^story_(\d+)$/);
+        const storyId = match ? match[1] : id;
+        syncUserAction({
+          surface: 'story-editor',
+          action_type: 'story:status_changed',
+          story_id: storyId,
+          from_state: null,
+          to_state: status,
+          notes: 'Status updated via stories:update'
+        });
+        syncStoryState(storyId, { status });
+      } catch (e) { console.error(e); }
+    });
+    return res;
   }))
   ipcMain.handle('stories:hydrate', (_event, id: string) => handleIpc('stories:hydrate', [id], () => {
     if (!/^story_\d+$/.test(id)) return;
@@ -68,6 +87,19 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     handleIpc('stories:set-status', [storyNumber, status], async () => {
       await storiesManager.setStoryStatus(storyNumber, status)
       win.webContents.send('stories:status-changed', { storyNumber, status })
+      Promise.resolve().then(() => {
+        try {
+          syncUserAction({
+            surface: 'story-editor',
+            action_type: 'story:status_changed',
+            story_id: storyNumber.toString(),
+            from_state: null,
+            to_state: status,
+            notes: 'Status updated via stories:set-status'
+          });
+          syncStoryState(storyNumber.toString(), { status });
+        } catch (e) { console.error(e); }
+      });
       return { ok: true }
     })
   )
