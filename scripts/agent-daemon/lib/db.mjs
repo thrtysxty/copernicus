@@ -155,6 +155,21 @@ export function getDb() {
     )
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ccr_sessions (
+      session_id   TEXT PRIMARY KEY,
+      token_id     TEXT NOT NULL,
+      pid          INTEGER,
+      worktree     TEXT,
+      log_path     TEXT,
+      state        TEXT NOT NULL DEFAULT 'RUNNING',
+      started_at   TEXT NOT NULL,
+      finished_at  TEXT,
+      exit_code    INTEGER,
+      notes        TEXT
+    )
+  `);
+
   try {
     db.exec("ALTER TABLE jules_sessions ADD COLUMN agent TEXT DEFAULT 'jules'");
     db.exec("UPDATE jules_sessions SET agent = 'jules' WHERE agent IS NULL");

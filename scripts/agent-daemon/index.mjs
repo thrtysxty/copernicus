@@ -22,6 +22,10 @@ async function main() {
   const { registerAdapter } = await import('./lib/hub.mjs');
   registerAdapter(julesAdapter);
 
+  const { CCRAdapter } = await import('./adapters/ccr.mjs');
+  const ccrAdapter = new CCRAdapter(db, await import('./lib/hub.mjs'), eventBus);
+  registerAdapter(ccrAdapter);
+
 
   const forceMergeIdx = args.indexOf('--force-merge');
   if (forceMergeIdx !== -1 && args.length > forceMergeIdx + 1) {
@@ -179,6 +183,7 @@ async function main() {
   console.log(`Found ${activeSessions.length} active sessions.`);
   attachNewSessions();
   await julesAdapter.poll();
+  await ccrAdapter.poll();
 
   if (args.includes('--once')) {
     console.log('--once flag provided, exiting after attach phase.');
@@ -192,6 +197,7 @@ async function main() {
     setInterval(() => {
       attachNewSessions();
       julesAdapter.poll();
+      ccrAdapter.poll();
     }, 30 * 1000);
     // Periodically run the improver to check for new completed sessions
     setInterval(() => {
