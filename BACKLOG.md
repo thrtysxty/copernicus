@@ -137,7 +137,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #638 | Agent Hub — Constitutional Safety Layer | APPROVED FOR IMPLEMENTATION | P1 |
 | #640 | Agent Hub — Universal Attribution Ledger Sources | APPROVED FOR IMPLEMENTATION | P1 |
 | #642 | Agent Hub — Token Health Monitoring And Loop Operator | APPROVED FOR IMPLEMENTATION | P1 |
-| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | APPROVED FOR IMPLEMENTATION | P1 |
 | #654 | Jules Dispatch Branch Aware | APPROVED FOR IMPLEMENTATION | P1 |
 | #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -567,6 +566,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #641 | Agent Hub — User As Agent Kanban Sync | IN PROGRESS | P1 |
 | #644 | Agent Hub — Jules Adapter | IN PROGRESS | P1 |
 | #645 | Agent Hub — Ccr Adapter | IN PROGRESS | P1 |
+| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
