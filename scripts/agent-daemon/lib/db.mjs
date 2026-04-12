@@ -1,8 +1,7 @@
 import Database from 'better-sqlite3';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
-import { execSync } from 'child_process';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, renameSync } from 'fs';
 
 const DB_DIR = join(homedir(), 'Library', 'Application Support', 'copernicus');
 const DB_PATH = join(DB_DIR, 'jules.db');
@@ -331,7 +330,7 @@ ${verdict.summary}
     // Write atomically
     const tmpPath = storyPath + '.tmp';
     writeFileSync(tmpPath, outputLines.join('\n'));
-    execSync(`mv "${tmpPath}" "${storyPath}"`);
+    renameSync(tmpPath, storyPath);
     console.log(`Verification record written to ${storyPath}`);
   } catch (e) {
     console.error(`Failed to write verification record to ${storyPath}:`, e.message);
@@ -348,7 +347,7 @@ export function writeStatus(storyPath, newStatus) {
     }
     const tmpPath = storyPath + '.tmp';
     writeFileSync(tmpPath, replaced);
-    execSync(`mv "${tmpPath}" "${storyPath}"`);
+    renameSync(tmpPath, storyPath);
     console.log(`writeStatus: Updated ${storyPath} to ${newStatus}`);
     return true;
   } catch (e) {

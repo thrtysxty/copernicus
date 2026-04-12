@@ -1,7 +1,7 @@
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync } from 'fs';
-import { execSync, spawnSync } from 'child_process';
+import { spawnSync, execFileSync } from 'child_process';
 import { getDb, logImprovementRun } from './db.mjs';
 import crypto from 'crypto';
 
@@ -81,7 +81,7 @@ Output your response as a unified diff format block inside \`\`\`diff ... \`\`\`
 
   console.log(`[improver] Spawning meta-agent CCR for ${role}...`);
   try {
-    const result = execSync(`cd "${REPO_ROOT}" && npx ccr code --dangerously-skip-permissions --file "${promptFile}"`, { encoding: 'utf8' });
+    const result = execFileSync('npx', ['ccr', 'code', '--dangerously-skip-permissions', '--file', promptFile], { cwd: REPO_ROOT, encoding: 'utf8' });
 
     // Extract diff from result
     const diffMatch = result.match(/\`\`\`diff\n([\s\S]*?)\n\`\`\`/);
@@ -118,7 +118,7 @@ Output your response as a unified diff format block inside \`\`\`diff ... \`\`\`
     try {
       const patchFile = join('/tmp', `patch_${runId}.diff`);
       writeFileSync(patchFile, diff);
-      execSync(`patch "${tempProgramPath}" "${patchFile}"`);
+      execFileSync('patch', [tempProgramPath, patchFile]);
       console.log(`[improver] Patch applied to temp program.md.`);
     } catch (e) {
       console.error(`[improver] Patch failed: ${e.message}`);
@@ -138,7 +138,7 @@ Output your response as a unified diff format block inside \`\`\`diff ... \`\`\`
     try {
       // Actually run the dispatch/review logic with the temp program to evaluate.
       // Since `ccr` or `jules_assign.sh` are the entry points:
-      const reviewResult = execSync(`cd "${REPO_ROOT}" && node scripts/agent-daemon/lib/review.mjs "${join(completedStoriesDir, randomStory)}" --program "${tempProgramPath}"`, { encoding: 'utf8', stdio: 'pipe' });
+      const reviewResult = execFileSync('node', ['scripts/agent-daemon/lib/review.mjs', join(completedStoriesDir, randomStory), '--program', tempProgramPath], { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' });
 
       // Attempt to parse a score from the output. We fallback to evaluating ACs if it outputs JSON.
       // If review.mjs doesn't support --program yet, this is the intent of the dispatch test.
