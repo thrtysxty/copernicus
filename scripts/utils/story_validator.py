@@ -91,7 +91,7 @@ class StoryValidator:
             line = line.strip()
             # Regex to find paths like 'path/to/file.ts', 'path/to/file.py', etc.
             # Handles markdown list items like - `path/to/file.ts`
-            match = re.search(r"[`]?(~?[\w./_-]+\.(?:tsx|jsx|json|ts|js|py|html|md|sh|ps1|yaml|yml|css|scss|txt|xml|java|cs|go|cpp|hpp|vue|svelte|c|h))[`]?", line)
+            match = re.search(r"[`]?(~?[\w./_-]+\.(?:tsx|jsx|json|ts|js|mjs|py|html|md|sh|ps1|yaml|yml|css|scss|txt|xml|java|cpp|hpp|vue|svelte))[`]?", line)
             if match:
                 path = match.group(1)
                 is_new = "(new)" in line.lower()
@@ -133,7 +133,9 @@ class StoryValidator:
 
         # Strip fenced code blocks before scanning for channel names to avoid
         # false positives from action_type / enum values inside code examples.
+        # Strip fenced and inline code to avoid false positives from action_type/enum values
         ipc_content_no_code = re.sub(r"```[\s\S]*?```", "", ipc_content)
+        ipc_content_no_code = re.sub(r"`[^`\n]+`", "", ipc_content_no_code)
 
         # Regex to find 'channel:name' or "channel:name"
         channel_matches = re.findall("['\"]([a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+)['\"]", ipc_content_no_code)
