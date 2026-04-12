@@ -30,9 +30,9 @@ export class JulesAdapter {
 
     const { stdout } = await execFileAsync('bash', [scriptPath, storyPath], { cwd: REPO_ROOT, env });
 
-    const match = stdout.match(/session\\/(\\d+)/);
+    const match = stdout.match(/session\/(\d+)/);
     if (!match) {
-        throw new Error("Could not capture session ID from stdout:\\n" + stdout);
+        throw new Error("Could not capture session ID from stdout:\n" + stdout);
     }
 
     const session_id = match[1];
