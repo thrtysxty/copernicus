@@ -1,6 +1,5 @@
 import pytest
 import json
-import subprocess
 import os
 import pydantic
 from backend.app import app, validate_origin
