@@ -137,6 +137,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #638 | Agent Hub — Constitutional Safety Layer | APPROVED FOR IMPLEMENTATION | P1 |
 | #640 | Agent Hub — Universal Attribution Ledger Sources | APPROVED FOR IMPLEMENTATION | P1 |
 | #642 | Agent Hub — Token Health Monitoring And Loop Operator | APPROVED FOR IMPLEMENTATION | P1 |
+| #645 | Agent Hub — Ccr Adapter | APPROVED FOR IMPLEMENTATION | P1 |
+| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | APPROVED FOR IMPLEMENTATION | P1 |
 | #654 | Jules Dispatch Branch Aware | APPROVED FOR IMPLEMENTATION | P1 |
 | #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -557,11 +559,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
 | #643 | Agent Hub — Data-Driven Model Selection At Mint | DRAFT | P2 |
-| #645 | Agent Hub — Ccr Adapter | DRAFT | P1 |
 | #646 | Agent Hub — Org Chart Ui | DRAFT | P2 |
 | #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
-| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | DRAFT | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
 | #639 | Agent Hub — Hub Enforcement Replacing Classifier | IN PROGRESS | P1 |

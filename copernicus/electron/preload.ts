@@ -165,6 +165,8 @@ const SEND_CHANNELS = new Set([
   'debug:evaluate',
   // Daemon (Story 524)
   'daemon:install', 'daemon:is-registered', 'hub:attribute', 'hub:user-sync',
+  // Security / Package Gate (Story 649)
+  'security:get-config', 'security:update-package-gate', 'security:add-to-allowlist',
   // Agent Browser (Story 630)
   'browser:navigate', 'browser:snapshot', 'browser:screenshot', 'browser:click',
   // Harness Self-Improvement (Story 629)
