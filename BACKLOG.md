@@ -130,6 +130,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #643 | Agent Hub — Data-Driven Model Selection At Mint | APPROVED FOR IMPLEMENTATION | P2 |
+| #646 | Agent Hub — Org Chart Ui | APPROVED FOR IMPLEMENTATION | P2 |
+| #647 | Agent Hub — Hub Ledger View | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -563,9 +566,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
-| #643 | Agent Hub — Data-Driven Model Selection At Mint | DRAFT | P2 |
-| #646 | Agent Hub — Org Chart Ui | DRAFT | P2 |
-| #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
 | #642 | Agent Hub — Token Health Monitoring And Loop Operator | IN PROGRESS | P1 |

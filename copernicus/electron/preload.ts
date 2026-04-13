@@ -165,6 +165,8 @@ const SEND_CHANNELS = new Set([
   'debug:evaluate',
   // Daemon (Story 524)
   'daemon:install', 'daemon:is-registered', 'hub:attribute', 'hub:user-sync',
+  'org-chart:get-config', 'org-chart:update-role', 'org-chart:list-active-tokens',
+  'hub:get-events', 'hub:get-attribution', 'hub:get-cost-summary',
   // Security / Package Gate (Story 649)
   'security:get-config', 'security:update-package-gate', 'security:add-to-allowlist',
   // Agent Browser (Story 630)
