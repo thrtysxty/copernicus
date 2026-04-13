@@ -130,6 +130,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | APPROVED FOR IMPLEMENTATION | P1 |
 | #634 | Agent Hub — Token Schema And Core Interface | APPROVED FOR IMPLEMENTATION | P1 |
 | #635 | Agent Hub — State Store Loop Controller And Story Queue | APPROVED FOR IMPLEMENTATION | P1 |
 | #636 | Agent Hub — Role Contract Schema | APPROVED FOR IMPLEMENTATION | P1 |

@@ -21,7 +21,7 @@ describe('Hub Enforcement', () => {
     } catch(e) {}
   });
 
-  test('check allows valid capability', () => {
+  test('check allows valid capability', async () => {
     const roleConfig = {
       role: { name: 'coder', authority_level: 2 },
       capabilities: ['shell', 'fs_write'],
@@ -31,12 +31,12 @@ describe('Hub Enforcement', () => {
     const token = mint(roleConfig, 'test-1', null);
     const action = { type: 'shell', capability: 'shell', command: 'echo hi' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
     assert.strictEqual(result.allowed, true);
     assert.ok(result.authority_level >= 0); // we mock or pass this if authority_level requires actual files to be loaded that are missing in test context
   });
 
-  test('check denies expired token', () => {
+  test('check denies expired token', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['shell'],
@@ -46,12 +46,12 @@ describe('Hub Enforcement', () => {
     const token = mint(roleConfig, 'test-2', null);
     const action = { type: 'shell', command: 'ls' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'expired');
   });
 
-  test('check denies out-of-scope path', () => {
+  test('check denies out-of-scope path', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['fs_write'],
@@ -61,12 +61,12 @@ describe('Hub Enforcement', () => {
     const token = mint(roleConfig, 'test-3', null);
     const action = { type: 'fs_write', path: '/etc/passwd' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'Path out of scope');
   });
 
-  test('check denies unlisted command', () => {
+  test('check denies unlisted command', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['shell'],
@@ -76,7 +76,7 @@ describe('Hub Enforcement', () => {
     const token = mint(roleConfig, 'test-4', null);
     const action = { type: 'shell', command: 'rm -rf /' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'Command out of scope');
   });
@@ -105,7 +105,7 @@ describe('Hub Enforcement', () => {
     }
   });
 
-  test('regulatory agent denied action outside its domain', () => {
+  test('regulatory agent denied action outside its domain', async () => {
     const roleConfig = {
       role: { name: 'reviewer' }, // a regulatory role
       capabilities: ['shell'],
@@ -117,7 +117,7 @@ describe('Hub Enforcement', () => {
     // target_domain checking requires canBlock integration
     const action = { type: 'shell', capability: 'shell', target_domain: 'unauthorized_domain' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
     assert.strictEqual(result.allowed, false);
     assert.ok(result.reason.includes('Regulatory role'));
   });

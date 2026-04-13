@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
@@ -159,7 +160,7 @@ export async function registerAllIpcHandlers(
           notes: 'Card moved/updated column'
         });
         syncStoryState(id, updates);
-      } catch (e) { console.error(e); }
+      } catch (e) { log.error(e); }
     });
     return res;
   }))

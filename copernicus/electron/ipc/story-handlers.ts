@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { ipcMain, BrowserWindow } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
 
@@ -43,7 +44,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
           notes: 'Status updated via stories:update'
         });
         syncStoryState(storyId, { status });
-      } catch (e) { console.error(e); }
+      } catch (e) { log.error(e); }
     });
     return res;
   }))
@@ -98,7 +99,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
             notes: 'Status updated via stories:set-status'
           });
           syncStoryState(storyNumber.toString(), { status });
-        } catch (e) { console.error(e); }
+        } catch (e) { log.error(e); }
       });
       return { ok: true }
     })

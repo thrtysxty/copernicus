@@ -173,7 +173,7 @@ describe('Hub Token Module', () => {
     assert.strictEqual(dbToken.story_id, '123');
   });
 
-  test('check allows valid action', () => {
+  test('check allows valid action', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['fs_write'],
@@ -183,7 +183,7 @@ describe('Hub Token Module', () => {
     const token = mint(roleConfig, '124', null);
 
     const action = { type: 'fs_write', path: '/var/www/index.html' };
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
 
     assert.strictEqual(result.allowed, true);
     assert.strictEqual(result.reason, 'ok');
@@ -195,7 +195,7 @@ describe('Hub Token Module', () => {
     assert.strictEqual(event.result, 'allowed|ok');
   });
 
-  test('check denies expired token', () => {
+  test('check denies expired token', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['shell'],
@@ -205,7 +205,7 @@ describe('Hub Token Module', () => {
     const token = mint(roleConfig, '125', null);
     const action = { type: 'shell', command: 'ls' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
 
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'expired');
@@ -216,7 +216,7 @@ describe('Hub Token Module', () => {
     assert.strictEqual(event.result, 'denied|expired');
   });
 
-  test('check denies out-of-scope path', () => {
+  test('check denies out-of-scope path', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['fs_write'],
@@ -226,13 +226,13 @@ describe('Hub Token Module', () => {
     const token = mint(roleConfig, '126', null);
     const action = { type: 'fs_write', path: '/etc/passwd' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
 
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'Path out of scope');
   });
 
-  test('check denies unlisted command', () => {
+  test('check denies unlisted command', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['shell'],
@@ -242,13 +242,13 @@ describe('Hub Token Module', () => {
     const token = mint(roleConfig, '127', null);
     const action = { type: 'shell', command: 'rm -rf /' };
 
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
 
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'Command out of scope');
   });
 
-  test('revoke blocks subsequent checks', () => {
+  test('revoke blocks subsequent checks', async () => {
     const roleConfig = {
       role: { name: 'coder' },
       capabilities: ['shell'],
@@ -259,7 +259,7 @@ describe('Hub Token Module', () => {
     revoke(token.token_id, 'testing revoke');
 
     const action = { type: 'shell', command: 'echo hello' };
-    const result = check(token.token_id, action);
+    const result = await check(token.token_id, action);
 
     assert.strictEqual(result.allowed, false);
     assert.strictEqual(result.reason, 'Token is REVOKED');

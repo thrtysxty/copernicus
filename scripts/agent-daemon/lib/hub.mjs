@@ -7,6 +7,8 @@ import { homedir } from 'os';
 
 import path from 'path';
 import os from 'os';
+import packageGate from './package-gate.mjs';
+
 import yaml from 'js-yaml';
 import { z } from 'zod';
 
@@ -384,7 +386,7 @@ export function startHubCheckServer() {
 
   const server = net.createServer((socket) => {
     let buffer = '';
-    socket.on('data', (data) => {
+    socket.on('data', async (data) => {
       buffer += data.toString();
       let newlineIdx;
       while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
@@ -396,7 +398,7 @@ export function startHubCheckServer() {
           const payload = JSON.parse(line);
           const { token_id, action } = payload;
           const start = process.hrtime.bigint();
-          const result = check(token_id, action);
+          const result = await check(token_id, action);
           const end = process.hrtime.bigint();
           // We can optionally log the duration here
           socket.write(JSON.stringify(result) + '\n');
@@ -425,7 +427,7 @@ export function startHubCheckServer() {
 }
 
 
-export function check(tokenId, action) {
+export async function check(tokenId, action) {
   const db = getDb();
 
   const tokenRow = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(tokenId);
@@ -473,6 +475,18 @@ export function check(tokenId, action) {
     reason = `capability '${actionCapability}' not in token ${tokenId} for role '${roleName}'`;
     logEvent(db, tokenId, eventType, action, false, reason);
     return { allowed: false, reason, authority_level: authorityLevel };
+  }
+
+
+  if (actionCapability === 'package:install') {
+    const gateResult = await packageGate.check(action.package, action.registry);
+    if (!gateResult.allowed) {
+      reason = gateResult.reason;
+      logEvent(db, tokenId, 'package:install:blocked', action, false, reason, JSON.stringify(gateResult));
+      return { allowed: false, reason, authority_level: authorityLevel };
+    } else {
+      logEvent(db, tokenId, 'package:install:allowed', action, true, gateResult.reason, JSON.stringify(gateResult));
+    }
   }
 
   // Regulatory role enforcement (AC 5)
