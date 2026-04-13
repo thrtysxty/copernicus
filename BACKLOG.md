@@ -520,10 +520,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #639 | Agent Hub — Hub Enforcement Replacing Classifier | COMPLETE | P1 |
 | #640 | Agent Hub — Universal Attribution Ledger Sources | COMPLETE | P1 |
 | #641 | Agent Hub — User As Agent Kanban Sync | COMPLETE | P1 |
-| #642 | Agent Hub — Token Health Monitoring And Loop Operator | COMPLETE | P1 |
 | #644 | Agent Hub — Jules Adapter | COMPLETE | P1 |
 | #645 | Agent Hub — Ccr Adapter | COMPLETE | P1 |
 | #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
+| #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | COMPLETE | P1 |
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
 | #654 | Jules Dispatch Branch Aware | COMPLETE | P1 |
 | #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
@@ -568,8 +568,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
+| #642 | Agent Hub — Token Health Monitoring And Loop Operator | IN PROGRESS | P1 |
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | IN PROGRESS | P1 |
-| #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
