@@ -130,8 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #654 | Jules Dispatch Branch Aware | APPROVED FOR IMPLEMENTATION | P1 |
-| #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -527,6 +525,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #645 | Agent Hub — Ccr Adapter | COMPLETE | P1 |
 | #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
+| #654 | Jules Dispatch Branch Aware | COMPLETE | P1 |
 | #655 | Fix 631 Genai Toolbox Rework | COMPLETE | P0 |
 | #656 | Daemon Merge Gate Human Review | COMPLETE | P0 |
 | #657 | Turso Libsql State Ledger | COMPLETE | P1 |
@@ -535,6 +534,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #660 | Daemon Post Merge Branch Reaper | COMPLETE | P2 |
 | #661 | Upgrade Framer Motion To V12 Fix Splashscreen Ease Type | COMPLETE | P1 |
 | #662 | Fix Daemon Getstorypath Story Py Missing Review Falls Back To Blocked | COMPLETE | P1 |
+| #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | COMPLETE | P0 |
 | #664 | Fix Command Injection In Improver Mjs Execsync Calls | COMPLETE | P2 |
 | #665 | Add Tests For Health Check Endpoint In Backend | COMPLETE | P3 |
 | #666 | Remove Unused Imports From Backend Test Security Py | COMPLETE | P3 |
