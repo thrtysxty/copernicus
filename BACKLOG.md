@@ -130,7 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | APPROVED FOR IMPLEMENTATION | P1 |
 | #634 | Agent Hub — Token Schema And Core Interface | APPROVED FOR IMPLEMENTATION | P1 |
 | #635 | Agent Hub — State Store Loop Controller And Story Queue | APPROVED FOR IMPLEMENTATION | P1 |
 | #636 | Agent Hub — Role Contract Schema | APPROVED FOR IMPLEMENTATION | P1 |
@@ -138,6 +137,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #638 | Agent Hub — Constitutional Safety Layer | APPROVED FOR IMPLEMENTATION | P1 |
 | #640 | Agent Hub — Universal Attribution Ledger Sources | APPROVED FOR IMPLEMENTATION | P1 |
 | #642 | Agent Hub — Token Health Monitoring And Loop Operator | APPROVED FOR IMPLEMENTATION | P1 |
+| #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | APPROVED FOR IMPLEMENTATION | P1 |
 | #654 | Jules Dispatch Branch Aware | APPROVED FOR IMPLEMENTATION | P1 |
 | #663 | Daemon Session Attach Polling Fallback With Token Keepalive And Human Intervention Gate | APPROVED FOR IMPLEMENTATION | P0 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -565,13 +565,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #646 | Agent Hub — Org Chart Ui | DRAFT | P2 |
 | #647 | Agent Hub — Hub Ledger View | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
-| #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | DRAFT | P1 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
+| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | IN PROGRESS | P1 |
 | #639 | Agent Hub — Hub Enforcement Replacing Classifier | IN PROGRESS | P1 |
 | #641 | Agent Hub — User As Agent Kanban Sync | IN PROGRESS | P1 |
 | #644 | Agent Hub — Jules Adapter | IN PROGRESS | P1 |
 | #645 | Agent Hub — Ccr Adapter | IN PROGRESS | P1 |
-| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
