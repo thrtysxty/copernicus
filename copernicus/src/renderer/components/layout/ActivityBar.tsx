@@ -2,7 +2,7 @@ import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
   Activity, Brain, Settings, Wand2, BookOpen,
-  Diff, GitBranch, FlaskConical, Bug, Globe, Database,
+  Diff, GitBranch, FlaskConical, Bug, Globe, Database, Users,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
 
@@ -137,6 +137,7 @@ export const ActivityBar: React.FC = () => {
         <NavItem id="debug" icon={Bug} label="Debug" testId="nav-debug" />
         <NavItem id="browser" icon={Globe} label="Browser" testId="nav-browser" />
         <NavItem id="database" icon={Database} label="Database" testId="nav-database" />
+        <NavItem id="hub:org-chart" icon={Users} label="Agent Hub" testId="nav-agent-hub" />
       </div>
 
       <div className="flex-1" />

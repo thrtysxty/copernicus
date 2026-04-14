@@ -1,11 +1,37 @@
 import { ipcMain } from 'electron';
 import { handleIpc } from '../utils/handle-ipc';
 // @ts-ignore
-import { syncUserAction } from '../../../scripts/agent-daemon/lib/hub.mjs';
+import { syncUserAction, getOrgChart, updateRole, listActiveTokens } from '../../../scripts/agent-daemon/lib/hub.mjs';
 // @ts-ignore
 import { getDb } from '../../../scripts/agent-daemon/lib/db.mjs';
 
 export function registerHubHandlers() {
+  ipcMain.handle('org-chart:get-config', () =>
+    handleIpc('org-chart:get-config', [], () => {
+      return getOrgChart();
+    })
+  );
+
+  ipcMain.handle('org-chart:update-role', (_event, updates) =>
+    handleIpc('org-chart:update-role', [updates], () => {
+      try {
+        updateRole(updates.role, updates);
+        return { success: true };
+      } catch (e: any) {
+        if (e.name === 'ConstitutionalViolation') {
+          return { error: 'CONSTITUTIONAL_FIELD_IMMUTABLE' };
+        }
+        throw e;
+      }
+    })
+  );
+
+  ipcMain.handle('org-chart:list-active-tokens', () =>
+    handleIpc('org-chart:list-active-tokens', [], () => {
+      return listActiveTokens();
+    })
+  );
+
   ipcMain.handle('hub:user-sync', (_event, action) =>
     handleIpc('hub:user-sync', [action], () => {
       syncUserAction(action);

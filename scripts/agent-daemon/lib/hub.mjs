@@ -177,6 +177,36 @@ export function getOrgChart() {
   return JSON.parse(JSON.stringify(_orgChart));
 }
 
+export function updateRole(roleName, updates) {
+  if ('authority_level' in updates || 'class' in updates) {
+    throw new ConstitutionalViolation('Constitutional fields (authority_level, class) are immutable via API. Edit org.yaml directly.');
+  }
+
+  const orgYamlPath = path.join(COPERNICUS_DIR, 'org.yaml');
+  if (!fs.existsSync(orgYamlPath)) {
+    throw new Error('org.yaml not found');
+  }
+
+  const fileContent = fs.readFileSync(orgYamlPath, 'utf8');
+  const parsed = yaml.load(fileContent);
+
+  if (!parsed.roles || !parsed.roles[roleName]) {
+    throw new Error(`Role ${roleName} not found in org.yaml`);
+  }
+
+  const role = parsed.roles[roleName];
+  if (updates.assigned_to !== undefined) role.assigned_to = updates.assigned_to;
+  if (updates.token_ttl !== undefined) role.token_ttl = updates.token_ttl;
+  if (updates.token_budget_usd !== undefined) role.token_budget_usd = updates.token_budget_usd;
+  if (updates.selection_policy !== undefined) role.selection_policy = updates.selection_policy;
+
+  const newYaml = yaml.dump(parsed);
+  fs.writeFileSync(orgYamlPath, newYaml, 'utf8');
+
+  // Reload the in-memory org chart
+  loadOrgChart();
+}
+
 export function loadOrgChart() {
   const orgYamlPath = path.join(COPERNICUS_DIR, 'org.yaml');
 
