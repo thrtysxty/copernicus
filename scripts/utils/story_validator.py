@@ -249,14 +249,14 @@ class StoryValidator:
     # --- 2e. Story number consistency ---
     def _check_story_number_consistency(self):
         print(blue("--- Running Story Number Consistency (2e) ---"))
-        filename_match = re.search(r"story_(\d+)_.*\.md", os.path.basename(self.story_path))
+        filename_match = re.search(r"story_(\d+[a-z]*)_.*\.md", os.path.basename(self.story_path))
         if not filename_match:
             self._add_issue(f"Could not extract story number from filename: {self.story_path}")
             return
         
         filename_story_num = filename_match.group(1)
 
-        content_match = re.search(r"## Story Number\s*(\d+)", self.story_content)
+        content_match = re.search(r"## Story Number\s*(\d+[a-z]*)", self.story_content)
         if not content_match:
             self._add_issue("Could not find '## Story Number' in story content.")
             return

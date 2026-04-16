@@ -166,7 +166,7 @@ else
 fi
 
 # Extract story number early — needed for the already-implemented guard below
-STORY_NUMBER=$(basename "$STORY_PATH" | grep -oE '^story_[0-9]+' | grep -oE '[0-9]+' || echo "???")
+STORY_NUMBER=$(basename "$STORY_PATH" | grep -oE '^story_[0-9]+[a-z]*' | sed 's/^story_//' || echo "???")
 STORY_TITLE=$(grep -m1 "^# \(User \)\?Story" "$STORY_PATH" | sed 's/^# //')
 
 # Original validation checks (can be removed later if story-validator.sh covers them)
