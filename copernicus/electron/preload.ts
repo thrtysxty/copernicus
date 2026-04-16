@@ -175,6 +175,8 @@ const SEND_CHANNELS = new Set([
   'daemon:improvement-log',
   // Database MCP (Story 631)
   'db:query', 'db:list-tables', 'db:search-episodes', 'db:story-status', 'db:recent-episodes', 'db:quality-summary',
+  // MLX (Story 652)
+  'mlx:download-model', 'mlx:list-installed', 'mlx:delete-model', 'mlx:get-perf', 'mlx:get-status', 'mlx:switch-model',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -232,6 +234,8 @@ const LISTEN_CHANNELS = new Set([
   'wizard:pty-data', 'wizard:pty-exit',
   // Deep linking to KB article (Story 567)
   'kb:open-article',
+  // MLX (Story 652)
+  'mlx:download-progress', 'mlx:server-status-changed',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

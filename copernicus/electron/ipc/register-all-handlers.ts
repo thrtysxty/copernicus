@@ -54,6 +54,7 @@ import { registerProviderHandlers } from './provider-handlers'
 import { registerKbHandlers } from './kb-handlers'
 import { registerBrowserHandlers } from './browser-handlers'
 import { registerDbMcpHandlers } from './db-mcp-handlers'
+import { registerMlxHandlers } from './mlx-handlers'
 // @ts-ignore
 import { syncUserAction, syncStoryState } from '../../../scripts/agent-daemon/lib/hub.mjs';
 import { registerHubHandlers } from './hub-handlers';
@@ -136,6 +137,7 @@ export async function registerAllIpcHandlers(
   registerKbHandlers()
   registerBrowserHandlers()
   registerDbMcpHandlers()
+  registerMlxHandlers()
 
   ipcMain.handle('memory:export-now', (_e) => handleIpc(async () => {
     const projectId = fsManager.getRootPath()

@@ -16,6 +16,7 @@ import { DEFAULT_TOUCH_BAR_CONFIG } from './touch-bar-types'
 import { StoriesManager } from './stories'
 import { ptyManager } from './pty-manager'
 import { stateLedger } from './db/state-ledger'
+import { mlxProvider } from './mlx-provider'
 import { DevtimeManager } from './devtime-manager'
 import { GithubManager } from './github-manager'
 import { llmService } from './llm/service'
@@ -584,6 +585,10 @@ app.whenReady().then(async () => {
   ensureCopernicusDirectory(settingsStore, firstRunRef)
   isFirstRun = firstRunRef.current
   createWindow();
+
+  // Story 652: initialize MLX Provider
+  mlxProvider.initializeWithSettings(settingsStore);
+
   if (worktreeManager && win) {
     worktreeManager.startPolling(win);
   }
