@@ -130,7 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #643 | Agent Hub — Data-Driven Model Selection At Mint | APPROVED FOR IMPLEMENTATION | P2 |
 | #652 | Mlx Native Inference — Apple Silicon Provider | APPROVED FOR IMPLEMENTATION | P1 |
 | #667 | Context Window Compaction Hierarchy | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -524,6 +523,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #640 | Agent Hub — Universal Attribution Ledger Sources | COMPLETE | P1 |
 | #641 | Agent Hub — User As Agent Kanban Sync | COMPLETE | P1 |
 | #642 | Agent Hub — Token Health Monitoring And Loop Operator | COMPLETE | P1 |
+| #643 | Agent Hub — Data-Driven Model Selection At Mint | COMPLETE | P2 |
 | #644 | Agent Hub — Jules Adapter | COMPLETE | P1 |
 | #645 | Agent Hub — Ccr Adapter | COMPLETE | P1 |
 | #646 | Agent Hub — Org Chart Ui | COMPLETE | P2 |
@@ -572,6 +572,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
+| #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | DRAFT | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
