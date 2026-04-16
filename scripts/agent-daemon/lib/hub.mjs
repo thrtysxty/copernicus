@@ -341,6 +341,54 @@ export function loadOrgChart() {
   }
 
   _orgChart = result.data;
+
+  // Story 652b: Apple Silicon MLX Defaults
+  const isAppleSilicon = process.arch === 'arm64' && process.platform === 'darwin';
+  const hasCloudKeys = !!(process.env.ANTHROPIC_API_KEY || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY);
+
+  if (isAppleSilicon && !hasCloudKeys) {
+    try {
+      const mlxModelsPath = join(dirname(fileURLToPath(import.meta.url)), '../defaults/mlx-models.yaml');
+      if (fs.existsSync(mlxModelsPath)) {
+        const mlxYaml = fs.readFileSync(mlxModelsPath, 'utf8');
+        const parsedMlx = yaml.load(mlxYaml);
+
+        if (parsedMlx && parsedMlx.models) {
+          const roleHintMap = {};
+          for (const m of parsedMlx.models) {
+             if (m.role_hint) {
+               roleHintMap[m.role_hint] = m.id;
+             }
+          }
+
+          const targetRoles = [
+            { role: 'coder', hint: 'coder' },
+            { role: 'reviewer', hint: 'reviewer' },
+            { role: 'planner', hint: 'general' },
+            { role: 'sentinel', hint: 'reviewer' }
+          ];
+
+          for (const t of targetRoles) {
+            if (_orgChart.roles && _orgChart.roles[t.role] && roleHintMap[t.hint]) {
+              const currentProvider = _orgChart.roles[t.role].assigned_to?.provider;
+              const isUnassignedOrCloud = !currentProvider || ['anthropic', 'openai', 'openrouter', 'google', 'gemini', 'jules'].includes(currentProvider);
+
+              if (isUnassignedOrCloud) {
+                if (!_orgChart.roles[t.role].assigned_to) {
+                  _orgChart.roles[t.role].assigned_to = {};
+                }
+                _orgChart.roles[t.role].assigned_to.provider = 'mlx-native';
+                _orgChart.roles[t.role].assigned_to.model = roleHintMap[t.hint];
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[hub] Failed to apply Apple Silicon MLX defaults:', e.message);
+    }
+  }
+
   return getOrgChart();
 }
 

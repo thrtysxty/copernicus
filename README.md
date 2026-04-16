@@ -249,6 +249,40 @@ browser:close     → Session cleanup
 
 ---
 
+## Built for Apple Silicon
+
+Copernicus ships with native support for **MLX native inference**, providing a massive Neural Engine advantage at **$0/token**.
+
+### Zero-Config Experience
+
+Launch Copernicus on a Mac with Apple Silicon (M1/M2/M3/M4) without setting any cloud API keys, and the agent org chart automatically routes to local MLX models. It’s a zero-config, zero-cost agentic experience out of the box.
+
+### Default Models
+
+The following MLX models are provisioned by default and automatically mapped to agent roles:
+
+| Org Chart Role | Model ID |
+|----------------|----------|
+| **coder** | `mlx-community/Qwen2.5-Coder-7B-Instruct-4bit` |
+| **reviewer** | `mlx-community/DeepSeek-R1-Distill-Qwen-7B-4bit` |
+| **planner** | `mlx-community/Mistral-7B-Instruct-v0.3-4bit` |
+| **sentinel** | `mlx-community/DeepSeek-R1-Distill-Qwen-7B-4bit` |
+
+### Customizing Models
+
+You can easily add custom models by editing the `mlx-models.yaml` configuration file located at:
+`scripts/agent-daemon/defaults/mlx-models.yaml`
+
+### Setup
+
+To take advantage of MLX inference, ensure you have the MLX LM package installed:
+```bash
+pip install mlx-lm
+```
+
+You can browse the full catalog of compatible models at the [mlx-community HuggingFace catalog](https://huggingface.co/mlx-community).
+
+
 ## Stack
 
 | Layer | Technology |
