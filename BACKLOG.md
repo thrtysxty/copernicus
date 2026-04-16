@@ -130,8 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
-| #652 | Mlx Native Inference — Apple Silicon Provider | APPROVED FOR IMPLEMENTATION | P1 |
-| #667 | Context Window Compaction Hierarchy | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -545,6 +543,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #664 | Fix Command Injection In Improver Mjs Execsync Calls | COMPLETE | P2 |
 | #665 | Add Tests For Health Check Endpoint In Backend | COMPLETE | P3 |
 | #666 | Remove Unused Imports From Backend Test Security Py | COMPLETE | P3 |
+| #667 | Context Window Compaction Hierarchy | COMPLETE | P1 |
 | #668 | Episodes Table Schema Add Hub Selection Columns | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
@@ -573,6 +572,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
 | #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | DRAFT | P1 |
+| #652 | Mlx Native Inference — Apple Silicon Provider | IN PROGRESS | P1 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
