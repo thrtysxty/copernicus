@@ -217,6 +217,47 @@ export function getDb() {
     )
   `);
 
+  // Story 668: Add hub selection columns to episodes table (must run after CREATE TABLE)
+  try {
+    db.exec("ALTER TABLE episodes ADD COLUMN role_name TEXT DEFAULT NULL");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    db.exec("ALTER TABLE episodes ADD COLUMN story_type TEXT DEFAULT NULL");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    db.exec("ALTER TABLE episodes ADD COLUMN provider TEXT DEFAULT NULL");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    db.exec("ALTER TABLE episodes ADD COLUMN model TEXT DEFAULT NULL");
+  } catch (e) {
+    // Column might already exist
+  }
+
+  // Backfill migration for story 643 JSON data
+  try {
+    const rows = db.prepare("SELECT episode_id, notes FROM episodes WHERE role_name IS NULL AND notes IS NOT NULL AND notes != ''").all();
+    for (const row of rows) {
+      try {
+        const notesJson = JSON.parse(row.notes);
+        if (notesJson.role_name && notesJson.story_type && notesJson.provider && notesJson.model) {
+          db.prepare('UPDATE episodes SET role_name = ?, story_type = ?, provider = ?, model = ? WHERE episode_id = ?')
+            .run(notesJson.role_name, notesJson.story_type, notesJson.provider, notesJson.model, row.episode_id);
+        }
+      } catch (e) {
+        // Not valid JSON or missing fields, skip
+      }
+    }
+  } catch (e) {
+    // Migration might fail, but it's non-critical
+    console.log('[db.mjs] Backfill migration error:', e.message);
+  }
+
   return db;
 }
 

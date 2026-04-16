@@ -5,7 +5,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { test, describe, before, beforeEach, after, mock } from 'node:test';
 import assert from 'node:assert';
 import { getDb } from './db.mjs';
-import { mint, check, revoke, updateHealth, declareWait, assessHealth, runHealthSweep, renewToken, syncUserAction, syncStoryState, reconcileStoryState } from './hub.mjs';
+import { mint, check, revoke, updateHealth, declareWait, assessHealth, runHealthSweep, renewToken, syncUserAction, syncStoryState, reconcileStoryState, selectModel, recordEpisodeScore } from './hub.mjs';
 
 describe('Hub Token Module', () => {
   let db;
@@ -312,5 +312,109 @@ describe('Hub Token Module', () => {
 
     // test passes if no error thrown
 
+  });
+
+  // Story 668: selectModel query tests
+  describe('selectModel (story 668)', () => {
+    beforeEach(() => {
+      const db = getDb();
+      // episodes has a FK to stories; create stub table so inserts work in test env
+      db.exec('CREATE TABLE IF NOT EXISTS stories (id TEXT PRIMARY KEY)');
+      db.prepare('DELETE FROM episodes').run();
+    });
+
+    test('returns top-scoring provider:model when 3+ samples above threshold', () => {
+      const db = getDb();
+      const now = new Date().toISOString();
+      for (let i = 0; i < 4; i++) {
+        db.prepare('INSERT INTO episodes (episode_id, timestamp, quality_score, role_name, story_type, provider, model) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(`ep_high_${i}`, now, 0.85, 'coder', 'ts_ipc', 'openrouter', 'kimi-k2');
+      }
+      const result = selectModel('coder', 'ts_ipc');
+      assert.ok(result, 'should return a result');
+      assert.strictEqual(result.provider, 'openrouter');
+      assert.strictEqual(result.model, 'kimi-k2');
+      assert.ok(result.avg_score >= 0.7);
+      assert.ok(result.sample_count >= 3);
+    });
+
+    test('returns null when fewer than 3 samples for role × story_type pair', () => {
+      const db = getDb();
+      const now = new Date().toISOString();
+      for (let i = 0; i < 2; i++) {
+        db.prepare('INSERT INTO episodes (episode_id, timestamp, quality_score, role_name, story_type, provider, model) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(`ep_few_${i}`, now, 0.9, 'coder', 'ts_ipc', 'openrouter', 'kimi-k2');
+      }
+      const result = selectModel('coder', 'ts_ipc');
+      assert.strictEqual(result, null);
+    });
+
+    test('returns null when best avg_score < 0.7', () => {
+      const db = getDb();
+      const now = new Date().toISOString();
+      for (let i = 0; i < 4; i++) {
+        db.prepare('INSERT INTO episodes (episode_id, timestamp, quality_score, role_name, story_type, provider, model) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(`ep_low_${i}`, now, 0.5, 'coder', 'ts_ipc', 'openrouter', 'kimi-k2');
+      }
+      const result = selectModel('coder', 'ts_ipc');
+      assert.strictEqual(result, null);
+    });
+  });
+
+  // Story 668: recordEpisodeScore column tests
+  describe('recordEpisodeScore (story 668)', () => {
+    let testTokenId;
+
+    beforeEach(() => {
+      const db = getDb();
+      // episodes has a FK to stories; create stub table so inserts work in test env
+      db.exec('CREATE TABLE IF NOT EXISTS stories (id TEXT PRIMARY KEY)');
+      db.prepare("INSERT OR IGNORE INTO stories (id) VALUES ('story-668')").run();
+      db.prepare('DELETE FROM episodes').run();
+      testTokenId = `test-token-668-${Date.now()}`;
+      // Insert token directly (bypassing mint) to avoid pre-existing provider bug
+      db.prepare(`
+        INSERT INTO hub_tokens (token_id, issued_at, expires_at, issued_by, role_name, role_class, authority_level, story_id, state, capabilities, scope, budget, health)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        testTokenId,
+        new Date().toISOString(),
+        new Date(Date.now() + 3600000).toISOString(),
+        'user:test',
+        'coder',
+        'operational',
+        2,
+        'story-668',
+        'ACTIVE',
+        '[]',
+        '{}',
+        '{}',
+        '{}'
+      );
+    });
+
+    test('writes role_name, story_type, provider, model to correct columns', () => {
+      const db = getDb();
+      const notesJson = JSON.stringify({ story_type: 'ts_ipc', provider: 'openrouter', model: 'kimi-k2', notes: 'APPROVED' });
+      const result = recordEpisodeScore(testTokenId, 0.85, notesJson);
+      assert.strictEqual(result, true);
+      const episode = db.prepare('SELECT * FROM episodes WHERE story_id = ?').get('story-668');
+      assert.ok(episode, 'episode row should exist');
+      assert.strictEqual(episode.role_name, 'coder');
+      assert.strictEqual(episode.story_type, 'ts_ipc');
+      assert.strictEqual(episode.provider, 'openrouter');
+      assert.strictEqual(episode.model, 'kimi-k2');
+      assert.strictEqual(episode.quality_score, 0.85);
+    });
+
+    test('does NOT serialize structured fields into notes column', () => {
+      const db = getDb();
+      const notesJson = JSON.stringify({ story_type: 'ts_ipc', provider: 'openrouter', model: 'kimi-k2', notes: 'APPROVED' });
+      recordEpisodeScore(testTokenId, 0.85, notesJson);
+      const episode = db.prepare('SELECT * FROM episodes WHERE story_id = ?').get('story-668');
+      assert.ok(!episode.notes.includes('"role_name"'), 'notes should not contain JSON role_name');
+      assert.ok(!episode.notes.includes('"story_type"'), 'notes should not contain JSON story_type');
+      assert.strictEqual(episode.notes, 'APPROVED');
+    });
   });
 });

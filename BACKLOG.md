@@ -130,6 +130,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #643 | Agent Hub — Data-Driven Model Selection At Mint | APPROVED FOR IMPLEMENTATION | P2 |
+| #652 | Mlx Native Inference — Apple Silicon Provider | APPROVED FOR IMPLEMENTATION | P1 |
+| #667 | Context Window Compaction Hierarchy | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -520,9 +523,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #639 | Agent Hub — Hub Enforcement Replacing Classifier | COMPLETE | P1 |
 | #640 | Agent Hub — Universal Attribution Ledger Sources | COMPLETE | P1 |
 | #641 | Agent Hub — User As Agent Kanban Sync | COMPLETE | P1 |
+| #642 | Agent Hub — Token Health Monitoring And Loop Operator | COMPLETE | P1 |
 | #644 | Agent Hub — Jules Adapter | COMPLETE | P1 |
 | #645 | Agent Hub — Ccr Adapter | COMPLETE | P1 |
 | #646 | Agent Hub — Org Chart Ui | COMPLETE | P2 |
+| #647 | Agent Hub — Hub Ledger View | COMPLETE | P2 |
+| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | COMPLETE | P1 |
 | #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | COMPLETE | P1 |
 | #653 | Dead Code And Artifact Purge | COMPLETE | P2 |
@@ -539,6 +545,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #664 | Fix Command Injection In Improver Mjs Execsync Calls | COMPLETE | P2 |
 | #665 | Add Tests For Health Check Endpoint In Backend | COMPLETE | P3 |
 | #666 | Remove Unused Imports From Backend Test Security Py | COMPLETE | P3 |
+| #668 | Episodes Table Schema Add Hub Selection Columns | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -565,12 +572,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #625 | Roca Contract Validation Draft | DRAFT | P3 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
-| #652 | Mlx Native Inference — Apple Silicon Provider | DRAFT | P1 |
-| #667 | Context Window Compaction Hierarchy | DRAFT | P1 |
-| #642 | Agent Hub — Token Health Monitoring And Loop Operator | IN PROGRESS | P1 |
-| #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | IN PROGRESS | P1 |
-| #643 | Agent Hub — Data-Driven Model Selection At Mint | IN PROGRESS | P2 |
-| #647 | Agent Hub — Hub Ledger View | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

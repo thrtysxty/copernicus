@@ -12,6 +12,111 @@ import packageGate from './package-gate.mjs';
 import yaml from 'js-yaml';
 import { z } from 'zod';
 
+// Story 668: Model selection based on episode history
+export function selectModel(roleName, storyType) {
+  const db = getDb();
+
+  const query = `
+    SELECT provider, model, AVG(quality_score) as avg_score, COUNT(*) as sample_count
+    FROM episodes
+    WHERE role_name = ? AND story_type = ?
+    GROUP BY provider, model
+    HAVING COUNT(*) >= 3
+    ORDER BY avg_score DESC
+    LIMIT 5
+  `;
+
+  const results = db.prepare(query).all(roleName, storyType);
+
+  if (results.length > 0) {
+    const bestResult = results[0];
+    if (bestResult.avg_score >= 0.7 && bestResult.sample_count >= 3) {
+      return {
+        provider: bestResult.provider,
+        model: bestResult.model,
+        avg_score: bestResult.avg_score,
+        sample_count: bestResult.sample_count
+      };
+    }
+  }
+
+  return null;
+}
+
+export function recordEpisodeScore(tokenId, qualityScore, notes) {
+  const db = getDb();
+
+  // Extract role_name, story_type, provider, model from token metadata
+  const tokenRow = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(tokenId);
+  if (!tokenRow) {
+    console.error(`[recordEpisodeScore] Token ${tokenId} not found`);
+    return false;
+  }
+
+  const roleName = tokenRow.role_name;
+  let storyType = null;
+  let episodeProvider = null;
+  let episodeModel = null;
+  let notesText = notes || '';
+
+  // Extract structured fields from notes if it's JSON matching story 643 format
+  if (notes) {
+    try {
+      const notesJson = JSON.parse(notes);
+      if (notesJson.story_type || notesJson.provider || notesJson.model) {
+        storyType = notesJson.story_type || null;
+        episodeProvider = notesJson.provider || null;
+        episodeModel = notesJson.model || null;
+        notesText = notesJson.notes || '';
+      }
+    } catch (e) {
+      // notes is plain text, use as-is
+    }
+  }
+
+  // Write episode with proper columns
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const episodeId = `ep_${dateStr}_${randomUUID().substring(0, 8)}`;
+
+  try {
+    db.prepare(`
+      INSERT INTO episodes
+        (episode_id, timestamp, story_id, agent, task, approach, outcome,
+         duration_ms, quality_score, revision_count, blocked_reasons,
+         files_touched, memory_ids, notes, commit_sha, embedding_id,
+         role_name, story_type, provider, model)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      episodeId,
+      new Date().toISOString(),
+      tokenRow.story_id || '',
+      'hub',
+      'model_selection',
+      'episode_analysis',
+      'recorded',
+      0,
+      qualityScore,
+      0,
+      '[]',
+      '[]',
+      '[]',
+      notesText,
+      null,
+      null,
+      roleName,
+      storyType,
+      episodeProvider,
+      episodeModel
+    );
+
+    console.log(`[recordEpisodeScore] wrote ${episodeId} for token ${tokenId}`);
+    return true;
+  } catch (e) {
+    console.error(`[recordEpisodeScore] failed to write episode for ${tokenId}:`, e.message);
+    return false;
+  }
+}
+
 class ConstitutionalViolation extends Error {
   constructor(message) {
     super(message);
@@ -329,7 +434,7 @@ export function mint(roleConfig, storyId, worktree) {
   }
 
   const ttl = roleOrgConfig.token_ttl;
-
+  const assignedProvider = roleOrgConfig.assigned_to?.provider || null;
 
   const token = {
     identity: roleConfig.identity || 'unknown',
@@ -358,7 +463,7 @@ export function mint(roleConfig, storyId, worktree) {
     issued_at: new Date(now).toISOString(),
     issued_by: roleConfig.issued_by || 'user:system',
     parent_token: roleConfig.parent_token || null,
-    notes: JSON.stringify({ notes: (roleConfig.notes || '') + ` (Contract version: ${roleVersion})`, identity: { adapter: provider } })
+    notes: JSON.stringify({ notes: (roleConfig.notes || '') + ` (Contract version: ${roleVersion})`, identity: { adapter: assignedProvider } })
   };
 
   db.prepare(`
