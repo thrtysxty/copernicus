@@ -21,7 +21,8 @@ def get_recent_commits(n=100):
 
 
 def get_story_number(path):
-    m = re.search(r'story_(\d+)', path.name)
+    # Capture full story ID including optional letter suffix (e.g. 652b, 643)
+    m = re.search(r'story_(\d+[a-z]*)', path.name)
     return m.group(1) if m else None
 
 
@@ -55,7 +56,13 @@ def run():
 
         # Match only implementation commits: feat(...) or fix(...) prefixed
         # Exclude chore/docs/refactor/dispatch-prep commits — they don't mean the story is done
-        pattern = rf'^[0-9a-f]+ (?:feat|fix)\([^)]*story[.\-_]0*{int(num)}[^)]*\)'
+        # Strip leading zeros from numeric part; require exact story-id boundary (no suffix digits/letters)
+        numeric_part = re.match(r'^(\d+)', num)
+        stripped = str(int(numeric_part.group(1))) if numeric_part else num
+        # letter suffix (e.g. 'b' in '652b') must also match exactly
+        letter_suffix = num[len(stripped):]  # '' or 'b' etc.
+        escaped_suffix = re.escape(letter_suffix)
+        pattern = rf'^[0-9a-f]+ (?:feat|fix)\([^)]*story[.\-_]0*{stripped}{escaped_suffix}(?![\da-z])[^)]*\)'
         if re.search(pattern, commits, re.IGNORECASE | re.MULTILINE):
             if mark_complete(story_file):
                 marked.append((num, story_file.name))
