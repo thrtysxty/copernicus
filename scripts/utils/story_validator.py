@@ -253,7 +253,7 @@ class StoryValidator:
         if not filename_match:
             self._add_issue(f"Could not extract story number from filename: {self.story_path}")
             return
-        
+
         filename_story_num = filename_match.group(1)
 
         content_match = re.search(r"## Story Number\s*(\d+[a-z]*)", self.story_content)

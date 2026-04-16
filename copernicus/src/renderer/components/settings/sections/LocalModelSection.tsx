@@ -4,6 +4,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { Zap, Play, Square, Cpu, Activity } from 'lucide-react';
 import log from '../../../utils/logger';
 import { unwrapIpc } from '../../../types/ipc';
+import { MLXProviderPanel } from '../../providers/MLXProviderPanel';
 
 export const LocalModelSection: React.FC = () => {
   const invoke = useIpcError();
@@ -130,6 +131,9 @@ export const LocalModelSection: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* MLX Native Inference — renders only on Apple Silicon, returns null otherwise */}
+      <MLXProviderPanel />
     </div>
   );
 };
