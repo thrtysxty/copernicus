@@ -13,8 +13,15 @@ export default defineConfig({
         entry: 'electron/main.ts',
         vite: {
           build: {
+            commonjsOptions: {
+              ignoreDynamicRequires: true,
+            },
             rollupOptions: {
-              external: ['node-pty', 'sqlite-vec', 'chokidar', 'fsevents', 'bufferutil', 'utf-8-validate'],
+              external: [
+                'node-pty', 'sqlite-vec', 'chokidar', 'fsevents', 'bufferutil', 'utf-8-validate',
+                'libsql',
+                /^@libsql\//,
+              ],
             },
           },
         },

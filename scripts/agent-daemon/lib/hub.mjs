@@ -1406,7 +1406,7 @@ export async function dispatch(tokenId) {
   let adapterName = identity.adapter;
   if (!adapterName) {
       try {
-          const { loadOrgChart, getOrgChart } = await import('../utils/doc_factory.mjs');
+          // loadOrgChart and getOrgChart are exported from this same module
           let chart;
           try { chart = getOrgChart(); } catch(e) { chart = loadOrgChart(); }
           const roleConfig = chart.roles[token.role_name];
