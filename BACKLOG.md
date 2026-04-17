@@ -130,6 +130,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
+| #685 | Extension Host Process Jsonrpc | APPROVED FOR IMPLEMENTATION | P3 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -579,13 +580,20 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
-| #624 | Abtop Agent Process Monitor Spike | DEFERRED — Phase 7 Observability Sprint | P2 |
 | #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
-| #569 | Kb Local Voting | DRAFT | P3 |
-| #682 | Upgrade Vitejs Plugin React V6 | DRAFT | P3 |
+| #569 | Kb Local Voting | DEFERRED — post-ship, backlog after toolchain and extension system | P3 |
+| #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
 | #683 | Eslint 9 Flat Config Migration | DRAFT | P3 |
-| #592 | Intelligence Sync Retarget Provider Injection | DRAFT — Awaiting story 591 merge | P2 |
+| #684 | Electron 28 To 41 Migration | DRAFT | P3 |
+| #686 | Extension Capability Manifest | DRAFT | P3 |
+| #687 | Extension Api Proxy Layer | DRAFT | P3 |
+| #688 | Extension Activation Events | DRAFT | P3 |
+| #689 | Extension Marketplace View | DRAFT | P3 |
+| #690 | Extension Development Kit | DRAFT | P3 |
+| #691 | Extension V1 V2 Migration Shim | DRAFT | P3 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
+| #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
+| #682 | Upgrade Vitejs Plugin React V6 | IN PROGRESS | P3 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

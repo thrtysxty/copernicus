@@ -484,4 +484,37 @@ Agents as first-class entities you configure, not black boxes you prompt:
 
 ---
 
+### Extension System v2 — Isolated Host
+
+Copernicus v1 extensions load in-process (trusted, no isolation). v2 moves extensions into
+a separate child process connected via JSON-RPC 2.0, adds capability-based security, lazy
+activation events, and a built-in marketplace. It's the architecture that makes third-party
+extension distribution safe.
+
+| Story | Title | What it delivers |
+|-------|-------|-----------------|
+| 685 | Extension host process + JSON-RPC protocol | Child process isolation; IDE crash-safe extension host; typed message boundary |
+| 686 | Capability manifest + approval prompt | Extensions declare filesystem/network/subprocess access; user approves on first install |
+| 687 | Extension API proxy layer | `CopernicusExtensionAPI` methods route through host boundary; capability enforcement at call time |
+| 688 | Activation events system | Extensions load on demand (`onView:`, `onCommand:`, `onWorkflowNode:`); cold start unaffected by extension count |
+| 689 | Extension marketplace view | Activity bar Extensions tab; browse npm-published extensions; install/update/remove from inside the IDE |
+| 690 | Extension Development Kit (EDK) | `create-copernicus-extension` scaffold; TypeScript types; `MockExtensionAPI` test harness |
+| 691 | v1 → v2 migration shim | `@copernicus/compat-v1` auto-wraps v1 extensions in the v2 host; zero code changes required for existing extensions |
+
+Full specification: [`docs/epics/epic_010_extension_system_v2_isolated_host.md`](docs/epics/epic_010_extension_system_v2_isolated_host.md)
+
+---
+
+### Toolchain Upgrades
+
+Deferred dependency bumps that require migration work, not just a version increment. Each is blocked behind the build gate (story 674) to guarantee a clean baseline before touching the runtime.
+
+| Story | Title | What it delivers |
+|-------|-------|-----------------|
+| 682 | `@vitejs/plugin-react` 4 → 6 | Two-major-version Vite plugin bump; picks up React 19 Fast Refresh support and current Vite 5 compatibility |
+| 683 | ESLint 9 flat config migration | `.eslintrc.json` → `eslint.config.js`; bumps `eslint-plugin-react-hooks` 4.6 → 7.0 for React 19-compatible hooks rules |
+| 684 | Electron 28 → 41 migration | Thirteen major versions of security patches, Chromium updates, and Node.js 22 LTS; full audit of deprecated APIs in `electron/` before bump |
+
+---
+
 *This roadmap reflects the active backlog as of April 2026. Story status and priority are tracked in [`docs/stories/`](docs/stories/); completed work is archived in [`docs/stories/completed/`](docs/stories/completed/).*

@@ -136,16 +136,19 @@ v1 extensions (B/C) are compatible with v2 with minimal changes:
 A `@copernicus/compat-v1` shim handles the async wrapping automatically for simple
 extensions.
 
-## Stories (not yet written)
+## Stories
 
-When this epic is actioned, break it into:
-- Extension host process + JSON-RPC protocol
-- Capability manifest + approval prompt
-- API proxy layer (mirrors v1 API, all async)
-- Activation events system
-- Extension marketplace view
-- Extension Development Kit (EDK)
-- v1 → v2 migration shim
+| Story | Title | Status |
+|-------|-------|--------|
+| 685 | Extension host process + JSON-RPC protocol | DRAFT |
+| 686 | Capability manifest + approval prompt | DRAFT |
+| 687 | Extension API proxy layer | DRAFT |
+| 688 | Activation events system | DRAFT |
+| 689 | Extension marketplace view | DRAFT |
+| 690 | Extension Development Kit (EDK) | DRAFT |
+| 691 | v1 → v2 migration shim | DRAFT |
+
+**Dependency chain:** 685 → 686 → 687 → 688 → 689 (sequential). 687 also unblocks 690 and 691 (parallel).
 
 ## Success Criteria
 - A third-party extension installed from the registry cannot read files outside the
