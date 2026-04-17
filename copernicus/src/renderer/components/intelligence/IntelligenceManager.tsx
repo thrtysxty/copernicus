@@ -95,8 +95,6 @@ const TYPE_COLORS: Record<IntelligenceDocType, { bg: string, text: string, icon:
   command: { bg: 'bg-amber-500/20', text: 'text-amber-400', icon: <Terminal size={12} /> }
 }
 
-const ALL_PROVIDERS: ProviderKey[] = ['claude', 'cursor', 'copilot', 'windsurf', 'gemini', 'aider']
-
 interface IntelligenceManagerProps {
   onClose?: () => void
 }
@@ -622,15 +620,17 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                 onBlur={handleDescBlur}
                 placeholder="Description"
               />
-              <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
                 <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mr-2">Providers:</span>
-                {ALL_PROVIDERS.map(p => {
+                {CANONICAL_PROVIDERS.map(p => {
                   const isEnabled = selectedDoc.providers.some((prov: any) => prov.provider === p)
+                  const meta = PROVIDER_METADATA[p] || { displayName: p }
                   return (
                     <button
                       key={p}
                       onClick={() => toggleProvider(selectedDoc, p)}
-                      className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-colors border ${isEnabled ? 'bg-copernicus-phosphor text-[#050505] border-copernicus-phosphor' : 'bg-zinc-900 text-zinc-600 border-zinc-800 hover:border-zinc-600'}`}
+                      title={meta.displayName}
+                      className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-colors border ${isEnabled ? 'bg-copernicus-phosphor text-[#050505] border-copernicus-phosphor rounded-none' : 'bg-zinc-900 text-zinc-600 border-zinc-800 hover:border-zinc-600'}`}
                     >
                       {p}
                     </button>

@@ -42,21 +42,8 @@ export class ProviderSyncEngine {
           fs.mkdirSync(dir, { recursive: true });
         }
 
-        if (doc.type === 'rule' && (provider === 'copilot' || provider === 'windsurf')) {
-           // append
-           const separator = '\n---\n';
-           if (fs.existsSync(fullPath)) {
-               const existing = fs.readFileSync(fullPath, 'utf8');
-               if (!existing.includes(formattedContent.trim())) {
-                 fs.appendFileSync(fullPath, separator + formattedContent);
-               }
-           } else {
-               fs.writeFileSync(fullPath, formattedContent);
-           }
-        } else {
-            // overwrite
-            fs.writeFileSync(fullPath, formattedContent);
-        }
+        // overwrite
+        fs.writeFileSync(fullPath, formattedContent);
 
         syncStatus[provider] = { status: 'synced' };
       } catch (err: any) {
@@ -89,7 +76,7 @@ export class ProviderSyncEngine {
     return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
 
-  resolvePath(docType: IntelligenceDocType, provider: ProviderKey, slug: string): string | null {
+  resolvePath(docType: IntelligenceDocType, _provider: ProviderKey, slug: string): string | null {
     if (docType === 'agent') {
       return `.copernicus/agents/${slug}/agent.yaml`;
     }
@@ -99,29 +86,21 @@ export class ProviderSyncEngine {
     }
 
     if (docType === 'rule') {
-      switch (provider) {
-        case 'claude': return `.claude/rules/${slug}.md`;
-        case 'cursor': return `.cursor/rules/${slug}.mdc`;
-        case 'copilot': return '.github/copilot-instructions.md';
-        case 'windsurf': return '.windsurfrules';
-        default: return null;
-      }
+      return `.copernicus/rules/${slug}.md`;
     }
 
     if (docType === 'skill') {
-      if (provider === 'claude') return `.claude/skills/${slug}/SKILL.md`;
-      return null;
+      return `.copernicus/skills/${slug}/skill.yaml`;
     }
 
     if (docType === 'command') {
-      if (provider === 'claude') return `.claude/commands/${slug}.md`;
-      return null;
+      return `.copernicus/commands/${slug}.md`;
     }
 
     return null;
   }
 
-  formatContent(doc: IntelligenceDocument, provider: ProviderKey): string {
+  formatContent(doc: IntelligenceDocument, _provider: ProviderKey): string {
     if (doc.type === 'agent') {
       // Serialize to agent.yaml
       const agentYaml: any = {
@@ -141,13 +120,8 @@ export class ProviderSyncEngine {
     let content = doc.content || '';
     
     if (doc.type === 'rule' && doc.pathScope && doc.pathScope.length > 0) {
-      if (provider === 'claude') {
-        const pathsStr = doc.pathScope.map(p => `  - ${p}`).join('\n');
-        content = `---\npaths:\n${pathsStr}\n---\n${content}`;
-      } else if (provider === 'cursor') {
-        const globsStr = doc.pathScope.map(p => `  - ${p}`).join('\n');
-        content = `---\nglobs:\n${globsStr}\n---\n${content}`;
-      }
+      const pathsStr = doc.pathScope.map(p => `  - ${p}`).join('\n');
+      content = `---\npaths:\n${pathsStr}\n---\n${content}`;
     }
 
     return content;

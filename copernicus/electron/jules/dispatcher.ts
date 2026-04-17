@@ -1,6 +1,7 @@
 import { stateLedger, StoryRecord, JulesSession } from '../db/state-ledger'
 import { generateJulesPrompt } from './prompt-generator'
 import { JulesClient } from './jules-client'
+import { fsManager } from '../fs-manager'
 
 export interface DispatchOptions {
   story: StoryRecord
@@ -19,7 +20,37 @@ export interface DispatchResult {
 export async function dispatchJulesSession(opts: DispatchOptions): Promise<DispatchResult> {
   const { story, repo, branch, julesClient, requirePlanApproval = false } = opts
 
-  const { text: prompt, hash: promptHash } = generateJulesPrompt(story, repo)
+  // Gather Agent Context
+  let agentContext = '';
+  try {
+    const rootPath = fsManager.getRootPath();
+    const projectId = rootPath ? (stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
+
+    // Get all docs for this project
+    const docs = stateLedger.listIntelDocs(projectId);
+
+    // Filter docs enabled for 'jules' and format them for context
+    const julesDocs = docs.filter(doc => {
+      let providers = [];
+      try {
+         providers = typeof doc.providers === 'string' ? JSON.parse(doc.providers) : (doc.providers || []);
+      } catch (e) {
+         providers = doc.providers || [];
+      }
+      return providers.some((p: any) => p.provider === 'jules');
+    });
+
+    if (julesDocs.length > 0) {
+      const parts = julesDocs.map(doc => {
+        return `### ${doc.title} (${doc.type})\n\n${doc.content || ''}`;
+      });
+      agentContext = parts.join('\n\n');
+    }
+  } catch (err) {
+    console.warn("Failed to read agent context for Jules prompt", err);
+  }
+
+  const { text: prompt, hash: promptHash } = generateJulesPrompt(story, repo, agentContext)
 
   // Dedup: if a session with this prompt hash is already running, return it
   const existing = stateLedger.getJulesSessionsByStory(story.id)
@@ -57,4 +88,3 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
     return { ok: false, error: (err as Error).message }
   }
 }
-

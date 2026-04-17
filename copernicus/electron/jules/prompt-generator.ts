@@ -20,7 +20,7 @@ function extractDocImpact(bodyMd: string): string {
   return match?.[1]?.trim() ?? ''
 }
 
-export function generateJulesPrompt(story: StoryRecord, _repo: string): GeneratedPrompt {
+export function generateJulesPrompt(story: StoryRecord, _repo: string, agentContext?: string): GeneratedPrompt {
   const storyNum = story.id.replace('story_', '')
   const branchName = `feat/${story.id}`
 
@@ -43,7 +43,7 @@ ${acceptanceCriteria}
 ## Files to Modify / Create
 
 ${docImpact || '(see Acceptance Criteria for file references)'}
-
+${agentContext ? `\n---\n\n## [AGENT CONTEXT]\n\n${agentContext}\n` : ''}
 ---
 
 ## Verification
