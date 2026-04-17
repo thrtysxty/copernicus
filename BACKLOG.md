@@ -128,7 +128,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #590 | Intelligence Agent Yaml Schema | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
-| #591 | Intelligence Soul Md Instruction Format | APPROVED FOR IMPLEMENTATION | P2 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
 | #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | APPROVED FOR IMPLEMENTATION | P1 |
@@ -483,6 +482,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #572 | Generalize Agent Monitor | COMPLETE | P1 |
 | #573 | Episodic Memory | COMPLETE | P1 |
 | #574 | Agent Selector | COMPLETE | P1 |
+| #591 | Intelligence Soul Md Instruction Format | COMPLETE | P2 |
 | #595 | Fix Ghost Tint Active States — Ux Bible §1.4 Compliance | COMPLETE | P3 |
 | #596 | Refactor Direct Stateledger.Db Access To Api Methods | COMPLETE | P2 |
 | #597 | Remove Stale Column Ids From Layout.Ts | COMPLETE | P2 |
@@ -573,8 +573,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
+| #624 | Abtop Agent Process Monitor Spike | DEFERRED — Phase 7 Observability Sprint | P2 |
 | #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
-| #624 | Abtop Agent Process Monitor Spike | DEFERRED — pending GPU box / ML350 production deployment | P2 |
 | #569 | Kb Local Voting | DRAFT | P3 |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT — Awaiting story 591 merge | P2 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
