@@ -1,0 +1,8 @@
+# Central Provider Registry — Story 676
+# This file is the source of truth for all providers and models in the Copernicus ecosystem.
+# Add new providers/models here — no code changes required.
+# User overrides: ~/.copernicus/providers.yaml (deep-merged on top of these defaults)
+#
+# STUB — full implementation in story 676
+providers: {}
+models: {}
