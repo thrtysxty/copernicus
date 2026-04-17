@@ -187,7 +187,7 @@ const LISTEN_CHANNELS = new Set([
   'editor:open',
   'agent:input', 'agent:message', 'agent:error', 'agent:code-stream',
   'layout:set-view', 'layout:toggle-flip', 'layout:toggle-spotlight', 'layout:open-palette',
-  'layout:toggle-ui-builder',
+  'layout:toggle-ui-builder', 'layout:toggle-sidebar',
   'app:ready', 'app:ready-status',
   'retro:ready', 'retro:approved', 'skills:onboarding-needed', 'skills:scaffolded',
   'models:active-changed',

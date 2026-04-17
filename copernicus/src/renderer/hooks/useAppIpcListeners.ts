@@ -106,6 +106,11 @@ export function useAppIpcListeners({
       setView(viewId as StoryboardView)
     })
 
+    const removeToggleSidebarListener = window.ipcRenderer.on('layout:toggle-sidebar', () => {
+      const state = useLayoutStore.getState()
+      state.setSidebarOpen(!state.sidebarOpen)
+    })
+
     const removeKbOpenArticleListener = window.ipcRenderer.on('kb:open-article', (_e, articleId: string) => {
       useLayoutStore.getState().setView('knowledge-base')
       useLayoutStore.getState().setActiveKbArticleId(articleId)
@@ -179,6 +184,7 @@ export function useAppIpcListeners({
       removePaletteListener()
       removeSetViewListener()
       removeReviewSession()
+      removeToggleSidebarListener()
       removeKbOpenArticleListener()
       window.removeEventListener('keydown', handleKeyDown)
     }

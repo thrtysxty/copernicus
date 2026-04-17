@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, session, globalShortcut } from 'electron'
+import { app, BrowserWindow, ipcMain, session, globalShortcut, Menu, MenuItemConstructorOptions } from 'electron'
 
 import path from 'node:path'
 import { spawn, ChildProcess } from 'node:child_process'
@@ -585,6 +585,92 @@ app.whenReady().then(async () => {
   ensureCopernicusDirectory(settingsStore, firstRunRef)
   isFirstRun = firstRunRef.current
   createWindow();
+
+  // Story 681: Native Application Menus with Keyboard Shortcuts
+  const isMac = process.platform === 'darwin'
+  const template: MenuItemConstructorOptions[] = [
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' as const },
+        { type: 'separator' as const },
+        { label: 'Preferences...', accelerator: 'CmdOrCtrl+,', click: () => { win?.webContents.send('layout:open-palette', { mode: 'settings' }) } },
+        { type: 'separator' as const },
+        { role: 'hide' as const },
+        { role: 'hideOthers' as const },
+        { role: 'unhide' as const },
+        { type: 'separator' as const },
+        { role: 'quit' as const }
+      ]
+    }] : []),
+    {
+      label: 'File',
+      submenu: [
+        { label: 'New Project…', accelerator: 'CmdOrCtrl+N', click: () => { win?.webContents.send('layout:open-genesis') } },
+        { label: 'Open Folder…', accelerator: 'CmdOrCtrl+O', click: () => { win?.webContents.send('dialog:open-folder') } },
+        { role: 'close' as const }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' as const },
+        { role: 'redo' as const },
+        { type: 'separator' as const },
+        { role: 'cut' as const },
+        { role: 'copy' as const },
+        { role: 'paste' as const },
+        { role: 'selectAll' as const },
+        { type: 'separator' as const },
+        { label: 'Find', accelerator: 'CmdOrCtrl+F', click: () => { win?.webContents.send('layout:open-palette', { mode: 'search' }) } }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { label: 'Planner', accelerator: 'CmdOrCtrl+1', click: () => { win?.webContents.send('layout:set-view', 'planner') } },
+        { label: 'Editor', accelerator: 'CmdOrCtrl+2', click: () => { win?.webContents.send('layout:set-view', 'editor') } },
+        { label: 'Designer', accelerator: 'CmdOrCtrl+3', click: () => { win?.webContents.send('layout:set-view', 'designer') } },
+        { label: 'Orchestrator', accelerator: 'CmdOrCtrl+4', click: () => { win?.webContents.send('layout:set-view', 'orchestrator') } },
+        { label: 'Telemetry', accelerator: 'CmdOrCtrl+5', click: () => { win?.webContents.send('layout:set-view', 'command-center') } },
+        { label: 'Agent Memory', accelerator: 'CmdOrCtrl+6', click: () => { win?.webContents.send('layout:set-view', 'memory') } },
+        { label: 'Reviews', accelerator: 'CmdOrCtrl+7', click: () => { win?.webContents.send('layout:set-view', 'review') } },
+        { label: 'Testing & Diagnostics', accelerator: 'CmdOrCtrl+8', click: () => { win?.webContents.send('layout:set-view', 'diagnostics') } },
+        { label: 'Source Control', accelerator: 'CmdOrCtrl+9', click: () => { win?.webContents.send('layout:set-view', 'git') } },
+        { label: 'Reporter', accelerator: 'CmdOrCtrl+0', click: () => { win?.webContents.send('layout:set-view', 'reporter') } },
+        { type: 'separator' as const },
+        { label: 'Debug', click: () => { win?.webContents.send('layout:set-view', 'debug') } },
+        { label: 'Browser', click: () => { win?.webContents.send('layout:set-view', 'browser') } },
+        { label: 'Database', click: () => { win?.webContents.send('layout:set-view', 'database') } },
+        { label: 'Agent Hub', click: () => { win?.webContents.send('layout:set-view', 'hub:org-chart') } },
+        { label: 'Knowledge Base', click: () => { win?.webContents.send('layout:set-view', 'knowledge-base') } },
+        { type: 'separator' as const },
+        // AC-4: we keep globalShortcut.register('CommandOrControl+P') below, so we use registerAccelerator: false to avoid collision
+        { label: 'Command Palette', accelerator: 'CmdOrCtrl+P', registerAccelerator: false, click: () => { win?.webContents.send('layout:open-palette', { mode: 'all' }) } },
+        { label: 'Toggle Sidebar', accelerator: 'CmdOrCtrl+B', click: () => { win?.webContents.send('layout:toggle-sidebar') } },
+        { role: 'togglefullscreen' as const }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' as const },
+        { role: 'zoom' as const },
+        { type: 'separator' as const },
+        { role: 'front' as const }
+      ]
+    },
+    {
+      role: 'help' as const,
+      submenu: [
+        ...(isMac ? [{ role: 'help' as const }] : []),
+        { label: 'Copernicus Documentation', click: async () => { const { shell } = require('electron'); await shell.openExternal('https://github.com/copernicus-ide/docs') } }
+      ]
+    }
+  ]
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+
 
   // Story 652: initialize MLX Provider
   mlxProvider.initializeWithSettings(settingsStore);
