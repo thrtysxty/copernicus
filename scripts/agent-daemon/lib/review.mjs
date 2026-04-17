@@ -3,7 +3,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { getStoryPath } from './db.mjs';
 import { getPrDiff, getPrBody } from './github.mjs';
-import { callStructured, ReviewVerdictSchema } from './llm.mjs';
+import { callStructured, ReviewVerdictSchema, resolveProviderWithFallback } from './llm.mjs';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -144,11 +144,12 @@ ${diff}
         { role: 'user', content: prompt }
     ];
 
+    const resolvedProvider = await resolveProviderWithFallback('review');
     const verdict = await callStructured({
         model: REVIEW_MODEL,
         messages: messages,
         schema: ReviewVerdictSchema,
-        provider: 'openrouter' // Use explicit provider or let it resolve
+        provider: resolvedProvider.id
     });
 
     return {

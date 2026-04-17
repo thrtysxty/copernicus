@@ -7,6 +7,106 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const DEFAULT_MAX_ITERATIONS = 10;
 
+// Story 669: Named route constants for provider isolation
+export const ROUTES = {
+  LOCAL_MLX: {
+    id: 'mlx-native',
+    baseURL: 'http://localhost:8080/v1',
+    apiKey: 'mlx',
+    cost: 'zero',
+    api: 'openai'
+  },
+  LOCAL_OLLAMA: {
+    id: 'ollama',
+    baseURL: 'http://localhost:11434/v1',
+    apiKey: 'ollama',
+    cost: 'zero',
+    api: 'openai'
+  },
+  CCR_FREE: {
+    id: 'ccr',
+    baseURL: 'http://127.0.0.1:9669',
+    apiKey: '',
+    cost: 'free',
+    api: 'openai'
+  },
+  OPENROUTER: {
+    id: 'openrouter',
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+    cost: 'paid',
+    api: 'openai'
+  }
+};
+
+// Story 669: Provider unavailable error
+export class ProviderUnavailableError extends Error {
+  constructor(intent, triedRoutes) {
+    super(`No provider available for intent '${intent}'. Tried: ${triedRoutes.join(', ')}`);
+    this.name = 'ProviderUnavailableError';
+    this.intent = intent;
+    this.triedRoutes = triedRoutes;
+  }
+}
+
+// Story 669: Check route liveness with timeout
+export async function checkRoute(routeId) {
+  const route = Object.values(ROUTES).find(r => r.id === routeId);
+  if (!route) {
+    return { alive: false, latencyMs: 0 };
+  }
+
+  const startTime = Date.now();
+  const timeoutMs = 1500;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    const response = await fetch(`${route.baseURL}/models`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: route.apiKey ? { 'Authorization': `Bearer ${route.apiKey}` } : {}
+    });
+
+    clearTimeout(timeoutId);
+    const latencyMs = Date.now() - startTime;
+
+    return { alive: response.ok, latencyMs };
+  } catch (e) {
+    return { alive: false, latencyMs: Date.now() - startTime };
+  }
+}
+
+// Story 669: Intent-based provider resolution with fallback
+export async function resolveProviderWithFallback(intent) {
+  const priorityMap = {
+    'background': ['LOCAL_OLLAMA', 'LOCAL_MLX', 'CCR_FREE'],
+    'review': ['CCR_FREE', 'LOCAL_OLLAMA', 'OPENROUTER'],
+    'coder': ['CCR_FREE', 'LOCAL_OLLAMA', 'OPENROUTER'],
+    'planning': ['CCR_FREE', 'OPENROUTER']
+  };
+
+  const routeKeys = priorityMap[intent];
+  if (!routeKeys) {
+    throw new Error(`Unknown intent: ${intent}`);
+  }
+
+  const triedRoutes = [];
+
+  for (const key of routeKeys) {
+    const route = ROUTES[key];
+    triedRoutes.push(route.id);
+
+    const check = await checkRoute(route.id);
+    if (check.alive) {
+      return route;
+    }
+  }
+
+  throw new ProviderUnavailableError(intent, triedRoutes);
+}
+
 function resolveProvider(providerName, model) {
   const home = os.homedir();
   const providersPath = path.join(home, '.copernicus', 'providers.json');

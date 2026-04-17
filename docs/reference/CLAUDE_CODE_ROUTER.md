@@ -109,6 +109,44 @@ The config supports variable interpolation:
 - `$OLLAMA_API_KEY`
 - `$ANTHROPIC_API_KEY`
 
+## Provider Route Precedence
+
+The daemon uses explicit route priorities based on task intent. Local providers are preferred over paid cloud providers.
+
+| Intent | Priority Order |
+|--------|---------------|
+| `background` | LOCAL_OLLAMA → LOCAL_MLX → CCR_FREE |
+| `review` | CCR_FREE → LOCAL_OLLAMA → OPENROUTER |
+| `coder` | CCR_FREE → LOCAL_OLLAMA → OPENROUTER |
+| `planning` | CCR_FREE → OPENROUTER |
+
+### Route Definitions
+
+```js
+const ROUTES = {
+  LOCAL_MLX:    { id: 'mlx-native',   baseURL: 'http://localhost:8080/v1',      cost: 'zero' },
+  LOCAL_OLLAMA: { id: 'ollama',        baseURL: 'http://localhost:11434/v1',   cost: 'zero' },
+  CCR_FREE:     { id: 'ccr',           baseURL: 'http://127.0.0.1:9669',       cost: 'free' },
+  OPENROUTER:   { id: 'openrouter',    baseURL: 'https://openrouter.ai/api/v1', cost: 'paid' }
+};
+```
+
+### Liveness Checks
+
+Each route is checked via `/v1/models` with a 1500ms timeout before dispatch. If no route is alive, `ProviderUnavailableError` is thrown with the intent and tried routes listed — never silent fallthrough to paid providers.
+
+### Checking Infrastructure
+
+```bash
+# Check CCR, Ollama, and MLX availability
+python scripts/check_infra.py
+
+# JSON output for automation
+python scripts/check_infra.py --json
+```
+
+Exit code 0 if CCR and Ollama are both alive; exit code 1 otherwise.
+
 ## Presets
 
 Export for team sharing:
