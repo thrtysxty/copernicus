@@ -130,7 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #624 | Abtop Agent Process Monitor Spike | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
-| #683 | Eslint 9 Flat Config Migration | APPROVED FOR IMPLEMENTATION | P3 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -562,6 +561,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #680 | User Manual Workflow Narratives | COMPLETE | P1 |
 | #681 | Native App Menus Keyboard Shortcuts | COMPLETE | P1 |
 | #682 | Upgrade Vitejs Plugin React V6 | COMPLETE | P3 |
+| #683 | Eslint 9 Flat Config Migration | COMPLETE | P3 |
 | #685 | Extension Host Process Jsonrpc | COMPLETE | P3 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
