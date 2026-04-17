@@ -3,6 +3,13 @@ from flask import request, jsonify
 import os
 
 def require_auth(f):
+    """
+    Authentication middleware for protecting backend routes.
+
+    Note: codebase-memory-mcp graph incorrectly reported zero inbound callers
+    for this function. It is actively used to decorate routes in stories.py,
+    notebooklm.py, settings.py, llm.py, and agents.py.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         expected_key = os.environ.get('COPERNICUS_API_KEY')

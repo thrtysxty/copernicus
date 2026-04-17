@@ -122,6 +122,7 @@ def generate_docs(request_data: GenerateDocsRequest):
             
     return jsonify({"error": "Invalid status for documentation generation"}), 400
 
+# TODO(story-227): not yet wired
 @docs_bp.route('/visual-audit', methods=['POST'])
 def visual_audit():
     # Placeholder for Story 227 AC-5

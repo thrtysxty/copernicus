@@ -35,10 +35,12 @@ def request_confirmation(request_data: ModelSwitchRequest):
     
     return jsonify({"approved": result}), 200
 
+# TODO(story-228): not yet wired
 @orchestration_bp.route('/pending-confirmations', methods=['GET'])
 def get_pending():
     return jsonify(pending_confirmations), 200
 
+# TODO(story-228): not yet wired
 @orchestration_bp.route('/resolve-confirmation', methods=['POST'])
 @validate(ResolveConfirmationRequest)
 def resolve_confirmation(request_data: ResolveConfirmationRequest):

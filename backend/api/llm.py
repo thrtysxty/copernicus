@@ -2,7 +2,6 @@ import os
 import json
 import logging
 logger = logging.getLogger(__name__)
-import subprocess
 from flask import Blueprint, request, Response, stream_with_context, jsonify
 from backend.middleware.auth import require_auth
 from backend.limiter import limiter
@@ -61,16 +60,3 @@ def chat(request_data: ChatRequest):
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
-@llm_bp.route('/context/git', methods=['GET'])
-@require_auth
-def get_git_context():
-    """Returns repository context: git status and file list."""
-    try:
-        status = subprocess.check_output(["git", "status", "--short"], text=True).strip() or "Clean"
-        files = subprocess.check_output(["git", "ls-files"], text=True).strip().split("\n")[:50]
-        return jsonify({
-            "status": status,
-            "files": files
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500

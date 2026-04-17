@@ -77,9 +77,16 @@ def handle_custom_error(error: AppError):
     """Handle AppError using the centralized handler."""
     return handle_app_error(error)
 
+from werkzeug.exceptions import HTTPException
+
 @app.errorhandler(Exception)
 def handle_generic_error(error: Exception):
     """Catch-all handler for unhandled exceptions."""
+    if isinstance(error, HTTPException):
+        return {
+            "ok": False,
+            "error": error.name,
+        }, error.code
     logger.exception("Unhandled exception occurred: %s", str(error))
     return {
         "ok": False,
