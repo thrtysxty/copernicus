@@ -128,9 +128,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #590 | Intelligence Agent Yaml Schema | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
-| #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
+| #624 | Abtop Agent Process Monitor Spike | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
-| #685 | Extension Host Process Jsonrpc | APPROVED FOR IMPLEMENTATION | P3 |
+| #683 | Eslint 9 Flat Config Migration | APPROVED FOR IMPLEMENTATION | P3 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -514,6 +514,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #630 | Agent Browser — In-Session Ui Verification Mcp | COMPLETE | P1 |
 | #631 | Genai Toolbox — Database Mcp For Agent Intelligence | COMPLETE | P2 |
 | #632 | Agent Socket Bus — Real-Time Inter-Agent Communication Layer | COMPLETE | P1 |
+| #633 | Harbor-Style Containerized Agent Sandboxing | COMPLETE | P2 |
 | #634 | Agent Hub — Token Schema And Core Interface | COMPLETE | P1 |
 | #635 | Agent Hub — State Store Loop Controller And Story Queue | COMPLETE | P1 |
 | #636 | Agent Hub — Role Contract Schema | COMPLETE | P1 |
@@ -561,6 +562,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #680 | User Manual Workflow Narratives | COMPLETE | P1 |
 | #681 | Native App Menus Keyboard Shortcuts | COMPLETE | P1 |
 | #682 | Upgrade Vitejs Plugin React V6 | COMPLETE | P3 |
+| #685 | Extension Host Process Jsonrpc | COMPLETE | P3 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -583,8 +585,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
 | #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
 | #569 | Kb Local Voting | DEFERRED — post-ship, backlog after toolchain and extension system | P3 |
-| #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
-| #683 | Eslint 9 Flat Config Migration | DRAFT | P3 |
 | #684 | Electron 28 To 41 Migration | DRAFT | P3 |
 | #686 | Extension Capability Manifest | DRAFT | P3 |
 | #687 | Extension Api Proxy Layer | DRAFT | P3 |
