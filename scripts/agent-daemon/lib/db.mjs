@@ -197,6 +197,24 @@ export function getDb() {
   `);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS hub_contract_proposals (
+      proposal_id   TEXT PRIMARY KEY,
+      created_at    TEXT NOT NULL,
+      proposed_by   TEXT NOT NULL,
+      role_name     TEXT NOT NULL,
+      current_hash  TEXT NOT NULL,
+      proposed_diff TEXT NOT NULL,
+      rationale     TEXT NOT NULL,
+      evidence      TEXT NOT NULL,
+      state         TEXT NOT NULL DEFAULT 'PENDING',
+      reviewed_by   TEXT,
+      reviewed_at   TEXT,
+      applied_at    TEXT,
+      notes         TEXT
+    )
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS episodes (
         episode_id     TEXT PRIMARY KEY,
         timestamp      TEXT NOT NULL,

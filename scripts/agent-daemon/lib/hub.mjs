@@ -1708,3 +1708,168 @@ export function reconcileStoryState() {
     console.error('Failed to reconcile story state:', e);
   }
 }
+
+// ── Story 648: Contract Proposal Authority Chain ──────────────────────────────
+
+/**
+ * AC-2: Submit a contract amendment proposal.
+ * Only meta-agent tokens (role_name='meta-agent') may submit.
+ * Diffs touching authority_level or class are rejected as constitutional amendments.
+ */
+export function submitContractProposal(proposal) {
+  const db = getDb();
+
+  // Validate proposing token is a meta-agent
+  const token = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(proposal.proposed_by);
+  if (!token || token.role_name !== 'meta-agent') {
+    throw new ConstitutionalViolation(
+      `submitContractProposal: proposing token '${proposal.proposed_by}' is not a meta-agent token`
+    );
+  }
+
+  // Constitutional guard: diff must not touch authority_level or class lines
+  const forbiddenPatterns = [/^\+.*authority_level\s*:/, /^\+.*\bclass\s*:/];
+  for (const line of (proposal.proposed_diff || '').split('\n')) {
+    for (const pattern of forbiddenPatterns) {
+      if (pattern.test(line)) {
+        throw new ConstitutionalViolation(
+          `submitContractProposal: proposed diff touches a constitutional field (authority_level or class)`
+        );
+      }
+    }
+  }
+
+  const proposalId = 'prop_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+  const createdAt = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO hub_contract_proposals
+      (proposal_id, created_at, proposed_by, role_name, current_hash, proposed_diff, rationale, evidence, state)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
+  `).run(
+    proposalId,
+    createdAt,
+    proposal.proposed_by,
+    proposal.role_name,
+    proposal.current_hash || '',
+    proposal.proposed_diff,
+    proposal.rationale,
+    typeof proposal.evidence === 'string' ? proposal.evidence : JSON.stringify(proposal.evidence || [])
+  );
+
+  logEvent(db, proposal.proposed_by, 'contract:proposal_ready', {
+    proposal_id: proposalId,
+    role_name: proposal.role_name,
+    rationale: proposal.rationale
+  }, true, 'Contract amendment proposal submitted by meta-agent');
+
+  return { proposal_id: proposalId };
+}
+
+/**
+ * AC-3: Approve a proposal. approvedBy must be 'user:<username>' (authority_level 5).
+ * Applies the unified diff to the role contract file and reloads the contract.
+ * Constitutional fields are double-checked at application time.
+ */
+export function approveProposal(proposalId, approvedBy) {
+  if (!approvedBy || !approvedBy.startsWith('user:')) {
+    throw new ConstitutionalViolation(
+      `approveProposal: approvedBy '${approvedBy}' is not a user identity (must start with 'user:')`
+    );
+  }
+
+  const db = getDb();
+  const proposal = db.prepare('SELECT * FROM hub_contract_proposals WHERE proposal_id = ?').get(proposalId);
+  if (!proposal) throw new Error(`Proposal not found: ${proposalId}`);
+  if (proposal.state !== 'PENDING') throw new Error(`Proposal ${proposalId} is not PENDING (state: ${proposal.state})`);
+
+  // Constitutional guard at application time
+  const forbiddenPatterns = [/^\+.*authority_level\s*:/, /^\+.*\bclass\s*:/];
+  for (const line of (proposal.proposed_diff || '').split('\n')) {
+    for (const pattern of forbiddenPatterns) {
+      if (pattern.test(line)) {
+        throw new ConstitutionalViolation(
+          `approveProposal: diff touches a constitutional field — approval blocked`
+        );
+      }
+    }
+  }
+
+  // Apply the unified diff to the contract file
+  const contractFilePath = path.join(ROLES_DIR, `${proposal.role_name}.yaml`);
+  if (!fs.existsSync(contractFilePath)) {
+    throw new Error(`Contract file not found for role '${proposal.role_name}': ${contractFilePath}`);
+  }
+
+  const currentLines = fs.readFileSync(contractFilePath, 'utf8').split('\n');
+  const patchLines = proposal.proposed_diff.split('\n');
+  const outputLines = [...currentLines];
+  let outputIdx = 0;
+
+  for (const patchLine of patchLines) {
+    if (patchLine.startsWith('@@')) {
+      const match = patchLine.match(/@@ -(\d+)/);
+      if (match) outputIdx = parseInt(match[1], 10) - 1;
+    } else if (patchLine.startsWith('-')) {
+      if (outputIdx < outputLines.length) outputLines.splice(outputIdx, 1);
+    } else if (patchLine.startsWith('+')) {
+      outputLines.splice(outputIdx, 0, patchLine.slice(1));
+      outputIdx++;
+    } else if (!patchLine.startsWith('\\')) {
+      outputIdx++;
+    }
+  }
+
+  fs.writeFileSync(contractFilePath, outputLines.join('\n'), 'utf8');
+
+  let reloadConfirmed = false;
+  try {
+    loadContract(proposal.role_name);
+    reloadConfirmed = true;
+  } catch (e) {
+    console.warn(`[hub] approveProposal: contract reload failed after apply: ${e.message}`);
+  }
+
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE hub_contract_proposals
+    SET state='APPROVED', reviewed_by=?, reviewed_at=?, applied_at=?, notes=?
+    WHERE proposal_id=?
+  `).run(approvedBy, now, now, 'Approved and applied by ' + approvedBy, proposalId);
+
+  logEvent(db, proposal.proposed_by, 'contract:amended', {
+    proposal_id: proposalId,
+    role_name: proposal.role_name,
+    approved_by: approvedBy,
+    diff: proposal.proposed_diff
+  }, true, `Contract amended by ${approvedBy}`);
+
+  return { success: true, contract_path: contractFilePath, reload_confirmed: reloadConfirmed };
+}
+
+/**
+ * AC-4: Reject a proposal. Sets state=REJECTED, writes rejection event.
+ * Does not modify any contract file.
+ */
+export function rejectProposal(proposalId, rejectedBy, reason) {
+  const db = getDb();
+  const proposal = db.prepare('SELECT * FROM hub_contract_proposals WHERE proposal_id = ?').get(proposalId);
+  if (!proposal) throw new Error(`Proposal not found: ${proposalId}`);
+  if (proposal.state !== 'PENDING') throw new Error(`Proposal ${proposalId} is not PENDING (state: ${proposal.state})`);
+
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE hub_contract_proposals
+    SET state='REJECTED', reviewed_by=?, reviewed_at=?, notes=?
+    WHERE proposal_id=?
+  `).run(rejectedBy || 'unknown', now, reason || 'No reason provided', proposalId);
+
+  logEvent(db, proposal.proposed_by, 'contract:proposal_rejected', {
+    proposal_id: proposalId,
+    role_name: proposal.role_name,
+    rejected_by: rejectedBy,
+    reason
+  }, false, `Proposal rejected: ${reason || 'no reason'}`);
+
+  return { success: true };
+}

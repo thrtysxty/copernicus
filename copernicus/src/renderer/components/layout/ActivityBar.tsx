@@ -138,6 +138,7 @@ export const ActivityBar: React.FC = () => {
         <NavItem id="browser" icon={Globe} label="Browser" testId="nav-browser" />
         <NavItem id="database" icon={Database} label="Database" testId="nav-database" />
         <NavItem id="hub:org-chart" icon={Users} label="Agent Hub" testId="nav-agent-hub" />
+        <NavItem id="hub:contract-proposals" icon={Users} label="Proposals" testId="nav-contract-proposals" />
       </div>
 
       <div className="flex-1" />

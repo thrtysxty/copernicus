@@ -129,7 +129,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #590 | Intelligence Agent Yaml Schema | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
-| #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
 | #677 | Dead Backend Code Audit | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -529,6 +528,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #645 | Agent Hub — Ccr Adapter | COMPLETE | P1 |
 | #646 | Agent Hub — Org Chart Ui | COMPLETE | P2 |
 | #647 | Agent Hub — Hub Ledger View | COMPLETE | P2 |
+| #648 | Agent Hub — Self-Improvement Loop Integration | COMPLETE | P2 |
 | #649 | Package Age Gate — Supply Chain Security For Agent-Driven Installs | COMPLETE | P1 |
 | #650 | Github Repo Hygiene And Onboarding Readiness | COMPLETE | P1 |
 | #651 | Ship-Ready Defaults And Gemma4 Configuration Guide | COMPLETE | P1 |

@@ -48,6 +48,7 @@ import { ReviewPanel } from './components/review/ReviewPanel'
 import { BrowserPanel } from './components/browser/BrowserPanel'
 import DatabasePanel from './components/database/DatabasePanel'
 import { OrgChartPanel } from './components/hub/OrgChartPanel'
+import { ContractProposalPanel } from './components/hub/ContractProposalPanel'
 
 
 const TERMINAL_HEIGHT = 200
@@ -412,6 +413,7 @@ export default function App() {
             {activeView === 'browser' && <BrowserPanel />}
             {activeView === 'database' && <DatabasePanel />}
             {activeView === 'hub:org-chart' && <OrgChartPanel />}
+            {activeView === 'hub:contract-proposals' && <ContractProposalPanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
 
               <>

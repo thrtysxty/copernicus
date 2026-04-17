@@ -1,14 +1,43 @@
 import { ipcMain, app } from 'electron';
 import { handleIpc } from '../utils/handle-ipc';
 // @ts-ignore
-import { syncUserAction, getOrgChart, updateRole, listActiveTokens } from '../../../scripts/agent-daemon/lib/hub.mjs';
+import { syncUserAction, getOrgChart, updateRole, listActiveTokens, approveProposal, rejectProposal } from '../../../scripts/agent-daemon/lib/hub.mjs';
 import { createClient } from '@libsql/client';
+import os from 'os';
 import path from 'node:path';
 
 const _getJulesClient = () =>
   createClient({ url: 'file:' + path.join(app.getPath('userData'), 'jules.db') });
 
 export function registerHubHandlers() {
+  ipcMain.handle('hub:get-proposals', (_event, { state }: { state?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL' } = {}) =>
+    handleIpc('hub:get-proposals', [{ state }], async () => {
+      const client = _getJulesClient();
+      let query = 'SELECT * FROM hub_contract_proposals ORDER BY created_at DESC';
+      const result = await client.execute({ sql: query, args: [] });
+      const proposals = result.rows as any[];
+
+      const pending = proposals.filter(p => p.state === 'PENDING');
+      const history = proposals.filter(p => p.state === 'APPROVED' || p.state === 'REJECTED');
+
+      return { pending, history };
+    })
+  );
+
+  ipcMain.handle('hub:approve-proposal', (_event, { proposalId }: { proposalId: string }) =>
+    handleIpc('hub:approve-proposal', [{ proposalId }], async () => {
+      await approveProposal(proposalId, 'user:' + os.userInfo().username);
+      return { success: true };
+    })
+  );
+
+  ipcMain.handle('hub:reject-proposal', (_event, { proposalId, reason }: { proposalId: string, reason: string }) =>
+    handleIpc('hub:reject-proposal', [{ proposalId, reason }], async () => {
+      await rejectProposal(proposalId, 'user:' + os.userInfo().username, reason);
+      return { success: true };
+    })
+  );
+
   ipcMain.handle('org-chart:get-config', () =>
     handleIpc('org-chart:get-config', [], () => {
       return getOrgChart();
