@@ -1,2 +1,20 @@
-// Story 685 — Extension Host Process + JSON-RPC Protocol
-// Stub: extension host entry point (runs as child process) — implementation by Jules
+import os from 'node:os'
+import path from 'node:path'
+import { ExtensionHostRuntime } from './ExtensionHostRuntime'
+
+const extensionsDir = path.join(os.homedir(), '.copernicus', 'extensions')
+
+const runtime = new ExtensionHostRuntime(extensionsDir)
+
+process.on('message', (_msg) => {
+  // Currently unused, handle incoming messages here later
+});
+
+async function main() {
+  await runtime.loadAll()
+}
+
+main().catch((err) => {
+  console.error('Host failed to start', err)
+  process.exit(1)
+})

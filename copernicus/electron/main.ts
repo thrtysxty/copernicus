@@ -51,6 +51,7 @@ import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
 import { jsonlExporter } from './memory/jsonl-exporter'
 import { memoryService } from './memory/memoryService'
+import { ExtensionHostManager } from './extensions/ExtensionHostManager'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -78,6 +79,7 @@ export let win: BrowserWindow | null
 let isFirstRun = false;
 let touchBarCleanup: { remove: () => void } | null = null
 let worktreeManager: WorktreeManager | null = null
+let extensionHostManager: ExtensionHostManager | null = null
 let ipcCleanupFns: {
   cleanupTestHandlers: () => void
   cleanupReplayHandlers: () => void
@@ -674,6 +676,9 @@ app.whenReady().then(async () => {
 
   // Story 652: initialize MLX Provider
   mlxProvider.initializeWithSettings(settingsStore);
+
+  extensionHostManager = new ExtensionHostManager()
+  extensionHostManager.start()
 
   if (worktreeManager && win) {
     worktreeManager.startPolling(win);
