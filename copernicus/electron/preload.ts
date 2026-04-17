@@ -112,8 +112,6 @@ const SEND_CHANNELS = new Set([
   'jules:dispatch-session', 'jules:list-sessions', 'jules:story-sessions', 'jules:retry-session', 'jules:list-sources', 'jules:approve-plan', 'jules:list-activities',
   // Local Model (Story 361)
   'localmodel:start', 'localmodel:stop', 'localmodel:status', 'localmodel:is-cached',
-  // Gemini PTY agent (Story 195)
-  'gemini:spawn', 'gemini:send-prompt', 'gemini:close', 'gemini:status',
   // Touch Bar
   'touchbar:rebuild',
   // Command Center (Story 184)
@@ -204,8 +202,6 @@ const LISTEN_CHANNELS = new Set([
   'ledger:stats-update',
   // Jules live session updates (pushed by jules/monitor.ts)
   'jules:session-update',
-  // Gemini PTY output (pushed by GeminiAgent)
-  'gemini:output',
   // LSP diagnostics (Story 176 + 189)
   'lsp:diagnostics-update',
   // Story 615 prep: LSP status changes

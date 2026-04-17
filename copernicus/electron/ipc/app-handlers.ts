@@ -483,7 +483,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('env:scan', () => handleIpc('env:scan', [], async () => {
     const check = async (bin: string): Promise<{ found: boolean; version?: string }> => {
       try {
-        const ALLOWED_BINS = ['git', 'node', 'python3', 'gemini', 'npm', 'npx', 'make', 'bun', 'gh', 'curl']
+        const ALLOWED_BINS = ['git', 'node', 'python3', 'npm', 'npx', 'make', 'bun', 'gh', 'curl']
         if (!ALLOWED_BINS.includes(bin)) throw new Error(`Disallowed binary: ${bin}`)
         const { stdout } = await execFileAsync(bin, ['--version'], { timeout: 3000, shell: false })
         const v = stdout.toString().trim()
@@ -597,7 +597,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('check-cli-tools', () => handleIpc('check-cli-tools', [], async () => {
-    const tools = ['claude', 'gemini', 'git', 'node'];
+    const tools = ['claude', 'git', 'node'];
     const results: Record<string, boolean> = {};
     const cmd = process.platform === 'win32' ? 'where' : 'which';
     const extraPaths = [

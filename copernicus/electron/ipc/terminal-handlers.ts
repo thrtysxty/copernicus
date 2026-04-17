@@ -3,7 +3,6 @@ import os from 'node:os'
 import { execFile } from 'node:child_process'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
-import { GeminiAgent } from '../agents/gemini-agent'
 import { assertSafePath } from '../utils/path-guard'
 
 import { IpcHandlerDeps } from './deps'
@@ -181,48 +180,4 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     });
   }));
 
-  // ── Gemini PTY Agent (Story 195) ──────────────────────────────────────────
-  const geminiAgents = new Map<string, GeminiAgent>()
-
-  ipcMain.handle('gemini:spawn', (_e, opts: { cwd: string }) => handleIpc('gemini:spawn', [opts], async () => {
-      let spawnCwd: string
-      try {
-        spawnCwd = opts.cwd ? assertSafePath(opts.cwd) : fsManager.getRootPath()
-      } catch {
-        spawnCwd = fsManager.getRootPath()
-      }
-      const agent = new GeminiAgent({
-        cwd: spawnCwd,
-        onOutput: (chunk) => {
-          win?.webContents.send('gemini:output', { sessionId: agent.sessionId, chunk })
-        },
-      })
-      await agent.spawn()
-      geminiAgents.set(agent.sessionId, agent)
-      agent.on('exit', () => geminiAgents.delete(agent.sessionId))
-      return { sessionId: agent.sessionId }
-    })
-  )
-
-  ipcMain.handle('gemini:send-prompt', (_e, { sessionId, text }: { sessionId: string; text: string }) => handleIpc('gemini:send-prompt', [{ sessionId, text }], async () => {
-      const agent = geminiAgents.get(sessionId)
-      if (!agent) throw new Error(`No Gemini session: ${sessionId}`)
-      const response = await agent.sendPrompt(text)
-      return { response }
-    })
-  )
-
-  ipcMain.handle('gemini:close', (_e, sessionId: string) => handleIpc('gemini:close', [sessionId], () => {
-      geminiAgents.get(sessionId)?.close()
-      geminiAgents.delete(sessionId)
-      return null
-    })
-  )
-
-  ipcMain.handle('gemini:status', () =>
-    handleIpc(async () => ({
-      available: await GeminiAgent.isAvailable(),
-      activeSessions: Array.from(geminiAgents.keys()),
-    }))
-  )
 }

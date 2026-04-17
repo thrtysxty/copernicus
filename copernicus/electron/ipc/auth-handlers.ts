@@ -2,7 +2,6 @@ import { ipcMain, BrowserWindow, shell } from 'electron'
 import { createServer } from 'node:http'
 import { randomBytes, createHash } from 'node:crypto'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import { handleIpc } from '../utils/handle-ipc'
 
@@ -119,17 +118,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         try {
           const { access_token, email } = await exchangeGoogleToken(code, verifier, clientId)
           await authManager.storeApiKey('google', access_token, undefined, 'oauth', { email })
-
-          const geminiDir = path.join(os.homedir(), '.gemini')
-          if (!fs.existsSync(geminiDir)) await fs.promises.mkdir(geminiDir, { recursive: true })
-          const geminiCreds = {
-            access_token,
-            client_id: clientId,
-            token_type: 'Bearer',
-            expiry: new Date(Date.now() + 3600 * 1000).toISOString(),
-            email
-          }
-          await fs.promises.writeFile(path.join(geminiDir, 'oauth_creds.json'), JSON.stringify(geminiCreds, null, 2))
 
           win?.webContents.send('oauth:google-complete', { ok: true, email })
           if (win) { win.show(); win.focus(); }

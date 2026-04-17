@@ -63,8 +63,8 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
 
     // Review
     ipcMain.handle('review:log'
-, (_event, { verdicts }: { verdicts: { claude: string; gemini: string } }) => handleIpc('review:log', [{ verdicts }], () => {
-    deps.stateLedger.logIntent(`REVIEW: [Claude: ${verdicts.claude}] [Gemini: ${verdicts.gemini}]`, 'COMPLETED', 'sentinel')
+, (_event, { verdicts }: { verdicts: { claude: string; [key: string]: string } }) => handleIpc('review:log', [{ verdicts }], () => {
+    deps.stateLedger.logIntent(`REVIEW: [Claude: ${verdicts.claude}]`, 'COMPLETED', 'sentinel')
     return true
   }))
 
