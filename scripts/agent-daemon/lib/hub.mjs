@@ -11,6 +11,7 @@ import packageGate from './package-gate.mjs';
 
 import yaml from 'js-yaml';
 import { z } from 'zod';
+import { getProvider, getModel, loadRegistry } from './providers.mjs';
 
 // Story 668: Model selection based on episode history
 export function selectModel(roleName, storyType) {
@@ -31,12 +32,20 @@ export function selectModel(roleName, storyType) {
   if (results.length > 0) {
     const bestResult = results[0];
     if (bestResult.avg_score >= 0.7 && bestResult.sample_count >= 3) {
-      return {
-        provider: bestResult.provider,
-        model: bestResult.model,
-        avg_score: bestResult.avg_score,
-        sample_count: bestResult.sample_count
-      };
+      try {
+        getProvider(bestResult.provider);
+        getModel(bestResult.model);
+
+        return {
+          provider: bestResult.provider,
+          model: bestResult.model,
+          avg_score: bestResult.avg_score,
+          sample_count: bestResult.sample_count
+        };
+      } catch (e) {
+        console.warn(`[selectModel] Episode references unknown provider/model: ${e.message} — falling back to null`);
+        return null; // caller falls back to default selection
+      }
     }
   }
 
@@ -348,18 +357,15 @@ export function loadOrgChart() {
 
   if (isAppleSilicon && !hasCloudKeys) {
     try {
-      const mlxModelsPath = join(dirname(fileURLToPath(import.meta.url)), '../defaults/mlx-models.yaml');
-      if (fs.existsSync(mlxModelsPath)) {
-        const mlxYaml = fs.readFileSync(mlxModelsPath, 'utf8');
-        const parsedMlx = yaml.load(mlxYaml);
+      const mlxModels = getModelsForProvider('mlx-native');
 
-        if (parsedMlx && parsedMlx.models) {
-          const roleHintMap = {};
-          for (const m of parsedMlx.models) {
-             if (m.role_hint) {
-               roleHintMap[m.role_hint] = m.id;
-             }
-          }
+      if (mlxModels && mlxModels.length > 0) {
+        const roleHintMap = {};
+        for (const m of mlxModels) {
+           if (m.role_hint) {
+             roleHintMap[m.role_hint] = m.id;
+           }
+        }
 
           const targetRoles = [
             { role: 'coder', hint: 'coder' },
@@ -382,7 +388,6 @@ export function loadOrgChart() {
               }
             }
           }
-        }
       }
     } catch (e) {
       console.warn('[hub] Failed to apply Apple Silicon MLX defaults:', e.message);

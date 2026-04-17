@@ -1,14 +1,4 @@
-# MLX default models — Apple Silicon (Story 652)
-models:
-  - id: mlx-community/gemma-2-2b-it-4bit
-    role_hint: guide
-    size_gb: 1.5
-  - id: mlx-community/Qwen2.5-Coder-7B-Instruct-4bit
-    role_hint: coder
-    size_gb: 4.3
-  - id: mlx-community/Mistral-7B-Instruct-v0.3-4bit
-    role_hint: general
-    size_gb: 4.1
-  - id: mlx-community/DeepSeek-R1-Distill-Qwen-7B-4bit
-    role_hint: reviewer
-    size_gb: 4.3
+# MIGRATED — model definitions have moved to providers.yaml (story 676).
+# This file is retained as an empty stub to avoid breaking any readers.
+# Do not add new entries here.
+models: []

@@ -4,39 +4,16 @@ import os from 'os';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getProvider } from './providers.mjs';
 
 const DEFAULT_MAX_ITERATIONS = 10;
 
-// Story 669: Named route constants for provider isolation
+// Story 676: Named route constants for provider isolation, derived from registry
 export const ROUTES = {
-  LOCAL_MLX: {
-    id: 'mlx-native',
-    baseURL: 'http://localhost:8080/v1',
-    apiKey: 'mlx',
-    cost: 'zero',
-    api: 'openai'
-  },
-  LOCAL_OLLAMA: {
-    id: 'ollama',
-    baseURL: 'http://localhost:11434/v1',
-    apiKey: 'ollama',
-    cost: 'zero',
-    api: 'openai'
-  },
-  CCR_FREE: {
-    id: 'ccr',
-    baseURL: 'http://127.0.0.1:9669',
-    apiKey: '',
-    cost: 'free',
-    api: 'openai'
-  },
-  OPENROUTER: {
-    id: 'openrouter',
-    baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY || '',
-    cost: 'paid',
-    api: 'openai'
-  }
+  LOCAL_MLX:    getProvider('mlx-native'),
+  LOCAL_OLLAMA: getProvider('local-ollama'),
+  CCR_FREE:     getProvider('ccr'),
+  OPENROUTER:   getProvider('openrouter'),
 };
 
 // Story 669: Provider unavailable error

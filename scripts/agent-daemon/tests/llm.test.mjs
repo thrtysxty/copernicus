@@ -15,7 +15,7 @@ test('ROUTES.LOCAL_MLX has correct port 8080', () => {
 });
 
 test('ROUTES.LOCAL_OLLAMA has correct port 11434', () => {
-  assert.strictEqual(ROUTES.LOCAL_OLLAMA.id, 'ollama');
+  assert.strictEqual(ROUTES.LOCAL_OLLAMA.id, 'local-ollama');
   assert.strictEqual(ROUTES.LOCAL_OLLAMA.baseURL, 'http://localhost:11434/v1');
   assert.strictEqual(ROUTES.LOCAL_OLLAMA.cost, 'zero');
   assert.strictEqual(ROUTES.LOCAL_OLLAMA.api, 'openai');
@@ -85,7 +85,7 @@ test('resolveProviderWithFallback tries routes in priority order', async () => {
     assert.strictEqual(e.intent, 'background');
     assert.ok(Array.isArray(e.triedRoutes));
     // Background intent tries OLLAMA, MLX, CCR
-    assert.ok(e.triedRoutes.includes('ollama'));
+    assert.ok(e.triedRoutes.includes('local-ollama'));
     assert.ok(e.triedRoutes.includes('mlx-native'));
     assert.ok(e.triedRoutes.includes('ccr'));
   }
@@ -99,7 +99,7 @@ test('resolveProviderWithFallback review intent has correct priority', async () 
       // Review tries CCR, then OLLAMA, then OPENROUTER
       const routes = e.triedRoutes;
       assert.ok(routes.includes('ccr'));
-      assert.ok(routes.includes('ollama'));
+      assert.ok(routes.includes('local-ollama'));
       assert.ok(routes.includes('openrouter'));
     }
   }
@@ -115,7 +115,7 @@ test('resolveProviderWithFallback planning intent has correct priority', async (
       assert.ok(routes.includes('ccr'));
       assert.ok(routes.includes('openrouter'));
       // Planning should NOT try OLLAMA or MLX
-      assert.ok(!routes.includes('ollama'), 'Planning should not try OLLAMA');
+      assert.ok(!routes.includes('local-ollama'), 'Planning should not try OLLAMA');
       assert.ok(!routes.includes('mlx-native'), 'Planning should not try MLX');
     }
   }
