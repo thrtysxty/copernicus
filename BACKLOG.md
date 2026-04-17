@@ -130,8 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
-| #672 | Launch Readiness User And Technical Documentation Audit | APPROVED FOR IMPLEMENTATION | P1 |
-| #673 | Launch Readiness Repo State Verification And Build Testing | APPROVED FOR IMPLEMENTATION | P1 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
@@ -553,6 +551,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | COMPLETE | P1 |
 | #670 | Hub Handlers Ts Migrate Getdb Calls From Better Sqlite3 To Libsql | COMPLETE | P1 |
 | #671 | Story Validator Py Reduce Typescript Type Spot Check False Positives | COMPLETE | P3 |
+| #672 | Launch Readiness User And Technical Documentation Audit | COMPLETE | P1 |
+| #673 | Launch Readiness Repo State Verification And Build Testing | COMPLETE | P1 |
 | #676 | Central Provider Registry | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
