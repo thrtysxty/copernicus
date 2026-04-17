@@ -128,6 +128,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #590 | Intelligence Agent Yaml Schema | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
+| #591 | Intelligence Soul Md Instruction Format | APPROVED FOR IMPLEMENTATION | P2 |
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
 | #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | APPROVED FOR IMPLEMENTATION | P1 |
@@ -577,7 +578,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #569 | Kb Local Voting | DRAFT | P3 |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT — Awaiting story 591 merge | P2 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
-| #591 | Intelligence Soul Md Instruction Format | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
