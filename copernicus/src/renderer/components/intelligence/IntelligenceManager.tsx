@@ -8,6 +8,84 @@ import { IntelligenceSuggestBanner } from './IntelligenceSuggestBanner'
 import { NotebookLMSection } from './NotebookLMSection'
 import { CANONICAL_PROVIDERS, PROVIDER_METADATA } from '../wizard/providerRegistry'
 
+
+function parseSoulMd(content: string) {
+  const result = {
+    agentName: '',
+    description: '',
+    communicationStyle: '',
+    coreValues: [] as string[],
+    expertiseAreas: [] as string[]
+  };
+
+  if (!content) return result;
+
+  const lines = content.split('\n');
+  let currentSection = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]?.trim();
+    if (line === undefined) continue;
+    if (!line) continue;
+
+    if (line.startsWith('# ')) {
+      result.agentName = line.substring(2).trim();
+      currentSection = 'description';
+    } else if (line.startsWith('**Communication Style:**')) {
+      result.communicationStyle = line.substring(24).trim();
+      currentSection = 'communicationStyle';
+    } else if (line.startsWith('**Core Values:**')) {
+      currentSection = 'coreValues';
+    } else if (line.startsWith('**Areas of Expertise:**')) {
+      const parts = line.substring(23).split(',').map(s => s.trim()).filter(Boolean);
+      result.expertiseAreas = parts;
+      currentSection = 'expertiseAreas';
+    } else {
+      if (currentSection === 'description') {
+        result.description += (result.description ? '\n' : '') + line;
+      } else if (currentSection === 'communicationStyle') {
+        result.communicationStyle += ' ' + line;
+      } else if (currentSection === 'coreValues') {
+        if (line.startsWith('- ')) {
+          result.coreValues.push(line.substring(2).trim());
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+function serializeSoulMd(data: {
+  agentName?: string | null,
+  description?: string | null,
+  communicationStyle?: string | null,
+  coreValues?: string[] | null,
+  expertiseAreas?: string[] | null
+}): string {
+  let output = '';
+  if (data.agentName) {
+    output += `# ${data.agentName}\n\n`;
+  }
+  if (data.description) {
+    output += `${data.description}\n\n`;
+  }
+  if (data.communicationStyle) {
+    output += `**Communication Style:** ${data.communicationStyle}\n\n`;
+  }
+  if (data.coreValues && data.coreValues.length > 0) {
+    output += '**Core Values:**\n';
+    data.coreValues.forEach(val => {
+      output += `- ${val}\n`;
+    });
+    output += '\n';
+  }
+  if (data.expertiseAreas && data.expertiseAreas.length > 0) {
+    output += `**Areas of Expertise:** ${data.expertiseAreas.join(', ')}\n\n`;
+  }
+  return output.trim();
+}
+
 const TYPE_ORDER: IntelligenceDocType[] = ['instruction', 'rule', 'agent', 'skill', 'command']
 const TYPE_COLORS: Record<IntelligenceDocType, { bg: string, text: string, icon: React.ReactNode }> = {
   instruction: { bg: 'bg-indigo-500/20', text: 'text-indigo-400', icon: <FileText size={12} /> },
@@ -37,6 +115,14 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
   const [editorContent, setEditorContent] = useState('')
   const [editorTitle, setEditorTitle] = useState('')
   const [editorDesc, setEditorDesc] = useState('')
+  const [instructionFields, setInstructionFields] = useState({
+    agentName: '',
+    description: '',
+    communicationStyle: '',
+    coreValues: [] as string[],
+    expertiseAreas: [] as string[],
+    isParsed: false
+  })
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'syncing' | 'error'>('saved')
   
   const [suggestions, setSuggestions] = useState<IntelligenceDocSuggestion[]>([])
@@ -72,17 +158,38 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
     fetchDocs()
   }, [fetchDocs])
 
+
+
   useEffect(() => {
     if (selectedDoc) {
       setEditorContent(selectedDoc.content || '')
       setEditorTitle(selectedDoc.title || '')
       setEditorDesc(selectedDoc.description || '')
+
+      if (selectedDoc.type === 'instruction') {
+        const parsed = parseSoulMd(selectedDoc.content || '');
+        setInstructionFields({
+          agentName: parsed.agentName || selectedDoc.title || '',
+          description: parsed.description || selectedDoc.description || '',
+          communicationStyle: parsed.communicationStyle || '',
+          coreValues: parsed.coreValues || [],
+          expertiseAreas: parsed.expertiseAreas || [],
+          isParsed: !!(parsed.agentName || parsed.communicationStyle || parsed.coreValues.length > 0 || parsed.expertiseAreas.length > 0)
+        });
+
+
+      }
+
     } else {
       setEditorContent('')
       setEditorTitle('')
       setEditorDesc('')
+      setInstructionFields({ agentName: '', description: '', communicationStyle: '', coreValues: [], expertiseAreas: [], isParsed: false });
+
     }
-  }, [selectedDocId])
+  }, [selectedDocId, selectedDoc?.content])
+
+
 
   useEffect(() => {
     const removeSyncComplete = window.ipcRenderer.on('intel:sync-complete', (_e: any, payload: { docId: string, provider: ProviderKey, status: SyncStatusValue }) => {
@@ -125,6 +232,23 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
       setSaveStatus('error')
     }
   }
+
+
+
+  const handleInstructionFieldChange = (field: keyof typeof instructionFields, value: any) => {
+    const newFields = { ...instructionFields, [field]: value };
+    setInstructionFields(newFields);
+
+    // Auto-serialize to content
+    const newContent = serializeSoulMd(newFields);
+    setEditorContent(newContent);
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveStatus('saving');
+    saveTimerRef.current = setTimeout(() => {
+      if (selectedDocId) handleUpdate(selectedDocId, { content: newContent });
+    }, 800);
+  };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value
@@ -686,18 +810,85 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               </div>
             )}
 
-            <div className="flex-1 p-4 relative flex flex-col gap-2">
-              {selectedDoc.type === 'agent' && (
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Description / System Prompt</label>
-              )}
-              <textarea
-                className="w-full h-full bg-transparent text-zinc-300 font-mono text-xs outline-none resize-none scrollbar-thin scrollbar-thumb-zinc-800"
-                value={editorContent}
-                onChange={handleContentChange}
-                placeholder="Write your markdown content here..."
-                spellCheck={false}
-              />
-            </div>
+
+            {selectedDoc.type === 'instruction' && (
+              <div className="shrink-0 p-4 border-b border-white/5 bg-zinc-900/50 flex flex-col gap-4">
+                {(!instructionFields.isParsed && selectedDoc.content) ? (
+                  <div className="text-amber-500 text-xs">
+                    This instruction document does not follow the SOUL.md format. You can edit it directly in the textarea below.
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-4">
+                      <div className="flex-1 flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Agent Name</label>
+                        <input
+                          type="text"
+                          className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
+                          value={instructionFields.agentName}
+                          onChange={(e) => handleInstructionFieldChange('agentName', e.target.value)}
+                        />
+                      </div>
+                      <div className="flex-1 flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Description</label>
+                        <input
+                          type="text"
+                          className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
+                          value={instructionFields.description}
+                          onChange={(e) => handleInstructionFieldChange('description', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Communication Style</label>
+                      <textarea
+                        className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors resize-y h-20"
+                        value={instructionFields.communicationStyle}
+                        onChange={(e) => handleInstructionFieldChange('communicationStyle', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1 flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Core Values (one per line)</label>
+                        <textarea
+                          className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors resize-y h-24"
+                          value={instructionFields.coreValues.join('\n')}
+                          onChange={(e) => handleInstructionFieldChange('coreValues', e.target.value.split('\n'))}
+                        />
+                      </div>
+                      <div className="flex-1 flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Expertise Areas (comma-separated)</label>
+                        <textarea
+                          className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors resize-y h-24"
+                          value={instructionFields.expertiseAreas.join(', ')}
+                          onChange={(e) => {
+                            const val = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                            handleInstructionFieldChange('expertiseAreas', val);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+
+            {(!selectedDoc || (selectedDoc.type === 'instruction' && instructionFields.isParsed)) ? null : (
+              <div className="flex-1 p-4 relative flex flex-col gap-2">
+                {selectedDoc.type === 'agent' && (
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Description / System Prompt</label>
+                )}
+                <textarea
+                  className="w-full h-full bg-transparent text-zinc-300 font-mono text-xs outline-none resize-none scrollbar-thin scrollbar-thumb-zinc-800"
+                  value={editorContent}
+                  onChange={handleContentChange}
+                  placeholder="Write your markdown content here..."
+                  spellCheck={false}
+                />
+              </div>
+            )}
+
 
             {selectedDoc.type === 'rule' && (
               <div className="shrink-0 border-t border-white/5 bg-zinc-900/50">

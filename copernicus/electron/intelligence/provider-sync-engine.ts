@@ -95,15 +95,7 @@ export class ProviderSyncEngine {
     }
 
     if (docType === 'instruction') {
-      switch (provider) {
-        case 'claude': return 'CLAUDE.md';
-        case 'cursor': return '.cursorrules';
-        case 'copilot': return '.github/copilot-instructions.md';
-        case 'windsurf': return '.windsurfrules';
-        case 'gemini': return 'GEMINI.md';
-        case 'aider': return 'CONVENTIONS.md';
-        default: return null;
-      }
+      return `.copernicus/agents/${slug}/SOUL.md`;
     }
 
     if (docType === 'rule') {

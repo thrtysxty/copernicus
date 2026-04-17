@@ -30,6 +30,12 @@ export interface IntelligenceDocument {
   agentTemperature?: number | null;
   agentSkills?: string[] | null;
   agentTools?: string[] | null;
+
+  // SOUL.md Identity fields (Story 591)
+  agentName?: string | null;
+  communicationStyle?: string | null;
+  coreValues?: string[] | null;
+  expertiseAreas?: string[] | null;
 }
 
 export interface IntelligenceDocSuggestion {
