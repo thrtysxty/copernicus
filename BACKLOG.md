@@ -131,7 +131,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
 | #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | APPROVED FOR IMPLEMENTATION | P1 |
-| #670 | Hub Handlers Ts Migrate Getdb Calls From Better Sqlite3 To Libsql | APPROVED FOR IMPLEMENTATION | P1 |
 | #671 | Story Validator Py Reduce Typescript Type Spot Check False Positives | APPROVED FOR IMPLEMENTATION | P3 |
 | #672 | Launch Readiness User And Technical Documentation Audit | APPROVED FOR IMPLEMENTATION | P1 |
 | #673 | Launch Readiness Repo State Verification And Build Testing | APPROVED FOR IMPLEMENTATION | P1 |
@@ -552,6 +551,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #666 | Remove Unused Imports From Backend Test Security Py | COMPLETE | P3 |
 | #667 | Context Window Compaction Hierarchy | COMPLETE | P1 |
 | #668 | Episodes Table Schema Add Hub Selection Columns | COMPLETE | P1 |
+| #670 | Hub Handlers Ts Migrate Getdb Calls From Better Sqlite3 To Libsql | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
