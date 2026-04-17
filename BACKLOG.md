@@ -130,7 +130,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #593 | Core Agent Library | COMPLETE | N/A |
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
-| #677 | Dead Backend Code Audit | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -555,6 +554,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #672 | Launch Readiness User And Technical Documentation Audit | COMPLETE | P1 |
 | #673 | Launch Readiness Repo State Verification And Build Testing | COMPLETE | P1 |
 | #676 | Central Provider Registry | COMPLETE | P1 |
+| #677 | Dead Backend Code Audit | COMPLETE | P2 |
 | #678 | Gemini Era Electron Dead Code | COMPLETE | P2 |
 | #679 | Dead Electron Infrastructure Classes | COMPLETE | P2 |
 | #680 | User Manual Workflow Narratives | COMPLETE | P1 |
