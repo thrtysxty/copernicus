@@ -46,6 +46,21 @@ class StoryValidator:
     def _add_warning(self, message):
         self.warnings.append(yellow(f"WARN: {message}"))
 
+    def _is_plausible_type_name(self, name: str) -> bool:
+        """Check if a PascalCase identifier is plausibly a TypeScript type name.
+
+        Filters out common English words and short identifiers that are unlikely
+        to be TypeScript types, reducing noise in the type spot-check.
+        """
+        if len(name) <= 5:
+            return False
+        if name.isupper():
+            return False
+        # Must have at least one internal camel-case transition
+        if not re.search(r'[a-z][A-Z]', name):
+            return False
+        return True
+
     def _extract_section_content(self, section_title):
         # Last resort: construct the pattern without re.escape inside the literal
         # This is to work around the write_file tool's behavior with newlines
@@ -164,8 +179,19 @@ class StoryValidator:
         
         # Filter out common words that are not types (e.g., "macOS", "Linux", "Windows", "Jules", "Task")
         # This list could be expanded.
-        non_type_words = {"MacOS", "Linux", "Windows", "Jules", "Task", "GUI", "IPC", "CI", "CD", "API", "UAC", "DMG", "NSIS", "AppImage", "Electron", "Pythonw"}
-        type_candidates = {t for t in type_candidates if t not in non_type_words and not t.isupper()} # Exclude acronyms
+        non_type_words = {
+            # Platform / tool names (existing)
+            "MacOS", "Linux", "Windows", "Jules", "Task", "GUI", "IPC", "CI",
+            "CD", "API", "UAC", "DMG", "NSIS", "AppImage", "Electron", "Pythonw",
+            # English prose words that commonly appear in ACs
+            "Apple", "Silicon", "Native", "Provider", "Running", "Active",
+            "Install", "Installed", "Switch", "Select", "Custom", "Default",
+            "Content", "Section", "Button", "Status", "Config", "Result",
+            "Action", "Source", "Target", "Format", "Output", "Input",
+            "Render", "Update", "Delete", "Fetch", "Create", "Remove",
+            "Handle", "Listen", "Connect", "Disconnect", "Subscribe",
+        }
+        type_candidates = {t for t in type_candidates if t not in non_type_words and self._is_plausible_type_name(t)}
         
         if not type_candidates:
             self._add_warning("No TypeScript type candidates found in 'Acceptance Criteria'.")
