@@ -1,9 +1,12 @@
-import { ipcMain } from 'electron';
+import { ipcMain, app } from 'electron';
 import { handleIpc } from '../utils/handle-ipc';
 // @ts-ignore
 import { syncUserAction, getOrgChart, updateRole, listActiveTokens } from '../../../scripts/agent-daemon/lib/hub.mjs';
-// @ts-ignore
-import { getDb } from '../../../scripts/agent-daemon/lib/db.mjs';
+import { createClient } from '@libsql/client';
+import path from 'node:path';
+
+const _getJulesClient = () =>
+  createClient({ url: 'file:' + path.join(app.getPath('userData'), 'jules.db') });
 
 export function registerHubHandlers() {
   ipcMain.handle('org-chart:get-config', () =>
@@ -40,8 +43,8 @@ export function registerHubHandlers() {
   );
 
   ipcMain.handle('hub:get-events', (_event, { limit, offset, event_types }: { limit: number; offset: number; event_types?: string[] }) =>
-    handleIpc('hub:get-events', [{ limit, offset, event_types }], () => {
-      const db = getDb();
+    handleIpc('hub:get-events', [{ limit, offset, event_types }], async () => {
+      const client = _getJulesClient();
       let query = 'SELECT * FROM hub_events';
       let countQuery = 'SELECT COUNT(*) as count FROM hub_events';
       const params: any[] = [];
@@ -58,16 +61,20 @@ export function registerHubHandlers() {
       query += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?';
       params.push(limit, offset);
 
-      const events = db.prepare(query).all(...params);
-      const { count } = db.prepare(countQuery).get(...countParams) as { count: number };
+      const [eventsResult, countResult] = await Promise.all([
+        client.execute({ sql: query, args: params }),
+        client.execute({ sql: countQuery, args: countParams }),
+      ]);
+      const events = eventsResult.rows;
+      const count = Number(countResult.rows[0]?.['count'] ?? 0);
 
       return { events, total: count };
     })
   );
 
   ipcMain.handle('hub:get-attribution', (_event, { limit, offset, surface, story_id }: { limit: number; offset: number; surface?: string; story_id?: string }) =>
-    handleIpc('hub:get-attribution', [{ limit, offset, surface, story_id }], () => {
-      const db = getDb();
+    handleIpc('hub:get-attribution', [{ limit, offset, surface, story_id }], async () => {
+      const client = _getJulesClient();
       let query = 'SELECT * FROM hub_attribution';
       let countQuery = 'SELECT COUNT(*) as count FROM hub_attribution';
       const params: any[] = [];
@@ -92,18 +99,26 @@ export function registerHubHandlers() {
       const countParams = [...params];
       params.push(limit, offset);
 
-      const rows = db.prepare(query).all(...params);
-      const { count } = db.prepare(countQuery).get(...countParams) as { count: number };
+      const [rowsResult, countResult] = await Promise.all([
+        client.execute({ sql: query, args: params }),
+        client.execute({ sql: countQuery, args: countParams }),
+      ]);
+      const rows = rowsResult.rows;
+      const count = Number(countResult.rows[0]?.['count'] ?? 0);
 
       return { rows, total: count };
     })
   );
 
   ipcMain.handle('hub:get-cost-summary', () =>
-    handleIpc('hub:get-cost-summary', [], () => {
-      const db = getDb();
+    handleIpc('hub:get-cost-summary', [], async () => {
+      const client = _getJulesClient();
 
-      const tokens = db.prepare('SELECT role_name, state, token_id, budget FROM hub_tokens').all() as Array<{
+      const [tokensResult, eventsResult] = await Promise.all([
+        client.execute('SELECT role_name, state, token_id, budget FROM hub_tokens'),
+        client.execute('SELECT timestamp, action, token_id FROM hub_events'),
+      ]);
+      const tokens = tokensResult.rows as unknown as Array<{
         role_name: string;
         state: string;
         token_id: string;
@@ -143,7 +158,7 @@ export function registerHubHandlers() {
 
       const by_role = Object.values(by_role_map);
 
-      const allEvents = db.prepare('SELECT timestamp, action, token_id FROM hub_events').all() as Array<{ timestamp: string, action: string, token_id: string }>;
+      const allEvents = eventsResult.rows as unknown as Array<{ timestamp: string, action: string, token_id: string }>;
       const daily_map: Record<string, { date: string, total_usd: number, token_count: number, role_spend: Record<string, number> }> = {};
 
       const token_roles = tokens.reduce((acc, t) => {
