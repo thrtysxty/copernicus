@@ -11,7 +11,7 @@ const SEND_CHANNELS = new Set([
   'intel:list', 'intel:get', 'intel:create', 'intel:update', 'intel:delete', 'intel:suggest', 'intel:audit-length',
 
   // LLM Chat
-  'chat:send', 'chat:confirm-model-switch', 'chat:compress-delta', 'chat:done-extraction',
+  'chat:send', 'chat:confirm-model-switch', 'chat:compress-delta',
   // File System
   'fs:path-has-git', 'fs:list-dir', 'fs:list-files-recursive', 'fs:open-file', 'fs:read-file', 'fs:save-file', 'fs:select-file', 'fs:make-dir',
   // Skills
@@ -27,9 +27,9 @@ const SEND_CHANNELS = new Set([
   'stories:update', 'stories:set-status', 'stories:is-repo-targeted', 'stories:hydrate', 'story:scaffold', 'stories:set-field',
   'stories:sync', 'stories:target-project', 'stories:import-from-path',
   // Makefile
-  'makefile:list', 'makefile:run', 'system:make',
+  'makefile:list', 'makefile:run',
   // Terminal
-  'terminal-create', 'terminal:resize', 'terminal-write', 'terminal-kill',
+  'terminal-create', 'terminal:resize', 'terminal-write',
   'terminal:input', 'terminal:spawn',
   'terminal:spawn-agent', 'terminal:attach-agent',
   'terminal:stop-agent',
@@ -49,13 +49,12 @@ const SEND_CHANNELS = new Set([
   'layout:update-telemetry', 'telemetry:update-touchbar', 'telemetry:status', 'telemetry:recovery-status',
   'kanban:get-columns', 'kanban:set-column',
   // Agent interop
-  'agent:delegate', 'agent:forward',
+  'agent:delegate',
   'agent:patch-apply', 'agent:patch-reverse',
   'agent:send-code-stream',
   // NotebookLM
   'nlm:list-notebooks', 'nlm:register-notebook', 'nlm:remove-notebook', 'nlm:query', 'notebooklm:notebook-contents',
   // Security
-  'security:git-push-response',
   // Settings
   'settings:save', 'settings:load',
   // GitHub
@@ -67,7 +66,7 @@ const SEND_CHANNELS = new Set([
   'mcp:list-servers', 'mcp:save-servers', 'mcp:test-server', 'mcp:get-status',
   'stitch:ping', 'stitch:extract-design', 'stitch:screenshot', 'stitch:design-dna', 'stitch:verify-ui',
   'stitch:generate', 'stitch:edit', 'stitch:variants', 'stitch:list-screens',
-  'notebooklm:status', 'notebooklm:list-notebooks', 'notebooklm:setup',
+  'notebooklm:status', 'notebooklm:list-notebooks',
 
   'git:status', 'git:stage', 'git:unstage', 'git:commit', 'git:branches', 'git:checkout', 'git:new-branch', 'git:diff-file', 'github:list-prs',
   'git:current-branch', 'git:list-branches',
@@ -93,7 +92,7 @@ const SEND_CHANNELS = new Set([
   'workflow:run', 'workflow:status', 'workflow:list-templates', 'workflow:get-template', 'workflow:reset', 'workflow:ollama-status', 'workflow:plan-waves', 'workflow:waves-status',
   'workflow:assemble-context', 'workflow:recovery-brief', 'workflow:classify-handoff',
   'workflow:update-node-data', 'workflow:get-snapshots', 'workflow:rewind', 'workflow:get-context', 'workflow:set-context', 'workflow:resume-node',
-  'workflow:save', 'workflow:reset-canvas', 'workflow:run-canvas',
+  'workflow:save', 'workflow:reset-canvas',
   // Review gate
   'review:log', 'review:session-complete', 'review:generate-summary',
   // Codebase semantic index
@@ -103,7 +102,6 @@ const SEND_CHANNELS = new Set([
   'lsp:open-file', 'lsp:close-file', 'lsp:get-diagnostics', 'lsp:check-file', 'lsp:workspace-check',
   'lsp:rename',
   // Canvas
-  'canvas:iframe-bounds',
   // Templates (Story 330)
   'templates:list', 'templates:save', 'templates:reset',
   // Browser (Story 155)
@@ -144,8 +142,7 @@ const SEND_CHANNELS = new Set([
   'providers:reload',
   // Knowledge Base (Story 566)
   'kb:list-articles', 'kb:get-article', 'kb:search',
-  // KB deep link (Story 567)
-  'kb:open-article',
+  // KB deep link (Story 567) - LISTEN only, no handler
   // Auth revoke
   'auth:revoke', 'auth:revoke-key', 'auth:validate-ollama-cloud',
   // Canvas interaction (Story 153)
@@ -178,7 +175,7 @@ const SEND_CHANNELS = new Set([
   // MLX (Story 652)
   'mlx:download-model', 'mlx:list-installed', 'mlx:delete-model', 'mlx:get-perf', 'mlx:get-status', 'mlx:switch-model',
   // Agent Hub Self-Improvement (Story 648)
-  'hub:get-proposals', 'hub:approve-proposal', 'hub:reject-proposal',
+  'hub:get-proposals', 'hub:approve-proposal',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
