@@ -175,7 +175,7 @@ const SEND_CHANNELS = new Set([
   // MLX (Story 652)
   'mlx:download-model', 'mlx:list-installed', 'mlx:delete-model', 'mlx:get-perf', 'mlx:get-status', 'mlx:switch-model',
   // Agent Hub Self-Improvement (Story 648)
-  'hub:get-proposals', 'hub:approve-proposal',
+  'hub:get-proposals', 'hub:approve-proposal', 'hub:reject-proposal',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */

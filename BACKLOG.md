@@ -131,6 +131,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
 | #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
+| #677 | Dead Backend Code Audit | APPROVED FOR IMPLEMENTATION | P2 |
+| #678 | Gemini Era Electron Dead Code | APPROVED FOR IMPLEMENTATION | P2 |
+| #679 | Dead Electron Infrastructure Classes | APPROVED FOR IMPLEMENTATION | P2 |
+| #680 | User Manual Workflow Narratives | APPROVED FOR IMPLEMENTATION | P1 |
+| #681 | Native App Menus Keyboard Shortcuts | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -577,11 +582,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #624 | Abtop Agent Process Monitor Spike | DEFERRED — Phase 7 Observability Sprint | P2 |
 | #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
 | #569 | Kb Local Voting | DRAFT | P3 |
-| #677 | Dead Backend Code Audit | DRAFT | P2 |
-| #678 | Gemini Era Electron Dead Code | DRAFT | P2 |
-| #679 | Dead Electron Infrastructure Classes | DRAFT | P2 |
-| #680 | User Manual Workflow Narratives | DRAFT | P1 |
-| #681 | Native App Menus Keyboard Shortcuts | DRAFT | P1 |
 | #592 | Intelligence Sync Retarget Provider Injection | DRAFT — Awaiting story 591 merge | P2 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
