@@ -1,13 +1,14 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
 import electron from 'vite-plugin-electron'
-import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    react(),
-    electron([
+export default defineConfig(async () => {
+  const { default: react } = await import('@vitejs/plugin-react')
+  return {
+    plugins: [
+      react(),
+      electron([
       {
         // Main process — native addons + chokidar (has native fsevents dep) must be external
         entry: 'electron/main.ts',
@@ -57,5 +58,6 @@ export default defineConfig({
         },
       },
     ]),
-  ],
+    ],
+  }
 })

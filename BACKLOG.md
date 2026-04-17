@@ -560,6 +560,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #679 | Dead Electron Infrastructure Classes | COMPLETE | P2 |
 | #680 | User Manual Workflow Narratives | COMPLETE | P1 |
 | #681 | Native App Menus Keyboard Shortcuts | COMPLETE | P1 |
+| #682 | Upgrade Vitejs Plugin React V6 | COMPLETE | P3 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -593,7 +594,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #691 | Extension V1 V2 Migration Shim | DRAFT | P3 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
-| #682 | Upgrade Vitejs Plugin React V6 | IN PROGRESS | P3 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
