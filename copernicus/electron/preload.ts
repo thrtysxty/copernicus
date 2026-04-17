@@ -177,6 +177,8 @@ const SEND_CHANNELS = new Set([
   'db:query', 'db:list-tables', 'db:search-episodes', 'db:story-status', 'db:recent-episodes', 'db:quality-summary',
   // MLX (Story 652)
   'mlx:download-model', 'mlx:list-installed', 'mlx:delete-model', 'mlx:get-perf', 'mlx:get-status', 'mlx:switch-model',
+  // Agent Hub Self-Improvement (Story 648)
+  'hub:get-proposals', 'hub:approve-proposal', 'hub:reject-proposal',
 ])
 
 /** Channels the renderer may LISTEN to from main (win.webContents.send) */
@@ -236,6 +238,8 @@ const LISTEN_CHANNELS = new Set([
   'kb:open-article',
   // MLX (Story 652)
   'mlx:download-progress', 'mlx:server-status-changed',
+  // Agent Hub Self-Improvement (Story 648)
+  'contract:proposal_ready',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

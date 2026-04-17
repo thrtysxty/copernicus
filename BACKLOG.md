@@ -128,8 +128,14 @@ This file is auto-generated. Run `make backlog` to update.
 | #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #590 | Intelligence Agent Yaml Schema | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
-| #591 | Intelligence Soul Md Instruction Format | DRAFT | N/A |
-| #592 | Intelligence Sync Retarget Provider Injection | DRAFT | N/A |
+| #633 | Harbor-Style Containerized Agent Sandboxing | APPROVED FOR IMPLEMENTATION | P2 |
+| #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
+| #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | APPROVED FOR IMPLEMENTATION | P1 |
+| #670 | Hub Handlers Ts Migrate Getdb Calls From Better Sqlite3 To Libsql | APPROVED FOR IMPLEMENTATION | P1 |
+| #671 | Story Validator Py Reduce Typescript Type Spot Check False Positives | APPROVED FOR IMPLEMENTATION | P3 |
+| #672 | Launch Readiness User And Technical Documentation Audit | APPROVED FOR IMPLEMENTATION | P1 |
+| #673 | Launch Readiness Repo State Verification And Build Testing | APPROVED FOR IMPLEMENTATION | P1 |
+| #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -566,13 +572,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #145 | Enhanced Story Management | COMPLETED | P1 |
 | #154 | Workspace Root Coherence And Help Panel Resource Loading | COMPLETED | P1 — IDE Usability |
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
+| #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
+| #624 | Abtop Agent Process Monitor Spike | DEFERRED — pending GPU box / ML350 production deployment | P2 |
 | #569 | Kb Local Voting | DRAFT | P3 |
-| #575 | Agent Break Room | DRAFT | P3 — Easter Egg / Delight |
-| #624 | Abtop Agent Process Monitor Spike | DRAFT | P2 |
-| #625 | Roca Contract Validation Draft | DRAFT | P3 |
-| #633 | Harbor-Style Containerized Agent Sandboxing | DRAFT | P2 |
-| #648 | Agent Hub — Self-Improvement Loop Integration | DRAFT | P2 |
-| #669 | Provider Route Isolation Distinct Routing For Ccr Ollama Openrouter And Mlx | DRAFT | P1 |
+| #592 | Intelligence Sync Retarget Provider Injection | DRAFT — Awaiting story 591 merge | P2 |
+| #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
+| #591 | Intelligence Soul Md Instruction Format | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
