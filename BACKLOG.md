@@ -132,10 +132,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #648 | Agent Hub — Self-Improvement Loop Integration | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
 | #677 | Dead Backend Code Audit | APPROVED FOR IMPLEMENTATION | P2 |
-| #678 | Gemini Era Electron Dead Code | APPROVED FOR IMPLEMENTATION | P2 |
-| #679 | Dead Electron Infrastructure Classes | APPROVED FOR IMPLEMENTATION | P2 |
-| #680 | User Manual Workflow Narratives | APPROVED FOR IMPLEMENTATION | P1 |
-| #681 | Native App Menus Keyboard Shortcuts | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -559,6 +555,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #672 | Launch Readiness User And Technical Documentation Audit | COMPLETE | P1 |
 | #673 | Launch Readiness Repo State Verification And Build Testing | COMPLETE | P1 |
 | #676 | Central Provider Registry | COMPLETE | P1 |
+| #678 | Gemini Era Electron Dead Code | COMPLETE | P2 |
+| #679 | Dead Electron Infrastructure Classes | COMPLETE | P2 |
+| #680 | User Manual Workflow Narratives | COMPLETE | P1 |
+| #681 | Native App Menus Keyboard Shortcuts | COMPLETE | P1 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
