@@ -1,427 +1,228 @@
-# COPERNICUS IDE — User Workflow Guide
-**Version:** 1.1 | **Date:** 2026-03-26 | **Authority:** The User(Jeremy)
+# Copernicus IDE — User Manual & Workflows
 
-First-time user journey from install to first deployment.
+## Preamble
 
-**Assumed setup:**
-New User: 
-New users may not have any required accounts or knowledge of proper project
-management or development processes. Copernicus is just as much for them as
-it is for experienced users.
+**Who uses Copernicus?**
 
-Existing User:
-These users may already have established accounts with API keys or platform 
-login credentials for OAuth. Both paths to access need to be available for 
-establishing access to external services.
-If there is existing git infrastructure, keys/tokens, or envs, the user should 
-be prompted to use them.
+Copernicus is not just a text editor; it is a multi-agent ideation and implementation platform. Because it handles planning, design, coding, and orchestration, its user base is varied.
+
+### The Archetypes
+
+**The Developer**
+You write code, but you want AI to write the boilerplate and handle refactors.
+* *Entry point:* Editor (`⌘2`)
+* *Primary views:* Editor, Git, Diagnostics, Debug, Review
+* *What you care about:* See *Active Coding Session* in Part 3. You can safely ignore the Planner and Reporter.
+
+**The PM / Story Author**
+You define the what and the why. You live in acceptance criteria and sprint planning.
+* *Entry point:* Planner (`⌘1`)
+* *Primary views:* Planner, Reporter, Knowledge Base, Memory
+* *What you care about:* See *Planning a Sprint* in Part 3. You can safely ignore the Debug and Diagnostics views.
+
+**The Visual Designer**
+You design UI components and ensure the implementation matches the spec.
+* *Entry point:* Designer (`⌘3`)
+* *Primary views:* Designer, Browser, Editor
+* *What you care about:* See *Designing a UI Component* in Part 3.
+
+**The Orchestrator / Agent Wrangler**
+You manage the swarm. You define which models handle which roles and monitor their execution.
+* *Entry point:* Orchestrator (`⌘4`) or Hub Org Chart
+* *Primary views:* Orchestrator, Command Center, Agent Hub, Reporter
+* *What you care about:* See *Monitoring Agents* in Part 3.
+
+### New User vs. Existing User
+If you are new to Copernicus, follow the Genesis Wizard below. If you are returning to an existing codebase, the IDE will load your previous state, and you can skip to Part 2 to navigate the interface.
 
 ---
 
 ## Act 1 — Install & First Launch
 
-### Download & Install
-Download the install file for the hardware environment (Mac, Linux, Windows). 
-Run the installer or drag the file to Applications folder. First launch triggers
-OS gatekeepers — click Open.
+The IDE installs like any Electron app. On first launch, the splash screen fades in, leading you to the Genesis Wizard.
 
-### Splash Screen
-A splash screen appears immediately — COPERNICUS logo, version number, and a
-loading indicator while the main process initialises (LSP startup, database
-connection, workspace scan). This is the only moment the user sees the version
-number without navigating to Settings → About.
-
-Once ready, the splash fades and the **Wizard** appears.
-The main IDE does not appear yet.
+> *"You're ready. Let's build something."*
 
 ---
 
 ## Act 2 — The Wizard
 
-The Wizard is a focused onboarding sequence. The main IDE is hidden until
-it completes. **Copernicus** (the guide agent — §7.2 GUIDE tab) is already
-active here, greeting the user by name if the system account is readable.
-If the user has prior development setup and keys are available they are 
-prompted to confirm their use.
+The Genesis Wizard guides you through setting up your workspace. Copernicus speaks from the setup view to help you out.
 
-### Step 1 — Providers
+> *"Welcome. Let's get your environment configured."*
 
-If the user confirms use of prior secrets and keys, the providers tab
-indicators are green. The user is then asked to enter credentials for missing 
-providers or advance to the next screen.
+### Step 1 - API Keys
+*The IDE needs providers.*
+You will be prompted to configure your API keys for the AI providers you wish to use. The current stack supports:
+- **CCR** (Claude Code Router, port 9669)
+- **Local Ollama** (port 11434)
+- **Cloud Ollama**
+- **MLX** (port 8080, Apple Silicon)
+- **OpenRouter**
+- **Anthropic Direct**
 
-For new users, Copernicus provides a provider configuration screen. Users will 
-be able to enter API keys (with walkthrough or as much automation/instruction as possible)
-or use account credentials based on the type of provider accounts offered by the 
-provider. 
+### Step 2 - Workspace Directory
+*Where does the code live?*
+Select the local path where your repositories will reside (e.g., `~/Workspace/Projects`).
 
-> *"Select your account type to access your **Provider** account."*
-The user is presented with the option to use web account credentials for accounts on
-monthly paid subscriptions or to enter their API key for use with token based billing
-from their providers. If the user selects web credentials, the entry field becomes a
-1-line CLI. The CLI is presented with the command to install the provider or package
-and the field label updates with the breadcrumbs describing each step of the process 
-until the account service is installed and the user logs into their account.
-Entering an API key saves the key or token to ~/.secrets and follows the same install 
-process.
-Copernicus confirms:
-> "**Provider**" is connected. I'll keep an eye on your
-> sessions and let you know before you hit a limit."*
+### Step 3 - Core Value & Context
+*What are we building?*
+Provide a 1-sentence description of the project's core value (e.g., "A checkout app for nurses").
 
-**Anthropic (Claude):**
-Web credentials
-API Key
+### Step 4 - Project Genesis Stack
+*How should it be built?*
+Choose the application stack (e.g., React + Electron, Next.js, etc.) or choose "Existing repo" to initialize Copernicus config files (`AGENTS.md`, `CLAUDE.md`) in an existing directory.
 
-**Google (Gemini):**
-Web credentials
-API Key
+### Step 5 - CapEx & Billing
+*Track your spend.*
+Determine if time and token billing are to be tracked (CapEx, OpEx, or None).
 
-**Google (Jules):**
-API Key
+### Step 6 - Review
+Confirm the project specifications. Once you hit Launch, the IDE scaffolds the project and opens the Planner.
 
-**Google (Stitch):**
-API Key
-
-**OpenAI (GPT):**
-API Key
-
-**Ollama (Agnostic web and local models):**
-API Key
-
-**OpenRouter (Agnostic):**
-API Key
-
-**DeepInfra (Agnostic + cloud compute infra):**
-API Key
-
-**GitHub (Repo Manager):**
-Personal Access Token (PAT)
-
-**Tavily (Web Search MCP):**
-API Key
-
-**Context7 (Dependency Documentation MCP):**
-API Key
-
-**BitNet (Embedded Agent):**
-No key or auth flow. Preinstalled and active by default to drive the scripted workflows
-for both the user onboarding and the integrated help features.
-
-
-### Step 2 — Workspace
-
-> *"Select the directory where you store your project repositories or create a new one"*
-
-File picker appears. User selects a folder (or creates one).
-
-### Step 3 - Project Repository
-
-> *"Select the project directory to open or create a new one"*
-
-File picker appears. User selects a folder (or creates one).
-Copernicus checks for a git repo — if absent:
-> *"No git repo here. Want me to initialise one?"*
-> *"Git repo initialized. Would you like to run the Project Genesis agent to establish your dependency boilerplate?"*
-
-Yes - Launches the Genesis project wizard.
-No - Sends the user to Step 4.
-
-#### Step 3a - Project Genesis Agent
-The user is prompted to describe their project:
-
-> *"What are you building?"* - The field has a placeholder that cycles various sofware ideas until the user starts typing.
-> *"Who is if for?"* - Same placeholder behavior - types of users or industries (nurses, teachers, vibe coders, etc.)
-> *"What is the core value?"* - Same placeholder behavior. - helps nurses ensure all checkout procedures are completed..
-> *"Project Name?"* - Same placeholder behavior. - Checkout Champion...
-
-User clicks Next to advance.
-
-#### Step 3b - Project Genesis Stack
-The user is prompted to select the application stack that would like to have scaffoled into their new repo.
-
-Options:
-
-Desktop App: React + Electron
-Web App: React + Flask
-Web or Full Stack: Next.js
-Mobile: React Native
-Scripting or Automation: Python CLI
-Custom: No Scaffold
-
-User clicks Next to advance.
-
-The new project repository is scaffolded into the /Workspace/Project path that the user selected in Steps 2 & 3.
-The Stack chosen by the user is put in place along with the default repository directory structure used by Copernicus for managing agents, stories, history, and anything else there is a dependency on. As the scaffolding runs in the background, the user is moved into Step 4.
-
-### Step 4 - CapEx & Billing
-
-The user is asked to determine if time and token billing are to be tracked within the 
-project and are provided options for: CapEx, OpEx, or None. This value is now tied to this 
-project repository and is in effect every time a project is re-opened until the user changes 
-the repo config.
-
-User clicks Next to advance.
-
-### Step 5 - The Planner (KanBan)
-The user is placed into the Planner view. If they have created a new project with the Genesis agent, then there will be at least one epic and several stories present in the view. The existing user will be prompted to create project epics and stories to plan out their sprints.
-
-
-```
-### Step 3 — Quick Tour (skippable)
-
-A 60-second animated overview of the five main areas:
-Planner → Editor → Designer → Orchestrator → Reporter.
-Narrated by Copernicus. Skip button always visible.
-
-### Step 4 — Launch
-
-> *"You're ready. Let's build something."*
-
-Splash screen fades in, then the main IDE appears for the first time.
+> *"All set. Your workspace is ready."*
 
 ---
 
-## Act 3 — First Look
+## Part 2 — The Interface
 
-The IDE renders. The user is on the **Planner** view — empty Kanban board,
-9 lanes, quiet. Copernicus speaks from the Chat Panel GUIDE tab:
+Copernicus has many views. They are accessed via the Activity Bar on the left or keyboard shortcuts.
 
-> *"Welcome. Want a 60-second tour before you dive in?"*
-> [Skip — take me to the Editor] [Let's go →]
+### Planner (`planner`)
+*The sprint backlog and task manager.*
+Open the planner via the Activity Bar (Clipboard icon) or by pressing `⌘1`. The planner is a 9-lane Kanban board where you define the work. You create stories, describe the acceptance criteria, and dispatch them to agents. Use this view during sprint planning or when checking the overall status of the project.
 
-### If Skip
-User goes straight to Editor or Planner — their choice. No tour, no nudges.
-Copernicus is available in the GUIDE tab whenever needed.
+### Editor (`editor`)
+*The core code authoring environment.*
+Open the editor via the Activity Bar (Code icon) or `⌘2`. This is a dual-pane setup powered by Monaco, offering full LSP support. You write code alongside the chat agent. If an agent proposes a change, you can click the "Toggle Ghost Mode" button in the header. This enables Ghost Mode, rendering agent edits as "shadow code" inline. You can then accept or reject all changes. The editor also features powerful Text and Semantic search.
 
-### If Tour
-The IDE switches to the **Designer view** — the Canvas loads and runs the
-tour as a visual walkthrough. Copernicus narrates each area (Planner, Editor,
-Designer, Orchestrator, Command Center) with the Canvas rendering a live
-animated preview of each. The user advances at their own pace.
+### Designer (`designer`)
+*The visual component builder.*
+Open the designer via the Activity Bar (Layout icon) or `⌘3`. This view houses the UIBuilderCanvas. Here, you visually assemble UI components. By using "Import from Stitch", you can pull in design tokens, and "Verify with Stitch" ensures your implementation aligns with the corporate mockups. It's the primary view for frontend design work.
 
-At the end of the tour the Canvas clears and Copernicus asks:
-> *"Where do you want to start — writing code or planning a story?"*
-> [Editor] [Planner]
+### Orchestrator (`orchestrator`)
+*The workflow engine.*
+Open the orchestrator via the Activity Bar (Workflow icon) or `⌘4`. It provides a node-based canvas where you can drag and drop tiles from the Tile Library. You define automated sequences for agents, such as the `jules-pr-manager` loop. Use this to orchestrate complex multi-step processes.
 
-User picks one. IDE transitions. Tour marked complete — never shown again.
+### Reporter (`reporter`)
+*The project accountant.*
+Open the reporter via the Activity Bar (Chart icon). This is the CapEx Dashboard. It allows you to monitor token spend, view the model leaderboard, and track cost metrics. Visit this view at the end of the day or during sprint retrospectives to ensure budgets are maintained.
 
----
+### Command Center (`command-center`)
+*The pulse of the swarm.*
+Open the command center via the Activity Bar (Activity/Pulse icon). It provides a high-level overview of system and agent activity. You can monitor Agent Swarms, see active tasks, check LSP state, and spot any stalled agents without disturbing your flow in the editor.
 
-## Act 4 — Planning the First Story
+### Org Chart (`hub:org-chart`)
+*The Agent Hub authority matrix.*
+Open the org chart via the Activity Bar (Hub icon). This view manages Phase 6 Hub tokens and role assignments. You can view the agent registry, assigned roles, token expiry times, and health scores. It also provides access to the Hub Ledger. Use this view to configure the agent hierarchy or investigate why an agent stopped working.
 
-### Creating a Story
+### Memory (`memory`)
+*The historical record.*
+Open the memory view via the Activity Bar (Brain icon). It allows you to browse past episodes and replay agent interactions. Use this during retrospectives to understand why certain decisions were made by the agents.
 
-The user describes what they want to build — in plain language, in the
-chat. Copernicus drafts the story:
+### Git (`git`)
+*Source control management.*
+Open git via the Activity Bar (Git-branch icon). This is the local staging and commit interface for regular version control workflows.
 
-> *"Got it — here's a draft story: 'Add user login with Google OAuth'.
-> I've written the acceptance criteria. Want to review before I save it?"*
+### Search (`search`)
+*Project-wide search.*
+Open search via the Activity Bar (Search icon). It provides a global search drawer for full-text and regex queries across your workspace.
 
-The user reviews inline, edits if needed, confirms.
-Story card appears in the **Planning** lane.
+### Review (`review`)
+*The PR diff inspector.*
+Open review via the Activity Bar (PR icon) or by clicking a PR link on a story card. It provides an inline diff review panel where you inspect code changes made by agents before merging them.
 
-### Moving Through Lanes
+### Debug (`debug`)
+*The execution inspector.*
+Open debug via the Activity Bar (Bug icon). This is the debug adapter client interface for setting breakpoints, inspecting variables, and stepping through code when troubleshooting complex application logic.
 
-Copernicus nudges:
-> *"This has a UI component — want to sketch it in the Designer before
-> handing it to Jules?"*
+### Diagnostics (`diagnostics`)
+*The logs and outputs.*
+Open diagnostics via the Activity Bar (Warning/Error icon). This view presents the raw output from language servers, compilers, and linters.
 
-If yes → user clicks the story card, clicks **Design** in the Touch Bar.
-Designer view opens. Canvas is blank. Chat Panel is still there on the right.
+### Knowledge Base (`knowledge-base`)
+*The project wiki.*
+Open the knowledge base via the Activity Bar (Book icon). It houses curated markdown articles and architectural notes for your project.
 
----
+### Browser (`browser`)
+*The in-IDE web viewer.*
+Open the browser via the Activity Bar (Globe icon). This integrated panel allows you to view local dev servers, external docs, or Playwright executions without leaving the IDE.
 
-## Act 5 — Storyboarding in the Designer
+### Database (`database`)
+*The schema inspector.*
+Open the database view via the Activity Bar (Database icon). This panel lets you view tables and query the local SQLite database, verifying data persistence and inspecting the Hub Ledger.
 
-The user describes the UI to the chat agent (now Claude, not Copernicus —
-guide hands off to the active agent for implementation tasks):
-
-> *"Two buttons centred on screen — Sign in with Google, Sign in with
-> GitHub. Logo above."*
-
-Claude places components on the Canvas. The user drags to adjust positions.
-The Canvas renders a live preview.
-
-When satisfied, the user flips back to the Planner. Story moves to
-**Storyboarding** lane — already done by the agent.
-
----
-
-## Act 6 — Sprint Planning
-
-Story card is now in **Sprint Planning**.
-
-User opens the Story Drawer (click the card). Sets:
-- **Assigned to:** Jules
-- **Workflow:** `jules-pr-manager` (pre-built template)
-
-Clicks **→ Jules** button on the card.
-
-Jules session is dispatched. The badge appears:
-```
-● QUEUED   main
-```
-
-The `jules-pr-manager` workflow starts watching in the background.
-Story moves to **Development**.
+### Internal / Developer Views
+- **Logs (`logs`)**: Raw system logs (internal).
+- **Replay (`replay`)**: Advanced state replay (in active development).
+- **Test Explorer (`test-explorer`)**: Visual test runner (in active development).
+- **GitHub (`github`)**: Extended GitHub API integration (coming soon).
 
 ---
 
-## Act 7 — Parallel Work (the Rhythm Begins)
+## Part 3 — Core Workflows
 
-The user doesn't wait for Jules. That's the point.
+### Planning a Sprint
+You start in the **Planner**. You create a new story card: "Add user login with Google OAuth." You describe it in the chat, and Copernicus drafts the Acceptance Criteria. Once approved, the card drops into the *Planning* lane.
 
-While Jules works on the OAuth story, the user opens the **Editor** view
-and starts on the next story. FileTree on the left, Monaco in the center,
-Claude in the Chat Panel on the right.
+### Dispatching to Jules
+When a story is ready, you move it to *Sprint Planning*. You open the Story Drawer, set the assignee to Jules, and select the `jules-pr-manager` workflow. You click **→ Jules**. A badge appears (`● QUEUED`), and the workflow begins in the background. The card moves to *Development*.
 
-**The rhythm:**
-- Write a bit, ask Claude a question, write more
-- Claude has LSP context — it sees diagnostics, symbols, the open file
-- `Cmd+S` saves; LSP updates instantly
-- The user is never alone in the editor
+### Active Coding Session
+While Jules works, you open the **Editor** to tackle another story. You write some code. The LSP provides instant feedback. You ask the Chat agent for help with a complex function. The agent suggests a block of code. Instead of copying and pasting, you turn on **Ghost Mode**. The code appears inline as "shadow code." You review it in context, hit "Accept All," and hit `⌘S` to save.
 
----
+### Designing a UI Component
+You need a new button. You open the **Designer**. You describe the button to Claude in the chat, and the Canvas renders it. You click "Import from Stitch" to pull in design tokens, and then "Verify with Stitch" to ensure the rendered button matches the corporate design system.
 
-## Act 8 — Checking In (Command Center)
+### Monitoring Agents
+You press the **CMD** button on your Touch Bar (or Activity Bar) to open the **Command Center**. You see Jules is running smoothly on Node 3 of 6. No stalls. You also check the **Org Chart** and see all Hub tokens are healthy.
 
-The user hits the **CMD** button in the Touch Bar (or Activity Bar).
-**Command Center** opens.
+### Reviewing a PR
+Jules finishes. The story card turns amber and shows a PR link. You click it, opening the **Review** view. You read through the diff, confirm the Acceptance Criteria are met, and click merge.
 
-At a glance:
-- **Agent Swarms** — Jules: RUNNING, Claude: IDLE
-- **Active Tasks** — OAuth story, `jules-pr-manager` workflow, node 3 of 6
-- **LSP State** — typescript-language-server running, 4 open files
-- **Agent Stalls** — none (green)
-
-The user sees Jules is making progress. No action needed. Back to Editor.
+### Sprint Retrospective
+At the end of the sprint, you open the **Reporter** to review the total token cost. You then visit the **Memory** view to replay an episode where an agent got stuck, helping you refine the `AGENTS.md` instructions for next time.
 
 ---
 
-## Act 9 — Jules Finishes
+## Part 4 — The Daily Rhythm
 
-The story card badge updates:
-```
-● DONE   PR #1 → main
-```
-
-The `jules-pr-manager` workflow has already:
-1. Detected the PR
-2. Run a review agent — read the diff, posted review comments
-3. Flagged for human approval (confidence below auto-merge threshold)
-
-The card is **amber-highlighted** in the Kanban — it needs the user's
-attention.
-
-User clicks the PR link → opens in the browser. Reviews Jules' work.
-Looks good. Merges.
-
-Story card moves to **Done**. Lane spotlight collapses the rest.
-The board shows one completed story. The first one.
-
----
-
-## Act 10 — First Deployment
-
-Terminal drawer opens (click the bar at the bottom, or Touch Bar).
-
-User types:
-```bash
-make deploy
-```
-```
-Or, if the workflow was configured to auto-deploy on merge — it already
-ran. The Command Center shows the deploy task completed.
-
-The feature is live on the Dell R210ii Core.
-
----
-
-## Act 10 — Sprint Finishing Ceremony
-
-At the end of the sprint, the user triggers the **Sprint Finishing Ceremony** template from the Workflow canvas.
-
-This automated process:
-1. Gathers Git commits, performance metrics, and logs for review.
-2. Prompts the user to reflect on the sprint's successes and failures.
-3. Automatically extracts concrete learning rules and updates `AGENTS.md`.
-4. Refreshes core documentation based on codebase changes.
-5. Captures fresh screenshots if any UI elements were modified.
-6. Automatically creates a Pull Request with all docs and `CHANGELOG.md` updates.
-
-The codebase and its documentation stay in sync, ensuring the next sprint starts without technical debt.
-
----
-
-## The Daily Rhythm
-
-Once onboarded, the user's day looks like this:
-
-### Morning — Orient
+**Morning — Orient**
 1. Open Command Center — any stalls overnight? Any PRs ready?
-2. Scan the Kanban — what moved, what's blocked?
-3. Merge any ready PRs from Jules
+2. Open Org Chart — scan Hub token health. Are any tokens expired or dead?
+3. Scan the Kanban — what moved, what's blocked?
+4. Merge any ready PRs.
 
-### Mid-day — Build
-1. Editor + Claude — active coding session
-2. Dispatch 1–2 stories to Jules (respects the 15/day free tier limit)
-3. Designer — UI work if needed, Canvas for visual review
+**Mid-day — Build**
+1. Editor + Chat — active coding session.
+2. Dispatch stories to agents (respecting budget limits).
+3. Designer — UI work, utilizing the Canvas.
 
-### End of Day — Sweep
-1. Command Center — confirm no stalls
-2. Planner — move completed stories to Done
-3. Check Reporter (CapEx) — token spend, cost summary for the session
-
----
-
-## Provider Rhythm — Working Within Limits
-
-**Claude Pro (web session, $20/mo):**
-- The primary coding and chat agent — active editor work, architecture
-  questions, code review
-- Session limits are conversation-based, not token counts. Copernicus
-  tracks usage and warns before the limit is hit
-- When the session limit is reached, Claude gracefully hands off to Gemini
-  via the Persona tab — the conversation context snapshots across
-  automatically (Story 157). The user notices a divider line in chat,
-  nothing more.
-- Keep Claude focused: use LSP for code context, `📎` attach for specific
-  files — don't paste large blocks into chat manually
-
-**Gemini (Google Student free):**
-- The natural fallback when Claude's session limit is hit
-- Handles large context windows well — good for broad codebase questions,
-  long file analysis, or extended planning conversations
-- Also the primary agent for Jules-adjacent tasks (same Google account)
-- Switch is seamless via Persona tab; no re-authentication needed
-
-**Jules (Google Student Pro — 100 tasks/day, 15 simultaneous):**
-- Generous limits — dispatch freely across the sprint, not just one at a time
-- Run multiple stories in parallel: Jules handles several branches
-  simultaneously while the user works in the Editor on something else
-- Copernicus still gates under-specced dispatches:
-  > *"This story doesn't have acceptance criteria yet. Jules works best
-  > with clear ACs — want me to help write them first?"*
-- The `jules-pr-manager` workflow handles the entire PR loop automatically
-- Monitor all active Jules sessions at once in Command Center — Active Tasks
-  shows each session, its current node, and elapsed time
-- Story card badges update live — no need to check Jules directly
+**End of Day — Sweep**
+1. Command Center — confirm no stalls.
+2. Planner — move completed stories to Done.
+3. Check Reporter (CapEx) — review token spend for the session.
 
 ---
 
-## What Copernicus Does Behind the Scenes
+## Part 5 — Provider Reference
 
-The user never sees:
-- IPC channel names
-- `handleIpc()` envelopes
-- LSP startup logs
-- Workflow engine state transitions
-- Database writes
+| Provider | Type | Primary Use Case | Cost Tier |
+|---|---|---|---|
+| **Anthropic Direct** | Cloud API | Primary chat and complex architectural reasoning. | High ($20/mo or pay-per-token) |
+| **CCR** | Local Proxy (9669) | Multi-file implementation and heavy lifting (Claude Code Router). | High (Depends on upstream) |
+| **OpenRouter** | Cloud API | Access to a variety of models (e.g., DeepSeek, GLM) for specialized tasks. | Variable |
+| **Local Ollama** | Local (11434) | Fast, local formatting, simple JSON tasks, privacy-focused edits. | Free (Compute cost only) |
+| **Cloud Ollama** | Cloud VM | Scaled open-weight models without local compute constraints. | Medium |
+| **MLX** | Local (8080) | Optimized local inference on Apple Silicon. | Free (Compute cost only) |
 
-The user sees:
-- Stories moving across the board
-- Badge updates on cards
-- Amber highlights when something needs attention
-- Copernicus speaking in plain language when guidance is needed
+---
 
-The IDE is quiet when things are working. It speaks up when they're not.
+## Part 6 — What Copernicus Does Behind the Scenes
+
+The IDE is designed to be quiet when things are working and only speak up when they are not. Behind the scenes, it manages a complex state machine.
+
+**Hub Token Authority**
+Copernicus doesn't just run CLI commands; it operates a Constitutional Hub. Every agent is assigned a role via the Org Chart and is issued a token. This token defines what files they can touch, what commands they can run, and how much money they can spend. If an agent loops, stalls, or hits its budget, the token is revoked (goes DEAD). The user sees this as a degraded health score in the Org Chart or a stalled warning in the Command Center. The system ensures agents cannot infinitely run up costs or destroy worktrees.
+
+You never see the raw IPC channels, the SQLite queries, or the workflow engine transitions. You just see stories moving across the board, ghost code appearing in your editor, and PRs waiting for your approval.
