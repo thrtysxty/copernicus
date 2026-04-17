@@ -124,13 +124,13 @@ Stories intentionally postponed to focus on Phase 6 foundation.
 
 | Story | Title | Deferred Reason | Target Phase |
 |-------|-------|-----------------|--------------|
-| 569 | Workflow canvas v2 — parallel execution | Blocked by state machine refactoring | Phase 7 |
+| 569 | Workflow Canvas v2 — Parallel Execution | Blocked by state machine refactoring | Phase 7 |
 | 575 | Agent Break Room | Awaiting agent ephemerality model | Phase 7 |
-| 624 | Extension marketplace backend | Phase 6 foundation priority | Phase 7 |
-| 625 | Extension marketplace UI | Depends on 624 | Phase 7 |
-| 633 | Harbor containerized sandboxing | Infrastructure complexity; defer to Phase 8 | Phase 8 |
-| Epic 010 | Multi-tenant workspace isolation | Enterprise feature; post-launch | Phase 8+ |
-| Epic 015 | Federated agent collaboration | Research phase; speculative | Phase 9 |
+| 624 | Hub-Aware Model Routing | Foundation now available (Hub token health, story 642); reserved for Phase 7 observability sprint | Phase 7 |
+| 625 | Multi-Provider Cost Arbitrage | Depends on production traffic data to make routing decisions meaningful | Phase 8 |
+| 633 | Containerized Agent Sandboxing | Infrastructure complexity; plain Docker viable sooner than Harbor | Phase 8 |
+| Epic 010 | Multi-tenant Workspace Isolation | Enterprise feature; post-launch | Phase 8+ |
+| Epic 015 | Federated Agent Collaboration | Research phase; speculative | Phase 9 |
 
 ---
 
