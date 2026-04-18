@@ -1,8 +1,10 @@
 import logging
-logger = logging.getLogger(__name__)
 import os
+import shlex
 import subprocess
 import sys
+
+logger = logging.getLogger(__name__)
 
 try:
     import termios
@@ -132,10 +134,12 @@ class ToolExecutor:
 
         if not confirm or self.confirm("EXECUTE SHELL", command):
             try:
+                # Security: Use shell=False and shlex.split to prevent injection
+                args = shlex.split(command)
                 # Run in repo root
                 result = subprocess.run(
-                    command,
-                    shell=True,
+                    args,
+                    shell=False,
                     cwd=self.repo_root,
                     capture_output=True,
                     text=True,
