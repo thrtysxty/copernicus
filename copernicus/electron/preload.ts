@@ -154,6 +154,7 @@ const SEND_CHANNELS = new Set([
   // Extensions
   'extensions:list', 'extensions:workflow-nodes', 'extensions:tiles', 'extensions:providers', 'extensions:reload',
   'extension:request-approval', 'extension:fire-event',
+  'extension:list', 'extension:install', 'extension:uninstall', 'extension:search',
   // DAP
   'debug:launch', 'debug:stop', 'debug:pause', 'debug:resume',
   'debug:step-over', 'debug:step-into', 'debug:step-out',
