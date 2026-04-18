@@ -232,6 +232,10 @@ export class StateLedger {
 
     // NotebookLM
     this.db.exec(SCHEMA.nlm_notebooks);
+
+    // Intelligence Documents (Story 566 / 694)
+    this.db.exec(SCHEMA.intelligence_documents);
+
     this.migrateAgentMemory();
   }
 
