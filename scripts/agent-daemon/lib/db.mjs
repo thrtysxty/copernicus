@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import Database from 'libsql';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, renameSync } from 'fs';
