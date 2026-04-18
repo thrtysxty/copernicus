@@ -2,7 +2,9 @@ import argparse
 import json
 import logging
 import os
+import select
 import signal
+import socket
 import subprocess
 import sys
 import threading
@@ -401,7 +403,7 @@ class MCPHub:
             if proxy.eager and start_eager:
                 proxy.start() # Start eager proxies immediately
 
-    def _register_tools(self):
+    def _register_tools(self, start_lazy=True):
         self.all_tools.clear()
         # Register native tools first
         self.all_tools.update(self.native_tools)
@@ -409,7 +411,7 @@ class MCPHub:
         # Register proxy tools, preferring native on collision
         for proxy_name, proxy in self.proxies.items():
             # If lazy, try to start it to get its tools, but don't fail if it doesn't start
-            if not proxy.is_alive() and not proxy.eager:
+            if start_lazy and not proxy.is_alive() and not proxy.eager:
                 logging.info(f"Attempting to start lazy proxy '{proxy_name}' to get its tools...")
                 proxy.start()
             
@@ -421,8 +423,9 @@ class MCPHub:
 
         logging.info(f"Registered {len(self.all_tools)} total tools.")
 
-    def start(self):
-        self._register_tools()
+    def start(self, start_lazy=True):
+        self._register_tools(start_lazy=start_lazy)
+        self._running.set()
         if self.transport == "tcp":
             logging.info(f"Starting MCP Hub (TCP) on port {self.port}...")
             self._server_thread = threading.Thread(target=self._run_tcp_server, daemon=True)
@@ -433,8 +436,6 @@ class MCPHub:
         else:
             logging.error(f"Unknown transport: {self.transport}")
             sys.exit(1)
-
-        self._running.set()
         logging.info("MCP Hub is running.")
         try:
             while self._running.is_set():
@@ -450,16 +451,68 @@ class MCPHub:
         for proxy in self.proxies.values():
             proxy.stop()
         if self._server_thread and self._server_thread.is_alive():
-            # TODO: Implement proper TCP server shutdown
-            pass
+            logging.info("Waiting for TCP server thread to stop...")
+            self._server_thread.join(timeout=5)
+            if self._server_thread.is_alive():
+                logging.warning("TCP server thread did not stop gracefully.")
         logging.info("MCP Hub stopped.")
 
     def _run_tcp_server(self):
-        # Placeholder for TCP server implementation
-        logging.warning("TCP server not yet implemented.")
-        # In a real implementation, this would listen on self.port
-        # and handle incoming tool call requests.
-        pass
+        server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            server_sock.bind(('127.0.0.1', self.port))
+            server_sock.listen(5)
+            server_sock.setblocking(False)
+            logging.info(f"TCP server listening on 127.0.0.1:{self.port}")
+
+            while self._running.is_set():
+                readable, _, _ = select.select([server_sock], [], [], 1.0)
+                if readable:
+                    client_sock, addr = server_sock.accept()
+                    logging.info(f"Accepted connection from {addr}")
+                    client_thread = threading.Thread(
+                        target=self._handle_tcp_client,
+                        args=(client_sock,),
+                        daemon=True
+                    )
+                    client_thread.start()
+        except Exception as e:
+            if self._running.is_set():
+                logging.error(f"TCP server error: {e}", exc_info=True)
+        finally:
+            server_sock.close()
+            logging.info("TCP server socket closed.")
+
+    def _handle_tcp_client(self, client_sock: socket.socket):
+        client_sock.settimeout(1.0)
+        try:
+            # Use makefile for convenient line-based reading/writing
+            f_in = client_sock.makefile('r', buffering=1, encoding='utf-8')
+            f_out = client_sock.makefile('w', buffering=1, encoding='utf-8')
+            with client_sock, f_in, f_out:
+                while self._running.is_set():
+                    try:
+                        line = f_in.readline()
+                        if not line:
+                            break
+                        request = json.loads(line)
+                        response = self._handle_request(request)
+                        f_out.write(json.dumps(response) + "\n")
+                        f_out.flush()
+                    except (socket.timeout, TimeoutError):
+                        continue
+                    except json.JSONDecodeError:
+                        logging.error("TCP client: Invalid JSON received")
+                        break
+                    except Exception as e:
+                        if self._running.is_set():
+                            logging.error(f"TCP client error: {e}")
+                        break
+        except Exception as e:
+            if self._running.is_set():
+                logging.error(f"Error initializing TCP client handler: {e}")
+        logging.info("TCP client connection closed.")
 
     def _run_stdio_server(self):
         while self._running.is_set():
@@ -503,7 +556,7 @@ class MCPHub:
             else:
                 return {"type": "tool_response", "error": f"Tool '{tool_name}' not found."}
         elif request_type == "shutdown":
-            logging.info("Received shutdown request via STDIO.")
+            logging.info(f"Received shutdown request via {self.transport}.")
             self._running.clear()
             return {"type": "status", "message": "Shutting down."}
         else:
