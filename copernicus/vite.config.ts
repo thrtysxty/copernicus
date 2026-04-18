@@ -18,6 +18,24 @@ export default defineConfig(async () => {
               ignoreDynamicRequires: true,
             },
             rollupOptions: {
+              plugins: [
+                {
+                  // hub.mjs lives at scripts/agent-daemon/lib/ — 3 dirs outside the Vite
+                  // root. Rollup's ESM→CJS interop bakes the require() path at build time
+                  // using the source file location, producing
+                  // require("../../../copernicus/node_modules/js-yaml") which resolves to
+                  // the wrong path from dist-electron/ at runtime. Patch post-bundle to a
+                  // bare specifier so Node's node_modules walk finds it correctly.
+                  name: 'fix-hub-yaml-interop',
+                  renderChunk(code: string) {
+                    const fixed = code.replace(
+                      /require\$\d*\(["'][^"']*\/node_modules\/js-yaml["']\)/,
+                      'require("js-yaml")'
+                    )
+                    return fixed !== code ? fixed : null
+                  },
+                },
+              ],
               external: [
                 'node-pty', 'sqlite-vec', 'chokidar', 'fsevents', 'bufferutil', 'utf-8-validate',
                 'libsql',
