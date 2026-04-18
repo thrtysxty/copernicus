@@ -87,6 +87,21 @@ export default defineConfig(async () => {
           },
         },
       },
+      {
+        // Extension host — forked child process, outputs to dist-electron/host/index.js
+        entry: path.join(__dirname, 'electron/extensions/host/index.ts'),
+        vite: {
+          build: {
+            outDir: 'dist-electron/host',
+            rollupOptions: {
+              output: {
+                format: 'cjs',
+                inlineDynamicImports: true,
+              },
+            },
+          },
+        },
+      },
     ]),
     ],
   }
