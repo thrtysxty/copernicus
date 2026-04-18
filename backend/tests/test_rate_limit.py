@@ -1,6 +1,5 @@
 import pytest
 import json
-import time
 from backend.app import app
 from backend.limiter import limiter
 
