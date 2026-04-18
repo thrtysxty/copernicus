@@ -8,7 +8,7 @@ import { assertSafePath } from '../utils/path-guard'
 import { IpcHandlerDeps } from './deps'
 
 export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
-  const { ptyManager, browserSession, fsManager, getPlaywright } = deps
+  const { ptyManager, fsManager } = deps
 
   // Terminal IPC
   ipcMain.on('terminal-create', (_event, { id, cols, rows, cwd }: { id: string; cols: number; rows: number; cwd?: string }) => {
@@ -59,70 +59,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const ALLOWED = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy'];
     if (ALLOWED.includes(target)) deps.spawn('make', [target], { cwd: fsManager.getRootPath(), shell: false })
   });
-
-  // ── Browser Handlers (Story 155) ──────────────────────────────────────────
-  ipcMain.handle('browser:launch', (_event, opts?: { headless?: boolean; executablePath?: string }) => handleIpc('browser:launch', [opts], async () => {
-    const { chromium } = await getPlaywright()
-    if (browserSession.browser) await browserSession.browser.close()
-    const browser = await chromium.launch({
-      headless: opts?.headless ?? true,
-      executablePath: opts?.executablePath,
-    })
-    browserSession.browser = browser
-    const context = await browser.newContext()
-    browserSession.page = await context.newPage()
-    return true
-  }))
-
-  ipcMain.handle('browser:navigate', (_event, url: string) => handleIpc('browser:navigate', [url], async () => {
-    if (!browserSession.page) throw new Error('NO_BROWSER')
-    await browserSession.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 })
-    return browserSession.page.url()
-  }))
-
-  ipcMain.handle('browser:screenshot', (_event, opts?: { selector?: string }) => handleIpc('browser:screenshot', [opts], async () => {
-    if (!browserSession.page) throw new Error('NO_BROWSER')
-    let buffer: Buffer
-    if (opts?.selector) {
-      const el = await browserSession.page.$(opts.selector)
-      if (!el) throw new Error(`Selector not found: ${opts.selector}`)
-      buffer = await el.screenshot()
-    } else {
-      buffer = await browserSession.page.screenshot({ fullPage: false })
-    }
-    const dataUrl = `data:image/png;base64,${buffer.toString('base64')}`
-    if (win) {
-      win.webContents.send('canvas:render', { content: `<img src="${dataUrl}" style="max-width:100%;display:block;margin:auto;" />` })
-    }
-    return dataUrl
-  }))
-
-  ipcMain.handle('browser:click', (_event, selector: string) => handleIpc('browser:click', [selector], async () => {
-    if (!browserSession.page) throw new Error('NO_BROWSER')
-    await browserSession.page.click(selector, { timeout: 5000 })
-    return true
-  }))
-
-  ipcMain.handle('browser:fill', (_event, { selector, value }: { selector: string; value: string }) => handleIpc('browser:fill', [{ selector, value }], async () => {
-    if (!browserSession.page) throw new Error('NO_BROWSER')
-    await browserSession.page.fill(selector, value)
-    return true
-  }))
-
-  ipcMain.handle('browser:evaluate', (_event, script: string) => handleIpc('browser:evaluate', [script], async () => {
-    if (!browserSession.page) throw new Error('NO_BROWSER')
-    const result = await browserSession.page.evaluate(script)
-    return JSON.stringify(result)
-  }))
-
-  ipcMain.handle('browser:close', () => handleIpc('browser:close', [], async () => {
-    if (browserSession.browser) {
-      await browserSession.browser.close()
-      browserSession.browser = null
-      browserSession.page = null
-    }
-    return true
-  }))
 
   // Container Runtime Handlers
   ipcMain.handle('runtime:check-docker', () => handleIpc('runtime:check-docker', [], async () => {
