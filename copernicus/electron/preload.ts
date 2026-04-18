@@ -153,6 +153,7 @@ const SEND_CHANNELS = new Set([
   'health:check-all',
   // Extensions
   'extensions:list', 'extensions:workflow-nodes', 'extensions:tiles', 'extensions:providers', 'extensions:reload',
+  'extension:request-approval',
   // DAP
   'debug:launch', 'debug:stop', 'debug:pause', 'debug:resume',
   'debug:step-over', 'debug:step-into', 'debug:step-out',
