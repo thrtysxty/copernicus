@@ -24,9 +24,6 @@ def chat(request_data: ChatRequest):
     model = request_data.model
     provider_name = request_data.provider or 'anthropic'
 
-    if model.startswith('notebooklm:'):
-        provider_name = 'notebooklm'
-
     system_prompt = request_data.systemPrompt or "You are an AI assistant in the Copernicus IDE."
     api_key = request_data.apiKey or ''
     base_url = request_data.baseUrl

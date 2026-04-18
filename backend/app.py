@@ -12,7 +12,7 @@ from backend.api.llm import llm_bp
 from backend.api.orchestration import orchestration_bp
 from backend.api.docs import docs_bp
 from backend.api.registry import registry_bp
-from backend.api.notebooklm import notebooklm_bp
+# notebooklm_bp removed - package unavailable
 from backend.routes.webhook_routes import webhook_bp
 from backend.socket_manager import SocketManager
 from backend.utils.errors import AppError, handle_app_error
@@ -104,18 +104,9 @@ app.register_blueprint(llm_bp, url_prefix='/api/llm')
 app.register_blueprint(orchestration_bp, url_prefix='/api/orchestration')
 app.register_blueprint(docs_bp, url_prefix='/api/docs')
 app.register_blueprint(registry_bp, url_prefix='/api/registry')
-app.register_blueprint(notebooklm_bp, url_prefix='/api/notebooklm')
+# notebooklm_bp registration removed - package unavailable
 app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
 
 if __name__ == '__main__':
     import sys
-    if '--notebooklm-login' in sys.argv:
-        try:
-            from notebooklm.notebooklm_cli import main as notebooklm_main
-            sys.argv = [sys.argv[0], 'login']
-            sys.exit(notebooklm_main())
-        except ImportError:
-            logger.error("notebooklm package is not installed. Please install it first.")
-            sys.exit(1)
-
     socketio.run(app, host='0.0.0.0', port=5001, debug=False, allow_unsafe_werkzeug=True)
