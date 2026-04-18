@@ -13,14 +13,19 @@ SECRET_PATTERNS = {
     "Generic Secret": r"(?i)(password|secret|token|apikey|private_key)\s*[:=]\s*['\"][a-zA-Z0-9]{16,}['\"]",
 }
 
+# Pre-compile patterns for performance
+COMPILED_PATTERNS = {
+    name: re.compile(pattern) for name, pattern in SECRET_PATTERNS.items()
+}
+
 
 def scan_file(filepath):
     vulnerabilities = []
     try:
         with open(filepath, "r", errors="ignore") as f:
             content = f.read()
-            for name, pattern in SECRET_PATTERNS.items():
-                matches = re.finditer(pattern, content)
+            for name, pattern in COMPILED_PATTERNS.items():
+                matches = pattern.finditer(content)
                 for match in matches:
                     line_no = content.count("\n", 0, match.start()) + 1
                     vulnerabilities.append(f"[!] {name} found in {filepath}:{line_no}")
