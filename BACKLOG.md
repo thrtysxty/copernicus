@@ -128,7 +128,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #589 | Notebooklm Webview Embed | COMPLETE | N/A |
 | #590 | Intelligence Agent Yaml Schema | COMPLETE | N/A |
 | #593 | Core Agent Library | COMPLETE | N/A |
-| #624 | Abtop Agent Process Monitor Spike | APPROVED FOR IMPLEMENTATION | P2 |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
@@ -506,6 +505,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #621 | Pty Auditor Shell Injection Hardening | COMPLETE | P1 |
 | #622 | Replace Bitnet With Gemma4 Mlx Local Model | COMPLETE | P1 |
 | #623 | Openrouter Sdk Provider | COMPLETE | P1 |
+| #624 | Abtop Agent Process Monitor Spike | COMPLETE | P2 |
 | #626 | Provider Registry Abstraction | COMPLETE | P1 |
 | #627 | Provider Config File | COMPLETE | P2 |
 | #628 | Llm Dispatch Service — Tool Loop, Caching, Reasoning, Structured Output | COMPLETE | P1 |
