@@ -134,6 +134,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
 | #687 | Extension Api Proxy Layer | APPROVED FOR IMPLEMENTATION | P3 |
+| #688 | Extension Activation Events | APPROVED FOR IMPLEMENTATION | P3 |
+| #690 | Extension Development Kit | APPROVED FOR IMPLEMENTATION | P3 |
+| #691 | Extension V1 V2 Migration Shim | APPROVED FOR IMPLEMENTATION | P3 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -590,10 +593,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
 | #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
 | #569 | Kb Local Voting | DEFERRED — post-ship, backlog after toolchain and extension system | P3 |
-| #688 | Extension Activation Events | DRAFT | P3 |
 | #689 | Extension Marketplace View | DRAFT | P3 |
-| #690 | Extension Development Kit | DRAFT | P3 |
-| #691 | Extension V1 V2 Migration Shim | DRAFT | P3 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
