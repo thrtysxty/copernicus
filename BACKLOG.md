@@ -562,7 +562,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #681 | Native App Menus Keyboard Shortcuts | COMPLETE | P1 |
 | #682 | Upgrade Vitejs Plugin React V6 | COMPLETE | P3 |
 | #683 | Eslint 9 Flat Config Migration | COMPLETE | P3 |
-| #684 | Electron 28 To 41 Migration | COMPLETE | P3 |
 | #685 | Extension Host Process Jsonrpc | COMPLETE | P3 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
@@ -594,6 +593,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #691 | Extension V1 V2 Migration Shim | DRAFT | P3 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
+| #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

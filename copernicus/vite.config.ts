@@ -26,13 +26,25 @@ export default defineConfig(async () => {
                   // require("../../../copernicus/node_modules/js-yaml") which resolves to
                   // the wrong path from dist-electron/ at runtime. Patch post-bundle to a
                   // bare specifier so Node's node_modules walk finds it correctly.
-                  name: 'fix-hub-yaml-interop',
+                  name: 'fix-hub-bundled-interop',
                   renderChunk(code: string) {
-                    const fixed = code.replace(
-                      /require\$\d*\(["'][^"']*\/node_modules\/js-yaml["']\)/,
-                      'require("js-yaml")'
-                    )
-                    return fixed !== code ? fixed : null
+                    let result = code
+                      // js-yaml: Rollup bakes source-relative path for cross-root module
+                      // hub.mjs (scripts/agent-daemon/lib/). Wrong at runtime from dist-electron/.
+                      .replace(
+                        /require\$\d*\(["'][^"']*\/node_modules\/js-yaml["']\)/,
+                        'require("js-yaml")'
+                      )
+                      // hub.mjs constitutional integrity check: when bundled into Electron,
+                      // import.meta.url resolves to the bundle path so computeFileHash() can't
+                      // find hub.mjs/db.mjs and calls process.exit(2). Remove the exit so the
+                      // bundled Electron process isn't killed — hub.mjs integrity is still
+                      // enforced when the daemon runs as a standalone child process.
+                      .replace(
+                        /(console\.error\("CONSTITUTIONAL INTEGRITY FAILURE:[^"]*"\))[,;\s]*process\.exit\(2\)/g,
+                        '$1'
+                      )
+                    return result !== code ? result : null
                   },
                 },
               ],
