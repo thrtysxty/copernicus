@@ -1,6 +1,8 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import { ExtensionActivatedMessage } from '../ExtensionHostProtocol'
+import { ExtensionApiProxy } from './ExtensionApiProxy'
+import { wrapV2Api } from '@copernicus/compat-v1'
 
 export class ExtensionHostRuntime {
   constructor(private extensionDir: string) {}
@@ -19,7 +21,7 @@ export class ExtensionHostRuntime {
     }
   }
 
-  async loadOne(dir: string): Promise<void> {
+  async loadOne(dir: string, approvedCapabilities?: any): Promise<void> {
     const packagePath = path.join(dir, 'package.json')
     if (!fs.existsSync(packagePath)) {
       return
@@ -32,6 +34,38 @@ export class ExtensionHostRuntime {
       if (!manifest) {
         return
       }
+
+      const entryPoint = packageJson.main ? path.join(dir, packageJson.main) : undefined
+      if (!entryPoint || !fs.existsSync(entryPoint)) {
+        return
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const extensionModule = require(entryPoint)
+
+      if (typeof extensionModule.activate !== 'function') {
+        return
+      }
+
+      const isV1 = !manifest.activationEvents && !manifest.capabilities
+
+      const effectiveCapabilities = isV1
+        ? { filesystem: 'read-write', network: true, subprocess: true }
+        : manifest.capabilities
+
+      const effectiveApproved = isV1
+        ? { filesystem: 'read-write', network: true, subprocess: true }
+        : approvedCapabilities
+
+      const proxy = new ExtensionApiProxy(effectiveCapabilities, effectiveApproved)
+
+      const apiToPass = isV1 ? wrapV2Api(proxy) : proxy
+
+      if (isV1) {
+        console.log(`[compat-v1] ${packageJson.name} loaded with v1 shim`)
+      }
+
+      await extensionModule.activate(apiToPass)
 
       const msg: ExtensionActivatedMessage = {
         jsonrpc: '2.0',

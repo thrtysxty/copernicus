@@ -49,7 +49,7 @@ export default defineConfig(async () => {
                 },
               ],
               external: [
-                'node-pty', 'sqlite-vec', 'chokidar', 'fsevents', 'bufferutil', 'utf-8-validate',
+                'node-pty', 'sqlite-vec', 'chokidar', 'fsevents', 'bufferutil', 'utf-8-validate', 'js-yaml', 'zod', 'better-sqlite3',
                 'libsql',
                 /^@libsql\//,
               ],

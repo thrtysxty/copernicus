@@ -10,6 +10,8 @@ export class ExtensionLoader {
   constructor(private extensionDir: string, private registry: ExtensionRegistry, private hostManager?: ExtensionHostManager) {}
 
   async loadAll(): Promise<LoadedExtension[]> {
+    log.warn('ExtensionLoader (v1) is deprecated. Extensions should migrate to v2 activationEvents and capabilities manifest.')
+
     if (!fs.existsSync(this.extensionDir)) {
       fs.mkdirSync(this.extensionDir, { recursive: true })
     }

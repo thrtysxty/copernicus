@@ -8,8 +8,8 @@ const runtime = new ExtensionHostRuntime(extensionsDir)
 
 process.on('message', async (msg: any) => {
   if (msg && msg.method === 'extension/activate') {
-    const { extensionPath } = msg.params
-    await runtime.loadOne(extensionPath)
+    const { extensionPath, approvedCapabilities } = msg.params
+    await runtime.loadOne(extensionPath, approvedCapabilities)
   }
 });
 
