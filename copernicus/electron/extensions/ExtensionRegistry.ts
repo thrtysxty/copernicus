@@ -29,24 +29,44 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
     this.extensions.set(extension.name, extension)
   }
 
-  registerWorkflowNode(def: WorkflowNodeDefinition & { execute?: NodeExecutor }): void {
+  async registerWorkflowNode(def: WorkflowNodeDefinition & { execute?: NodeExecutor }): Promise<void> {
     this.workflowNodes.set(def.type, def)
     if (def.execute) {
       this.nodeExecutors.set(def.type, def.execute)
     }
   }
 
-  registerTile(def: TileDefinition): void {
+  async registerTile(def: TileDefinition): Promise<void> {
     this.tiles.set(def.id, def)
   }
 
-  registerProvider(def: ProviderDefinition): void {
+  async registerProvider(def: ProviderDefinition): Promise<void> {
     this.providers.set(def.id, def)
   }
 
-  registerView(def: ViewDefinition): void {
+  async registerView(def: ViewDefinition): Promise<void> {
     // TODO: Implement view registration
     log.info(`View ${def.id} registered (not yet implemented)`)
+  }
+
+  // FS mock to satisfy the API
+  fs = {
+    readFile: async (_path: string): Promise<string> => {
+      throw new Error('Not implemented on main process directly yet')
+    },
+    writeFile: async (_path: string, _content: string): Promise<void> => {
+      throw new Error('Not implemented on main process directly yet')
+    }
+  }
+
+  // HTTP mock to satisfy the API
+  http = {
+    get: async (_url: string): Promise<string> => {
+      throw new Error('Not implemented on main process directly yet')
+    },
+    post: async (_url: string, _body: string): Promise<string> => {
+      throw new Error('Not implemented on main process directly yet')
+    }
   }
 
   getExtensions(): LoadedExtension[] {

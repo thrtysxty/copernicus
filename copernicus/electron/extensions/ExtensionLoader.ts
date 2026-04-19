@@ -69,6 +69,8 @@ export class ExtensionLoader {
         registerTile: this.registry.registerTile.bind(this.registry),
         registerProvider: this.registry.registerProvider.bind(this.registry),
         registerView: this.registry.registerView.bind(this.registry),
+        fs: this.registry.fs,
+        http: this.registry.http
       }
 
       try {

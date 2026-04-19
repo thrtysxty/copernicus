@@ -3,8 +3,10 @@ import path from 'node:path'
 import log from 'electron-log'
 import { EventEmitter } from 'node:events'
 import { ExtensionTrustStore } from './ExtensionTrustStore'
-import { CopernicusManifest } from './types'
+import { CopernicusManifest, WorkflowNodeDefinition, TileDefinition, ProviderDefinition, ViewDefinition } from './types'
 import { BrowserWindow } from 'electron'
+import { ExtensionRegistry } from './ExtensionRegistry'
+import { ApiCallRequestMessage, ApiCallResultMessage } from './ExtensionHostProtocol'
 
 export class ExtensionHostManager extends EventEmitter {
   private child: ChildProcess | null = null
@@ -13,7 +15,7 @@ export class ExtensionHostManager extends EventEmitter {
   private trustStore = new ExtensionTrustStore()
   private pendingApprovals = new Map<string, (approved: boolean) => void>()
 
-  constructor() {
+  constructor(private registry: ExtensionRegistry) {
     super()
   }
 
@@ -70,7 +72,7 @@ export class ExtensionHostManager extends EventEmitter {
       this.child.send({
         jsonrpc: '2.0',
         method: 'extension/activate',
-        params: { extensionPath }
+        params: { extensionPath, approvedCapabilities: hasCapabilities ? capabilities : undefined }
       })
     }
   }
@@ -96,9 +98,52 @@ export class ExtensionHostManager extends EventEmitter {
       })
     }
 
-    this.child.on('message', (msg) => {
-      // Stub: handle messages
-      log.info('[ExtensionHostManager] Received message from host:', msg)
+    this.child.on('message', async (msg: any) => {
+      if (msg && msg.method === 'api/call') {
+        const req = msg as ApiCallRequestMessage
+        try {
+          const { method, args } = req.params
+          let result: any
+
+          if (method === 'registerWorkflowNode') {
+            await this.registry.registerWorkflowNode(args[0] as WorkflowNodeDefinition)
+          } else if (method === 'registerTile') {
+            await this.registry.registerTile(args[0] as TileDefinition)
+          } else if (method === 'registerProvider') {
+            await this.registry.registerProvider(args[0] as ProviderDefinition)
+          } else if (method === 'registerView') {
+            await this.registry.registerView(args[0] as ViewDefinition)
+          } else if (method === 'fs.readFile') {
+            result = await this.registry.fs.readFile(args[0] as string)
+          } else if (method === 'fs.writeFile') {
+            await this.registry.fs.writeFile(args[0] as string, args[1] as string)
+          } else if (method === 'http.get') {
+            result = await this.registry.http.get(args[0] as string)
+          } else if (method === 'http.post') {
+            result = await this.registry.http.post(args[0] as string, args[1] as string)
+          } else {
+            throw new Error(`Unknown API method: ${method}`)
+          }
+
+          const response: ApiCallResultMessage = {
+            jsonrpc: '2.0',
+            method: 'api/result',
+            id: req.id,
+            result
+          }
+          this.child?.send(response)
+        } catch (e: any) {
+          const response: ApiCallResultMessage = {
+            jsonrpc: '2.0',
+            method: 'api/result',
+            id: req.id,
+            error: e.message || String(e)
+          }
+          this.child?.send(response)
+        }
+      } else {
+        log.info('[ExtensionHostManager] Received message from host:', msg)
+      }
     })
 
     this.child.on('exit', (code, signal) => {

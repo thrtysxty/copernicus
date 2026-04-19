@@ -52,6 +52,7 @@ import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
 import { jsonlExporter } from './memory/jsonl-exporter'
 import { memoryService } from './memory/memoryService'
 import { ExtensionHostManager } from './extensions/ExtensionHostManager'
+import { ExtensionRegistry } from './extensions/ExtensionRegistry'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -678,7 +679,7 @@ app.whenReady().then(async () => {
   // Story 652: initialize MLX Provider
   mlxProvider.initializeWithSettings(settingsStore);
 
-  extensionHostManager = new ExtensionHostManager()
+  extensionHostManager = new ExtensionHostManager(ExtensionRegistry.getInstance())
   extensionHostManager.start()
 
   if (worktreeManager && win) {
