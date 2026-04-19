@@ -1,1 +1,32 @@
-{"name":"@copernicus/edk","version":"0.1.0","private":true}
+{
+  "name": "@copernicus/edk",
+  "version": "0.1.0",
+  "private": true,
+  "bin": {
+    "create-copernicus-extension": "./dist/bin/create-copernicus-extension.js"
+  },
+  "main": "./dist/types/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./mock": {
+      "types": "./dist/mock/index.d.ts",
+      "default": "./dist/mock/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "mock": ["dist/mock/index.d.ts"]
+    }
+  },
+  "scripts": {
+    "build": "tsc && cp -r src/scaffold dist/"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

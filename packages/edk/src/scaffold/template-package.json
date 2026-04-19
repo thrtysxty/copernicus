@@ -1,0 +1,19 @@
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "A Copernicus extension",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@copernicus/edk": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "copernicus": {
+    "displayName": "{{name}}",
+    "activationEvents": ["*"]
+  }
+}
