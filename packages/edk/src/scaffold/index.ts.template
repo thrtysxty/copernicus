@@ -1,0 +1,5 @@
+import type { CopernicusExtensionAPI } from '@copernicus/edk';
+
+export async function activate(api: CopernicusExtensionAPI): Promise<void> {
+  // Your extension code here
+}

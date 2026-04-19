@@ -1,0 +1,19 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "description": "A Copernicus IDE extension",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "devDependencies": {
+    "@copernicus/edk": "^0.1.0",
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  },
+  "copernicus": {
+    "displayName": "{{name}}",
+    "activationEvents": ["*"]
+  }
+}

@@ -1,0 +1,9 @@
+# {{name}}
+
+A new extension for Copernicus IDE.
+
+## Getting Started
+
+1. Run `npm install` to install dependencies.
+2. Run `npm run build` to compile the extension.
+3. Test your extension in Copernicus IDE.
