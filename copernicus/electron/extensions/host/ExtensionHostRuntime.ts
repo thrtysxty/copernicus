@@ -19,7 +19,7 @@ export class ExtensionHostRuntime {
     }
   }
 
-  private async loadOne(dir: string): Promise<void> {
+  async loadOne(dir: string): Promise<void> {
     const packagePath = path.join(dir, 'package.json')
     if (!fs.existsSync(packagePath)) {
       return

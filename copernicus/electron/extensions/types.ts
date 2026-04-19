@@ -1,6 +1,12 @@
 export interface CopernicusManifest {
   displayName: string
   description?: string
+  capabilities?: {
+    filesystem?: 'read' | 'read-write'
+    network?: boolean
+    subprocess?: boolean
+  }
+  activationEvents?: string[]
   contributes?: {
     workflowNodes?: WorkflowNodeDefinition[]
     tiles?: TileDefinition[]

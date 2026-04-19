@@ -8,6 +8,7 @@ import { registerWorktreeHandlers } from './worktree-handlers'
 import { ExtensionRegistry } from '../extensions/ExtensionRegistry'
 import { ExtensionLoader } from '../extensions/ExtensionLoader'
 import { registerExtensionHandlers } from './extension-handlers'
+import { getExtensionHostManager } from '../main'
 import { GenesisRunner } from '../genesis/genesis-runner'
 import { ScaffoldRunner } from '../genesis/scaffold'
 import { SnapshotManager } from '../workflow/snapshot-manager'
@@ -68,7 +69,7 @@ export async function registerAllIpcHandlers(
   // Extensions
   const extensionDir = path.join(app.getPath('home'), '.copernicus', 'extensions')
   const extensionRegistry = ExtensionRegistry.getInstance()
-  const extensionLoader = new ExtensionLoader(extensionDir, extensionRegistry)
+  const extensionLoader = new ExtensionLoader(extensionDir, extensionRegistry, getExtensionHostManager() || undefined)
   await extensionLoader.loadAll()
   registerExtensionHandlers(extensionRegistry, extensionLoader)
 

@@ -49,6 +49,7 @@ import { BrowserPanel } from './components/browser/BrowserPanel'
 import DatabasePanel from './components/database/DatabasePanel'
 import { OrgChartPanel } from './components/hub/OrgChartPanel'
 import { ContractProposalPanel } from './components/hub/ContractProposalPanel'
+import { CapabilityApprovalDialog } from './components/extensions/CapabilityApprovalDialog'
 
 
 const TERMINAL_HEIGHT = 200
@@ -536,6 +537,7 @@ export default function App() {
         />
       )}
       <CRTOverlay enabled={crtMode} anyAgentActive={anyAgentActive} heavyLoad={heavyLoad} />
+      <CapabilityApprovalDialog />
     </div>
   )
 }

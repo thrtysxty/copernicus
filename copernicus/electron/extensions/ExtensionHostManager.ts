@@ -2,11 +2,28 @@ import { ChildProcess, fork } from 'node:child_process'
 import path from 'node:path'
 import log from 'electron-log'
 import { EventEmitter } from 'node:events'
+import { ExtensionTrustStore } from './ExtensionTrustStore'
+import { CopernicusManifest } from './types'
+import { BrowserWindow } from 'electron'
 
 export class ExtensionHostManager extends EventEmitter {
   private child: ChildProcess | null = null
   private crashCount = 0
   private lastCrashTime = 0
+  private trustStore = new ExtensionTrustStore()
+  private pendingApprovals = new Map<string, (approved: boolean) => void>()
+
+  constructor() {
+    super()
+  }
+
+  resolveApproval(id: string, approved: boolean): void {
+    const resolver = this.pendingApprovals.get(id)
+    if (resolver) {
+      resolver(approved)
+      this.pendingApprovals.delete(id)
+    }
+  }
 
   start(): void {
     this.spawnHost()
@@ -16,6 +33,45 @@ export class ExtensionHostManager extends EventEmitter {
     if (this.child) {
       this.child.kill()
       this.child = null
+    }
+  }
+
+  async activateExtension(extensionName: string, displayName: string, capabilities: CopernicusManifest['capabilities'], extensionPath: string): Promise<void> {
+    const hasCapabilities = capabilities && Object.keys(capabilities).length > 0
+
+    if (hasCapabilities && !this.trustStore.isTrusted(extensionName)) {
+      const win = BrowserWindow.getAllWindows()[0]
+      if (!win) {
+        log.warn(`[ExtensionHostManager] No window available to prompt for extension ${extensionName}`)
+        return
+      }
+
+      const requestId = Math.random().toString(36).substring(7)
+
+      const approved = await new Promise<boolean>((resolve) => {
+        this.pendingApprovals.set(requestId, resolve)
+        win.webContents.send('extension:request-approval', {
+          id: requestId,
+          extensionName,
+          displayName,
+          capabilities
+        })
+      })
+
+      if (!approved) {
+        log.warn(`[ExtensionHostManager] User denied capabilities for extension ${extensionName}`)
+        return
+      }
+
+      this.trustStore.approve(extensionName, capabilities)
+    }
+
+    if (this.child) {
+      this.child.send({
+        jsonrpc: '2.0',
+        method: 'extension/activate',
+        params: { extensionPath }
+      })
     }
   }
 

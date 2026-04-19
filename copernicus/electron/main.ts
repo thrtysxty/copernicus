@@ -80,6 +80,7 @@ let isFirstRun = false;
 let touchBarCleanup: { remove: () => void } | null = null
 let worktreeManager: WorktreeManager | null = null
 let extensionHostManager: ExtensionHostManager | null = null
+export const getExtensionHostManager = () => extensionHostManager;
 let ipcCleanupFns: {
   cleanupTestHandlers: () => void
   cleanupReplayHandlers: () => void

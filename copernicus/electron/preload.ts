@@ -235,6 +235,7 @@ const LISTEN_CHANNELS = new Set([
   'mlx:download-progress', 'mlx:server-status-changed',
   // Agent Hub Self-Improvement (Story 648)
   'contract:proposal_ready',
+  'extension:request-approval',
 ])
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(channel: string, listener: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void): () => void {

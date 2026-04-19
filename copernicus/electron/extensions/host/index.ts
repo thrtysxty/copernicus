@@ -6,12 +6,15 @@ const extensionsDir = path.join(os.homedir(), '.copernicus', 'extensions')
 
 const runtime = new ExtensionHostRuntime(extensionsDir)
 
-process.on('message', (_msg) => {
-  // Currently unused, handle incoming messages here later
+process.on('message', async (msg: any) => {
+  if (msg && msg.method === 'extension/activate') {
+    const { extensionPath } = msg.params
+    await runtime.loadOne(extensionPath)
+  }
 });
 
 async function main() {
-  await runtime.loadAll()
+  // Extension load is triggered via IPC now
 }
 
 main().catch((err) => {

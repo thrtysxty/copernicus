@@ -4,9 +4,10 @@ import fs from 'fs'
 import { ExtensionRegistry } from './ExtensionRegistry'
 import { CopernicusExtensionAPI } from './api'
 import { CopernicusManifest, LoadedExtension } from './types'
+import { ExtensionHostManager } from './ExtensionHostManager'
 
 export class ExtensionLoader {
-  constructor(private extensionDir: string, private registry: ExtensionRegistry) {}
+  constructor(private extensionDir: string, private registry: ExtensionRegistry, private hostManager?: ExtensionHostManager) {}
 
   async loadAll(): Promise<LoadedExtension[]> {
     if (!fs.existsSync(this.extensionDir)) {
@@ -71,6 +72,11 @@ export class ExtensionLoader {
       }
 
       try {
+        if (this.hostManager) {
+           // The new host manager is responsible for checking capabilities and activating the extension
+           await this.hostManager.activateExtension(packageJson.name, manifest.displayName || packageJson.name, manifest.capabilities, dir)
+        }
+
         await extensionModule.activate(api)
         return {
           name: packageJson.name,

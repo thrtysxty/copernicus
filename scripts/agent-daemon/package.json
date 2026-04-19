@@ -6,9 +6,9 @@
     "@anthropic-ai/sdk": "^0.82.0",
     "@google/generative-ai": "^0.24.1",
     "@google/jules-sdk": "^0.2.0",
-    "libsql": "^0.5.29",
     "js-yaml": "^4.1.1",
-    "openai": "^4.0.0",
+    "libsql": "^0.5.29",
+    "openai": "^4.104.0",
     "zod": "^3.25.76"
   }
 }
