@@ -49,6 +49,7 @@ import { BrowserPanel } from './components/browser/BrowserPanel'
 import DatabasePanel from './components/database/DatabasePanel'
 import { OrgChartPanel } from './components/hub/OrgChartPanel'
 import { ContractProposalPanel } from './components/hub/ContractProposalPanel'
+import { ExtensionsPanel } from './components/extensions/ExtensionsPanel'
 import { CapabilityApprovalDialog } from './components/extensions/CapabilityApprovalDialog'
 
 
@@ -415,6 +416,7 @@ export default function App() {
             {activeView === 'database' && <DatabasePanel />}
             {activeView === 'hub:org-chart' && <OrgChartPanel />}
             {activeView === 'hub:contract-proposals' && <ContractProposalPanel />}
+            {activeView === 'extensions' && <ExtensionsPanel />}
             {(activeView === 'designer' || activeView === 'editor') && (
 
               <>
