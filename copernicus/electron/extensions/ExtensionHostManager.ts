@@ -1,3 +1,4 @@
+import { ExtensionActivationBus } from './ExtensionActivationBus'
 import { ChildProcess, fork } from 'node:child_process'
 import path from 'node:path'
 import log from 'electron-log'
@@ -14,9 +15,11 @@ export class ExtensionHostManager extends EventEmitter {
   private lastCrashTime = 0
   private trustStore = new ExtensionTrustStore()
   private pendingApprovals = new Map<string, (approved: boolean) => void>()
+  public activationBus: ExtensionActivationBus;
 
   constructor(private registry: ExtensionRegistry) {
     super()
+    this.activationBus = new ExtensionActivationBus(this)
   }
 
   resolveApproval(id: string, approved: boolean): void {
@@ -29,6 +32,8 @@ export class ExtensionHostManager extends EventEmitter {
 
   start(): void {
     this.spawnHost()
+    // Fire wildcard activation events on startup for backward compat
+    setTimeout(() => this.activationBus.fire('*'), 500)
   }
 
   stop(): void {
@@ -38,7 +43,18 @@ export class ExtensionHostManager extends EventEmitter {
     }
   }
 
-  async activateExtension(extensionName: string, displayName: string, capabilities: CopernicusManifest['capabilities'], extensionPath: string): Promise<void> {
+  async activateExtension(extensionName: string, displayName: string, capabilities: CopernicusManifest['capabilities'], extensionPath: string, forceActivate: boolean = false): Promise<void> {
+    if (!forceActivate) {
+      try {
+        const pkg = require(path.join(extensionPath, 'package.json'));
+        const events = pkg.copernicus?.activationEvents || [];
+        this.activationBus.register(extensionPath, extensionName, displayName, capabilities, events);
+      } catch (e) {
+        log.warn(`[ExtensionHostManager] Failed to read package.json for ${extensionName}`, e);
+      }
+      return;
+    }
+
     const hasCapabilities = capabilities && Object.keys(capabilities).length > 0
 
     if (hasCapabilities && !this.trustStore.isTrusted(extensionName)) {

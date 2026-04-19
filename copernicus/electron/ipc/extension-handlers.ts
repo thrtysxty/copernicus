@@ -15,6 +15,14 @@ export function registerExtensionHandlers(registry: ExtensionRegistry, loader: E
     return registry.getExtensions()
   }))
 
+  ipcMain.handle('extension:fire-event', (_event, msg: { event: string }) => handleIpc(async () => {
+    const hostManager = getExtensionHostManager()
+    if (hostManager) {
+      await hostManager.activationBus.fire(msg.event)
+    }
+    return { ok: true }
+  }))
+
   ipcMain.handle('extension:request-approval', (_event, result: { id: string; approved: boolean }) => handleIpc(() => {
     const hostManager = getExtensionHostManager()
     if (hostManager) {

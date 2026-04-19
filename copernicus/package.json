@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "main": "dist-electron/main.js",
   "description": "The COPERNICUS IDE - Professional Phosphor Edition",
-  "author": "COPERNICUS IDE Team",
+  "author": {
+    "name": "COPERNICUS IDE Team",
+    "email": "team@copernicus.local"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/JMThiessen/copernicus.git"

@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 const ipcRenderer = window.ipcRenderer
 
 export interface Command {
@@ -26,6 +27,11 @@ class CommandRegistry {
   execute(input: string, context: CommandContext): boolean {
     const [cmdName, ...rest] = input.trim().split(/\s+/)
     if (!cmdName) return false
+
+    // Story 688: Fire extension activation event before command execution
+    window.ipcRenderer.invoke('extension:fire-event', { event: `onCommand:${cmdName}` })
+      .catch((err: any) => log.error('Failed to fire extension event', err))
+
     const args = rest.join(' ')
     const cmd = this.commands.get(cmdName)
     if (!cmd) return false

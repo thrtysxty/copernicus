@@ -310,6 +310,7 @@ stitchTokens: null,
 
       setView: (view) => set((state) => {
         if (view === 'search') return { ...state, searchDrawerOpen: true }
+        window.ipcRenderer.invoke('extension:fire-event', { event: `onView:${view}` }).catch(err => log.error('Extension fire event failed', err))
         return { ...state, activeView: view }
       }),
 
