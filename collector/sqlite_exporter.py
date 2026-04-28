@@ -180,7 +180,7 @@ class OTLPHandler(BaseHTTPRequestHandler):
                             cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
                             conn.commit()
                             conn.close()
-                        except Exception as ignore_e:
+                        except Exception:
                             pass
 
                 self.send_response(200)
@@ -233,6 +233,15 @@ def run_recovery():
         """)
         conn.commit()
 
+        # Deduplicate: Bulk mark as written any unwritten rows whose payload_hash is already written
+        cursor.execute("""
+            UPDATE collector_log
+            SET written = 1
+            WHERE written = 0
+            AND payload_hash IN (SELECT payload_hash FROM collector_log WHERE written = 1)
+        """)
+        conn.commit()
+
         cursor.execute("SELECT id, payload_hash, payload FROM collector_log WHERE written = 0 ORDER BY id ASC")
         rows = cursor.fetchall()
 
@@ -241,14 +250,13 @@ def run_recovery():
         recovered = 0
 
         if pending_rows > 0:
+            seen_hashes = set()
+            duplicate_ids = []
             for log_id, payload_hash, payload_text in rows:
                 try:
-                    # Check if another row with same hash is already written
-                    cursor.execute("SELECT id FROM collector_log WHERE payload_hash = ? AND written = 1 LIMIT 1", (payload_hash,))
-                    if cursor.fetchone():
-                        # Deduplicate: Mark as written without processing
-                        cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
-                        conn.commit()
+                    # Deduplicate within the current batch
+                    if payload_hash in seen_hashes:
+                        duplicate_ids.append((log_id,))
                         continue
 
                     payload = json.loads(payload_text)
@@ -284,12 +292,21 @@ def run_recovery():
                         cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
                         conn.commit()
 
+                    # Only add to seen_hashes after successful processing
+                    seen_hashes.add(payload_hash)
+
                 except json.JSONDecodeError:
                     logger.error(f"Invalid JSON payload in collector_log id {log_id}")
                     cursor.execute("UPDATE collector_log SET written = 1 WHERE id = ?", (log_id,))
                     conn.commit()
+                    # Add to seen hashes as we marked it written
+                    seen_hashes.add(payload_hash)
                 except Exception as e:
                     logger.error(f"Error recovering log id {log_id}: {e}")
+
+            if duplicate_ids:
+                cursor.executemany("UPDATE collector_log SET written = 1 WHERE id = ?", duplicate_ids)
+                conn.commit()
 
             recovery_stats["recovered"] = recovered
             if recovered > 0:
