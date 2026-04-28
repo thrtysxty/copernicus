@@ -15,7 +15,7 @@ export function ensureCopernicusDirectory(settingsStore: SettingsStore, isFirstR
   try {
     if (!fs.existsSync(COPERNICUS_HOME)) fs.mkdirSync(COPERNICUS_HOME, { recursive: true });
     if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
-    const settingsPath = path.join(app.getPath('userData'), 'copernicus-settings.json');
+    const settingsPath = path.join(process.env.COPERNICUS_E2E_HOME ?? app.getPath('userData'), 'copernicus-settings.json');
     if (!fs.existsSync(settingsPath) || !settingsStore.get('workspace')) isFirstRunRef.current = true;
   } catch (error) { log.error('Failed to initialize .copernicus directory:', error); }
 }

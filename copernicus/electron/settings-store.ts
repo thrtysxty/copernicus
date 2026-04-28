@@ -22,7 +22,7 @@ export class SettingsStore {
 
   constructor() {
     // Unify on copernicus-settings.json as the single source of truth
-    this.configPath = path.join(app.getPath('userData'), 'copernicus-settings.json');
+    this.configPath = path.join(process.env.COPERNICUS_E2E_HOME ?? app.getPath('userData'), 'copernicus-settings.json');
     this.load();
     this.migrateLegacy();
   }
