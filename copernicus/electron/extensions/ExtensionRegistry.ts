@@ -14,6 +14,7 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
   private workflowNodes: Map<string, WorkflowNodeDefinition & { execute?: NodeExecutor }> = new Map()
   private tiles: Map<string, TileDefinition> = new Map()
   private providers: Map<string, ProviderDefinition> = new Map()
+  private views: Map<string, ViewDefinition> = new Map()
   private nodeExecutors: Map<string, NodeExecutor> = new Map()
 
   private constructor() {}
@@ -45,8 +46,8 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
   }
 
   async registerView(def: ViewDefinition): Promise<void> {
-    // TODO: Implement view registration
-    log.info(`View ${def.id} registered (not yet implemented)`)
+    this.views.set(def.id, def)
+    log.info(`View ${def.id} registered`)
   }
 
   // FS mock to satisfy the API
@@ -85,6 +86,10 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
     return Array.from(this.providers.values())
   }
 
+  getViews(): ViewDefinition[] {
+    return Array.from(this.views.values())
+  }
+
   getNodeExecutor(type: string): NodeExecutor | undefined {
     return this.nodeExecutors.get(type)
   }
@@ -94,6 +99,7 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
     this.workflowNodes.clear()
     this.tiles.clear()
     this.providers.clear()
+    this.views.clear()
     this.nodeExecutors.clear()
   }
 }
