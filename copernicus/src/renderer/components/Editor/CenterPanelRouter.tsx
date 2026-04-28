@@ -429,7 +429,10 @@ export function CenterPanelRouter({
   // FIX: When switching from Designer/other to Editor view, ensure centerMode is reset correctly
   useEffect(() => {
     if (activeView === 'editor' && (centerModeRef.current === 'canvas' || centerModeRef.current === 'builder')) {
-      if (!filePath) return
+      if (!filePath) {
+        setCenterMode('code')
+        return
+      }
       const fileType = classifyFile(filePath)
       if (fileType === 'canvas') setCenterMode('canvas')
       else if (fileType === 'svg') setCenterMode('canvas')
@@ -440,7 +443,10 @@ export function CenterPanelRouter({
 
   useEffect(() => {
     if (centerModeRef.current === 'builder' || centerModeRef.current === 'canvas') return
-    if (!filePath) return
+    if (!filePath) {
+      setCenterMode('code')
+      return
+    }
     if (language === 'svg') setCenterMode('canvas')
     else if (language === 'image') setCenterMode('canvas')
     else if (language === 'binary') setCenterMode('binary')
