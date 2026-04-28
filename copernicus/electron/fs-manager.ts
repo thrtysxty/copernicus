@@ -1,4 +1,5 @@
 import fs from 'fs'
+import fsPromises from 'fs/promises'
 import path from 'path'
 import os from 'os'
 import log from './utils/logger'
@@ -79,18 +80,22 @@ export class FSManager {
     if (!last) throw new Error('No transaction found to undo');
 
     log.info(`[FSManager] Undoing transaction ${last.id}...`);
-    for (const f of last.files) {
-      if (f.originalDataPath) {
-        try {
-          const originalContent = fs.readFileSync(f.originalDataPath, 'utf-8');
-          fs.writeFileSync(f.path, originalContent, 'utf-8');
-          log.info(`[FSManager] Restored ${f.path}`);
-        } catch (error: any) {
-          log.error(`[FSManager] Error restoring ${f.path} from ${f.originalDataPath}: ${error.message}`);
+    const batchSize = 50;
+    for (let i = 0; i < last.files.length; i += batchSize) {
+      const batch = last.files.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (f) => {
+        if (f.originalDataPath) {
+          try {
+            const originalContent = await fsPromises.readFile(f.originalDataPath, 'utf-8');
+            await fsPromises.writeFile(f.path, originalContent, 'utf-8');
+            log.info(`[FSManager] Restored ${f.path}`);
+          } catch (error: any) {
+            log.error(`[FSManager] Error restoring ${f.path} from ${f.originalDataPath}: ${error.message}`);
+          }
+        } else {
+          log.warn(`[FSManager] No original content path found for ${f.path} in transaction ${last.id}. Skipping.`);
         }
-      } else {
-        log.warn(`[FSManager] No original content path found for ${f.path} in transaction ${last.id}. Skipping.`);
-      }
+      }));
     }
     // After undoing, mark the transaction in the ledger as rolled back
     stateLedger.logTransaction({
