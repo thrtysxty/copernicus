@@ -226,7 +226,7 @@ export class AuthManager {
         if (fs.existsSync(ghConfigPath)) {
             try {
                 const content = fs.readFileSync(ghConfigPath, 'utf-8');
-                const parsed = yaml.load(content) as any;
+                const parsed = yaml.load(content, { schema: yaml.JSON_SCHEMA }) as any;
                 const hosts = Object.keys(parsed);
                 const host = hosts[0];
                 if (!host) return null;

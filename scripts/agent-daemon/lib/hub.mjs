@@ -302,7 +302,7 @@ export function updateRole(roleName, updates) {
   }
 
   const fileContent = fs.readFileSync(orgYamlPath, 'utf8');
-  const parsed = yaml.load(fileContent);
+  const parsed = yaml.load(fileContent, { schema: yaml.JSON_SCHEMA });
 
   if (!parsed.roles || !parsed.roles[roleName]) {
     throw new Error(`Role ${roleName} not found in org.yaml`);
@@ -339,7 +339,7 @@ export function loadOrgChart() {
   const fileContent = fs.readFileSync(orgYamlPath, 'utf8');
   let parsed;
   try {
-    parsed = yaml.load(fileContent);
+    parsed = yaml.load(fileContent, { schema: yaml.JSON_SCHEMA });
   } catch (e) {
     throw new Error(`Invalid YAML in org chart: ${e.message}`);
   }
@@ -1133,7 +1133,7 @@ export function loadContract(roleName) {
   const content = fs.readFileSync(contractPath, 'utf8');
   let parsed;
   try {
-    parsed = yaml.load(content);
+    parsed = yaml.load(content, { schema: yaml.JSON_SCHEMA });
   } catch (e) {
     throw new Error(`Invalid YAML in contract '${roleName}': ${e.message}`);
   }

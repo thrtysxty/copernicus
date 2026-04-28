@@ -32,10 +32,10 @@ export function loadRegistry() {
     // Determine defaultPath relative to this file
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
     const defaultPath = path.join(__dirname, '..', 'defaults', 'providers.yaml');
-    const defaults = fs.existsSync(defaultPath) ? yaml.load(fs.readFileSync(defaultPath, 'utf8')) : { providers: {}, models: {} };
+    const defaults = fs.existsSync(defaultPath) ? yaml.load(fs.readFileSync(defaultPath, 'utf8'), { schema: yaml.JSON_SCHEMA }) : { providers: {}, models: {} };
 
     const overridePath = path.join(os.homedir(), '.copernicus', 'providers.yaml');
-    const overrides = fs.existsSync(overridePath) ? yaml.load(fs.readFileSync(overridePath, 'utf8')) : {};
+    const overrides = fs.existsSync(overridePath) ? yaml.load(fs.readFileSync(overridePath, 'utf8'), { schema: yaml.JSON_SCHEMA }) : {};
 
     const merged = deepMerge(defaults, overrides);
 

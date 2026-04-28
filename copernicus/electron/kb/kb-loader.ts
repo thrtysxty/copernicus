@@ -44,7 +44,7 @@ export function loadKnowledgeBase(): void {
       const body = match[2] ? match[2].trim() : '';
 
       try {
-        const fm = yaml.load(frontmatterText) as Record<string, any> | undefined;
+        const fm = yaml.load(frontmatterText, { schema: yaml.JSON_SCHEMA }) as Record<string, any> | undefined;
 
         if (!fm || !fm.id || !fm.title || !fm.section || !fm.source || !fm.version) {
           log.warn(`[KB] Missing required frontmatter fields in ${filePath}`);

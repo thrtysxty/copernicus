@@ -44,7 +44,7 @@ function getSecurityConfig() {
     return DEFAULT_CONFIG;
   }
   try {
-    const doc = yaml.load(fsLib.readFileSync(SECURITY_YAML_PATH, 'utf8'));
+    const doc = yaml.load(fsLib.readFileSync(SECURITY_YAML_PATH, 'utf8'), { schema: yaml.JSON_SCHEMA });
     return doc;
   } catch (e) {
     return DEFAULT_CONFIG;
