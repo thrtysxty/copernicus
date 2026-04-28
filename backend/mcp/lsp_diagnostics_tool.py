@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 import os
 import json
 import subprocess
@@ -79,7 +78,7 @@ def run_ruff(workspace_root, file_filter=None):
                 "message": item.get("message", "")
             })
         return diagnostics
-    except Exception as e:
+    except Exception:
         return []
 
 def main():
