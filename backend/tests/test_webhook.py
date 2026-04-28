@@ -1,5 +1,4 @@
 import os
-import json
 import pytest
 import hmac
 import hashlib
