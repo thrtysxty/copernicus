@@ -60,7 +60,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const monacoInstance = useMonaco();
   const editorRef = React.useRef<any>(null);
   const invoke = useIpcError();
-  const { setFileDirty } = useLayoutStore()
+  const { setFileDirty, editorFocusLine, setEditorFocusLine } = useLayoutStore()
   const [, setGhostDecorations] = React.useState<string[]>([])
   const [, setCoverageDecorations] = React.useState<string[]>([])
   const coverageData = useTestRunnerStore(s => s.coverage)
@@ -401,6 +401,17 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     }
   }, [monacoInstance]) // eslint-disable-line react-hooks/exhaustive-deps
 
+
+  React.useEffect(() => {
+    if (!monacoInstance || !editorRef.current || !filePath || !editorFocusLine) return;
+    if (editorFocusLine.file === filePath) {
+      editorRef.current.revealLineInCenter(editorFocusLine.line);
+      editorRef.current.setPosition({ lineNumber: editorFocusLine.line, column: editorFocusLine.col || 1 });
+      editorRef.current.focus();
+      setEditorFocusLine(null);
+    }
+  }, [monacoInstance, filePath, editorFocusLine, setEditorFocusLine]);
+
   // Handle goto-line events (Story 338)
   React.useEffect(() => {
     if (!monacoInstance) return
@@ -510,6 +521,12 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
         }}
         onMount={(editor) => {
           editorRef.current = editor;
+          if (editorFocusLine && editorFocusLine.file === filePath) {
+            editor.revealLineInCenter(editorFocusLine.line);
+            editor.setPosition({ lineNumber: editorFocusLine.line, column: editorFocusLine.col || 1 });
+            editor.focus();
+            setEditorFocusLine(null);
+          }
           // AC2: Accept All shortcut
           if (monacoInstance) {
             editor.addCommand(

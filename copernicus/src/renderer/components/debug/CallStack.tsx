@@ -7,6 +7,8 @@ export function CallStack() {
   const callStack = useDebugStore(s => s.callStack)
   const isPaused = useDebugStore(s => s.isPaused)
   const setActiveFile = useLayoutStore(s => s.setActiveFile)
+  const openFile = useLayoutStore(s => s.openFile)
+  const setEditorFocusLine = useLayoutStore(s => s.setEditorFocusLine)
   const invoke = useIpcError()
   const setScopes = useDebugStore(s => s.setScopes)
   const clearVariables = useDebugStore(s => s.clearVariables)
@@ -22,12 +24,13 @@ export function CallStack() {
   const handleFrameClick = async (frameId: number, sourcePath?: string, _line?: number) => {
     // Open file
     if (sourcePath) {
+      openFile(sourcePath)
       setActiveFile(sourcePath)
 
-      // TODO: scroll to line in monaco editor.
-      // Monaco editor handles the openFilePath but we need a way to tell it the line.
-      // A common pattern is openFilePath = 'path:line' or setting it in a store state `editorFocusLine`
-      // For now just opening the file is handled.
+      if (_line) {
+        setEditorFocusLine({ file: sourcePath, line: _line, col: 1 })
+        invoke<void>('layout:goto-line', { file: sourcePath, line: _line, col: 1 }).catch(() => {})
+      }
     }
 
     // Load scopes for this frame

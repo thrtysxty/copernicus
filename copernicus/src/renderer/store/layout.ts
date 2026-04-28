@@ -233,6 +233,8 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   // Workspace Switch
   workspaceKey: number
   resetForWorkspaceSwitch: () => void
+  editorFocusLine: { file: string, line: number, col?: number } | null
+  setEditorFocusLine: (focus: { file: string, line: number, col?: number } | null) => void
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -458,6 +460,8 @@ stitchTokens: null,
       setSessionEnded: (v) => set({ isSessionEnded: v }),
 
       workspaceKey: 0,
+      editorFocusLine: null,
+      setEditorFocusLine: (focus) => set({ editorFocusLine: focus }),
       resetForWorkspaceSwitch: () => set((state) => ({
         openFiles: [],
         activeFilePath: null,
