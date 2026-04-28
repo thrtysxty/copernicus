@@ -32,8 +32,8 @@ describe('LogTailer', () => {
     expect(sources).toContain('backend')
   })
 
-  it('should return log history sorted by timestamp descending', () => {
-    const history = logTailer.getHistory(10)
+  it('should return log history sorted by timestamp descending', async () => {
+    const history = await logTailer.getHistory(10)
     expect(history.length).toBe(3)
     // Descending order: backend (10:00:02) -> language-server (10:00:01) -> copernicus (10:00:00)
     expect(history[0]!.source).toBe('backend')

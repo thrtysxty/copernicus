@@ -28,15 +28,15 @@ export class LogTailer extends EventEmitter {
     return ['copernicus', 'language-server', 'backend']
   }
 
-  public getHistory(limit: number = 200): LogEntry[] {
+  public async getHistory(limit: number = 200): Promise<LogEntry[]> {
     const allLogs: LogEntry[] = []
     const sources = this.listSources() as Array<'copernicus' | 'language-server' | 'backend'>
     
-    for (const source of sources) {
+    await Promise.all(sources.map(async (source) => {
       const logPath = path.join(this.logDir, `${source}.log`)
       if (fs.existsSync(logPath)) {
         try {
-          const content = fs.readFileSync(logPath, 'utf-8')
+          const content = await fs.promises.readFile(logPath, 'utf-8')
           const lines = content.split('\n')
           for (const line of lines) {
             if (line.trim()) {
@@ -47,7 +47,7 @@ export class LogTailer extends EventEmitter {
           log.error(`Failed to read log file: ${logPath}`, e)
         }
       }
-    }
+    }))
 
     // Sort by timestamp DESCENDING and limit
     return allLogs
