@@ -1,5 +1,4 @@
 import logging
-logger = logging.getLogger(__name__)
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter.errors import RateLimitExceeded
@@ -16,7 +15,9 @@ from backend.api.registry import registry_bp
 from backend.routes.webhook_routes import webhook_bp
 from backend.socket_manager import SocketManager
 from backend.utils.errors import AppError, handle_app_error
+from werkzeug.exceptions import HTTPException
 
+logger = logging.getLogger(__name__)
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
@@ -77,7 +78,6 @@ def handle_custom_error(error: AppError):
     """Handle AppError using the centralized handler."""
     return handle_app_error(error)
 
-from werkzeug.exceptions import HTTPException
 
 @app.errorhandler(Exception)
 def handle_generic_error(error: Exception):
@@ -108,5 +108,4 @@ app.register_blueprint(registry_bp, url_prefix='/api/registry')
 app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
 
 if __name__ == '__main__':
-    import sys
     socketio.run(app, host='0.0.0.0', port=5001, debug=False, allow_unsafe_werkzeug=True)
