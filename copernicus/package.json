@@ -152,7 +152,7 @@
     "js-yaml": "^4.1.1",
     "libsql": "^0.5.29",
     "lucide-react": "^0.294.0",
-    "monaco-editor": "^0.45.0",
+    "monaco-editor": "^0.55.1",
     "node-pty": "^1.1.0",
     "openai": "^6.25.0",
     "playwright-core": "^1.58.2",
