@@ -2,6 +2,7 @@ import { stateLedger, StoryRecord, JulesSession } from '../db/state-ledger'
 import { generateJulesPrompt } from './prompt-generator'
 import { JulesClient } from './jules-client'
 import { fsManager } from '../fs-manager'
+import { julesManager } from './jules-manager'
 
 export interface DispatchOptions {
   story: StoryRecord
@@ -80,7 +81,6 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
     stateLedger.upsertJulesSession(record)
 
     // Call createSession from JulesManager to trigger the agent_spawn hook
-    const { julesManager } = await import('./jules-manager')
     julesManager.createSession(story.id, sessionId, prompt)
 
     return { ok: true, sessionId }

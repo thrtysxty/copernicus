@@ -15,6 +15,7 @@ import {
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { TILE_MAP } from './tile-renders'
+import { commandRegistry } from '../../../store/commandRegistry'
 
 const renderPreview = (comp: UIComponent) => {
   const Tile = TILE_MAP[comp.type]
@@ -410,34 +411,32 @@ Identify visual discrepancies, missing tokens, and suggest the minimum changes n
                   ? `${uiComponents.length} component(s): ${uiComponents.map(c => c.type).join(', ')}`
                   : 'Empty canvas'
                 const seededPrompt = `Generate UI. Canvas: ${canvasContext}. Device: ${deviceType}.`
-                import('../../../store/commandRegistry').then(({ commandRegistry }) => {
-                  commandRegistry.unregisterCommand('stitch-generate')
-                  commandRegistry.registerCommand({
-                    id: 'stitch-generate',
-                    label: `Stitch: Generate — ${canvasContext}`,
-                    action: () => {
-                      setIsGenerating(true)
-                      invoke('stitch:generate', { projectId, prompt: seededPrompt, deviceType })
-                        .then(async (result) => {
-                          const data = unwrapIpc<{ screenId: string }>(result)
-                          if (data?.screenId) {
-                            setStitchScreenId(data.screenId)
-                            addToast('Screen generated successfully', 'success')
-                            const htmlData = unwrapIpc<{ html: string, css: string }>(
-                              await invoke('stitch:extract-design', { projectId, screenId: data.screenId })
-                            )
-                            if (htmlData) {
-                              setStitchGhostHtml(htmlData.html)
-                              setStitchGhostCss(htmlData.css)
-                            }
+                commandRegistry.unregisterCommand('stitch-generate')
+                commandRegistry.registerCommand({
+                  id: 'stitch-generate',
+                  label: `Stitch: Generate — ${canvasContext}`,
+                  action: () => {
+                    setIsGenerating(true)
+                    invoke('stitch:generate', { projectId, prompt: seededPrompt, deviceType })
+                      .then(async (result) => {
+                        const data = unwrapIpc<{ screenId: string }>(result)
+                        if (data?.screenId) {
+                          setStitchScreenId(data.screenId)
+                          addToast('Screen generated successfully', 'success')
+                          const htmlData = unwrapIpc<{ html: string, css: string }>(
+                            await invoke('stitch:extract-design', { projectId, screenId: data.screenId })
+                          )
+                          if (htmlData) {
+                            setStitchGhostHtml(htmlData.html)
+                            setStitchGhostCss(htmlData.css)
                           }
-                        })
-                        .catch(() => {})
-                        .finally(() => setIsGenerating(false))
-                    }
-                  })
-                  window.ipcRenderer.send('layout:open-palette')
+                        }
+                      })
+                      .catch(() => {})
+                      .finally(() => setIsGenerating(false))
+                  }
                 })
+                window.ipcRenderer.send('layout:open-palette')
               }}
               disabled={isGenerating}
               className="px-3 py-1.5 text-xs font-medium text-black bg-copernicus-phosphor hover:bg-copernicus-phosphor/80 rounded disabled:opacity-50"

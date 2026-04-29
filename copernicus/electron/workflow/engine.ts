@@ -15,6 +15,9 @@ import log from '../utils/logger';
 import path from 'path';
 import crypto from 'crypto';
 import { SnapshotManager } from './snapshot-manager';
+import { browserSession } from '../browser-session';
+import { memoryService } from '../memory/memoryService';
+import { RECALL_MEMORY_TOOL, ToolExecutor } from '../llm/tools';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -180,7 +183,6 @@ export class WorkflowEngine {
       // Optionally push a global error if needed, but per-node errors are more granular
     } finally {
       this.snapshotManager?.endRun()
-      const { browserSession } = await import('../browser-session')
       if (browserSession.browser) {
         await browserSession.browser.close().catch(() => {})
         browserSession.browser = null
@@ -404,7 +406,6 @@ export class WorkflowEngine {
 
     let tools: any[] | undefined = undefined;
     if (node.role && ['executor', 'researcher', 'planner'].includes(node.role)) {
-      const { RECALL_MEMORY_TOOL } = await import('../llm/tools');
       tools = [RECALL_MEMORY_TOOL];
     }
 
@@ -438,7 +439,6 @@ export class WorkflowEngine {
       if (json.stop_reason === 'tool_use' && json.content) {
         const toolUse = json.content.find((c: any) => c.type === 'tool_use');
         if (toolUse && toolUse.name === 'recall_memory') {
-          const { ToolExecutor } = await import('../llm/tools');
           const executor = new ToolExecutor();
           const rootPath = this.services.fsManager.getRootPath();
           const projectId = rootPath ? (this.services.stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
@@ -531,7 +531,6 @@ export class WorkflowEngine {
     if (json.choices?.[0]?.finish_reason === 'tool_calls' || json.choices?.[0]?.message?.tool_calls) {
       const toolCall = json.choices[0].message.tool_calls[0];
       if (toolCall && toolCall.function.name === 'recall_memory') {
-        const { ToolExecutor } = await import('../llm/tools');
         const executor = new ToolExecutor();
         const rootPath = this.services.fsManager.getRootPath();
         const projectId = rootPath ? (this.services.stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
@@ -580,7 +579,6 @@ export class WorkflowEngine {
         const projectId = rootPath ? (stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
         try {
           const result = await this.runShell(d.command);
-          const { memoryService } = await import('../memory/memoryService');
           memoryService.logWork({
             projectId,
             bankId: `workflow:node:${node.id}`,
@@ -589,7 +587,6 @@ export class WorkflowEngine {
           }).catch(log.warn);
           return result;
         } catch (err: unknown) {
-          const { memoryService } = await import('../memory/memoryService');
           const exitCodeStr = this.context.get('__lastExitCode');
           const exitCode = exitCodeStr ? parseInt(exitCodeStr, 10) : 1;
           memoryService.logWork({
@@ -652,8 +649,7 @@ export class WorkflowEngine {
         return 'screenshot:captured';
       }
       case 'browser-action': {
-        const { browserSession } = await import('../browser-session')
-        const action = d.action
+          const action = d.action
         if (!action) throw new Error('browser-action: action is required')
 
         stateLedger.logEvent('BROWSER_ACTION', action, { url: d.url, selector: d.selector }, 'workflow')

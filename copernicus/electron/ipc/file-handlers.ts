@@ -7,6 +7,7 @@ import { handleIpc } from '../utils/handle-ipc'
 import { assertSafePath } from '../utils/path-guard'
 import { parseMakefile } from '../utils/makefile-parser'
 import { memoryService } from '../memory/memoryService'
+import { runDiagnosticsOnFile } from './diag-handlers'
 
 import { IpcHandlerDeps } from './deps'
 
@@ -29,7 +30,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       await fsManager.commitTransaction(txId);
 
       // Auto-run linting for saved files
-      const { runDiagnosticsOnFile } = await import('./diag-handlers')
       for (const f of files) {
         runDiagnosticsOnFile(f.filePath, fsManager.getRootPath()).catch(log.error)
       }
@@ -149,7 +149,6 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     codebaseIndexer.indexFile(filePath).catch(log.error)
     
     // Auto-run linting based on file type
-    const { runDiagnosticsOnFile } = await import('./diag-handlers')
     runDiagnosticsOnFile(filePath, fsManager.getRootPath()).catch(log.error)
 
     const rootPath = fsManager.getRootPath();

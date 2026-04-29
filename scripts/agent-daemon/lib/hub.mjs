@@ -1,5 +1,5 @@
 import { randomUUID, createHash } from 'crypto';
-import { getDb } from './db.mjs';
+import { getDb, getStoryPath } from './db.mjs';
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -1434,7 +1434,6 @@ export function registerAdapter(adapter) {
 }
 
 export async function dispatch(tokenId) {
-  const { getDb, getStoryPath, logEvent } = await import('./db.mjs');
   const db = getDb();
   const token = db.prepare('SELECT * FROM hub_tokens WHERE token_id = ?').get(tokenId);
 
