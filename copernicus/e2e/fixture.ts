@@ -82,7 +82,9 @@ export const test = base.extend<E2EOptions & ElectronFixtures>({
     }
 
     await use(app)
-    await app.close()
+    // SIGKILL bypasses macOS keep-alive and the async before-quit handler
+    app.process().kill('SIGKILL')
+    await app.close().catch(() => {})
   },
 
   window: async ({ app, skipWizard }, use) => {

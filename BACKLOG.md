@@ -133,7 +133,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #694 | Missing Intelligence Documents Table | COMPLETE | N/A |
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
-| #698 | Fix E2E Fixture Wizard Bypass Settingsstore Pre Ready Initialization Fails With User Data Dir In Electron 41 | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -574,6 +573,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #689 | Extension Marketplace View | COMPLETE | P3 |
 | #690 | Extension Development Kit | COMPLETE | P3 |
 | #691 | Extension V1 V2 Migration Shim | COMPLETE | P3 |
+| #698 | Fix E2E Fixture Wizard Bypass Settingsstore Pre Ready Initialization Fails With User Data Dir In Electron 41 | COMPLETE | P1 |
 | #699 | Jules Freebie Batch Code Quality Hardening And Test Coverage | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
