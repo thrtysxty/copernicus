@@ -183,7 +183,7 @@
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.16",
     "cron-parser": "^5.5.0",
     "cronstrue": "^3.13.0",
