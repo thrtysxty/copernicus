@@ -133,7 +133,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.78.0",
+    "@anthropic-ai/sdk": "^0.91.1",
     "@copernicus/compat-v1": "file:../packages/compat-v1",
     "@google/generative-ai": "^0.24.1",
     "@google/jules-sdk": "^0.2.0",
