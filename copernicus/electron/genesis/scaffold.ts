@@ -109,6 +109,21 @@ Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/compl
       this.writeAgentConfig(payload);
       this.ensureDocsStructure(repoPath);
 
+      // Call install-hooks.sh if it exists (Genesis Scaffold step for pre-commit-secrets)
+      const installHooksPath = path.join(repoPath, 'scripts', 'hooks', 'install-hooks.sh');
+      if (fs.existsSync(installHooksPath)) {
+        try {
+          const res = spawnSync('bash', ['scripts/hooks/install-hooks.sh'], { cwd: repoPath });
+          if (res.error) {
+            log.warn(`[ScaffoldRunner] install-hooks.sh failed: ${res.error.message}`);
+          } else if (res.status !== 0) {
+            log.warn(`[ScaffoldRunner] install-hooks.sh exited with ${res.status}`);
+          }
+        } catch (err: any) {
+          log.warn(`[ScaffoldRunner] Failed to run install-hooks.sh: ${err.message}`);
+        }
+      }
+
       if (isNewRepo) {
         this.firstCommit(repoPath, projectName);
       }

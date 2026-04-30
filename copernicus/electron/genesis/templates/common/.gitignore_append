@@ -1,3 +1,6 @@
 # Genesis Append
 .claude/
 .rtk.config
+
+# Allow testing scanner to be committed into repo
+!scripts/hooks/test-secret-scanner.sh

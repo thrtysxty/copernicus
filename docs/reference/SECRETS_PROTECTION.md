@@ -79,10 +79,11 @@ line number, and the matched pattern.
 ### Install
 
 ```bash
-bash scripts/install-hooks.sh
+bash scripts/hooks/install-hooks.sh
 ```
 
 This adds the scanner as the first stage of `.git/hooks/pre-commit`. Running it twice is safe.
+The `scaffold.ts` script installs this automatically for any new project created through Copernicus.
 
 ### Patterns that hard-block a commit
 
@@ -90,11 +91,11 @@ This adds the scanner as the first stage of `.git/hooks/pre-commit`. Running it 
 |---------|---------------|
 | `sk-ant-[a-zA-Z0-9]{10,}` | Anthropic API key |
 | `sk-[a-zA-Z0-9]{20,}` | OpenAI / generic sk- key |
-| `ghp_[a-zA-Z0-9]{36}` | GitHub personal access token |
+| `ghp_[a-zA-Z0-9]{36}`, `gho_`, `ghu_`, `ghs_`, `github_pat_` | GitHub personal access token |
 | `AKIA[A-Z0-9]{16}` | AWS access key ID |
 | `-----BEGIN (RSA\|EC\|DSA\|OPENSSH) PRIVATE KEY-----` | Private key material |
 | `sk_live_[a-zA-Z0-9]{24,}` | Stripe live secret key |
-| `xoxb-[a-zA-Z0-9-]{50,}` | Slack bot token |
+| `xoxb-[a-zA-Z0-9-]{50,}`, `xoxp-` | Slack bot/user token |
 
 ### Patterns that warn but allow the commit
 
