@@ -9,10 +9,38 @@ import path from 'node:path';
 const _getJulesClient = () =>
   createClient({ url: 'file:' + path.join(app.getPath('userData'), 'jules.db') });
 
+async function _ensureHubTables(client: ReturnType<typeof createClient>) {
+  await client.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS hub_tokens (
+      token_id TEXT PRIMARY KEY, issued_at TEXT NOT NULL, expires_at TEXT NOT NULL,
+      issued_by TEXT NOT NULL, role_name TEXT NOT NULL, role_class TEXT NOT NULL,
+      authority_level INTEGER NOT NULL, story_id TEXT, worktree TEXT,
+      capabilities TEXT NOT NULL, scope TEXT NOT NULL, budget TEXT NOT NULL,
+      health TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'ACTIVE', parent_token TEXT
+    );
+    CREATE TABLE IF NOT EXISTS hub_events (
+      event_id TEXT PRIMARY KEY, timestamp TEXT NOT NULL, token_id TEXT NOT NULL,
+      event_type TEXT NOT NULL, action TEXT, result TEXT, notes TEXT
+    );
+    CREATE TABLE IF NOT EXISTS hub_attribution (
+      attr_id TEXT PRIMARY KEY, timestamp TEXT NOT NULL, surface TEXT NOT NULL,
+      instructing_actor TEXT, executing_actor TEXT NOT NULL, authority_level INTEGER NOT NULL,
+      action_type TEXT NOT NULL, target TEXT, summary TEXT, git_sha TEXT, token_id TEXT
+    );
+    CREATE TABLE IF NOT EXISTS hub_contract_proposals (
+      proposal_id TEXT PRIMARY KEY, created_at TEXT NOT NULL, proposed_by TEXT NOT NULL,
+      role_name TEXT NOT NULL, current_hash TEXT NOT NULL, proposed_hash TEXT NOT NULL,
+      diff TEXT, justification TEXT, state TEXT NOT NULL DEFAULT 'PENDING',
+      reviewed_by TEXT, reviewed_at TEXT, rejection_reason TEXT
+    );
+  `);
+}
+
 export function registerHubHandlers() {
   ipcMain.handle('hub:get-proposals', (_event, { state }: { state?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL' } = {}) =>
     handleIpc('hub:get-proposals', [{ state }], async () => {
       const client = _getJulesClient();
+      await _ensureHubTables(client);
       let query = 'SELECT * FROM hub_contract_proposals ORDER BY created_at DESC';
       const result = await client.execute({ sql: query, args: [] });
       const proposals = result.rows as any[];
@@ -74,6 +102,7 @@ export function registerHubHandlers() {
   ipcMain.handle('hub:get-events', (_event, { limit, offset, event_types }: { limit: number; offset: number; event_types?: string[] }) =>
     handleIpc('hub:get-events', [{ limit, offset, event_types }], async () => {
       const client = _getJulesClient();
+      await _ensureHubTables(client);
       let query = 'SELECT * FROM hub_events';
       let countQuery = 'SELECT COUNT(*) as count FROM hub_events';
       const params: any[] = [];
@@ -101,9 +130,10 @@ export function registerHubHandlers() {
     })
   );
 
-  ipcMain.handle('hub:get-attribution', (_event, { limit, offset, surface, story_id }: { limit: number; offset: number; surface?: string; story_id?: string }) =>
+  ipcMain.handle('hub:get-attribution', (_event, { limit, offset = 0, surface, story_id }: { limit: number; offset?: number; surface?: string; story_id?: string }) =>
     handleIpc('hub:get-attribution', [{ limit, offset, surface, story_id }], async () => {
       const client = _getJulesClient();
+      await _ensureHubTables(client);
       let query = 'SELECT * FROM hub_attribution';
       let countQuery = 'SELECT COUNT(*) as count FROM hub_attribution';
       const params: any[] = [];
@@ -142,6 +172,7 @@ export function registerHubHandlers() {
   ipcMain.handle('hub:get-cost-summary', () =>
     handleIpc('hub:get-cost-summary', [], async () => {
       const client = _getJulesClient();
+      await _ensureHubTables(client);
 
       const [tokensResult, eventsResult] = await Promise.all([
         client.execute('SELECT role_name, state, token_id, budget FROM hub_tokens'),
