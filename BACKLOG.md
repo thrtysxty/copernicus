@@ -132,9 +132,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #693 | Extension Host Missing Build Target | COMPLETE | N/A |
 | #694 | Missing Intelligence Documents Table | COMPLETE | N/A |
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
-| #702 | Claude Code File Deny Rules | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
 | #703 | Pre Commit Secret Scanner | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
-| #704 | E2E Test Env Pattern | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
+| #702 | Claude Code File Deny Rules | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -582,6 +581,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #699 | Jules Freebie Batch Code Quality Hardening And Test Coverage | COMPLETE | P2 |
 | #700 | Upgrade Tailwind Css From V3 To V4 | COMPLETE | P2 |
 | #701 | Fix Onboarding E2E Test Wizard Next Button Requires Field Input Before Click | COMPLETE | P2 |
+| #704 | E2E Test Env Pattern | COMPLETE | P1 — Security hardening |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
