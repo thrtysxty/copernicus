@@ -17,6 +17,27 @@ type ElectronFixtures = {
 
 const APP_MAIN = path.join(__dirname, '../dist-electron/main.js')
 
+function loadDotEnvTest(): Record<string, string> {
+  const envPath = path.join(__dirname, '../.env.test')
+  if (!fs.existsSync(envPath)) return {}
+
+  const content = fs.readFileSync(envPath, 'utf8')
+  const env: Record<string, string> = {}
+
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eqIdx = trimmed.indexOf('=')
+    if (eqIdx !== -1) {
+      const key = trimmed.slice(0, eqIdx).trim()
+      const val = trimmed.slice(eqIdx + 1).trim()
+      env[key] = val
+    }
+  }
+
+  return env
+}
+
 function seedPreferences(e2eHome: string) {
   const workspacePath = path.join(e2eHome, 'workspace')
   fs.mkdirSync(workspacePath, { recursive: true })
@@ -61,10 +82,12 @@ export const test = base.extend<E2EOptions & ElectronFixtures>({
       seedPreferences(e2eHome)
     }
 
+    const testEnv = { ...process.env, ...loadDotEnvTest() }
+
     const app = await electron.launch({
       args: [APP_MAIN, `--user-data-dir=${e2eHome}`],
       env: {
-        ...process.env,
+        ...testEnv,
         NODE_ENV: 'test',
         COPERNICUS_E2E_HOME: e2eHome,
         // Suppress update checks

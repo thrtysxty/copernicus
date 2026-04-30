@@ -178,6 +178,8 @@ Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/compl
     // Default fallbacks in case templates are somehow missing
     let agentsContent = '';
     let claudeContent = '';
+    let envExampleContent = '';
+    let envTestContent = '';
 
     try {
       const agentsTemplatePath = path.join(commonDir, 'AGENTS.md');
@@ -210,16 +212,36 @@ Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/compl
       } else {
         log.warn(`[ScaffoldRunner] Missing CLAUDE.md template at ${claudeTemplatePath}`);
       }
+
+      const envExampleTemplatePath = path.join(commonDir, '.env.example');
+      if (fs.existsSync(envExampleTemplatePath)) {
+        envExampleContent = fs.readFileSync(envExampleTemplatePath, 'utf8');
+
+        const stackEnvExamplePath = path.join(stackDir, '.env.example.append');
+        if (fs.existsSync(stackEnvExamplePath)) {
+          envExampleContent += '\n' + fs.readFileSync(stackEnvExamplePath, 'utf8');
+        }
+      }
+
+      const envTestTemplatePath = path.join(commonDir, '.env.test');
+      if (fs.existsSync(envTestTemplatePath)) {
+        envTestContent = fs.readFileSync(envTestTemplatePath, 'utf8');
+      }
+
     } catch (err: any) {
       log.error(`[ScaffoldRunner] Failed to read templates: ${err.message}`);
     }
 
     const agentsPath = path.join(repoPath, 'AGENTS.md');
     const claudePath = path.join(repoPath, 'CLAUDE.md');
+    const targetEnvExample = path.join(repoPath, '.env.example');
+    const targetEnvTest = path.join(repoPath, '.env.test');
 
     if (isNewRepo) {
       if (agentsContent) fs.writeFileSync(agentsPath, agentsContent);
       if (claudeContent) fs.writeFileSync(claudePath, claudeContent);
+      if (envExampleContent) fs.writeFileSync(targetEnvExample, envExampleContent);
+      if (envTestContent) fs.writeFileSync(targetEnvTest, envTestContent);
 
       try {
         // Copy .claude directory
@@ -248,6 +270,8 @@ Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/compl
       // For existing repos, append if they exist, or create if they don't
       if (agentsContent) this.appendOrCreate(agentsPath, agentsContent, '## Genesis Addition');
       if (claudeContent) this.appendOrCreate(claudePath, claudeContent, '## Genesis Addition');
+      if (envExampleContent && !fs.existsSync(targetEnvExample)) fs.writeFileSync(targetEnvExample, envExampleContent);
+      if (envTestContent && !fs.existsSync(targetEnvTest)) fs.writeFileSync(targetEnvTest, envTestContent);
     }
   }
 
@@ -322,7 +346,21 @@ Stories are in \`docs/stories/\`. Completed stories move to \`docs/stories/compl
   }
 
   private getGitignore(stack: string): string {
-    const common = 'node_modules\n.env\ndist\nbuild\n*.log\n.DS_Store';
+    const common = `node_modules
+dist
+build
+*.log
+.DS_Store
+
+# Ignore real env files
+.env
+.env.local
+.env.*.local
+
+# Allow safe env templates and dummies
+!.env.example
+!.env.test
+!.env.test.*`;
     const python = '\n__pycache__\nvenv\n*.pyc';
     
     switch (stack) {
