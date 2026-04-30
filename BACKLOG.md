@@ -132,6 +132,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #693 | Extension Host Missing Build Target | COMPLETE | N/A |
 | #694 | Missing Intelligence Documents Table | COMPLETE | N/A |
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
+| #702 | Claude Code File Deny Rules | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
+| #703 | Pre Commit Secret Scanner | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
+| #704 | E2E Test Env Pattern | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
