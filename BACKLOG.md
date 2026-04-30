@@ -578,6 +578,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #698 | Fix E2E Fixture Wizard Bypass Settingsstore Pre Ready Initialization Fails With User Data Dir In Electron 41 | COMPLETE | P1 |
 | #699 | Jules Freebie Batch Code Quality Hardening And Test Coverage | COMPLETE | P2 |
 | #700 | Upgrade Tailwind Css From V3 To V4 | COMPLETE | P2 |
+| #701 | Fix Onboarding E2E Test Wizard Next Button Requires Field Input Before Click | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -600,7 +601,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
 | #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
 | #569 | Kb Local Voting | DEFERRED — post-ship, backlog after toolchain and extension system | P3 |
-| #701 | Fix Onboarding E2E Test Wizard Next Button Requires Field Input Before Click | DRAFT | P2 |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
