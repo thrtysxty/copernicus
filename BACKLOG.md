@@ -133,6 +133,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #694 | Missing Intelligence Documents Table | COMPLETE | N/A |
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
 | #674 | Launch Readiness E2E Build And Test Gate | APPROVED FOR IMPLEMENTATION | P0 — Blocks release |
+| #700 | Upgrade Tailwind Css From V3 To V4 | APPROVED FOR IMPLEMENTATION | P2 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -574,6 +575,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #690 | Extension Development Kit | COMPLETE | P3 |
 | #691 | Extension V1 V2 Migration Shim | COMPLETE | P3 |
 | #696 | Eliminate Rollup Mixed Static Dynamic Import Warnings | COMPLETE | P2 |
+| #697 | Suppress Build Config Module Type Warnings Postcss Esm Vite Cjs Deprecation | COMPLETE | P2 |
 | #698 | Fix E2E Fixture Wizard Bypass Settingsstore Pre Ready Initialization Fails With User Data Dir In Electron 41 | COMPLETE | P1 |
 | #699 | Jules Freebie Batch Code Quality Hardening And Test Coverage | COMPLETE | P2 |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
@@ -601,7 +603,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
-| #697 | Suppress Build Config Module Type Warnings Postcss Esm Vite Cjs Deprecation | IN PROGRESS | P2 |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
