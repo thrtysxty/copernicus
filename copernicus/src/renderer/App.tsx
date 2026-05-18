@@ -1,3 +1,4 @@
+import { ErrorBoundary } from './components/ErrorBoundary'
 import log from './utils/logger'
 import React, { useState, useEffect, useRef } from 'react'
 import {
@@ -390,6 +391,7 @@ export default function App() {
 
         {/* Main Content Area */}
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative" key={workspaceKey}>
+          <ErrorBoundary>
           <div className="flex-1 flex overflow-hidden">
             {/* Solo full-screen views */}
             {activeView === 'command-center' && <CommandCenter />}
@@ -508,7 +510,8 @@ export default function App() {
 
           <StatusBar />
 
-        </main>
+        </ErrorBoundary>
+      </main>
       </div>
 
       {/* Overlays */}

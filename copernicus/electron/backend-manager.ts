@@ -1,3 +1,4 @@
+import { config } from './config'
 import { spawn, ChildProcess } from 'child_process'
 import path from 'path'
 import fs from 'fs'
@@ -7,13 +8,13 @@ import { app } from 'electron'
 
 export class BackendManager {
   private process: ChildProcess | null = null
-  private port: number = 5001
+  private port: number = config.backend.port
 
   async start(): Promise<void> {
     if (this.process) return
 
     this.port = parseInt(process.env.COPERNICUS_BACKEND_PORT ?? '5001', 10);
-    const healthCheckUrl = `http://127.0.0.1:${this.port}/api/health`;
+    const healthCheckUrl = `${config.backend.url}/api/health`;
 
     const alreadyRunning = await new Promise<boolean>((resolve) => {
       const req = http.get(healthCheckUrl, { timeout: 1000 }, (res) => {

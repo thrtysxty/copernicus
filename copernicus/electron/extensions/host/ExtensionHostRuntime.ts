@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import path from 'node:path'
 import fs from 'node:fs'
 import { ExtensionActivatedMessage } from '../ExtensionHostProtocol'
@@ -62,7 +63,7 @@ export class ExtensionHostRuntime {
       const apiToPass = isV1 ? wrapV2Api(proxy) : proxy
 
       if (isV1) {
-        console.log(`[compat-v1] ${packageJson.name} loaded with v1 shim`)
+        log.info(`[compat-v1] ${packageJson.name} loaded with v1 shim`)
       }
 
       await extensionModule.activate(apiToPass)

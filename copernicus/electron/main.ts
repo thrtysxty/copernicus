@@ -1,3 +1,4 @@
+import { config } from './config'
 import { app, BrowserWindow, ipcMain, session, globalShortcut, Menu, MenuItemConstructorOptions } from 'electron'
 
 import path from 'node:path'
@@ -122,7 +123,7 @@ function updateClaudeTelemetrySettings(write: boolean): boolean {
         'CLAUDE_CODE_ENABLE_TELEMETRY=1',
         'OTEL_METRICS_EXPORTER=otlp',
         'OTEL_LOGS_EXPORTER=otlp',
-        'OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318',
+        `OTEL_EXPORTER_OTLP_ENDPOINT=${config.otel.endpoint}`,
         'OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative',
         'OTEL_LOG_TOOL_DETAILS=1',
         endMarker
@@ -283,7 +284,7 @@ async function registerIpcHandlers() {
 
   ipcMain.handle('telemetry:recovery-status', (_e) => handleIpc(async () => {
     try {
-      const response = await fetch('http://localhost:4318/recovery-status');
+      const response = await fetch(`${config.otel.endpoint}/recovery-status`);
       if (response.ok) {
         return await response.json();
       }
@@ -318,7 +319,7 @@ async function registerIpcHandlers() {
   ipcMain.handle('health:check-all', (_e) => handleIpc(async () => {
     const checks = await Promise.allSettled([
       // Backend reachable
-      fetch('http://localhost:5001/api/health').then(() => ({ name: 'Backend', ok: true })).catch(() => ({ name: 'Backend', ok: false })),
+      fetch(`${config.backend.url}/api/health`).then(() => ({ name: 'Backend', ok: true })).catch(() => ({ name: 'Backend', ok: false })),
       // Git valid
       execAsync('git rev-parse --git-dir', { cwd: cwd() }).then(() => ({ name: 'Git', ok: true })).catch(() => ({ name: 'Git', ok: false })),
     ])
@@ -509,7 +510,7 @@ app.whenReady().then(async () => {
     ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: file: http://localhost:5173"
     : "script-src 'self' blob: file:"
   const connectSrc = isDev
-    ? "connect-src 'self' http://localhost:5001 ws://localhost:5173 http://localhost:5173 https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com"
+    ? `connect-src 'self' ${config.backend.url.replace('http://','')} ws://localhost:5173 http://localhost:5173 https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com`
     : "connect-src 'self' https://api.anthropic.com https://openrouter.ai https://api.openai.com https://generativelanguage.googleapis.com https://api.github.com"
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [`default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; ${connectSrc}; worker-src 'self' blob: file:;`] } })
@@ -712,7 +713,7 @@ app.whenReady().then(async () => {
   startupTasks()
 
   // Story 361: Auto-start local model if Ollama is not detected
-  fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) })
+  fetch(`${config.ollama.url}/api/tags`, { signal: AbortSignal.timeout(2000) })
     .then(res => {
       if (!res.ok) localModelManager.start().catch(log.error);
     })

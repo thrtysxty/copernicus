@@ -1,3 +1,4 @@
+import { config as appConfig } from './config'
 import { app, safeStorage } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -158,7 +159,7 @@ export class AuthManager {
     // Fallbacks
     if (provider === 'ollama-cloud') return process.env.OLLAMA_CLOUD_HOST || process.env.OLLAMA_CLOUD_URL || 'https://ollama.com';
     // Local takes priority if set; cloud URL is the fallback for users without a local instance
-    if (provider === 'ollama') return process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || 'http://localhost:11434';
+    if (provider === 'ollama') return process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || appConfig.ollama.url;
     if (provider === 'openrouter') return 'https://openrouter.ai/api/v1';
     if (provider === 'openai') return 'https://api.openai.com/v1';
     if (provider === 'deepinfra') return 'https://api.deepinfra.com/v1/openai';
@@ -246,7 +247,7 @@ export class AuthManager {
     const statuses = await Promise.all(Array.from(allProviders).map(async p => {
       if (p === 'ollama') {
         try {
-          const res = await fetch('http://localhost:11434/api/tags', {
+          const res = await fetch(`${appConfig.ollama.url}/api/tags`, {
             signal: AbortSignal.timeout(2000),
           });
           return { provider: p, hasKey: true, source: 'none', type: 'env' as const, isActive: res.ok };
@@ -291,7 +292,7 @@ export class AuthManager {
     const res3 = this.getApiKey('deepinfra');
     if (res3) return { key: res3, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra' };
 
-    const ollamaUrl = process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || 'http://localhost:11434'
+    const ollamaUrl = process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || appConfig.ollama.url
     return {
       key: 'ollama',
       baseUrl: ollamaUrl.replace(/\/$/, '') + '/v1',
@@ -318,7 +319,7 @@ export class AuthManager {
         return { key, baseUrl: 'https://api.deepinfra.com/v1/openai', provider: 'deepinfra', headers: {} };
       }
       case 'ollama': {
-        const url = process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || 'http://localhost:11434';
+        const url = process.env.OLLAMA_LOCAL_URL || process.env.OLLAMA_BASE_URL || process.env.OLLAMA_CLOUD_URL || appConfig.ollama.url;
         return { key: 'ollama', baseUrl: url.replace(/\/$/, '') + '/v1', provider: 'ollama', headers: {} };
       }
       default:

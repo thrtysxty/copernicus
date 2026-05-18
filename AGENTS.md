@@ -687,9 +687,9 @@ The Kanban board updates status via IPC on card move.
 <!-- codebase-memory-mcp:start -->
 # codebase-memory-mcp — Code Intelligence
 
-This project is indexed by codebase-memory-mcp v0.5.4 (MIT, DeusData). Single static binary, 64-language tree-sitter, SQLite persistence at `~/.cache/codebase-memory-mcp/`, sub-millisecond queries. Project key: `Users-dadmin-Projects-agentic-platform`.
+This project is indexed by codebase-memory-mcp v0.5.4 (MIT, DeusData). Single static binary, 64-language tree-sitter, SQLite persistence at `~/.cache/codebase-memory-mcp/`, sub-millisecond queries. Project key: `copernicus`.
 
-> If the MCP server is not responding, re-index: `codebase-memory-mcp cli index_repository '{"repo_path":"/Users/dadmin/Projects/agentic-platform","name":"agentic-platform"}'`
+> If the MCP server is not responding, re-index: `codebase-memory-mcp cli index_repository '{"repo_path":"<REPO_ROOT>","name":"copernicus"}'`
 
 ## Always Do
 
@@ -741,8 +741,8 @@ Before completing any code modification task, verify:
 
 ## CLI
 
-- Re-index: `codebase-memory-mcp cli index_repository '{"repo_path":"/Users/dadmin/Projects/agentic-platform","name":"agentic-platform"}'`
-- Check status: `codebase-memory-mcp cli index_status '{"project":"Users-dadmin-Projects-agentic-platform"}'`
-- Architecture: `codebase-memory-mcp cli get_architecture '{"project":"Users-dadmin-Projects-agentic-platform","aspects":["overview"]}'`
+- Re-index: `codebase-memory-mcp cli index_repository '{"repo_path":"<REPO_ROOT>","name":"copernicus"}'`
+- Check status: `codebase-memory-mcp cli index_status '{"project":"copernicus"}'`
+- Architecture: `codebase-memory-mcp cli get_architecture '{"project":"copernicus","aspects":["overview"]}'`
 
 <!-- codebase-memory-mcp:end -->

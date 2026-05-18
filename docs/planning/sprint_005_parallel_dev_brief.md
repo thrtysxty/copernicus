@@ -29,7 +29,7 @@ Every Jules agent MUST adhere to these non-negotiable standards before writing a
 single line of code:
 
 ```
-Repo root:   /Users/dadmin/Projects/agentic-platform
+Repo root:   <REPO_ROOT>
 IDE root:    copernicus/
 Node:        Use exact version in copernicus/package.json
 TypeScript:  strict mode enforced — npx tsc --noEmit must exit 0

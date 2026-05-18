@@ -6,13 +6,14 @@ services:
     container_name: copernicus-ollama
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama_models:/root/.ollama   # persist models across container restarts
     environment:
-      - OLLAMA_HOST=0.0.0.0           # bind to all interfaces (not just localhost)
+      - OLLAMA_HOST=127.0.0.1           # bind to localhost only
       - OLLAMA_NUM_PARALLEL=2         # allow 2 concurrent requests (embed + chat)
       - OLLAMA_MAX_LOADED_MODELS=2    # keep nomic-embed-text + one chat model hot
+    user: "1000:1000"
     deploy:
       resources:
         limits:

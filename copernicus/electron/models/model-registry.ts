@@ -1,3 +1,4 @@
+import { config } from '../config'
 import log from 'electron-log'
 export interface ModelConfig {
   id: string; // e.g. 'gpt-4', 'claude-3-opus'
@@ -21,7 +22,7 @@ export class ModelRegistry {
 
   public async fetchNotebookLMModels() {
     try {
-      const response = await fetch('http://localhost:5001/api/notebooklm/notebooks');
+      const response = await fetch(`${config.backend.url}/api/notebooklm/notebooks`);
       if (!response.ok) return;
       const data = await response.json() as any[];
       if (Array.isArray(data)) {
@@ -42,7 +43,7 @@ export class ModelRegistry {
 
   private async fetchRegistry() {
     try {
-      const response = await fetch('http://localhost:5001/api/registry/models');
+      const response = await fetch(`${config.backend.url}/api/registry/models`);
       if (!response.ok) return;
       const data = await response.json() as any[];
       if (Array.isArray(data)) {

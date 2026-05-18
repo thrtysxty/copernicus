@@ -2,7 +2,7 @@
 
 **Project:** COPERNICUS IDE — multi-agent orchestration platform and developer IDE
 **Stack:** Python 3.11/Flask, React 18/TypeScript (Electron), SQLite, Dell R210ii Core (Docker)
-**Repo root:** /Users/dadmin/Projects/agentic-platform
+**Repo root:** <REPO_ROOT>
 
 ---
 

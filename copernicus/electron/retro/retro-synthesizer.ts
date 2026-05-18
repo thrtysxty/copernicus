@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { stateLedger } from '../db/state-ledger'
 import { fsManager } from '../fs-manager'
 import path from 'path'
@@ -127,7 +128,7 @@ Output ONLY valid JSON. No markdown formatting, no explanations.`
         finalSystemPrompt = [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }];
       }
 
-      const response = await fetch('http://127.0.0.1:5001/api/llm/chat', {
+      const response = await fetch(`${config.backend.url}/api/llm/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

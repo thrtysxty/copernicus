@@ -16,8 +16,9 @@ export class JsonlExporter {
     // Group by bank_id
     const banks = new Map<string, any[]>();
     for (const row of rows) {
-      if (!banks.has(row.bank_id)) banks.set(row.bank_id, []);
-      banks.get(row.bank_id)!.push(row);
+      const bankId = row.bank_id ?? 'default';
+      if (!banks.has(bankId)) banks.set(bankId, []);
+      banks.get(bankId)!.push(row);
     }
 
     // Write one file per bank_id, overwriting existing
@@ -26,8 +27,8 @@ export class JsonlExporter {
       const lines = bankRows.map(row => {
         return JSON.stringify({
           id: row.id,
-          bank_id: row.bank_id,
-          event_type: row.event_type,
+          bank_id: row.bank_id ?? 'default',
+          event_type: row.event_type ?? 'memory_fact',
           content: row.content,
           importance: row.importance,
           tags: row.tags ? JSON.parse(row.tags) : undefined,

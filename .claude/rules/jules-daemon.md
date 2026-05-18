@@ -21,7 +21,7 @@ fi
 If not running and there are active (unmerged) sessions in `jules.db`, start it:
 
 ```bash
-node /Users/dadmin/Projects/copernicus/scripts/agent-daemon/index.mjs \
+node scripts/agent-daemon/index.mjs \
   >> /tmp/agent-daemon.log 2>&1 &
 echo $! > /tmp/jules_daemon.pid
 ```

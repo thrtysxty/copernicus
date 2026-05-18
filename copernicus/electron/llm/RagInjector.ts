@@ -1,3 +1,4 @@
+import { config } from '../config'
 import log from '../utils/logger'
 import { contextManager } from './ContextManager'
 import { authManager } from '../auth-manager'
@@ -93,7 +94,7 @@ export class RagInjector {
         }
       }
 
-      const response = await fetch('http://127.0.0.1:5001/api/llm/chat', {
+      const response = await fetch(`${config.backend.url}/api/llm/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,7 +133,7 @@ export class RagInjector {
             try {
               const data = JSON.parse(dataStr)
               if (data.token) summary += data.token
-            } catch {}
+            } catch (err) { console.warn("[Non-critical]", err) }
           }
         }
       }

@@ -9,6 +9,7 @@ import {
 import { NodeExecutor, CopernicusExtensionAPI } from './api'
 
 export class ExtensionRegistry implements CopernicusExtensionAPI {
+  private static readonly MAX_EXTENSIONS = 100
   private static instance: ExtensionRegistry
   private extensions: Map<string, LoadedExtension> = new Map()
   private workflowNodes: Map<string, WorkflowNodeDefinition & { execute?: NodeExecutor }> = new Map()
@@ -16,6 +17,7 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
   private providers: Map<string, ProviderDefinition> = new Map()
   private views: Map<string, ViewDefinition> = new Map()
   private nodeExecutors: Map<string, NodeExecutor> = new Map()
+  private registeredBy: Map<string, string> = new Map()
 
   private constructor() {}
 
@@ -27,26 +29,52 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
   }
 
   registerExtension(extension: LoadedExtension): void {
+    if (this.extensions.size >= ExtensionRegistry.MAX_EXTENSIONS) {
+      const firstKey = this.extensions.keys().next().value
+      if (firstKey !== undefined) this.remove(firstKey)
+    }
     this.extensions.set(extension.name, extension)
   }
 
-  async registerWorkflowNode(def: WorkflowNodeDefinition & { execute?: NodeExecutor }): Promise<void> {
+  remove(name: string): void {
+    const ext = this.extensions.get(name)
+    if (!ext) return
+    this.extensions.delete(name)
+    // Clean up all registrations tied to this extension
+    for (const [key, owner] of this.registeredBy.entries()) {
+      if (owner === name) {
+        this.workflowNodes.delete(key)
+        this.tiles.delete(key)
+        this.providers.delete(key)
+        this.views.delete(key)
+        this.nodeExecutors.delete(key)
+        this.registeredBy.delete(key)
+      }
+    }
+    log.info(`Extension "${name}" removed from registry`)
+  }
+
+  async registerWorkflowNode(def: WorkflowNodeDefinition & { execute?: NodeExecutor }, extensionName?: string): Promise<void> {
     this.workflowNodes.set(def.type, def)
     if (def.execute) {
       this.nodeExecutors.set(def.type, def.execute)
     }
+    if (extensionName) this.registeredBy.set(def.type, extensionName)
   }
 
-  async registerTile(def: TileDefinition): Promise<void> {
+  async registerTile(def: TileDefinition, extensionName?: string): Promise<void> {
     this.tiles.set(def.id, def)
+    if (extensionName) this.registeredBy.set(def.id, extensionName)
   }
 
-  async registerProvider(def: ProviderDefinition): Promise<void> {
+  async registerProvider(def: ProviderDefinition, extensionName?: string): Promise<void> {
     this.providers.set(def.id, def)
+    if (extensionName) this.registeredBy.set(def.id, extensionName)
   }
 
-  async registerView(def: ViewDefinition): Promise<void> {
+  async registerView(def: ViewDefinition, extensionName?: string): Promise<void> {
     this.views.set(def.id, def)
+    if (extensionName) this.registeredBy.set(def.id, extensionName)
     log.info(`View ${def.id} registered`)
   }
 
@@ -101,5 +129,6 @@ export class ExtensionRegistry implements CopernicusExtensionAPI {
     this.providers.clear()
     this.views.clear()
     this.nodeExecutors.clear()
+    this.registeredBy.clear()
   }
 }

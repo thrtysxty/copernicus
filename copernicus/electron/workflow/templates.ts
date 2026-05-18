@@ -39,13 +39,13 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
             variant: 'jules-watch',
             label: 'Watch Jules Session',
             description: 'Poll Jules session status until PR is created or session fails.'
-          } as any },
+          } as ToolNodeData },
         { id: 'fetch-diff',    type: 'tool', label: 'Fetch PR Diff',       x: 230, y: 150,
           data: { 
             variant: 'github-fetch-diff',
             label: 'Fetch PR Diff',
             description: 'Fetch PR diff from GitHub when Jules creates the PR.'
-          } as any },
+          } as ToolNodeData },
         {
           id: 'review-agent', type: 'agent', label: 'Claude Code Review', x: 410, y: 150,
           data: {
@@ -59,20 +59,20 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
             task: 'Review the following PR diff and provide feedback:\n\n{{__prDiff}}',
             contextFiles: [],
             outputChannel: 'terminal',
-          } as any,
+          } as AgentNodeData,
         },
         { id: 'post-review',   type: 'tool', label: 'Post Review Comment',   x: 590, y: 150,
           data: { 
             variant: 'github-post-comment',
             label: 'Post Review Comment',
             description: 'Post the review agent output as a PR comment.'
-          } as any },
+          } as ToolNodeData },
         { id: 'flag-approval', type: 'tool', label: 'Flag Card for Approval', x: 770, y: 150,
           data: { 
             variant: 'kanban-flag-card',
             label: 'Flag Card for Approval',
             description: 'Set story card to amber-highlighted state, awaiting human merge.'
-          } as any },
+          } as ToolNodeData },
       ],
       edges: [
         { id: 'e1', source: 'watch-session',  target: 'fetch-diff' },
@@ -176,15 +176,15 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
       nodes: [
         // Phase 1: Retrospective
         { id: 'ceremony-git-log-reader', type: 'tool', label: 'Git Log Reader', x: 50, y: 150,
-          data: { variant: 'shell-command', command: "git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" } as any },
+          data: { variant: 'shell-command', command: "git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" } as ToolNodeData },
         { id: 'ceremony-model-calls-summary', type: 'tool', label: 'Model Calls Summary', x: 250, y: 150,
-          data: { variant: 'db-query', query: 'model-calls-sprint', contextKey: 'model_calls_data' } as any },
+          data: { variant: 'db-query', query: 'model-calls-sprint', contextKey: 'model_calls_data' } as ToolNodeData },
         { id: 'ceremony-performance-analyser', type: 'tool', label: 'Performance Analyser', x: 450, y: 150,
-          data: { variant: 'db-query', query: 'model-performance-sprint', contextKey: 'perf_data' } as any },
+          data: { variant: 'db-query', query: 'model-performance-sprint', contextKey: 'perf_data' } as ToolNodeData },
         { id: 'ceremony-build-error-reader', type: 'tool', label: 'Build Error Reader', x: 650, y: 150,
-          data: { variant: 'file-read', filePath: (process.env.HOME ?? '/tmp') + '/.copernicus/logs/copernicus.log' } as any },
+          data: { variant: 'file-read', filePath: (process.env.HOME ?? '/tmp') + '/.copernicus/logs/copernicus.log' } as ToolNodeData },
         { id: 'ceremony-user-reflection', type: 'decision', label: 'User Reflection', x: 850, y: 150,
-          data: { variant: 'human-approval', message: "Sprint close reflection: describe what shipped, what broke, and what to reinforce next sprint. The documentation refresh will run automatically after this step." } as any },
+          data: { variant: 'human-approval', message: "Sprint close reflection: describe what shipped, what broke, and what to reinforce next sprint. The documentation refresh will run automatically after this step." } as DecisionNodeData },
         { id: 'ceremony-learning-extractor', type: 'agent', label: 'Learning Extractor', x: 1050, y: 150,
           data: {
             variant: 'agent',
@@ -194,37 +194,37 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
             systemPrompt: 'You are a software engineering retrospective facilitator. Analyse the sprint evidence and extract concrete, actionable learning rules that can improve agent performance next sprint. Format each learning as: [RETROSPECTIVE vX.X.X] <pattern>: <what went wrong> → <reinforced rule>',
             task: 'Sprint Evidence:\n\nGit commits:\n{{ceremony-git-log-reader}}\n\nModel usage:\n{{model_calls_data}}\n\nPerformance scores:\n{{perf_data}}\n\nBuild errors:\n{{ceremony-build-error-reader}}\n\nUser reflection:\n{{ceremony-user-reflection}}\n\nExtract 5-10 concrete learning rules. Output one rule per line, no preamble.',
             outputChannel: 'context'
-          } as any },
+          } as AgentNodeData },
         { id: 'ceremony-routing-weight-updater', type: 'tool', label: 'Routing Weight Updater', x: 1250, y: 150,
-          data: { variant: 'memory-write', content: '[ROUTING] {{ceremony-learning-extractor}}', importance: 9, source: 'retrospective-routing' } as any },
+          data: { variant: 'memory-write', content: '[ROUTING] {{ceremony-learning-extractor}}', importance: 9, source: 'retrospective-routing' } as ToolNodeData },
         { id: 'ceremony-memory-writer', type: 'tool', label: 'Memory Writer', x: 1450, y: 150,
-          data: { variant: 'memory-write', content: '{{ceremony-learning-extractor}}', importance: 8, source: 'retrospective' } as any },
+          data: { variant: 'memory-write', content: '{{ceremony-learning-extractor}}', importance: 8, source: 'retrospective' } as ToolNodeData },
         { id: 'ceremony-agents-md-updater', type: 'tool', label: 'Agents MD Updater', x: 1650, y: 150,
-          data: { variant: 'agents-md-append', content: '\n## Reinforcements (sprint-auto)\n\n{{ceremony-learning-extractor}}\n' } as any },
+          data: { variant: 'agents-md-append', content: '\n## Reinforcements (sprint-auto)\n\n{{ceremony-learning-extractor}}\n' } as ToolNodeData },
 
         // Phase 2: Documentation Refresh
         { id: 'doc-prompt-builder', type: 'tool', label: 'Doc Prompt Builder', x: 50, y: 400,
-          data: { variant: 'shell-command', command: "cat README.md docs/reference/UX_BIBLE.md docs/reference/TECHNICAL_BIBLE.md > /tmp/doc-reporter-prompt.txt" } as any },
+          data: { variant: 'shell-command', command: "cat README.md docs/reference/UX_BIBLE.md docs/reference/TECHNICAL_BIBLE.md > /tmp/doc-reporter-prompt.txt" } as ToolNodeData },
         { id: 'doc-reporter', type: 'tool', label: 'Doc Reporter', x: 250, y: 400,
-          data: { variant: 'shell-command', command: 'mkdir -p /tmp/529-drafts /tmp/528-drafts && ollama run deepseek-v3.1:671b-cloud "$(cat /tmp/doc-reporter-prompt.txt)" | tee /tmp/529-drafts/report.md /tmp/528-drafts/report.md', timeout: 300000 } as any },
+          data: { variant: 'shell-command', command: 'mkdir -p /tmp/529-drafts /tmp/528-drafts && ollama run deepseek-v3.1:671b-cloud "$(cat /tmp/doc-reporter-prompt.txt)" | tee /tmp/529-drafts/report.md /tmp/528-drafts/report.md', timeout: 300000 } as ToolNodeData },
         { id: 'doc-editor', type: 'tool', label: 'Doc Editor', x: 450, y: 400,
-          data: { variant: 'shell-command', command: 'gemini -p "$(cat /tmp/doc-editor-prompt.txt)" --approval-mode yolo 2>&1 | tee /tmp/doc-editor.log', timeout: 300000 } as any },
+          data: { variant: 'shell-command', command: 'gemini -p "$(cat /tmp/doc-editor-prompt.txt)" --approval-mode yolo 2>&1 | tee /tmp/doc-editor.log', timeout: 300000 } as ToolNodeData },
 
         // Phase 3: Screenshot Gate
         { id: 'ui-change-check', type: 'tool', label: 'UI Change Check', x: 650, y: 400,
-          data: { variant: 'shell-command', command: 'git diff $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --name-only | grep -c "copernicus/src/renderer" || echo "0"', contextKey: 'ui_change_count' } as any },
+          data: { variant: 'shell-command', command: 'git diff $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --name-only | grep -c "copernicus/src/renderer" || echo "0"', contextKey: 'ui_change_count' } as ToolNodeData },
         { id: 'screenshot-gate', type: 'decision', label: 'UI Changed?', x: 850, y: 400,
-          data: { variant: 'exit-code-gate', pattern: '{{ui_change_count}} > 0' } as any },
+          data: { variant: 'exit-code-gate', pattern: '{{ui_change_count}} > 0' } as DecisionNodeData },
         { id: 'screenshot-capture', type: 'tool', label: 'Screenshot Capture', x: 1050, y: 400,
-          data: { variant: 'shell-command', command: 'gemini -p "Run scripts/capture-docs-screenshots.ts using npx ts-node. Fix any failures. All 18 screenshots must land in docs/help/screenshots/." --approval-mode yolo 2>&1 | tee /tmp/screenshot-capture.log' } as any },
+          data: { variant: 'shell-command', command: 'gemini -p "Run scripts/capture-docs-screenshots.ts using npx ts-node. Fix any failures. All 18 screenshots must land in docs/help/screenshots/." --approval-mode yolo 2>&1 | tee /tmp/screenshot-capture.log' } as ToolNodeData },
 
         // Phase 4: Ceremony Close
         { id: 'changelog-entry', type: 'tool', label: 'Changelog Entry', x: 1250, y: 400,
-          data: { variant: 'shell-command', command: 'echo "## Sprint $(date +%Y-%m-%d)\\n\\n$(git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD | head -20)" >> CHANGELOG.md' } as any },
+          data: { variant: 'shell-command', command: 'echo "## Sprint $(date +%Y-%m-%d)\\n\\n$(git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD | head -20)" >> CHANGELOG.md' } as ToolNodeData },
         { id: 'doc-pr-creator', type: 'tool', label: 'Doc PR Creator', x: 1450, y: 400,
-          data: { variant: 'shell-command', command: 'git diff --quiet docs/ || (git add docs/ CHANGELOG.md && git commit -m "docs(ceremony): sprint close doc refresh $(date +%Y-%m-%d)" && gh pr create --title "Sprint close: documentation refresh $(date +%Y-%m-%d)" --body "Auto-generated by Sprint Finishing Ceremony workflow." --base main)' } as any },
+          data: { variant: 'shell-command', command: 'git diff --quiet docs/ || (git add docs/ CHANGELOG.md && git commit -m "docs(ceremony): sprint close doc refresh $(date +%Y-%m-%d)" && gh pr create --title "Sprint close: documentation refresh $(date +%Y-%m-%d)" --body "Auto-generated by Sprint Finishing Ceremony workflow." --base main)' } as ToolNodeData },
         { id: 'ceremony-complete', type: 'tool', label: 'Ceremony Complete', x: 1650, y: 400,
-          data: { variant: 'shell-command', command: 'echo "Sprint finishing ceremony complete. PR created. See /tmp/doc-editor.log for details."' } as any },
+          data: { variant: 'shell-command', command: 'echo "Sprint finishing ceremony complete. PR created. See /tmp/doc-editor.log for details."' } as ToolNodeData },
       ],
       edges: [
         // Phase 1 edges
@@ -268,15 +268,15 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
       name: 'Release Retrospective',
       nodes: [
         { id: 'git-log-reader', type: 'tool', label: 'Git Log Reader', x: 50, y: 150,
-          data: { variant: 'shell-command', command: "git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" } as any },
+          data: { variant: 'shell-command', command: "git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" } as ToolNodeData },
         { id: 'model-calls-summary', type: 'tool', label: 'Model Calls Summary', x: 250, y: 150,
-          data: { variant: 'db-query', query: 'model-calls-sprint', contextKey: 'model_calls_data' } as any },
+          data: { variant: 'db-query', query: 'model-calls-sprint', contextKey: 'model_calls_data' } as ToolNodeData },
         { id: 'performance-analyser', type: 'tool', label: 'Performance Analyser', x: 450, y: 150,
-          data: { variant: 'db-query', query: 'model-performance-sprint', contextKey: 'perf_data' } as any },
+          data: { variant: 'db-query', query: 'model-performance-sprint', contextKey: 'perf_data' } as ToolNodeData },
         { id: 'build-error-reader', type: 'tool', label: 'Build Error Reader', x: 650, y: 150,
-          data: { variant: 'file-read', filePath: (process.env.HOME ?? '/tmp') + '/.copernicus/logs/copernicus.log' } as any },
+          data: { variant: 'file-read', filePath: (process.env.HOME ?? '/tmp') + '/.copernicus/logs/copernicus.log' } as ToolNodeData },
         { id: 'user-reflection', type: 'decision', label: 'User Reflection', x: 850, y: 150,
-          data: { variant: 'human-approval', message: "Please describe retrospective points, successes, and failures from the past sprint." } as any },
+          data: { variant: 'human-approval', message: "Please describe retrospective points, successes, and failures from the past sprint." } as DecisionNodeData },
         { id: 'learning-extractor', type: 'agent', label: 'Learning Extractor', x: 1050, y: 150,
           data: {
             variant: 'agent',
@@ -286,13 +286,13 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
             systemPrompt: 'You are a software engineering retrospective facilitator. Analyse the sprint evidence and extract concrete, actionable learning rules that can improve agent performance next sprint. Format each learning as: [RETROSPECTIVE vX.X.X] <pattern>: <what went wrong> → <reinforced rule>',
             task: 'Sprint Evidence:\n\nGit commits:\n{{git-log-reader}}\n\nModel usage:\n{{model_calls_data}}\n\nPerformance scores:\n{{perf_data}}\n\nBuild errors:\n{{build-error-reader}}\n\nUser reflection:\n{{user-reflection}}\n\nExtract 5-10 concrete learning rules. Output one rule per line, no preamble.',
             outputChannel: 'context'
-          } as any },
+          } as AgentNodeData },
         { id: 'routing-weight-updater', type: 'tool', label: 'Routing Weight Updater', x: 1250, y: 150,
-          data: { variant: 'memory-write', content: '[ROUTING] {{learning-extractor}}', importance: 9, source: 'retrospective-routing' } as any },
+          data: { variant: 'memory-write', content: '[ROUTING] {{learning-extractor}}', importance: 9, source: 'retrospective-routing' } as ToolNodeData },
         { id: 'memory-writer', type: 'tool', label: 'Memory Writer', x: 1450, y: 150,
-          data: { variant: 'memory-write', content: '{{learning-extractor}}', importance: 8, source: 'retrospective' } as any },
+          data: { variant: 'memory-write', content: '{{learning-extractor}}', importance: 8, source: 'retrospective' } as ToolNodeData },
         { id: 'agents-md-updater', type: 'tool', label: 'Agents MD Updater', x: 1650, y: 150,
-          data: { variant: 'agents-md-append', content: '\n## Reinforcements (sprint-auto)\n\n{{learning-extractor}}\n' } as any },
+          data: { variant: 'agents-md-append', content: '\n## Reinforcements (sprint-auto)\n\n{{learning-extractor}}\n' } as ToolNodeData },
       ],
       edges: [
         { id: 'e1', source: 'git-log-reader', target: 'model-calls-summary' },

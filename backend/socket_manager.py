@@ -1,3 +1,4 @@
+import os
 from flask_socketio import SocketIO, emit
 
 class SocketManager:
@@ -8,7 +9,11 @@ class SocketManager:
         if cls._instance is None:
             cls._instance = super(SocketManager, cls).__new__(cls)
             if app is not None:
-                cls._socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
+                allowed_origins = os.environ.get(
+                    "ALLOWED_ORIGINS",
+                    "http://localhost:3000,http://localhost:5001,app://copernicus"
+                ).split(",")
+                cls._socketio = SocketIO(app, async_mode='threading', cors_allowed_origins=allowed_origins)
         return cls._instance
 
     @classmethod
@@ -30,10 +35,3 @@ class SocketManager:
             return
         with self._socketio.app.app_context():
             self._socketio.emit('agent:status', {'sessionId': session_id, 'message': message}, namespace='/telemetry')
-
-# Example usage (for testing/initialization)
-# if __name__ == '__main__':
-#     from flask import Flask
-#     app = Flask(__name__)
-#     socket_manager = SocketManager(app)
-#     # Now you can use socket_manager.emit_token_stream(...) or socket_manager.emit_agent_status(...)

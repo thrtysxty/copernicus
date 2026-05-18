@@ -48,7 +48,7 @@ git branch -d story/NNN
 
 ### Delegate Selection (in priority order)
 
-> **All scripts run from repo root `/Users/dadmin/Projects/copernicus/`**
+> **All scripts run from repo root ``**
 
 1. **Jules — TypeScript/React stories (async PR, zero Claude tokens):**
    ```bash

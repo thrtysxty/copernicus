@@ -1,3 +1,4 @@
+import os
 import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -28,7 +29,7 @@ socket_manager = SocketManager(app)
 socketio = SocketManager.get_socketio()
 
 # Allowed origins set
-ALLOWED_ORIGINS = {'http://localhost:3000', 'http://localhost:5001', 'app://copernicus'}
+ALLOWED_ORIGINS = set(os.environ.get('ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:5001,app://copernicus').split(','))
 
 def validate_origin(origin: str) -> bool:
     """Validate if the given origin is allowed and not suspicious.

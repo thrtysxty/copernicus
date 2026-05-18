@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { ipcMain } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
 import { IpcHandlerDeps } from './deps'
@@ -20,7 +21,7 @@ export function register(_deps: IpcHandlerDeps) {
   ipcMain.handle('notebooklm:notebook-contents', async (_e, notebookId: string) =>
     handleIpc(async () => {
       const authHeader = _deps.authManager.getApiKey('jules');
-      const response = await fetch(`http://localhost:5001/api/notebooklm/notebooks/${notebookId}/contents`, {
+      const response = await fetch(`${config.backend.url}/api/notebooklm/notebooks/${notebookId}/contents`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

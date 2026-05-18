@@ -1,3 +1,4 @@
+import { config } from './config'
 import fs from 'node:fs'
 import path from 'node:path'
 import { execSync, spawnSync } from 'node:child_process'
@@ -260,7 +261,7 @@ export class StoriesManager {
 
     if (newStatus === 'DOCUMENTING') {
       log.info(`[StoriesManager] Story ${id} entered DOCUMENTING state. Triggering scribe...`);
-      fetch('http://localhost:5001/api/docs/generate', {
+      fetch(`${config.backend.url}/api/docs/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ story_id: id, status: 'DOCUMENTING' })
@@ -424,7 +425,7 @@ ${ac ? ac : `- [ ] Implement ${title}`}
     writeFileAtomic(archivePath, archivedBody)
 
     // Trigger Implementation Report Generation (Story 227)
-    fetch('http://localhost:5001/api/docs/generate', {
+    fetch(`${config.backend.url}/api/docs/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ story_id: id, status: 'COMPLETE' })

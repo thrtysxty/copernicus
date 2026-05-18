@@ -36,6 +36,9 @@ function getLspScriptPath(): string {
 export type LspProcessStatus = 'running' | 'restarting' | 'dead' | 'stopped'
 
 export class LspManager {
+  private static readonly MAX_DIAGNOSTICS = 500
+  private static readonly MAX_FILE_VERSIONS = 1000
+
   private proc: ChildProcess | null = null
   private nextId = 1
   private pending = new Map<number, PendingRequest>()
@@ -160,6 +163,10 @@ export class LspManager {
     const uri = `file://${filePath}`
     const ver = (this.fileVersions.get(uri) ?? 0) + 1
     this.fileVersions.set(uri, ver)
+    if (this.fileVersions.size > LspManager.MAX_FILE_VERSIONS) {
+      const firstKey = this.fileVersions.keys().next().value
+      if (firstKey !== undefined) this.fileVersions.delete(firstKey)
+    }
     if (ver === 1) {
       this.sendNotify('textDocument/didOpen', {
         textDocument: { uri, languageId: 'typescript', version: ver, text: content },
@@ -409,6 +416,10 @@ export class LspManager {
       const uri = msg.params.uri
       const diagnostics = msg.params.diagnostics
       this.diagnosticsCache.set(uri, diagnostics)
+      if (this.diagnosticsCache.size > LspManager.MAX_DIAGNOSTICS) {
+        const firstKey = this.diagnosticsCache.keys().next().value
+        if (firstKey !== undefined) this.diagnosticsCache.delete(firstKey)
+      }
       
       let errorCount = 0
       for (const diags of this.diagnosticsCache.values()) {

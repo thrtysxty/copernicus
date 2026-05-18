@@ -89,7 +89,7 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
       }
       
       setMemories(filteredMemories)
-    } catch {} finally { setLoading(false) }
+    } catch (err) { console.warn("[Non-critical]", err) } finally { setLoading(false) }
   }
 
   useEffect(() => { fetchMemories() }, [selectedBankId, fileHistoryMode, activeFilePath])

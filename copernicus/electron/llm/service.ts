@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { BrowserWindow } from 'electron'
 import { authManager } from '../auth-manager'
 import { modelRegistry } from '../models/model-registry'
@@ -99,7 +100,7 @@ export class LLMService {
         finalSystemPrompt = [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }];
       }
 
-      const response = await fetch('http://127.0.0.1:5001/api/llm/chat', {
+      const response = await fetch(`${config.backend.url}/api/llm/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -213,7 +214,7 @@ export class LLMService {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5001/api/llm/chat', {
+      const response = await fetch(`${config.backend.url}/api/llm/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': process.env.COPERNICUS_API_KEY || '' },
         body: JSON.stringify({

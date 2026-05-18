@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { ipcMain, BrowserWindow } from 'electron'
 import { handleIpc } from '../utils/handle-ipc'
 
@@ -10,7 +11,7 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('registry:list-models', () => handleIpc('registry:list-models', [], () => modelRegistry.getModels()))
   ipcMain.handle('registry:list-personas', () => handleIpc('registry:list-personas', [], async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/registry/personas');
+      const response = await fetch(`${config.backend.url}/api/registry/personas`);
       if (!response.ok) return [];
       return await response.json();
     } catch {
@@ -32,7 +33,7 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   )
   ipcMain.handle('models:list-ollama', () => handleIpc('models:list-ollama', [], async () => {
     try {
-      const response = await fetch('http://localhost:11434/api/tags', {
+      const response = await fetch(`${config.ollama.url}/api/tags`, {
         signal: AbortSignal.timeout(3000),
       });
       if (!response.ok) return { ok: false, error: 'OLLAMA_NOT_RUNNING', models: [] };

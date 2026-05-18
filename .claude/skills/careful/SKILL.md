@@ -8,7 +8,7 @@ description: Invoke before touching production systems, shared infrastructure, t
 Activating guard mode now:
 
 ```bash
-touch /Users/dadmin/.claude/careful-active
+touch 
 ```
 
 **Active blocks for this session:**
@@ -18,6 +18,6 @@ touch /Users/dadmin/.claude/careful-active
 - `kubectl delete`
 - `git reset --hard`
 
-Guard is enforced via a global PreToolUse hook (`~/.claude/hooks/careful-block.sh`) that checks for the sentinel file above. To deactivate: `rm /Users/dadmin/.claude/careful-active`.
+Guard is enforced via a global PreToolUse hook (`~/.claude/hooks/careful-block.sh`) that checks for the sentinel file above. To deactivate: `rm 
 
 To bypass a specific block intentionally, explicitly state why before running the command and Claude will ask for confirmation first.

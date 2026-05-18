@@ -1,3 +1,4 @@
+import { config } from '../../config'
 
 export async function dispatchOllamaAnthropic(opts: {
   modelId: string
@@ -6,7 +7,7 @@ export async function dispatchOllamaAnthropic(opts: {
   maxTokens?: number
   baseUrl?: string
 }): Promise<string> {
-  const base = opts.baseUrl ?? process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'
+  const base = opts.baseUrl ?? process.env.OLLAMA_BASE_URL ?? config.ollama.url
   const url = `${base}/api/messages`
 
   try {

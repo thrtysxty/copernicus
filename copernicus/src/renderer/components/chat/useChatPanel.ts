@@ -175,7 +175,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     try {
       const stored = localStorage.getItem('copernicus:saved-prompts')
       if (stored) setSavedPrompts(JSON.parse(stored))
-    } catch {}
+    } catch (err) { log.warn("[ChatPanel] Non-critical error:", err) }
   }, [isFlipped])
 
   const confirmSavePrompt = () => {
@@ -348,9 +348,9 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     const currentImage = pendingImage
     setInput(''); setContext([]); setPendingImage(null)
     
-    if (currentInput.includes('@help')) { try { const result = await invoke<any>('fs:read-file', 'docs/help/USER_GUIDE.md'); const data = unwrapIpc<string>(result); if (data) enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${data}\n`) } catch {} }
+    if (currentInput.includes('@help')) { try { const result = await invoke<any>('fs:read-file', 'docs/help/USER_GUIDE.md'); const data = unwrapIpc<string>(result); if (data) enrichedContent = enrichedContent.replace('@help', `\n\n[CONTEXT: OPERATOR MANUAL]\n${data}\n`) } catch (err) { log.warn("[ChatPanel] Non-critical error:", err) } }
     const sessionId = `chat-${Date.now()}`; streamingIdRef.current = sessionId; setIsStreaming(true)
-    if (openFilePath) { try { const diagRes = await invoke<any>('lsp:get-diagnostics', openFilePath); const diags = unwrapIpc<any[]>(diagRes) ?? []; if (diags.length > 0) enrichedContent = `[LSP diagnostics for ${openFilePath.split(/[/\\]/).pop()}]\n${diags.slice(0, 10).map((d: any) => `[${d.severity === 1 ? 'ERROR' : 'WARN'}] L${(d.range?.start?.line ?? 0) + 1}: ${d.message}`).join('\n')}\n\n---\n\n${enrichedContent}` } catch {} }
+    if (openFilePath) { try { const diagRes = await invoke<any>('lsp:get-diagnostics', openFilePath); const diags = unwrapIpc<any[]>(diagRes) ?? []; if (diags.length > 0) enrichedContent = `[LSP diagnostics for ${openFilePath.split(/[/\\]/).pop()}]\n${diags.slice(0, 10).map((d: any) => `[${d.severity === 1 ? 'ERROR' : 'WARN'}] L${(d.range?.start?.line ?? 0) + 1}: ${d.message}`).join('\n')}\n\n---\n\n${enrichedContent}` } catch (err) { log.warn("[ChatPanel] Non-critical error:", err) } }
     setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: 'assistant', content: '' }])
     
     let systemPrompt: string | undefined = undefined
@@ -404,7 +404,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       else updatedContent = `${updatedContent}\n\n${implMarker}\n${content}\n`
       await invoke('stories:update-content', { id: activeStoryId, content: updatedContent })
       window.ipcRenderer.send('db:log-intent', `Architected ${activeStoryId} via Chat`, 'COMPLETED', 'chat')
-    } catch {}
+    } catch (err) { log.warn("[ChatPanel] Non-critical error:", err) }
   }
 
   const handleFileAttach = async () => {
@@ -414,7 +414,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       if (!filePath) return
       const result = await invoke<any>('fs:read-file', filePath); const content = unwrapIpc<string>(result)
       if (typeof content === 'string') setContext(prev => [...prev, { type: 'file', label: filePath.split(/[/\\]/).pop() ?? filePath, content: `\n// File: ${filePath}\n${content}\n` }])
-    } catch {}
+    } catch (err) { log.warn("[ChatPanel] Non-critical error:", err) }
   }
 
   const triggerPicker = async (mode: any) => {

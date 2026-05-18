@@ -1,3 +1,4 @@
+import log from '../utils/logger'
 import { stateLedger, StoryRecord, JulesSession } from '../db/state-ledger'
 import { generateJulesPrompt } from './prompt-generator'
 import { JulesClient } from './jules-client'
@@ -6,7 +7,7 @@ import { julesManager } from './jules-manager'
 
 export interface DispatchOptions {
   story: StoryRecord
-  repo: string           // 'owner/repo' e.g. 'dadmin/agentic-platform'
+  repo: string           // 'owner/repo' e.g. 'Copernicus-IDE/copernicus'
   branch: string         // target branch, usually 'main'
   julesClient: JulesClient // Jules Client
   requirePlanApproval?: boolean  // default false for automated dispatch
@@ -48,7 +49,7 @@ export async function dispatchJulesSession(opts: DispatchOptions): Promise<Dispa
       agentContext = parts.join('\n\n');
     }
   } catch (err) {
-    console.warn("Failed to read agent context for Jules prompt", err);
+    log.warn("Failed to read agent context for Jules prompt", err);
   }
 
   const { text: prompt, hash: promptHash } = generateJulesPrompt(story, repo, agentContext)

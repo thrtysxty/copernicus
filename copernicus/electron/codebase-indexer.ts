@@ -1,3 +1,4 @@
+import { config } from './config'
 import fs from 'fs'
 import path from 'path'
 import { stateLedger } from './db/state-ledger'
@@ -96,7 +97,7 @@ export class CodebaseIndexer {
 
   private async tryProvider(provider: string, text: string): Promise<number[] | null> {
     if (provider === 'ollama') {
-      const url = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
+      const url = process.env.OLLAMA_BASE_URL || config.ollama.url
       const res = await fetch(`${url}/api/embeddings`, {
         method: 'POST',
         body: JSON.stringify({ model: 'qwen3-embedding:0.6b', prompt: text }),

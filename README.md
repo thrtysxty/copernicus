@@ -1,5 +1,9 @@
 # COPERNICUS IDE
 
+
+[![Build Status](https://github.com/Copernicus-IDE/copernicus/actions/workflows/build.yml/badge.svg)](https://github.com/Copernicus-IDE/copernicus/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 **An agentic development environment where Claude, Gemini, and Jules work as peers on your engineering team.**
 
 Not a chat wrapper. Not a code-completion plugin. A full IDE — Monaco editor, integrated PTY terminal, Kanban project management, semantic codebase search, financial telemetry, workflow automation — built from the ground up for the reality that LLM agents are now capable engineering contributors when given structure, context, and accountability.

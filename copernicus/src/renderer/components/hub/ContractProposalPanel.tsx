@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { IpcResult } from '../../types/ipc';
@@ -69,7 +70,7 @@ export function ContractProposalPanel() {
         fetchData();
       }
     } catch (e: any) {
-      console.error('Approve failed', e);
+      log.error('Approve failed', e);
     }
   };
 
@@ -81,7 +82,7 @@ export function ContractProposalPanel() {
         fetchData();
       }
     } catch (e: any) {
-      console.error('Reject failed', e);
+      log.error('Reject failed', e);
     }
   };
 

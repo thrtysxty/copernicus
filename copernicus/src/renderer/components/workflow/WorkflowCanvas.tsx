@@ -21,15 +21,15 @@ interface PaletteTile {
 
 const PALETTE_TRIGGERS: PaletteTile[] = [
   { type: 'trigger', label: 'Manual Start',    color: '#A78BFA',
-    defaultData: { variant: 'manual' } as any },
+    defaultData: { variant: 'manual' } },
   { type: 'trigger', label: 'Cron Schedule',   color: '#A78BFA',
-    defaultData: { variant: 'cron', scheduleNl: 'every day at 9am', scheduleCron: '0 9 * * *' } as any },
+    defaultData: { variant: 'cron', scheduleNl: 'every day at 9am', scheduleCron: '0 9 * * *' } },
   { type: 'trigger', label: 'Story Activated', color: '#A78BFA',
-    defaultData: { variant: 'story-activated' } as any },
+    defaultData: { variant: 'story-activated' } },
   { type: 'trigger', label: 'Status Change',   color: '#A78BFA',
-    defaultData: { variant: 'story-status-change', expectedStatus: 'IN PROGRESS' } as any },
+    defaultData: { variant: 'story-status-change', expectedStatus: 'IN PROGRESS' } },
   { type: 'trigger', label: 'Terminal Exit',   color: '#A78BFA',
-    defaultData: { variant: 'terminal-exit' } as any },
+    defaultData: { variant: 'terminal-exit' } },
 ];
 
 const PALETTE_AGENTS: PaletteTile[] = [
@@ -38,47 +38,47 @@ const PALETTE_AGENTS: PaletteTile[] = [
       variant: 'agent', provider: 'anthropic',
       modelId: 'claude-3-5-sonnet-20241022', persona: 'Agent',
       systemPrompt: '', task: '', contextFiles: [], outputChannel: 'terminal',
-    } as any },
+    } },
 ];
 
 const PALETTE_TOOLS: PaletteTile[] = [
   { type: 'tool', label: 'Shell Command',   color: '#60A5FA',
-    defaultData: { variant: 'shell-command', command: '' } as any },
+    defaultData: { variant: 'shell-command', command: '' } },
   { type: 'tool', label: 'Makefile Target', color: '#60A5FA',
-    defaultData: { variant: 'makefile-run', command: 'test' } as any },
+    defaultData: { variant: 'makefile-run', command: 'test' } },
   { type: 'tool', label: 'File Read',       color: '#60A5FA',
-    defaultData: { variant: 'file-read', filePath: '' } as any },
+    defaultData: { variant: 'file-read', filePath: '' } },
   { type: 'tool', label: 'File Write',      color: '#60A5FA',
-    defaultData: { variant: 'file-write', filePath: '', content: '' } as any },
+    defaultData: { variant: 'file-write', filePath: '', content: '' } },
   { type: 'tool', label: 'Story Update',    color: '#60A5FA',
-    defaultData: { variant: 'story-update', field: 'status', value: '' } as any },
+    defaultData: { variant: 'story-update', field: 'status', value: '' } },
   { type: 'tool', label: 'Log Event',       color: '#60A5FA',
-    defaultData: { variant: 'log-event', message: '' } as any },
+    defaultData: { variant: 'log-event', message: '' } },
   { type: 'tool', label: 'Screenshot',      color: '#60A5FA',
-    defaultData: { variant: 'screenshot' } as any },
+    defaultData: { variant: 'screenshot' } },
   { type: 'tool', label: 'Browser',         color: '#34D399',
-    defaultData: { variant: 'browser-action', action: 'screenshot' } as any },
+    defaultData: { variant: 'browser-action', action: 'screenshot' } },
 ];
 
 const PALETTE_DECISIONS: PaletteTile[] = [
   { type: 'decision', label: 'Exit Code Gate',  color: '#FBBF24',
-    defaultData: { variant: 'exit-code-gate' } as any },
+    defaultData: { variant: 'exit-code-gate' } },
   { type: 'decision', label: 'Output Match',    color: '#FBBF24',
-    defaultData: { variant: 'output-match', pattern: '' } as any },
+    defaultData: { variant: 'output-match', pattern: '' } },
   { type: 'decision', label: 'Human Approval',  color: '#FBBF24',
-    defaultData: { variant: 'human-approval' } as any },
+    defaultData: { variant: 'human-approval' } },
   { type: 'decision', label: 'Status Check',    color: '#FBBF24',
-    defaultData: { variant: 'story-status-check', expectedStatus: 'COMPLETE' } as any },
+    defaultData: { variant: 'story-status-check', expectedStatus: 'COMPLETE' } },
 ];
 
 const PALETTE_FLOW: PaletteTile[] = [
   { type: 'flow', label: 'Delay', color: '#71717A',
-    defaultData: { variant: 'delay', durationMs: 2000 } as any },
+    defaultData: { variant: 'delay', durationMs: 2000 } },
 ];
 
 const PALETTE_QUALITY: PaletteTile[] = [
   { type: 'verification', label: 'Verification Gate', color: '#10B981',
-    defaultData: { variant: 'verification', checklist: [] } as any },
+    defaultData: { variant: 'verification', checklist: [] } },
 ];
 
 // Group orchestrator tiles by category
@@ -190,7 +190,7 @@ export default function WorkflowCanvas() {
   const [nodes, setNodes] = useState<WFNode[]>([]);
   const [edges, setEdges] = useState<WFEdge[]>([]);
   const [templates, setTemplates] = useState<{id:string;name:string;description:string}[]>([]);
-  const [snapshots, setSnapshots] = useState<Map<string, number>>(new Map());
+  const [snapshots, setSnapshots] = useState<Map<string, string>>(new Map());
   const [detachedHead, setDetachedHead] = useState(false);
   const [rewindError, setRewindError] = useState<string | null>(null);
 
@@ -235,7 +235,7 @@ export default function WorkflowCanvas() {
                     label: sn.label,
                     x: sn.position.x,
                     y: sn.position.y,
-                    data: newData as any
+                    data: newData as WorkflowNodeData
                   };
                   changed = true;
                }
@@ -248,7 +248,7 @@ export default function WorkflowCanvas() {
               label: sn.label,
               x: sn.position.x,
               y: sn.position.y,
-              data: { variant: sn.tileId, ...sn.config } as any
+              data: { variant: sn.tileId, ...sn.config } as unknown as WorkflowNodeData
             });
             changed = true;
           }
@@ -284,7 +284,7 @@ export default function WorkflowCanvas() {
   useEffect(() => {
     if (activeWorkflowTemplate) {
       invoke('workflow:get-snapshots', activeWorkflowTemplate).then(res => {
-        const list = (unwrapIpc<any[]>(res) ?? []) as any[];
+        const list = unwrapIpc<{node_id: string; id: string}[]>(res) ?? [];
         setSnapshots(new Map(list.map(s => [s.node_id, s.id])));
       });
     }
@@ -461,7 +461,7 @@ export default function WorkflowCanvas() {
           label: tile.label,
           x,
           y,
-          data: { variant: tile.id, ...tile.defaultConfig } as any,
+          data: { variant: tile.id, ...tile.defaultConfig } as unknown as WorkflowNodeData,
         };
 
         setNodes(prev => [...prev, newNode]);
@@ -504,7 +504,7 @@ export default function WorkflowCanvas() {
     };
 
     const result = await invoke<{ ok: boolean; error?: string }>('workflow:run', graph)
-    const data = (result as any).data || result;
+    const data = (result as { data?: typeof result }).data || result;
     if (!data.ok) {
       log.error('[WorkflowCanvas] workflow:run failed:', data.error)
       setIsRunning(false)
@@ -665,9 +665,9 @@ export default function WorkflowCanvas() {
           ))}
           {extensionWorkflowNodes.length > 0 && (
             <NodePaletteSection title="EXTENSIONS" nodes={extensionWorkflowNodes.map(n => ({
-              type: 'extension',
+              type: 'extension' as const,
               label: n.label,
-              defaultData: { extensionType: n.type, ...n.defaultData } as any,
+              defaultData: { extensionType: n.type, ...n.defaultData } as unknown as WorkflowNodeData,
               color: '#8B5CF6' // A distinct color for extension nodes
             }))} onDragStart={handlePaletteDragStart} />
           )}
@@ -763,7 +763,7 @@ export default function WorkflowCanvas() {
             {/* Nodes */}
             {nodes.map(node => {
               const isError = node.status === 'error' || node.status === 'failed';
-              const errorMsg = (node as any).error || context[node.id];
+              const errorMsg = (node as WFNode & { error?: string }).error || context[node.id];
 
               return (
                 <g

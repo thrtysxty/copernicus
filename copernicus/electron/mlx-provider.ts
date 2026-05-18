@@ -1,3 +1,4 @@
+import { config } from './config'
 import { app } from 'electron';
 import { spawn, ChildProcess } from 'child_process';
 import { providerRegistry } from './llm/provider-registry';
@@ -59,7 +60,7 @@ class MLXProvider {
     providerRegistry.register({
       id: 'mlx-native',
       displayName: 'MLX (Apple Silicon)',
-      baseUrl: 'http://localhost:8080/v1',
+      baseUrl: config.mlx.url,
       resolveKey: () => null, // requires_api_key: false
       supportsToolCalling: true, // we assume it does via compatible API
       // Custom metadata for MLX per AC3

@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { WorkflowState, VALID_TRANSITIONS } from './states';
 import { WorkflowGraph, WFNode, NodeStatus, WorkflowExecutionEvent, WorkflowStepStartEvent, WorkflowStepEndEvent } from './types';
 import type { AuthManager } from '../auth-manager';
@@ -936,7 +937,7 @@ export class WorkflowEngine {
       case 'openrouter': return 'https://openrouter.ai/api/v1';
       case 'deepinfra':  return 'https://api.deepinfra.com/v1/openai';
       case 'ollama':
-      case 'ollama-anthropic': return 'http://localhost:11434/v1';
+      case 'ollama-anthropic': return `${config.ollama.url}/v1`;
       default:
         return this.services?.authManager.getBaseUrl(provider)
                ?? 'https://api.openai.com/v1';

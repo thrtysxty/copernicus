@@ -31,7 +31,10 @@ export interface MemoryFragment {
   content: string;
   tags?: string[];
   agent_id?: string;
-  created_at?: string;
+  bank_id?: string;
+  event_type?: string;
+  importance?: number;
+  created_at?: number;
 }
 
 export interface SharedAsset {
@@ -137,6 +140,16 @@ export interface JulesSession {
   error_message?: string
 }
 
+export interface WorkflowWave {
+  id: string;
+  workflowId: string;
+  waveIndex: number;
+  storyIds: string[];
+  status: string;
+  startedAt: number;
+  completedAt: number | null;
+}
+
 export class StateLedger {
   public db: Database;
 
@@ -155,6 +168,14 @@ export class StateLedger {
     this.init();
   }
 
+  // Typed query helpers — eliminates `as any` at call sites
+  private queryAll<T>(sql: string, ...params: unknown[]): T[] {
+    return this.db.prepare(sql).all(...params) as T[]
+  }
+
+  private queryGet<T>(sql: string, ...params: unknown[]): T | undefined {
+    return this.db.prepare(sql).get(...params) as T | undefined
+  }
   private init() {
     this.db.exec(SCHEMA.intents);
     this.db.exec(SCHEMA.events);
@@ -242,11 +263,11 @@ export class StateLedger {
   // ── Agent Memory (Story 489) ──────────────────────────────────────────
 
   private migrateAgentMemory(): void {
-    const hasRows = this.db.prepare('SELECT COUNT(*) as count FROM agent_memory WHERE bank_id = ? AND event_type = ?').get('chat', 'memory_fact') as { count: number };
-    
+    const hasRows = this.queryGet<{ count: number }>('SELECT COUNT(*) as count FROM agent_memory WHERE bank_id = ? AND event_type = ?', 'chat', 'memory_fact');
+
     if (hasRows && hasRows.count === 0) {
       this.db.transaction(() => {
-        const rows = this.db.prepare('SELECT * FROM project_memory').all() as any[];
+        const rows = this.queryAll<MemoryFragment>('SELECT * FROM project_memory');
         const insertStmt = this.db.prepare(`
           INSERT INTO agent_memory (id, project_id, bank_id, event_type, content, importance, ts)
           VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -260,7 +281,7 @@ export class StateLedger {
             'memory_fact', // event_type
             row.content,
             row.importance,
-            Math.floor(row.created_at / 1000) // Convert from ms to seconds
+            Math.floor((row.created_at ?? Date.now()) / 1000) // Convert from ms to seconds
           );
         }
       })();
@@ -286,13 +307,21 @@ export class StateLedger {
     }
   }
 
-  getWorkflowWaves(workflowId: string): any[] {
-    const rows = this.db.prepare(`
+  getWorkflowWaves(workflowId: string): WorkflowWave[] {
+    const rows = this.queryAll<{
+      id: string;
+      workflowId: string;
+      waveIndex: number;
+      storyIds: string;
+      status: string;
+      startedAt: number;
+      completedAt: number | null;
+    }>(`
       SELECT id, workflow_id as workflowId, wave_index as waveIndex, story_ids as storyIds, status, started_at as startedAt, completed_at as completedAt
       FROM workflow_waves
       WHERE workflow_id = ?
       ORDER BY wave_index ASC
-    `).all(workflowId) as any[];
+    `, workflowId);
 
     return rows.map(r => ({
       ...r,
@@ -318,60 +347,60 @@ export class StateLedger {
     );
   }
 
-  getAllAgentMemoryForProject(projectId: string): any[] {
-    return this.db.prepare('SELECT * FROM agent_memory WHERE project_id = ?').all(projectId) as any[];
+  getAllAgentMemoryForProject(projectId: string): MemoryFragment[] {
+    return this.queryAll<MemoryFragment>('SELECT * FROM agent_memory WHERE project_id = ?', projectId);
   }
 
   getMemoryWorkingSet(projectId: string, bankId: string, limit: number): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT * FROM memory_working_set
       WHERE project_id = ? AND bank_id = ?
       ORDER BY score DESC
       LIMIT ?
-    `).all(projectId, bankId, limit) as any[];
+    `, projectId, bankId, limit);
   }
 
   getMemoryWorkingSetForProject(projectId: string, limit: number, bankId?: string): any[] {
     if (bankId) {
-      return this.db.prepare(`
+      return this.queryAll<any>(`
         SELECT * FROM memory_working_set
         WHERE project_id = ? AND bank_id = ?
         ORDER BY score DESC
         LIMIT ?
-      `).all(projectId, bankId, limit) as any[];
+      `, projectId, bankId, limit);
     } else {
-      return this.db.prepare(`
+      return this.queryAll<any>(`
         SELECT * FROM memory_working_set
         WHERE project_id = ?
         ORDER BY score DESC
         LIMIT ?
-      `).all(projectId, limit) as any[];
+      `, projectId, limit);
     }
   }
 
-  getAgentMemoryTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): any[] {
-    return this.db.prepare(`
-      SELECT * FROM agent_memory 
-      WHERE project_id = ? AND ts BETWEEN ? AND ? 
+  getAgentMemoryTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): MemoryFragment[] {
+    return this.queryAll<MemoryFragment>(`
+      SELECT * FROM agent_memory
+      WHERE project_id = ? AND ts BETWEEN ? AND ?
       ORDER BY ts ASC LIMIT ?
-    `).all(projectId, fromTs, toTs, limit) as any[];
+    `, projectId, fromTs, toTs, limit);
   }
 
   getAgentWorkLogTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): any[] {
-    return this.db.prepare(`
-      SELECT * FROM agent_work_log 
-      WHERE project_id = ? AND ts BETWEEN ? AND ? 
+    return this.queryAll<any>(`
+      SELECT * FROM agent_work_log
+      WHERE project_id = ? AND ts BETWEEN ? AND ?
       ORDER BY ts ASC LIMIT ?
-    `).all(projectId, fromTs, toTs, limit) as any[];
+    `, projectId, fromTs, toTs, limit);
   }
 
-  recallAgentMemory(projectId: string, bankId: string, query: string, limit: number): any[] {
-    return this.db.prepare(`
+  recallAgentMemory(projectId: string, bankId: string, query: string, limit: number): MemoryFragment[] {
+    return this.queryAll<MemoryFragment>(`
       SELECT * FROM memory_working_set
       WHERE project_id = ? AND bank_id = ? AND content LIKE ?
       ORDER BY score DESC
       LIMIT ?
-    `).all(projectId, bankId, `%${query}%`, limit) as any[];
+    `, projectId, bankId, `%${query}%`, limit);
   }
 
   supersedeMemory(oldId: string, newId: string): void {
@@ -379,7 +408,7 @@ export class StateLedger {
       this.db.prepare(`
         UPDATE agent_memory SET importance = 1 WHERE id = ?
       `).run(oldId);
-      
+
       this.db.prepare(`
         UPDATE agent_memory SET supersedes_id = ? WHERE id = ?
       `).run(newId, oldId);
@@ -400,18 +429,18 @@ export class StateLedger {
   }
 
   getAgentWorkLog(projectId: string, bankId: string, limit: number): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT * FROM agent_work_log
       WHERE project_id = ? AND bank_id = ?
       ORDER BY ts DESC
       LIMIT ?
-    `).all(projectId, bankId, limit) as any[];
+    `, projectId, bankId, limit);
   }
 
   // ── Kanban Columns (Story 428) ──────────────────────────────────────────
 
   private initKanbanColumns(): void {
-    const existing = this.db.prepare('SELECT COUNT(*) as count FROM kanban_columns').get() as any;
+    const existing = this.queryGet<{ count: number }>('SELECT COUNT(*) as count FROM kanban_columns');
     if (existing && existing.count === 0) {
       const DEFAULT_COLUMNS = [
         { id: 'planning',        status: 'PLANNING',       color: 'bg-slate-500/10 border-slate-500/30',   accent: 'bg-slate-500' },
@@ -439,11 +468,11 @@ export class StateLedger {
   }
 
   getKanbanColumns(): KanbanColumnRecord[] {
-    return this.db.prepare('SELECT * FROM kanban_columns ORDER BY sort_order ASC').all() as KanbanColumnRecord[];
+    return this.queryAll<KanbanColumnRecord>('SELECT * FROM kanban_columns ORDER BY sort_order ASC');
   }
 
   setKanbanColumn(id: string, updates: Partial<KanbanColumnRecord>): void {
-    const existing = this.db.prepare('SELECT * FROM kanban_columns WHERE id = ?').get(id) as KanbanColumnRecord;
+    const existing = this.queryGet<KanbanColumnRecord>('SELECT * FROM kanban_columns WHERE id = ?', id);
     if (!existing) {
       throw new Error('column not found');
     }
@@ -467,7 +496,7 @@ export class StateLedger {
   // ── Template Overrides (Story 330) ────────────────────────────────────────
 
   getTemplateOverride(id: string): { content: string } | null {
-    const row = this.db.prepare('SELECT content FROM template_overrides WHERE template_id = ?').get(id) as any
+    const row = this.queryGet<{ content: string }>('SELECT content FROM template_overrides WHERE template_id = ?', id);
     return row ? { content: row.content } : null
   }
 
@@ -508,24 +537,24 @@ export class StateLedger {
   }
 
   getLastTransaction(): { id: string, files: { path: string, beforeHash?: string, afterHash?: string, originalDataPath?: string }[] } | null {
-    const row = this.db.prepare(`
-      SELECT * FROM file_transactions 
-      WHERE status = 'COMMITTED' 
+    const row = this.queryGet<{ id: string; created_at: string; status: string; description: string | null }>(`
+      SELECT * FROM file_transactions
+      WHERE status = 'COMMITTED'
       ORDER BY created_at DESC LIMIT 1
-    `).get() as any
+    `);
     if (!row) return null
 
-    const entries = this.db.prepare(`
+    const entries = this.queryAll<{ file_path: string; before_hash: string | null; after_hash: string | null; original_data_path: string | null }>(`
       SELECT * FROM file_transaction_entries WHERE transaction_id = ?
-    `).all(row.id) as any[]
+    `, row.id);
 
     return {
       id: row.id,
       files: entries.map(e => ({
         path: e.file_path,
-        beforeHash: e.before_hash,
-        afterHash: e.after_hash,
-        originalDataPath: e.original_data_path
+        beforeHash: e.before_hash ?? undefined,
+        afterHash: e.after_hash ?? undefined,
+        originalDataPath: e.original_data_path ?? undefined
       }))
     }
   }
@@ -554,7 +583,7 @@ export class StateLedger {
   }
 
   getProjectByPath(path: string): ProjectRecord | null {
-    const row = this.db.prepare('SELECT * FROM projects WHERE path = ?').get(path) as any
+    const row = this.queryGet<ProjectRecord>('SELECT * FROM projects WHERE path = ?', path);
     return row ?? null
   }
 
@@ -565,7 +594,7 @@ export class StateLedger {
   }
 
   getProjectById(id: string): ProjectRecord | null {
-    const row = this.db.prepare('SELECT * FROM projects WHERE id = ?').get(id) as any
+    const row = this.queryGet<ProjectRecord>('SELECT * FROM projects WHERE id = ?', id);
     return row ?? null
   }
 
@@ -580,9 +609,9 @@ export class StateLedger {
   }
 
   getTestRunHistory(limit = 20): TestRunRecord[] {
-    return this.db.prepare(
-      'SELECT * FROM test_runs ORDER BY run_at DESC LIMIT ?'
-    ).all(limit) as TestRunRecord[]
+    return this.queryAll<TestRunRecord>(
+      'SELECT * FROM test_runs ORDER BY run_at DESC LIMIT ?', limit
+    )
   }
 
   // ── Model Call Ledger (Story 156) ────────────────────────────────────────
@@ -609,15 +638,20 @@ export class StateLedger {
   }
 
   getSessionStats(session_id: string): ModelCallStats {
-    const total = this.db.prepare(`
+    const total = this.queryGet<{
+      total_calls: number;
+      total_tokens_in: number;
+      total_tokens_out: number;
+      total_cost_usd: number;
+    }>(`
       SELECT COUNT(*) as total_calls,
              SUM(tokens_in) as total_tokens_in,
              SUM(tokens_out) as total_tokens_out,
              SUM(cost_usd) as total_cost_usd
       FROM model_calls WHERE session_id = ?
-    `).get(session_id) as any
+    `, session_id) ?? { total_calls: 0, total_tokens_in: 0, total_tokens_out: 0, total_cost_usd: 0 };
 
-    const byModel = this.db.prepare(`
+    const byModel = this.queryAll<{ model_id: string; provider: string; calls: number; tokens_in: number; tokens_out: number; cost_usd: number }>(`
       SELECT model_id, provider,
              COUNT(*) as calls,
              SUM(tokens_in) as tokens_in,
@@ -625,7 +659,7 @@ export class StateLedger {
              SUM(cost_usd) as cost_usd
       FROM model_calls WHERE session_id = ?
       GROUP BY model_id, provider ORDER BY calls DESC
-    `).all(session_id) as any[]
+    `, session_id);
 
     return {
       total_calls:      total.total_calls      ?? 0,
@@ -638,18 +672,18 @@ export class StateLedger {
 
   getRecentCalls(limit = 100, panel_id?: string): ModelCallRecord[] {
     if (panel_id) {
-      return this.db.prepare(
-        'SELECT * FROM model_calls WHERE panel_id = ? ORDER BY created_at DESC LIMIT ?'
-      ).all(panel_id, limit) as ModelCallRecord[]
+      return this.queryAll<ModelCallRecord>(
+        'SELECT * FROM model_calls WHERE panel_id = ? ORDER BY created_at DESC LIMIT ?', panel_id, limit
+      )
     }
-    return this.db.prepare(
-      'SELECT * FROM model_calls ORDER BY created_at DESC LIMIT ?'
-    ).all(limit) as ModelCallRecord[]
+    return this.queryAll<ModelCallRecord>(
+      'SELECT * FROM model_calls ORDER BY created_at DESC LIMIT ?', limit
+    )
   }
 
   getEditDecisionsCounts(promptId: string): { accept: number, reject: number, abort: number } {
     try {
-      const rows = this.db.prepare('SELECT decision, COUNT(*) as count FROM edit_decisions WHERE prompt_id = ? GROUP BY decision').all(promptId) as { decision: string, count: number }[];
+      const rows = this.queryAll<{ decision: string, count: number }>('SELECT decision, COUNT(*) as count FROM edit_decisions WHERE prompt_id = ? GROUP BY decision', promptId);
       const result = { accept: 0, reject: 0, abort: 0 };
       for (const row of rows) {
         if (row.decision === 'accept') result.accept = row.count;
@@ -664,29 +698,29 @@ export class StateLedger {
   }
 
   getAllTimeCost(): number {
-    const row = this.db.prepare('SELECT SUM(cost_usd) as total FROM model_calls').get() as any
+    const row = this.queryGet<{ total: number }>('SELECT SUM(cost_usd) as total FROM model_calls');
     return row?.total ?? 0
   }
 
   getSessionStatsByRole(sessionId: string): { role: string, tokens: number, cost: number }[] {
-    return this.db.prepare(`
+    return this.queryAll<{ role: string, tokens: number, cost: number }>(`
       SELECT COALESCE(persona_role, 'unknown') as role,
              SUM(tokens_in + tokens_out) as tokens, SUM(cost_usd) as cost
       FROM model_calls WHERE session_id = ?
       GROUP BY role ORDER BY cost DESC
-    `).all(sessionId) as any[]
+    `, sessionId);
   }
 
   getAllTimeStatsByRole(): { role: string, tokens: number, cost: number }[] {
-    return this.db.prepare(`
+    return this.queryAll<{ role: string, tokens: number, cost: number }>(`
       SELECT COALESCE(persona_role, 'unknown') as role,
              SUM(tokens_in + tokens_out) as tokens, SUM(cost_usd) as cost
       FROM model_calls GROUP BY role ORDER BY cost DESC
-    `).all() as any[]
+    `);
   }
 
   queryModelCallsSprint(since: number): object[] {
-    return this.db.prepare(`
+    return this.queryAll<object>(`
       SELECT model_id, provider,
              COUNT(*) as calls,
              SUM(tokens_in) as tokens_in,
@@ -697,11 +731,11 @@ export class StateLedger {
       WHERE created_at > datetime(? / 1000, 'unixepoch')
       GROUP BY model_id, provider
       ORDER BY calls DESC
-    `).all(since) as object[];
+    `, since);
   }
 
   queryModelPerformanceSprint(since: number): object[] {
-    return this.db.prepare(`
+    return this.queryAll<object>(`
       SELECT model_id, provider, task_type,
              COUNT(*) as observations,
              AVG(speed_score) as avg_speed,
@@ -714,7 +748,7 @@ export class StateLedger {
       WHERE timestamp > datetime(? / 1000, 'unixepoch')
       GROUP BY model_id, provider, task_type
       ORDER BY avg_composite_qs DESC
-    `).all(since) as object[];
+    `, since);
   }
 
   // ── Jules Sessions (Story 161) ──────────────────────────────────────────
@@ -741,20 +775,20 @@ export class StateLedger {
   }
 
   getJulesSessionsByStory(story_id: string): JulesSession[] {
-    return this.db.prepare(
-      'SELECT * FROM jules_sessions WHERE story_id = ? ORDER BY started_at DESC'
-    ).all(story_id) as JulesSession[]
+    return this.queryAll<JulesSession>(
+      'SELECT * FROM jules_sessions WHERE story_id = ? ORDER BY started_at DESC', story_id
+    )
   }
 
   listJulesSessions(status?: string): JulesSession[] {
     if (status) {
-      return this.db.prepare(
-        'SELECT * FROM jules_sessions WHERE status = ? ORDER BY started_at DESC LIMIT 50'
-      ).all(status) as JulesSession[]
+      return this.queryAll<JulesSession>(
+        'SELECT * FROM jules_sessions WHERE status = ? ORDER BY started_at DESC LIMIT 50', status
+      )
     }
-    return this.db.prepare(
+    return this.queryAll<JulesSession>(
       'SELECT * FROM jules_sessions ORDER BY started_at DESC LIMIT 50'
-    ).all() as JulesSession[]
+    )
   }
 
   private migrateStories(): void {
@@ -781,9 +815,8 @@ export class StateLedger {
     // SQLite can't DROP CONSTRAINT, so rebuild the table if the FK still exists.
     // PRAGMA must be set outside the transaction (SQLite limitation).
     try {
-      const hasFk = (this.db.pragma('foreign_key_list(stories)') as any[]).some(
-        (r: any) => r.table === 'epics'
-      )
+      const fkList = this.db.pragma('foreign_key_list(stories)') as unknown[];
+      const hasFk = fkList.some((r: any) => r.table === 'epics');
       if (hasFk) {
         this.db.pragma('foreign_keys = OFF')
         this.db.transaction(() => {
@@ -833,8 +866,7 @@ export class StateLedger {
   }
 
   getRecentIntents(limit: number = 10): Intent[] {
-    const stmt = this.db.prepare('SELECT * FROM intents ORDER BY created_at DESC LIMIT ?');
-    return stmt.all(limit) as Intent[];
+    return this.queryAll<Intent>('SELECT * FROM intents ORDER BY created_at DESC LIMIT ?', limit);
   }
 
   // ── Events ───────────────────────────────────────────────────────────────
@@ -846,13 +878,12 @@ export class StateLedger {
   }
 
   getRecentEvents(limit: number = 50): EventLog[] {
-    const stmt = this.db.prepare(`
+    const rows = this.queryAll<any>(`
       SELECT e.*, m.prompt_id, m.commit_sha
       FROM events e
       LEFT JOIN model_calls m ON CASE WHEN json_valid(e.content) THEN json_extract(e.content, '$.session_id') ELSE NULL END = m.session_id
       ORDER BY e.created_at DESC LIMIT ?
-    `);
-    const rows = stmt.all(limit) as any[];
+    `, limit);
     return rows.map(row => ({
       ...row,
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
@@ -870,8 +901,8 @@ export class StateLedger {
   }
 
   searchMemory(query: string): MemoryFragment[] {
-    const stmt = this.db.prepare('SELECT * FROM memory WHERE content LIKE ? ORDER BY created_at DESC LIMIT 10');
-    const rows = stmt.all(`%${query}%`) as any[];
+    type DbRow = Omit<MemoryFragment, 'tags'> & { tags?: string }
+    const rows = this.queryAll<DbRow>('SELECT * FROM memory WHERE content LIKE ? ORDER BY created_at DESC LIMIT 10', `%${query}%`);
     return rows.map(row => ({
       ...row,
       tags: row.tags ? JSON.parse(row.tags) : []
@@ -892,8 +923,7 @@ export class StateLedger {
   }
 
   findAsset(assetPath: string): SharedAsset | undefined {
-    const stmt = this.db.prepare('SELECT * FROM shared_assets WHERE path = ?');
-    return stmt.get(assetPath) as SharedAsset | undefined;
+    return this.queryGet<SharedAsset>('SELECT * FROM shared_assets WHERE path = ?', assetPath);
   }
 
   // ── Stories (Story 160) ─────────────────────────────────────────────────
@@ -934,16 +964,13 @@ export class StateLedger {
   }
 
   listStoriesFromDb(projectId?: string): StoryRecord[] {
-    let stmt;
+    let rows: any[];
     if (projectId !== undefined) {
-      stmt = this.db.prepare('SELECT * FROM stories WHERE project_id = ? ORDER BY id DESC')
-      const rows = stmt.all(projectId) as any[]
-      return rows.map(r => this._deserializeStory(r))
+      rows = this.queryAll<any>('SELECT * FROM stories WHERE project_id = ? ORDER BY id DESC', projectId);
     } else {
-      stmt = this.db.prepare('SELECT * FROM stories ORDER BY id DESC')
-      const rows = stmt.all() as any[]
-      return rows.map(r => this._deserializeStory(r))
+      rows = this.queryAll<any>('SELECT * FROM stories ORDER BY id DESC');
     }
+    return rows.map(r => this._deserializeStory(r))
   }
 
   deleteOrphanedStories(projectId: string, validFilePaths: string[]): void {
@@ -959,7 +986,7 @@ export class StateLedger {
   }
 
   getStoryById(id: string): StoryRecord | null {
-    const row = this.db.prepare('SELECT * FROM stories WHERE id = ?').get(id) as any
+    const row = this.queryGet<StoryRecord>('SELECT * FROM stories WHERE id = ?', id);
     return row ? this._deserializeStory(row) : null
   }
 
@@ -970,9 +997,9 @@ export class StateLedger {
     const sets: string[] = []
     const vals: any[] = []
     for (const [k, v] of Object.entries(fields)) {
-      if (allowed.includes(k)) { 
-        sets.push(`${k} = ?`); 
-        vals.push(k === 'flagged' ? (v ? 1 : 0) : v) 
+      if (allowed.includes(k)) {
+        sets.push(`${k} = ?`);
+        vals.push(k === 'flagged' ? (v ? 1 : 0) : v)
       }
     }
     if (!sets.length) return
@@ -1013,9 +1040,7 @@ export class StateLedger {
   }
 
   getLatestSnapshot(panelId: string): any | null {
-    const row = this.db.prepare(`
-      SELECT * FROM context_snapshots WHERE panel_id = ? ORDER BY created_at DESC LIMIT 1
-    `).get(panelId) as any;
+    const row = this.queryGet<any>('SELECT * FROM context_snapshots WHERE panel_id = ? ORDER BY created_at DESC LIMIT 1', panelId);
     if (!row) return null;
     try {
       return { ...row, messages: JSON.parse(row.messages) };
@@ -1033,9 +1058,7 @@ export class StateLedger {
 
   addProjectMemory(payload: { content: string, importance?: number, source: string }): void {
     const fingerprint = payload.content.trim().slice(0, 120)
-    const existing = this.db.prepare(
-      "SELECT id FROM project_memory WHERE substr(content, 1, 120) = ?"
-    ).get(fingerprint)
+    const existing = this.queryGet('SELECT id FROM project_memory WHERE substr(content, 1, 120) = ?', fingerprint)
     if (existing) return
     this.db.prepare(`
       INSERT INTO project_memory (id, content, importance, source, created_at, last_accessed)
@@ -1043,10 +1066,10 @@ export class StateLedger {
     `).run(crypto.randomUUID(), payload.content, payload.importance ?? 3, payload.source, Date.now(), Date.now())
   }
 
-  searchProjectMemory(limit: number = 5): any[] {
-    return this.db.prepare(`
+  searchProjectMemory(limit: number = 5): MemoryFragment[] {
+    return this.queryAll<MemoryFragment>(`
       SELECT * FROM project_memory ORDER BY (importance * 1.0 / (1.0 + (strftime('%s', 'now') * 1000 - created_at) / 86400000.0)) DESC LIMIT ?
-    `).all(limit) as any[];
+    `, limit);
   }
 
   close() {
@@ -1054,18 +1077,18 @@ export class StateLedger {
   }
 
   listRetroReports(projectId: string): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT * FROM retro_reports
       WHERE project_id = ?
       ORDER BY ts_generated DESC
-    `).all(projectId) as any[];
+    `, projectId);
   }
 
   getRetroReport(id: string): any {
-    const report = this.db.prepare('SELECT * FROM retro_reports WHERE id = ?').get(id) as any;
+    const report = this.queryGet<any>('SELECT * FROM retro_reports WHERE id = ?', id);
     if (!report) return null;
 
-    const items = this.db.prepare('SELECT * FROM retro_items WHERE retro_id = ?').all(id);
+    const items = this.queryAll<any>('SELECT * FROM retro_items WHERE retro_id = ?', id);
     return { ...report, items };
   }
 
@@ -1089,7 +1112,7 @@ export class StateLedger {
     }[]
   }): string {
     const id = `retro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     this.db.transaction(() => {
       this.db.prepare(`
         INSERT INTO retro_reports (
@@ -1144,8 +1167,8 @@ export class StateLedger {
 
   approveRetroReport(id: string, originatedStories: string[]): boolean {
     this.db.prepare(`
-      UPDATE retro_reports 
-      SET status = 'approved', ts_approved = ?, retro_originated_stories = ? 
+      UPDATE retro_reports
+      SET status = 'approved', ts_approved = ?, retro_originated_stories = ?
       WHERE id = ?
     `).run(Date.now(), JSON.stringify(originatedStories), id)
     return true;
@@ -1193,8 +1216,7 @@ export class StateLedger {
     excerpt?: string;
   }): void {
     const ts = Date.now();
-    // Use an INSERT OR REPLACE or handle it manually if we need to check version
-    const existing = this.db.prepare('SELECT version FROM intelligence_documents WHERE id = ?').get(doc.id) as { version: number } | undefined;
+    const existing = this.queryGet<{ version: number }>('SELECT version FROM intelligence_documents WHERE id = ?', doc.id);
 
     if (existing) {
       if (doc.version > existing.version) {
@@ -1227,12 +1249,12 @@ export class StateLedger {
   }
 
   listKbArticles(): Record<string, any[]> {
-    const rows = this.db.prepare(`
+    const rows = this.queryAll<{ id: string; title: string; section: string; tags: string }>(`
       SELECT id, title, section, tags
       FROM intelligence_documents
       WHERE source = 'curated'
       ORDER BY section ASC, title ASC
-    `).all() as any[];
+    `);
 
     const mapped = rows.map(r => ({
       ...r,
@@ -1250,11 +1272,7 @@ export class StateLedger {
   }
 
   getKbArticle(id: string): any {
-    const row = this.db.prepare(`
-      SELECT *
-      FROM intelligence_documents
-      WHERE id = ?
-    `).get(id) as any;
+    const row = this.queryGet<any>('SELECT * FROM intelligence_documents WHERE id = ?', id);
 
     if (!row) return null;
     return {
@@ -1265,24 +1283,23 @@ export class StateLedger {
 
   searchKbArticles(query: string): any[] {
     const searchPattern = `%${query}%`;
-    const rows = this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT id, title, section, excerpt
       FROM intelligence_documents
       WHERE source IN ('curated', 'user', 'community')
       AND (title LIKE ? OR content LIKE ?)
       ORDER BY ts DESC
-    `).all(searchPattern, searchPattern) as any[];
-    return rows;
+    `, searchPattern, searchPattern);
   }
 
   // ── Intelligence Documents ────────────────────────────────────────────────
 
   listIntelDocs(projectId: string): any[] {
-    const rows = this.db.prepare(`
+    const rows = this.queryAll<any>(`
       SELECT * FROM intelligence_documents
       WHERE project_id = ?
       ORDER BY type ASC, title ASC
-    `).all(projectId) as any[];
+    `, projectId);
 
     return rows.map(r => {
       const mapped = {
@@ -1314,9 +1331,7 @@ export class StateLedger {
   }
 
   getIntelDoc(id: string): any {
-    const row = this.db.prepare(`
-      SELECT * FROM intelligence_documents WHERE id = ?
-    `).get(id) as any;
+    const row = this.queryGet<any>('SELECT * FROM intelligence_documents WHERE id = ?', id);
 
     if (!row) return null;
 
@@ -1424,7 +1439,7 @@ export class StateLedger {
       if (allowed.includes(k)) {
         const dbKey = keyMap[k] || k;
         sets.push(`${dbKey} = ?`);
-        
+
         if (['pathScope', 'toolRestrictions', 'providers', 'syncStatus', 'agentSkills', 'agentTools'].includes(k)) {
            vals.push(v ? JSON.stringify(v) : null);
         } else {
@@ -1445,7 +1460,7 @@ export class StateLedger {
   }
 
   getNlmNotebooks() {
-    return this.db.prepare('SELECT * FROM nlm_notebooks ORDER BY created_at DESC').all();
+    return this.queryAll<any>('SELECT * FROM nlm_notebooks ORDER BY created_at DESC');
   }
 
   registerNlmNotebook(notebook: { id: string; name: string; domain: string; description: string }) {
@@ -1469,11 +1484,11 @@ export class StateLedger {
   getFailedAgentWorkLog(projectId: string, storyId: string, failedAgentId: string): any[] {
     // Schema doesn't have session_id or story_id directly on agent_work_log.
     // They are stored in 'meta' or 'bank_id'.
-    // The requirement says: 
+    // The requirement says:
     // SELECT * FROM agent_work_log WHERE session_id = :failedAgentId OR (story_id = :storyId AND event_type IN ('tool_call','file_edit','git_commit','error')) ORDER BY ts ASC
     // We'll emulate session_id and story_id via bank_id and JSON in meta if needed.
     // Assuming bank_id = storyId and session_id is in meta.
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT * FROM agent_work_log
       WHERE project_id = ?
         AND (
@@ -1482,7 +1497,7 @@ export class StateLedger {
           OR (bank_id = ? AND event_type IN ('tool_call', 'file_edit', 'git_commit', 'error'))
         )
       ORDER BY ts ASC
-    `).all(projectId, failedAgentId, failedAgentId, storyId) as any[];
+    `, projectId, failedAgentId, failedAgentId, storyId);
   }
 
   // Codebase Indexer Vector Search
@@ -1527,49 +1542,49 @@ export class StateLedger {
   }
 
   searchCodebaseVecBySymbol(symbolUid: string): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT chunk_id, file_path, line_start, line_end, symbols, content
       FROM codebase_vec
       WHERE symbol_uid = ?
-    `).all(symbolUid) as any[];
+    `, symbolUid);
   }
 
   searchCodebaseVec(embedding: Float32Array, topK: number): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT chunk_id, file_path, line_start, line_end, symbols, content, distance
       FROM codebase_vec
       WHERE embedding MATCH ?
       ORDER BY distance
       LIMIT ?
-    `).all(embedding, topK) as any[];
+    `, embedding, topK);
   }
 
   // General App Queries
 
   getDailyCosts(days: number): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT date(created_at) as day,
              SUM(cost_usd) as total_cost,
              SUM(tokens_in + tokens_out) as total_tokens
       FROM model_calls
       WHERE created_at >= date('now', '-' || ? || ' days')
       GROUP BY date(created_at) ORDER BY day ASC
-    `).all(days) as any[];
+    `, days);
   }
 
   getCostByModel(): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT model_id, provider,
              SUM(cost_usd) as total_cost,
              COUNT(*) as call_count,
              SUM(tokens_in) as tokens_in,
              SUM(tokens_out) as tokens_out
       FROM model_calls GROUP BY model_id, provider ORDER BY total_cost DESC
-    `).all() as any[];
+    `);
   }
 
   getCostByStory(): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT panel_id as story_id,
              SUM(cost_usd) as total_cost,
              COUNT(*) as call_count,
@@ -1577,35 +1592,35 @@ export class StateLedger {
       FROM model_calls
       WHERE panel_id IS NOT NULL AND panel_id != 'chat'
       GROUP BY panel_id ORDER BY total_cost DESC LIMIT 50
-    `).all() as any[];
+    `);
   }
 
   getWeeklyVelocity(weeks: number): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT strftime('%Y-W%W', start_time) as week,
              SUM(duration_hours) as hours,
              COUNT(DISTINCT story_id) as stories
       FROM dev_sessions
       WHERE start_time >= date('now', '-' || (? * 7) || ' days')
       GROUP BY week ORDER BY week ASC
-    `).all(weeks) as any[];
+    `, weeks);
   }
 
   getCostHeatmapData(): { churnMap: Record<string, number>, costMap: Record<string, number> } {
-    const churn = this.db.prepare('SELECT changed_files FROM review_sessions').all() as any[];
+    const churn = this.queryAll<{ changed_files: string }>('SELECT changed_files FROM review_sessions');
     const churnMap: Record<string, number> = {};
     churn.forEach(s => {
       try {
         const files = JSON.parse(s.changed_files) as string[];
         if (Array.isArray(files)) files.forEach(f => churnMap[f] = (churnMap[f] || 0) + 1);
-      } catch {}
+      } catch (err) { /* non-critical */ }
     });
 
-    const costs = this.db.prepare(`
+    const costs = this.queryAll<{ cost_usd: number; changed_files: string }>(`
       SELECT mc.cost_usd, rs.changed_files
       FROM model_calls mc
       JOIN review_sessions rs ON mc.session_id = rs.session_id
-    `).all() as any[];
+    `);
 
     const costMap: Record<string, number> = {};
     costs.forEach(c => {
@@ -1615,7 +1630,7 @@ export class StateLedger {
           const splitCost = c.cost_usd / files.length;
           files.forEach(f => costMap[f] = (costMap[f] || 0) + splitCost);
         }
-      } catch {}
+      } catch (err) { /* non-critical */ }
     });
 
     return { churnMap, costMap };
@@ -1634,35 +1649,35 @@ export class StateLedger {
         SUM(CASE WHEN tokens_out > 0 THEN 1 ELSE 0 END) as successful_calls
       FROM model_calls
     `;
-    const params: any[] = [];
+    const params: unknown[] = [];
     if (days !== 'all') {
       query += ` WHERE created_at >= date('now', '-' || ? || ' days')`;
       params.push(days);
     }
     query += ` GROUP BY provider, model_id`;
-    return this.db.prepare(query).all(...params) as any[];
+    return this.queryAll<any>(query, ...params);
   }
 
   // Stories
   getStoriesThroughput(): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT strftime('%Y-W%W', updated_at) as week, COUNT(*) as completed
       FROM stories WHERE status = 'COMPLETE' AND updated_at >= date('now', '-84 days')
       GROUP BY week ORDER BY week ASC
-    `).all() as any[];
+    `);
   }
 
   getStoriesStatusDistribution(): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT status, COUNT(*) as count FROM stories GROUP BY status ORDER BY count DESC
-    `).all() as any[];
+    `);
   }
 
   getStoriesBugsByAssignee(): any[] {
-    return this.db.prepare(`
+    return this.queryAll<any>(`
       SELECT COALESCE(assigned_to, 'unassigned') as assignee, COUNT(*) as bug_count
       FROM stories WHERE type = 'bug' GROUP BY assigned_to ORDER BY bug_count DESC
-    `).all() as any[];
+    `);
   }
 
   // Transactions

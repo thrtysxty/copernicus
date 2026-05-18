@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { Lock, FileText } from 'lucide-react';
@@ -58,7 +59,7 @@ export function RoleCard({ roleName, roleConfig, activeToken, isReadOnly, onUpda
           setProviders(result.data as Provider[]);
         }
       } catch (e) {
-        console.error('Failed to load providers', e);
+        log.error('Failed to load providers', e);
       }
     };
     fetchProviders();
@@ -72,7 +73,7 @@ export function RoleCard({ roleName, roleConfig, activeToken, isReadOnly, onUpda
         onUpdate();
       }
     } catch (e) {
-      console.error('Failed to update role', e);
+      log.error('Failed to update role', e);
     }
   };
 

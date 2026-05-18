@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import { codebaseIndexer } from '../codebase-indexer'
@@ -218,7 +219,7 @@ export class ToolExecutor {
   }
 
   private async localResearch(prompt: string, persona: string = 'junior-dev'): Promise<string> {
-    const response = await fetch('http://localhost:5001/api/agents/research', {
+    const response = await fetch(`${config.backend.url}/api/agents/research`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, persona }),

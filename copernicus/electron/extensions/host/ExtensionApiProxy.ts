@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import { CopernicusExtensionAPI, NodeExecutor } from '../api'
 import { CopernicusManifest, WorkflowNodeDefinition, TileDefinition, ProviderDefinition, ViewDefinition } from '../types'
 import { ApiCallRequestMessage } from '../ExtensionHostProtocol'
@@ -68,7 +69,7 @@ export class ExtensionApiProxy implements CopernicusExtensionAPI {
     // For now, we strip it out and warn if present, or we could handle it via a reverse RPC call later.
     const { execute, ...serializableDef } = def
     if (execute) {
-      console.warn('NodeExecutor is not yet supported in extension host proxy')
+      log.warn('NodeExecutor is not yet supported in extension host proxy')
     }
     await this.rpcCall('registerWorkflowNode', serializableDef)
   }

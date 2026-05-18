@@ -259,7 +259,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
             setNbLmOpen(false)
           }
         }
-      } catch(e) {}
+      } catch(e) { console.warn("[FileTree] Operation failed:", e) }
     }
     fetchActiveModel()
 
@@ -345,7 +345,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
              const finalContent = unwrapIpc<string>(result) || ''
              setActiveFileContent(finalContent)
              setActiveFileLanguage(getLanguage(node.path))
-           } catch (e) {}
+           } catch (e) { console.warn("[FileTree] Failed to read file:", e) }
         }
       }
     })

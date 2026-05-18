@@ -77,3 +77,9 @@ This project uses AI agents as active contributors. See AGENTS.md for how that w
 - **Types**: No `any` on IPC boundaries.
 
 For the full set of mandatory rules, link to our [TECHNICAL_BIBLE.md](docs/reference/TECHNICAL_BIBLE.md).
+
+## Community Standards
+
+- **Code of Conduct:** This project follows the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md). Please read it before contributing.
+- **Security:** If you discover a vulnerability, please report it privately via [GitHub Security Advisories](https://github.com/Copernicus-IDE/copernicus/security/advisories) or email security@copernicus.dev. Do not file public issues for security vulnerabilities. See [SECURITY.md](SECURITY.md) for details.
+- **Type Safety:** When contributing new code, use proper TypeScript types instead of `as any` assertions. If you encounter existing `as any` usage, consider replacing it with a proper interface when touching that code.

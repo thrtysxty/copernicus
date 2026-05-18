@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { ipcMain, BrowserWindow } from 'electron'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
@@ -69,7 +70,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     
     // Notify Python backend (Story 228 AC-3)
     try {
-      await fetch('http://localhost:5001/api/orchestration/resolve-confirmation', {
+      await fetch(`${config.backend.url}/api/orchestration/resolve-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,3 +1,4 @@
+import { config } from './config'
 import { io, Socket } from 'socket.io-client';
 import { BrowserWindow } from 'electron';
 import log from 'electron-log';
@@ -5,7 +6,7 @@ import log from 'electron-log';
 export class SocketManager {
   private agentsSocket: Socket | null = null;
   private telemetrySocket: Socket | null = null;
-  private readonly backendUrl = 'http://localhost:5001';
+  private readonly backendUrl = config.backend.url;
 
   constructor() {}
 

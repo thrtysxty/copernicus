@@ -78,3 +78,36 @@ copernicus/e2e/report/
 .gitnexus
 /copernicus/scripts/agent-daemon/bin/toolbox
 *_debug.log
+
+# Development artifacts (git history tracks changes)
+docs/stories/
+docs/sprints/
+docs/epics/
+docs/personas/
+docs/prompts/
+docs/archive/
+docs/reports/
+docs/sdk/
+docs/stitch/
+docs/stitch_mlx_local_inference_panel/
+docs/setup/
+
+# Local environment configs
+**/*.env.local
+**/config.env
+**/.env.*
+docs/audit/
+
+# Internal dev artifacts — not for community release
+repo_index.json
+.claude/worktrees/
+.agents/
+.continue/
+.gitnexus/
+copernicus/resources/icons/icon_source.png
+
+# OS files
+.DS_Store
+**/.DS_Store
+*.bak
+.claude/

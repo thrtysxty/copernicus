@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { ipcMain, BrowserWindow } from 'electron'
 import log from 'electron-log'
 import { handleIpc } from '../utils/handle-ipc'
@@ -28,7 +29,7 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
 
   ipcMain.handle('workflow:ollama-status', () => handleIpc('workflow:ollama-status', [], async () => {
     try {
-      const res = await fetch('http://localhost:11434/api/tags', {
+      const res = await fetch(`${config.ollama.url}/api/tags`, {
         signal: AbortSignal.timeout(2000),
       });
       return { online: res.ok };

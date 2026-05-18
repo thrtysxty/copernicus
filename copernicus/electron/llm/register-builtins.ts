@@ -1,3 +1,4 @@
+import { config } from '../config'
 // Story 626 — Provider Registry: Built-in Provider Registration
 // STUB: Full implementation delivered by Jules
 
@@ -33,11 +34,11 @@ export function registerBuiltinProviders(): void {
   providerRegistry.register({
     id: 'ollama',
     displayName: 'Ollama',
-    baseUrl: 'http://localhost:11434',
+    baseUrl: config.ollama.url,
     resolveKey: () => authManager.resolveForProvider('ollama')?.key || null,
     listModels: async () => {
       try {
-        const res = await fetch('http://localhost:11434/api/tags', {
+        const res = await fetch(`${config.ollama.url}/api/tags`, {
           signal: AbortSignal.timeout(2000),
         })
         if (!res.ok) return []

@@ -37,7 +37,7 @@ gemini -r 2                     # resume by index
 
 ### Delegate Selection (in priority order)
 
-> **All scripts run from repo root `/Users/dadmin/Projects/agentic-platform/` — never from inside `copernicus/`.**
+> **All scripts run from repo root `<REPO_ROOT>/` — never from inside `copernicus/`.**
 
 1. **Jules — isolated TypeScript/React stories (async PR, zero Claude tokens):**
    ```bash

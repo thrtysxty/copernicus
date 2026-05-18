@@ -1,3 +1,4 @@
+import log from '../../utils/logger'
 import { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { RoleCard } from './RoleCard';
@@ -28,7 +29,7 @@ export function OrgChartPanel() {
       }
     } catch (e) {
       setIsHubRunning(false);
-      console.error('Failed to load org chart config', e);
+      log.error('Failed to load org chart config', e);
     } finally {
       setLoading(false);
     }

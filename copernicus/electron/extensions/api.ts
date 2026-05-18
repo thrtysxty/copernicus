@@ -3,10 +3,10 @@ import type { WorkflowNodeDefinition, TileDefinition, ProviderDefinition, ViewDe
 export type NodeExecutor = (config: Record<string, string>, context: Record<string, string>) => Promise<string>
 
 export interface CopernicusExtensionAPI {
-  registerWorkflowNode(def: WorkflowNodeDefinition & { execute?: NodeExecutor }): Promise<void>
-  registerTile(def: TileDefinition): Promise<void>
-  registerProvider(def: ProviderDefinition): Promise<void>
-  registerView(def: ViewDefinition): Promise<void>
+  registerWorkflowNode(def: WorkflowNodeDefinition & { execute?: NodeExecutor }, extensionName?: string): Promise<void>
+  registerTile(def: TileDefinition, extensionName?: string): Promise<void>
+  registerProvider(def: ProviderDefinition, extensionName?: string): Promise<void>
+  registerView(def: ViewDefinition, extensionName?: string): Promise<void>
 
   fs: {
     readFile(path: string): Promise<string>

@@ -165,7 +165,7 @@ function CenterPanelHeader({
                     const cl = classifyFile(file.path)
                     if (cl === 'binary') setCenterMode('binary')
                     else setCenterMode('code')
-                  } catch {}
+                  } catch (err) { console.warn("[Non-critical]", err) }
                 }}
                 className={`flex items-center gap-2 px-3 h-full border-r border-copernicus-steel cursor-pointer transition-all shrink-0 select-none group ${isActive ? 'bg-zinc-800 text-zinc-100 border-b border-copernicus-phosphor/70' : 'bg-[#0A0A0A] text-zinc-500 hover:text-zinc-300'}`}
               >
