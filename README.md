@@ -1,84 +1,56 @@
-# COPERNICUS IDE
+# Copernicus IDE
 
-
-[![Build Status](https://github.com/Copernicus-IDE/copernicus/actions/workflows/build.yml/badge.svg)](https://github.com/Copernicus-IDE/copernicus/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
-**An agentic development environment where Claude, Gemini, and Jules work as peers on your engineering team.**
 
-Not a chat wrapper. Not a code-completion plugin. A full IDE — Monaco editor, integrated PTY terminal, Kanban project management, semantic codebase search, financial telemetry, workflow automation — built from the ground up for the reality that LLM agents are now capable engineering contributors when given structure, context, and accountability.
+An agentic development environment where LLM agents work as peers on your engineering team — not a chat wrapper, not a code-completion plugin. A full IDE with Monaco editor, integrated terminal, Kanban project management, semantic codebase search, financial telemetry, and workflow automation.
 
-You write stories. Agents implement them. Copernicus tracks cost, quality, and velocity — and learns from every sprint.
+You write stories. Agents implement them. Copernicus tracks cost, quality, and velocity.
 
 ---
 
 ## What Makes This Different
 
-Individual pieces of the agentic development puzzle exist elsewhere: episodic memory systems, token authority frameworks, loop controllers, behavioral contracts. Copernicus is the first integration of all of them into a governed agentic IDE — a single environment where planning, delegation, financial accountability, verification, and retrospective learning are connected rather than scattered across separate tools and manual process.
+Individual pieces of the agentic development puzzle exist elsewhere: episodic memory, token authority, loop controllers, behavioral contracts. Copernicus integrates all of them into a governed IDE — planning, delegation, financial accountability, verification, and retrospective learning connected rather than scattered across tools.
 
-Copernicus is built using its own methodology. Every feature in this README was implemented by an agent working a story with defined acceptance criteria, reviewed by Claude against those ACs, and merged only on a passing tsc gate. The agents are not a curiosity bolted onto the side of the product — they are the development team.
-
-**AI contributors:** [Claude](https://anthropic.com) (Anthropic) — architecture, planning, code review throughout. [Jules](https://jules.google) (Google) — implementation across 30+ merged PRs. Named in commits, named here.
+**AI contributors:** [Claude](https://anthropic.com) (Anthropic) — architecture, planning, code review. [Jules](https://jules.google) (Google) — implementation across 30+ merged PRs.
 
 ---
 
 ## Why Copernicus Exists
 
-Every current LLM coding tool has the same problem: the agent gets context from you, makes a guess, and disappears. You have no idea what it cost, whether it broke anything, or how to route the next task to a better model.
+Every current LLM coding tool has the same problem: the agent gets context, makes a guess, and disappears. You have no idea what it cost, whether it broke anything, or how to route the next task.
 
-Copernicus solves this with three principles:
+**Plan → Delegate → Review.** The architect defines acceptance criteria. The implementer executes. The reviewer verifies the diff, runs `tsc`, and approves or requests rework — all inside the IDE.
 
-**Plan → Delegate → Review.** The architect (you, or Claude) defines acceptance criteria. The implementer (Gemini, Jules, or a workflow) executes. The reviewer verifies the diff, runs tsc, and approves or requests rework — all inside the IDE.
+**Every decision is accountable.** Every LLM call is logged with model, provider, tokens, cost, latency. The CapEx dashboard shows exactly where money went and what it produced.
 
-**Every decision is accountable.** Every LLM call is logged with model, provider, tokens, cost, latency, and the panel that triggered it. The CapEx dashboard shows you exactly where money went and what it produced.
-
-**The system learns.** The Release Retrospective workflow extracts learnings from each sprint — what worked, what failed, what routing decisions to reinforce — and writes them back to `AGENTS.md` and the project memory table. The next sprint starts smarter.
+**The system learns.** The Release Retrospective workflow extracts learnings from each sprint and writes them back to project memory. The next sprint starts smarter.
 
 ---
 
-## Execution Channels & Providers
+## Execution Channels
 
-Copernicus is not wired to specific models — it exposes three execution channels that any provider can fill. The incumbents listed below are what we run; the architecture is open.
+| Channel | How it works | What fills it |
+|---------|-------------|---------------|
+| **In-process streaming** | Direct API call from Electron main process | Anthropic, Google, OpenAI, OpenRouter, DeepInfra, Ollama |
+| **PTY session** | Shell process with filesystem access | CCR (Claude Code Router) |
+| **Async PR agent** | Fire-and-forget to remote agent; result is a GitHub branch + PR | Jules (Google) |
 
-### Three Execution Channels
-
-| Channel | How it works | What occupies it today |
-|---------|-------------|------------------------|
-| **In-process streaming** | Direct API call from the Electron main process; response streams live to the chat panel | Any provider — Anthropic, Google, OpenAI, OpenRouter, DeepInfra, Ollama |
-| **PTY session** | Shell process with filesystem access; agent reads/writes files, runs tsc, calls tools autonomously | CCR (Claude Code Router) |
-| **Async PR agent** | Fire-and-forget to a remote agent; result is a GitHub branch + PR, reviewed by Claude before merge | Jules (Google) |
-
-Any model can be promoted into any channel. You could run Claude Sonnet as a PTY session, route Llama 3 through the async PR channel, or wire a Gemini API call in-process. The channel is the interface; the model is a configuration choice.
+Any model can fill any channel. The channel is the interface; the model is a configuration choice.
 
 ### Provider Ecosystem
 
-| Provider | Models we test with | Cost | What it's great for |
-|----------|---------------------|------|---------------------|
-| **Anthropic** | Claude 4.6 Opus · Sonnet · Haiku | Pay-per-token | Architecture, code review, complex reasoning, the PR gate |
-| **Google Gemini** | Gemini 2.5 Pro · 2.0 Flash | Free tier + pay | Long-context implementation, multimodal, multi-file refactors |
-| **Jules** | Google async coding agent | Free tier | Story implementation via isolated GitHub branch + PR |
+| Provider | Models | Cost | Best for |
+|----------|--------|------|----------|
+| **Anthropic** | Claude 4.6 Opus · Sonnet · Haiku | Pay-per-token | Architecture, review, complex reasoning |
+| **Google Gemini** | 2.5 Pro · 2.0 Flash | Free tier + pay | Long context, multimodal, multi-file refactors |
+| **Jules** | Google async coding agent | Free tier | Story implementation via isolated PR |
 | **OpenAI** | GPT-4o · GPT-4 Turbo | Pay-per-token | General purpose, vision, function calling |
-| **OpenRouter** | 200+ models via one key | Varies by model | Model variety, cost arbitrage, fallback routing |
-| **DeepInfra** | Llama 3.3 70B · Qwen2.5 · Mistral | Low cost | Cost-efficient open-weight inference, batch tasks |
-| **Ollama (local)** | Any model — Llama, Qwen, Gemma, DeepSeek, Phi… | Free | Full offline, privacy, codebase embeddings |
-| **Ollama (sovereign)** | Large models on a remote Ollama server — DeepSeek-V3, Qwen3-Coder, Kimi, Qwen3-VL… | Free (self-hosted) | GPU-class inference without cloud spend; set `OLLAMA_BASE_URL` to your server |
-| **Stitch / MCP** | codebase-memory · Context7 · Lynkr | Free | Live context injection, RAG, tool connectors |
-
-### Three Ways to Start
-
-**Free tier — zero API spend**
-CCR handles multi-file implementation as a PTY session. Jules (free tier) handles async PR stories. Ollama runs local embeddings and inference. Full spec-driven development workflow, no credit card.
-
-**Anthropic-first — the full review loop**
-Claude as architect and reviewer (in-process, streaming). Jules for async implementation. Claude Sonnet 4.6 reviews every PR diff against story ACs before `jules_daemon.py` merges. The complete Plan → Delegate → Review loop.
-
-**Local-first — nothing leaves your machine**
-Ollama handles inference, embeddings, and codebase search entirely on-device. Route individual tasks to cloud providers as you see fit. Start private, upgrade selectively.
-
-**Sovereign inference — own your stack**
-Point `OLLAMA_BASE_URL` at a self-hosted GPU server running DeepSeek-V3, Qwen3-Coder, or Kimi. GPU-class models at zero per-token cost. Mix with cloud providers for tasks where latency or capability matters more than cost.
-
----
+| **OpenRouter** | 200+ models via one key | Varies | Model variety, cost arbitrage |
+| **DeepInfra** | Llama 3.3 70B · Qwen2.5 · Mistral | Low cost | Cost-efficient open-weight inference |
+| **Ollama (local)** | Any model — Llama, Qwen, Gemma, DeepSeek, Phi… | Free | Full offline, privacy, embeddings |
+| **Ollama (sovereign)** | Large models on remote Ollama server | Free (self-hosted) | GPU-class inference without cloud spend |
 
 ---
 
@@ -86,206 +58,103 @@ Point `OLLAMA_BASE_URL` at a self-hosted GPU server running DeepSeek-V3, Qwen3-C
 
 ### Semantic Codebase Intelligence
 
-Copernicus indexes your entire workspace and keeps it current:
-
-- **LSP-symbol-aware chunking** — `typescript-language-server` provides function and class boundaries; the indexer uses these as natural chunk boundaries rather than arbitrary character splits. Falls back to 1000-char chunks with 200-char overlap for non-TypeScript files.
-- **768-dimensional embeddings** stored in `sqlite-vec` virtual tables — the same database as everything else, no external vector store
-- **Embedding provider waterfall**: Ollama (`qwen3-embedding:0.6b`) → Google (`text-embedding-004`) → OpenAI (`text-embedding-3-small`). Uses whatever you have configured. Works fully offline if Ollama is running.
-- **Incremental re-indexing** — chokidar watches for file changes; only modified files are re-chunked and re-embedded
-- **Hybrid search** — vector similarity + symbol name boosting; results ranked by relevance + recency
-- **Status bar indicator** — live indexing progress (`Indexing [ollama]… 47/312`) visible in the footer
+- **LSP-symbol-aware chunking** — `typescript-language-server` provides function/class boundaries as natural chunk boundaries
+- **768-dimensional embeddings** in `sqlite-vec` — same database as everything else, no external vector store
+- **Embedding provider waterfall**: Ollama → Google → OpenAI. Works fully offline if Ollama is running.
+- **Incremental re-indexing** — chokidar watches for file changes; only modified files are re-embedded
+- **Hybrid search** — vector similarity + symbol name boosting, ranked by relevance + recency
 
 ### Multi-Provider Model Routing
 
-Seven provider types, unified interface:
-
-```
-anthropic | openai | google | openrouter | deepinfra | ollama | ollama-cloud
-```
-
-- **Model Registry** — static definitions for Claude, GPT-4, Gemini, Llama, Mistral + dynamic Ollama discovery at runtime. Each model entry carries `inputCostPer1M`, `outputCostPer1M`, and `supportsVision` flags.
-- **Cost calculation** — `calculateCost(modelId, tokensIn, tokensOut)` on every call, logged immediately to the ledger
-- **Model hot-swap** — switch models mid-conversation. A context snapshot carries the prior transcript to the new model; the first call after switch prepends `[CONTEXT HANDOFF]` so the new model has full continuity.
-- **Vision routing** — `chat:send` checks `supportsVision` before including image payloads; non-vision models return an inline warning with model suggestions
-- **Ollama reachability** — `AuthManager.getAuthStatus()` pings `localhost:11434` to check daemon status; Ollama shows as connected/disconnected in the providers list without needing a key
+- **Model Registry** — static definitions + dynamic Ollama discovery. Each entry carries cost data and capability flags.
+- **Cost calculation** on every call, logged to the ledger immediately
+- **Model hot-swap** — switch mid-conversation with context handoff
+- **Vision routing** — `supportsVision` flag gates image payloads per model
 
 ### Workflow Engine
 
-A visual SVG node canvas for building multi-step agent pipelines:
+Visual SVG node canvas for building multi-step agent pipelines:
 
-**Five node types:**
-- `agent` — dispatches to any provider + model + persona with a templated system prompt and task
-- `tool` — runs Makefile targets, shell commands, file reads/writes, Kanban actions
-- `decision` — gates on exit code, test pass/fail, or human approval (blocks until you click)
-- `trigger` — fires on story activation, PR open, or manual button
-- `flow` — orchestration grouping for subgraph reuse
+| Node type | What it does |
+|-----------|-------------|
+| `agent` | Dispatch to any provider + model + persona |
+| `tool` | Run Makefile targets, shell commands, file I/O, Kanban actions |
+| `decision` | Gate on exit code, test results, or human approval |
+| `trigger` | Fire on story activation, PR open, or manual button |
+| `flow` | Orchestration grouping for subgraph reuse |
 
-**Context variables** interpolated at runtime across all node prompts: `{{__storyId}}`, `{{__storyTitle}}`, `{{__lastExitCode}}`, `{{__lastOutput}}`, plus any custom context bag entries.
+**Context variables** interpolated at runtime: `{{__storyId}}`, `{{__storyTitle}}`, `{{__lastExitCode}}`, `{{__lastOutput}}`, plus custom entries.
 
-**Five built-in templates:**
-
-| Template | What it does |
-|----------|--------------|
-| **Jules PR Manager** | Watch Jules session → fetch diff → Claude review → post PR comment → flag for architect approval |
-| **Story Implementation Pipeline** | Architect designs → Implementer codes → Test gate → Commit → Reviewer verifies |
-| **Code Review Gate** | PR trigger → Reviewer agent → Human approval gate → Merge or request revisions |
-| **Hotfix Pipeline** | Implementer → Test suite → Exit-code gate → Commit or escalate to architect |
-| **Release Retrospective** | Git log + model call metrics → performance analysis → user reflection (human node) → learning extraction → `project_memory` write (importance 9) → `AGENTS.md` reinforcement |
-
-**Time-Travel Orchestration** — after each successful node, `SnapshotManager` captures the current git SHA and workflow state. Completed nodes show a `⟳ Rewind` button; rewinding calls `git checkout <sha>` and resets downstream nodes to idle. A detached HEAD warning banner guides the next step.
+**Time-Travel Orchestration** — after each node, `SnapshotManager` captures git SHA and workflow state. Rewind any completed node to reset downstream.
 
 ### Agent Review Panel
 
-The review loop closes inside the IDE — no more `git diff HEAD~1` in a separate terminal:
-
-- **Monaco diff editor** — side-by-side or unified view. Added lines green, removed lines red. Files outside the story's declared scope flagged `⚠ Out of scope`.
-- **Inline tsc** — "Run tsc" streams `npx tsc --noEmit` output into a log pane below the diff. Pass: green `✓`. Fail: red `✗ N errors` with the first five errors shown inline.
-- **One-click actions** — Approve & Close (marks stories COMPLETE, clears pending review), Request Rework (opens inline note field, story stays REVIEW), View PR (Jules sessions only)
-- **Chat integration** — a `ReviewSummaryCard` appears in the chat thread on session completion with pill shortcuts to "View Diff →", "Run tsc →", and "Approve →"
-- **Activity bar badge** — Review icon shows a phosphor dot when a review is pending
+- **Monaco diff editor** — side-by-side or unified view. Out-of-scope changes flagged.
+- **Inline tsc** — streams `npx tsc --noEmit` output. Pass/fail shown inline.
+- **One-click actions** — Approve & Close, Request Rework, View PR
 
 ### Ghost Implementation
 
-While an agent session streams, proposed changes appear as low-opacity Monaco decorations before they land on disk:
-
-- Added lines: `rgba(74, 222, 128, 0.15)` with a left border accent
-- Removed lines: `rgba(239, 68, 68, 0.15)` with strikethrough
-- Accept or reject individual blocks or all at once; keyboard shortcuts `Cmd+Shift+A` / `Cmd+Shift+R`
-- Toggle via "Ghost Mode" in the editor header — off by default for distraction-free work
+Proposed changes appear as low-opacity Monaco decorations before landing on disk. Accept or reject individual blocks or all at once.
 
 ### Financial Telemetry — CapEx Dashboard
 
-Every LLM call is logged to a SQLite ledger (`model_calls` table):
-
-```
-session_id  panel_id  model_id  provider  persona_role
-tokens_in   tokens_out  cost_usd  latency_ms  reasoning
-workflow_run_id  parent_call_id  created_at
-```
-
-Five dashboard tabs:
-
-| Tab | What you see |
-|-----|--------------|
-| **Financial** | CAPEX/OPEX hours, weekly velocity, session count, developer rate |
-| **Quality** | Test coverage %, pass/fail trends, bugs by assignee |
-| **LLM** | Daily burn curve, cost by model, cost by story (top 50) |
-| **Velocity** | Stories completed per week, status distribution over time |
-| **Heatmap** | Technical debt map — files coloured by error density (red), agent churn (orange), token cost (purple). Toggle overlays independently. Click a cell to open the file. |
-
-**Status bar** surfaces a live slice: agent telemetry block (tokens + cost per agent), session HH:MM:SS timer (▶ ⏸ ■), and total CapEx — all with hover tooltips.
-
-**Agent Telemetry Overlay** — clicking the telemetry block opens a slide-up panel with three tabs: Activity (live per-agent), Session (by persona role from ledger), All-Time (cumulative by role across all sessions).
+Every LLM call logged to SQLite (`model_calls` table). Five dashboard tabs: Financial, Quality, LLM, Velocity, Heatmap. Status bar shows live agent telemetry, session timer, and total CapEx.
 
 ### Security Layer
 
-Four-component security architecture:
-
-- **SecurityManager** — analyses file writes and shell output for dangerous patterns; fires alert events to the renderer
-- **PatternDetector** — logs security alerts to `~/.copernicus/logs/security-alerts.jsonl`
-- **GitGuard** — pre-commit hook runs `scripts/utils/security_audit.py` before allowing any commit through Copernicus
-- **SandboxManager** — per-agent sandboxing toggle via IPC; configurable from Settings → Security
-
-Environment variable allowlist controlled from Settings → Security; agents can only read env vars you explicitly permit.
+- **SecurityManager** — analyses file writes and shell output for dangerous patterns
+- **PatternDetector** — logs alerts to `security-alerts.jsonl`
+- **GitGuard** — pre-commit security audit
+- **SandboxManager** — per-agent sandboxing via IPC
 
 ### Retrospective & Project Memory
 
-The **Release Retrospective** workflow template runs at the end of each sprint:
+The **Release Retrospective** workflow: git log → performance analysis → human reflection → learning extraction → `project_memory` (importance-weighted, recency-decayed) → `AGENTS.md` reinforcement. The next sprint starts informed.
 
-1. Reads git log since last tag and `model_calls` sprint metrics
-2. Analyses performance trends and build error logs
-3. Pauses at a **Human Approval** node — you reflect on sprint successes and failures
-4. A **Learning Extractor** agent (Claude) formats findings as structured `[RETROSPECTIVE vX.X.X]` rules
-5. Rules written to `project_memory` with `importance: 9` — high enough to be retrieved on every session start
-6. **AGENTS.md Updater** appends routing reinforcements directly to the repo's agent convention file
+### Browser Automation
 
-`project_memory` table uses an **importance × recency decay** scoring function. High-importance memories survive indefinitely; low-importance ones decay naturally. Retrieved memories are injected at session start so agents begin informed.
-
-### Playwright Browser Automation
-
-A full browser automation layer, surfaced as IPC handlers and usable from workflow nodes:
-
-```
-browser:launch    → Chromium (headless or headed), lazy-loaded on first use
-browser:navigate  → URL navigation with 15-second timeout
-browser:screenshot → Full-page or selector screenshot as base64
-browser:click     → Element interaction
-browser:fill      → Form input
-browser:evaluate  → Arbitrary JavaScript in page context
-browser:close     → Session cleanup
-```
-
-`devtime:run-playwright` spawns `npx playwright test`, parses output to `{ title, status, duration }[]`, and returns structured results for the Quality dashboard. Canvas screenshots render inline via `canvas:render` push.
+Playwright integration via IPC handlers: `browser:launch`, `browser:navigate`, `browser:screenshot`, `browser:click`, `browser:fill`, `browser:evaluate`, `browser:close`.
 
 ### Development Environment
 
-- **Monaco Editor** — Multi-file tabs with dirty indicators, `×` close, horizontal scroll. TypeScript LSP: completions, hover docs, go-to-definition, signature help, real-time diagnostics. `Ctrl+S` saves directly.
-- **Integrated Terminal** — Full PTY via `node-pty`; keyboard input wired (`terminal:input` → `pty.write()`). Ephemeral tabs for Touch Bar commands.
-- **Command Palette** — `Cmd+P`: VS Code style, fuzzy search, 4–6 visible rows, `↑↓ Enter Esc` navigation, default commands registered at mount.
-- **Spotlight System** — Clicking any panel's bookmark strip expands it to fill the layout; others collapse to `w-10` vertical strips with rotated labels. Explorer / Editor / Chat spotlight modes.
-- **UI Builder Canvas** — Drag-and-resize visual component editor; agents patch the component tree via structured output.
+- **Monaco Editor** — multi-file tabs, TypeScript LSP (completions, hover, go-to-definition, diagnostics)
+- **Integrated Terminal** — full PTY via `node-pty`
+- **Command Palette** — `Cmd+P`, fuzzy search, keyboard navigation
+- **Spotlight System** — click a panel's bookmark to expand it; others collapse to vertical strips
+- **UI Builder Canvas** — drag-and-resize visual component editor
 
 ### Project Management
 
-- **Kanban** — 9 lanes: Planning → Storyboarding → Sprint Planning → Development → Testing → QA → Documenting → Ready to Build → Done
-- **Agent Queue Scheduler** — Declare story dependencies. Collision guard warns before out-of-order dispatch. Notification fires when blockers clear.
-- **Story Status Automation** — agent dispatches update story status on spawn (`IN PROGRESS`) and completion (`REVIEW`); Kanban reacts to `stories:status-changed` push events
-- **SQLite + Markdown dual-persistence** — stories live in both SQLite (Kanban) and `docs/stories/*.md` (git-trackable, diffable, agent-readable)
-
-### IDE Completeness Panels
-
-| Panel | Key capability |
-|-------|---------------|
-| **Git** | Stage/unstage files, commit, branch list, checkout, new branch, GitHub PR list |
-| **Codebase Search** | ripgrep text search + semantic vector search in one panel |
-| **Diagnostics** | Streaming `npx tsc --noEmit`, parsed `file(line,col): error TS…` format, error count badge on activity bar |
-| **Review** | Monaco diff viewer, inline tsc, approve/rework |
+- **Kanban** — 9 lanes from Planning to Done
+- **Agent Queue Scheduler** — declare story dependencies, collision guard, blocker notifications
+- **Story Status Automation** — agents update status on dispatch and completion
+- **SQLite + Markdown dual-persistence** — stories in both DB (Kanban) and files (git-trackable, agent-readable)
 
 ### Settings
 
-- **Auth** — All keys via Electron `safeStorage` encryption. Providers: Anthropic, OpenAI, Google, OpenRouter, DeepInfra, GitHub, Jules. Ollama uses reachability-as-auth (no key — if the daemon answers, it's connected).
-- **Models** — Active model selector. Ollama models discovered live. Default model per view (chat vs workflow node vs agent).
-- **Providers** — Correct icon set, drag-to-reorder priority tiles, embedding provider priority list.
-- **Personas** — View, disable, or create custom personas with name, description, system prompt, model affinity, and role. Persisted to DB.
-- **Templates** — All system workflow templates listed; click to open inline Monaco editor; Save / Reset to Default; user overrides in `template_overrides` table.
-- **Appearance** — Phosphor color presets (green / amber / white / blue), UI density, **CRT Mode** (scanline + vignette overlay, intensity scales with agent load — off by default).
-- **Hardware** — macOS Touch Bar configuration: view navigation buttons, command tray slots, telemetry display mode (Story+Timer or Branch+Cost).
+- **Auth** — all keys via Electron `safeStorage` encryption. Ollama uses reachability-as-auth (no key needed).
+- **Models** — active model selector, per-view defaults, live Ollama discovery
+- **Personas** — custom system prompts, model affinity, role definitions
+- **Templates** — workflow templates with inline Monaco editor
+- **Appearance** — Phosphor color presets, UI density, CRT Mode (scanline overlay)
+- **Hardware** — macOS Touch Bar configuration
 
 ---
 
 ## Built for Apple Silicon
 
-Copernicus ships with native support for **MLX native inference**, providing a massive Neural Engine advantage at **$0/token**.
+Copernicus ships with native MLX inference support — zero-config, zero-cost agentic experience on M1/M2/M3/M4 Macs.
 
-### Zero-Config Experience
-
-Launch Copernicus on a Mac with Apple Silicon (M1/M2/M3/M4) without setting any cloud API keys, and the agent org chart automatically routes to local MLX models. It’s a zero-config, zero-cost agentic experience out of the box.
-
-### Default Models
-
-The following MLX models are provisioned by default and automatically mapped to agent roles:
-
-| Org Chart Role | Model ID |
-|----------------|----------|
+| Org chart role | Default model |
+|----------------|---------------|
 | **coder** | `mlx-community/Qwen2.5-Coder-7B-Instruct-4bit` |
 | **reviewer** | `mlx-community/DeepSeek-R1-Distill-Qwen-7B-4bit` |
 | **planner** | `mlx-community/Mistral-7B-Instruct-v0.3-4bit` |
-| **sentinel** | `mlx-community/DeepSeek-R1-Distill-Qwen-7B-4bit` |
 
-### Customizing Models
+Customize models in `scripts/agent-daemon/defaults/mlx-models.yaml`. Install MLX: `pip install mlx-lm`.
 
-You can easily add custom models by editing the `mlx-models.yaml` configuration file located at:
-`scripts/agent-daemon/defaults/mlx-models.yaml`
-
-### Setup
-
-To take advantage of MLX inference, ensure you have the MLX LM package installed:
-```bash
-pip install mlx-lm
-```
-
-You can browse the full catalog of compatible models at the [mlx-community HuggingFace catalog](https://huggingface.co/mlx-community).
-
+---
 
 ## Stack
 
@@ -300,9 +169,8 @@ You can browse the full catalog of compatible models at the [mlx-community Huggi
 | Browser automation | `playwright-core` |
 | Charts | Recharts |
 | Backend | Python 3.11, Flask |
-| Orchestration | `gemini` CLI (yolo mode), `jules_daemon.py` (poll + review + merge) |
-| Inference | Anthropic · OpenAI · Google · OpenRouter · DeepInfra · Ollama (local) |
-| Infrastructure | Docker, PostgreSQL 16 |
+| Orchestration | `jules_daemon.py` (poll + review + merge) |
+| Inference | Anthropic · OpenAI · Google · OpenRouter · DeepInfra · Ollama |
 
 ---
 
@@ -311,7 +179,7 @@ You can browse the full catalog of compatible models at the [mlx-community Huggi
 ```bash
 # Prerequisites: Node.js 18+, Python 3.11+, gh CLI (recommended), Ollama (optional)
 
-# One-command setup (checks prereqs, installs deps, creates config + secrets template)
+# One-command setup
 bash scripts/dev-setup.sh
 
 # Start backend (port 5001) + IDE
@@ -320,42 +188,27 @@ make dev
 # Type check
 make tsc
 
-# Regenerate BACKLOG.md from story files
-make backlog
+# IPC compliance scan
+make ipc-lint
 ```
 
-On first launch, the **Genesis Wizard** walks you through credential setup, repo connection, and optionally synthesises an initial epic and story backlog from your project brief.
+On first launch, the **Genesis Wizard** walks you through credential setup, repo connection, and optionally synthesizes an initial epic and story backlog from your project brief.
 
 ---
 
-## Agent Dispatch Toolchain
+## Architecture
 
-```bash
-# Dispatch a story to Jules (validates story format, guards against re-dispatch)
-bash scripts/jules_assign.sh docs/stories/story_NNN_title.md
+**IPC envelope** — Every `ipcMain.handle` uses `handleIpc()` returning `{ ok: true, data }` or `{ ok: false, error }`. Every renderer call uses `useIpcError()` + `unwrapIpc()`. Enforced by `make ipc-lint` and TypeScript types.
 
-# Dry run — print prompt size without dispatching
-bash scripts/jules_assign.sh --dry-run docs/stories/story_NNN_title.md
+**Agent dispatch** — Claude runs in-process (streaming). CCR handles Python, shell, and multi-file implementation from isolated git worktrees. Jules dispatches async to GitHub; `scripts/agent-daemon/index.mjs` polls for completion, runs Claude Sonnet review against story ACs, and auto-merges only on explicit APPROVE.
 
-# Agent daemon — polls active Jules sessions, reviews PRs, auto-merges on APPROVE
-node scripts/agent-daemon/index.mjs           # run continuously
-node scripts/agent-daemon/index.mjs --status  # show all sessions + review state
-node scripts/agent-daemon/index.mjs --once    # single poll cycle
+**Semantic search** — LSP provides symbol boundaries → chunks stored in `sqlite-vec` with 768-dim embeddings → queries combine cosine similarity with symbol name boost. No external dependencies beyond an embedding provider.
 
-# CCR dispatch (Claude Code Router — for Python, shell, multi-file implementation)
-# From a worktree: create it first, then dispatch in background
-git worktree add .agent-worktrees/story-NNN story/NNN
-(cd .agent-worktrees/story-NNN && ccr code --dangerously-skip-permissions \
-  -p "$(cat /tmp/prompt_NNN.md)" 2>&1 | tee /tmp/cc_NNN.log)
+**Memory system** — `project_memory` stores learnings with importance 1–10 scored against recency decay. Importance-9 entries persist indefinitely. Retrieved memories inject as system context at session start.
 
-# 10-point IPC compliance scan
-make ipc-lint
+**Story format** — Markdown files with structured sections (`## Blocks`, `## Acceptance Criteria`, `## Definition of Done`). SQLite Kanban syncs from disk on focus, writes atomically.
 
-# TypeScript check
-make tsc
-```
-
-`ipc-lint` catches: bare `ipcMain.handle` without `handleIpc()` wrapper, renderer calls without `useIpcError()`, missing `unwrapIpc()`, stale channel IDs, stray `console.log`, ghost tint CSS, and more.
+**Configuration** — All service URLs centralized in `electron/config.ts` with env-var overrides (`COPERNICUS_BACKEND_URL`, `OLLAMA_BASE_URL`, etc.). No hardcoded localhost references in production code.
 
 ---
 
@@ -365,160 +218,48 @@ make tsc
 copernicus/
   electron/
     agents/             PTY session management
-    db/                 StateLedger — model_calls, review_sessions,
-                        dispatch_queue, project_memory, context_snapshots…
-    ipc/                13 modular handler files (app, git, search,
-                        diagnostics, chat, workflow, security, terminal…)
-    lsp/                LSP manager — JSON-RPC 2.0, symbol caching,
-                        diagnostics cache
-    models/             ModelRegistry — 7 providers, cost tables,
-                        dynamic Ollama discovery
-    security/           SecurityManager, PatternDetector, GitGuard,
-                        SandboxManager
-    workflow/           WorkflowEngine, SnapshotManager, 5 node types,
-                        5 built-in templates, state machine
-    codebase-indexer.ts sqlite-vec 768-dim embeddings, LSP-symbol chunking,
-                        chokidar file watcher
-    touch-bar.ts        macOS Touch Bar integration
+    db/                 StateLedger — model_calls, stories, project_memory…
+    ipc/                13 modular handler files
+    lsp/                LSP manager — JSON-RPC 2.0, symbol caching, diagnostics
+    models/             ModelRegistry — 7 providers, cost tables, Ollama discovery
+    security/           SecurityManager, PatternDetector, GitGuard, SandboxManager
+    workflow/           WorkflowEngine, SnapshotManager, 5 node types, 5 templates
+    codebase-indexer.ts sqlite-vec 768-dim embeddings, LSP-symbol chunking
+    config.ts           Centralized service configuration with env-var overrides
   src/renderer/
-    components/         Kanban, Editor (Monaco + tabs + ghost mode),
-                        Terminal, Chat (image upload, lightbox),
-                        Workflow (canvas + rewind), Review (diff + tsc),
-                        Git, Search, Diagnostics, CapEx (5-tab dashboard),
-                        Settings, Planning (queue + scheduler),
-                        effects (CRTOverlay)…
+    components/         Kanban, Editor, Terminal, Chat, Workflow (canvas + rewind),
+                        Review (diff + tsc), CapEx (5-tab dashboard), Settings…
     store/              layout, session, queue, commandRegistry
     hooks/              useIpcError (enforced IPC pattern)
-backend/                Flask API — devtime, story scaffolding, orchestration
-src/agentic/            Python multi-agent orchestration logic
+backend/                Flask API — devtime, orchestration, notebooklm
+scripts/                jules_assign.sh, jules_daemon.py, dev-setup.sh, ipc-lint.sh…
 docs/
-  stories/              Active stories (Markdown + frontmatter)
-  stories/completed/    Archived completed stories
-  sprints/              Sprint planning documents
-  reference/            UX_BIBLE.md, TECHNICAL_BIBLE.md
-scripts/                jules_assign.sh, jules_daemon.py, dev-setup.sh,
-                        ipc-lint.sh, generate_backlog.py, security_audit.py…
+  guides/              Engineering standards, SOPs
+  help/                User guides, keyboard shortcuts, operator startup
+  reference/           UX_BIBLE.md, TECHNICAL_BIBLE.md
 ```
 
 ---
 
-## Architecture Notes
+## Contributing
 
-**IPC envelope** — Every `ipcMain.handle` uses `handleIpc()` returning `{ ok: true, data }` or `{ ok: false, error }`. Every renderer call uses `useIpcError()` + `unwrapIpc()`. Enforced by `make ipc-lint` and TypeScript types. No exceptions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code standards, and PR process. We enforce:
 
-**Agent dispatch** — Claude runs in-process (streaming). CCR (Claude Code Router, port 9669) handles Python, shell, and multi-file implementation stories from isolated git worktrees. Jules dispatches async to GitHub; `scripts/agent-daemon/index.mjs` polls for completion, runs a Claude Sonnet 4.6 review against story ACs and forbidden patterns, and auto-merges only on an explicit APPROVE verdict. All channels log to `model_calls` and surface in the terminal tab strip.
+- TypeScript strict mode with `noEmit` gate
+- `make ipc-lint` — catches bare `ipcMain.handle`, missing `unwrapIpc()`, stale channels
+- `make tsc` — zero-error type check before merge
+- PR validation CI on every push
 
-**Semantic search architecture** — LSP provides symbol boundaries → chunks stored in `sqlite-vec` with 768-dim embeddings → queries combine cosine similarity with symbol name boost → results returned as `{ file, line, col, symbol, score }[]`. No external dependencies beyond an embedding provider.
+## Security
 
-**Memory system** — `project_memory` stores learnings with `importance` 1–10 scored against recency decay. Session start retrieves top memories above threshold and injects them as system context. The retrospective pipeline writes importance-9 entries that persist indefinitely.
+See [SECURITY.md](SECURITY.md) for vulnerability reporting. Security features:
 
-**Story format** — Markdown files with structured sections (`## Blocks`, `## Blocked By`, `## Acceptance Criteria`, `## Definition of Done`). SQLite Kanban syncs from disk on focus, writes atomically. Agents read story files directly — they are the agent's source of truth.
+- All API keys encrypted via Electron `safeStorage`
+- CORS origins env-configurable (no wildcards in production)
+- GitGuard pre-commit hook scans for secrets
+- SandboxManager per-agent filesystem isolation
+- Docker Compose binds Ollama to `127.0.0.1` only
 
-**Governance** — `docs/reference/UX_BIBLE.md` and `TECHNICAL_BIBLE.md` define binding constraints. `AGENTS.md` at repo root is read automatically by Jules and updated by the Retrospective workflow. All three documents are the law; the retrospective pipeline keeps them current.
+## License
 
----
-
-## Roadmap
-
-The active backlog is in [`docs/stories/`](docs/stories/). What follows is a high-level view of current initiatives, organized by phase.
-
-### Phase 6 — Configurable Agent Hub
-
-The biggest architectural initiative underway. The Agent Hub replaces the current pattern-matched classifier hook with a structural authority layer: every agent that executes work holds a minted employment credential token, and every action is checked against that token's scope before proceeding. Authority flows from a single auditable source rather than from ad-hoc allow lists.
-
-| Story | Title | What it delivers |
-|-------|-------|-----------------|
-| 634 | Token schema and core interface | `mint`, `check`, `revoke` — the three atomic Hub operations; token carries identity, role, scope, expiry |
-| 635 | State store, loop controller, story queue | In-memory Hub state; loop detection; story queue with priority ordering |
-| 636 | Role contract schema | Structured role definitions: name, class (regulatory/operational), authority level, capability list |
-| 637 | Org chart configuration | YAML org chart: declare who reports to whom, what capabilities each role has |
-| 638 | Constitutional safety layer | Hard limits no token can override — mandatory tsc gate, no main-branch direct commits, no credential writes |
-| 639 | Hub enforcement replacing classifier | Classifier hook retired; all authority checks flow through Hub token scope |
-| 640 | Universal attribution ledger | Every tool call attributed to the token that authorized it — full audit trail |
-| 641 | User-as-agent / Kanban sync | The human operator represented as a Hub agent with elevated authority; story status synced from Hub state |
-| 642 | Token health monitoring and loop operator | Detects stalled and runaway sessions; escalates to operator; loop budget per token |
-| 643 | Data-driven model selection at mint | Hub selects provider:model at token mint time based on role, story context, and cost constraints |
-| 644 | Jules adapter | Jules sessions governed by Hub tokens — dispatch, plan approval, and merge authority all enforced |
-| 645 | CCR adapter | CCR sessions governed by Hub tokens — worktree scope, allowed shell commands, and file write paths enforced |
-| 646 | Org chart UI | Visual org chart in the IDE: see active agents, their roles, token expiry, and current task |
-| 647 | Hub ledger view | Dashboard tab showing all token events — mints, checks, revocations, violations |
-| 648 | Self-improvement loop integration | Retrospective pipeline writes Hub role reinforcements: successful routing decisions promoted to org chart defaults |
-
-Full specification: [`docs/reference/PHASE6_AGENT_HUB.md`](docs/reference/PHASE6_AGENT_HUB.md)
-
----
-
-### Intelligence View
-
-Agents as first-class entities you configure, not black boxes you prompt:
-
-| Story | Title | What it delivers |
-|-------|-------|-----------------|
-| 590 | agent.yaml schema | Standard schema for defining agents as documents — model, persona, tools, constraints |
-| 591 | soul.md instruction format | Freeform behavioral instruction layer for agents; composable with agent.yaml |
-| 592 | Provider injection and sync retarget | Swap an agent's provider or model without recreating the agent; live retarget during a session |
-
----
-
-### Infrastructure and Providers
-
-| Story | Title | What it delivers |
-|-------|-------|-----------------|
-| 631 | GenAI Toolbox — database MCP | Google's open-source database MCP server as an agent intelligence backend; structured agent memory via SQL |
-| 633 | Harbor-style containerized sandboxing | Per-agent Docker containers with explicit filesystem mounts and resource caps; `--dangerously-skip-permissions` becomes unnecessary |
-| 649 | Package age gate — supply chain security | Block agent-driven installs of packages under 6 months old; CVE scan before any `npm install` or `pip install`; kills a known supply-chain attack vector |
-| 652 | MLX native inference — Apple Silicon | `mlx_lm.server` as an OpenAI-compatible local provider; native Neural Engine inference at $0/token for M-series users; the commercial differentiator for the platform |
-
----
-
-### Ship Readiness
-
-| Story | Title | What it delivers |
-|-------|-------|-----------------|
-| 650 | Repo hygiene and onboarding readiness | LICENSE (MIT), CONTRIBUTING.md, AGENTS.md, real PR and issue templates, stale PR cleanup — the gap between "working repo" and "welcoming repo" |
-| 651 | Ship-ready defaults and Gemma4 onboarding guide | Safe zero-config defaults; embedded `node-llama-cpp` inference engine for an in-app Gemma4 guide that walks new users from install to first dispatch without requiring cloud keys |
-
----
-
-### Delight
-
-| Story | Title | What it delivers |
-|-------|-------|-----------------|
-| 575 | Agent Break Room | Hidden animated leisure space for agents between tasks; social identity layer; self-authored persona files. Never advertised — discovery is the feature. |
-
----
-
-### Extension System v2 — Isolated Host
-
-Copernicus v1 extensions load in-process (trusted, no isolation). v2 moves extensions into
-a separate child process connected via JSON-RPC 2.0, adds capability-based security, lazy
-activation events, and a built-in marketplace. It's the architecture that makes third-party
-extension distribution safe.
-
-| Story | Title | What it delivers |
-|-------|-------|-----------------|
-| 685 | Extension host process + JSON-RPC protocol | Child process isolation; IDE crash-safe extension host; typed message boundary |
-| 686 | Capability manifest + approval prompt | Extensions declare filesystem/network/subprocess access; user approves on first install |
-| 687 | Extension API proxy layer | `CopernicusExtensionAPI` methods route through host boundary; capability enforcement at call time |
-| 688 | Activation events system | Extensions load on demand (`onView:`, `onCommand:`, `onWorkflowNode:`); cold start unaffected by extension count |
-| 689 | Extension marketplace view | Activity bar Extensions tab; browse npm-published extensions; install/update/remove from inside the IDE |
-| 690 | Extension Development Kit (EDK) | `create-copernicus-extension` scaffold; TypeScript types; `MockExtensionAPI` test harness |
-| 691 | v1 → v2 migration shim | `@copernicus/compat-v1` auto-wraps v1 extensions in the v2 host; zero code changes required for existing extensions |
-
-Full specification: [`docs/epics/epic_010_extension_system_v2_isolated_host.md`](docs/epics/epic_010_extension_system_v2_isolated_host.md)
-
----
-
-### Toolchain Upgrades
-
-Deferred dependency bumps that require migration work, not just a version increment. Each is blocked behind the build gate (story 674) to guarantee a clean baseline before touching the runtime.
-
-| Story | Title | What it delivers |
-|-------|-------|-----------------|
-| 682 | `@vitejs/plugin-react` 4 → 6 | Two-major-version Vite plugin bump; picks up React 19 Fast Refresh support and current Vite 5 compatibility |
-| 683 | ESLint 9 flat config migration | `.eslintrc.json` → `eslint.config.js`; bumps `eslint-plugin-react-hooks` 4.6 → 7.0 for React 19-compatible hooks rules |
-| 684 | Electron 28 → 41 migration | Thirteen major versions of security patches, Chromium updates, and Node.js 22 LTS; full audit of deprecated APIs in `electron/` before bump |
-
----
-
-*This roadmap reflects the active backlog as of April 2026. Story status and priority are tracked in [`docs/stories/`](docs/stories/); completed work is archived in [`docs/stories/completed/`](docs/stories/completed/).*
+[MIT](LICENSE)
