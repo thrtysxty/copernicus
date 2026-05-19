@@ -1,12 +1,47 @@
 import { config } from '../config'
-// Story 626 — Provider Registry: Built-in Provider Registration
-// STUB: Full implementation delivered by Jules
-
 import { providerRegistry } from './provider-registry'
 import { authManager } from '../auth-manager'
 import { listOpenRouterModels } from './providers/openrouter'
+import { listOpenAIModels } from './providers/openai'
+import { listGoogleModels } from './providers/google'
 
 export function registerBuiltinProviders(): void {
+  // OpenAI
+  providerRegistry.register({
+    id: 'openai',
+    displayName: 'OpenAI',
+    baseUrl: 'https://api.openai.com/v1',
+    resolveKey: () => authManager.resolveForProvider('openai')?.key || null,
+    listModels: async () => {
+      const models = await listOpenAIModels()
+      return models.map(m => ({
+        id: m.id,
+        name: m.name,
+        contextLength: m.contextLength,
+        supportsToolCalling: true
+      }))
+    },
+    supportsToolCalling: true
+  })
+
+  // Google
+  providerRegistry.register({
+    id: 'google',
+    displayName: 'Google',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    resolveKey: () => authManager.resolveForProvider('google')?.key || null,
+    listModels: async () => {
+      const models = await listGoogleModels()
+      return models.map(m => ({
+        id: m.id,
+        name: m.name,
+        contextLength: m.contextLength,
+        supportsToolCalling: m.supportsToolCalling
+      }))
+    },
+    supportsToolCalling: true
+  })
+
   // OpenRouter
   providerRegistry.register({
     id: 'openrouter',
@@ -19,7 +54,7 @@ export function registerBuiltinProviders(): void {
         id: m.id,
         name: m.name,
         contextLength: m.contextLength,
-        supportsToolCalling: true, // Note: varies by model, treating as true for now per instructions
+        supportsToolCalling: true,
         pricing: {
           promptPer1M: m.pricing.prompt * 1000000,
           completionPer1M: m.pricing.completion * 1000000
@@ -47,8 +82,8 @@ export function registerBuiltinProviders(): void {
         return data.models.map((m: any) => ({
           id: m.name,
           name: m.name,
-          contextLength: 8192, // Default context length assumption
-          supportsToolCalling: false // Default to false for basic Ollama
+          contextLength: 8192,
+          supportsToolCalling: false
         }))
       } catch (e) {
         return []

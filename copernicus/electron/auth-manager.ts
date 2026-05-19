@@ -301,7 +301,7 @@ export class AuthManager {
     }
   }
 
-  public resolveForProvider(provider: 'deepinfra' | 'openai' | 'openrouter' | 'ollama') {
+  public resolveForProvider(provider: 'deepinfra' | 'google' | 'openai' | 'openrouter' | 'ollama') {
     switch (provider) {
       case 'openrouter': {
         const key = this.getApiKey('openrouter');
@@ -312,6 +312,11 @@ export class AuthManager {
         const key = this.getApiKey('openai');
         if (!key) return null;
         return { key, baseUrl: 'https://api.openai.com/v1', provider: 'openai', headers: {} };
+      }
+      case 'google': {
+        const key = this.getApiKey('google');
+        if (!key) return null;
+        return { key, baseUrl: 'https://generativelanguage.googleapis.com/v1beta', provider: 'google', headers: {} };
       }
       case 'deepinfra': {
         const key = this.getApiKey('deepinfra');
