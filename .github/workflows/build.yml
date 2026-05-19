@@ -33,7 +33,10 @@ jobs:
       run: |
         pip install pyinstaller
         pip install -r backend/requirements.txt
-      working-directory: .
+
+    - name: Install macOS-only dependencies
+      if: runner.os == 'macOS'
+      run: pip install -r backend/requirements-macos.txt
 
     - name: Build Python backend with PyInstaller
       run: pyinstaller backend/copernicus_backend.spec --distpath backend/dist/

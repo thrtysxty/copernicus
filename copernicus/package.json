@@ -59,10 +59,6 @@
       "notarize": false,
       "extraResources": [
         {
-          "from": "../resources/knowledge",
-          "to": "knowledge"
-        },
-        {
           "from": "../scripts/install-daemon.sh",
           "to": "install-daemon.sh"
         },
@@ -98,10 +94,6 @@
       ],
       "extraResources": [
         {
-          "from": "../resources/knowledge",
-          "to": "knowledge"
-        },
-        {
           "from": "../scripts/install-daemon.ps1",
           "to": "install-daemon.ps1"
         },
@@ -119,10 +111,6 @@
       ],
       "category": "Development",
       "extraResources": [
-        {
-          "from": "../resources/knowledge",
-          "to": "knowledge"
-        },
         {
           "from": "../scripts/install-daemon.sh",
           "to": "install-daemon.sh"
