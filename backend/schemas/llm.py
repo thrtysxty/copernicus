@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, field_validator
-import re, unicodedata
+import re
+import unicodedata
 from backend.utils.validate import validate_no_paths
 
 ALLOWED_PROVIDERS = frozenset({'anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'})

@@ -7,13 +7,11 @@
 # The `get_db_path()` function resolves paths based on environment variables or project structure,
 # and `research` endpoint's `history_path` is a securely created temporary file.
 from backend.utils.errors import AppError
-import logging
-logger = logging.getLogger(__name__)
 from flask import Blueprint, jsonify, request
 from backend.limiter import limiter
 from backend.middleware.auth import require_auth
 from backend.utils.validate import validate
-from backend.schemas.agents import AgentRunRequest, ResetContextRequest, ContextHandoffRequest, ResearchRequest
+from backend.schemas.agents import ResetContextRequest, ContextHandoffRequest, ResearchRequest
 import subprocess
 import os
 import re
@@ -27,6 +25,9 @@ from typing import List, Optional, Dict, Any
 from pathlib import Path
 from collections import OrderedDict
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Constants for roles, models, and events
 ROLE_SYSTEM = "system"
@@ -55,10 +56,12 @@ def get_db_path():
     """Returns the path to the Copernicus SQLite database."""
     # Priority: ENV > Default home location > Local repo location
     env_path = os.environ.get('COPERNICUS_DB_PATH')
-    if env_path: return env_path
+    if env_path:
+        return env_path
     
     home_path = os.path.expanduser('~/.copernicus/copernicus.db')
-    if os.path.exists(home_path): return home_path
+    if os.path.exists(home_path):
+        return home_path
     
     local_path = PROJECT_ROOT / "copernicus" / "copernicus.db"
     return str(local_path.resolve())
@@ -459,7 +462,6 @@ def research(request_data: ResearchRequest):
 
     # Pass full chat context to gateway (via JSON file)
     # Do NOT include prompt in command-line args — only in history file.
-    import json
     import tempfile
 
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as f:

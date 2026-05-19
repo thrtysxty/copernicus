@@ -1,4 +1,3 @@
-import pytest
 from backend.utils.errors import AppError, handle_app_error
 
 class TestAppError:

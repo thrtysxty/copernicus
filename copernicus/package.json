@@ -12,7 +12,7 @@
     "url": "https://github.com/JMThiessen/copernicus.git"
   },
   "scripts": {
-    "prepare": "bash scripts/download-toolbox.sh",
+    "prepare": "echo skip",
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
     "build:debug": "cross-env COPERNICUS_DEBUG=true tsc && vite build && electron-builder",

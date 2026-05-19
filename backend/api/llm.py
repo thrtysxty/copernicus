@@ -1,13 +1,14 @@
 import os
 import json
-import logging
-logger = logging.getLogger(__name__)
-from flask import Blueprint, request, Response, stream_with_context, jsonify
+from flask import Blueprint, request, Response, stream_with_context
 from backend.middleware.auth import require_auth
 from backend.limiter import limiter
 from backend.providers.factory import get_provider
 from backend.utils.validate import validate
 from backend.schemas.llm import ChatRequest
+import logging
+
+logger = logging.getLogger(__name__)
 
 llm_bp = Blueprint('llm', __name__)
 

@@ -150,16 +150,16 @@ Customize in Settings → Hardware. Install MLX: `pip install mlx-lm`.
 
 | Layer | Technology |
 |-------|------------|
-| IDE shell | Electron 33, Vite 5 |
-| Renderer | React 18, TypeScript 5, Tailwind CSS |
-| Editor | Monaco Editor, `typescript-language-server` (JSON-RPC 2.0) |
-| State | Zustand + persist middleware |
-| Database | SQLite (`better-sqlite3`), `sqlite-vec` for vector search |
-| Terminal | `node-pty`, `xterm.js` |
-| Browser automation | `playwright-core` |
-| Charts | Recharts |
-| Backend | Python 3.11, Flask |
-| Inference | Anthropic · OpenAI · Google · OpenRouter · DeepInfra · Ollama |
+| IDE shell | [Electron](https://electronjs.org) 33, [Vite](https://vite.dev) 5 |
+| Renderer | [React](https://react.dev) 18, [TypeScript](https://typescriptlang.org) 5, [Tailwind CSS](https://tailwindcss.com) |
+| Editor | [Monaco Editor](https://microsoft.github.io/monaco-editor/), [typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) (JSON-RPC 2.0) |
+| State | [Zustand](https://github.com/pmndrs/zustand) + persist middleware |
+| Database | [SQLite](https://sqlite.org) ([better-sqlite3](https://github.com/WiseLibs/better-sqlite3)), [sqlite-vec](https://github.com/asg017/sqlite-vec) for vector search |
+| Terminal | [node-pty](https://github.com/microsoft/node-pty), [xterm.js](https://xtermjs.org) |
+| Browser automation | [Playwright](https://playwright.dev) |
+| Charts | [Recharts](https://recharts.org) |
+| Backend | [Python](https://python.org) 3.11, [Flask](https://flask.palletsprojects.com) |
+| Inference | [Anthropic](https://anthropic.com) · [OpenAI](https://openai.com) · [Google](https://ai.google) · [OpenRouter](https://openrouter.ai) · [DeepInfra](https://deepinfra.com) · [Ollama](https://ollama.com) |
 
 ---
 

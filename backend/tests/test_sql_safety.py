@@ -1,10 +1,8 @@
 import pytest
 from flask import Flask
+import sqlite3
 from backend.api.stories import stories_bp
-from backend.middleware.auth import require_auth
 from unittest.mock import patch, MagicMock
-import json
-import sqlite3 # Import sqlite3 for proper mocking
 
 @pytest.fixture
 def client():

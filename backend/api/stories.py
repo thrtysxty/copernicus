@@ -1,6 +1,4 @@
 from backend.utils.errors import AppError
-import logging
-logger = logging.getLogger(__name__)
 from flask import Blueprint, jsonify
 import sqlite3
 import os
@@ -11,6 +9,9 @@ from contextlib import closing
 from backend.middleware.auth import require_auth
 from backend.utils.validate import validate
 from backend.schemas.stories import StoryCreateRequest, StoryUpdateRequest
+import logging
+
+logger = logging.getLogger(__name__)
 
 stories_bp = Blueprint('stories', __name__)
 

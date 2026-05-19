@@ -1,5 +1,5 @@
 import os
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 
 class SocketManager:
     _instance = None

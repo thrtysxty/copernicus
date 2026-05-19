@@ -2,7 +2,8 @@ from functools import wraps
 from typing import Type, Any
 from flask import request, jsonify
 from pydantic import BaseModel, ValidationError
-import re, unicodedata
+import re
+import unicodedata
 
 
 # Reusable path-rejection utility
