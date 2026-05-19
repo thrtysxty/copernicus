@@ -1,35 +1,30 @@
 # Keyboard Shortcuts
 
+Shortcuts use `Cmd` on macOS and `Ctrl` on Windows/Linux.
+
 ## Global
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd+P` | Command Palette |
-| `Cmd+Shift+P` | Show all commands |
-| `Cmd+Shift+W` | Toggle Workflow Builder |
-| `Cmd+Shift+K` | Toggle Kanban Board |
-| `Cmd+Shift+T` | Toggle Terminal |
-| `Cmd+Shift+M` | Toggle CapEx Dashboard |
-| `Cmd+Shift+S` | Toggle Settings |
+| `Cmd/Ctrl+P` | Command Palette |
+| `Cmd/Ctrl+,` | Settings |
+| `Cmd/Ctrl+N` | New Project |
+| `Cmd/Ctrl+O` | Open Folder |
+| `Cmd/Ctrl+1–9,0` | Switch view (Planner, Editor, Designer, Orchestrator, Telemetry, Memory, Reviews, Diagnostics, Source Control, Reporter) |
 
-## Editor
+## Editor & Navigation
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd+B` | Toggle sidebar |
-| `Cmd+J` | Toggle terminal panel |
-| `Ctrl+Shift+`` | New terminal |
-| `Cmd+Shift+F` | Search across files |
-| `Cmd+G` | Go to line |
+| `Cmd/Ctrl+B` | Toggle sidebar |
+| `Cmd/Ctrl+F` | Find in files |
+| `Cmd/Ctrl+Shift+P` | Show all commands |
 
-## Chat
+## Workflow & Views
 
 | Shortcut | Action |
 |----------|--------|
-| `Enter` | Send message |
-| `Shift+Enter` | New line |
-| `Cmd+L` | Clear chat |
-| `Cmd+Shift+L` | New chat session |
+| `Cmd/Ctrl+P` | Command Palette (also opens search) |
 
 ## Kanban
 
@@ -47,5 +42,5 @@
 | `Space` | Pan canvas |
 | `Scroll` | Zoom |
 | `Delete` | Delete selected node |
-| `Cmd+Z` | Undo |
-| `Cmd+Shift+Z` | Redo |
+| `Cmd/Ctrl+Z` | Undo |
+| `Cmd/Ctrl+Shift+Z` | Redo |
