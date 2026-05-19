@@ -1,5 +1,0 @@
-contract: test role
-ttl: 1h
-capabilities: []
-scope:
-  commands: []

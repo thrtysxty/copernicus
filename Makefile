@@ -1,38 +1,40 @@
-.PHONY: help dev dev-backend dev-frontend test test-e2e backlog deploy db-deploy db-migrate clean reset reset-db validate-story validate-all setup
-
-# Infrastructure Config
-CORE_SERVER_IP ?= 192.168.1.185  # Dell R210ii
-PI_BASELINE_IP ?= 192.168.1.19  # Performance Baseline (Pi 3B+)
+.PHONY: help setup dev dev-backend dev-frontend dev-ollama test test-e2e tsc lint clean reset
 
 help:
-	@echo "COPERNICUS IDE - Development Commands"
+	@echo "Copernicus IDE — Development Commands"
 	@echo ""
-	@echo "Usage: make <command> [ARG=value]"
+	@echo "  make setup        Install all dependencies (first-time)"
+	@echo "  make dev          Start backend + frontend (requires setup)"
+	@echo "  make dev-backend   Start Flask backend only"
+	@echo "  make dev-frontend  Start Electron frontend only"
+	@echo "  make dev-ollama   Start Ollama via Docker (optional)"
 	@echo ""
-	@echo "Core Workflow:"
-	@echo "  setup        - Create .venv and install all dependencies (first-time setup)"
-	@echo "  dev          - Start development server (backend + copernicus)"
-	@echo "  test         - Run backend pytest suite"
-	@echo "  test-e2e     - Run frontend Playwright E2E test suite"
-	@echo "  deploy       - Deploy to Dell R210ii Core"
+	@echo "Quality:"
+	@echo "  make tsc          TypeScript type check"
+	@echo "  make lint         ESLint"
+	@echo "  make test         Run Python tests"
+	@echo "  make test-e2e     Run Playwright E2E tests"
 	@echo ""
-	@echo "Utilities:"
-	@echo "  backlog      - Generate the master backlog document"
-		@echo "make db-deploy - Deploy database schema to Core"
-	@echo "make db-migrate - Run pending database migrations on Core"
-	@echo "  clean        - Clean build artifacts"
-	@echo "  reset        - Wipe all app state (DB, settings, logs) - triggers setup wizard on next launch"
-	@echo "  reset-db     - Wipe DB only (preserves settings and first-run state)"
+	@echo "Maintenance:"
+	@echo "  make clean        Remove build artifacts"
+	@echo "  make reset        Wipe app state (triggers setup wizard)"
 
-VENV := .venv
+VENV := backend/venv
 PYTHON := $(shell [ -f $(VENV)/bin/python3 ] && echo $(VENV)/bin/python3 || echo python3)
 
-# Bootstrap: create venv and install all dependencies
+# ── Bootstrap ──────────────────────────────────────────────────────────────
 setup:
+	@echo "Setting up Copernicus..."
 	python3 -m venv $(VENV)
-	$(VENV)/bin/pip install -r backend/requirements.txt
+	$(VENV)/bin/pip install --quiet --upgrade pip
+	$(VENV)/bin/pip install --quiet -r backend/requirements.txt
 	cd copernicus && npm install
+	cp -n secrets.example ~/.secrets 2>/dev/null || true
+	@echo ""
+	@echo "Setup complete. Run 'make dev' to start."
+	@echo "Edit ~/.secrets to add your API keys."
 
+# ── Development ───────────────────────────────────────────────────────────
 dev:
 	(trap 'kill 0' SIGINT; $(PYTHON) backend/app.py & cd copernicus && npm run dev)
 
@@ -42,82 +44,31 @@ dev-backend:
 dev-frontend:
 	cd copernicus && npm run dev
 
+dev-ollama:
+	docker compose -f docker-compose.ollama.yml up -d
+
+# ── Quality ────────────────────────────────────────────────────────────────
+tsc:
+	cd copernicus && npx tsc --noEmit
+
+lint:
+	cd copernicus && npm run lint
+
 test:
 	$(PYTHON) -m pytest tests/ -v
 
 test-e2e:
 	cd copernicus && npx playwright test
 
-backlog:
-	$(PYTHON) scripts/utils/generate_backlog.py
-
-## ── Jules / Agent Dispatch ────────────────────────────────────────────────────
-# Dispatch a story to Jules CLI:  make jules STORY=docs/stories/story_182_*.md
-jules:
-	@bash scripts/jules_assign.sh $(STORY)
-
-# Dry-run (validates story, shows prompt size, does not dispatch):
-jules-dry:
-	@bash scripts/jules_assign.sh --dry-run $(STORY)
-
-# Validate a single story spec:
-validate-story:
-	@bash scripts/story-validator.sh $(STORY)
-
-# Validate all stories:
-validate-all:
-	@for f in docs/stories/story_*.md; do 
-		echo "--- $$f ---"; 
-		python3 scripts/utils/story_validator.py "$$f" || true; 
-	done
-
-# IPC compliance check across codebase:
-ipc-lint:
-	@bash scripts/ipc-lint.sh
-
-# IPC lint with fix hints:
-ipc-lint-fix:
-	@bash scripts/ipc-lint.sh --fix-hints
-
-# Jules env setup (run in Jules Initial Setup configuration):
-jules-preflight:
-	@bash scripts/jules-preflight.sh
-
-# TypeScript type-check only:
-tsc:
-	@cd copernicus && npx tsc --noEmit
-
-deploy:
-	git push origin main
-	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/copernicus && git pull && docker compose -f docker/docker-compose.yml restart'
-
-db-deploy:
-	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/copernicus && ./scripts/deployment/deploy_database.sh'
-
-db-migrate:
-	@echo "Running database migration on Core Server..."
-	ssh admin@$(CORE_SERVER_IP) 'cd ~/projects/copernicus && source .venv/bin/activate && python scripts/migrations/run_migrations.py --execute'
-
+# ── Maintenance ───────────────────────────────────────────────────────────
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true # nosec
-	find . -type f -name "*.pyc" -delete
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name "node_modules" -prune -o -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name "dist-electron" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 
 reset:
-	@echo "Wiping COPERNICUS app state (DB, settings, logs)..."
+	@echo "Wiping Copernicus app state..."
 	rm -rf ~/Library/Application\ Support/copernicus/
 	rm -rf ~/.copernicus/logs/
 	@echo "Done. App will show setup wizard on next launch."
-
-reset-db:
-	@echo "Wiping COPERNICUS database only..."
-	rm -f ~/Library/Application\ Support/copernicus/copernicus.db
-	@echo "Done."
-
-## ── Ollama Inference Server (Dell R210ii Core) ────────────────────────
-ollama-status:
-	@echo "=== Ollama on Core ==="
-	@curl -sf http://$(CORE_SERVER_IP):11434/api/tags | python3 -m json.tool 2>/dev/null 
-	  || echo "[!] Ollama unreachable at http://$(CORE_SERVER_IP):11434"
-
-ollama-stop:
-	ssh core "docker stop copernicus-ollama || true"

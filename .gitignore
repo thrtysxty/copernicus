@@ -26,6 +26,7 @@ out/
 # Logs
 *.log
 copernicus_debug.log*
+*_debug.log
 
 # IDEs
 .vscode/
@@ -39,9 +40,7 @@ copernicus/out/
 .gemini/
 
 # Claude Code — personal session state (not shared)
-.claude/projects/
-.claude/tasks/
-.claude/worktrees/
+.claude/
 
 # Agent worktrees and state
 .agent-worktrees/
@@ -72,12 +71,11 @@ dev_orchestrator/
 # Electron release artifacts
 copernicus/release/
 
-# Playwright e2e output (screenshots committed separately to docs/help/screenshots/)
+# Playwright e2e output
 copernicus/e2e/test-results/
 copernicus/e2e/report/
-.gitnexus
+.gitnexus/
 /copernicus/scripts/agent-daemon/bin/toolbox
-*_debug.log
 
 # Development artifacts (git history tracks changes)
 docs/stories/
@@ -91,23 +89,133 @@ docs/sdk/
 docs/stitch/
 docs/stitch_mlx_local_inference_panel/
 docs/setup/
+docs/audit/
 
 # Local environment configs
 **/*.env.local
 **/config.env
 **/.env.*
-docs/audit/
 
 # Internal dev artifacts — not for community release
 repo_index.json
-.claude/worktrees/
-.agents/
-.continue/
 .gitnexus/
-copernicus/resources/icons/icon_source.png
+
+# Agent orchestration (internal dev tooling, not for community release)
+scripts/utils/
+scripts/lifecycle/
+scripts/hooks/
+scripts/agent-daemon/
+scripts/dispatch/
+scripts/agent_harness.py
+scripts/check_infra.py
+scripts/generate_repo_index.py
+scripts/harnesses.json
+scripts/install-daemon.ps1
+scripts/install-daemon.sh
+scripts/ipc-lint.sh
+scripts/jules-preflight.sh
+scripts/jules.db
+scripts/jules_assign.sh
+scripts/mcp_hub.py
+scripts/mcp_server.py
+scripts/stitch_dispatch.mjs
+scripts/story-implemented.sh
+scripts/story-validator.sh
+scripts/e2e-gate.mjs
+
+# Agentic internals (internal dispatch, telemetry, compaction)
+src/agentic/
+
+# Collector (internal data export tool)
+collector/
+
+# Safari extension (internal tool, not maintained for community)
+tools/nlm-safari/
+
+# Workflow queues (runtime state, not source)
+workflow/
+
+# Internal planning docs
+docs/planning/
+docs/SLOGANS.md
+docs/WORKFLOW_COMPOSER.md
+docs/guides/JULES_ENGINEERING_STANDARDS.md
+docs/guides/SOP_PRODUCT_SESSION.md
+
+# Root-level dev noise
+fix_expertise.js
+fix_inputs.js
+verify.py
+plan.md
+ROADMAP.md
+TASK.md
+skills-lock.json
 
 # OS files
-.DS_Store
-**/.DS_Store
 *.bak
-.claude/
+
+# Internal .claude/ artifacts (rules, hooks, tasks kept; skills/archive, agent_mapping removed)
+.claude/agent_mapping.json
+.claude/tasks/
+.claude/hooks/
+.claude/rules/dispatch.md
+.claude/rules/jules-daemon.md
+.claude/rules/completion-protocol.md
+.claude/rules/codebase-memory.md
+.claude/rules/tavily.md
+.claude/rules/token-efficiency.md
+.claude/rules/ui-dispatch.md
+.claude/skills/archive/
+.claude/skills/babysit-jules/
+.claude/skills/create-agent
+.claude/skills/deployer/
+.claude/skills/junior/
+.claude/skills/junior_dev/
+.claude/skills/log_error/
+.claude/skills/log_success/
+.claude/skills/meta_interviewer/
+.claude/skills/meta_nterviewer/
+.claude/skills/pi_check/
+.claude/skills/product/
+.claude/skills/product_owner/
+.claude/skills/scaffold-skills/
+.claude/skills/senior/
+.claude/skills/senior_dev/
+.claude/skills/story/
+.claude/skills/test_webhook/
+
+# Gemini config (internal)
+.gemini/
+gemini.md
+
+# Internal reference docs removed from community release
+docs/reference/AGENT_SANDBOXING_SPIKE.md
+docs/reference/CLAUDE_CODE_ROUTER.md
+docs/reference/COMPLETION_PROTOCOL.md
+docs/reference/INSTALLER_SETUP.md
+docs/reference/JULES_SETUP.md
+docs/reference/KNOWLEDGE_BASE_VISION.md
+docs/reference/PAIR_TEST_PROTOCOL.md
+docs/reference/PERSONA_MODEL_MATRIX.md
+docs/reference/PHASE6_AGENT_HUB.md
+docs/reference/RETROSPECTIVE_GUIDE.md
+docs/reference/STITCH_SETUP.md
+docs/reference/agent_commands.md
+docs/reference/cred_spike_report.md
+docs/help/BACKGROUND_SERVICES_GUIDE.md
+
+# Docs directories (internal development)
+docs/guides/
+
+# Docs templates (internal development)
+docs/templates/
+
+# Copernicus internal scripts
+copernicus/scripts/agent-daemon/
+copernicus/scripts/download-toolbox.sh
+
+# Genesis templates (internal rules removed, common templates kept)
+copernicus/electron/genesis/templates/common/.claude/rules/completion-protocol.md
+copernicus/electron/genesis/templates/common/.claude/rules/dispatch.md
+copernicus/electron/genesis/templates/common/.claude/rules/token-efficiency.md
+copernicus/electron/genesis/templates/common/.claude/hooks/
