@@ -58,6 +58,11 @@ if [[ ! -d "$VENV" ]]; then
 fi
 "$VENV/bin/pip" install --quiet --upgrade pip
 "$VENV/bin/pip" install --quiet -r backend/requirements.txt
+
+# macOS-only: MLX for Apple Silicon local inference
+if [[ "$(uname)" == "Darwin" ]] && [[ -f "backend/requirements-macos.txt" ]]; then
+  "$VENV/bin/pip" install --quiet -r backend/requirements-macos.txt || warn "MLX install failed (non-Apple Silicon? Safe to ignore)"
+fi
 ok "Python dependencies"
 
 # JS dependencies
