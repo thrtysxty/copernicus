@@ -65,6 +65,10 @@
         {
           "from": "../backend/dist/copernicus-backend",
           "to": "copernicus-backend"
+        },
+        {
+          "from": "../resources/knowledge",
+          "to": "knowledge"
         }
       ]
     },
@@ -100,6 +104,10 @@
         {
           "from": "../backend/dist/copernicus-backend.exe",
           "to": "copernicus-backend.exe"
+        },
+        {
+          "from": "../resources/knowledge",
+          "to": "knowledge"
         }
       ]
     },
@@ -118,6 +126,10 @@
         {
           "from": "../backend/dist/copernicus-backend",
           "to": "copernicus-backend"
+        },
+        {
+          "from": "../resources/knowledge",
+          "to": "knowledge"
         }
       ]
     }

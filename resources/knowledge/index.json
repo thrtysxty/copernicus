@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "topics": [
+    {
+      "id": "getting-started",
+      "title": "Getting Started",
+      "file": "getting-started.md",
+      "keywords": ["setup", "install", "first launch", "genesis wizard", "api key", "secrets", "config", "configuration", "start", "begin", "new user", "onboarding", "quickstart"]
+    },
+    {
+      "id": "configuration",
+      "title": "Configuration",
+      "file": "configuration.md",
+      "keywords": ["config", "config.env", "secrets", "settings", "environment", "env var", "ollama url", "backend port", "log level", "api key setup", "anthropic key", "openai key", "google key"]
+    },
+    {
+      "id": "workflow-builder",
+      "title": "Workflow Builder",
+      "file": "workflow-builder.md",
+      "keywords": ["workflow", "canvas", "node", "agent node", "tool node", "decision node", "trigger node", "flow node", "context variable", "time travel", "snapshot", "template", "pipeline", "automation"]
+    },
+    {
+      "id": "kanban-stories",
+      "title": "Kanban and Stories",
+      "file": "kanban-stories.md",
+      "keywords": ["kanban", "story", "stories", "board", "lane", "status", "acceptance criteria", "definition of done", "queue", "scheduler", "backlog", "planning", "epic"]
+    },
+    {
+      "id": "model-routing",
+      "title": "Model Routing and Providers",
+      "file": "model-routing.md",
+      "keywords": ["model", "provider", "anthropic", "openai", "google", "gemini", "ollama", "openrouter", "deepinfra", "hot swap", "switch model", "vision", "cost", "pricing", "mlx", "apple silicon", "local model"]
+    },
+    {
+      "id": "codebase-search",
+      "title": "Semantic Codebase Search",
+      "file": "codebase-search.md",
+      "keywords": ["search", "index", "embedding", "vector", "semantic", "codebase", "symbol", "lsp", "chunk", "reindex", "query", "find code"]
+    },
+    {
+      "id": "capex-dashboard",
+      "title": "CapEx Dashboard",
+      "file": "capex-dashboard.md",
+      "keywords": ["capex", "cost", "spending", "financial", "telemetry", "dashboard", "token", "model calls", "budget", "expense", "money", "billing"]
+    },
+    {
+      "id": "review-panel",
+      "title": "Agent Review Panel",
+      "file": "review-panel.md",
+      "keywords": ["review", "diff", "approve", "rework", "agent review", "type check", "tsc", "merge", "pr", "out of scope", "ghost", "implementation"]
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "file": "security.md",
+      "keywords": ["security", "safe storage", "encryption", "cors", "gitguard", "sandbox", "secret", "credential", "key storage", "dangerous pattern", "filesystem isolation"]
+    },
+    {
+      "id": "project-memory",
+      "title": "Project Memory and Retrospectives",
+      "file": "project-memory.md",
+      "keywords": ["memory", "retrospective", "learning", "importance", "decay", "convention", "decision", "bank", "reinforcement", "sprint review"]
+    },
+    {
+      "id": "keyboard-shortcuts",
+      "title": "Keyboard Shortcuts",
+      "file": "keyboard-shortcuts.md",
+      "keywords": ["shortcut", "keyboard", "hotkey", "key binding", "command palette", "cmd+p", "cmd+shift", "terminal toggle", "sidebar"]
+    },
+    {
+      "id": "ipc-architecture",
+      "title": "Architecture: IPC Envelope",
+      "file": "ipc-architecture.md",
+      "keywords": ["ipc", "architecture", "handleIpc", "unwrapIpc", "envelope", "main process", "renderer", "handler", "channel", "typescript"]
+    },
+    {
+      "id": "browser-automation",
+      "title": "Browser Automation",
+      "file": "browser-automation.md",
+      "keywords": ["browser", "playwright", "screenshot", "navigate", "click", "fill", "evaluate", "automation", "web", "scrape"]
+    },
+    {
+      "id": "troubleshooting",
+      "title": "Troubleshooting",
+      "file": "troubleshooting.md",
+      "keywords": ["troubleshoot", "error", "fix", "debug", "blank screen", "connection failed", "backend won't start", "ollama not found", "type check fail", "reset", "crash", "blank", "white screen", "stale", "stuck"]
+    }
+  ]
+}
