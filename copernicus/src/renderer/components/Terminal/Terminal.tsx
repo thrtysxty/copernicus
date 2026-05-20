@@ -4,7 +4,6 @@ import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 import { useLayoutStore } from '../../store/layout';
 import { useIpcError } from '../../hooks/useIpcError';
-import log from '../../utils/logger';
 
 const ipcRenderer = window.ipcRenderer;
 
@@ -23,7 +22,6 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
   const setTerminalCwd = useLayoutStore(s => s.setTerminalCwd);
   const busyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const openedRef = useRef(false);
-  const ptyReadyRef = useRef(false);
   const tryOpenRef = useRef<(() => void) | null>(null);
   const invoke = useIpcError();
 
@@ -83,25 +81,9 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       // If cwd is provided, set it initially
       if (cwd) setTerminalCwd(id, cwd);
 
-      // Register input handler after open — ensures all keystrokes are captured
+      // Send keystrokes directly — terminal-create is always sent before onData is
+      // registered, so the PTY session exists by the time any input arrives.
       term.onData((data) => {
-        log.info('[Terminal] onData fired:', { id, len: data.length });
-        if (!ptyReadyRef.current) {
-          // Buffer input until pty is confirmed ready (first terminal-incoming received)
-          const bufferTimer = setInterval(() => {
-            if (ptyReadyRef.current) {
-              clearInterval(bufferTimer);
-              invoke('terminal:input', { id, data }).catch(() => {});
-            }
-          }, 50);
-          // Safety: flush after 2s even if no response (pty might be slow to start)
-          setTimeout(() => {
-            clearInterval(bufferTimer);
-            ptyReadyRef.current = true;
-            invoke('terminal:input', { id, data }).catch(() => {});
-          }, 2000);
-          return;
-        }
         invoke('terminal:input', { id, data }).catch(() => {});
       });
     };
@@ -110,7 +92,6 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
     // Handle data from backend
     const removeDataListener = ipcRenderer.on('terminal-incoming', (_event: any, { id: terminalId, data }: { id: string, data: string }) => {
       if (terminalId === id) {
-        ptyReadyRef.current = true;
         term.write(data);
         setTerminalBusy(id, true);
         if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
@@ -146,7 +127,6 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       if (openedRef.current) ipcRenderer.send('terminal-kill', { id });
       term.dispose();
       openedRef.current = false;
-      ptyReadyRef.current = false;
     };
   }, [id, setTerminalBusy, invoke]);
 

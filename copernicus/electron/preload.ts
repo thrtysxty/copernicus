@@ -29,7 +29,7 @@ const SEND_CHANNELS = new Set([
   // Makefile
   'makefile:list', 'makefile:run',
   // Terminal
-  'terminal-create', 'terminal:resize', 'terminal-write',
+  'terminal-create', 'terminal-kill', 'terminal:resize', 'terminal-write',
   'terminal:input', 'terminal:spawn',
   'terminal:spawn-agent', 'terminal:attach-agent',
   'terminal:stop-agent',
