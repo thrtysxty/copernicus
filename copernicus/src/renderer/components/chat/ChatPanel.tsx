@@ -17,7 +17,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
   const chat = useChatPanel(openFilePath, rootPath, panelId)
 
   return (
-    <FlippablePanel
+    <div data-testid="panel-chat">
+          <FlippablePanel
       id={panelId === 'chat' ? 'chat' : `chat-${panelId}`}
       front={
         <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono min-w-0 overflow-hidden">
@@ -116,5 +117,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
         </ErrorBoundary>
       }
     />
+    </div>
   )
 }
