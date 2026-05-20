@@ -23,6 +23,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
   const setTerminalCwd = useLayoutStore(s => s.setTerminalCwd);
   const busyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const openedRef = useRef(false);
+  const ptyReadyRef = useRef(false);
   const tryOpenRef = useRef<(() => void) | null>(null);
   const invoke = useIpcError();
 
@@ -85,6 +86,22 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       // Register input handler after open — ensures all keystrokes are captured
       term.onData((data) => {
         log.info('[Terminal] onData fired:', { id, len: data.length });
+        if (!ptyReadyRef.current) {
+          // Buffer input until pty is confirmed ready (first terminal-incoming received)
+          const bufferTimer = setInterval(() => {
+            if (ptyReadyRef.current) {
+              clearInterval(bufferTimer);
+              invoke('terminal:input', { id, data }).catch(() => {});
+            }
+          }, 50);
+          // Safety: flush after 2s even if no response (pty might be slow to start)
+          setTimeout(() => {
+            clearInterval(bufferTimer);
+            ptyReadyRef.current = true;
+            invoke('terminal:input', { id, data }).catch(() => {});
+          }, 2000);
+          return;
+        }
         invoke('terminal:input', { id, data }).catch(() => {});
       });
     };
@@ -93,6 +110,7 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
     // Handle data from backend
     const removeDataListener = ipcRenderer.on('terminal-incoming', (_event: any, { id: terminalId, data }: { id: string, data: string }) => {
       if (terminalId === id) {
+        ptyReadyRef.current = true;
         term.write(data);
         setTerminalBusy(id, true);
         if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
@@ -102,12 +120,17 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
     // ResizeObserver handles both initial open (when dimensions first appear)
     // and subsequent resize events during panel animations
+    // Debounced to avoid sending intermediate dimensions during CSS transitions
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     const resizeObserver = new ResizeObserver(() => {
       tryOpen();
-      if (openedRef.current && fitAddonRef.current) {
-        fitAddonRef.current.fit();
-        invoke('terminal:resize', { id, cols: term.cols, rows: term.rows });
-      }
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (openedRef.current && fitAddonRef.current) {
+          fitAddonRef.current.fit();
+          invoke('terminal:resize', { id, cols: term.cols, rows: term.rows }).catch(() => {});
+        }
+      }, 100);
     });
     resizeObserver.observe(terminalRef.current);
 
@@ -116,12 +139,14 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
 
     return () => {
       resizeObserver.disconnect();
+      if (resizeTimer) clearTimeout(resizeTimer);
       removeDataListener();
       if (busyTimeoutRef.current) clearTimeout(busyTimeoutRef.current);
       setTerminalBusy(id, false);
       if (openedRef.current) ipcRenderer.send('terminal-kill', { id });
       term.dispose();
       openedRef.current = false;
+      ptyReadyRef.current = false;
     };
   }, [id, setTerminalBusy, invoke]);
 
@@ -131,11 +156,24 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
       if (!openedRef.current && tryOpenRef.current) {
         tryOpenRef.current();
       }
-      setTimeout(() => {
-          xtermRef.current?.focus();
-          fitAddonRef.current?.fit();
-          invoke('terminal:resize', { id, cols: xtermRef.current!.cols, rows: xtermRef.current!.rows });
-      }, 50);
+      // Delay focus to allow CSS transition (300ms) to settle — retry ensures focus
+      // lands even if the panel is still animating
+      const focusTimer = setTimeout(() => {
+        xtermRef.current?.focus();
+        if (fitAddonRef.current) {
+          fitAddonRef.current.fit();
+          invoke('terminal:resize', { id, cols: xtermRef.current!.cols, rows: xtermRef.current!.rows }).catch(() => {});
+        }
+      }, 150);
+      // Second retry after transition should be complete
+      const retryTimer = setTimeout(() => {
+        xtermRef.current?.focus();
+        if (fitAddonRef.current && xtermRef.current) {
+          fitAddonRef.current.fit();
+          invoke('terminal:resize', { id, cols: xtermRef.current!.cols, rows: xtermRef.current!.rows }).catch(() => {});
+        }
+      }, 350);
+      return () => { clearTimeout(focusTimer); clearTimeout(retryTimer); };
     }
   }, [active, id, invoke]);
 

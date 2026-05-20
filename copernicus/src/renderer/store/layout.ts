@@ -474,7 +474,7 @@ stitchTokens: null,
       name: 'copernicus-layout-storage',
       partialize: (state) => {
         // Story 613: workingDir, isGitDirty, gitBranch are now sourced from main process
-        const { workingDir, isGitDirty, gitBranch, ...persisted } = state as any
+        const { workingDir, isGitDirty, gitBranch, terminalOpen, ...persisted } = state as any
         return persisted
       },
       onRehydrateStorage: () => (state) => {
@@ -495,6 +495,7 @@ stitchTokens: null,
         state.spotlightPane = null
         state.tourHighlight = null
         state.isSessionEnded = false
+        state.terminalOpen = false
       }
     }
   )

@@ -25,10 +25,10 @@ export const ApplicationHeader: React.FC = () => {
       </div>
 
       {/* Right: repo_name // story_id — no labels */}
-      <div className="flex items-center relative" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+      <div className="flex items-center relative overflow-hidden max-w-[40%]" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
         <button
           onClick={() => setShowSwitcher(!showSwitcher)}
-          className="text-[10px] font-mono text-copernicus-phosphor font-bold uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity outline-none"
+          className="text-[10px] font-mono text-copernicus-phosphor font-bold uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity outline-none truncate max-w-[180px]"
         >
           {repoName}
         </button>
