@@ -82,7 +82,6 @@ global.ResizeObserver = class {
 
 describe('App - Escape Key Handling', () => {
   const invokeMock = vi.fn().mockResolvedValue({ ok: true, data: null })
-  const setAgentsOpenMock = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -90,8 +89,6 @@ describe('App - Escape Key Handling', () => {
 
     // Setup default layout store returns
     const defaultStoreState: Record<string, any> = {
-      agentsOpen: false,
-      setAgentsOpen: setAgentsOpenMock,
       activeView: 'planner',
       workspaceKey: 'test',
       sidebarOpen: false,
@@ -144,8 +141,9 @@ describe('App - Escape Key Handling', () => {
 
   it('closes intelligence view on escape', () => {
     // Override store state for this test
+    const setViewMock = vi.fn()
     vi.mocked(useLayoutStore).mockImplementation((selector: any) => {
-      return selector({ ...vi.mocked(useLayoutStore).getState(), agentsOpen: true })
+      return selector({ ...vi.mocked(useLayoutStore).getState(), activeView: 'intelligence', setView: setViewMock })
     })
 
     render(<App />)
@@ -153,7 +151,7 @@ describe('App - Escape Key Handling', () => {
     // Simulate escape key
     fireEvent.keyDown(document, { key: 'Escape' })
 
-    expect(setAgentsOpenMock).toHaveBeenCalledWith(false)
+    expect(setViewMock).toHaveBeenCalledWith('planner')
     expect(invokeMock).not.toHaveBeenCalledWith('window:exit-fullscreen')
   })
 })

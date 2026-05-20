@@ -220,7 +220,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   
   const [activeRetroCard, setActiveRetroCard] = useState<any | null>(null)
   const [additionalPendingCount, setAdditionalPendingCount] = useState(0)
-  const setAgentsOpen = useLayoutStore(s => s.setAgentsOpen)
+  const setView = useLayoutStore(s => s.setView)
   const [onboardingStackProfile, setOnboardingStackProfile] = useState<any | null>(null)
   const [showSkillModal, setShowSkillModal] = useState(false)
   const [isSkillOnboardingDismissed, setIsSkillOnboardingDismissed] = useState(false)
@@ -396,7 +396,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
+    <div data-testid="panel-kanban" className="flex-1 flex flex-col h-full bg-[#050505] text-zinc-300 font-sans overflow-hidden relative">
       {/* Action bar */}
       <div className="flex items-center px-3 py-1.5 border-b border-white/5 shrink-0">
         {/* Left: Epics toggle */}
@@ -434,7 +434,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
             Run Retrospective
           </button>
           <button
-            onClick={() => setAgentsOpen(true)}
+            onClick={() => setView('intelligence')}
             className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
           >
             <Glasses size={10} />

@@ -141,8 +141,6 @@ export default function App() {
   const hasCompletedTour = useLayoutStore(s => s.hasCompletedTour)
   const tourHighlight = useLayoutStore(s => s.tourHighlight)
   const settingsOpen = useLayoutStore(s => s.settingsOpen)
-  const agentsOpen = useLayoutStore(s => s.agentsOpen)
-  const setAgentsOpen = useLayoutStore(s => s.setAgentsOpen)
 
   const capexSessionTime = useTelemetryStore(s => s.capexSessionTime)
   const capexTotal = useTelemetryStore(s => s.capexTotal)
@@ -205,13 +203,13 @@ export default function App() {
     })
   }, [])
 
-  // Story 380 & 609: ESC exits native fullscreen safely and closes intelligence view
+  // Story 380 & 609: ESC exits native fullscreen safely and exits intelligence view
   useEffect(() => {
-    if (!isFullscreen && !agentsOpen) return
+    if (!isFullscreen && activeView !== 'intelligence') return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !e.defaultPrevented) {
-        if (agentsOpen) {
-          setAgentsOpen(false)
+        if (activeView === 'intelligence') {
+          setView('planner')
         } else if (isFullscreen) {
           invoke('window:exit-fullscreen')
         }
@@ -219,7 +217,7 @@ export default function App() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isFullscreen, agentsOpen, invoke, setAgentsOpen])
+  }, [isFullscreen, activeView, invoke, setView])
 
   // Load extensions on mount
   useEffect(() => {
@@ -419,6 +417,7 @@ export default function App() {
             {activeView === 'hub:org-chart' && <OrgChartPanel />}
             {activeView === 'hub:contract-proposals' && <ContractProposalPanel />}
             {activeView === 'extensions' && <ExtensionsPanel />}
+            {activeView === 'intelligence' && <IntelligenceManager />}
             {(activeView === 'designer' || activeView === 'editor') && (
 
               <>
@@ -514,12 +513,6 @@ export default function App() {
       </main>
       </div>
 
-      {/* Overlays */}
-      {agentsOpen && (
-        <div className="absolute inset-0 z-[200] bg-[#050505]">
-          <IntelligenceManager onClose={() => setAgentsOpen(false)} />
-        </div>
-      )}
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
       <CommandPalette
         open={commandPaletteOpen}

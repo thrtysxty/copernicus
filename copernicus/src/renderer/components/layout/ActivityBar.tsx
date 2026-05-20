@@ -1,8 +1,8 @@
 import React from 'react'
 import {
   FolderOpen, Code, Palette, Workflow, BarChart2,
-  Activity, Brain, Settings, Wand2, BookOpen,
-  Diff, GitBranch, FlaskConical, Bug, Globe, Database, Users, Puzzle,
+  Activity, Settings, Wand2,
+  Diff, GitBranch, Bug, Brain,
 } from 'lucide-react'
 import { useLayoutStore, StoryboardView } from '../../store/layout'
 
@@ -68,6 +68,28 @@ export const ActivityBar: React.FC = () => {
     )
   }
 
+  // Telemetry/Memory flip: clicking cycles between the two views
+  const telemetryMemoryView = activeView === 'command-center' ? 'command-center' : (activeView === 'memory' || activeView === 'replay') ? 'memory' : null
+  const handleTelemetryMemoryClick = () => {
+    if (telemetryMemoryView === 'command-center') {
+      setView('memory')
+    } else {
+      setView('command-center')
+    }
+  }
+
+  // Reviews/Testing flip: clicking cycles between the two views
+  const reviewsTestingView = activeView === 'review' ? 'review'
+    : (activeView === 'diagnostics' || activeView === 'test-explorer' || activeView === 'logs') ? 'testing'
+    : null
+  const handleReviewsTestingClick = () => {
+    if (reviewsTestingView === 'review') {
+      setView('diagnostics')
+    } else {
+      setView('review')
+    }
+  }
+
   return (
     <aside className="w-12 flex-shrink-0 bg-[#080808] border-r border-copernicus-steel flex flex-col items-center z-50 h-full">
       {/* Traffic light spacer + C logo merged into one draggable header */}
@@ -105,29 +127,29 @@ export const ActivityBar: React.FC = () => {
           }}
         />
         <NavItem id="orchestrator" icon={Workflow} label="Orchestrator" shortcut="⌘4" testId="nav-orchestrator" />
-        <NavItem id="command-center" icon={Activity} label="Telemetry" shortcut="⌘5" testId="nav-telemetry" />
+        {/* Telemetry & Memory — flip between views on click */}
         <NavItem
-          icon={Brain}
-          label="Agent Memory"
-          shortcut="⌘6"
-          isActive={activeView === 'memory' || activeView === 'replay'}
-          onClick={() => setView('memory')}
-          testId="nav-memory"
+          icon={Activity}
+          label={telemetryMemoryView === 'memory' ? 'Memory' : 'Telemetry'}
+          shortcut="⌘5"
+          isActive={!!telemetryMemoryView}
+          onClick={handleTelemetryMemoryClick}
+          testId="nav-telemetry"
         />
-        <NavItem id="review" icon={Diff} label="Reviews" shortcut="⌘7" hasDot={!!pendingReview} testId="nav-review" />
+        {/* Reviews & Testing — flip between views on click */}
         <NavItem
-          icon={FlaskConical}
-          label="Testing"
-          shortcut="⌘8"
-          badge={diagnosticErrorCount}
-          hasDot={diagnosticErrorCount > 0}
-          isActive={activeView === 'diagnostics' || activeView === 'test-explorer' || activeView === 'logs'}
-          onClick={() => setView('diagnostics')}
-          testId="nav-diagnostics"
+          icon={Diff}
+          label={reviewsTestingView === 'testing' ? 'Testing' : 'Reviews'}
+          shortcut="⌘7"
+          isActive={!!reviewsTestingView}
+          hasDot={!!pendingReview || diagnosticErrorCount > 0}
+          badge={reviewsTestingView === 'testing' ? diagnosticErrorCount : undefined}
+          onClick={handleReviewsTestingClick}
+          testId="nav-review"
         />
         <NavItem
           icon={GitBranch}
-          label="Source Control"
+          label="Sources"
           shortcut="⌘9"
           isActive={activeView === 'git' || activeView === 'github'}
           onClick={() => setView('git')}
@@ -135,29 +157,18 @@ export const ActivityBar: React.FC = () => {
         />
         <NavItem id="reporter" icon={BarChart2} label="Reporter" shortcut="⌘0" testId="nav-reporter" />
         <NavItem id="debug" icon={Bug} label="Debug" testId="nav-debug" />
-        <NavItem id="browser" icon={Globe} label="Browser" testId="nav-browser" />
-        <NavItem id="database" icon={Database} label="Database" testId="nav-database" />
-        <NavItem id="hub:org-chart" icon={Users} label="Agent Hub" testId="nav-agent-hub" />
-        <NavItem id="hub:contract-proposals" icon={Users} label="Proposals" testId="nav-contract-proposals" />
-        <NavItem id="extensions" icon={Puzzle} label="Extensions" testId="nav-extensions" />
+        <NavItem id="intelligence" icon={Brain} label="Intelligence" testId="nav-intelligence" />
       </div>
 
       <div className="flex-1" />
 
-      {/* Bottom Tools */}
-      <div className="flex flex-col items-center w-full pb-2">
+      {/* Bottom Actions — separated from navigation */}
+      <div className="flex flex-col items-center w-full pb-2 border-t border-white/5 pt-1">
         <NavItem
           icon={Wand2}
           label="New Project"
           testId="nav-genesis"
           onClick={() => useLayoutStore.getState().setShowGenesis(true)}
-        />
-        <NavItem
-          id="knowledge-base"
-          icon={BookOpen}
-          label="Knowledge Base"
-          testId="nav-kb"
-          onClick={() => setView('knowledge-base')}
         />
         <NavItem
           icon={Settings}
