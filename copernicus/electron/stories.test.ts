@@ -33,6 +33,9 @@ describe('StoriesManager', () => {
       updateStoryFields: vi.fn(),
       getStoryById: vi.fn(),
       deleteStory: vi.fn(),
+      deleteOrphanedStories: vi.fn(),
+      getActiveProject: vi.fn().mockReturnValue(null),
+      getProjectByPath: vi.fn().mockReturnValue(null),
     };
 
     // Make existSync return true for the project root to target it,

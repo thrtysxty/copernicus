@@ -153,7 +153,7 @@ export const DiagnosticsPanel: React.FC = () => {
   const tabs: ('All' | 'LSP' | 'ESLint' | 'Ruff' | 'Audit')[] = ['All', 'LSP', 'ESLint', 'Ruff', 'Audit']
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
+    <div data-testid="panel-diagnostics" className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
       <div className="p-4 border-b border-zinc-800 flex flex-col gap-3 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

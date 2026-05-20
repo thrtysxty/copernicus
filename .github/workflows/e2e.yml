@@ -1,0 +1,119 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'copernicus/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'copernicus/**'
+
+jobs:
+  smoke:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: copernicus
+        run: npm ci
+
+      - name: Build Electron app
+        working-directory: copernicus
+        run: npm run build:app
+
+      - name: Install Playwright browsers
+        working-directory: copernicus
+        run: npx playwright install
+
+      - name: Run smoke tests
+        working-directory: copernicus
+        run: npx playwright test --project=smoke
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results
+          path: copernicus/e2e/test-results/
+
+  functional:
+    needs: smoke
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: copernicus
+        run: npm ci
+
+      - name: Build Electron app
+        working-directory: copernicus
+        run: npm run build:app
+
+      - name: Install Playwright browsers
+        working-directory: copernicus
+        run: npx playwright install
+
+      - name: Run functional tests
+        working-directory: copernicus
+        run: npx playwright test --project=functional
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-results
+          path: copernicus/e2e/test-results/
+
+  # Agent-driven tests are advisory — they don't gate merges.
+  # They require ANTHROPIC_API_KEY or Ollama to be available.
+  agent:
+    needs: functional
+    runs-on: macos-15
+    timeout-minutes: 45
+    if: ${{ vars.RUN_AGENT_TESTS == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: copernicus
+        run: npm ci
+
+      - name: Build Electron app
+        working-directory: copernicus
+        run: npm run build:app
+
+      - name: Install Playwright browsers
+        working-directory: copernicus
+        run: npx playwright install
+
+      - name: Run agent-driven tests
+        working-directory: copernicus
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COPERNICUS_E2E_AGENT: claude
+        run: npx playwright test e2e/views/
+
+      - name: Upload agent test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-results
+          path: copernicus/e2e/test-results/

@@ -1,9 +1,18 @@
-import * as pty from 'node-pty';
 import os from 'os';
 import fs from 'fs';
 import { BrowserWindow } from 'electron';
 import { PTYAuditor, securityManager } from './security';
 import log from './utils/logger';
+
+// Safe load for native module — may fail in packaged app
+let pty: typeof import('node-pty') | null = null;
+try {
+  pty = require('node-pty');
+  log.info('[PTY] node-pty loaded successfully');
+} catch (err) {
+  log.error('[PTY] FATAL: node-pty failed to load:', err);
+  pty = null;
+}
 
 const getShell = () => {
   if (os.platform() === 'win32') return 'powershell.exe';
@@ -21,7 +30,7 @@ const getShell = () => {
 const shell = getShell();
 
 export class PTYManager {
-  private sessions: Map<string, { id: string, ptyProcess: pty.IPty }> = new Map();
+  private sessions: Map<string, { id: string, ptyProcess: any /* pty.IPty */ }> = new Map();
   private auditor: PTYAuditor;
 
   constructor() {
@@ -29,6 +38,13 @@ export class PTYManager {
   }
 
   create(id: string, cols: number, rows: number, cwd: string = os.homedir(), window: BrowserWindow) {
+    if (!pty) {
+      log.error(`[PTY] Cannot create terminal ${id}: node-pty module not loaded`);
+      if (window && !window.isDestroyed()) {
+        window.webContents.send('terminal-incoming', { id, data: '\r\n\x1b[31m[ERROR] Terminal unavailable: node-pty module failed to load.\x1b[0m\r\n' });
+      }
+      return;
+    }
     if (this.sessions.has(id)) {
       log.warn(`Terminal session ${id} already exists.`);
       return;
@@ -52,7 +68,7 @@ export class PTYManager {
     }
 
     try {
-      const ptyProcess = pty.spawn(executable, args, {
+      const ptyProcess = pty?.spawn(executable, args, {
         name: 'xterm-256color',
         cols: cols,
         rows: rows,
@@ -92,7 +108,7 @@ export class PTYManager {
     // Use security manager to build environment for ephemeral runs too
     const { env } = securityManager.prepareSecureExecution(id);
 
-    const ptyProcess = pty.spawn(shell, ['-c', command], {
+    const ptyProcess = pty!.spawn(shell, ['-c', command], {
       name: 'xterm-256color',
       cols,
       rows,
@@ -163,7 +179,7 @@ export class PTYManager {
     session.ptyProcess.write(data);
   }
 
-  getPty(id: string): pty.IPty | undefined {
+  getPty(id: string): any /* pty.IPty */ | undefined {
     const session = this.sessions.get(id);
     return session?.ptyProcess;
   }

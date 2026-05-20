@@ -47,7 +47,7 @@ export function OrgChartPanel() {
   }, [invoke]);
 
   if (loading && !config) {
-    return <div className="p-8 text-zinc-500 font-mono text-sm flex items-center gap-2"><RefreshCw size={14} className="animate-spin" /> Loading Org Chart...</div>;
+    return <div data-testid="panel-org-chart" className="p-8 text-zinc-500 font-mono text-sm flex items-center gap-2"><RefreshCw size={14} className="animate-spin" /> Loading Org Chart...</div>;
   }
 
   if (!config) {

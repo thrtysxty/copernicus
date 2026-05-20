@@ -90,7 +90,7 @@ export const NotebookLMSection: React.FC<NotebookLMSectionProps> = ({ selectedNo
   }
 
   return (
-    <div className="mt-8 pt-4 border-t border-white/5">
+    <div className="mt-8 pt-4 border-t border-white/5 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Book size={14} className="text-blue-400" />

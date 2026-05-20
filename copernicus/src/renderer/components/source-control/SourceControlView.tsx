@@ -40,7 +40,7 @@ export function SourceControlView() {
   )
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
+    <div data-testid="panel-source-control" className="flex flex-col h-full w-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
       <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 shrink-0 bg-black/20">
         <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
           Source Control

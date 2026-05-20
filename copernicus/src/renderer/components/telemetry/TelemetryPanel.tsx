@@ -8,7 +8,7 @@ export const TelemetryPanel: React.FC = () => {
   const invoke = useIpcError()
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-[10px]">
+    <div data-testid="panel-telemetry" className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-[10px]">
       <div className="flex items-center gap-2 text-zinc-500 uppercase tracking-widest">
         <Activity size={12} />
         <span>Agent Telemetry</span>

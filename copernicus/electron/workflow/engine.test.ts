@@ -18,7 +18,9 @@ describe('WorkflowEngine - Step Events', () => {
     mockServices = {
       win: mockWin as any,
       fsManager: { getRootPath: vi.fn().mockReturnValue('') } as any,
-      stateLedger: { logEvent: vi.fn() } as any,
+      stateLedger: { logEvent: vi.fn(), getProjectByPath: vi.fn().mockReturnValue(null), getActiveProject: vi.fn().mockReturnValue(null) } as any,
+      memoryService: { addMemory: vi.fn().mockResolvedValue(undefined), logWork: vi.fn().mockResolvedValue(undefined) } as any,
+      snapshotManager: { beginRun: vi.fn(), endRun: vi.fn() } as any,
     };
     engine.setServices(mockServices as EngineServices);
   });

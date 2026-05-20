@@ -2,7 +2,7 @@ import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, DollarSign, Check, ArrowRight, ArrowLeft,
-         ShieldCheck, Key, Zap, Layout, Sparkles, Loader2, Monitor } from 'lucide-react';
+         ShieldCheck, Key, Zap, Layout, Sparkles, Loader2, Monitor, AlertTriangle } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc, IpcResult } from '../../types/ipc'
 import GenesisWizard from '../genesis/GenesisWizard';
@@ -60,6 +60,7 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
   const googleOAuthClientId = ''; // Static for now
   
   const [error, setError] = useState<string | null>(null);
+  const [gitWarning, setGitWarning] = useState(false);
 
   // GitHub
   const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string } | null>(null);
@@ -308,14 +309,12 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
       }
       const selectedPath = unwrapIpc<string | null>(result);
       if (selectedPath) {
-        // Step 2 Validation: Check if the selected path contains a .git directory
+        // Warn if directory contains .git, but allow proceeding
         const gitRes = await invoke<any>('fs:path-has-git', selectedPath);
         if (gitRes.ok && unwrapIpc<boolean>(gitRes)) {
-          // If it is a git repo, display an inline warning and clear workspacePath
-          setError('This directory is a git repository. COPERNICUS needs the parent folder that contains your projects, not the project itself.');
-          setWorkspacePath('');
-          return;
+          setGitWarning(true);
         } else {
+          setGitWarning(false);
           setError(null);
         }
 
@@ -944,6 +943,17 @@ const Wizard: React.FC<WizardProps> = ({ onComplete: onWizardComplete }) => {
                       </div>
                     )}
 
+                    {gitWarning && step === 2 && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mt-4">
+                        <p className="text-xs text-amber-400 font-bold uppercase tracking-wide flex items-center gap-2">
+                          <AlertTriangle size={14} /> Git Repository Detected
+                        </p>
+                        <p className="text-[10px] text-zinc-400 mt-1">
+                          This directory contains a .git folder. COPERNICUS will use it as your workspace root —
+                          subdirectories will be individual projects. This is fine if this is your Projects folder.
+                        </p>
+                      </div>
+                    )}
                     {error && step === 2 && (
                       <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center mt-4">
                         <p className="text-xs text-red-400">{error}</p>

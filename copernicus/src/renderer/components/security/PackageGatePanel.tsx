@@ -82,7 +82,7 @@ export function PackageGatePanel() {
     : 'text-red-500';
 
   return (
-    <div className="p-4 space-y-6">
+    <div data-testid="panel-package-gate" className="p-4 space-y-6">
       <h2 className="text-xl font-semibold">Package Gate Security</h2>
 
       <div className="flex items-center space-x-2">

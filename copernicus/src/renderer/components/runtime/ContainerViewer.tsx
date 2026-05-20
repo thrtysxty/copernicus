@@ -73,7 +73,7 @@ export const ContainerViewer: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#080808] text-zinc-300 font-mono text-xs">
+    <div data-testid="panel-runtime" className="flex flex-col h-full bg-[#080808] text-zinc-300 font-mono text-xs">
       <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel shrink-0">
         <span className="text-[10px] text-zinc-500 uppercase tracking-widest">CONTAINERS</span>
         <div className="flex items-center gap-1">

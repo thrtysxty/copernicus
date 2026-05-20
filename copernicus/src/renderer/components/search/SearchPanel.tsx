@@ -70,7 +70,7 @@ export const SearchPanel: React.FC = () => {
   }, {} as Record<string, SearchResult[]>)
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
+    <div data-testid="panel-search" className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
       <div className="p-4 border-b border-copernicus-steel/20 shrink-0">
         <div className="flex items-center gap-2 mb-4">
           <div className="flex bg-zinc-900 rounded p-0.5">

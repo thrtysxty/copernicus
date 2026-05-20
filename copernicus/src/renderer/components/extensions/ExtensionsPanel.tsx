@@ -106,7 +106,7 @@ export const ExtensionsPanel: React.FC = () => {
   const isInstalledCache = new Set(installed.map(e => e.name))
 
   return (
-    <div className="flex flex-col h-full bg-[#080808] text-zinc-300">
+    <div data-testid="panel-extensions" className="flex flex-col h-full bg-[#080808] text-zinc-300">
       <div className="h-10 px-4 border-b border-copernicus-steel flex items-center gap-3 shrink-0 bg-[#050505]">
         <Puzzle size={16} className="text-zinc-500" />
         <h2 className="text-xs font-mono uppercase tracking-widest text-zinc-400">Extensions</h2>

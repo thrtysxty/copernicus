@@ -73,12 +73,8 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('git:current-branch', () => handleIpc('git:current-branch', [], async () => {
-    try {
-      const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: cwd() })
-      return stdout.trim()
-    } catch {
-      return 'unknown'
-    }
+    const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: cwd() })
+    return stdout.trim()
   }))
 
   ipcMain.handle('git:list-branches', () => handleIpc('git:list-branches', [], async () => {
@@ -108,32 +104,28 @@ export function register(_win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('git:diff-file', (_e, { file }: { file: string }) => handleIpc('git:diff-file', [file], async () => {
-    try {
-      const { stdout } = await execAsync(`git diff HEAD -- "${file}"`, { cwd: cwd() })
-      return stdout
-    } catch { return '' }
+    const { stdout } = await execAsync(`git diff HEAD -- "${file}"`, { cwd: cwd() })
+    return stdout
   }))
 
   ipcMain.handle('github:list-prs', () => handleIpc('github:list-prs', [], async () => {
     // Read owner/repo from git remote
-    try {
-      const { stdout: remote } = await execAsync('git remote get-url origin', { cwd: cwd() })
-      const match = remote.match(/github\.com[:/](.+?)(?:\.git)?$/)
-      if (!match) return []
-      const repo = match[1]
-      const token = deps.authManager.getApiKey('github') ?? ''
-      const headers: Record<string,string> = { Accept: 'application/vnd.github+json' }
-      if (token) headers['Authorization'] = `Bearer ${token}`
-      const res = await fetch(`https://api.github.com/repos/${repo}/pulls?state=open&per_page=20`, { headers })
-      if (!res.ok) return []
-      const prs = await res.json() as any[]
-      return prs.map((pr: any) => ({
-        number: pr.number,
-        title: pr.title,
-        author: pr.user?.login,
-        url: pr.html_url,
-        ciStatus: pr.head?.sha ? 'unknown' : 'none'
-      }))
-    } catch { return [] }
+    const { stdout: remote } = await execAsync('git remote get-url origin', { cwd: cwd() })
+    const match = remote.match(/github\.com[:/](.+?)(?:\.git)?$/)
+    if (!match) throw new Error('No GitHub remote found')
+    const repo = match[1]
+    const token = deps.authManager.getApiKey('github') ?? ''
+    const headers: Record<string,string> = { Accept: 'application/vnd.github+json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch(`https://api.github.com/repos/${repo}/pulls?state=open&per_page=20`, { headers })
+    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`)
+    const prs = await res.json() as any[]
+    return prs.map((pr: any) => ({
+      number: pr.number,
+      title: pr.title,
+      author: pr.user?.login,
+      url: pr.html_url,
+      ciStatus: pr.head?.sha ? 'unknown' : 'none'
+    }))
   }))
 }

@@ -68,7 +68,7 @@ export const LogViewer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-mono text-[11px] overflow-hidden">
+    <div data-testid="panel-logs" className="flex flex-col h-full bg-[#050505] text-zinc-300 font-mono text-[11px] overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-3 p-2 border-b border-zinc-800 bg-[#0A0A0A] shrink-0">
         <div className="flex items-center gap-1.5 px-2 bg-black/40 border border-zinc-800 rounded h-7 w-48">

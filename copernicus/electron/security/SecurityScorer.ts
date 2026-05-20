@@ -113,10 +113,25 @@ export class SecurityScorer {
     // Apply weights
     const totalScore = (lspScore * 0.30) + (sentinelScore * 0.40) + (npmScore * 0.30);
 
-    if (totalScore >= 90) return 'A';
-    if (totalScore >= 80) return 'B';
-    if (totalScore >= 70) return 'C';
-    if (totalScore >= 60) return 'D';
+    log.info(`[SecurityScorer] Score breakdown - LSP: ${lspScore}, Sentinel: ${sentinelScore}, npm: ${npmScore}, Total: ${totalScore.toFixed(1)}`);
+
+    if (totalScore >= 90) {
+      log.info('[SecurityScorer] Grade: A (Excellent)');
+      return 'A';
+    }
+    if (totalScore >= 80) {
+      log.info('[SecurityScorer] Grade: B (Good)');
+      return 'B';
+    }
+    if (totalScore >= 70) {
+      log.info('[SecurityScorer] Grade: C (Fair)');
+      return 'C';
+    }
+    if (totalScore >= 60) {
+      log.info('[SecurityScorer] Grade: D (Poor)');
+      return 'D';
+    }
+    log.warn('[SecurityScorer] Grade: F (Failing)');
     return 'F';
   }
 
@@ -124,6 +139,8 @@ export class SecurityScorer {
     const lspErrors = this.getLspErrorCount();
     const npmAuditIssues = await this.runNpmAudit();
     const sentinelHits = this.cachedSentinelHits;
+
+    log.info(`[SecurityScorer] Computing score - LSP errors: ${lspErrors}, Sentinel hits: ${sentinelHits}, npm audit issues: ${npmAuditIssues}`);
 
     const grade = this.calculateGrade(lspErrors, sentinelHits, npmAuditIssues);
 

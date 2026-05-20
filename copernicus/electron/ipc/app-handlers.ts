@@ -4,7 +4,7 @@ import { spawn, execFile, execSync } from 'node:child_process'
 import { promisify } from 'node:util'
 import fs from 'node:fs'
 import os from 'node:os'
-import log from 'electron-log'
+import log from '../utils/logger'
 import { handleIpc } from '../utils/handle-ipc'
 import { memoryService } from '../memory/memoryService'
 import { assertSafePath } from '../utils/path-guard'
@@ -133,7 +133,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
       // Step 6: Update window title
       const name = path.basename(dirPath) || dirPath
-      win.setTitle(name)
+      win?.setTitle(name)
 
       // Step 7: Get git state
       const gitState = getGitState(dirPath)
@@ -163,7 +163,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       }
 
       // Step 9: Notify renderer
-      win.webContents.send('app:workspace-changed', workspaceState)
+      win?.webContents.send('app:workspace-changed', workspaceState)
 
       // Step 10: Log state snapshot and check for drift
       const allSources = {

@@ -84,7 +84,7 @@ export function DebugPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800 w-64 text-zinc-300">
+    <div data-testid="panel-debug" className="flex flex-col h-full bg-zinc-900 border-l border-zinc-800 w-64 text-zinc-300">
       {/* Header */}
       <div className="flex justify-between items-center p-2 border-b border-zinc-800 text-sm font-semibold uppercase tracking-wider text-zinc-400">
         Debug

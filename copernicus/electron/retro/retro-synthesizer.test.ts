@@ -6,6 +6,13 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
+// Mock electron (BrowserWindow.getAllWindows used at end of synthesize)
+vi.mock('electron', () => ({
+  BrowserWindow: {
+    getAllWindows: vi.fn().mockReturnValue([]),
+  }
+}))
+
 // Mock dependencies
 vi.mock('../db/state-ledger', () => ({
   stateLedger: {
@@ -17,6 +24,8 @@ vi.mock('../db/state-ledger', () => ({
       }),
       transaction: vi.fn((fn) => fn),
     },
+    getAgentMemoryTimeRange: vi.fn().mockReturnValue([]),
+    getAgentWorkLogTimeRange: vi.fn().mockReturnValue([]),
     createRetroReport: vi.fn().mockReturnValue('mock-retro-id'),
     pushRetroReady: vi.fn(),
   }
@@ -75,11 +84,9 @@ describe('RetroSynthesizer', () => {
       { id: 'm3', content: 'learned Z', importance: 5, ts: 102 },
     ]
     
-    // Configure mock to return these memory rows, and empty work log
-    const mockDbAll = vi.fn()
-    mockDbAll.mockReturnValueOnce(memoryRows) // memory
-    mockDbAll.mockReturnValueOnce([]) // work log
-    vi.mocked(stateLedger.db.prepare).mockReturnValue({ all: mockDbAll, run: vi.fn(), get: vi.fn(), reader: false, source: '', expanded: false, bind: vi.fn(), pluck: vi.fn(), expand: vi.fn(), raw: vi.fn(), columns: vi.fn(), iterate: vi.fn(), safeIntegers: vi.fn() } as any)
+    // Configure mock to return these memory rows via getAgentMemoryTimeRange, and empty work log
+    vi.mocked(stateLedger.getAgentMemoryTimeRange).mockReturnValue(memoryRows as any)
+    vi.mocked(stateLedger.getAgentWorkLogTimeRange).mockReturnValue([] as any)
 
     // Setup 1 prior retro
     const retrosPath = path.join(tmpDir, '.claude', 'retros')

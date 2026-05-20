@@ -4,9 +4,9 @@ import { securityManager } from '../security';
 import { SecurityScorer } from '../security/SecurityScorer';
 import * as path from 'path';
 import { app } from 'electron';
+import log from 'electron-log';
 
 let scorer: SecurityScorer | null = null;
-
 
 import * as os from 'os';
 import * as yaml from 'js-yaml';
@@ -47,12 +47,14 @@ function getSecurityConfig() {
     const doc = yaml.load(fsLib.readFileSync(SECURITY_YAML_PATH, 'utf8'), { schema: yaml.JSON_SCHEMA });
     return doc;
   } catch (e) {
+    log.error('[security-handlers] Failed to parse security.yaml, using defaults:', e);
     return DEFAULT_CONFIG;
   }
 }
 
 function updateSecurityConfig(newConfig: any) {
   fsLib.writeFileSync(SECURITY_YAML_PATH, yaml.dump(newConfig));
+  log.info('[security-handlers] Security config updated');
 }
 
 export function register() {
@@ -65,6 +67,7 @@ export function register() {
     const config = getSecurityConfig() as any;
 
     if (updates.enabled === false && !confirmed) {
+        log.warn('[security-handlers] Attempt to disable package gate without confirmation');
         throw new Error('Disabling package gate requires confirmation.');
     }
 
@@ -81,21 +84,24 @@ export function register() {
     if (!config.package_allowlist.includes(packageName)) {
         config.package_allowlist.push(packageName);
         updateSecurityConfig(config);
+        log.info('[security-handlers] Added package to allowlist:', packageName);
     }
     return config;
   }));
 
-  // Initialize scorer lazily or when registered
   const projectRoot = path.resolve(app.getAppPath(), '../../');
   if (!scorer && securityManager && securityManager.detector) {
     scorer = new SecurityScorer(securityManager.detector, projectRoot);
+    log.info('[security-handlers] SecurityScorer initialized');
   }
 
   ipcMain.handle('security:score', () => handleIpc('security:score', [], async () => {
     if (!scorer) {
       if (securityManager && securityManager.detector) {
         scorer = new SecurityScorer(securityManager.detector, projectRoot);
+        log.info('[security-handlers] Lazy-initialized SecurityScorer');
       } else {
+        log.error('[security-handlers] SecurityManager not initialized');
         throw new Error('SecurityManager not initialized');
       }
     }

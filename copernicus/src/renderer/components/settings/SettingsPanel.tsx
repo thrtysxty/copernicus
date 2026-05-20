@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { 
   X, Shield, Key, Layout, Cpu, 
   Settings, GitBranch, Workflow, FileText, 
-  Terminal, Database, User, Layers, Search, Zap, Puzzle, DollarSign, Monitor
+  Terminal, Database, User, Layers, Search, Zap, Puzzle, DollarSign, Monitor, Users, Globe
 } from 'lucide-react'
 
 // Import Sections
@@ -25,6 +25,8 @@ import { ExtensionsSection } from './sections/ExtensionsSection'
 import { SkillsSection } from './sections/SkillsSection'
 import { BillingSection } from './sections/BillingSection'
 import { DeviceSection } from './sections/DeviceSection'
+import { GovernanceSection } from './sections/GovernanceSection'
+import { ToolsSection } from './sections/ToolsSection'
 
 type TabId =
   | 'providers'
@@ -47,6 +49,8 @@ type TabId =
   | 'skills'
   | 'billing'
   | 'device'
+  | 'governance'
+  | 'tools'
 
 interface SettingsPanelProps {
   onClose: () => void
@@ -76,12 +80,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       case 'skills':      return <SkillsSection />
       case 'billing':     return <BillingSection />
       case 'device':      return <DeviceSection />
+      case 'governance':  return <GovernanceSection />
+      case 'tools':       return <ToolsSection />
       default:            return <ProvidersSection />
     }
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center bg-black/60 backdrop-blur-md overflow-y-auto py-4 px-12">
+    <div data-testid="panel-settings" className="fixed inset-0 z-[200] flex items-start justify-center bg-black/60 backdrop-blur-md overflow-y-auto py-4 px-12">
       <div className="bg-[#0A0A0A] border border-zinc-800 w-full max-w-5xl h-[700px] max-h-[calc(100vh-2rem)] flex flex-col shadow-2xl rounded-xl overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header */}
@@ -122,7 +128,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
 
             <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
             <TabButton id="security" label="Security" icon={<Shield size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="governance" label="Governance" icon={<Users size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="extensions" label="Extensions" icon={<Puzzle size={14} />} active={activeTab} onClick={setActiveTab} />
+            <TabButton id="tools" label="Tools" icon={<Globe size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="environment" label="Environment" icon={<Terminal size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="hardware" label="Hardware" icon={<Cpu size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="data" label="State & Data" icon={<Database size={14} />} active={activeTab} onClick={setActiveTab} />

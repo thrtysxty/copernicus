@@ -447,15 +447,15 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
 
 
   return (
-    <div className="flex h-full w-full bg-[#050505] text-zinc-300 font-sans relative z-10">
+    <div data-testid="panel-intelligence" className="flex h-full w-full bg-[#050505] text-zinc-300 font-sans relative z-10">
       {/* Left Rail */}
-      <div className="w-64 flex flex-col border-r border-white/5 bg-zinc-950 shrink-0">
+      <div data-testid="panel-intelligence-sidebar" className="w-64 flex flex-col border-r border-white/5 bg-zinc-950 shrink-0">
         <div className="p-3 border-b border-white/5 flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Intelligence</h2>
           {onClose && (
             <button
               onClick={onClose}
-              className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider font-bold transition-colors"
+              className="flex items-center gap-1 text-[10px] text-zinc-300 hover:text-white uppercase tracking-wider font-bold transition-colors"
               title="Close"
             >
               <X size={14} /> Close
@@ -557,7 +557,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
       </div>
 
       {/* Right Pane - Editor */}
-      <div className="flex-1 flex flex-col bg-[#050505] overflow-hidden">
+      <div data-testid="panel-intelligence-editor" className="flex-1 flex flex-col bg-[#050505] overflow-hidden">
         {documents.length === 0 && suggestions.length > 0 && !hasDismissedSuggestions && (
           <IntelligenceSuggestBanner
             suggestions={suggestions}

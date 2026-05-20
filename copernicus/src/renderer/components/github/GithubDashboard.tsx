@@ -179,7 +179,7 @@ export const GithubDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="h-full flex flex-col bg-copernicus-bg text-zinc-300 relative overflow-hidden font-sans">
+    <div data-testid="panel-github" className="h-full flex flex-col bg-copernicus-bg text-zinc-300 relative overflow-hidden font-sans">
 
       {/* Header */}
       <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel bg-copernicus-bg/50 backdrop-blur-sm flex-shrink-0">

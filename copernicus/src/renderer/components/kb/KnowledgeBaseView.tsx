@@ -42,7 +42,7 @@ export const KnowledgeBaseView: React.FC = () => {
   }, [])
 
   return (
-    <div className="flex h-full w-full bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
+    <div data-testid="panel-knowledge-base" className="flex h-full w-full bg-copernicus-bg text-zinc-300 font-sans overflow-hidden">
       {/* Sidebar for Content Tree */}
       <KbTree
         activeArticleId={activeKbArticleId}

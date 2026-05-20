@@ -274,7 +274,7 @@ Output ONLY valid JSON. No markdown formatting, no explanations.`
 
     // Notify renderer
     stateLedger.pushRetroReady(reportId)
-    const win = require('electron').BrowserWindow.getAllWindows()[0]
+    const win = (require('electron') as any).BrowserWindow?.getAllWindows()?.[0]
     if (win) {
         win.webContents.send('retro:ready', { reportId })
     }

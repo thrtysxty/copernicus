@@ -4,6 +4,7 @@ import { randomBytes, createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { handleIpc } from '../utils/handle-ipc'
+import log from '../utils/logger'
 
 import { IpcHandlerDeps } from './deps'
 
@@ -12,7 +13,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
 
   // ── Anthropic: API key only — no OAuth ────────
   ipcMain.handle('oauth:start-anthropic', () => handleIpc('oauth:start-anthropic', [], () => {
-    throw new Error('Anthropic does not support OAuth. Paste your API key from console.anthropic.com/settings/keys into the Providers settings panel.')
+    return { ok: false, error: 'Anthropic does not support OAuth. Paste your API key from console.anthropic.com/settings/keys into the Providers settings panel.' }
   }))
 
   // ── OpenRouter OAuth ──────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }))
 
   ipcMain.handle('oauth:start-google', () => handleIpc('oauth:start-google', [], () => {
-    throw new Error('Use app:start-oauth-listener instead')
+    return { ok: false, error: 'Use app:start-oauth-listener instead' }
   }))
 
   // Auth Handlers
@@ -180,7 +181,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const cloudHost = authManager.getBaseUrl('ollama') || 'https://ollama.com'
     const res = await fetch(`${cloudHost}/api/tags`, {
       headers: { Authorization: `Bearer ${key}` }
-    }).catch(() => null)
+    }).catch((err) => { log.error('[auth:validate-ollama-cloud]', err); return null; })
     return res?.ok ?? false
   }))
 

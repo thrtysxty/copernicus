@@ -102,7 +102,7 @@ export function HubLedgerPanel() {
   });
 
   return (
-    <div className="h-full flex flex-col bg-[#1A1A1A] text-[#E0E0E0] overflow-hidden">
+    <div data-testid="panel-hub" className="h-full flex flex-col bg-[#1A1A1A] text-[#E0E0E0] overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-2 bg-[#252525] border-b border-zinc-800 shrink-0">
         <button
           className={`px-3 py-1 text-sm font-medium transition-colors ${activeTab === 'events' ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-500 hover:text-zinc-300'}`}

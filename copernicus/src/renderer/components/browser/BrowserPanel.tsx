@@ -47,7 +47,7 @@ export const BrowserPanel: React.FC = () => {
   const truncatedSnapshot = snapshot ? JSON.stringify(snapshot, null, 2).substring(0, 10000) + (JSON.stringify(snapshot).length > 10000 ? '\n... (truncated)' : '') : null;
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 text-zinc-300 p-4 font-mono text-sm">
+    <div data-testid="panel-browser" className="flex flex-col h-full bg-zinc-900 text-zinc-300 p-4 font-mono text-sm">
       <div className="flex items-center space-x-2 mb-4">
         <input
           type="text"

@@ -37,7 +37,9 @@ describe('ProvidersSection', () => {
           return { ok: true, data: { claude: true } }
         case 'providers:list':
           // Missing deliberately to test fallback to canonical array
-          return { ok: false }
+          return { ok: false, error: 'not found' }
+        case 'providers:reload':
+          return { ok: true, data: { ok: true, count: 0 } }
         case 'settings:load':
           return { ok: true, data: {} }
         case 'notebooklm:status':

@@ -4,6 +4,7 @@ import { GitGuard, ConfirmationProvider } from './git-guard';
 import { buildSafeEnv } from './env-sanitizer';
 import * as path from 'path';
 import { app } from 'electron';
+import log from '../utils/logger';
 
 export class SecurityManager {
   public detector: PatternDetector;
@@ -26,6 +27,8 @@ export class SecurityManager {
     const env = buildSafeEnv(agentId);
     const sandboxPrefix = this.sandbox.generateProfile(agentId, this.projectRoot);
 
+    log.info(`[SecurityManager] Prepared secure execution for ${agentId} - sandbox: ${sandboxPrefix.length > 0 ? 'enabled' : 'disabled'}`);
+
     return {
       env,
       sandboxPrefix
@@ -37,6 +40,7 @@ export class SecurityManager {
    * Fires alert events and writes to security log via PatternDetector.
    */
   public analyseData(agentId: string, data: string): void {
+    log.debug(`[SecurityManager] Analysing ${data.length} bytes from ${agentId}`);
     this.detector.detect(agentId, data);
   }
 
@@ -44,7 +48,10 @@ export class SecurityManager {
    * Checks if a git command is safe to execute.
    */
   public async checkGitCommand(agentId: string, command: string) {
-    return await this.gitGuard.check(agentId, command);
+    log.info(`[SecurityManager] Git command check for ${agentId}: ${command.substring(0, 50)}...`);
+    const result = await this.gitGuard.check(agentId, command);
+    log.info(`[SecurityManager] Git command ${result ? 'ALLOWED' : 'BLOCKED'}`);
+    return result;
   }
 }
 

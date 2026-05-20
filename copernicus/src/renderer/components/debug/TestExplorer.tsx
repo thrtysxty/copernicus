@@ -98,7 +98,7 @@ export const TestExplorer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans text-sm">
+    <div data-testid="panel-test-explorer" className="flex flex-col h-full bg-[#050505] text-zinc-300 font-sans text-sm">
       <div className="flex items-center justify-between p-3 border-b border-copernicus-steel shrink-0 bg-[#080808]">
         <div className="font-medium text-white flex items-center gap-2">
           <FileText size={16} className="text-copernicus-phosphor" />

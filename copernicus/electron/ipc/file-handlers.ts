@@ -111,17 +111,22 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     if (!root) throw new Error('NO_ROOT')
     const results: { path: string, size: number }[] = []
     
+    const skipDirs = new Set(['node_modules', '.git', 'dist', 'release', '.build', 'checkouts', 'DerivedData', '.cache', '__pycache__'])
     const walk = (dir: string) => {
-      const entries = fs.readdirSync(dir, { withFileTypes: true })
+      let entries: fs.Dirent[]
+      try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return }
       for (const entry of entries) {
+        if (entry.isSymbolicLink()) continue
         const fullPath = path.join(dir, entry.name)
         if (entry.isDirectory()) {
-          if (['node_modules', '.git', 'dist', 'release'].includes(entry.name)) continue
+          if (skipDirs.has(entry.name)) continue
           walk(fullPath)
         } else {
           if (/\.(ts|tsx|py)$/.test(entry.name)) {
-            const stats = fs.statSync(fullPath)
-            results.push({ path: fullPath, size: stats.size })
+            try {
+              const stats = fs.lstatSync(fullPath)
+              results.push({ path: fullPath, size: stats.size })
+            } catch { /* skip unreadable files */ }
           }
         }
       }

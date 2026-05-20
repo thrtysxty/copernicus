@@ -84,7 +84,7 @@ export const GitPanel: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
+    <div data-testid="panel-git" className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
       <div className="p-4 border-b border-copernicus-steel/20 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <BranchSelector onBranchChange={refresh} />

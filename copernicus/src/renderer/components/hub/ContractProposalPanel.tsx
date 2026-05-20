@@ -107,7 +107,7 @@ export function ContractProposalPanel() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#050505] overflow-y-auto overflow-x-hidden p-8">
+    <div data-testid="panel-contract-proposals" className="flex-1 flex flex-col bg-[#050505] overflow-y-auto overflow-x-hidden p-8">
 
       {/* PENDING SECTION */}
       <div className="mb-12">

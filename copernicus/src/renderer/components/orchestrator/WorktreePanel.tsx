@@ -77,7 +77,7 @@ export const WorktreePanel: React.FC = () => {
   }
 
   return (
-    <div className="bg-zinc-950 border-t border-zinc-800">
+    <div data-testid="panel-worktree" className="bg-zinc-950 border-t border-zinc-800">
       <div className="h-9 bg-[#080808] border-t border-zinc-800 flex items-center px-2">
         <GitBranch size={12} className="text-copernicus-phosphor mr-1" />
         <span className="font-mono text-[10px] uppercase tracking-[0.2em] font-black text-copernicus-phosphor mr-2">

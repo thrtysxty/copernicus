@@ -136,7 +136,7 @@ export const ReviewPanel: React.FC = () => {
   const allFilesInScope = new Set(stories.flatMap(s => s.filesInScope || []))
 
   return (
-    <div className="h-full flex flex-col bg-[#050505] font-mono text-zinc-400">
+    <div data-testid="panel-review" className="h-full flex flex-col bg-[#050505] font-mono text-zinc-400">
       <header className="h-12 border-b border-copernicus-steel/30 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
           <Diff size={16} className="text-copernicus-phosphor" />

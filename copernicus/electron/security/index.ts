@@ -5,6 +5,7 @@ export * from './git-guard';
 export * from './sandbox-manager';
 export * from './security-manager';
 import { handleIpc } from '../utils/handle-ipc';
+import log from '../utils/logger';
 
 /**
  * Registers IPC handlers for security-related features.
@@ -14,6 +15,8 @@ import { handleIpc } from '../utils/handle-ipc';
  * @param store A persistent store instance (e.g., electron-store or similar) for settings.
  */
 export function registerSecurityHandlers(ipcMain: any, store: any) {
+  log.info('[Security] Registering security IPC handlers');
+  
   // Environment Allowlist Management
   ipcMain.handle('security:get-env-allowlist', (_: any) =>
     handleIpc(() => store.get('security.envAllowlist', []))
@@ -22,7 +25,11 @@ export function registerSecurityHandlers(ipcMain: any, store: any) {
   ipcMain.handle('security:add-env-var', (_: any, key: string) =>
     handleIpc(() => {
       const list = store.get('security.envAllowlist', []) as string[];
-      if (!list.includes(key)) { list.push(key); store.set('security.envAllowlist', list); }
+      if (!list.includes(key)) {
+        list.push(key);
+        store.set('security.envAllowlist', list);
+        log.info(`[Security] Added ${key} to environment allowlist`);
+      }
       return list;
     })
   );
@@ -30,7 +37,10 @@ export function registerSecurityHandlers(ipcMain: any, store: any) {
   ipcMain.handle('security:remove-env-var', (_: any, key: string) =>
     handleIpc(() => {
       const list = (store.get('security.envAllowlist', []) as string[]).filter((k: string) => k !== key);
-      store.set('security.envAllowlist', list);
+      if (list.length < (store.get('security.envAllowlist', []) as string[]).length) {
+        store.set('security.envAllowlist', list);
+        log.info(`[Security] Removed ${key} from environment allowlist`);
+      }
       return list;
     })
   );
@@ -41,6 +51,10 @@ export function registerSecurityHandlers(ipcMain: any, store: any) {
   );
 
   ipcMain.handle('security:set-sandbox-enabled', (_: any, agentId: string, enabled: boolean) =>
-    handleIpc(() => { store.set(`security.sandbox.${agentId}`, enabled); return enabled; })
+    handleIpc(() => {
+      store.set(`security.sandbox.${agentId}`, enabled);
+      log.info(`[Security] Sandbox ${enabled ? 'enabled' : 'disabled'} for ${agentId}`);
+      return enabled;
+    })
   );
 }

@@ -47,9 +47,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       }
     }
 
-    llmService.streamChat(payload).then(() => {
-      // The service streamChat has finished. Wait for its broadcast to complete.
-    }).catch((err: unknown) => log.error('[LLM] streamChat error:', err))
+    await llmService.streamChat(payload)
     return { ok: true }
   }))
 

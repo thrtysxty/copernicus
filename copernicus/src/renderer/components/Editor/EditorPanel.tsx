@@ -34,7 +34,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
 
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#050505] min-w-0 overflow-hidden">
+    <div data-testid="panel-editor" className="flex flex-col h-full w-full bg-[#050505] min-w-0 overflow-hidden">
       <div className="flex-1 overflow-hidden">
         <MonacoEditor
           filePath={filePath}

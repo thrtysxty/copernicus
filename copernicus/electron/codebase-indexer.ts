@@ -219,10 +219,9 @@ export class CodebaseIndexer {
       
       if (!symbolsIndexed) {
         log.warn('[Indexer] LSP indexing returned no symbols, falling back to walk()...')
-        const files = this.walk(rootPath).filter(f =>
-          ['.ts', '.tsx', '.py', '.md', '.json', '.sql'].includes(path.extname(f)) &&
-          !f.includes('node_modules') && !f.includes('.git')
-        )
+        const exts = new Set(['.ts', '.tsx', '.py', '.md', '.json', '.sql'])
+        const files = this.walk(rootPath).filter(f => exts.has(path.extname(f)))
+
 
         this.totalFiles = files.length
 
@@ -342,15 +341,25 @@ export class CodebaseIndexer {
     return ranked.slice(0, topK)
   }
 
+  private static readonly SKIP_DIRS = new Set(['node_modules', '.git', '.build', 'checkouts', 'DerivedData', '.cache', 'dist', 'release', '__pycache__'])
+
   private walk(dir: string): string[] {
-    let results: string[] = []
-    const list = fs.readdirSync(dir)
-    list.forEach(file => {
-      file = path.join(dir, file)
-      const stat = fs.statSync(file)
-      if (stat && stat.isDirectory()) results = results.concat(this.walk(file))
-      else results.push(file)
-    })
+    const results: string[] = []
+    let list: string[]
+    try { list = fs.readdirSync(dir) } catch { return results }
+    for (const name of list) {
+      const fullPath = path.join(dir, name)
+      try {
+        const stat = fs.lstatSync(fullPath)
+        if (stat.isSymbolicLink()) continue
+        if (stat.isDirectory()) {
+          if (CodebaseIndexer.SKIP_DIRS.has(name)) continue
+          results.push(...this.walk(fullPath))
+        } else {
+          results.push(fullPath)
+        }
+      } catch { continue }
+    }
     return results
   }
 }

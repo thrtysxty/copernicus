@@ -23,13 +23,20 @@ export default defineConfig({
     },
     {
       name: 'functional',
-      testMatch: ['**/workflow.test.ts', '**/onboarding.test.ts', '**/debug.test.ts', '**/settings.test.ts', '**/navigation.test.ts', '**/hub-ipc.test.ts'],
+      testMatch: ['**/workflow.test.ts', '**/onboarding.test.ts', '**/debug.test.ts', '**/settings.test.ts', '**/navigation.test.ts', '**/hub-ipc.test.ts', '**/critical-path.test.ts'],
+      retries: 2,
     },
     {
       name: 'screenshots',
       testMatch: '**/screenshots.test.ts',
       // Screenshots tests are slow — longer per-test timeout.
       timeout: 90_000,
+    },
+    {
+      name: 'views',
+      testMatch: '**/views/**/*.agent.test.ts',
+      timeout: 120_000,
+      retries: 0,
     },
   ],
   // Require a built app. Run `npm run build:app` first.

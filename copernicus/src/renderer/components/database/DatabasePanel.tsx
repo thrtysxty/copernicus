@@ -72,7 +72,7 @@ export default function DatabasePanel() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-zinc-300 p-6 overflow-hidden">
+    <div data-testid="panel-database" className="flex flex-col h-full bg-[#050505] text-zinc-300 p-6 overflow-hidden">
       <div className="flex items-center space-x-2 mb-6">
         <Database className="text-copernicus-phosphor w-5 h-5" />
         <h2 className="text-lg font-mono tracking-wider text-zinc-100">DATABASE QUERY MCP</h2>

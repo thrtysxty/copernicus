@@ -454,7 +454,7 @@ export function CenterPanelRouter({
   }, [language, filePath, setCenterMode])
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden relative">
+    <div data-testid="panel-editor" className="flex flex-col h-full w-full overflow-hidden relative">
       <CenterPanelHeader
         ghostMode={ghostMode}
         setGhostMode={setGhostMode}

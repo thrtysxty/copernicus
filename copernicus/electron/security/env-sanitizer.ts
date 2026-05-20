@@ -84,9 +84,17 @@ export function buildSafeEnv(_agentId: string, allowList: string[] = []): NodeJS
   const originalEnv = process.env;
 
   // 1. Start with passthrough variables (these are internal and trusted)
+  // Validate values against patterns to ensure security
   for (const key of PASSTHROUGH_VARS) {
     if (originalEnv[key] !== undefined) {
-      safeEnv[key] = originalEnv[key];
+      const pattern = VALUE_PATTERNS[key];
+      if (pattern && pattern.test(originalEnv[key]!)) {
+        safeEnv[key] = originalEnv[key];
+      } else if (pattern) {
+        log.warn(`[Security] Environment variable ${key} excluded: invalid value format`);
+      } else {
+        safeEnv[key] = originalEnv[key]; // No pattern defined, pass through
+      }
     }
   }
 

@@ -11,26 +11,39 @@ interface PendingRequest {
 }
 
 function getLspScriptPath(): string {
-  const base = app.isPackaged
-    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'typescript-language-server')
-    : path.join(app.getAppPath(), 'node_modules', 'typescript-language-server')
+  // Search multiple possible locations for the typescript-language-server package.
+  // In packaged apps, it may be in app.asar.unpacked, app.asar, or directly in resources.
+  // In development, it lives in the project node_modules.
+  const candidates = app.isPackaged
+    ? [
+        path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'typescript-language-server'),
+        path.join(process.resourcesPath, 'app.asar', 'node_modules', 'typescript-language-server'),
+        path.join(process.resourcesPath, 'node_modules', 'typescript-language-server'),
+      ]
+    : [
+        path.join(app.getAppPath(), 'node_modules', 'typescript-language-server'),
+      ]
 
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf-8'))
-    const binEntry: string | undefined = typeof pkg.bin === 'string'
-      ? pkg.bin
-      : pkg.bin?.['typescript-language-server']
-    if (binEntry) return path.join(base, binEntry)
-  } catch {
-    // fallthrough to default
+  for (const base of candidates) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf-8'))
+      const binEntry: string | undefined = typeof pkg.bin === 'string'
+        ? pkg.bin
+        : pkg.bin?.['typescript-language-server']
+      if (binEntry) {
+        const scriptPath = path.join(base, binEntry)
+        if (fs.existsSync(scriptPath)) return scriptPath
+      }
+    } catch {
+      // package.json not found at this path, try next candidate
+    }
+    // Common locations for v4+
+    for (const c of ['lib/cli.mjs', 'lib/cli.js']) {
+      const p = path.join(base, c)
+      if (fs.existsSync(p)) return p
+    }
   }
-  // Common locations for v4+
-  const candidates = ['lib/cli.mjs', 'lib/cli.js']
-  for (const c of candidates) {
-    const p = path.join(base, c)
-    if (fs.existsSync(p)) return p
-  }
-  throw new Error(`[LSP] Cannot locate typescript-language-server entry in ${base}`)
+  throw new Error(`[LSP] Cannot locate typescript-language-server in any of: ${candidates.join(', ')}`)
 }
 
 export type LspProcessStatus = 'running' | 'restarting' | 'dead' | 'stopped'
