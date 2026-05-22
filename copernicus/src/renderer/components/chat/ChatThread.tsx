@@ -78,7 +78,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
       } else {
         confirmApply()
       }
-    } catch (err) { console.warn("[Non-critical]", err) }
+    } catch (err) { log.warn("[Non-critical]", err) }
   }
 
   const handlePreview = () => {

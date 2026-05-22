@@ -86,7 +86,7 @@ export function RoleCard({ roleName, roleConfig, activeToken, isReadOnly, onUpda
   };
 
   const openContract = () => {
-    invoke('fs:open-file', roleConfig.contract).catch(console.error);
+    invoke('fs:open-file', roleConfig.contract).catch(log.error);
   };
 
   const minutesRemaining = activeToken ? Math.max(0, Math.floor((activeToken.expires_at * 1000 - Date.now()) / 60000)) : 0;
