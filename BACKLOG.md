@@ -133,6 +133,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #694 | Missing Intelligence Documents Table | COMPLETE | N/A |
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
 | #703 | Pre Commit Secret Scanner | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
+| #725 | Ipc Handler Compliance Sweep | APPROVED FOR IMPLEMENTATION | P1 — Open source release gate |
+| #726 | Renderer Ipc Compliance Sweep | APPROVED FOR IMPLEMENTATION | P1 — Open source release gate |
+| #727 | Worktree Handler Tests | APPROVED FOR IMPLEMENTATION | P1 — Core flow coverage |
+| #728 | Kanban Story Filter | APPROVED FOR IMPLEMENTATION | P2 — Feature |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -623,6 +627,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #718 | Chat Panel Tests | READY | P1 — Core flow coverage |
 | #719 | E2E Agent Run Spec | READY | P1 — Core flow coverage |
 | #720 | Backend Registry Hot Swap Tests | READY | P1 — Core flow coverage |
+| #721 | Tsc Handler Undefined Errors | READY | P0 — Blocks CI tsc gate (Story 707) |
+| #722 | Tsc Missing Module Security Test | READY | P0 — Blocks CI tsc gate (Story 707) |
+| #723 | Tsc Mock Type Mismatches | READY | P0 — Blocks CI tsc gate (Story 707) |
+| #724 | Tsc Security Test Cleanup | READY | P1 — Blocks tsc gate |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 
