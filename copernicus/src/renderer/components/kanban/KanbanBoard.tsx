@@ -224,6 +224,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const [onboardingStackProfile, setOnboardingStackProfile] = useState<any | null>(null)
   const [showSkillModal, setShowSkillModal] = useState(false)
   const [isSkillOnboardingDismissed, setIsSkillOnboardingDismissed] = useState(false)
+  const [filterQuery, setFilterQuery] = useState('')
 
   // Sync cache data to stories state when cache resolves (AC5)
   useEffect(() => {
@@ -478,6 +479,33 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
         </div>
       )}
 
+      {/* Filter Bar */}
+      <div className="flex items-center px-3 py-2 border-b border-white/5 bg-zinc-950 shrink-0">
+        <div className="relative w-full max-w-md">
+          <input
+            data-testid="kanban-filter"
+            aria-label="Filter stories"
+            type="text"
+            placeholder="Filter stories…"
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setFilterQuery('')
+            }}
+            className="w-full bg-zinc-900 border border-white/10 rounded px-2.5 py-1 text-[10px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-copernicus-phosphor/50 transition-colors"
+          />
+          {filterQuery && (
+            <button
+              data-testid="kanban-filter-clear"
+              onClick={() => setFilterQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Target Repo Warning Overlay */}
       {isRepoTargeted === false && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-8">
@@ -507,8 +535,15 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
           />
         )}
         {(columns || []).map(col => {
-          const colStories = (stories || []).filter(s => s.status === col.status && s.type !== 'Epic')
+          let colStories = (stories || []).filter(s => s.status === col.status && s.type !== 'Epic')
             .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 4) - (PRIORITY_ORDER[b.priority] ?? 4))
+
+          const hasStoriesBeforeFilter = colStories.length > 0
+
+          if (filterQuery) {
+            const query = filterQuery.toLowerCase()
+            colStories = colStories.filter(s => stripStoryPrefix(s.title).toLowerCase().includes(query))
+          }
 
           const isSpotlit = spotlightLane === col.id
           const isCollapsed = spotlightLane !== null && !isSpotlit
@@ -670,6 +705,11 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                       />
                     ))}
                     
+                    {hasStoriesBeforeFilter && colStories.length === 0 && filterQuery && (
+                      <div className="flex justify-center p-4">
+                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">No matches</span>
+                      </div>
+                    )}
                   </div>
 
                 </>
