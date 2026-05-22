@@ -604,6 +604,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #571 | Repo Hygiene Ghost Script Cleanup | COMPLETED | P2 |
 | #625 | Roca Contract Validation Draft | DEFERRED — Phase 8 | P3 |
 | #569 | Kb Local Voting | DEFERRED — post-ship, backlog after toolchain and extension system | P3 |
+| #705 | Context Authority Layer | DRAFT | P1 — Token efficiency / infrastructure |
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
