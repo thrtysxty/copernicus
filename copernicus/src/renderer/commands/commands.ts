@@ -1,13 +1,8 @@
 import { commandRegistry, Command, CommandContext } from './registry';
 import log from '../utils/logger'
 
-const sendToTerminal = (terminalId: string, text: string) => {
-  const ipcRenderer = window.ipcRenderer;
-  if (ipcRenderer) {
-    ipcRenderer.send('terminal:write', { id: terminalId, data: text + '\r' });
-  } else {
-    log.warn('ipcRenderer not found, cannot send to terminal:', terminalId, text);
-  }
+const sendToTerminal = (terminalId: string, text: string, ctx: CommandContext) => {
+  ctx.send('terminal-write', { id: terminalId, data: text + '\r' });
 };
 
 const commands: Command[] = [
@@ -17,7 +12,7 @@ const commands: Command[] = [
     execute: (args: string, ctx: CommandContext) => {
       // In Story 077/082 context, active terminal is tracked
       const activeTerminal = 'claude'; // Mock default
-      sendToTerminal(activeTerminal, `/architect ${args}`);
+      sendToTerminal(activeTerminal, `/architect ${args}`, ctx);
       ctx.appendMessage('assistant', `Dispatched to architect: ${args}`);
     }
   },
@@ -25,7 +20,7 @@ const commands: Command[] = [
     name: '/senior',
     description: 'Dispatch to active terminal',
     execute: (args: string, ctx: CommandContext) => {
-      sendToTerminal('claude', `/senior ${args}`);
+      sendToTerminal('claude', `/senior ${args}`, ctx);
       ctx.appendMessage('assistant', `Dispatched to senior: ${args}`);
     }
   },
@@ -35,7 +30,7 @@ const commands: Command[] = [
     execute: (args: string, ctx: CommandContext) => {
       const agentMatch = args.match(/agent=(\w+)/);
       const targetAgent = (agentMatch && agentMatch[1]) ? agentMatch[1] : 'jules';
-      sendToTerminal(targetAgent, `/delegate ${args}`);
+      sendToTerminal(targetAgent, `/delegate ${args}`, ctx);
       ctx.appendMessage('assistant', `Delegated to ${targetAgent}: ${args}`);
     }
   },

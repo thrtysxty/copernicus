@@ -313,7 +313,14 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       getCurrentModel: () => model,
       setBackTab: (tab: any) => setActiveBackTab(tab),
       flip: () => toggleFlip('chat'),
-      invoke
+      invoke,
+      send: (channel: string, ...args: unknown[]) => {
+        if (window.ipcRenderer) {
+          window.ipcRenderer.send(channel, ...args)
+        } else {
+          log.warn('ipcRenderer not found, cannot send:', channel, args)
+        }
+      }
     }
     if (currentInput.startsWith('/')) { if (commandRegistry.execute(currentInput, cmdContext)) { setInput(''); setShowSuggestions(false); return } }
     setMessages(prev => [...prev, { 

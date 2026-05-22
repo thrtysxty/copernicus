@@ -16,6 +16,7 @@ export interface CommandContext {
   setBackTab: (tab: string) => void
   flip: () => void
   invoke: <T = unknown>(channel: string, ...args: unknown[]) => Promise<T>
+  send: (channel: string, ...args: unknown[]) => void
 }
 
 class CommandRegistry {
