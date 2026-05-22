@@ -108,7 +108,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:check-repo']
+      const handler = handlers['git:check-repo']!
       const result = await handler({} as any, { path: '/test/project' })
 
       expect(result.ok).toBe(true)
@@ -124,7 +124,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:check-repo']
+      const handler = handlers['git:check-repo']!
       const result = await handler({} as any, { path: '/tmp' })
 
       expect(result.ok).toBe(true)
@@ -142,7 +142,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:current-branch']
+      const handler = handlers['git:current-branch']!
       const result = await handler({} as any)
 
       expect(result.ok).toBe(true)
@@ -158,7 +158,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:current-branch']
+      const handler = handlers['git:current-branch']!
       const result = await handler({} as any)
 
       expect(result.ok).toBe(false)
@@ -176,7 +176,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:diff-file']
+      const handler = handlers['git:diff-file']!
       const result = await handler({} as any, { file: 'src/test.ts' })
 
       expect(result.ok).toBe(true)
@@ -192,7 +192,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:diff-file']
+      const handler = handlers['git:diff-file']!
       const result = await handler({} as any, { file: 'missing.ts' })
 
       expect(result.ok).toBe(false)
@@ -210,7 +210,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:stage']
+      const handler = handlers['git:stage']!
       const result = await handler({} as any, { file: 'src/test.ts' })
 
       expect(result.ok).toBe(true)
@@ -227,7 +227,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:checkout']
+      const handler = handlers['git:checkout']!
       const result = await handler({} as any, { branch: 'main' })
 
       expect(result.ok).toBe(true)
@@ -244,7 +244,7 @@ describe('git-handlers', () => {
       const register = await getRegister()
       register({} as BrowserWindow, mockDeps as any)
 
-      const handler = handlers['git:new-branch']
+      const handler = handlers['git:new-branch']!
       const result = await handler({} as any, { name: 'feature/new' })
 
       expect(result.ok).toBe(true)

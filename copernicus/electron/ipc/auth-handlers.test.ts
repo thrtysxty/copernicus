@@ -62,7 +62,7 @@ describe('auth-handlers', () => {
     mockWin = {
       webContents: {
         send: vi.fn(),
-      },
+      } as unknown as import('electron').WebContents,
       show: vi.fn(),
       focus: vi.fn(),
     }
@@ -146,7 +146,7 @@ describe('auth-handlers', () => {
 
       it('returns error object instead of throwing', async () => {
         register(mockWin as any, mockDeps)
-        const handler = handlers['oauth:start-anthropic']
+        const handler = handlers['oauth:start-anthropic']!
         if (!handler) throw new Error('handler not registered: oauth:start-anthropic')
         const result = await handler({})
 
@@ -164,7 +164,7 @@ describe('auth-handlers', () => {
 
       it('returns error object instead of throwing', async () => {
         register(mockWin as any, mockDeps)
-        const handler = handlers['oauth:start-google']
+        const handler = handlers['oauth:start-google']!
         if (!handler) throw new Error('handler not registered: oauth:start-google')
         const result = await handler({})
 
@@ -220,7 +220,7 @@ describe('auth-handlers', () => {
     it('auth:status calls authManager.getAuthStatus', async () => {
       mockDeps.authManager.getAuthStatus.mockResolvedValue({ authenticated: true })
       register(mockWin as any, mockDeps)
-      const handler = handlers['auth:status']
+      const handler = handlers['auth:status']!
       if (!handler) throw new Error('handler not registered: auth:status')
       await handler({})
       expect(mockDeps.authManager.getAuthStatus).toHaveBeenCalled()
@@ -228,7 +228,7 @@ describe('auth-handlers', () => {
 
     it('auth:store-api-key stores key and reinitializes Jules client', async () => {
       register(mockWin as any, mockDeps)
-      const handler = handlers['auth:store-api-key']
+      const handler = handlers['auth:store-api-key']!
       if (!handler) throw new Error('handler not registered: auth:store-api-key')
       await handler({}, 'jules', 'test-key', 'https://jules.example.com')
       expect(mockDeps.authManager.storeApiKey).toHaveBeenCalledWith('jules', 'test-key', 'https://jules.example.com', 'apikey')
@@ -237,7 +237,7 @@ describe('auth-handlers', () => {
 
     it('auth:revoke calls authManager.revokeApiKey', async () => {
       register(mockWin as any, mockDeps)
-      const handler = handlers['auth:revoke']
+      const handler = handlers['auth:revoke']!
       await handler({}, 'openai')
       expect(mockDeps.authManager.revokeApiKey).toHaveBeenCalledWith('openai')
     })
@@ -245,7 +245,7 @@ describe('auth-handlers', () => {
     it('auth:get-api-key returns null for openai provider', async () => {
       mockDeps.authManager.resolveOpenAICompatibleKey.mockReturnValue(null)
       register(mockWin as any, mockDeps)
-      const handler = handlers['auth:get-api-key']
+      const handler = handlers['auth:get-api-key']!
       const result = await handler({}, 'openai')
       expect(result.ok).toBe(true)
       expect(result.data).toBeNull()
@@ -254,7 +254,7 @@ describe('auth-handlers', () => {
     it('auth:get-api-key returns resolved key for openrouter provider', async () => {
       mockDeps.authManager.resolveOpenAICompatibleKey.mockReturnValue({ key: 'or-key' })
       register(mockWin as any, mockDeps)
-      const handler = handlers['auth:get-api-key']
+      const handler = handlers['auth:get-api-key']!
       const result = await handler({}, 'openrouter')
       expect(result.ok).toBe(true)
       expect(result.data).toBe('or-key')
@@ -263,7 +263,7 @@ describe('auth-handlers', () => {
     it('auth:resolve-openai-config returns resolved config', async () => {
       mockDeps.authManager.resolveOpenAICompatibleKey.mockReturnValue({ key: 'test', baseUrl: 'https://api.test.com' })
       register(mockWin as any, mockDeps)
-      const handler = handlers['auth:resolve-openai-config']
+      const handler = handlers['auth:resolve-openai-config']!
       const result = await handler({})
       expect(result.ok).toBe(true)
       expect(result.data).toEqual({ key: 'test', baseUrl: 'https://api.test.com' })
@@ -273,7 +273,7 @@ describe('auth-handlers', () => {
       it('returns false when no key exists', async () => {
         mockDeps.authManager.getApiKey.mockReturnValue(null)
         register(mockWin as any, mockDeps)
-        const handler = handlers['auth:validate-ollama-cloud']
+        const handler = handlers['auth:validate-ollama-cloud']!
         const result = await handler({})
         expect(result.ok).toBe(true)
         expect(result.data).toBe(false)
@@ -288,7 +288,7 @@ describe('auth-handlers', () => {
         global.fetch = vi.fn(() => Promise.reject(new Error('Network error')))
 
         register(mockWin as any, mockDeps)
-        const handler = handlers['auth:validate-ollama-cloud']
+        const handler = handlers['auth:validate-ollama-cloud']!
         const result = await handler({})
 
         expect(result.ok).toBe(true)
@@ -310,7 +310,7 @@ describe('auth-handlers', () => {
         global.fetch = vi.fn(() => Promise.resolve(mockResponse as Response))
 
         register(mockWin as any, mockDeps)
-        const handler = handlers['auth:validate-ollama-cloud']
+        const handler = handlers['auth:validate-ollama-cloud']!
         const result = await handler({})
 
         expect(result.ok).toBe(true)
@@ -328,7 +328,7 @@ describe('auth-handlers', () => {
         global.fetch = vi.fn(() => Promise.resolve(mockResponse as Response))
 
         register(mockWin as any, mockDeps)
-        const handler = handlers['auth:validate-ollama-cloud']
+        const handler = handlers['auth:validate-ollama-cloud']!
         const result = await handler({})
 
         expect(result.ok).toBe(true)
@@ -340,7 +340,7 @@ describe('auth-handlers', () => {
 
     it('auth:revoke-key calls authManager.revokeKey', async () => {
       register(mockWin as any, mockDeps)
-      const handler = handlers['auth:revoke-key']
+      const handler = handlers['auth:revoke-key']!
       await handler({}, 'google')
       expect(mockDeps.authManager.revokeKey).toHaveBeenCalledWith('google')
     })
@@ -400,7 +400,7 @@ describe('auth-handlers', () => {
       })
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:set-trust']
+      const handler = handlers['github:set-trust']!
       await handler({}, 'owner/repo', true)
 
       expect(mockDeps.settingsStore.set).toHaveBeenCalledWith('github:trusted-repos', ['owner/repo'])
@@ -414,7 +414,7 @@ describe('auth-handlers', () => {
       })
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:set-trust']
+      const handler = handlers['github:set-trust']!
       await handler({}, 'owner/repo', false)
 
       expect(mockDeps.settingsStore.set).toHaveBeenCalledWith('github:trusted-repos', ['other/repo'])
@@ -427,7 +427,7 @@ describe('auth-handlers', () => {
       })
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:add-repo']
+      const handler = handlers['github:add-repo']!
       const result = await handler({}, 'owner/repo')
 
       expect(result.ok).toBe(true)
@@ -442,7 +442,7 @@ describe('auth-handlers', () => {
       })
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:remove-repo']
+      const handler = handlers['github:remove-repo']!
       const result = await handler({}, 'owner/repo')
 
       expect(result.ok).toBe(true)
@@ -458,7 +458,7 @@ describe('auth-handlers', () => {
       })
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:get-trust-list']
+      const handler = handlers['github:get-trust-list']!
       const result = await handler({})
 
       expect(result.ok).toBe(true)
@@ -470,7 +470,7 @@ describe('auth-handlers', () => {
 
     it('github:set-target-repo sets target and updates Jules baseUrl', async () => {
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:set-target-repo']
+      const handler = handlers['github:set-target-repo']!
       await handler({}, 'owner/repo')
 
       expect(mockDeps.settingsStore.set).toHaveBeenCalledWith('github:target-repo', 'owner/repo')
@@ -481,7 +481,7 @@ describe('auth-handlers', () => {
       mockDeps.settingsStore.get.mockReturnValue('owner/repo')
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:get-target-repo']
+      const handler = handlers['github:get-target-repo']!
       const result = await handler({})
 
       expect(result.ok).toBe(true)
@@ -492,7 +492,7 @@ describe('auth-handlers', () => {
       mockDeps.authManager.getApiKey.mockReturnValue(null)
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:search']
+      const handler = handlers['github:search']!
       const result = await handler({}, 'query')
 
       expect(result.ok).toBe(false)
@@ -501,7 +501,7 @@ describe('auth-handlers', () => {
 
     it('github:clone-repo spawns terminal with git clone command', async () => {
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:clone-repo']
+      const handler = handlers['github:clone-repo']!
       const result = await handler({}, { repoUrl: 'https://github.com/owner/repo.git', repoName: 'repo' })
 
       expect(result.ok).toBe(true)
@@ -513,7 +513,7 @@ describe('auth-handlers', () => {
       mockDeps.authManager.getApiKey.mockReturnValue(null)
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:test-connection']
+      const handler = handlers['github:test-connection']!
       const result = await handler({})
 
       expect(result.ok).toBe(false)
@@ -531,7 +531,7 @@ describe('auth-handlers', () => {
       global.fetch = vi.fn(() => Promise.resolve(mockResponse as unknown as Response))
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:test-connection']
+      const handler = handlers['github:test-connection']!
       const result = await handler({})
 
       expect(result.ok).toBe(true)
@@ -551,7 +551,7 @@ describe('auth-handlers', () => {
       global.fetch = vi.fn(() => Promise.resolve(mockResponse as unknown as Response))
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:test-connection']
+      const handler = handlers['github:test-connection']!
       const result = await handler({})
 
       expect(result.ok).toBe(false)
@@ -571,7 +571,7 @@ describe('auth-handlers', () => {
       global.fetch = vi.fn(() => Promise.resolve(mockResponse as unknown as Response))
 
       register(mockWin as any, mockDeps)
-      const handler = handlers['github:test-connection']
+      const handler = handlers['github:test-connection']!
       const result = await handler({})
 
       expect(result.ok).toBe(false)

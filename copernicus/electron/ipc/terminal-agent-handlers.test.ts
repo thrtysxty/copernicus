@@ -9,7 +9,7 @@ vi.mock('electron', () => ({
 }))
 
 vi.mock('../utils/handle-ipc', () => ({
-  handleIpc: vi.fn(async (channelOrFn, argsOrNothing, fnOrNothing) => {
+  handleIpc: vi.fn(async (channelOrFn, _argsOrNothing, fnOrNothing) => {
     let fn: () => any
     if (typeof channelOrFn === 'function') {
       fn = channelOrFn
@@ -72,7 +72,7 @@ describe('terminal-agent-handlers', () => {
 
     register({} as BrowserWindow, mockDeps as any)
 
-    const handler = handlers['terminal:attach-agent']
+    const handler = handlers['terminal:attach-agent']!
     const result = await handler({} as any, { agentId: 'test-123', label: 'Test Agent' })
 
     expect(result.ok).toBe(true)
@@ -86,7 +86,7 @@ describe('terminal-agent-handlers', () => {
 
     register({} as BrowserWindow, mockDeps as any)
 
-    const handler = handlers['terminal:attach-agent']
+    const handler = handlers['terminal:attach-agent']!
     const result = await handler({} as any, { agentId: 'new-agent', label: 'New Agent' })
 
     expect(result.ok).toBe(true)
@@ -102,7 +102,7 @@ describe('terminal-agent-handlers', () => {
 
     register({} as BrowserWindow, mockDeps as any)
 
-    const handler = handlers['terminal:attach-agent']
+    const handler = handlers['terminal:attach-agent']!
     const result = await handler({} as any, { agentId: 'test', label: 'Test' })
 
     expect(result.ok).toBe(false)

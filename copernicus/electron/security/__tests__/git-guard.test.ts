@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GitGuard, ConfirmationProvider, GitPushRequest } from '../git-guard';
+import { GitGuard, ConfirmationProvider } from '../git-guard';
 import { execSync } from 'node:child_process';
 import log from '../../utils/logger';
 

@@ -3,7 +3,7 @@
 ## Story Number
 732
 
-**Status:** APPROVED FOR IMPLEMENTATION
+**Status:** IN PROGRESS
 **Priority:** P1
 **Type:** Bug Fix
 

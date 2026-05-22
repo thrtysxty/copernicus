@@ -217,14 +217,14 @@ describe('env-sanitizer', () => {
     });
 
     it('should validate PATH correctly', () => {
-      const pattern = VALUE_PATTERNS.PATH;
+      const pattern = VALUE_PATTERNS.PATH!;
       expect(pattern.test('/usr/bin:/bin')).toBe(true);
       expect(pattern.test('/usr/local/bin')).toBe(true);
       expect(pattern.test('; rm -rf /')).toBe(false);
     });
 
     it('should validate USER correctly', () => {
-      const pattern = VALUE_PATTERNS.USER;
+      const pattern = VALUE_PATTERNS.USER!;
       expect(pattern.test('john')).toBe(true);
       expect(pattern.test('user_123')).toBe(true);
       expect(pattern.test('Root')).toBe(false); // uppercase
@@ -232,7 +232,7 @@ describe('env-sanitizer', () => {
     });
 
     it('should validate NODE_ENV correctly', () => {
-      const pattern = VALUE_PATTERNS.NODE_ENV;
+      const pattern = VALUE_PATTERNS.NODE_ENV!;
       expect(pattern.test('development')).toBe(true);
       expect(pattern.test('production')).toBe(true);
       expect(pattern.test('test')).toBe(true);

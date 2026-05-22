@@ -13,7 +13,7 @@ vi.mock('electron', () => ({
 }))
 
 vi.mock('../utils/handle-ipc', () => ({
-  handleIpc: vi.fn(async (channelOrFn, argsOrNothing, fnOrNothing) => {
+  handleIpc: vi.fn(async (channelOrFn, _argsOrNothing, fnOrNothing) => {
     let fn: () => any
     if (typeof channelOrFn === 'function') {
       fn = channelOrFn
@@ -89,6 +89,7 @@ describe('terminal-handlers', () => {
 
     vi.mocked(ipcMain.on).mockImplementation((channel, handler) => {
       eventHandlers[channel] = handler
+      return ipcMain
     })
 
     const cp = await import('node:child_process')
@@ -106,7 +107,7 @@ describe('terminal-handlers', () => {
 
     register(mockWin, mockDeps as any)
 
-    const handler = eventHandlers['terminal-create']
+    const handler = eventHandlers['terminal-create']!
     handler({}, { id: 'term-1', cols: 80, rows: 24, cwd: '/test/cwd' })
 
     expect(mockPtyManager.create).toHaveBeenCalledWith('term-1', 80, 24, '/safe/cwd', mockWin)
@@ -120,7 +121,7 @@ describe('terminal-handlers', () => {
 
     register(mockWin, mockDeps as any)
 
-    const handler = eventHandlers['terminal-create']
+    const handler = eventHandlers['terminal-create']!
     handler({}, { id: 'term-1', cols: 80, rows: 24, cwd: '/unsafe' })
 
     expect(mockPtyManager.create).toHaveBeenCalledWith('term-1', 80, 24, expect.any(String), mockWin)
@@ -134,7 +135,7 @@ describe('terminal-handlers', () => {
   it('terminal:resize calls ptyManager.resize', async () => {
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['terminal:resize']
+    const handler = handlers['terminal:resize']!
     const result = await handler({} as any, { id: 'term-1', cols: 100, rows: 30 })
 
     expect(result.ok).toBe(true)
@@ -149,7 +150,7 @@ describe('terminal-handlers', () => {
   it('terminal:input calls ptyManager.write', async () => {
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['terminal:input']
+    const handler = handlers['terminal:input']!
     const result = await handler({} as any, { id: 'term-1', data: 'ls -la' })
 
     expect(result.ok).toBe(true)
@@ -164,7 +165,7 @@ describe('terminal-handlers', () => {
   it('terminal-write calls ptyManager.write', () => {
     register(mockWin, mockDeps as any)
 
-    const handler = eventHandlers['terminal-write']
+    const handler = eventHandlers['terminal-write']!
     handler({}, { id: 'term-1', data: 'echo hello' })
 
     expect(mockPtyManager.write).toHaveBeenCalledWith('term-1', 'echo hello')
@@ -178,7 +179,7 @@ describe('terminal-handlers', () => {
   it('terminal-kill calls ptyManager.kill', () => {
     register(mockWin, mockDeps as any)
 
-    const handler = eventHandlers['terminal-kill']
+    const handler = eventHandlers['terminal-kill']!
     handler({}, { id: 'term-1' })
 
     expect(mockPtyManager.kill).toHaveBeenCalledWith('term-1')
@@ -192,7 +193,7 @@ describe('terminal-handlers', () => {
   it('terminal:stop-agent calls ptyManager.kill', async () => {
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['terminal:stop-agent']
+    const handler = handlers['terminal:stop-agent']!
     const result = await handler({} as any, { id: 'agent-1' })
 
     expect(result.ok).toBe(true)
@@ -207,7 +208,7 @@ describe('terminal-handlers', () => {
   it('terminal:spawn creates ephemeral terminal', async () => {
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['terminal:spawn']
+    const handler = handlers['terminal:spawn']!
     const result = await handler({} as any, {
       command: 'npm test',
       cwd: '/mock/project',
@@ -230,10 +231,10 @@ describe('terminal-handlers', () => {
 
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['terminal:spawn-agent']
+    const handler = handlers['terminal:spawn-agent']!
     await handler({}, { agentId: 'test-agent' })
 
-    expect(mockAllWindows[0].webContents.send).toHaveBeenCalledWith('terminal:activate-tab', {
+    expect(mockAllWindows[0]!.webContents.send).toHaveBeenCalledWith('terminal:activate-tab', {
       agentId: 'test-agent',
     })
   })
@@ -247,7 +248,7 @@ describe('terminal-handlers', () => {
     register(mockWin, mockDeps as any)
 
     const allowedTargets = ['dev', 'test', 'build', 'lint', 'backlog', 'deploy']
-    const handler = eventHandlers['system:make']
+    const handler = eventHandlers['system:make']!
 
     allowedTargets.forEach(target => {
       handler({}, target)
@@ -258,7 +259,7 @@ describe('terminal-handlers', () => {
   it('system:make ignores disallowed targets', () => {
     register(mockWin, mockDeps as any)
 
-    const handler = eventHandlers['system:make']
+    const handler = eventHandlers['system:make']!
     handler({}, 'dangerous-target')
 
     expect(mockDeps.spawn).not.toHaveBeenCalled()
@@ -277,7 +278,7 @@ describe('terminal-handlers', () => {
 
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['runtime:check-docker']
+    const handler = handlers['runtime:check-docker']!
     const result = await handler({} as any)
 
     expect(result.ok).toBe(true)
@@ -292,7 +293,7 @@ describe('terminal-handlers', () => {
 
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['runtime:check-docker']
+    const handler = handlers['runtime:check-docker']!
     const result = await handler({} as any)
 
     expect(result.ok).toBe(true)
@@ -313,7 +314,7 @@ describe('terminal-handlers', () => {
 
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['runtime:list-containers']
+    const handler = handlers['runtime:list-containers']!
     const result = await handler({} as any)
 
     expect(result.ok).toBe(true)
@@ -328,7 +329,7 @@ describe('terminal-handlers', () => {
 
     register(mockWin, mockDeps as any)
 
-    const handler = handlers['runtime:list-containers']
+    const handler = handlers['runtime:list-containers']!
     const result = await handler({} as any)
 
     expect(result.ok).toBe(true)

@@ -85,7 +85,7 @@ describe('security-handlers', () => {
     mockYamlLoad.mockReturnValue({ version: 1, package_gate: { enabled: true } })
 
     register()
-    const handler = handlers['security:get-config']
+    const handler = handlers['security:get-config']!
     const result = await handler({} as any)
 
     expect(result.ok).toBe(true)
@@ -99,7 +99,7 @@ describe('security-handlers', () => {
     vi.mocked(fs.existsSync).mockReturnValue(false)
 
     register()
-    const handler = handlers['security:get-config']
+    const handler = handlers['security:get-config']!
     const result = await handler({} as any)
 
     expect(result.ok).toBe(true)
@@ -117,7 +117,7 @@ describe('security-handlers', () => {
     mockYamlLoad.mockReturnValue({ version: 1, package_gate: { enabled: true }, package_allowlist: [], package_blocklist: [] })
 
     register()
-    const handler = handlers['security:update-package-gate']
+    const handler = handlers['security:update-package-gate']!
     const result = await handler({} as any, {
       updates: { enabled: false },
       confirmed: false,
@@ -140,7 +140,7 @@ describe('security-handlers', () => {
     })
 
     register()
-    const handler = handlers['security:update-package-gate']
+    const handler = handlers['security:update-package-gate']!
     const result = await handler({} as any, {
       updates: { min_age_days: 60 },
       confirmed: true,
@@ -164,7 +164,7 @@ describe('security-handlers', () => {
     })
 
     register()
-    const handler = handlers['security:add-to-allowlist']
+    const handler = handlers['security:add-to-allowlist']!
     const result = await handler({} as any, 'new-package')
 
     expect(result.ok).toBe(true)
@@ -184,7 +184,7 @@ describe('security-handlers', () => {
     })
 
     register()
-    const handler = handlers['security:add-to-allowlist']
+    const handler = handlers['security:add-to-allowlist']!
     await handler({} as any, 'existing-package')
 
     expect(fs.writeFileSync).not.toHaveBeenCalled()
@@ -193,7 +193,7 @@ describe('security-handlers', () => {
   it('security:score returns error when SecurityManager not initialized', async () => {
     const { register } = await import('./security-handlers')
     register()
-    const handler = handlers['security:score']
+    const handler = handlers['security:score']!
     const result = await handler({} as any)
 
     expect(result.ok).toBe(false)

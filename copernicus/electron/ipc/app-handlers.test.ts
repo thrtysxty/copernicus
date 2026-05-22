@@ -210,14 +210,14 @@ describe('app-handlers', () => {
 
     it('settings:save calls settingsStore.setAll', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['settings:save']
+      const handler = handlers['settings:save']!
       await handler({}, { theme: 'dark', fontSize: 14 })
       expect(mockDeps.settingsStore.setAll).toHaveBeenCalledWith({ theme: 'dark', fontSize: 14 })
     })
 
     it('settings:load returns all settings', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['settings:load']
+      const handler = handlers['settings:load']!
       const result = await handler({})
       expect(result.ok).toBe(true)
       expect(mockDeps.settingsStore.getAll).toHaveBeenCalled()
@@ -247,7 +247,7 @@ describe('app-handlers', () => {
 
     it('app:open-external rejects non-http(s) URLs', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['app:open-external']
+      const handler = handlers['app:open-external']!
       const result = await handler({}, 'file:///etc/passwd')
       expect(result.ok).toBe(false)
       expect(result.error).toContain('Blocked external URL')
@@ -256,7 +256,7 @@ describe('app-handlers', () => {
     it('app:open-external allows https URLs', async () => {
       const { shell } = await import('electron')
       register({} as any, mockDeps)
-      const handler = handlers['app:open-external']
+      const handler = handlers['app:open-external']!
       await handler({}, 'https://example.com')
       expect(shell.openExternal).toHaveBeenCalledWith('https://example.com')
     })
@@ -290,14 +290,14 @@ describe('app-handlers', () => {
 
     it('app:get-recent-projects returns settings', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['app:get-recent-projects']
+      const handler = handlers['app:get-recent-projects']!
       await handler({})
       expect(mockDeps.settingsStore.get).toHaveBeenCalledWith('recentProjects', [])
     })
 
     it('app:get-root-path returns workspace path', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['app:get-root-path']
+      const handler = handlers['app:get-root-path']!
       await handler({})
       expect(mockDeps.settingsStore.get).toHaveBeenCalledWith('workspace', null)
     })
@@ -336,7 +336,7 @@ describe('app-handlers', () => {
 
     it('devtime:status returns session info', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['devtime:status']
+      const handler = handlers['devtime:status']!
       await handler({})
       expect(mockDeps.devtimeManager.getActiveSession).toHaveBeenCalled()
       expect(mockDeps.devtimeManager.getTotalMonthValue).toHaveBeenCalled()
@@ -409,7 +409,7 @@ describe('app-handlers', () => {
 
     it('db:vacuum calls stateLedger.vacuum', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['db:vacuum']
+      const handler = handlers['db:vacuum']!
       await handler({})
       expect(mockDeps.stateLedger.vacuum).toHaveBeenCalled()
     })
@@ -439,7 +439,7 @@ describe('app-handlers', () => {
     it('mcp:list-servers returns configured servers', async () => {
       mockDeps.settingsStore.getAll.mockReturnValue({ mcp: { servers: [{ name: 'test' }] } })
       register({} as any, mockDeps)
-      const handler = handlers['mcp:list-servers']
+      const handler = handlers['mcp:list-servers']!
       const result = await handler({})
       expect(result.ok).toBe(true)
       expect(result.data).toEqual([{ name: 'test' }])
@@ -447,7 +447,7 @@ describe('app-handlers', () => {
 
     it('mcp:save-servers persists servers', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['mcp:save-servers']
+      const handler = handlers['mcp:save-servers']!
       const servers = [{ name: 'test' }]
       await handler({}, servers)
       expect(mockDeps.settingsStore.setAll).toHaveBeenCalledWith({ mcp: { servers } })
@@ -472,7 +472,7 @@ describe('app-handlers', () => {
 
     it('env:get-versions returns version info', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['env:get-versions']
+      const handler = handlers['env:get-versions']!
       const result = await handler({})
       expect(result.ok).toBe(true)
       expect(result.data).toHaveProperty('node')
@@ -495,7 +495,7 @@ describe('app-handlers', () => {
 
     it('git:branch returns branch name', async () => {
       register({} as any, mockDeps)
-      const handler = handlers['git:branch']
+      const handler = handlers['git:branch']!
       const result = await handler({})
       expect(result.ok).toBe(true)
     })

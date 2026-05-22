@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventEmitter } from 'events';
+import type { PatternDetector } from '../pattern-detector';
 
 // Mock the lsp-manager import that SecurityScorer uses
 vi.mock('../../lsp/lsp-manager', () => ({
@@ -57,7 +58,7 @@ describe('SecurityScorer', () => {
 
     // Create a real EventEmitter as the detector
     detector = Object.assign(new EventEmitter(), { detect: vi.fn() })
-    scorer = new SecurityScorer(detector, '/test/project')
+    scorer = new SecurityScorer(detector as unknown as PatternDetector, '/test/project')
     mockSpawn = (await import('child_process')).spawn
 
     // Reset lspManager diagnostics
