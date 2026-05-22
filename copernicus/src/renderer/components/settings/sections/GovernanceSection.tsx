@@ -64,7 +64,7 @@ const SubTabButton: React.FC<{ id: SubTab, label: string, icon: any, active: Sub
   return (
     <button
       onClick={() => onClick(id)}
-      className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-copernicus-phosphor border-b-2 border-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'}`}
+      className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
     >
       {icon} {label}
     </button>

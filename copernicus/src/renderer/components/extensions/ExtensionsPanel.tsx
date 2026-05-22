@@ -130,13 +130,13 @@ export const ExtensionsPanel: React.FC = () => {
         <div className="flex items-center gap-4 mt-4 text-[10px] font-mono uppercase tracking-widest">
           <button
             onClick={() => setActiveTab('installed')}
-            className={`pb-1 border-b-2 transition-colors ${activeTab === 'installed' ? 'border-copernicus-phosphor text-zinc-200' : 'border-transparent text-zinc-500 hover:text-zinc-400'}`}
+            className={`px-2 py-1.5 transition-colors ${activeTab === 'installed' ? 'bg-copernicus-phosphor/10 text-zinc-200' : 'text-zinc-500 hover:text-zinc-400'}`}
           >
             Installed ({installed.length})
           </button>
           <button
             onClick={() => setActiveTab('marketplace')}
-            className={`pb-1 border-b-2 transition-colors ${activeTab === 'marketplace' ? 'border-copernicus-phosphor text-zinc-200' : 'border-transparent text-zinc-500 hover:text-zinc-400'}`}
+            className={`px-2 py-1.5 transition-colors ${activeTab === 'marketplace' ? 'bg-copernicus-phosphor/10 text-zinc-200' : 'text-zinc-500 hover:text-zinc-400'}`}
           >
             Marketplace {searchResults.length > 0 ? `(${searchResults.length})` : ''}
           </button>
