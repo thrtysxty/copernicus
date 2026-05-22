@@ -44,7 +44,7 @@ export const UITestDrawer: React.FC = () => {
     setRunningFile(file || 'all')
     try {
       const res = await invoke<any>('devtime:run-playwright', file ? { file } : {})
-      const data = res?.data || res
+      const data = unwrapIpc<any>(res)
       if (data && data.results) {
         setResults(data.results)
       }

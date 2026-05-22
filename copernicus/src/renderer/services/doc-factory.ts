@@ -1,4 +1,5 @@
 import log from '../utils/logger'
+import { unwrapIpc } from '../types/ipc'
 
 export interface DocMetadata {
   id: string;
@@ -13,13 +14,14 @@ export interface DocMetadata {
 }
 
 export class DocFactory {
-  static async generateStoryMarkdown(meta: DocMetadata): Promise<string> {
-    const ipcRenderer = window.ipcRenderer;
+  static async generateStoryMarkdown(meta: DocMetadata, invoke?: <T>(c: string, ...a: any[]) => Promise<T>): Promise<string> {
     let template = '';
 
     try {
+      if (!invoke) throw new Error('invoke not provided');
       // Hydra logic: read template from file system via IPC
-      template = await ipcRenderer.invoke('fs:read-file', 'copernicus/src/renderer/templates/story-doc.md');
+      const res = await invoke<any>('fs:read-file', 'copernicus/src/renderer/templates/story-doc.md');
+      template = unwrapIpc<string>(res);
     } catch (e) {
       log.warn('[DOC_FACTORY] Using fallback string template');
       template = `# IMPLEMENTATION REPORT: [STORY_ID]\n\n[NARRATIVE_TEXT]`;
@@ -39,10 +41,10 @@ export class DocFactory {
       .replace('[TECHNICAL_SUMMARY]', meta.techSummary);
   }
 
-  static async saveDocumentation(path: string, content: string) {
-    const ipcRenderer = window.ipcRenderer;
-    if (ipcRenderer) {
-      return await ipcRenderer.invoke('fs:write-file', path, content);
+  static async saveDocumentation(path: string, content: string, invoke?: <T>(c: string, ...a: any[]) => Promise<T>) {
+    if (invoke) {
+      const res = await invoke<any>('fs:write-file', path, content);
+      return unwrapIpc(res);
     }
     log.warn('[DOC_FACTORY] IPC not available, documentation not saved.');
   }

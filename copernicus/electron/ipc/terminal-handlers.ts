@@ -49,10 +49,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return termId
   }))
 
-  ipcMain.on('terminal:spawn-agent', (_event, { agentId }: { agentId: string }) => {
+  ipcMain.handle('terminal:spawn-agent', (_event, { agentId }: { agentId: string }) => handleIpc('terminal:spawn-agent', [{ agentId }], async () => {
     if (!/^[a-z0-9_-]+$/.test(agentId)) return;
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('terminal:activate-tab', { agentId }));
-  })
+    return { ok: true };
+  }))
 
   // System Execution
   ipcMain.on('system:make', (_, target: string) => {

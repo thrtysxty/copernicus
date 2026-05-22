@@ -335,10 +335,12 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
               position: { line: position.lineNumber - 1, character: position.column - 1 },
             },
           }).catch(() => null)
-          const items: any[] = Array.isArray(raw?.data)
-            ? raw.data
-            : Array.isArray(raw?.data?.items) ? raw.data.items
-            : Array.isArray(raw) ? raw : []
+
+          const data = raw ? unwrapIpc<any>(raw) : null
+          const items: any[] = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.items) ? data.items
+            : []
           return {
             suggestions: items.map((item: any) => ({
               label: item.label,
@@ -463,12 +465,16 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
         const content = editor.getValue();
         try {
           const result = await invoke<any>('fs:save-file', { filePath, content });
-          const data = result.data || result;
-          if (data.ok) {
+          const data = unwrapIpc<any>(result);
+          if (data && data.ok !== false) {
             log.info(`[Monaco] Saved: ${filePath}`);
             if (filePath) setFileDirty(filePath, false);
-          } else {
+          } else if (data && data.ok === false) {
             log.error('[Monaco] Save failed:', data.error);
+          } else {
+             // In case unwrapped data doesn't have an explicit 'ok' flag but save didn't throw
+             log.info(`[Monaco] Saved: ${filePath}`);
+             if (filePath) setFileDirty(filePath, false);
           }
         } catch (err) {
           log.error('[Monaco] Save failed:', err);

@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import { useLayoutStore, PHOSPHOR_PRESETS } from '../store/layout'
 import log from '../utils/logger'
-
-const ipcRenderer = window.ipcRenderer
+import { useIpcError } from './useIpcError'
+import { unwrapIpc } from '../types/ipc'
 
 export function useThemeManager() {
+  const invoke = useIpcError()
   const phosphorColor = useLayoutStore((state) => state.phosphorColor)
   const uiDensity = useLayoutStore((state) => state.uiDensity)
   const fontSize = useLayoutStore((state) => state.fontSize)
@@ -38,12 +39,12 @@ export function useThemeManager() {
       root.classList.add(`ui-density-${uiDensity}`)
 
       // Persist to settings.json via main process so splash screen can read it on next launch
-      if (ipcRenderer) {
-        ipcRenderer.invoke('settings:save', { 
+      if (invoke) {
+        invoke('settings:save', {
           phosphorColor: preset.hex,
           appearance: { uiDensity, fontSize, animationsEnabled, crtMode }
-        }).catch(log.error)
+        }).then(res => unwrapIpc(res)).catch(log.error)
       }
     }
-  }, [phosphorColor, uiDensity, fontSize, animationsEnabled, crtMode])
+  }, [phosphorColor, uiDensity, fontSize, animationsEnabled, crtMode, invoke])
 }

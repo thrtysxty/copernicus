@@ -1,5 +1,5 @@
 import log from '../utils/logger'
-const ipcRenderer = window.ipcRenderer
+import { unwrapIpc } from '../types/ipc'
 
 export interface Command {
   name: string          // e.g. '/help'
@@ -15,6 +15,7 @@ export interface CommandContext {
   getCurrentModel: () => string
   setBackTab: (tab: string) => void
   flip: () => void
+  invoke: <T = unknown>(channel: string, ...args: unknown[]) => Promise<T>
 }
 
 class CommandRegistry {
@@ -29,7 +30,7 @@ class CommandRegistry {
     if (!cmdName) return false
 
     // Story 688: Fire extension activation event before command execution
-    window.ipcRenderer.invoke('extension:fire-event', { event: `onCommand:${cmdName}` })
+    context.invoke('extension:fire-event', { event: `onCommand:${cmdName}` })
       .catch((err: any) => log.error('Failed to fire extension event', err))
 
     const args = rest.join(' ')
@@ -138,7 +139,7 @@ commandRegistry.register({
   description: 'Run Sentinel security audit on staged changes',
   execute: (_args, ctx) => {
     ctx.appendMessage('copernicus', '🔒 Dispatching Sentinel audit agent...')
-    ipcRenderer.send('terminal:spawn-agent', { agentId: 'sentinel' })
+    ctx.invoke('terminal:spawn-agent', { agentId: 'sentinel' }).catch((err: any) => log.error('Failed to spawn agent', err))
   },
 })
 
@@ -152,6 +153,6 @@ commandRegistry.register({
       return
     }
     ctx.appendMessage('copernicus', `Scaffolding story: ${args}`)
-    ipcRenderer.send('story:scaffold', { args })
+    ctx.invoke('story:scaffold', { args }).then(res => unwrapIpc(res)).catch((err: any) => log.error('Failed to scaffold story', err))
   },
 })

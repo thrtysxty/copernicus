@@ -312,7 +312,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       setModel: (m: any) => setModel(m),
       getCurrentModel: () => model,
       setBackTab: (tab: any) => setActiveBackTab(tab),
-      flip: () => toggleFlip('chat')
+      flip: () => toggleFlip('chat'),
+      invoke
     }
     if (currentInput.startsWith('/')) { if (commandRegistry.execute(currentInput, cmdContext)) { setInput(''); setShowSuggestions(false); return } }
     setMessages(prev => [...prev, { 

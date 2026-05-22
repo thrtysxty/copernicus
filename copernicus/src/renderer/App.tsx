@@ -67,7 +67,7 @@ const ArchiveDrawer: React.FC = () => {
   useEffect(() => {
     invoke('stories:list', { status: 'ARCHIVED' })
       .then((res: any) => {
-        const list = res?.data ?? res ?? []
+        const list = unwrapIpc<any>(res) ?? []
         if (Array.isArray(list)) setArchived(list)
       })
       .catch(() => {})
@@ -125,6 +125,11 @@ export default function App() {
   
   // Selective subscriptions for primitives
   const activeView = useLayoutStore(s => s.activeView)
+
+  useEffect(() => {
+    invoke('extension:fire-event', { event: `onView:${activeView}` })
+      .catch(err => log.error('Extension fire event failed', err))
+  }, [activeView, invoke])
   const workspaceKey = useLayoutStore(s => s.workspaceKey)
   const sidebarOpen = useLayoutStore(s => s.sidebarOpen)
   const terminalOpen = useLayoutStore(s => s.terminalOpen)

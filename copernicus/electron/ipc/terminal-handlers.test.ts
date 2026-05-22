@@ -221,17 +221,17 @@ describe('terminal-handlers', () => {
 
   it('registers terminal:spawn-agent handler', () => {
     register(mockWin, mockDeps as any)
-    expect(ipcMain.on).toHaveBeenCalledWith('terminal:spawn-agent', expect.any(Function))
+    expect(ipcMain.handle).toHaveBeenCalledWith('terminal:spawn-agent', expect.any(Function))
   })
 
-  it('terminal:spawn-agent sends activate-tab event', () => {
+  it('terminal:spawn-agent sends activate-tab event', async () => {
     const mockAllWindows = [{ webContents: { send: vi.fn() } }]
     vi.mocked(BrowserWindow.getAllWindows).mockReturnValue(mockAllWindows as any)
 
     register(mockWin, mockDeps as any)
 
-    const handler = eventHandlers['terminal:spawn-agent']
-    handler({}, { agentId: 'test-agent' })
+    const handler = handlers['terminal:spawn-agent']
+    await handler({}, { agentId: 'test-agent' })
 
     expect(mockAllWindows[0].webContents.send).toHaveBeenCalledWith('terminal:activate-tab', {
       agentId: 'test-agent',
