@@ -336,6 +336,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
             },
           }).catch(() => null)
 
+
           const data = raw ? unwrapIpc<any>(raw) : null
           const items: any[] = Array.isArray(data)
             ? data

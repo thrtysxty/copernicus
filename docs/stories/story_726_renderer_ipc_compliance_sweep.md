@@ -1,6 +1,6 @@
 # User Story 726: Renderer IPC Compliance Sweep
 
-**Status:** APPROVED FOR IMPLEMENTATION
+**Status:** IN PROGRESS
 **Priority:** P1 — Open source release gate
 **Phase:** Sprint 1 — Code Quality
 

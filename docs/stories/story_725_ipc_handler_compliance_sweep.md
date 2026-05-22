@@ -1,6 +1,6 @@
 # User Story 725: IPC Handler Compliance Sweep
 
-**Status:** APPROVED FOR IMPLEMENTATION
+**Status:** IN PROGRESS
 **Priority:** P1 — Open source release gate
 **Phase:** Sprint 1 — Code Quality
 

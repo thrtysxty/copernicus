@@ -16,8 +16,9 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('diagnostics:run-tsc', () => handleIpc('diagnostics:run-tsc', [], () => {
     return new Promise<any[]>((resolve) => {
       const copDir = path.join(cwd(), 'copernicus')
-      const proc = spawn('npx', ['tsc', '--noEmit', '--pretty', 'false'], {
-        cwd: copDir, shell: true
+      const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx'
+      const proc = spawn(npxCmd, ['tsc', '--noEmit', '--pretty', 'false'], {
+        cwd: copDir, shell: false
       })
       let output = ''
       proc.stdout.on('data', (d: Buffer) => output += d.toString())

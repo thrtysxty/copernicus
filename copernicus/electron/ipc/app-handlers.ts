@@ -156,7 +156,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         isDirty: gitState.isDirty,
         storiesCount,
         gitRepoFound: gitState.gitRepoFound,
-        projectId: memoryService.activeProjectId,
+        activeProjectId: memoryService.activeProjectId,
         lspStatus: lspStatusInfo.status,
         worktreePolling: deps.worktreeManager && !deps.worktreeManager.isPollingStopped ? 'active' : 'stopped',
         drift: [],
@@ -224,7 +224,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         isDirty: false,
         storiesCount: 0,
         gitRepoFound: false,
-        projectId: '',
+        activeProjectId: '',
         lspStatus: lspStatusInfo.status,
         worktreePolling,
         drift: ['no-workspace-set'],
@@ -259,7 +259,7 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
       isDirty: gitState.isDirty,
       storiesCount,
       gitRepoFound: gitState.gitRepoFound,
-      projectId: memoryService.activeProjectId,
+      activeProjectId: memoryService.activeProjectId,
       lspStatus: lspStatusInfo.status,
       worktreePolling,
       drift: drift.length > 0 ? drift : undefined,
@@ -335,7 +335,8 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
         args.push(file);
       }
       
-      const child = spawn('npx', args, {
+      const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx'
+      const child = spawn(npxCmd, args, {
         cwd: fsManager.getRootPath(),
         shell: false,
         env: { ...process.env, CI: 'true' }

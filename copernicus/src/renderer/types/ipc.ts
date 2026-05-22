@@ -25,7 +25,7 @@ export interface WorkspaceState {
   isDirty: boolean
   storiesCount: number
   gitRepoFound: boolean
-  projectId: string // TODO story-614: replace with memoryService.activeProjectId
+  activeProjectId: string
   lspStatus?: 'running' | 'stopped' | 'dead'
   worktreePolling?: 'active' | 'stopped'
   drift?: string[] // non-empty if any of the 5 state sources disagree
@@ -100,5 +100,3 @@ export interface McpStatusResponse extends IpcResponseBase {
 export interface WorkflowListTemplatesResponse extends IpcResponseBase {
   templates: Array<{ id: string; name: string; description: string }>;
 }
-
-// ... (I'll add more as I go, for now I'll just write this to get started)

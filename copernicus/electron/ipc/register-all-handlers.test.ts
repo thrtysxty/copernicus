@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ipcMain, app, BrowserWindow } from 'electron'
-import path from 'node:path'
+import { ipcMain, BrowserWindow } from 'electron'
+// import path from 'node:path'  // unused
 
 vi.mock('electron', () => ({
   ipcMain: {
@@ -29,7 +29,7 @@ vi.mock('node:path', async () => {
 })
 
 vi.mock('../utils/handle-ipc', () => ({
-  handleIpc: vi.fn(async (channelOrFn, argsOrNothing, fnOrNothing) => {
+  handleIpc: vi.fn(async (channelOrFn, _argsOrNothing, fnOrNothing) => {
     let fn: () => any
     if (typeof channelOrFn === 'function') {
       fn = channelOrFn

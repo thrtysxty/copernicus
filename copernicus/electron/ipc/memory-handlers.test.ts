@@ -50,12 +50,12 @@ describe('memory-handlers', () => {
 
     const handlerFn = callArgs![1] as Function
     const mockParams = { projectId: 'proj-1', content: 'Test memory', bankId: 'bank-1' }
-    vi.mocked(memoryService.addMemory).mockResolvedValue({ id: 'mem-1' })
+    vi.mocked(memoryService.addMemory).mockResolvedValue('mem-1')
 
     const result = await handlerFn({} as any, mockParams)
     expect(result.ok).toBe(true)
     expect(memoryService.addMemory).toHaveBeenCalledWith(mockParams)
-    expect(result.data).toEqual({ id: 'mem-1' })
+    expect(result.data).toEqual('mem-1')
   })
 
   it('memory:get-working-set calls memoryService.getWorkingSet', async () => {
@@ -64,7 +64,9 @@ describe('memory-handlers', () => {
     expect(callArgs).toBeDefined()
 
     const handlerFn = callArgs![1] as Function
-    const mockSet = [{ id: 'mem-1', content: 'Memory 1' }]
+    const mockSet = [
+      { id: 'mem-1', projectId: 'proj-1', bankId: 'bank-1', eventType: 'chat', content: 'Memory 1', importance: 5, tags: [], entities: [], meta: {}, supersedesId: undefined, ts: Date.now(), score: 0.95 }
+    ]
     vi.mocked(memoryService.getWorkingSet).mockResolvedValue(mockSet)
 
     const result = await handlerFn({} as any, 'proj-1', 'bank-1', 10)
@@ -91,7 +93,7 @@ describe('memory-handlers', () => {
     expect(callArgs).toBeDefined()
 
     const handlerFn = callArgs![1] as Function
-    vi.mocked(memoryService.supersede).mockReturnValue(undefined)
+    vi.mocked(memoryService.supersede).mockResolvedValue()
 
     const result = await handlerFn({} as any, 'mem-old', 'mem-new')
     expect(result.ok).toBe(true)
@@ -105,12 +107,12 @@ describe('memory-handlers', () => {
 
     const handlerFn = callArgs![1] as Function
     const mockParams = { projectId: 'proj-1', bankId: 'bank-1', work: 'Implemented feature', duration: 30 }
-    vi.mocked(memoryService.logWork).mockResolvedValue({ id: 'log-1' })
+    vi.mocked(memoryService.logWork).mockResolvedValue('log-1')
 
     const result = await handlerFn({} as any, mockParams)
     expect(result.ok).toBe(true)
     expect(memoryService.logWork).toHaveBeenCalledWith(mockParams)
-    expect(result.data).toEqual({ id: 'log-1' })
+    expect(result.data).toEqual('log-1')
   })
 
   it('memory:get-work-log calls memoryService.getWorkLog', async () => {
@@ -119,7 +121,9 @@ describe('memory-handlers', () => {
     expect(callArgs).toBeDefined()
 
     const handlerFn = callArgs![1] as Function
-    const mockLog = [{ id: 'log-1', work: 'Fixed bug', duration: 15 }]
+    const mockLog = [
+      { id: 'log-1', projectId: 'proj-1', bankId: 'bank-1', eventType: 'tool_call', meta: { work: 'Fixed bug', duration: 15 }, ts: Date.now() }
+    ]
     vi.mocked(memoryService.getWorkLog).mockResolvedValue(mockLog)
 
     const result = await handlerFn({} as any, 'proj-1', 'bank-1', 20)

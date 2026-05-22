@@ -14,7 +14,7 @@ vi.mock('electron', () => ({
 }))
 
 vi.mock('../utils/handle-ipc', () => ({
-  handleIpc: vi.fn(async (channelOrFn, argsOrNothing, fnOrNothing) => {
+  handleIpc: vi.fn(async (channelOrFn, fnOrNothing) => {
     // Handle both signatures: handleIpc(fn) and handleIpc(channel, args, fn)
     const fn = typeof channelOrFn === 'function' ? channelOrFn : fnOrNothing
     try {
@@ -136,7 +136,15 @@ describe('chat-handlers', () => {
 
     it('returns error object when sending image to non-vision model', async () => {
       vi.mocked(mockDeps.modelRegistry!.getModels).mockReturnValue([
-        { id: 'test-model', supportsVision: false },
+        {
+          id: 'test-model',
+          name: 'Test Model',
+          provider: 'anthropic',
+          contextWindow: 200000,
+          costPer1kIn: 0.015,
+          costPer1kOut: 0.075,
+          supportsVision: false,
+        },
       ])
 
       register({} as BrowserWindow, mockDeps as IpcHandlerDeps)

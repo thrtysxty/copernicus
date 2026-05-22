@@ -81,6 +81,7 @@ describe('project-handlers', () => {
     vi.mocked(stateLedger.getProjectByPath).mockReturnValue({ 
       id: 'proj-1', 
       path: '/path/to/workspace', 
+      billing_mode: 'CAPEX', 
       target_device: 'MOBILE' 
     })
 
@@ -99,7 +100,8 @@ describe('project-handlers', () => {
     vi.mocked(stateLedger.getProjectByPath).mockReturnValue({ 
       id: 'proj-1', 
       path: '/path/to/workspace', 
-      target_device: null 
+      billing_mode: 'CAPEX', 
+      target_device: undefined 
     })
 
     const result = await handlerFn({} as any)

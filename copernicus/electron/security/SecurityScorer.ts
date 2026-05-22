@@ -43,9 +43,10 @@ export class SecurityScorer {
 
     this.auditInProgress = true;
     return new Promise((resolve) => {
-      const proc = spawn('npm', ['audit', '--json'], {
+      const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+      const proc = spawn(npmCmd, ['audit', '--json'], {
         cwd: this.projectRoot,
-        shell: true,
+        shell: false,
       });
 
       let stdout = '';

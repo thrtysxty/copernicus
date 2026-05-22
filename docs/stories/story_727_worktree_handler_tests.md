@@ -1,6 +1,6 @@
 # User Story 727: Worktree Handler Tests
 
-**Status:** APPROVED FOR IMPLEMENTATION
+**Status:** IN PROGRESS
 **Priority:** P1 — Core flow coverage
 **Phase:** Sprint 1 — Core Flow Tests
 
