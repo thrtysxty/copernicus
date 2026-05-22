@@ -608,6 +608,21 @@ This file is auto-generated. Run `make backlog` to update.
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
+| #706 | Ci Pytest Coverage Gate | READY | P1 — Ship gate |
+| #707 | Ci Tsc Zero Error Gate | READY | P1 — Ship gate |
+| #708 | Ci Playwright E2E On Push | READY | P1 — Ship gate |
+| #709 | Ipc Envelope Contract Tests | READY | P1 — Core infrastructure coverage |
+| #710 | Kanban Flow Tests | READY | P1 — Core flow coverage |
+| #711 | Agent Dispatch Tests | READY | P1 — Core flow coverage |
+| #712 | Backend Agent Session Tests | READY | P1 — Core flow coverage |
+| #713 | E2E Story Wizard Spec | READY | P1 — Core flow coverage |
+| #714 | Backend Llm Router Tests | READY | P1 — Core flow coverage |
+| #715 | Settings Persistence Tests | READY | P1 — Core flow coverage |
+| #716 | E2E Kanban Drag Spec | READY | P1 — Core flow coverage |
+| #717 | Terminal Panel Tests | READY | P1 — Core flow coverage |
+| #718 | Chat Panel Tests | READY | P1 — Core flow coverage |
+| #719 | E2E Agent Run Spec | READY | P1 — Core flow coverage |
+| #720 | Backend Registry Hot Swap Tests | READY | P1 — Core flow coverage |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

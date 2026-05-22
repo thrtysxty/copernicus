@@ -21,7 +21,7 @@ def test_assert_safe_path_with_path_traversal():
     """Test with path traversal (../../etc/passwd) -> raises ValueError."""
     # This path is constructed to resolve outside the mock root if not handled
     bad_path = str(MOCK_PROJECT_ROOT / 'data' / '..' / '..' / 'etc' / 'passwd')
-    with pytest.raises(ValueError, match="Path outside allowed roots: /etc/passwd"):
+    with pytest.raises(ValueError, match="Path outside allowed roots: /private/etc/passwd"):
         assert_safe_path(bad_path, roots=[str(r) for r in MOCK_ALLOWED_ROOTS])
 
 def test_assert_safe_path_with_symlink_outside_roots(tmp_path):

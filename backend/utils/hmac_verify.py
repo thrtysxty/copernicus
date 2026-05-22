@@ -14,8 +14,12 @@ def verify_hmac_signature(payload: bytes, signature: str, secret: str) -> bool:
     Returns:
         bool: True if the signature is valid, False otherwise.
     """
-    if not payload or not signature or not secret:
+    # Handle empty inputs gracefully
+    if not signature or not secret:
         return False
+    if not payload:
+        # Empty payload is valid - compute HMAC and compare
+        pass
         
     # GitHub's signature is prefixed with "sha256="
     if signature.startswith("sha256="):

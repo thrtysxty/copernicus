@@ -17,10 +17,15 @@ def assert_safe_path(path_str: str, roots: list[str] = None) -> Path:
     if roots is None:
         roots = ALLOWED_ROOTS
         
+    # Handle None input gracefully
+    if path_str is None:
+        raise ValueError(f"Path outside allowed roots: None")
+    
+    # Use realpath to resolve symlinks (handles macOS /private/etc)
     resolved = Path(path_str).resolve()
     resolved_str = str(resolved)
     
-    # Ensure all roots are absolute
+    # Ensure all roots are absolute and resolved
     abs_roots = [str(Path(r).resolve()) for r in roots]
     
     if not any(resolved_str == root or resolved_str.startswith(root + os.sep) for root in abs_roots):
