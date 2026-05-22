@@ -1,6 +1,9 @@
 # User Story 729: Fix Underline Active Indicator — Block Style
 
-**Status:** APPROVED FOR IMPLEMENTATION
+## Story Number
+729
+
+**Status:** IN PROGRESS
 **Priority:** P1
 **Type:** Design Compliance Fix
 
@@ -27,6 +30,12 @@ Replace `border-b-2` underline active indicators with the VT block style (`bg-co
 3. In `ExtensionsPanel.tsx`, the two tab buttons (installed/marketplace) replace `border-b-2 transition-colors` + `border-copernicus-phosphor` active with `bg-copernicus-phosphor/10 text-zinc-200 transition-colors` and remove the `pb-1` underline spacing (replace with `px-2 py-1.5`)
 4. Running `bash scripts/ipc-lint.sh 2>&1 | grep "Underline active"` returns no matches
 5. `npx tsc --noEmit` passes with zero errors after changes
+
+## Definition of Done
+
+- All 5 ACs pass
+- `npx tsc --noEmit` exits 0
+- No `border-b-2` active-state classes remain in the three target files
 
 ## Reference Pattern
 

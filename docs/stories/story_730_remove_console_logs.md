@@ -1,6 +1,9 @@
 # User Story 730: Remove console.log/warn/error from Renderer
 
-**Status:** APPROVED FOR IMPLEMENTATION
+## Story Number
+730
+
+**Status:** IN PROGRESS
 **Priority:** P2
 **Type:** Code Quality
 
@@ -33,3 +36,9 @@ grep -rn "console\.log\|console\.warn\|console\.error" copernicus/src/renderer/ 
 
 - Check each call site: if it's a genuine error that should be visible, keep it as `log.error()`; if it's debug output, delete it
 - Do not add `eslint-disable` comments — fix the underlying call
+
+## Definition of Done
+
+- All 5 ACs pass
+- `grep` for console.* returns zero matches
+- `npx tsc --noEmit` exits 0

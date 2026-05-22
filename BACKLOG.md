@@ -133,8 +133,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #694 | Missing Intelligence Documents Table | COMPLETE | N/A |
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
 | #703 | Pre Commit Secret Scanner | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
-| #729 | Fix Active Indicator Underline | APPROVED FOR IMPLEMENTATION | P1 |
-| #730 | Remove Console Logs | APPROVED FOR IMPLEMENTATION | P2 |
 | #731 | Backend Flask Route Tests | APPROVED FOR IMPLEMENTATION | P1 |
 | #732 | Fix Terminal Send Regression | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
@@ -586,6 +584,7 @@ This file is auto-generated. Run `make backlog` to update.
 | #701 | Fix Onboarding E2E Test Wizard Next Button Requires Field Input Before Click | COMPLETE | P2 |
 | #702 | Claude Code File Deny Rules | COMPLETE | P1 — Security hardening |
 | #704 | E2E Test Env Pattern | COMPLETE | P1 — Security hardening |
+| #726 | Renderer Ipc Compliance Sweep | COMPLETE | P1 — Open source release gate |
 | #728 | Kanban Story Filter | COMPLETE | P2 — Feature |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
@@ -614,8 +613,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
 | #725 | Ipc Handler Compliance Sweep | IN PROGRESS | P1 — Open source release gate |
-| #726 | Renderer Ipc Compliance Sweep | IN PROGRESS | P1 — Open source release gate |
 | #727 | Worktree Handler Tests | IN PROGRESS | P1 — Core flow coverage |
+| #729 | Fix Active Indicator Underline | IN PROGRESS | P1 |
+| #730 | Remove Console Logs | IN PROGRESS | P2 |
 | #706 | Ci Pytest Coverage Gate | READY | P1 — Ship gate |
 | #707 | Ci Tsc Zero Error Gate | READY | P1 — Ship gate |
 | #708 | Ci Playwright E2E On Push | READY | P1 — Ship gate |
