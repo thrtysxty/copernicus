@@ -583,8 +583,11 @@ This file is auto-generated. Run `make backlog` to update.
 | #701 | Fix Onboarding E2E Test Wizard Next Button Requires Field Input Before Click | COMPLETE | P2 |
 | #702 | Claude Code File Deny Rules | COMPLETE | P1 — Security hardening |
 | #704 | E2E Test Env Pattern | COMPLETE | P1 — Security hardening |
+<<<<<<< HEAD
 | #726 | Renderer Ipc Compliance Sweep | COMPLETE | P1 — Open source release gate |
 | #728 | Kanban Story Filter | COMPLETE | P2 — Feature |
+=======
+>>>>>>> fcb13d83 (feat: backend Flask app structure, IPC tests, stories 729-731)
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -613,9 +616,12 @@ This file is auto-generated. Run `make backlog` to update.
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
 | #725 | Ipc Handler Compliance Sweep | IN PROGRESS | P1 — Open source release gate |
 | #727 | Worktree Handler Tests | IN PROGRESS | P1 — Core flow coverage |
+<<<<<<< HEAD
 | #729 | Fix Active Indicator Underline | IN PROGRESS | P1 |
 | #730 | Remove Console Logs | IN PROGRESS | P2 |
-| #732 | Fix Terminal Send Regression | IN PROGRESS | P1 |
+=======
+| #728 | Kanban Story Filter | IN PROGRESS | P2 — Feature |
+>>>>>>> fcb13d83 (feat: backend Flask app structure, IPC tests, stories 729-731)
 | #706 | Ci Pytest Coverage Gate | READY | P1 — Ship gate |
 | #707 | Ci Tsc Zero Error Gate | READY | P1 — Ship gate |
 | #708 | Ci Playwright E2E On Push | READY | P1 — Ship gate |
