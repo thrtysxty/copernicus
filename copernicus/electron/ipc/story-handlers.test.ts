@@ -19,7 +19,7 @@ vi.mock('../utils/handle-ipc', () => ({
 
 vi.mock('../db/state-ledger', () => ({
   stateLedger: {
-    getStoryById: vi.fn((id: string) => null),
+    getStoryById: vi.fn((_id: string) => null),
     getStoriesFromDb: vi.fn(() => []),
     listStoriesFromDb: vi.fn(() => []),
     upsertStory: vi.fn(),
@@ -44,8 +44,8 @@ describe('story-handlers', () => {
         archiveStory: vi.fn(),
         deleteStory: vi.fn(),
         setField: vi.fn(),
-        getStoryContent: vi.fn((id: string) => '# Test Story\n**Status:** PLANNING'),
-        getStoryPath: vi.fn((id: string) => '/test/story.md'),
+        getStoryContent: vi.fn((_id: string) => '# Test Story\n**Status:** PLANNING'),
+        getStoryPath: vi.fn((_id: string) => '/test/story.md'),
         listStories: vi.fn(() => []),
         syncFromDisk: vi.fn(() => 0),
         isRepoTargeted: vi.fn(() => false),
