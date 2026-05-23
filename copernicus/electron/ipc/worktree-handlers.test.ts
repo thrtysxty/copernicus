@@ -49,6 +49,19 @@ describe('worktree-handlers', () => {
   }
 
   describe('worktree:create', () => {
+    it('rejects path traversal branch names', async () => {
+      mockManager.create.mockRejectedValue(new Error('Branch name must not contain path traversal sequences'))
+
+      const register = await getRegister()
+      register(mockManager as any)
+
+      const handler = handlers['worktree:create']!
+      const result = await handler({} as any, { branch: '../../outside-repo', storyId: 1, nodeId: null, mergeMode: 'gated' })
+
+      expect(result.ok).toBe(false)
+      expect(result.error).toMatch(/path traversal/)
+    })
+
     it('creates worktree successfully', async () => {
       mockManager.create.mockResolvedValue({ path: '/tmp/worktree', branch: 'story/001' })
 
