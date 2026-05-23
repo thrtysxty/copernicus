@@ -11,14 +11,15 @@ import sys
 # Add parent to path to import app
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app import create_app
+from app import create_app, reset_test_db
 
 
 class TestStoriesRoutes(unittest.TestCase):
     """Test stories CRUD endpoints."""
 
     def setUp(self):
-        """Set up test client with in-memory database."""
+        """Set up test client with fresh temp database."""
+        reset_test_db()
         self.app = create_app('testing')
         self.client = self.app.test_client()
 
@@ -45,7 +46,6 @@ class TestStoriesRoutes(unittest.TestCase):
 
     def test_get_story_by_id_existing_returns_200(self):
         """GET /api/stories/<id> returns 200 for existing story."""
-        # First create a story
         create_payload = {
             'title': 'Existing Story',
             'description': 'Should be retrievable'
@@ -67,13 +67,11 @@ class TestStoriesRoutes(unittest.TestCase):
 
     def test_put_story_updates_existing(self):
         """PUT /api/stories/<id> returns 200 with updated object."""
-        # Create initial story
         self.client.post('/api/stories', json={
             'title': 'Original Title',
             'description': 'Original description'
         })
 
-        # Update it
         update_payload = {
             'title': 'Updated Title',
             'description': 'Updated description'
@@ -140,6 +138,157 @@ class TestStoriesRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         data = response.get_json()
         self.assertIn('error', data)
+
+    # ── NEW: DELETE + edge cases ────────────────────────────────────────────
+
+    def test_delete_story_existing_returns_200(self):
+        """DELETE /api/stories/<id> returns 200 for existing story."""
+        create_resp = self.client.post('/api/stories', json={
+            'title': 'To Be Deleted',
+            'description': 'Will be deleted'
+        })
+        story_id = create_resp.get_json()['id']
+
+        response = self.client.delete(f'/api/stories/{story_id}')
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertIn('message', data)
+
+        get_resp = self.client.get(f'/api/stories/{story_id}')
+        self.assertEqual(get_resp.status_code, 404)
+
+    def test_delete_story_missing_returns_404(self):
+        """DELETE /api/stories/<id> returns 404 for non-existent story."""
+        response = self.client.delete('/api/stories/9999')
+        self.assertEqual(response.status_code, 404)
+        data = response.get_json()
+        self.assertIn('error', data)
+
+    def test_get_stories_empty_returns_empty_list(self):
+        """GET /api/stories returns 200 with empty list when no stories."""
+        response = self.client.get('/api/stories')
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data, [])
+
+    def test_get_stories_returns_ordered_by_id_desc(self):
+        """GET /api/stories returns stories ordered by id descending."""
+        for i in range(3):
+            self.client.post('/api/stories', json={
+                'title': f'Story {i}',
+                'description': f'Description {i}'
+            })
+
+        response = self.client.get('/api/stories')
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(len(data), 3)
+        titles = [s['title'] for s in data]
+        self.assertEqual(titles, ['Story 2', 'Story 1', 'Story 0'])
+
+    def test_post_story_description_too_long_returns_400(self):
+        """POST /api/stories with 10001-char description returns 400."""
+        response = self.client.post('/api/stories', json={
+            'title': 'Title',
+            'description': 'x' * 10001
+        })
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
+
+    def test_put_story_description_too_long_returns_400(self):
+        """PUT /api/stories/<id> with 10001-char description returns 400."""
+        create_resp = self.client.post('/api/stories', json={
+            'title': 'Story',
+            'description': 'Original'
+        })
+        story_id = create_resp.get_json()['id']
+
+        response = self.client.put(f'/api/stories/{story_id}', json={
+            'title': 'Updated',
+            'description': 'x' * 10001
+        })
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
+
+    def test_story_roundtrip_full_crud(self):
+        """Create, read, update, delete a story in sequence."""
+        create_resp = self.client.post('/api/stories', json={
+            'title': 'CRUD Story',
+            'description': 'Initial description'
+        })
+        self.assertEqual(create_resp.status_code, 201)
+        story_id = create_resp.get_json()['id']
+
+        get_resp = self.client.get(f'/api/stories/{story_id}')
+        self.assertEqual(get_resp.status_code, 200)
+        self.assertEqual(get_resp.get_json()['title'], 'CRUD Story')
+
+        put_resp = self.client.put(f'/api/stories/{story_id}', json={
+            'title': 'Updated CRUD Story',
+            'description': 'Changed description'
+        })
+        self.assertEqual(put_resp.status_code, 200)
+        self.assertEqual(put_resp.get_json()['title'], 'Updated CRUD Story')
+
+        del_resp = self.client.delete(f'/api/stories/{story_id}')
+        self.assertEqual(del_resp.status_code, 200)
+
+        get_after = self.client.get(f'/api/stories/{story_id}')
+        self.assertEqual(get_after.status_code, 404)
+
+    def test_post_story_invalid_json_returns_400(self):
+        """POST /api/stories with malformed JSON returns 400."""
+        response = self.client.post('/api/stories',
+            data='not-valid-json',
+            content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_put_story_invalid_json_returns_400(self):
+        """PUT /api/stories/<id> with malformed JSON returns 400."""
+        create_resp = self.client.post('/api/stories', json={
+            'title': 'Story',
+            'description': 'Desc'
+        })
+        story_id = create_resp.get_json()['id']
+
+        response = self.client.put(f'/api/stories/{story_id}',
+            data='invalid-json',
+            content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_story_id_type_enforcement_returns_404(self):
+        """GET /api/stories/<string> with non-integer id returns 404."""
+        response = self.client.get('/api/stories/not-a-number')
+        self.assertEqual(response.status_code, 404)
+
+    def test_put_story_empty_description_returns_400(self):
+        """PUT /api/stories/<id> with empty description returns 400."""
+        create_resp = self.client.post('/api/stories', json={
+            'title': 'Story',
+            'description': 'Original'
+        })
+        story_id = create_resp.get_json()['id']
+
+        response = self.client.put(f'/api/stories/{story_id}', json={
+            'title': 'Updated',
+            'description': ''
+        })
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
+
+    def test_post_story_whitespace_title_returns_201(self):
+        """POST /api/stories with whitespace-only title returns 201 (whitespace is truthy)."""
+        response = self.client.post('/api/stories', json={
+            'title': '   ',
+            'description': 'Some description'
+        })
+        self.assertEqual(response.status_code, 201)
+        data = response.get_json()
+        self.assertIn('id', data)
+        self.assertEqual(data['title'], '   ')
 
 
 def run_tests():

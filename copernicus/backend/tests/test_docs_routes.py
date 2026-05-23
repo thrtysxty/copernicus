@@ -11,7 +11,7 @@ import sys
 # Add parent to path to import app
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app import create_app
+from app import create_app, reset_test_db
 
 
 class TestDocsRoutes(unittest.TestCase):
@@ -19,6 +19,7 @@ class TestDocsRoutes(unittest.TestCase):
 
     def setUp(self):
         """Set up test client."""
+        reset_test_db()
         self.app = create_app('testing')
         self.client = self.app.test_client()
 
