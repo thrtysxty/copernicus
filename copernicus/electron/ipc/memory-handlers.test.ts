@@ -93,7 +93,7 @@ describe('memory-handlers', () => {
     expect(callArgs).toBeDefined()
 
     const handlerFn = callArgs![1] as Function
-    vi.mocked(memoryService.supersede).mockResolvedValue()
+    vi.mocked(memoryService.supersede).mockResolvedValue(undefined)
 
     const result = await handlerFn({} as any, 'mem-old', 'mem-new')
     expect(result.ok).toBe(true)

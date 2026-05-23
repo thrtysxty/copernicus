@@ -82,7 +82,15 @@ describe('chat-handlers', () => {
     mockDeps = {
       modelRegistry: {
         getModels: vi.fn(() => []),
-        getFastModel: vi.fn(() => ({ id: 'fast-model' })),
+        getFastModel: vi.fn(() => ({
+          id: 'fast-model',
+          name: 'Fast Model',
+          provider: 'anthropic',
+          contextWindow: 200000,
+          costPer1kIn: 0.015,
+          costPer1kOut: 0.075,
+          supportsVision: true,
+        })),
       } as any,
       llmService: {
         streamChat: vi.fn(),

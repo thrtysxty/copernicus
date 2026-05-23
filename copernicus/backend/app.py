@@ -14,17 +14,24 @@ from app import stories_bp, docs_bp
 BASE_DIR = Path(__file__).parent.parent
 DATABASE_PATH = BASE_DIR / 'copernicus.db'
 
+# Test isolation: allow tests to override the DB path for a given app instance
+_test_db_path: Optional[str] = None
+
 
 class Database:
     """Database connection helper."""
 
     def __init__(self):
         self.conn: Optional[sqlite3.Connection] = None
+        self._path: Optional[str] = None
 
-    def connect(self):
-        """Connect to database."""
-        self.conn = sqlite3.connect(str(DATABASE_PATH))
+    def connect(self, path: Optional[str] = None) -> sqlite3.Connection:
+        """Connect to database, respecting test override."""
+        db_path = path if path else str(DATABASE_PATH)
+        # Always create a fresh connection to ensure test isolation
+        self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
+        self._path = db_path
         return self.conn
 
     def close(self):
@@ -35,8 +42,10 @@ class Database:
 
     def execute(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
         """Execute SQL with parameterized query."""
-        if not self.conn:
-            self.connect()
+        # Always use current _test_db_path to ensure test isolation
+        db_path = _test_db_path if _test_db_path else str(DATABASE_PATH)
+        if not self.conn or self._path != db_path:
+            self.connect(db_path)
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
         self.conn.commit()
@@ -44,16 +53,18 @@ class Database:
 
     def fetchone(self, sql: str, params: tuple = ()) -> Optional[sqlite3.Row]:
         """Fetch one row."""
-        if not self.conn:
-            self.connect()
+        db_path = _test_db_path if _test_db_path else str(DATABASE_PATH)
+        if not self.conn or self._path != db_path:
+            self.connect(db_path)
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
         return cursor.fetchone()
 
     def fetchall(self, sql: str, params: tuple = ()) -> list[sqlite3.Row]:
         """Fetch all rows."""
-        if not self.conn:
-            self.connect()
+        db_path = _test_db_path if _test_db_path else str(DATABASE_PATH)
+        if not self.conn or self._path != db_path:
+            self.connect(db_path)
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
         return cursor.fetchall()
@@ -75,6 +86,8 @@ def init_db():
 
 def create_app(config_name: str = 'development') -> Any:
     """Create Flask application."""
+    global _test_db_path
+
     app = Flask(__name__)
     app.config['DATABASE'] = str(DATABASE_PATH)
     app.config['TESTING'] = False
@@ -82,8 +95,10 @@ def create_app(config_name: str = 'development') -> Any:
 
     if config_name == 'testing':
         app.config['TESTING'] = True
-        # Use in-memory database for testing
         app.config['DATABASE'] = ':memory:'
+        _test_db_path = ':memory:'
+    else:
+        _test_db_path = None
 
     # Initialize database schema
     init_db()

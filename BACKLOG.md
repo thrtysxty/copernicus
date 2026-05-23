@@ -584,10 +584,10 @@ This file is auto-generated. Run `make backlog` to update.
 | #704 | E2E Test Env Pattern | COMPLETE | P1 — Security hardening |
 | #726 | Renderer Ipc Compliance Sweep | COMPLETE | P1 — Open source release gate |
 | #728 | Kanban Story Filter | COMPLETE | P2 — Feature |
-| #729 | Fix Active Indicator Underline | COMPLETE | P1 |
-| #730 | Remove Console Logs | COMPLETE | P2 |
+| #729 | Fix Active Indicator Underline | COMPLETE | P2 — Visual polish |
+| #730 | Remove Console Logs | COMPLETE | P2 — Code cleanup |
 | #731 | Backend Flask Route Tests | COMPLETE | P1 |
-| #732 | Fix Terminal Send Regression | COMPLETE | P1 |
+| #732 | Fix Terminal Send Regression | COMPLETE | P1 — Regression fix |
 | #732 | Stories Input Validation | COMPLETE | P0 (BLOCK) |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
