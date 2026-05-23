@@ -133,7 +133,6 @@ This file is auto-generated. Run `make backlog` to update.
 | #694 | Missing Intelligence Documents Table | COMPLETE | N/A |
 | #695 | Flask Backend Notebooklm Missing Module | COMPLETE | N/A |
 | #703 | Pre Commit Secret Scanner | APPROVED FOR IMPLEMENTATION | P1 — Security hardening |
-| #731 | Backend Flask Route Tests | APPROVED FOR IMPLEMENTATION | P1 |
 | #210 | Jules Session Badge On Kanban Cards | CANCELLED | P1 |
 | #594 | Auto-Mode Classifier Hit Logger | CANCELLED — auto mode not available on current account tier | P2 |
 | #167 | Terminals Management | COMPLETE | P0 — Blocker |
@@ -587,7 +586,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #728 | Kanban Story Filter | COMPLETE | P2 — Feature |
 | #729 | Fix Active Indicator Underline | COMPLETE | P1 |
 | #730 | Remove Console Logs | COMPLETE | P2 |
+| #731 | Backend Flask Route Tests | COMPLETE | P1 |
 | #732 | Fix Terminal Send Regression | COMPLETE | P1 |
+| #732 | Stories Input Validation | COMPLETE | P0 (BLOCK) |
 | #127 | Splash Wizard Ipc Handlers | COMPLETED | P0 — Blocks first-run onboarding |
 | #128 | Splash Fullscreen Frameless | COMPLETED | P1 — First-run visual quality |
 | #129 | Wizard Completion Loop | COMPLETED | P0 — Blocks onboarding |
@@ -635,6 +636,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #722 | Tsc Missing Module Security Test | READY | P0 — Blocks CI tsc gate (Story 707) |
 | #723 | Tsc Mock Type Mismatches | READY | P0 — Blocks CI tsc gate (Story 707) |
 | #724 | Tsc Security Test Cleanup | READY | P1 — Blocks tsc gate |
+| #733 | Terminal Docker Id Sanitization | READY | P0 (BLOCK) |
+| #734 | Docs Path Validation Consolidation | READY | P0 (BLOCK) |
+| #735 | File Handlers Assert Safe Path | READY | P0 (BLOCK) |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

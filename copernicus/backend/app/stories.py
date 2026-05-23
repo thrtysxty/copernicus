@@ -22,6 +22,10 @@ def create_story():
 
     title = data.get('title', '')
     description = data.get('description', '')
+    if not title or not description:
+        return jsonify({'error': 'title and description are required'}), 400
+    if len(title) > 500 or len(description) > 10000:
+        return jsonify({'error': 'Field too long'}), 400
 
     import sqlite3
     conn = sqlite3.connect(get_db_path())
@@ -85,6 +89,10 @@ def update_story(story_id: int):
 
     title = data.get('title', '')
     description = data.get('description', '')
+    if not title or not description:
+        return jsonify({'error': 'title and description are required'}), 400
+    if len(title) > 500 or len(description) > 10000:
+        return jsonify({'error': 'Field too long'}), 400
 
     import sqlite3
     conn = sqlite3.connect(get_db_path())

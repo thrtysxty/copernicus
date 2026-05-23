@@ -111,6 +111,36 @@ class TestStoriesRoutes(unittest.TestCase):
         data = response.get_json()
         self.assertIn('error', data)
 
+    def test_post_story_empty_title_returns_400(self):
+        """POST /api/stories with empty title returns 400."""
+        response = self.client.post('/api/stories', json={'title': '', 'description': 'desc'})
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
+
+    def test_post_story_empty_description_returns_400(self):
+        """POST /api/stories with empty description returns 400."""
+        response = self.client.post('/api/stories', json={'title': 'Title', 'description': ''})
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
+
+    def test_post_story_title_too_long_returns_400(self):
+        """POST /api/stories with 501-char title returns 400."""
+        response = self.client.post('/api/stories', json={'title': 'x' * 501, 'description': 'desc'})
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
+
+    def test_put_story_empty_title_returns_400(self):
+        """PUT /api/stories/<id> with empty title returns 400."""
+        create_resp = self.client.post('/api/stories', json={'title': 'Story', 'description': 'desc'})
+        story_id = create_resp.get_json()['id']
+        response = self.client.put(f'/api/stories/{story_id}', json={'title': '', 'description': 'new desc'})
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertIn('error', data)
+
 
 def run_tests():
     """Run the story route tests."""
