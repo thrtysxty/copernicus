@@ -141,7 +141,7 @@
     "@google/generative-ai": "^0.24.1",
     "@google/jules-sdk": "^0.2.0",
     "@google/stitch-sdk": "^0.0.3",
-    "@libsql/client": "^0.17.2",
+    "@libsql/client": "^0.17.3",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@monaco-editor/react": "^4.6.0",
     "@openrouter/sdk": "^0.11.2",
