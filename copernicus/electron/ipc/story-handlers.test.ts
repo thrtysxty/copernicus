@@ -2,9 +2,21 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { ipcMain } from 'electron'
 import { register } from './story-handlers'
 
+vi.mock('electron', () => ({
+  ipcMain: {
+    handle: vi.fn(),
+    on: vi.fn(),
+  },
+  BrowserWindow: {
+    getAllWindows: vi.fn(() => []),
+  },
+}))
+
 vi.mock('../utils/handle-ipc', () => ({
-  handleIpc: vi.fn(async (channelOrFn: any, fnOrNothing?: any) => {
-    const fn = typeof channelOrFn === 'function' ? channelOrFn : fnOrNothing
+  handleIpc: vi.fn(async (channelOrFn: any, argsOrFn?: any, maybeFn?: any) => {
+    const fn = typeof channelOrFn === 'function' ? channelOrFn
+             : typeof argsOrFn === 'function' ? argsOrFn
+             : maybeFn
     try {
       const result = await fn!()
       if (result && typeof result === 'object' && 'error' in result) {
@@ -38,7 +50,7 @@ describe('story-handlers', () => {
     handlers = {}
     mockDeps = {
       storiesManager: {
-        createStory: vi.fn(),
+        createStory: vi.fn(() => 'story_001'),
         updateStoryStatus: vi.fn(),
         setStoryStatus: vi.fn(),
         archiveStory: vi.fn(),
@@ -48,7 +60,7 @@ describe('story-handlers', () => {
         getStoryPath: vi.fn((_id: string) => '/test/story.md'),
         listStories: vi.fn(() => []),
         syncFromDisk: vi.fn(() => 0),
-        isRepoTargeted: vi.fn(() => false),
+        isRepoTargeted: vi.fn(() => true),
         targetProject: vi.fn(() => 0),
         importFromPath: vi.fn(() => 0),
         throughput: vi.fn(() => 0),
@@ -59,6 +71,13 @@ describe('story-handlers', () => {
         getStoriesThroughput: vi.fn(() => 0),
         getStoriesStatusDistribution: vi.fn(() => ({})),
         getStoriesBugsByAssignee: vi.fn(() => ({})),
+        listStoriesFromDb: vi.fn(() => []),
+        getStoryById: vi.fn((id) => {
+          if (id === 'story_001' || id === 'story_999') {
+            return { id, file_path: `/test/${id}.md`, body_md: '# Test', status: 'PLANNING' }
+          }
+          return null
+        }),
       },
     }
 
@@ -111,7 +130,7 @@ describe('story-handlers', () => {
 
       expect(result.ok).toBe(true)
       expect(mockDeps.storiesManager.updateStoryStatus).toHaveBeenCalledWith('story_001', 'IN_PROGRESS')
-      expect(mockWindow.webContents.send).toHaveBeenCalledWith('story:status-changed', {
+      expect(mockWindow.webContents.send).toHaveBeenCalledWith('stories:status-changed', {
         id: 'story_001',
         status: 'IN_PROGRESS',
       })
@@ -166,7 +185,7 @@ describe('story-handlers', () => {
       const result = await handlers['stories:archive']!({} as any, 'invalid-id')
 
       expect(result.ok).toBe(false)
-      expect(result.error).toBe('undefined')
+      expect(result.error).toBe('Invalid story id: invalid-id')
     })
   })
 
@@ -183,7 +202,7 @@ describe('story-handlers', () => {
         throw new Error('Story not found')
       })
 
-      const result = await handlers['stories:delete']!({} as any, 'nonexistent')
+      const result = await handlers['stories:delete']!({} as any, 'story_999')
 
       expect(result.ok).toBe(false)
       expect(result.error).toBe('Story not found')
@@ -193,7 +212,7 @@ describe('story-handlers', () => {
       const result = await handlers['stories:delete']!({} as any, 'invalid')
 
       expect(result.ok).toBe(false)
-      expect(result.error).toBe('undefined')
+      expect(result.error).toBe('Invalid story id: invalid')
     })
   })
 
@@ -221,7 +240,7 @@ describe('story-handlers', () => {
       const result = await handlers['stories:set-field']!({} as any, { id: 'invalid', field: 'priority', value: 'P1' })
 
       expect(result.ok).toBe(false)
-      expect(result.error).toBe('undefined')
+      expect(result.error).toBe('Invalid story id: invalid')
     })
   })
 
@@ -346,7 +365,7 @@ describe('story-handlers', () => {
       const result = await handlers['stories:hydrate']!({} as any, 'invalid')
 
       expect(result.ok).toBe(false)
-      expect(result.error).toBe('undefined')
+      expect(result.error).toBe('Invalid story id: invalid')
     })
   })
 

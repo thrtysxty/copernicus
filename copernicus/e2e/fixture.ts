@@ -68,7 +68,17 @@ export const test = base.extend<E2EOptions & ElectronFixtures>({
     fs.mkdirSync(dir, { recursive: true })
     await use(dir)
     // Cleanup after test (comment out to inspect state)
-    fs.rmSync(dir, { recursive: true, force: true })
+    // Retry up to 3x - Electron may still be releasing the dir
+    for (let i = 0; i < 3; i++) {
+      try {
+        fs.rmSync(dir, { recursive: true, force: true });
+        break;
+      } catch (e) {
+        if (i === 2) throw e;
+        if (e.code !== "ENOTEMPTY" && e.code !== "EBUSY") throw e;
+        setTimeout(() => {}, 500);
+      }
+    }
   },
 
   app: async ({ skipWizard, e2eHome }, use) => {
@@ -85,13 +95,22 @@ export const test = base.extend<E2EOptions & ElectronFixtures>({
     const testEnv = { ...process.env, ...loadDotEnvTest() }
 
     const app = await electron.launch({
-      args: [APP_MAIN, `--user-data-dir=${e2eHome}`],
+      headless: true,
+      args: [
+        APP_MAIN,
+        `--user-data-dir=${e2eHome}`,
+        `--disable-gpu`,
+        `--no-sandbox`,
+        `--disable-dev-shm-usage`,
+        `--disable-gpu-sandbox`,
+        `--force-device-scale-factor=1`,
+      ],
       env: {
         ...testEnv,
         NODE_ENV: 'test',
-        COPERNICUS_E2E_HOME: e2eHome,
-        // Suppress update checks
         ELECTRON_NO_UPDATER: '1',
+        ELECTRON_DISABLE_SANDBOX: '1',
+        COPERNICUS_E2E_HOME: e2eHome,
       },
     })
 

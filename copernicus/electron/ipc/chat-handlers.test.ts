@@ -14,12 +14,16 @@ vi.mock('electron', () => ({
 }))
 
 vi.mock('../utils/handle-ipc', () => ({
-  handleIpc: vi.fn(async (channelOrFn, fnOrNothing) => {
-    // Handle both signatures: handleIpc(fn) and handleIpc(channel, args, fn)
-    const fn = typeof channelOrFn === 'function' ? channelOrFn : fnOrNothing
+  handleIpc: vi.fn(async (channelOrFn: any, argsOrFn?: any, maybeFn?: any) => {
+    // Handle both signatures:
+    //   handleIpc(fn)                — chat:compress-delta style
+    //   handleIpc(channel, args, fn) — all other handlers
+    const fn = typeof channelOrFn === 'function' ? channelOrFn
+             : typeof argsOrFn === 'function' ? argsOrFn
+             : maybeFn
     try {
       const result = await fn!()
-      // If result already has error property, pass through
+      // If result already has error property, pass through (vision check, etc.)
       if (result && typeof result === 'object' && 'error' in result) {
         return result
       }

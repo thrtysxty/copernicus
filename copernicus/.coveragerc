@@ -1,0 +1,11 @@
+[run]
+source = backend
+omit =
+    backend/tests/*
+    */migrations/*
+    backend/app.py
+    backend/app/core.py
+
+[report]
+fail_under = 65
+show_missing = True

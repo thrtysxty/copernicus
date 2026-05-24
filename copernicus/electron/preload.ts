@@ -23,7 +23,7 @@ const SEND_CHANNELS = new Set([
   // Git
   'git:branch',
   // Stories
-  'stories:list', 'stories:create', 'stories:get-content', 'stories:update-content',
+  'stories:list', 'stories:create', 'stories:delete', 'stories:get-content', 'stories:update-content',
   'stories:update', 'stories:set-status', 'stories:is-repo-targeted', 'stories:hydrate', 'story:scaffold', 'stories:set-field',
   'stories:sync', 'stories:target-project', 'stories:import-from-path',
   // Makefile

@@ -19,7 +19,7 @@ export default defineConfig({
   projects: [
     {
       name: 'smoke',
-      testMatch: ['**/smoke.test.ts', '**/story-wizard.spec.ts', '**/kanban-drag.spec.ts', '**/agent-run.spec.ts'],
+      testMatch: ['**/smoke.test.ts', '**/story-wizard.spec.ts', '**/kanban-drag.spec.ts', '**/agent-run.spec.ts', '**/chat-llm.spec.ts', '**/story-create.spec.ts'],
     },
     {
       name: 'functional',

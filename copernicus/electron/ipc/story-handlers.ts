@@ -25,12 +25,13 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   ipcMain.handle('stories:get-content', (_event, id: string) => handleIpc('stories:get-content', [id], () => storiesManager.getStoryContent(id)))
   ipcMain.handle('stories:update-content', (_event, { id, content }: { id: string; content: string }) => handleIpc('stories:update-content', [{ id, content }], () => storiesManager.updateStoryContent(id, content)))
   ipcMain.handle('stories:set-field', (_event, { id, field, value }: { id: string; field: string; value: string }) => handleIpc('stories:set-field', [{ id, field, value }], () => {
-    if (!/^story_\d+$/.test(id)) return
+    if (!/^story_\d+$/.test(id)) throw new Error(`Invalid story id: ${id}`);
     return storiesManager.setField(id, field, value)
   }))
   ipcMain.handle('stories:update', (_event, id: string, status: string) => handleIpc('stories:update', [id, status], () => {
-    if (!/^story_\d+$/.test(id)) return;
+    if (!/^story_\d+$/.test(id)) throw new Error(`Invalid story id: ${id}`);
     const res = storiesManager.updateStoryStatus(id, status);
+    win?.webContents.send('stories:status-changed', { id, status });
     Promise.resolve().then(() => {
       try {
         const match = id.match(/^story_(\d+)$/);
@@ -49,18 +50,18 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     return res;
   }))
   ipcMain.handle('stories:hydrate', (_event, id: string) => handleIpc('stories:hydrate', [id], () => {
-    if (!/^story_\d+$/.test(id)) return;
+    if (!/^story_\d+$/.test(id)) throw new Error(`Invalid story id: ${id}`);
     const content = storiesManager.getStoryContent(id)
     const filePath = storiesManager.getStoryPath(id)
     win?.webContents.send('editor:open', { path: filePath, content })
     return true
   }))
   ipcMain.handle('stories:delete', (_event, id: string) => handleIpc('stories:delete', [id], () => {
-    if (!/^story_\d+/.test(id)) return;
+    if (!/^story_\d+/.test(id)) throw new Error(`Invalid story id: ${id}`);
     return storiesManager.deleteStory(id)
   }))
   ipcMain.handle('stories:archive', (_event, id: string) => handleIpc('stories:archive', [id], () => {
-    if (!/^story_\d+/.test(id)) return;
+    if (!/^story_\d+/.test(id)) throw new Error(`Invalid story id: ${id}`);
     return storiesManager.archiveStory(id)
   }))
 

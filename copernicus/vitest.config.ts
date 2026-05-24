@@ -14,8 +14,13 @@ export default defineConfig({
     include: ['{electron,src}/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'release', '**/electron/db/state-ledger.test.ts'],
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'lcov', 'json', 'html'],
       exclude: ['node_modules/', 'src/renderer/test/setup.ts'],
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        branches: 55,
+      },
     },
   },
   resolve: {
