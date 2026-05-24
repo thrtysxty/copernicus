@@ -163,7 +163,7 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^10.1.0",
     "react-rnd": "^10.5.2",
-    "recharts": "^3.7.0",
+    "recharts": "^3.8.1",
     "remark-gfm": "^4.0.1",
     "socket.io-client": "^4.8.3",
     "sqlite-vec": "^0.1.9",
