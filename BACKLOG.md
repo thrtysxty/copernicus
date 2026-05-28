@@ -616,11 +616,9 @@ This file is auto-generated. Run `make backlog` to update.
 | #575 | Agent Break Room | DRAFT — Phase 7 | P3 — Easter Egg / Delight |
 | #592 | Intelligence Sync Retarget Provider Injection | IN PROGRESS | P2 |
 | #684 | Electron 28 To 41 Migration | IN PROGRESS | P3 |
+| #706 | Ci Pytest Coverage Gate | IN PROGRESS | P1 — Ship gate |
 | #725 | Ipc Handler Compliance Sweep | IN PROGRESS | P1 — Open source release gate |
 | #727 | Worktree Handler Tests | IN PROGRESS | P1 — Core flow coverage |
-| #706 | Ci Pytest Coverage Gate | READY | P1 — Ship gate |
-| #707 | Ci Tsc Zero Error Gate | READY | P1 — Ship gate |
-| #708 | Ci Playwright E2E On Push | READY | P1 — Ship gate |
 | #709 | Ipc Envelope Contract Tests | READY | P1 — Core infrastructure coverage |
 | #710 | Kanban Flow Tests | READY | P1 — Core flow coverage |
 | #711 | Agent Dispatch Tests | READY | P1 — Core flow coverage |
@@ -640,6 +638,8 @@ This file is auto-generated. Run `make backlog` to update.
 | #733 | Terminal Docker Id Sanitization | READY | P0 (BLOCK) |
 | #734 | Docs Path Validation Consolidation | READY | P0 (BLOCK) |
 | #735 | File Handlers Assert Safe Path | READY | P0 (BLOCK) |
+| #708 | Ci Playwright E2E On Push | READY (e2e.yml already exists — needs AC verification) | P1 — Ship gate |
+| #707 | Ci Tsc Zero Error Gate | READY (gate exists in pr-validation.yml — AC needs verification vs actual CI) | P1 — Ship gate |
 | #526 | Mcp Server Persistent Service | SUPERSEDED — by Story 527 (Copernicus MCP Hub absorbs this scope entirely) | P1 — Infrastructure |
 | #393 | Designer Canvasobject Copernicus Design Tokens | SUPERSEDED — by story 397 (System A files deleted) | P1 |
 

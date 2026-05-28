@@ -1,7 +1,8 @@
 .PHONY: ci-test coverage ci-coverage rc-check dist
 
 ci-test:
-	python -m pytest backend/tests/ --cov=backend --cov-fail-under=60
+	/opt/homebrew/bin/python3.11 -m pytest backend/tests/ --cov=backend --cov-fail-under=80
+	/opt/homebrew/bin/python3.11 -m pytest backend/tests/test_stories_security.py backend/tests/test_docs_path_security.py backend/tests/test_context_manager_pruning.py -v --tb=short
 
 coverage:
 	python -m pytest backend/tests/ --cov=backend --cov-report=term-missing
