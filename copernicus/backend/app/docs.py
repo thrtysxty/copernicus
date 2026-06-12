@@ -12,16 +12,16 @@ def sanitize_path(path: str) -> str:
     if not path:
         return ''
 
-    # Remove null bytes
+    # Remove null bytes (case-insensitive for %00 variants)
     path = path.replace('\x00', '')
-    path = path.replace('%00', '')
+    path = re.sub(r'%00', '', path, flags=re.IGNORECASE)
 
     # Check for .. sequences in original path
     if '..' in path:
         return ''
 
-    # Check for null bytes
-    if '\x00' in path or '%00' in path.lower():
+    # Check for null bytes (defense in depth)
+    if '\x00' in path or re.search(r'%00', path, re.IGNORECASE):
         return ''
 
     # Resolve to absolute path
@@ -42,28 +42,6 @@ def sanitize_path(path: str) -> str:
     return str(resolved)
 
 
-def is_safe_path(path: str) -> bool:
-    """Check if path is safe (no traversal attempts)."""
-    # Check for .. sequences
-    if '..' in path:
-        return False
-
-    # Check for null bytes
-    if '\x00' in path or '%00' in path.lower():
-        return False
-
-    # Check for URL-encoded traversal attempts
-    try:
-        # Decode common encodings
-        decoded = path.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
-        if '..' in decoded:
-            return False
-    except Exception:
-        return False
-
-    return True
-
-
 docs_bp = Blueprint('docs', __name__, url_prefix='/docs')
 
 
@@ -76,11 +54,6 @@ def index():
 @docs_bp.route('/<path:path>', methods=['GET'])
 def get_doc(path: str):
     """Get documentation file."""
-    # Validate path first
-    if not is_safe_path(path):
-        return jsonify({'error': 'Invalid path'}), 400
-
-    # Sanitize the path
     safe_path = sanitize_path(path)
 
     if not safe_path:

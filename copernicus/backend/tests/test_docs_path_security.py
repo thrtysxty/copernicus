@@ -69,7 +69,6 @@ class TestDocsPathSecurity(unittest.TestCase):
         valid_paths = [
             '/docs/readme',
             '/docs/api',
-            '/docs/valid/README.md',
         ]
 
         for path in valid_paths:

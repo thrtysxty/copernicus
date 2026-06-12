@@ -24,7 +24,16 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
     const txId = await fsManager.beginTransaction();
     try {
       for (const f of files) {
-        assertSafePath(f.filePath);
+        try {
+          assertSafePath(f.filePath);
+        } catch {
+          try {
+            await fsManager.rollbackTransaction(txId);
+          } catch (rollbackErr) {
+            log.error('Rollback failed:', rollbackErr);
+          }
+          return { ok: false, error: 'Unsafe path' };
+        }
         await fsManager.stageFile(txId, f.filePath, f.content);
       }
       await fsManager.commitTransaction(txId);

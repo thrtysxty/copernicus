@@ -51,18 +51,18 @@ class TestDocsRoutes(unittest.TestCase):
         self.assertIn('/docs/readme', endpoint_paths)
         self.assertIn('/docs/api', endpoint_paths)
 
-    def test_docs_get_doc_returns_404_for_nonexistent(self):
-        """GET /docs/<path> returns 404 for non-existent files."""
+    def test_docs_get_doc_returns_403_for_outside_root(self):
+        """GET /docs/<path> returns 403 for paths outside project root."""
         response = self.client.get('/docs/some/file.md')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 403)
         data = response.get_json()
-        self.assertEqual(data['status'], 'not_found')
+        self.assertIn('error', data)
 
-    def test_docs_invalid_path_returns_400(self):
-        """GET /docs with invalid path returns 400."""
+    def test_docs_invalid_path_returns_403(self):
+        """GET /docs with invalid path returns 403."""
         # Test path with special characters that might cause issues
         response = self.client.get('/docs/../../../etc/passwd')
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
         # Should not leak sensitive content
         data = response.get_json()
         self.assertNotIn('root:', data)

@@ -1,8 +1,13 @@
 import json
 from typing import Iterator, List, Dict
-from google import genai
-from google.genai import types
 from backend.providers.base import BaseProvider
+
+try:
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    GENAI_AVAILABLE = False
 
 class GoogleProvider(BaseProvider):
     def stream_chat(self, messages: List[Dict[str, str]], model: str, **kwargs) -> Iterator[str]:

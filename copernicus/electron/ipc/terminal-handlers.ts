@@ -96,10 +96,11 @@ export function register(win: BrowserWindow, deps: IpcHandlerDeps) {
   }));
 
   ipcMain.handle('runtime:manage-container', (_event, { id, action }: { id: string, action: 'start' | 'stop' | 'logs' }) => handleIpc('runtime:manage-container', [{ id, action }], async () => {
+    if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+      throw new Error('INVALID_CONTAINER_ID');
+    }
+
     if (action === 'logs') {
-      if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
-        throw new Error('INVALID_CONTAINER_ID');
-      }
       const termId = `logs-${id}-${Date.now()}`;
       if (win) {
         win.webContents.send('terminal:spawn', { id: termId, label: `Logs: ${id.substring(0, 8)}`, ephemeral: true });
