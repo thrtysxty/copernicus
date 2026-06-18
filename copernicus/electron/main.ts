@@ -33,25 +33,21 @@ import { julesMonitor } from './jules/monitor'
 import { julesManager } from './jules/jules-manager'
 import { lspManager } from './lsp/lsp-manager'
 import { backendManager } from './backend-manager'
-import { handleIpc } from './utils/handle-ipc'
 import { socketManager } from './socket-manager'
 import { JulesClient } from './jules/jules-client'
 import { applyAndVerifyPatch, reversePatch } from './utils/patch-manager'
 import { runRAGBenchmark } from './utils/rag-benchmark'
 import { addRecentProject } from './utils/recent-projects'
-import { execAsync } from './utils/exec-async'
-import { cwd } from 'node:process'
 import { localModelManager } from './local-model/LocalModelManager'
-import { WorktreeManager } from './worktree/WorktreeManager' // Added this back for worktreeManager type
+import { WorktreeManager } from './worktree/WorktreeManager'
 import { detectStack } from './skills/stack-detector'
-import { providerSyncEngine } from './intelligence/provider-sync-engine'
 import { auditSkillDescriptions } from './skills/description-auditor'
 import { loadKnowledgeBase } from './kb/kb-loader'
+import { registerTelemetryHandlers, registerSkillsHandlers } from './ipc/telemetry-skills-handlers'
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
 import { jsonlExporter } from './memory/jsonl-exporter'
-import { memoryService } from './memory/memoryService'
 import { ExtensionHostManager } from './extensions/ExtensionHostManager'
 import { ExtensionRegistry } from './extensions/ExtensionRegistry'
 
@@ -270,168 +266,15 @@ async function registerIpcHandlers() {
         isFirstRun, spawn, LOG_DIR
       }
 
-  ipcMain.handle('review:generate-summary', (_e, { diff, storyId, storyTitle }) => handleIpc(async () => {
-    // Fast LLM summary or simple fallback
-    // Truncate diff to 4000 chars
-    const truncated = (diff as string).slice(0, 4000)
-    // For now: return structured response without LLM (LLM integration is optional)
-    // Parse changed files from diff
-    const fileLines = truncated.split('\n').filter((l: string) => l.startsWith('--- a/') || l.startsWith('+++ b/')).map((l: string) => l.replace(/^(\+\+\+ b\/|--- a\/)/, '').trim()).filter((f: string, i: number, arr: string[]) => arr.indexOf(f) === i && f !== '/dev/null')
-    return {
-      storyId,
-      storyTitle,
-      changedFiles: fileLines.slice(0, 10),
-      summary: `Story ${storyId} implementation complete. ${fileLines.length} file(s) changed.`,
-      timestamp: new Date().toISOString()
-    }
-  }))
-
-  ipcMain.handle('telemetry:recovery-status', (_e) => handleIpc(async () => {
-    try {
-      const response = await fetch(`${config.otel.endpoint}/recovery-status`);
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (err) {
-      log.warn('[Main] Failed to fetch recovery status:', err);
-    }
-    return { pendingRows: 0, recovered: 0 };
-  }))
-
-  ipcMain.handle('telemetry:status', (_e) => handleIpc(async () => {
-    const collectorRunning = collectorProcess !== null && !collectorProcess.killed;
-
-    let settingsWritten = false;
-    try {
-      const rootPath = fsManager.getRootPath();
-      if (rootPath) {
-        const settingsPath = path.join(rootPath, '.claude', 'settings.json');
-        if (fs.existsSync(settingsPath)) {
-          const content = fs.readFileSync(settingsPath, 'utf-8');
-          settingsWritten = content.includes('// --- Copernicus Managed: OTel ---');
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-
-    return { collectorRunning, settingsWritten };
-  }))
-
-  ipcMain.handle('memory:get-active-project', (_e) => handleIpc(() => memoryService.activeProjectId))
-
-  ipcMain.handle('health:check-all', (_e) => handleIpc(async () => {
-    const checks = await Promise.allSettled([
-      // Backend reachable
-      fetch(`${config.backend.url}/api/health`).then(() => ({ name: 'Backend', ok: true })).catch(() => ({ name: 'Backend', ok: false })),
-      // Git valid
-      execAsync('git rev-parse --git-dir', { cwd: cwd() }).then(() => ({ name: 'Git', ok: true })).catch(() => ({ name: 'Git', ok: false })),
-    ])
-    return checks.map((r, i) => r.status === 'fulfilled' ? r.value : { name: ['Backend','Git'][i], ok: false })
-  }))
-
-  ipcMain.handle('db:get-edit-decisions', (_e, { promptId }: { promptId: string }) => handleIpc(() => {
-    return stateLedger.getEditDecisionsCounts(promptId)
-  }))
-
-  ipcMain.handle('skills:detect-stack', () => handleIpc(() => {
-    const rootPath = fsManager.getRootPath()
-    return detectStack(rootPath || '')
-  }))
-
-  ipcMain.handle('skills:audit', () => handleIpc(async () => {
-    const rootPath = fsManager.getRootPath()
-    return auditSkillDescriptions(rootPath || '')
-  }))
-
-  ipcMain.handle('skills:scaffold', (_e, { categories, stackProfile }) => handleIpc(async () => {
-    const rootPath = fsManager.getRootPath()
-    if (!rootPath) throw new Error('No project root path set');
-
-    const generated: string[] = []
-    const skipped: string[] = []
-    const projectName = path.basename(rootPath)
-    const stackStr = stackProfile.frameworks.join(', ')
-
-    const targetSkillsDir = path.join(rootPath, '.claude', 'skills')
-    if (!fs.existsSync(targetSkillsDir)) {
-      fs.mkdirSync(targetSkillsDir, { recursive: true })
-    }
-
-    const templatesDir = path.join(__dirname, 'skills', 'templates')
-
-    for (const category of categories) {
-      const sourceDir = path.join(templatesDir, category)
-      const targetDir = path.join(targetSkillsDir, category)
-
-      if (!fs.existsSync(sourceDir)) {
-        log.warn(`[skills:scaffold] Template directory not found for category: ${category}`)
-        skipped.push(category)
-        continue
-      }
-
-      if (fs.existsSync(targetDir)) {
-        skipped.push(category)
-        continue
-      }
-
-      try {
-        fs.mkdirSync(targetDir, { recursive: true })
-
-        const copyRecursiveSync = (src: string, dest: string) => {
-          const exists = fs.existsSync(src)
-          const stats = exists && fs.statSync(src)
-          const isDirectory = exists && stats && stats.isDirectory()
-
-          if (isDirectory) {
-            if (!fs.existsSync(dest)) fs.mkdirSync(dest)
-            fs.readdirSync(src).forEach((childItemName) => {
-              copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName))
-            })
-          } else {
-            let content = fs.readFileSync(src, 'utf-8')
-            content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName)
-                             .replace(/\{\{STACK\}\}/g, stackStr)
-                             .replace(/\{\{REPO_ROOT\}\}/g, rootPath)
-            
-            if (path.basename(dest) === 'SKILL.md' && path.dirname(dest) === targetDir) {
-              const doc = stateLedger.createIntelDoc({
-                projectId: rootPath,
-                type: 'skill',
-                title: category,
-                description: `Skill scaffold for ${category}`,
-                content: content,
-                providers: [{ provider: 'claude', enabled: true }]
-              })
-              providerSyncEngine.sync(doc, rootPath).catch(err => {
-                log.error('Provider sync failed on skill scaffold:', err)
-              })
-            } else {
-              fs.writeFileSync(dest, content, 'utf-8')
-            }
-          }
-        }
-
-        copyRecursiveSync(sourceDir, targetDir)
-        generated.push(category)
-      } catch (err) {
-        log.error(`[skills:scaffold] Error writing skill ${category}:`, err)
-        skipped.push(category)
-      }
-    }
-
-    const newStackProfile = detectStack(rootPath)
-    
-    const activeWin = BrowserWindow.getAllWindows()[0]
-    if (activeWin) {
-      activeWin.webContents.send('skills:scaffolded', {
-        stackProfile: newStackProfile,
-        result: { generated, skipped }
-      })
-    }
-
-    return { generated, skipped }
-  }))
+  // Register extracted handlers
+  registerTelemetryHandlers({
+    collectorProcess,
+    fsManager,
+    stateLedger,
+  });
+  registerSkillsHandlers({
+    fsManager,
+  });
 
   const { cleanupTestHandlers, cleanupReplayHandlers, cleanupDebugHandlers, cleanupWorktreeHandlers, worktreeManager: registeredWorktreeManager } =
     await registerAllIpcHandlers(win!, globalDeps, touchBarCleanup)
