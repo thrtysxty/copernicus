@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { app } from 'electron';
 import { SCHEMA } from './schema';
+import { runMigrations, validateSchemaVersion, MIGRATION_VERSION } from './migrations';
 
 export interface Intent {
   id?: number;
@@ -114,6 +115,8 @@ export interface ModelCallRecord {
   prompt_text?: string | null;
   response_text?: string | null;
   context_json?: string | null;
+  prompt_id?: string | null;
+  commit_sha?: string | null;
 }
 
 export interface ModelCallStats {
@@ -177,6 +180,9 @@ export class StateLedger {
     return this.db.prepare(sql).get(...params) as T | undefined
   }
   private init() {
+    // Run migrations first to ensure schema is at the right version
+    runMigrations(this.db, MIGRATION_VERSION);
+
     this.db.exec(SCHEMA.intents);
     this.db.exec(SCHEMA.events);
     this.db.exec(SCHEMA.memory);
@@ -199,25 +205,12 @@ export class StateLedger {
 
     // Model Call Ledger (Story 156)
     this.db.exec(SCHEMA.model_calls);
-    try {
-      this.db.exec("ALTER TABLE model_calls ADD COLUMN persona_role TEXT DEFAULT 'unknown'");
-    } catch (e) { /* Column already exists */ }
-
-    // Replay Debugging Migrations (Story 385)
-    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN prompt_text TEXT`) } catch (e) {}
-    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN response_text TEXT`) } catch (e) {}
-    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN context_json TEXT`) } catch (e) {}
 
     // Knowledge Base migrations (Story 566)
     this.migrateKnowledgeBase();
 
-    // Model Calls schema migration for Story 456
-    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN IF NOT EXISTS prompt_id TEXT`) } catch (e) {}
-    try { this.db.exec(`ALTER TABLE model_calls ADD COLUMN IF NOT EXISTS commit_sha TEXT`) } catch (e) {}
-
     // Projects & Epics (Story 211)
     this.db.exec(SCHEMA.projects);
-    try { this.db.exec("ALTER TABLE projects ADD COLUMN target_device TEXT NOT NULL DEFAULT 'AGNOSTIC'") } catch (e) { /* column already exists */ }
     this.db.exec(SCHEMA.epics);
 
     // Dev Sessions (from DevtimeManager integration)
@@ -246,9 +239,7 @@ export class StateLedger {
 
     // Agent Memory (Story 489)
     this.db.exec(SCHEMA.agent_memory);
-    try { this.db.exec("ALTER TABLE agent_memory ADD COLUMN story_id TEXT") } catch (e) { /* column already exists */ }
     this.db.exec(SCHEMA.agent_work_log);
-    try { this.db.exec("ALTER TABLE agent_work_log ADD COLUMN story_id TEXT") } catch (e) { /* column already exists */ }
     this.db.exec(SCHEMA.memory_working_set);
 
     // NotebookLM
@@ -258,6 +249,9 @@ export class StateLedger {
     this.db.exec(SCHEMA.intelligence_documents);
 
     this.migrateAgentMemory();
+
+    // Validate schema version
+    validateSchemaVersion(this.db);
   }
 
   // ── Agent Memory (Story 489) ──────────────────────────────────────────
