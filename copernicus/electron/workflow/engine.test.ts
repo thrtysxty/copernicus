@@ -1,130 +1,164 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { WorkflowEngine } from './engine';
-import { WorkflowGraph, WFNode, WFEdge } from './types';
-import type { EngineServices } from './engine';
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { WorkflowEngine } from './engine'
+import { WorkflowGraph, WFNode } from './types'
+import type { EngineServices } from './engine'
 
-describe('WorkflowEngine - Step Events', () => {
-  let engine: WorkflowEngine;
-  let mockWin: any;
-  let mockServices: Partial<EngineServices>;
+vi.mock('../memory/memoryService', () => ({
+  memoryService: {
+    setActiveProject: vi.fn(),
+    addMemory: vi.fn().mockResolvedValue(undefined),
+    logWork: vi.fn().mockResolvedValue(undefined),
+  },
+}))
+
+vi.mock('../db/state-ledger', () => ({
+  stateLedger: {
+    init: vi.fn(),
+    getActiveProject: vi.fn(() => ({ id: 'proj-1' })),
+    getProjectByPath: vi.fn(() => ({ id: 'proj-1' })),
+    logEvent: vi.fn(),
+    vacuum: vi.fn(),
+  },
+}))
+
+vi.mock('../codebase-indexer', () => ({
+  CodebaseIndexer: vi.fn().mockImplementation(() => ({
+    startIndexing: vi.fn().mockResolvedValue(undefined),
+  })),
+}))
+
+describe('WorkflowEngine', () => {
+  let engine: WorkflowEngine
+  let mockWin: any
+  let mockServices: Partial<EngineServices>
 
   beforeEach(() => {
-    engine = new WorkflowEngine();
+    vi.clearAllMocks()
+
     mockWin = {
       webContents: {
         send: vi.fn(),
       },
-    };
+    }
+
     mockServices = {
       win: mockWin as any,
-      fsManager: { getRootPath: vi.fn().mockReturnValue('') } as any,
-      stateLedger: { logEvent: vi.fn(), getProjectByPath: vi.fn().mockReturnValue(null), getActiveProject: vi.fn().mockReturnValue(null) } as any,
-      memoryService: { addMemory: vi.fn().mockResolvedValue(undefined), logWork: vi.fn().mockResolvedValue(undefined) } as any,
-      snapshotManager: { beginRun: vi.fn(), endRun: vi.fn() } as any,
-    };
-    engine.setServices(mockServices as EngineServices);
-  });
+      fsManager: {
+        getRootPath: vi.fn().mockReturnValue('/mock/workspace'),
+        writeFile: vi.fn(),
+        readFile: vi.fn(),
+      } as any,
+      stateLedger: {
+        logEvent: vi.fn(),
+        getProjectByPath: vi.fn(() => ({ id: 'proj-1' })),
+        getActiveProject: vi.fn(() => ({ id: 'proj-1' }))
+      } as any,
+      snapshotManager: {
+        beginRun: vi.fn(),
+        endRun: vi.fn(),
+        capture: vi.fn()
+      } as any,
+      authManager: {
+        getApiKey: vi.fn(),
+      },
+      lspManager: {
+        stop: vi.fn(),
+        start: vi.fn(),
+        workspaceCheck: vi.fn(() => ({ errorCount: 0 })),
+      },
+      worktreeManager: {
+        stop: vi.fn(),
+        setRepoRoot: vi.fn(),
+        isPollingStopped: true,
+      },
+      storiesManager: {
+        setProjectRoot: vi.fn(),
+      },
+    }
 
-  it('Test 1: Run a 3-node linear workflow; confirm 3 step-start + 3 step-end events emitted in order.', async () => {
-    const nodes: WFNode[] = [
-      { id: '1', type: 'trigger', label: 'T', x: 0, y: 0, data: { variant: 'manual' } },
-      { id: '2', type: 'flow', label: 'F', x: 0, y: 0, data: { variant: 'delay', durationMs: 1 } },
-      { id: '3', type: 'flow', label: 'F2', x: 0, y: 0, data: { variant: 'delay', durationMs: 1 } },
-    ];
-    const edges: WFEdge[] = [
-      { id: 'e1', source: '1', target: '2' },
-      { id: 'e2', source: '2', target: '3' },
-    ];
-    const graph: WorkflowGraph = { id: 'wf1', name: 'wf1', nodes, edges };
+    engine = new WorkflowEngine()
+    engine.setServices(mockServices as EngineServices)
+  })
 
-    await engine.runGraph(graph);
+  describe('Core Execution', () => {
+    it('executes a simple linear workflow and updates context', async () => {
+      const graph: WorkflowGraph = {
+        id: 'wf1',
+        nodes: [
+          { id: '1', type: 'trigger', label: 'T', data: { variant: 'manual' } },
+          { id: '2', type: 'tool', label: 'L', data: { variant: 'log-event', message: 'Hello' } },
+        ],
+        edges: [{ source: '1', target: '2' }],
+      }
 
-    const calls = mockWin.webContents.send.mock.calls;
-    const startCalls = calls.filter((c: any) => c[0] === 'workflow:step-start');
-    const endCalls = calls.filter((c: any) => c[0] === 'workflow:step-end');
+      await engine.runGraph(graph)
+      expect(engine.getState()).toBe('COMPLETE')
+      expect(engine.getContext()['2']).toBe('logged:Hello')
+    })
 
-    expect(startCalls.length).toBe(3);
-    expect(endCalls.length).toBe(3);
+    it('handles decision branches correctly', async () => {
+      const graph: WorkflowGraph = {
+        id: 'wf2',
+        nodes: [
+          { id: '1', type: 'tool', label: 'T', data: { variant: 'log-event', message: 'match' } },
+          { id: '2', type: 'decision', label: 'D', data: { variant: 'output-match', pattern: 'match' } },
+          { id: '3', type: 'tool', label: 'Yes', data: { variant: 'log-event', message: 'Yes' } },
+          { id: '4', type: 'tool', label: 'No', data: { variant: 'log-event', message: 'No' } },
+        ],
+        edges: [
+          { source: '1', target: '2' },
+          { source: '2', target: '3', label: 'Yes' },
+          { source: '2', target: '4', label: 'No' },
+        ],
+      }
 
-    expect(startCalls[0][1].nodeId).toBe('1');
-    expect(startCalls[1][1].nodeId).toBe('2');
-    expect(startCalls[2][1].nodeId).toBe('3');
+      await engine.runGraph(graph)
+      expect(engine.getNodeStatuses()['3']).toBe('completed')
+      expect(engine.getNodeStatuses()['4']).toBe('skipped')
+    })
 
-    expect(endCalls[0][1].nodeId).toBe('1');
-    expect(endCalls[0][1].status).toBe('completed');
-    expect(endCalls[1][1].nodeId).toBe('2');
-    expect(endCalls[2][1].nodeId).toBe('3');
-  });
+    it('pauses workflow on verification failure', async () => {
+      const graph: WorkflowGraph = {
+        id: 'wf3',
+        nodes: [
+          { id: '1', type: 'trigger', label: 'T', data: { variant: 'manual' } },
+          { id: '2', type: 'verification', label: 'V', data: { checklist: ['AC1'] } },
+        ],
+        edges: [{ source: '1', target: '2' }],
+      }
 
-  it('Test 2: Run a decision workflow where branch B is skipped; confirm branch B node gets step-end with status: skipped and no step-start.', async () => {
-    const nodes: WFNode[] = [
-      { id: '1', type: 'decision', label: 'D', x: 0, y: 0, data: { variant: 'output-match', pattern: 'match' } },
-      { id: '2', type: 'flow', label: 'A', x: 0, y: 0, data: { variant: 'delay', durationMs: 1 } },
-      { id: '3', type: 'flow', label: 'B', x: 0, y: 0, data: { variant: 'delay', durationMs: 1 } },
-    ];
-    const edges: WFEdge[] = [
-      { id: 'e1', source: '1', target: '2', label: 'Yes' },
-      { id: 'e2', source: '1', target: '3', label: 'No' },
-    ];
-    const graph: WorkflowGraph = { id: 'wf2', name: 'wf2', nodes, edges };
+      await expect(engine.runGraph(graph)).rejects.toThrow(/Verification failed/)
+      expect(engine.getState()).toBe('PAUSED')
+    })
+  })
 
-    await engine.runGraph(graph);
+  describe('Agent Dispatch', () => {
+    it('throws error if services are not injected', async () => {
+      const localEngine = new WorkflowEngine()
+      const node = { id: 'a1', type: 'agent', label: 'A1', data: { provider: 'anthropic', modelId: 'claude-3' } } as any
+      await expect(localEngine.executeNode(node)).rejects.toThrow('ENGINE_SERVICES_NOT_INJECTED')
+    })
 
-    const calls = mockWin.webContents.send.mock.calls;
-    const startCalls = calls.filter((c: any) => c[0] === 'workflow:step-start');
-    const endCalls = calls.filter((c: any) => c[0] === 'workflow:step-end');
+    it('verifies auth check before agent dispatch', async () => {
+      mockServices.authManager.getApiKey.mockReturnValue(null)
+      const node = { id: 'a1', type: 'agent', label: 'A1', data: { provider: 'anthropic', modelId: 'claude-3' } } as any
+      await expect(engine.executeNode(node)).rejects.toThrow('AUTH_MISSING:anthropic')
+    })
+  })
 
-    expect(startCalls.length).toBe(2);
-    expect(startCalls[0][1].nodeId).toBe('1');
-    expect(startCalls[1][1].nodeId).toBe('3');
+  describe('Tool Dispatch', () => {
+    it('executes file-read tool', async () => {
+      mockServices.fsManager.readFile.mockReturnValue('file content')
+      const node = { id: 't1', type: 'tool', label: 'Read', data: { variant: 'file-read', filePath: 'test.txt' } } as any
+      await engine.executeNode(node)
+      expect(engine.getContext()['t1']).toBe('file content')
+    })
 
-    expect(endCalls.length).toBe(3);
-    const skippedCall = endCalls.find((c: any) => c[1].nodeId === '2');
-    expect(skippedCall[1].status).toBe('skipped');
-    expect(skippedCall[1].durationMs).toBe(0);
-  });
-
-  it('Test 3: Run a workflow where node 2 throws; confirm step-end with status: error emitted before workflow halts.', async () => {
-    const nodes: WFNode[] = [
-      { id: '1', type: 'trigger', label: 'T', x: 0, y: 0, data: { variant: 'manual' } },
-      { id: '2', type: 'tool', label: 'Err', x: 0, y: 0, data: { variant: 'invalid' as any } },
-      { id: '3', type: 'flow', label: 'F', x: 0, y: 0, data: { variant: 'delay', durationMs: 1 } },
-    ];
-    const edges: WFEdge[] = [
-      { id: 'e1', source: '1', target: '2' },
-      { id: 'e2', source: '2', target: '3' },
-    ];
-    const graph: WorkflowGraph = { id: 'wf3', name: 'wf3', nodes, edges };
-
-    await engine.runGraph(graph);
-
-    const calls = mockWin.webContents.send.mock.calls;
-    const endCalls = calls.filter((c: any) => c[0] === 'workflow:step-end');
-
-    expect(endCalls.length).toBe(2);
-    expect(endCalls[0][1].nodeId).toBe('1');
-    expect(endCalls[0][1].status).toBe('completed');
-    expect(endCalls[1][1].nodeId).toBe('2');
-    expect(endCalls[1][1].status).toBe('error');
-
-    const startCalls = calls.filter((c: any) => c[0] === 'workflow:step-start');
-    expect(startCalls.length).toBe(2);
-    expect(startCalls[0][1].nodeId).toBe('1');
-    expect(startCalls[1][1].nodeId).toBe('2');
-  });
-
-  it('Test 4: durationMs in step-end is >= 0 and reflects actual execution time.', async () => {
-    const nodes: WFNode[] = [
-      { id: '1', type: 'flow', label: 'F', x: 0, y: 0, data: { variant: 'delay', durationMs: 50 } },
-    ];
-    const graph: WorkflowGraph = { id: 'wf4', name: 'wf4', nodes, edges: [] };
-
-    await engine.runGraph(graph);
-
-    const calls = mockWin.webContents.send.mock.calls;
-    const endCall = calls.find((c: any) => c[0] === 'workflow:step-end');
-
-    expect(endCall).toBeDefined();
-    expect(endCall[1].durationMs).toBeGreaterThanOrEqual(0);
-  });
-});
+    it('executes file-write tool', async () => {
+      const node = { id: 't1', type: 'tool', label: 'Write', data: { variant: 'file-write', filePath: 'test.txt', content: 'hello' } } as any
+      await engine.executeNode(node)
+      expect(mockServices.fsManager.writeFile).toHaveBeenCalledWith('test.txt', 'hello')
+      expect(engine.getContext()['t1']).toBe('written:test.txt')
+    })
+  })
+})

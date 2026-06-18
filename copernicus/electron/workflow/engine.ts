@@ -122,7 +122,6 @@ export class WorkflowEngine {
     }
 
     this.nodeStatuses.clear();
-    this.context.clear();
 
     // Inject LSP state into context bag for agent awareness
     try {
@@ -180,8 +179,10 @@ export class WorkflowEngine {
       this.transition('COMPLETE');
     } catch (error: unknown) {
       log.error('[WorkflowEngine] Execution Failed:', error);
-      this.transition('FAILED');
-      // Optionally push a global error if needed, but per-node errors are more granular
+      if (this.currentState !== 'PAUSED') {
+        this.transition('FAILED');
+      }
+      throw error;
     } finally {
       this.snapshotManager?.endRun()
       if (browserSession.browser) {

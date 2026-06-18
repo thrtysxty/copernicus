@@ -23,6 +23,7 @@ vi.mock('fs', async () => {
     existsSync: vi.fn(),
     readFileSync: vi.fn(),
     writeFileSync: vi.fn(),
+    unlinkSync: vi.fn(),
   };
 });
 
