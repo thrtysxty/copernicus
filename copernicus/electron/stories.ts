@@ -1,7 +1,7 @@
 import { config } from './config'
 import fs from 'node:fs'
 import path from 'node:path'
-import { execSync, spawnSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { BrowserWindow } from 'electron'
 import { StateLedger, StoryRecord } from './db/state-ledger'
 import log from './utils/logger'
@@ -240,20 +240,20 @@ export class StoriesManager {
     if (!record) return
 
     if (newStatus === 'COMPLETE') {
-       try {
-         const auditScript = path.join(this.projectRoot, 'scripts/utils/security_audit.py')
-         if (fs.existsSync(auditScript)) {
-            execSync(`python3 "${auditScript}"`, { cwd: this.projectRoot })
+       const auditScript = path.join(this.projectRoot, 'scripts/utils/security_audit.py')
+       if (fs.existsSync(auditScript)) {
+         try {
+           execFileSync('python3', [auditScript], { cwd: this.projectRoot, timeout: 30000 })
+         } catch (e) {
+           log.error('[SECURITY] Audit REJECTED.', e)
+           if (this.window) {
+             this.window.webContents.send('app:critical-error', {
+               type: 'Security Audit Rejected',
+               message: `Security Audit Rejected story ${id}.`
+             })
+           }
+           return
          }
-       } catch (e) {
-         log.error('[SECURITY] Audit REJECTED.', e)
-         if (this.window) {
-           this.window.webContents.send('app:critical-error', {
-             type: 'Security Audit Rejected',
-             message: `Security Audit Rejected story ${id}.`
-           })
-         }
-         return
        }
        this.archiveStory(id)
        return

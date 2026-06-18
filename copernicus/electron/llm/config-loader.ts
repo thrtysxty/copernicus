@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
-import { execSync } from 'node:child_process'
 import log from 'electron-log'
 import { providerRegistry, ProviderModel } from './provider-registry'
 
@@ -16,12 +15,11 @@ export interface ConfigReloadResult {
 function resolveValue(val: string | undefined): string | undefined {
   if (!val) return val
   if (val.startsWith('!')) {
-    try {
-      return execSync(val.slice(1)).toString().trim()
-    } catch (e) {
-      log.warn(`Failed to execute shell command for config value: ${val}`, e)
-      return undefined
-    }
+    log.warn(
+      `[config-loader] DEPRECATED: Shell-exec prefix "!" in providers.json is no longer supported. ` +
+      `Use an env-var reference instead. Ignoring value: ${val.slice(0, 40)}${val.length > 40 ? '...' : ''}`
+    )
+    return undefined
   }
   if (/^[A-Z0-9_]+$/.test(val)) {
     return process.env[val]

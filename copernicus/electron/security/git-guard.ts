@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import log from '../utils/logger';
 
@@ -61,7 +61,7 @@ export class GitGuard {
     let auditResult = 'Audit PASSED';
     try {
       const auditScript = path.join(this.projectRoot, 'scripts/utils/security_audit.py');
-      const output = execSync(`python3 "${auditScript}"`, { cwd: this.projectRoot }).toString();
+      const output = execFileSync('python3', [auditScript], { cwd: this.projectRoot, timeout: 30000, encoding: 'utf8' });
       auditResult = output;
     } catch (e: unknown) {
       auditResult = (e as any).stdout ? (e as any).stdout.toString() : 'Audit REJECTED: Credential leak detected.';
