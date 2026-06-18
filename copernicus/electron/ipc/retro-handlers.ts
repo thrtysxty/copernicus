@@ -136,8 +136,8 @@ export function registerRetroHandlers(deps?: IpcHandlerDeps) {
               const priority = meta.priority ?? 'P2'
               const title = item.content
               
-              if (deps?.scaffoldRunner && typeof deps.scaffoldRunner.scaffold === 'function') {
-                const newStoryId = deps.scaffoldRunner.scaffold({ title, priority })
+              if (deps?.genesisRunner?.scaffoldRunner && typeof deps.genesisRunner.scaffoldRunner.scaffold === 'function') {
+                const newStoryId = deps.genesisRunner.scaffoldRunner.scaffold({ title, priority })
                 if (newStoryId) newStoryIds.push(newStoryId)
               } else if (deps?.storiesManager) {
                 const newStoryId = deps.storiesManager.createStory({ title, priority, type: 'Feature', epic: '(none)' })

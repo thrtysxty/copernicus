@@ -69,5 +69,9 @@ export interface IpcHandlerDeps {
   touchBarCleanup: { remove: () => void } | null;
   isFirstRun: boolean;
   spawn: typeof import('node:child_process').spawn;
-  getCanvasIframeBounds?: () => unknown;
+  getCanvasIframeBounds?: () => { x: number; y: number; width: number; height: number } | undefined;
+  // TODO(arch): layoutStore is a renderer-side Zustand store - should not be accessed from main process.
+  // This is a design issue: terminal-agent-handlers.ts (main process) accesses renderer store.
+  // Proper fix: move terminal agent logic to renderer or use IPC for terminal management.
+  layoutStore?: any;
 }
