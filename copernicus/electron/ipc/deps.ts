@@ -21,6 +21,10 @@ import { GenesisRunner } from '../genesis/genesis-runner'
 import { SnapshotManager } from '../workflow/snapshot-manager'
 import { JulesClient } from '../jules/jules-client'
 import { WorktreeManager } from '../worktree/WorktreeManager'
+import { applyAndVerifyPatch, reversePatch } from '../utils/patch-manager'
+import { runRAGBenchmark } from '../utils/rag-benchmark'
+import { createTouchBar } from '../touch-bar'
+import { DEFAULT_TOUCH_BAR_CONFIG } from '../touch-bar-types'
 
 export interface TerminalSession {
   id: string
@@ -54,18 +58,16 @@ export interface IpcHandlerDeps {
   julesMonitor: JulesMonitor;
   julesManager: JulesManager;
   genesisRunner: GenesisRunner;
-  scaffoldRunner?: any;
-  layoutStore: any;
-  applyAndVerifyPatch: any;
-  reversePatch: any;
-  runRAGBenchmark: any;
-  getPlaywright: any;
+  scaffoldRunner?: GenesisRunner;
+  applyAndVerifyPatch: typeof applyAndVerifyPatch;
+  reversePatch: typeof reversePatch;
+  runRAGBenchmark: typeof runRAGBenchmark;
   LOG_DIR: string;
-  dispatchJulesSession: any;
-  createTouchBar: any;
-  DEFAULT_TOUCH_BAR_CONFIG: any;
+  dispatchJulesSession: typeof import('../jules/dispatcher').dispatchJulesSession;
+  createTouchBar: typeof createTouchBar;
+  DEFAULT_TOUCH_BAR_CONFIG: typeof DEFAULT_TOUCH_BAR_CONFIG;
   touchBarCleanup: { remove: () => void } | null;
   isFirstRun: boolean;
-  spawn: any;
-  getCanvasIframeBounds?: () => any;
+  spawn: typeof import('node:child_process').spawn;
+  getCanvasIframeBounds?: () => unknown;
 }
