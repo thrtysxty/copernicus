@@ -143,12 +143,16 @@ docs/guides/JULES_ENGINEERING_STANDARDS.md
 docs/guides/SOP_PRODUCT_SESSION.md
 
 # Root-level dev noise
-fix_expertise.js
-fix_inputs.js
+fix_*.js
+merge*.sh
+push-and-dispatch-*.sh
+*.db
+repo_index.json
+TASK.md
+test_check.ts
 verify.py
 plan.md
-ROADMAP.md
-TASK.md
+verification-table.md
 skills-lock.json
 
 # OS files
