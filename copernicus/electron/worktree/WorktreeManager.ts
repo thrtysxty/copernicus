@@ -1,5 +1,5 @@
 import log from '../utils/logger'
-import { spawnSync } from 'child_process'
+import { execFile } from 'child_process'
 import path from 'path'
 import fs from 'fs'
 import type { Database } from 'libsql'
@@ -23,14 +23,14 @@ export class WorktreeManager {
     }
   }
 
-  create(
+  async create(
     branch: string,
     storyId: string | null,
     nodeId: string | null,
     mergeMode: 'gated' | 'yolo',
-  ): AgentWorktree {
+  ): Promise<AgentWorktree> {
     const worktreePath = path.join(this.worktreesDir, branch)
-    this.execGit(['worktree', 'add', '-b', branch, worktreePath])
+    await this.execGit(['worktree', 'add', '-b', branch, worktreePath])
 
 
     const stmt = this.db.prepare(`
@@ -63,24 +63,24 @@ export class WorktreeManager {
     return row ? this.mapRowToAgentWorktree(row) : undefined
   }
 
-  getDiff(id: string): { files: string[]; diff: string } {
+  async getDiff(id: string): Promise<{ files: string[]; diff: string }> {
     const worktree = this.getById(id)
     if (!worktree) throw new Error(`Worktree with id ${id} not found`)
 
-    const diff = this.execGit(['diff', `main...${worktree.branch}`])
-    const files = this.execGit(['diff', `main...${worktree.branch}`, '--name-only'])
+    const diff = await this.execGit(['diff', `main...${worktree.branch}`])
+    const files = (await this.execGit(['diff', `main...${worktree.branch}`, '--name-only']))
       .split('\n').filter(Boolean)
     return { files, diff }
   }
 
-  merge(id: string): AgentWorktree {
+  async merge(id: string): Promise<AgentWorktree> {
     const worktree = this.getById(id)
     if (!worktree) throw new Error(`Worktree with id ${id} not found`)
 
     // Ensure we are on main branch for merge
-    this.execGit(['checkout', 'main'])
-    this.execGit(['merge', '--squash', worktree.branch])
-    this.execGit(['commit', '-m', `feat(agent): squash merge ${worktree.branch}`])
+    await this.execGit(['checkout', 'main'])
+    await this.execGit(['merge', '--squash', worktree.branch])
+    await this.execGit(['commit', '-m', `feat(agent): squash merge ${worktree.branch}`])
     this._cleanup(worktree.branch, worktree.worktreePath)
 
     const stmt = this.db.prepare(
@@ -93,30 +93,30 @@ export class WorktreeManager {
     return updatedWorktree
   }
 
-  remove(id: string) {
+  async remove(id: string): Promise<void> {
     const worktree = this.getById(id)
     if (!worktree) throw new Error(`Worktree with id ${id} not found`)
 
-    this._cleanup(worktree.branch, worktree.worktreePath)
+    await this._cleanup(worktree.branch, worktree.worktreePath)
 
     const stmt = this.db.prepare('DELETE FROM agent_worktrees WHERE id = ?')
     stmt.run(id)
   }
 
-  _cleanup(branch: string, worktreePath: string) {
+  private async _cleanup(branch: string, worktreePath: string): Promise<void> {
     try {
-      this.execGit(['worktree', 'remove', '--force', worktreePath])
+      await this.execGit(['worktree', 'remove', '--force', worktreePath])
     } catch (error: any) {
       log.error(`Error removing worktree ${worktreePath}:`, error.message)
     }
     try {
-      this.execGit(['branch', '-D', branch])
+      await this.execGit(['branch', '-D', branch])
     } catch (error: any) {
       log.error(`Error deleting branch ${branch}:`, error.message)
     }
   }
 
-  poll() {
+  async poll(): Promise<void> {
     if (this.isStopped) return
     const currentRepoRoot = this.repoRoot
     const activeWorktrees = this.list().filter((wt) => wt.status === 'active')
@@ -124,17 +124,17 @@ export class WorktreeManager {
     for (const wt of activeWorktrees) {
       if (this.isStopped || this.repoRoot !== currentRepoRoot) return
       try {
-        const logOutput = this.execGit(
+        const logOutput = await this.execGit(
           ['log', `main..${wt.branch}`, '--oneline'],
           wt.worktreePath,
         )
         const commitCount = logOutput.split('\n').filter(Boolean).length
 
         if (commitCount > 0) {
-          const latestCommitSha = this.execGit(
+          const latestCommitSha = (await this.execGit(
             ['rev-parse', wt.branch],
             wt.worktreePath,
-          ).trim()
+          )).trim()
 
           const stmt = this.db.prepare(`
             UPDATE agent_worktrees
@@ -153,7 +153,7 @@ export class WorktreeManager {
           this.mainWindow?.webContents.send('worktree:completed', completedWorktree)
 
           if (wt.mergeMode === 'yolo') {
-            this.merge(wt.id)
+            await this.merge(wt.id)
           }
         }
       } catch (error: any) {
@@ -205,16 +205,21 @@ export class WorktreeManager {
     return this.isStopped
   }
 
-  private execGit(args: string[], cwd?: string): string {
+  private execGit(args: string[], cwd?: string): Promise<string> {
     const root = cwd || this.repoRoot
     log.info(`Executing: git -C ${root} ${args.join(' ')}`)
-    const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' })
-    if (result.status !== 0) {
-      const msg = result.stderr?.trim() || result.error?.message || 'unknown error'
-      log.error(`Git command failed: git -C ${root} ${args.join(' ')}`)
-      throw new Error(`Git command failed: ${args.join(' ')}. Error: ${msg}`)
-    }
-    return (result.stdout || '').trim()
+
+    return new Promise((resolve, reject) => {
+      execFile('git', ['-C', root, ...args], { encoding: 'utf8', timeout: 30000 }, (error, stdout, stderr) => {
+        if (error || (stdout === '' && stderr)) {
+          const msg = stderr?.trim() || error?.message || 'unknown error'
+          log.error(`Git command failed: git -C ${root} ${args.join(' ')}`)
+          reject(new Error(`Git command failed: ${args.join(' ')}. Error: ${msg}`))
+          return
+        }
+        resolve((stdout || '').trim())
+      })
+    })
   }
 
   private mapRowToAgentWorktree(row: any): AgentWorktree {

@@ -91,8 +91,8 @@ class TestAuthMiddleware:
             response = client.get('/test', headers={'X-API-Key': 'valid-key-123'})
             assert response.status_code == 200
 
-    def test_dev_mode_no_key_env_bypass(self):
-        """When COPERNICUS_API_KEY is not set, auth is bypassed (dev mode)."""
+    def test_missing_env_key_returns_503(self):
+        """When COPERNICUS_API_KEY is not set, returns 503 Service Unavailable."""
         app = Flask(__name__)
         app.config['TESTING'] = True
 
@@ -100,13 +100,17 @@ class TestAuthMiddleware:
         prev = os.environ.pop('COPERNICUS_API_KEY', None)
 
         @app.route('/test')
+        @require_auth
         def test_endpoint():
             return 'OK'
 
         with app.test_client() as client:
-            # No API key set, should bypass auth
+            # No API key set, should return 503
             response = client.get('/test')
-            assert response.status_code == 200
+            assert response.status_code == 503
+            json_data = response.get_json()
+            assert json_data['ok'] is False
+            assert 'API key not set' in json_data['error']
 
             # Restore
             if prev is not None:
@@ -116,25 +120,28 @@ class TestAuthMiddleware:
         """Test that require_auth properly wraps the decorated function."""
         app = Flask(__name__)
         app.config["TESTING"] = True
-        
-        # Remove the API key env var to trigger dev mode bypass
+
+        # Set a valid API key
         prev = os.environ.pop("COPERNICUS_API_KEY", None)
-        
+        os.environ["COPERNICUS_API_KEY"] = "test-key-123"
+
         try:
             with app.test_request_context():
                 @app.route("/test")
                 @require_auth
                 def protected_endpoint():
                     return "secret_data"
-                
+
                 with app.test_client() as client:
-                    response = client.get("/test")
+                    response = client.get("/test", headers={"X-API-Key": "test-key-123"})
                     assert response.status_code == 200
                     assert response.get_data(as_text=True) == "secret_data"
         finally:
             # Restore
             if prev is not None:
                 os.environ["COPERNICUS_API_KEY"] = prev
+            else:
+                os.environ.pop("COPERNICUS_API_KEY", None)
 class TestHmacVerification:
     """Tests for verify_hmac_signature in utils/hmac_verify.py."""
 

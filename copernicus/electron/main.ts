@@ -2,7 +2,7 @@ import { config } from './config'
 import { app, BrowserWindow, ipcMain, session, globalShortcut, Menu, MenuItemConstructorOptions } from 'electron'
 
 import path from 'node:path'
-import { spawn, ChildProcess } from 'node:child_process'
+import { spawn, ChildProcess, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import log from 'electron-log'
@@ -227,11 +227,15 @@ function createWindow() {
         if (process.platform === 'darwin') {
           daemonRegistered = fs.existsSync(path.join(app.getPath('home'), 'Library', 'LaunchAgents', 'com.copernicus.jules-daemon.plist'))
         } else if (process.platform === 'linux') {
-          require('node:child_process').execSync('systemctl --user is-enabled jules-daemon', { stdio: 'ignore' })
-          daemonRegistered = true
+          try {
+            execFileSync('systemctl', ['--user', 'is-enabled', 'jules-daemon'], { stdio: 'ignore' })
+            daemonRegistered = true
+          } catch { /* ignore */ }
         } else if (process.platform === 'win32') {
-          require('node:child_process').execSync('powershell.exe -Command "Get-ScheduledTask -TaskName CopernicusJulesDaemon -ErrorAction Stop"', { stdio: 'ignore' })
-          daemonRegistered = true
+          try {
+            execFileSync('powershell.exe', ['-Command', 'Get-ScheduledTask -TaskName CopernicusJulesDaemon -ErrorAction Stop'], { stdio: 'ignore' })
+            daemonRegistered = true
+          } catch { /* ignore */ }
         }
       } catch { /* not registered */ }
       if (!daemonRegistered) {

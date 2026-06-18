@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow, shell, app, dialog } from 'electron'
 import path from 'node:path'
-import { spawn, execFile, execSync } from 'node:child_process'
+import { spawn, execFile, execFileSync } from 'node:child_process'
 import { promisify } from 'node:util'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -19,8 +19,8 @@ const execFileAsync = promisify(execFile)
 // Story 613: Helper to get git state for a directory
 function getGitState(dirPath: string): { branch: string; isDirty: boolean; gitRepoFound: boolean } {
   try {
-    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: dirPath, encoding: 'utf8' }).trim()
-    const status = execSync('git status --porcelain', { cwd: dirPath, encoding: 'utf8' }).trim()
+    const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: dirPath, encoding: 'utf8' }).trim()
+    const status = execFileSync('git', ['status', '--porcelain'], { cwd: dirPath, encoding: 'utf8' }).trim()
     return { branch, isDirty: status.length > 0, gitRepoFound: true }
   } catch {
     return { branch: 'unknown', isDirty: false, gitRepoFound: false }

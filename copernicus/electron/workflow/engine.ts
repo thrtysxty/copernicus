@@ -387,7 +387,7 @@ export class WorkflowEngine {
 
     if (d.useWorktree && this.services?.worktreeManager) {
       const branch = `agent-${node.id}-${Date.now()}`
-      const wt = this.services.worktreeManager.create(
+      const wt = await this.services.worktreeManager.create(
         branch,
         this.context.get('__storyId') ?? null,
         node.id,

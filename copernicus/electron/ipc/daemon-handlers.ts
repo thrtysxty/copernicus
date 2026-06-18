@@ -1,6 +1,6 @@
 import log from '../utils/logger'
 import { ipcMain, app } from 'electron'
-import { spawn, execSync, execFile } from 'node:child_process'
+import { spawn, execFile, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { handleIpc } from '../utils/handle-ipc'
@@ -23,23 +23,23 @@ function isDaemonRegistered(): boolean {
     } else if (process.platform === 'linux') {
       // Check for Jules daemon
       try {
-        execSync('systemctl --user is-enabled jules-daemon', { stdio: 'ignore' })
+        execFileSync('systemctl', ['--user', 'is-enabled', 'jules-daemon'], { stdio: 'ignore' })
         return true
       } catch (e) { /* ignore */ }
       // Check for MCP Hub daemon
       try {
-        execSync('systemctl --user is-enabled copernicus-mcp-hub', { stdio: 'ignore' })
+        execFileSync('systemctl', ['--user', 'is-enabled', 'copernicus-mcp-hub'], { stdio: 'ignore' })
         return true
       } catch (e) { /* ignore */ }
     } else if (process.platform === 'win32') {
       // Check for Jules daemon
       try {
-        execSync('powershell.exe -Command "Get-ScheduledTask -TaskName CopernicusJulesDaemon -ErrorAction Stop"', { stdio: 'ignore' })
+        execFileSync('powershell.exe', ['-Command', 'Get-ScheduledTask -TaskName CopernicusJulesDaemon -ErrorAction Stop'], { stdio: 'ignore' })
         return true
       } catch (e) { /* ignore */ }
       // Check for MCP Hub daemon
       try {
-        execSync('powershell.exe -Command "Get-ScheduledTask -TaskName CopernicusMCPHub -ErrorAction Stop"', { stdio: 'ignore' })
+        execFileSync('powershell.exe', ['-Command', 'Get-ScheduledTask -TaskName CopernicusMCPHub -ErrorAction Stop'], { stdio: 'ignore' })
         return true
       } catch (e) { /* ignore */ }
     }
@@ -53,7 +53,7 @@ async function getMcpHubStatus() {
   const scriptPath = path.join(app.getAppPath(), 'scripts', 'mcp_hub.py')
   try {
     // Attempt to run mcp_hub.py with --status and capture output
-    const output = execSync(`python3 ${scriptPath} --status`, { encoding: 'utf8', timeout: 5000 }).trim()
+    const output = execFileSync('python3', [scriptPath, '--status'], { encoding: 'utf8', timeout: 5000 }).trim()
 
     const status: {
       port?: number,

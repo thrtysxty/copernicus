@@ -1,7 +1,7 @@
 import { config } from './config'
 import fs from 'node:fs'
 import path from 'node:path'
-import { execFileSync, spawnSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { BrowserWindow } from 'electron'
 import { StateLedger, StoryRecord } from './db/state-ledger'
 import log from './utils/logger'
@@ -447,9 +447,7 @@ ${ac ? ac : `- [ ] Implement ${title}`}
     try {
       if (fs.existsSync(record.file_path)) {
         try {
-          const res = spawnSync('git', ['rm', '-f', record.file_path], { cwd: this.projectRoot })
-          if (res.error) throw res.error;
-          if (res.status !== 0) throw new Error(`git rm exited with ${res.status}`);
+          execFileSync('git', ['rm', '-f', record.file_path], { cwd: this.projectRoot, encoding: 'utf8', timeout: 10000 })
         } catch {
           fs.unlinkSync(record.file_path)
         }
