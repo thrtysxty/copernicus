@@ -32,8 +32,8 @@ export const TechnicalPulseOverlay: React.FC<Props> = ({ onClose }) => {
     setHealthChecks(initialChecks)
 
     try {
-      const result = await invoke<HealthCheck[]>('health:check-all')
-      const coreChecks = unwrapIpc<HealthCheck[]>(result as any) || []
+      const result = await invoke<IpcResult<HealthCheck[]>>('health:check-all')
+      const coreChecks = unwrapIpc<HealthCheck[]>(result) || []
       
       const allChecks: HealthCheck[] = initialChecks.map(initialCheck => {
         const found = coreChecks.find(cc => cc.name === initialCheck.name);
@@ -81,15 +81,15 @@ export const TechnicalPulseOverlay: React.FC<Props> = ({ onClose }) => {
         <div className="flex items-center gap-2">
           <button
             onClick={checkHealth}
-            className="text-[10px] text-copernicus-phosphor/80 hover:text-copernicus-phosphor transition-colors px-2 py-1 rounded disabled:opacity-50"
+            className="text-[11px] text-copernicus-phosphor/80 hover:text-copernicus-phosphor transition-colors px-2 py-1 rounded disabled:opacity-50"
             disabled={checking}
           >
             {checking ? 'Checking…' : 'Re-check all'}
           </button>
-          <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 text-[10px] transition-colors">✕</button>
+          <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 text-[11px] transition-colors">✕</button>
         </div>
       </div>
-      <ul className="space-y-1 text-[10px] font-mono">
+      <ul className="space-y-1 text-[11px] font-mono">
         {healthChecks.map((check, index) => (
           <li key={index} className="flex items-center justify-between">
             <span className="flex items-center gap-1.5">

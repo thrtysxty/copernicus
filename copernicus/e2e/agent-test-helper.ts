@@ -19,6 +19,9 @@ export type TestAction =
   | { type: 'navigate'; view: string }
   | { type: 'assert'; description: string; expected: boolean }
   | { type: 'screenshot'; name: string }
+  | { type: 'hover'; selector: string }
+  | { type: 'pressKey'; key: string }
+  | { type: 'drag'; source: string; target: string }
   | { type: 'done'; summary: string }
 
 export interface StepResult {

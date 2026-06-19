@@ -35,7 +35,8 @@ export const PersonasSection: React.FC = () => {
   const [modelAffinity, setModelAffinity] = useState('')
 
   useEffect(() => {
-    invoke<SettingsLoadResponse>('settings:load').then(s => {
+    invoke<IpcResult<SettingsLoadResponse>>('settings:load').then(res => {
+      const s = unwrapIpc<SettingsLoadResponse>(res)
       if (s?.customPersonas) setCustomPersonas(s.customPersonas as Persona[])
       if (s?.disabledPersonas) setDisabledPersonas(s.disabledPersonas as string[])
       setLoading(false)
@@ -159,7 +160,7 @@ export const PersonasSection: React.FC = () => {
               <label className="text-[9px] text-zinc-500 uppercase font-bold">Role Selector</label>
               <select 
                 value={role}
-                onChange={e => setRole(e.target.value as any)}
+                onChange={e => setRole(e.target.value as Persona['role'])}
                 className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs font-mono focus:border-copernicus-phosphor focus:outline-none"
               >
                 <option value="Architect">Architect</option>

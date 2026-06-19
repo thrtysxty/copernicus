@@ -3,11 +3,11 @@ import { Maximize2, Minimize2 } from 'lucide-react'
 import { DiagnosticsPanel } from '../debug/DiagnosticsPanel'
 import { TestExplorer } from '../debug/TestExplorer'
 import { LogViewer } from '../debug/LogViewer'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 
 export function OutputView() {
   const [spotlightedSection, setSpotlightedSection] = useState<string | null>(null)
-  const diagnosticErrorCount = useLayoutStore(s => s.diagnosticErrorCount)
+  const diagnosticErrorCount = useWorkspaceStore(s => s.diagnosticErrorCount)
 
   const toggleSpotlight = (id: string) => {
     setSpotlightedSection(spotlightedSection === id ? null : id)

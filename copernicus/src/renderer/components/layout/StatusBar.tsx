@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useCommandStore, LspState } from '../../store/commandStore'
 import { useTelemetryStore } from '../../store/telemetryStore'
 import { useIpcError } from '../../hooks/useIpcError'
@@ -28,7 +28,7 @@ export const StatusBar: React.FC = () => {
     gitBranch,
     isGitDirty,
     setSessionEnded
-  } = useLayoutStore()
+  } = useWorkspaceStore()
 
   const { lspState } = useCommandStore()
 
@@ -86,8 +86,8 @@ export const StatusBar: React.FC = () => {
 
   // Fetch active model on mount
   useEffect(() => {
-    invoke<ModelConfig>('models:active').then(r => {
-      const m = unwrapIpc<ModelConfig>(r as any)
+    invoke<IpcResult<ModelConfig>>('models:active').then(r => {
+      const m = unwrapIpc<ModelConfig>(r)
       if (m) setActiveModel(m)
     }).catch(() => {})
   }, [invoke])
@@ -96,16 +96,16 @@ export const StatusBar: React.FC = () => {
   useEffect(() => {
     const pollGit = async () => {
       try {
-        const branchRes = await invoke('git:current-branch')
-        const branch = unwrapIpc<string>(branchRes as any) ?? 'unknown'
-        
-        const statusRes = await invoke('git:status')
-        const status = unwrapIpc<any[]>(statusRes as any) ?? []
-        
+        const branchRes = await invoke<IpcResult<string>>('git:current-branch')
+        const branch = unwrapIpc<string>(branchRes) ?? 'unknown'
+
+        const statusRes = await invoke<IpcResult<any[]>>('git:status')
+        const status = unwrapIpc<any[]>(statusRes) ?? []
+
         const isDirty = status.length > 0
-        
-        useLayoutStore.getState().setGitBranch(branch)
-        useLayoutStore.getState().setGitDirty(isDirty)
+
+        useWorkspaceStore.getState().setGitBranch(branch)
+        useWorkspaceStore.getState().setGitDirty(isDirty)
       } catch (e) {
         // Ignore polling errors
       }
@@ -119,9 +119,9 @@ export const StatusBar: React.FC = () => {
   // Poll codebase index status every 5s
   useEffect(() => {
     const poll = () => {
-      invoke<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string }>('codebase:index-status')
+      invoke<IpcResult<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string }>>('codebase:index-status')
         .then(result => {
-          const data = (result as any).data || result
+          const data = unwrapIpc<{ indexing: boolean; filesIndexed: number; totalFiles: number; provider: string }>(result)
           setIndexStatus(data)
         })
         .catch(() => {})
@@ -134,8 +134,8 @@ export const StatusBar: React.FC = () => {
   // Load all-time cost on mount and listen for live ledger updates
   useEffect(() => {
     if (!window.ipcRenderer) return
-    invoke<number>('ledger:all-time-cost').then(result => {
-      const cost = unwrapIpc<any>(result)
+    invoke<IpcResult<number>>('ledger:all-time-cost').then(result => {
+      const cost = unwrapIpc<number>(result)
       if (typeof cost === 'number') {
         setTelemetryStore({ capexTotal: cost })
       }
@@ -174,8 +174,9 @@ export const StatusBar: React.FC = () => {
   useEffect(() => {
     const pollScore = async () => {
       try {
-        const res = await invoke<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number }>('security:score')
-        if (res) setSecurityScore(res)
+        const res = await invoke<IpcResult<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number }>>('security:score')
+        const score = unwrapIpc<{ grade: string; lspErrors: number; sentinelHits: number; npmAuditIssues: number }>(res)
+        if (score) setSecurityScore(score)
       } catch { /* ignore polling errors */ }
     }
     pollScore()
@@ -260,8 +261,8 @@ export const StatusBar: React.FC = () => {
           else if (lsp.status === 'dead') { color = 'text-red-600'; statusText = 'Dead'; }
 
           // Use the dynamic type from state if it exists (added by listener)
-          const attemptText = (lsp as any).attempt ? ` (Retry ${(lsp as any).attempt}/3)` : '';
-          const reasonText = (lsp as any).reason ? ` - ${(lsp as any).reason}` : '';
+          const attemptText = lsp.attempt ? ` (Retry ${lsp.attempt}/3)` : '';
+          const reasonText = lsp.reason ? ` - ${lsp.reason}` : '';
 
           return (
             <Tooltip
@@ -284,7 +285,7 @@ export const StatusBar: React.FC = () => {
           <Tooltip content={`${securityScore.lspErrors} LSP errors · ${securityScore.sentinelHits} Sentinel hits · ${securityScore.npmAuditIssues} npm audit issues`}>
             <div
               className="flex items-center gap-1.5 px-3 cursor-pointer hover:text-zinc-400 transition-colors"
-              onClick={() => useLayoutStore.getState().setView('reporter')}
+              onClick={() => useWorkspaceStore.getState().setView('reporter')}
             >
               <span className={`text-[9px] font-mono font-bold ${securityScore.grade === 'A' ? 'text-green-400' : securityScore.grade === 'B' ? 'text-yellow-400' : 'text-red-400'}`}>
                 {securityScore.grade}

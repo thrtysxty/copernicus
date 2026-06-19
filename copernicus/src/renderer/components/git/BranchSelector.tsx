@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Check, ChevronDown, GitBranch, AlertTriangle } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { IpcResult, unwrapIpc } from '../../types/ipc'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 
 interface Branch {
   name: string
@@ -22,8 +22,8 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({ onBranchChange }
   const invoke = useIpcError()
   const dropdownRef = useRef<HTMLDivElement>(null)
   
-  const currentBranchName = useLayoutStore(s => s.gitBranch)
-  const isGitDirty = useLayoutStore(s => s.isGitDirty)
+  const currentBranchName = useWorkspaceStore(s => s.gitBranch)
+  const isGitDirty = useWorkspaceStore(s => s.isGitDirty)
 
   const fetchBranches = async () => {
     setLoading(true)

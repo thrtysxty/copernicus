@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, CaseSensitive, WholeWord, Regex, FileCode, SearchCode, X } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { IpcResult, unwrapIpc } from '../../types/ipc'
 
@@ -18,8 +18,8 @@ interface SemanticResult {
 }
 
 export const SearchDrawer: React.FC = () => {
-  const { searchDrawerOpen, setSearchDrawerOpen } = useLayoutStore()
-  const openFile = useLayoutStore(s => s.openFile)
+  const { searchDrawerOpen, setSearchDrawerOpen } = useWorkspaceStore()
+  const openFile = useWorkspaceStore(s => s.openFile)
 
   const [query, setQuery] = useState('')
   const [mode, setMode] = useState<'text' | 'semantic'>('text')

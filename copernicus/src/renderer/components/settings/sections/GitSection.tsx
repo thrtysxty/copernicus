@@ -100,14 +100,14 @@ export const GitSection: React.FC = () => {
     <div className="space-y-10">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono">Git & GitHub</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Configure version control integration and repository defaults.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Configure version control integration and repository defaults.</p>
       </div>
 
       {/* GitHub Connection */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-zinc-400">
           <Github size={14} />
-          <h3 className="text-[10px] uppercase font-bold tracking-wider">GitHub Connection</h3>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider">GitHub Connection</h3>
         </div>
         
         <div className="bg-zinc-900/30 border border-zinc-800 rounded-lg overflow-hidden">
@@ -122,12 +122,12 @@ export const GitSection: React.FC = () => {
                       Connected
                     </span>
                   </div>
-                  <p className="text-[9px] text-zinc-500 font-mono mt-0.5 tracking-tighter">Authenticated via Personal Access Token</p>
+                  <p className="text-[11px] text-zinc-500 font-mono mt-0.5 tracking-tighter">Authenticated via Personal Access Token</p>
                 </div>
               </div>
               <button 
                 onClick={handleDisconnect}
-                className="px-3 py-1.5 bg-red-900/10 border border-red-900/30 rounded text-[9px] font-bold text-red-400 uppercase hover:bg-red-900/20 transition-colors font-mono"
+                className="px-3 py-1.5 bg-red-900/10 border border-red-900/30 rounded text-[11px] font-bold text-red-400 uppercase hover:bg-red-900/20 transition-colors font-mono"
               >
                 Disconnect
               </button>
@@ -135,7 +135,7 @@ export const GitSection: React.FC = () => {
           ) : (
             <div className="p-4 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold">Personal Access Token</label>
+                <label className="text-[11px] text-zinc-500 uppercase font-bold">Personal Access Token</label>
                 <div className="flex gap-2">
                   <input 
                     type="password" 
@@ -146,12 +146,12 @@ export const GitSection: React.FC = () => {
                   />
                   <button 
                     onClick={handleConnect}
-                    className="px-4 py-2 bg-copernicus-phosphor text-black rounded text-[10px] font-bold uppercase hover:bg-green-400 transition-colors font-mono"
+                    className="px-4 py-2 bg-copernicus-phosphor text-black rounded text-[11px] font-bold uppercase hover:bg-green-400 transition-colors font-mono"
                   >
                     Connect
                   </button>
                 </div>
-                <p className="text-[9px] text-zinc-600 italic">Required for repository creation and codebase integration.</p>
+                <p className="text-[11px] text-zinc-600 italic">Required for repository creation and codebase integration.</p>
               </div>
             </div>
           )}
@@ -162,13 +162,13 @@ export const GitSection: React.FC = () => {
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-zinc-400">
           <Settings size={14} />
-          <h3 className="text-[10px] uppercase font-bold tracking-wider">Repository Boilerplate</h3>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider">Repository Boilerplate</h3>
         </div>
 
         <div className="grid grid-cols-2 gap-6 bg-zinc-900/30 border border-zinc-800 p-6 rounded-lg">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Default Branch</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Default Branch</label>
               <input 
                 type="text" 
                 value={defaults.defaultBranch}
@@ -177,7 +177,7 @@ export const GitSection: React.FC = () => {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">.gitignore Template</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">.gitignore Template</label>
               <select 
                 value={defaults.gitignoreTemplate}
                 onChange={e => handleSaveDefaults({ gitignoreTemplate: e.target.value })}
@@ -192,7 +192,7 @@ export const GitSection: React.FC = () => {
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Author Name</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Author Name</label>
               <input 
                 type="text" 
                 value={defaults.authorName}
@@ -202,7 +202,7 @@ export const GitSection: React.FC = () => {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Author Email</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Author Email</label>
               <input 
                 type="email" 
                 value={defaults.authorEmail}
@@ -214,7 +214,7 @@ export const GitSection: React.FC = () => {
           </div>
 
           <div className="col-span-2 space-y-1.5">
-            <label className="text-[9px] text-zinc-500 uppercase font-bold">Commit Message Template</label>
+            <label className="text-[11px] text-zinc-500 uppercase font-bold">Commit Message Template</label>
             <textarea 
               value={defaults.commitTemplate}
               onChange={e => handleSaveDefaults({ commitTemplate: e.target.value })}
@@ -225,7 +225,7 @@ export const GitSection: React.FC = () => {
 
           <button 
             onClick={handleInitWorkspace}
-            className="col-span-2 flex items-center justify-center gap-2 py-2.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold uppercase hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-all font-mono"
+            className="col-span-2 flex items-center justify-center gap-2 py-2.5 bg-zinc-800 border border-zinc-700 rounded text-[11px] font-bold uppercase hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-all font-mono"
           >
             <HardDrive size={14} /> Apply to Current Workspace
           </button>

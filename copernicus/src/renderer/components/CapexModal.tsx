@@ -151,13 +151,13 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                  {/* Repo Selection Dropdown */}
                  <div className="space-y-2 relative">
                     <div className="flex items-center justify-between">
-                        <label className="block text-[10px] uppercase text-zinc-500">Target Repository</label>
+                        <label className="block text-[11px] uppercase text-zinc-500">Target Repository</label>
                         <button
                             onClick={() => {
                                 setShowNewRepoInput(!showNewRepoInput);
                                 if (showNewRepoInput) setNewRepoName('');
                             }}
-                            className="text-[9px] text-copernicus-phosphor flex items-center gap-1 hover:underline"
+                            className="text-[11px] text-copernicus-phosphor flex items-center gap-1 hover:underline"
                         >
                             {showNewRepoInput ? <><X size={10} /> Cancel</> : <><Plus size={10} /> New Repo</>}
                         </button>
@@ -174,7 +174,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                             />
                             <button
                                 onClick={handleCreateRepo}
-                                className="bg-copernicus-phosphor text-black px-3 py-1 text-[10px] font-bold uppercase"
+                                className="bg-copernicus-phosphor text-black px-3 py-1 text-[11px] font-bold uppercase"
                             >
                                 Create
                             </button>
@@ -197,7 +197,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                                         <div className="relative">
                                             <Search className="absolute left-2 top-2 text-zinc-600" size={12} />
                                             <input
-                                                className="w-full bg-black/40 border border-zinc-800 text-zinc-300 pl-8 pr-2 py-1.5 text-[10px] focus:border-copernicus-phosphor focus:outline-none"
+                                                className="w-full bg-black/40 border border-zinc-800 text-zinc-300 pl-8 pr-2 py-1.5 text-[11px] focus:border-copernicus-phosphor focus:outline-none"
                                                 value={repoSearch}
                                                 onChange={e => setRepoSearch(e.target.value)}
                                                 placeholder="Search repos..."
@@ -213,12 +213,12 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                                                     setFormData({...formData, repo_name: r.name, repo_path: r.path});
                                                     setShowRepoDropdown(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-2 text-[10px] hover:text-zinc-300 transition-colors truncate ${formData.repo_path === r.path ? 'bg-copernicus-phosphor/5 text-copernicus-phosphor' : 'text-zinc-400'}`}
+                                                className={`w-full text-left px-3 py-2 text-[11px] hover:text-zinc-300 transition-colors truncate ${formData.repo_path === r.path ? 'bg-copernicus-phosphor/5 text-copernicus-phosphor' : 'text-zinc-400'}`}
                                             >
                                                 {r.name}
                                             </button>
                                         )) : (
-                                            <div className="px-3 py-4 text-[10px] text-zinc-600 italic text-center uppercase tracking-widest">No repos found</div>
+                                            <div className="px-3 py-4 text-[11px] text-zinc-600 italic text-center uppercase tracking-widest">No repos found</div>
                                         )}
                                     </div>
                                 </div>
@@ -229,7 +229,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
 
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-[10px] uppercase text-zinc-500 mb-1">Financial Type</label>
+                        <label className="block text-[11px] uppercase text-zinc-500 mb-1">Financial Type</label>
                         <select
                             className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
                             value={formData.financial_category}
@@ -241,7 +241,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                         </select>
                     </div>
                     <div>
-                        <label className="block text-[10px] uppercase text-zinc-500 mb-1">Phase</label>
+                        <label className="block text-[11px] uppercase text-zinc-500 mb-1">Phase</label>
                         <select
                             className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
                             value={formData.phase}
@@ -256,7 +256,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                  </div>
 
                  <div>
-                    <label className="block text-[10px] uppercase text-zinc-500 mb-1">Story Context (Optional)</label>
+                    <label className="block text-[11px] uppercase text-zinc-500 mb-1">Story Context (Optional)</label>
                     <select
                         className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none"
                         value={formData.story}
@@ -291,7 +291,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                  </div>
 
                  <div>
-                    <label className="block text-[10px] uppercase text-zinc-500 mb-1">Description</label>
+                    <label className="block text-[11px] uppercase text-zinc-500 mb-1">Description</label>
                     <textarea
                         className="w-full bg-[#080808] border border-zinc-800 text-zinc-300 p-2 text-xs focus:border-copernicus-phosphor focus:outline-none h-20 resize-none"
                         value={formData.description}
@@ -306,14 +306,14 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
             <div className="flex justify-end gap-3 mt-8">
                 <button
                     onClick={handleSkip}
-                    className="px-4 py-2 text-[10px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors"
+                    className="px-4 py-2 text-[11px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors"
                 >
                     {type === 'start' ? 'Skip Tracking' : 'Quit Without Saving'}
                 </button>
                 <button
                     onClick={handleSubmit}
                     disabled={type === 'start' && !formData.repo_path}
-                    className="px-6 py-2 text-[10px] uppercase tracking-wider font-bold bg-copernicus-phosphor text-black hover:bg-copernicus-phosphor/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-6 py-2 text-[11px] uppercase tracking-wider font-bold bg-copernicus-phosphor text-black hover:bg-copernicus-phosphor/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                     {type === 'start' ? 'Start Session' : 'Save & Quit'}
                 </button>

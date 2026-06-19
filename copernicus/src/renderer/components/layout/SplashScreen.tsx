@@ -43,7 +43,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
 
     sequence.forEach(({ t, s }) => {
       const timeout = setTimeout(() => {
-        setStage(s as any);
+        setStage(s as 'off' | 'igniting' | 'on');
       }, t);
       timeouts.push(timeout);
     });
@@ -131,14 +131,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
 
         {/* Version Badge */}
         <div className="absolute top-4 right-4 z-10">
-          <div className="font-mono text-[9px] text-[var(--phosphor)]/60 tracking-widest uppercase bg-[#050505]/60 px-2 py-0.5">
+          <div className="font-mono text-[11px] text-[var(--phosphor)]/60 tracking-widest uppercase bg-[#050505]/60 px-2 py-0.5">
             v{appVersion}
           </div>
         </div>
 
         {/* Dynamic Status Text Overlay */}
         <div className="absolute bottom-8 left-0 right-0 flex justify-center w-full z-10 px-8">
-          <div className="font-mono text-[10px] text-[var(--phosphor)]/80 tracking-widest uppercase truncate max-w-lg bg-[#050505]/60 px-2 py-1">
+          <div className="font-mono text-[11px] text-[var(--phosphor)]/80 tracking-widest uppercase truncate max-w-lg bg-[#050505]/60 px-2 py-1">
             {statusText}
           </div>
         </div>

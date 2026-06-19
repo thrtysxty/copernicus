@@ -5,6 +5,8 @@ import { execFileSync } from 'node:child_process'
 import { BrowserWindow } from 'electron'
 import { StateLedger, StoryRecord } from './db/state-ledger'
 import log from './utils/logger'
+import matter from 'gray-matter'
+import yaml from 'js-yaml'
 
 interface Story {
   id: string
@@ -145,12 +147,12 @@ export class StoriesManager {
 
   private _parseStoryRecord(filename: string, content: string): StoryRecord {
     const id = filename.replace('.md', '')
-    const titleMatch = content.match(/^#\s+(.+)$/m)
-    let title = titleMatch ? titleMatch[1]! : id
-    title = title.replace(/^Story \d+[:\s—]+\s*/, '')
+    const { data, content: body } = matter(content)
 
-    const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)$/m)
-    const statusRaw = statusMatch ? statusMatch[1]!.trim().toUpperCase() : ''
+    const titleMatch = body.match(/^#\s+(.+)$/m)
+    const title = data.title || (titleMatch ? titleMatch[1]! : id)
+
+    const statusRaw = (data.status || '').toString().trim().toUpperCase()
     const BOARD_STATUSES = ['PLANNING', 'STORYBOARDING', 'SPRINT_PLANNING', 'IN_PROGRESS', 'TESTING', 'QA', 'DOCUMENTING', 'READY', 'COMPLETE']
     let status = 'PLANNING'
     if (BOARD_STATUSES.includes(statusRaw)) status = statusRaw
@@ -163,43 +165,23 @@ export class StoriesManager {
     else if (statusRaw.includes('READY')) status = 'READY'
     else if (statusRaw.includes('COMPLETE') || statusRaw.includes('DONE')) status = 'COMPLETE'
 
-    const priorityMatch = content.match(/\*\*Priority:\*\*\s*(P\d|UNKNOWN)/m)
-    const priority = priorityMatch ? priorityMatch[1] : 'UNKNOWN'
+    const priority = (data.priority || 'UNKNOWN').toString().toUpperCase()
+    const type = (data.type || 'Unknown').toString()
+    const epic = (data.epic && data.epic !== '(none)' && data.epic !== '') ? data.epic : null
+    const assigned_to = (data.assigned_to && data.assigned_to !== '(unassigned)') ? data.assigned_to : undefined
+    const workflow_id = (data.workflow_id && data.workflow_id !== '(none)' && data.workflow_id !== '— none —' && data.workflow_id !== '')
+      ? data.workflow_id : null
 
-    const typeMatch = content.match(/\*\*Type:\*\*\s*(.+)$/m)
-    const type = typeMatch ? typeMatch[1]!.trim() : 'Unknown'
+    const blocked_by = Array.isArray(data.blocked_by)
+      ? data.blocked_by.map(l => (typeof l === 'string' ? l.match(/story_\d+/i)?.[0] ?? l : String(l)))
+      : []
 
-    const epicMatch = content.match(/\*\*Epic:\*\*\s*(.+)$/m)
-    const epic = epicMatch && epicMatch[1]!.trim() !== '(none)' && epicMatch[1]!.trim() !== ''
-      ? epicMatch[1]!.trim() : null
+    const blocks = Array.isArray(data.blocks)
+      ? data.blocks.map(l => (typeof l === 'string' ? l.match(/story_\d+/i)?.[0] ?? l : String(l)))
+      : []
 
-    const modelMatch = content.match(/\*\*(?:Model|Assigned To):\*\*\s*(.+)$/m)
-    const assigned_to = modelMatch && modelMatch[1]!.trim() !== '(unassigned)'
-      ? modelMatch[1]!.trim() : undefined
-
-    const workflowMatch = content.match(/\*\*(?:Workflow):\*\*\s*(.+)$/m)
-    const workflow_id = workflowMatch && workflowMatch[1]!.trim() !== '(none)' && workflowMatch[1]!.trim() !== '— none —' && workflowMatch[1]!.trim() !== ''
-      ? workflowMatch[1]!.trim() : null
-
-    const blockedByMatch = content.match(/##\s+Blocked By\s*\n([\s\S]*?)(?=\n##|$)/)
-    const blockedByLines = (blockedByMatch?.[1] ?? '').trim().split('\n')
-    const blocked_by = blockedByLines
-      .map(l => l.replace(/^[-*]\s*/, '').trim())
-      .filter(l => l.length > 0 && !l.toLowerCase().includes('none'))
-      .map(l => l.match(/story_\d+/i)?.[0] ?? l)
-
-    const blocksMatch = content.match(/##\s+Blocks\s*\n([\s\S]*?)(?=\n##|$)/)
-    const blocksLines = (blocksMatch?.[1] ?? '').trim().split('\n')
-    const blocks = blocksLines
-      .map(l => l.replace(/^[-*]\s*/, '').trim())
-      .filter(l => l.length > 0 && !l.toLowerCase().includes('none'))
-      .map(l => l.match(/story_\d+/i)?.[0] ?? l)
-
-    const dateMatch = content.match(/\*\*Date:\*\*\s*(.+)$/m)
-    const date = dateMatch ? dateMatch[1]!.trim() : ''
-
-    const flaggedMatch = content.match(/\*\*Flagged:\*\*\s*(.+)$/m)
-    const flagged = flaggedMatch ? flaggedMatch[1]!.trim().toLowerCase() === 'true' : false
+    const date = (data.date || '').toString()
+    const flagged = !!data.flagged
 
     return {
       id, title, status, project_id: this.activeProjectId,
@@ -216,23 +198,7 @@ export class StoriesManager {
 
   async setStoryStatus(storyNumber: number, status: string) {
     const id = `story_${String(storyNumber).padStart(3, '0')}`
-    const record = this.ledger.getStoryById(id)
-    if (!record) {
-      log.warn(`[StoriesManager] setStoryStatus: story ${id} not found in DB.`)
-      return
-    }
-
-    const verboseStatus = status === 'READY' ? 'READY FOR IMPLEMENTATION'
-                        : status === 'REVIEW' ? 'READY FOR REVIEW'
-                        : status
-
-    const updatedBody = record.body_md.replace(
-      /(\*\*Status:\*\*).+$/m, `$1 ${verboseStatus}`
-    )
-
-    this.ledger.updateStoryFields(id, { status, body_md: updatedBody })
-    writeFileAtomic(record.file_path, updatedBody)
-    this.broadcastUpdate()
+    await this.updateStoryStatus(id, status)
   }
 
   updateStoryStatus(id: string, newStatus: string) {
@@ -268,18 +234,14 @@ export class StoriesManager {
       }).catch(err => log.error('[StoriesManager] Failed to trigger documentation generation:', err));
     }
 
-    const verboseStatus = newStatus === 'READY'   ? 'READY FOR IMPLEMENTATION'
-                        : newStatus === 'REVIEW'  ? 'READY FOR REVIEW'
-                        : newStatus
-
-    const updatedBody = record.body_md.replace(
-      /(\*\*Status:\*\*).+$/m, `$1 ${verboseStatus}`
-    )
+    const { data, content } = matter(record.body_md)
+    const updatedData = { ...data, status: newStatus }
+    const updatedBody = `---\n${yaml.dump(updatedData)}---\n\n${content}`
 
     this.ledger.updateStoryFields(id, { status: newStatus, body_md: updatedBody })
     writeFileAtomic(record.file_path, updatedBody)
     this.broadcastUpdate()
-    
+
     if (this.window) {
       this.window.webContents.send('story:status-changed', { id, status: newStatus })
     }
@@ -306,16 +268,22 @@ export class StoriesManager {
     const filepath = path.join(this.storiesPath, `${id}.md`)
 
     const status = type === 'Epic' ? 'EPIC' : 'PLANNING'
+
+    const data = {
+      title,
+      status,
+      type,
+      priority,
+      epic: epic === '(none)' ? null : epic,
+      assigned_to: '(unassigned)',
+      workflow_id: '(none)',
+      date: dateStr,
+      flagged: false,
+      blocked_by: [],
+      blocks: [],
+    }
+
     const body = `# Story ${String(nextNum).padStart(3, '0')}: ${title}
-
-**Status:** ${status}
-**Type:** ${type}
-**Priority:** ${priority}
-**Epic:** ${epic}
-**Model:** (unassigned)
-**Date:** ${dateStr}
-
----
 
 ## Problem
 ${title}
@@ -333,17 +301,18 @@ ${ac ? ac : `- [ ] Implement ${title}`}
 - None
 
 ## Definition of Done
-- [ ] ...
-`
+- [ ] ...`
+
+    const content = `---\n${yaml.dump(data)}---\n\n${body}`
 
     this.ledger.upsertStory({
       id, slug, title, project_id: this.activeProjectId, status: type === 'Epic' ? 'EPIC' : 'PLANNING', priority, type, epic,
       workflow_id: null,
-      blocked_by: [], blocks: [], body_md: body, file_path: filepath, date: dateStr,
+      blocked_by: [], blocks: [], body_md: content, file_path: filepath, date: dateStr,
       flagged: false,
     })
 
-    writeFileAtomic(filepath, body)
+    writeFileAtomic(filepath, content)
     this.broadcastUpdate()
     return id
   }
@@ -380,25 +349,27 @@ ${ac ? ac : `- [ ] Implement ${title}`}
     const record = this.ledger.getStoryById(id)
     if (!record) return
 
-    let fieldLabel = field.charAt(0).toUpperCase() + field.slice(1)
-    if (field === 'model') fieldLabel = 'Model'
-    if (field === 'workflowId') fieldLabel = 'Workflow'
-
-    const finalValue = (value === '— none —' || value === '(none)') ? '(none)' : String(value)
-    const re = new RegExp(`^\\*\\*${fieldLabel}:\\*\\*(.*?)$`, 'm')
-    let updatedBody = record.body_md
-
-    if (re.test(updatedBody)) {
-      updatedBody = updatedBody.replace(re, `**${fieldLabel}:** ${finalValue}`)
-    } else {
-      updatedBody = updatedBody.replace(/^(# .*?\n)/, `$1**${fieldLabel}:** ${finalValue}\n`)
-    }
-
     let dbField: string = field
     if (field === 'model') dbField = 'assigned_to'
     if (field === 'workflowId') dbField = 'workflow_id'
 
+    const finalValue = (value === '— none —' || value === '(none)') ? '(none)' : String(value)
     const dbValue = finalValue === '(none)' ? null : (field === 'flagged' ? (value === true || value === 'true') : finalValue)
+
+    const { data, content } = matter(record.body_md)
+    const fieldMap: Record<string, string> = {
+      priority: 'priority',
+      type: 'type',
+      model: 'assigned_to',
+      epic: 'epic',
+      status: 'status',
+      workflowId: 'workflow_id',
+      flagged: 'flagged'
+    }
+    const yamlKey = fieldMap[field] as string
+    const updatedData = { ...data, [yamlKey]: dbValue }
+    const updatedBody = `---\n${yaml.dump(updatedData)}---\n\n${content}`
+
     this.ledger.updateStoryFields(id, { [dbField]: dbValue, body_md: updatedBody } as any)
     writeFileAtomic(record.file_path, updatedBody)
     this.broadcastUpdate()
@@ -412,9 +383,9 @@ ${ac ? ac : `- [ ] Implement ${title}`}
     if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true })
 
     const archivePath = path.join(archiveDir, path.basename(record.file_path))
-    const archivedBody = record.body_md.replace(
-      /(\*\*Status:\*\*).+$/m, '$1 COMPLETE'
-    )
+    const { data, content } = matter(record.body_md)
+    const updatedData = { ...data, status: 'COMPLETE' }
+    const archivedBody = `---\n${yaml.dump(updatedData)}---\n\n${content}`
 
     this.ledger.updateStoryFields(id, {
       status:    'COMPLETE',
@@ -433,7 +404,7 @@ ${ac ? ac : `- [ ] Implement ${title}`}
 
     try { fs.unlinkSync(record.file_path) } catch { /* ignore */ }
     this.broadcastUpdate()
-    
+
     if (this.window) {
       this.window.webContents.send('story:status-changed', { id, status: 'COMPLETE' })
     }

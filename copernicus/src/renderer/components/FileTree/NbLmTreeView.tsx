@@ -79,11 +79,11 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
   }
 
   if (loading) {
-    return <div className="text-zinc-600 text-[10px] p-2 italic">Loading...</div>
+    return <div className="text-zinc-600 text-[11px] p-2 italic">Loading...</div>
   }
 
   if (error) {
-    return <div className="text-red-400 text-[10px] p-2">Failed to load</div>
+    return <div className="text-red-400 text-[11px] p-2">Failed to load</div>
   }
 
   const SectionHeader = ({ title, isOpen, onToggle }: { title: string, isOpen: boolean, onToggle: () => void }) => (
@@ -104,7 +104,7 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
         {sourcesOpen && (
           <div className="ml-4">
             {contents.sources.length === 0 ? (
-              <div className="text-zinc-600 text-[10px] italic px-1 py-[2px]">None</div>
+              <div className="text-zinc-600 text-[11px] italic px-1 py-[2px]">None</div>
             ) : (
               contents.sources.map(src => (
                 <div
@@ -130,7 +130,7 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
         {studioOpen && (
           <div className="ml-4">
             {contents.studio.length === 0 ? (
-              <div className="text-zinc-600 text-[10px] italic px-1 py-[2px]">None</div>
+              <div className="text-zinc-600 text-[11px] italic px-1 py-[2px]">None</div>
             ) : (
               contents.studio.map(art => (
                 <div
@@ -143,7 +143,7 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
                     <Wand2 size={12} className="text-zinc-500" />
                   </div>
                   <span className="truncate group-hover:text-zinc-300">{art.title}</span>
-                  <span className="text-[9px] bg-white/10 px-1 rounded ml-1 uppercase text-zinc-500">{art.type}</span>
+                  <span className="text-[11px] bg-white/10 px-1 rounded ml-1 uppercase text-zinc-500">{art.type}</span>
                 </div>
               ))
             )}
@@ -156,14 +156,14 @@ export const NbLmTreeView: React.FC<NbLmTreeViewProps> = ({ notebookId }) => {
         <SectionHeader title="Notes" isOpen={notesOpen} onToggle={() => setNotesOpen(!notesOpen)} />
         {notesOpen && (
           <div className="ml-4 flex flex-col gap-1 px-1 py-[2px]">
-            <div className="text-zinc-600 text-[10px] italic">Notes not available via API</div>
+            <div className="text-zinc-600 text-[11px] italic">Notes not available via API</div>
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault()
                 openExternal('https://notebooklm.google.com')
               }}
-              className="text-copernicus-phosphor hover:underline text-[10px] inline-block"
+              className="text-copernicus-phosphor hover:underline text-[11px] inline-block"
             >
               Open in NotebookLM ↗
             </a>

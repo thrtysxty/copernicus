@@ -9,7 +9,7 @@ vi.mock('../../../store/toastStore', () => ({
   useToastStore: () => ({ addToast: vi.fn() })
 }))
 vi.mock('../../../store/layout', () => ({
-  useLayoutStore: () => ({ setNotebooklmEnabled: vi.fn() })
+  useWorkspaceStore: () => ({ setNotebooklmEnabled: vi.fn() })
 }))
 vi.mock('../../../utils/logger', () => ({
   default: { error: vi.fn() }

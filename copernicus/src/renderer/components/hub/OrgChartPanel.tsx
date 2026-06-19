@@ -2,19 +2,21 @@ import log from '../../utils/logger'
 import { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { RoleCard } from './RoleCard';
+import { RoleConfig, ActiveToken } from './RoleCard';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Skeleton } from '../common/Skeleton';
 
 export function OrgChartPanel() {
   const invoke = useIpcError();
-  const [config, setConfig] = useState<any>(null);
-  const [activeTokens, setActiveTokens] = useState<any[]>([]);
+  const [config, setConfig] = useState<Record<string, RoleConfig> | null>(null);
+  const [activeTokens, setActiveTokens] = useState<ActiveToken[]>([]);
   const [isHubRunning, setIsHubRunning] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const configResult = await invoke<any>('org-chart:get-config');
+      const configResult = await invoke<IpcResult<Record<string, RoleConfig>>>('org-chart:get-config');
       if (configResult && configResult.ok && configResult.data) {
         setConfig(configResult.data);
         setIsHubRunning(true);
@@ -23,7 +25,7 @@ export function OrgChartPanel() {
         // We could theoretically use a cached config here if needed, but for now we'll just not show it if we can't get it
       }
 
-      const tokensResult = await invoke<any>('org-chart:list-active-tokens');
+      const tokensResult = await invoke<IpcResult<ActiveToken[]>>('org-chart:list-active-tokens');
       if (tokensResult && tokensResult.ok && tokensResult.data) {
         setActiveTokens(tokensResult.data);
       }
@@ -39,7 +41,7 @@ export function OrgChartPanel() {
     fetchData();
     // In a real app we might poll for tokens or subscribe to an event
     const interval = setInterval(() => {
-      invoke<any>('org-chart:list-active-tokens').then(res => {
+      invoke<IpcResult<ActiveToken[]>>('org-chart:list-active-tokens').then(res => {
         if (res && res.ok && res.data) setActiveTokens(res.data);
       }).catch(() => {});
     }, 10000);
@@ -47,7 +49,33 @@ export function OrgChartPanel() {
   }, [invoke]);
 
   if (loading && !config) {
-    return <div data-testid="panel-org-chart" className="p-8 text-zinc-500 font-mono text-sm flex items-center gap-2"><RefreshCw size={14} className="animate-spin" /> Loading Org Chart...</div>;
+    return (
+      <div data-testid="panel-org-chart" className="p-8 h-full overflow-y-auto bg-[#050505] space-y-12">
+        <div className="flex items-center gap-3">
+          <Skeleton width={18} height={18} rounded="full" />
+          <Skeleton width={150} height={16} />
+          <Skeleton width={100} height={16} />
+        </div>
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <Skeleton width={120} height={12} />
+            <div className="flex gap-4">
+              <Skeleton width={200} height={100} className="rounded-lg" />
+              <Skeleton width={200} height={100} className="rounded-lg" />
+              <Skeleton width={200} height={100} className="rounded-lg" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <Skeleton width={120} height={12} />
+            <div className="flex gap-4">
+              <Skeleton width={200} height={100} className="rounded-lg" />
+              <Skeleton width={200} height={100} className="rounded-lg" />
+              <Skeleton width={200} height={100} className="rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!config) {
@@ -64,8 +92,8 @@ export function OrgChartPanel() {
     );
   }
 
-  const regulatoryRoles = Object.entries(config.roles).filter(([_, r]: any) => r.class === 'regulatory');
-  const operationalRoles = Object.entries(config.roles).filter(([_, r]: any) => r.class === 'operational');
+  const regulatoryRoles = Object.entries(config.roles).filter(([_, r]: [string, RoleConfig]) => r.class === 'regulatory');
+  const operationalRoles = Object.entries(config.roles).filter(([_, r]: [string, RoleConfig]) => r.class === 'operational');
 
   return (
     <div className="p-8 h-full overflow-y-auto bg-[#050505]">
@@ -93,7 +121,7 @@ export function OrgChartPanel() {
               <RoleCard
                 key={name}
                 roleName={name}
-                roleConfig={roleConfig as any}
+                roleConfig={roleConfig}
                 activeToken={activeTokens.find(t => t.role === name)}
                 isReadOnly={!isHubRunning}
                 onUpdate={fetchData}
@@ -120,7 +148,7 @@ export function OrgChartPanel() {
                 {index > 0 && <div className="absolute -top-4 left-40 w-px h-4 bg-zinc-800" />}
                 <RoleCard
                   roleName={name}
-                  roleConfig={roleConfig as any}
+                  roleConfig={roleConfig}
                   activeToken={activeTokens.find(t => t.role === name)}
                   isReadOnly={!isHubRunning}
                   onUpdate={fetchData}

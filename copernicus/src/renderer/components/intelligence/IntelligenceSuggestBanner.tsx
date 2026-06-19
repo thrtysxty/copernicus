@@ -44,8 +44,8 @@ export const IntelligenceSuggestBanner: React.FC<IntelligenceSuggestBannerProps>
         content: suggestion.content,
         providers: []
       };
-      const res = await invoke<IntelligenceDocument>('intel:create', payload);
-      const newDoc = unwrapIpc<IntelligenceDocument>(res as any);
+      const res = await invoke<IpcResult<IntelligenceDocument>>('intel:create', payload);
+      const newDoc = unwrapIpc<IntelligenceDocument>(res);
       
       if (newDoc) {
         const newCreated = [...createdDocs, newDoc];
@@ -78,8 +78,8 @@ export const IntelligenceSuggestBanner: React.FC<IntelligenceSuggestBannerProps>
           content: suggestion.content,
           providers: []
         };
-        const res = await invoke<IntelligenceDocument>('intel:create', payload);
-        const newDoc = unwrapIpc<IntelligenceDocument>(res as any);
+        const res = await invoke<IpcResult<IntelligenceDocument>>('intel:create', payload);
+        const newDoc = unwrapIpc<IntelligenceDocument>(res);
         if (newDoc) {
           newCreated.push(newDoc);
         }
@@ -121,10 +121,10 @@ export const IntelligenceSuggestBanner: React.FC<IntelligenceSuggestBannerProps>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[11px] font-bold text-zinc-200 truncate">{suggestion.title}</div>
-                <div className="text-[9px] text-zinc-500 truncate">{suggestion.description}</div>
+                <div className="text-[11px] text-zinc-500 truncate">{suggestion.description}</div>
               </div>
             </div>
-            <div className="text-[10px] text-zinc-400 mb-3 bg-zinc-950 p-2 rounded flex-1">
+            <div className="text-[11px] text-zinc-400 mb-3 bg-zinc-950 p-2 rounded flex-1">
               <span className="font-bold uppercase tracking-wider text-zinc-600 mr-1">Rationale:</span>
               {suggestion.rationale}
             </div>
@@ -132,14 +132,14 @@ export const IntelligenceSuggestBanner: React.FC<IntelligenceSuggestBannerProps>
               <button 
                 onClick={() => handleSkip(suggestion.id)}
                 disabled={isProcessing}
-                className="text-[9px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider px-2 py-1 transition-colors disabled:opacity-50"
+                className="text-[11px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider px-2 py-1 transition-colors disabled:opacity-50"
               >
                 Skip
               </button>
               <button 
                 onClick={() => handleCreate(suggestion)}
                 disabled={isProcessing}
-                className="text-[9px] bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1 rounded font-bold uppercase tracking-wider transition-colors flex items-center gap-1 disabled:opacity-50"
+                className="text-[11px] bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1 rounded font-bold uppercase tracking-wider transition-colors flex items-center gap-1 disabled:opacity-50"
               >
                 <Plus size={10} /> Create
               </button>
@@ -152,7 +152,7 @@ export const IntelligenceSuggestBanner: React.FC<IntelligenceSuggestBannerProps>
         <button
           onClick={handleCreateAll}
           disabled={isProcessing}
-          className="text-[10px] bg-copernicus-phosphor hover:brightness-110 text-[#050505] px-4 py-1.5 rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
+          className="text-[11px] bg-copernicus-phosphor hover:brightness-110 text-[#050505] px-4 py-1.5 rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
         >
           <Sparkles size={12} /> Create All Suggestions
         </button>

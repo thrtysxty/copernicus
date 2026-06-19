@@ -1,0 +1,85 @@
+const fs = require('fs');
+const path = require('path');
+const matter = require('gray-matter');
+
+const STORIES_PATH = path.join(process.cwd(), 'docs/stories');
+
+function migrate() {
+  if (!fs.existsSync(STORIES_PATH)) {
+    console.error('Stories path not found');
+    process.exit(1);
+  }
+
+  const files = fs.readdirSync(STORIES_PATH).filter(f => f.endsWith('.md') && !f.endsWith('.tmp'));
+
+  files.forEach(file => {
+    const filePath = path.join(STORIES_PATH, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    const id = file.replace('.md', '');
+    const titleMatch = content.match(/^#\s+(.+)$/m);
+    let title = titleMatch ? titleMatch[1] : id;
+    title = title.replace(/^Story \d+[:\s—]+\s*/, '');
+
+    const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)$/m);
+    const status = statusMatch ? statusMatch[1].trim() : 'PLANNING';
+
+    const priorityMatch = content.match(/\*\*Priority:\*\*\s*(P\d|UNKNOWN)/m);
+    const priority = priorityMatch ? priorityMatch[1] : 'UNKNOWN';
+
+    const typeMatch = content.match(/\*\*Type:\*\*\s*(.+)$/m);
+    const type = typeMatch ? typeMatch[1].trim() : 'Unknown';
+
+    const epicMatch = content.match(/\*\*Epic:\*\*\s*(.+)$/m);
+    const epic = (epicMatch && epicMatch[1].trim() !== '(none)' && epicMatch[1].trim() !== '') ? epicMatch[1].trim() : null;
+
+    const modelMatch = content.match(/\*\*(?:Model|Assigned To):\*\*\s*(.+)$/m);
+    const assigned_to = (modelMatch && modelMatch[1].trim() !== '(unassigned)') ? modelMatch[1].trim() : '(unassigned)';
+
+    const workflowMatch = content.match(/\*\*(?:Workflow):\*\*\s*(.+)$/m);
+    const workflow_id = (workflowMatch && workflowMatch[1].trim() !== '(none)' && workflowMatch[1].trim() !== '— none —' && workflowMatch[1].trim() !== '')
+      ? workflowMatch[1].trim() : '(none)';
+
+    const blockedByMatch = content.match(/##\s+Blocked By\s*\n([\s\S]*?)(?=\n##|$)/);
+    const blocked_by = (blockedByMatch?.[1] || '').trim().split('\\n')
+      .map(l => l.replace(/^[-*]\s*/, '').trim())
+      .filter(l => l.length > 0 && !l.toLowerCase().includes('none'))
+      .map(l => l.match(/story_\d+/i)?.[0] ?? l);
+
+    const blocksMatch = content.match(/##\s+Blocks\s*\n([\s\S]*?)(?=\n##|$)/);
+    const blocks = (blocksMatch?.[1] || '').trim().split('\\n')
+      .map(l => l.replace(/^[-*]\s*/, '').trim())
+      .filter(l => l.length > 0 && !l.toLowerCase().includes('none'))
+      .map(l => l.match(/story_\d+/i)?.[0] ?? l);
+
+    const dateMatch = content.match(/\*\*Date:\*\*\s*(.+)$/m);
+    const date = dateMatch ? dateMatch[1].trim() : '';
+
+    const flaggedMatch = content.match(/\*\*Flagged:\*\*\s*(.+)$/m);
+    const flagged = flaggedMatch ? flaggedMatch[1].trim().toLowerCase() === 'true' : false;
+
+    const data = {
+      title,
+      status,
+      priority,
+      type,
+      epic,
+      assigned_to,
+      workflow_id,
+      date,
+      flagged,
+      blocked_by,
+      blocks,
+    };
+
+    // The current stories have a '---' separator between metadata and body.
+    const parts = content.split('---');
+    const cleanBody = parts.length > 1 ? parts.slice(1).join('---').trim() : content;
+
+    const result = matter.stringify(data, cleanBody);
+    fs.writeFileSync(filePath, result, 'utf-8');
+    console.log(`Migrated ${file}`);
+  });
+}
+
+migrate();

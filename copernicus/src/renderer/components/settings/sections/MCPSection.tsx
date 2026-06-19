@@ -4,12 +4,18 @@ import { Trash2, AlertCircle, Plus, X, Server } from 'lucide-react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { SettingsLoadResponse } from '../../../types/ipc'
 
-interface McpServer { 
-  name: string; 
-  transport: 'stdio' | 'sse' | 'http'; 
-  command?: string; 
-  args?: string[]; 
-  url?: string 
+interface McpServer {
+  name: string;
+  transport: 'stdio' | 'sse' | 'http';
+  command?: string;
+  args?: string[];
+  url?: string
+}
+
+interface McpSettings {
+  servers: McpServer[];
+  stitchProjectId?: string;
+  [key: string]: unknown;
 }
 
 export const MCPSection: React.FC = () => {
@@ -28,15 +34,18 @@ export const MCPSection: React.FC = () => {
 
   const loadSettings = async () => {
     try {
-      const result = await invoke<SettingsLoadResponse>('settings:load')
+      const res = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+      const settings = unwrapIpc<SettingsLoadResponse>(res)
 
-      setMcpServers((result?.mcp as any)?.servers ?? [])
-      setStitchProjectId((result?.mcp as any)?.stitchProjectId ?? '')
-      const storedKey = await invoke<string | null>('auth:get-api-key', 'stitch')
-      setStitchApiKey(storedKey ?? '')
+      const mcp = settings.mcp as McpSettings | undefined
+      setMcpServers(mcp?.servers ?? [])
+      setStitchProjectId(mcp?.stitchProjectId ?? '')
 
-      
-      const statuses = await invoke<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>('mcp:get-status')
+      const keyRes = await invoke<IpcResult<string | null>>('auth:get-api-key', 'stitch')
+      setStitchApiKey(unwrapIpc<string | null>(keyRes) ?? '')
+
+      const statusRes = await invoke<IpcResult<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>>('mcp:get-status')
+      const statuses = unwrapIpc<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>(statusRes)
       const map: Record<string, 'connected' | 'disconnected' | 'error'> = {}
       if (Array.isArray(statuses)) {
         statuses.forEach(s => { map[s.name] = s.status })
@@ -54,12 +63,14 @@ export const MCPSection: React.FC = () => {
   }, [])
 
   const saveMcpServers = async (servers: McpServer[]) => {
-    const current = await invoke<SettingsLoadResponse>('settings:load')
+    const res = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+    const current = unwrapIpc<SettingsLoadResponse>(res)
     await invoke('settings:save', { ...current, mcp: { servers } })
     setMcpServers(servers)
-    
+
     // Refresh status after save
-    const statuses = await invoke<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>('mcp:get-status')
+    const statusRes = await invoke<IpcResult<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>>('mcp:get-status')
+    const statuses = unwrapIpc<Array<{name:string;status:'connected' | 'disconnected' | 'error'}>>(statusRes)
     const map: Record<string, 'connected' | 'disconnected' | 'error'> = {}
     if (Array.isArray(statuses)) {
       statuses.forEach(s => { map[s.name] = s.status })
@@ -70,8 +81,10 @@ export const MCPSection: React.FC = () => {
 
   const saveStitchProject = async (id: string) => {
     setStitchProjectId(id)
-    const current = await invoke<SettingsLoadResponse>('settings:load')
-    await invoke('settings:save', { ...current, mcp: { ...(current.mcp as any), stitchProjectId: id } })
+    const res = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+    const current = unwrapIpc<SettingsLoadResponse>(res)
+    const mcp = (current.mcp as McpSettings) || {}
+    await invoke('settings:save', { ...current, mcp: { ...mcp, stitchProjectId: id } })
   }
 
   const saveStitchApiKey = async (key: string) => {
@@ -86,7 +99,7 @@ export const MCPSection: React.FC = () => {
     setIsStitchTesting(true)
     setStitchStatus('none')
     try {
-      const res = await invoke<{ok: boolean, error?: string}>('stitch:ping', stitchProjectId)
+      const res = await invoke<IpcResult<{ok: boolean, error?: string}>>('stitch:ping', stitchProjectId)
       if (res.ok) {
         setStitchStatus('success')
       } else {

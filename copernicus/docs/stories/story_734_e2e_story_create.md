@@ -1,3 +1,18 @@
+---
+title: 'story_734: E2E Story Creation'
+status: READY
+priority: P0
+type: Unknown
+epic: null
+assigned_to: (unassigned)
+workflow_id: (none)
+date: ''
+flagged: false
+blocked_by: []
+blocks:
+  - story_737
+--- 
+
 # story_734: E2E Story Creation
 
 **Status:** READY

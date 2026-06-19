@@ -107,6 +107,7 @@ export interface WFNode {
   data: WorkflowNodeData; // For storing config like agent name, command, etc.
   status?: NodeStatus;
   role?: WFNodeRole;
+  error?: string;
 }
 
 export interface WFEdge {

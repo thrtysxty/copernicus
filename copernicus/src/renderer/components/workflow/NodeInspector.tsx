@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { WFNode, WFNodeRole } from '../../../../electron/workflow/types';
-import { AgentNodeData } from '../../../../electron/workflow/types';
+import { WFNode, WFNodeRole, AgentNodeData, ExtensionNodeData } from '../../../../electron/workflow/types';
 import { ExtensionProvider } from '../../store/extensionStore';
 import { ROLE_CONFIGS } from '../../../../electron/workflow/roles';
 import log from '../../utils/logger'
-import { unwrapIpc } from '../../types/ipc';
+import { unwrapIpc, IpcResult } from '../../types/ipc';
 import { useExtensionStore } from '../../store/extensionStore'
 import { ScheduleInput } from './ScheduleInput';
 
 const PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter', 'deepinfra', 'ollama'] as const;
+
+interface ModelConfig { id: string; name: string; provider: string }
 
 interface NodeInspectorProps {
   node: WFNode;
@@ -20,14 +21,19 @@ interface NodeInspectorProps {
   invoke: <T>(channel: string, ...args: any[]) => Promise<T>;
 }
 
+interface Story {
+  id: string
+  title: string
+}
+
 export function NodeInspector({ node, authStatus, availableModels, onChange, onClose, onDelete, invoke }: NodeInspectorProps) {
   const [localModels, setLocalModels] = useState<{id:string;name:string}[]>([]);
-  const [stories, setStories] = useState<any[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
   const extensionProviders = useExtensionStore(s => s.providers)
 
   useEffect(() => {
-    invoke<any[]>('stories:list').then(res => {
-      const data = (res as any).data || res;
+    invoke<IpcResult<Story[]>>('stories:list').then(res => {
+      const data = unwrapIpc<Story[]>(res);
       if (Array.isArray(data)) setStories(data);
     }).catch(log.error);
   }, [invoke]);
@@ -41,8 +47,9 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
   const handleProviderChange = async (provider: string) => {
     updateData({ provider, modelId: '' });
     if (provider === 'ollama') {
-      const result = await invoke<{ ok: boolean; models: any[] }>('models:list-ollama');
-      if (result.ok) setLocalModels(result.models);
+      const result = await invoke<IpcResult<ModelConfig[]>>('models:list-ollama');
+      const models = unwrapIpc<ModelConfig[]>(result);
+      if (models) setLocalModels(models.map(m => ({ id: m.id, name: m.name })));
     }
   };
 
@@ -57,8 +64,9 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
 
   const resumeNode = async () => {
     try {
-      const res = await invoke<any>('workflow:resume-node', node.id);
-      if (!res.ok) log.error('Failed to resume node:', res.error);
+      const res = await invoke<IpcResult<boolean>>('workflow:resume-node', node.id);
+      const success = unwrapIpc<boolean>(res);
+      if (!success) log.error('Failed to resume node');
     } catch (err) {
       log.error('Failed to resume node:', err);
     }
@@ -77,7 +85,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
       {node.status === 'paused' && (
         <div className="p-3 bg-red-900/20 border-b border-red-900/40">
           <p className="text-xs text-red-500 mb-2 font-bold uppercase tracking-wider">Verification Failed</p>
-          <p className="text-[10px] text-red-400 mb-3 font-mono break-words whitespace-pre-wrap">{(node as any).error}</p>
+          <p className="text-[10px] text-red-400 mb-3 font-mono break-words whitespace-pre-wrap">{node.error}</p>
           <button
             onClick={resumeNode}
             className="w-full py-1.5 rounded text-[10px] font-mono uppercase tracking-wider
@@ -109,7 +117,7 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
         {node.type === 'extension' && (
           <div className="space-y-2">
             <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Extension Config</p>
-            <p className="text-[10px] text-zinc-400">Type: {(node.data as any).extensionType ?? '—'}</p>
+            <p className="text-[10px] text-zinc-400">Type: {(node.data as ExtensionNodeData).extensionType ?? '—'}</p>
           </div>
         )}
       </div>
@@ -131,11 +139,11 @@ export function NodeInspector({ node, authStatus, availableModels, onChange, onC
 
 // ── Components ─────────────────────────────────────────────────────────────
 
-function ChecklistCheckbox({ nodeId, index, onUpdate, invoke }: { nodeId: string, index: number, onUpdate: () => void, invoke: any }) {
+function ChecklistCheckbox({ nodeId, index, onUpdate, invoke }: { nodeId: string, index: number, onUpdate: () => void, invoke: <T>(channel: string, ...args: any[]) => Promise<T> }) {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    invoke('workflow:get-context', `__check_${nodeId}_${index}`).then((res: any) => {
+    invoke<IpcResult<string>>('workflow:get-context', `__check_${nodeId}_${index}`).then((res) => {
       if (res.ok) {
         const val = unwrapIpc<string>(res);
         setChecked(val === 'true');
@@ -151,7 +159,7 @@ function ChecklistCheckbox({ nodeId, index, onUpdate, invoke }: { nodeId: string
       onChange={async (e) => {
         const isChecked = e.target.checked;
         setChecked(isChecked);
-        await invoke('workflow:set-context', `__check_${nodeId}_${index}`, isChecked ? 'true' : 'false');
+        await invoke<IpcResult<boolean>>('workflow:set-context', `__check_${nodeId}_${index}`, isChecked ? 'true' : 'false');
         onUpdate();
       }}
     />
@@ -169,7 +177,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function DebouncedInput({ initialValue, onCommit, className, placeholder, type = 'text', min, max, step }: any) {
+function DebouncedInput({ initialValue, onCommit, className, placeholder, type = 'text', min, max, step }: { initialValue: string | number, onCommit: (val: string | number) => void, className?: string, placeholder?: string, type?: string, min?: number, max?: number, step?: number }) {
   const [val, setVal] = useState(initialValue);
   
   useEffect(() => {
@@ -192,7 +200,7 @@ function DebouncedInput({ initialValue, onCommit, className, placeholder, type =
   );
 }
 
-function DebouncedTextarea({ initialValue, onCommit, className, placeholder, rows = 3 }: any) {
+function DebouncedTextarea({ initialValue, onCommit, className, placeholder, rows = 3 }: { initialValue: string, onCommit: (val: string) => void, className?: string, placeholder?: string, rows?: number }) {
   const [val, setVal] = useState(initialValue);
   
   useEffect(() => {
@@ -211,8 +219,8 @@ function DebouncedTextarea({ initialValue, onCommit, className, placeholder, row
   );
 }
 
-function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onUpdateRole, onProviderChange, extensionProviders }: any) {
-  const data = node.data;
+function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onUpdateRole, onProviderChange, extensionProviders }: { node: WFNode, modelsForProvider: {id:string;name:string}[], authStatus: Record<string, boolean>, onUpdate: (patch: Record<string, any>) => void, onUpdateRole: (role: WFNodeRole | undefined) => void, onProviderChange: (provider: string) => void, extensionProviders: ExtensionProvider[] }) {
+  const data = node.data as AgentNodeData;
   const currentRole = node.role as WFNodeRole | undefined;
   const roleConfig = currentRole ? ROLE_CONFIGS[currentRole] : null;
 
@@ -242,7 +250,7 @@ function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onUpdateRo
         )}
       </Field>
       <Field label="Persona Label">
-        <DebouncedInput className="inspector-input" initialValue={data.persona} onCommit={(v: string) => onUpdate({ persona: v })} />
+        <DebouncedInput className="inspector-input" initialValue={data.persona} onCommit={(v) => onUpdate({ persona: String(v) })} />
       </Field>
       <Field label="Provider">
         <select className="inspector-input" value={data.provider ?? ''} onChange={e => onProviderChange(e.target.value)}>
@@ -269,14 +277,14 @@ function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onUpdateRo
           className="inspector-input mt-1"
           placeholder="Custom model ID"
           initialValue={data.modelId}
-          onCommit={(v: string) => onUpdate({ modelId: v })}
+          onCommit={(v) => onUpdate({ modelId: String(v) })}
         />
       </Field>
       <Field label="System Prompt">
-        <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.systemPrompt} onCommit={(v: string) => onUpdate({ systemPrompt: v })} />
+        <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.systemPrompt} onCommit={(v) => onUpdate({ systemPrompt: v })} />
       </Field>
       <Field label="Task">
-        <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.task} onCommit={(v: string) => onUpdate({ task: v })} />
+        <DebouncedTextarea className="inspector-input h-20 resize-none" initialValue={data.task} onCommit={(v) => onUpdate({ task: v })} />
         <p className="text-[8px] text-zinc-600 mt-0.5">Use {'{{storyId}}'}, {'{{storyTitle}}'}, {'{{prevOutput}}'}</p>
       </Field>
       <Field label="Output Channel">
@@ -286,7 +294,7 @@ function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onUpdateRo
       </Field>
       {data.outputChannel === 'file' && (
         <Field label="Output File">
-          <DebouncedInput className="inspector-input" initialValue={data.outputFile} onCommit={(v: string) => onUpdate({ outputFile: v })} />
+          <DebouncedInput className="inspector-input" initialValue={data.outputFile} onCommit={(v) => onUpdate({ outputFile: String(v) })} />
         </Field>
       )}
       <Field label="Temperature">
@@ -321,8 +329,8 @@ function AgentFields({ node, modelsForProvider, authStatus, onUpdate, onUpdateRo
   );
 }
 
-function VerificationFields({ node, onUpdate, invoke }: any) {
-  const data = node.data;
+function VerificationFields({ node, onUpdate, invoke }: { node: WFNode, onUpdate: (patch: Record<string, any>) => void, invoke: <T>(channel: string, ...args: any[]) => Promise<T> }) {
+  const data = node.data as any;
   const checklist: string[] = data.checklist ?? [];
 
   return (
@@ -375,8 +383,8 @@ function VerificationFields({ node, onUpdate, invoke }: any) {
   );
 }
 
-function ToolFields({ node, onUpdate }: any) {
-  const data = node.data;
+function ToolFields({ node, onUpdate }: { node: WFNode, onUpdate: (patch: Record<string, any>) => void }) {
+  const data = node.data as any;
   return (
     <>
       <Field label="Variant">
@@ -423,8 +431,8 @@ function ToolFields({ node, onUpdate }: any) {
   );
 }
 
-function TriggerFields({ node, stories, onUpdate, onStoryChange }: any) {
-  const data = node.data;
+function TriggerFields({ node, stories, onUpdate, onStoryChange }: { node: WFNode, stories: Story[], onUpdate: (patch: Record<string, any>) => void, onStoryChange: (storyId: string) => void }) {
+  const data = node.data as any;
   return (
     <>
       <Field label="Variant">
@@ -448,7 +456,7 @@ function TriggerFields({ node, stories, onUpdate, onStoryChange }: any) {
             onChange={e => onStoryChange(e.target.value)}
           >
             <option value="">— select story —</option>
-            {stories.map((s: any) => (
+            {stories.map((s: Story) => (
               <option key={s.id} value={s.id}>{s.id}: {s.title}</option>
             ))}
           </select>
@@ -463,7 +471,7 @@ function TriggerFields({ node, stories, onUpdate, onStoryChange }: any) {
               onChange={e => onStoryChange(e.target.value)}
             >
               <option value="">— select story —</option>
-              {stories.map((s: any) => (
+              {stories.map((s: Story) => (
                 <option key={s.id} value={s.id}>{s.id}: {s.title}</option>
               ))}
             </select>
@@ -482,8 +490,8 @@ function TriggerFields({ node, stories, onUpdate, onStoryChange }: any) {
   );
 }
 
-function DecisionFields({ node, onUpdate }: any) {
-  const data = node.data;
+function DecisionFields({ node, onUpdate }: { node: WFNode, onUpdate: (patch: Record<string, any>) => void }) {
+  const data = node.data as any;
   return (
     <>
       <Field label="Variant">
@@ -512,8 +520,8 @@ function DecisionFields({ node, onUpdate }: any) {
   );
 }
 
-function FlowFields({ node, onUpdate }: any) {
-  const data = node.data;
+function FlowFields({ node, onUpdate }: { node: WFNode, onUpdate: (patch: Record<string, any>) => void }) {
+  const data = node.data as any;
   return (
     <>
       <Field label="Delay (ms)">

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import log from '../utils/logger'
-import { useLayoutStore, StoryboardView, PaneId } from '../store/layout'
+import { useWorkspaceStore, StoryboardView, PaneId } from '../store/layout'
 import { useToastStore } from '../store/toastStore'
 import { unwrapIpc, IpcResult, WorkspaceState } from '../types/ipc'
 
@@ -47,7 +47,7 @@ export function useAppIpcListeners({
       setGitBranch(workspaceState.branch)
       setGitDirty(workspaceState.isDirty)
       // AC4: Context reset on switch
-      useLayoutStore.getState().resetForWorkspaceSwitch()
+      useWorkspaceStore.getState().resetForWorkspaceSwitch()
 
       // Verify env state consistency
       invoke<IpcResult<WorkspaceState>>('app:get-env-state').then((r) => {
@@ -85,12 +85,12 @@ export function useAppIpcListeners({
     })
 
     const removeFlipListener = window.ipcRenderer.on('layout:toggle-flip', () => {
-      const target = useLayoutStore.getState().spotlightPane ?? 'chat'
+      const target = useWorkspaceStore.getState().spotlightPane ?? 'chat'
       toggleFlip(target as 'editor' | 'chat')
     })
 
     const removeSpotListener = window.ipcRenderer.on('layout:toggle-spotlight', () => {
-      const current = useLayoutStore.getState().spotlightPane
+      const current = useWorkspaceStore.getState().spotlightPane
       setSpotlight(current ? null : 'editor')
     })
 
@@ -107,13 +107,13 @@ export function useAppIpcListeners({
     })
 
     const removeToggleSidebarListener = window.ipcRenderer.on('layout:toggle-sidebar', () => {
-      const state = useLayoutStore.getState()
+      const state = useWorkspaceStore.getState()
       state.setSidebarOpen(!state.sidebarOpen)
     })
 
     const removeKbOpenArticleListener = window.ipcRenderer.on('kb:open-article', (_e, articleId: string) => {
-      useLayoutStore.getState().setView('knowledge-base')
-      useLayoutStore.getState().setActiveKbArticleId(articleId)
+      useWorkspaceStore.getState().setView('knowledge-base')
+      useWorkspaceStore.getState().setActiveKbArticleId(articleId)
     })
 
     const removeReviewSession = window.ipcRenderer.on('review:session-complete', (_e, data: any) => {

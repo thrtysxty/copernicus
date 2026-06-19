@@ -23,6 +23,8 @@ export interface LspState {
   openFiles: number
   errorCount: number
   warningCount: number
+  attempt?: number
+  reason?: string
 }
 
 export interface McpUsage {

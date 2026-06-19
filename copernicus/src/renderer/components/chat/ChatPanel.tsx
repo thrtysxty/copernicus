@@ -6,6 +6,7 @@ import { ChatBackFace } from './ChatBackFace'
 import { useChatPanel } from './useChatPanel'
 import { commandRegistry } from '../../commands/registry'
 import { ErrorBoundary } from '../layout/ErrorBoundary'
+import { Skeleton } from '../common/Skeleton'
 
 interface ChatPanelProps {
   openFilePath?: string | null
@@ -22,35 +23,50 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
       id={panelId === 'chat' ? 'chat' : `chat-${panelId}`}
       front={
         <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300 font-mono min-w-0 overflow-hidden">
-          <ChatThread
-            authStatus={chat.authStatus}
-            messages={chat.messages}
-            openFilePath={openFilePath}
-            pendingModelSwitch={chat.pendingModelSwitch}
-            acceptModelSwitch={chat.acceptModelSwitch}
-            rejectModelSwitch={chat.rejectModelSwitch}
-            handleSaveToStory={chat.handleSaveToStory}
-            model={chat.model}
-            setModel={chat.setModel}
-            availableModels={chat.availableModels}
-            showModelPicker={chat.showModelPicker}
-            setShowModelPicker={chat.setShowModelPicker}
-            isRepoActive={chat.isRepoActive}
-            isFlipped={chat.isFlipped}
-            isStreaming={chat.isStreaming}
-            invoke={chat.invoke}
-            contextUpdate={chat.contextUpdate}
-          />
+          {chat.isLoadingSnapshot ? (
+            <div className="p-4 space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex gap-3">
+                  <Skeleton width={20} height={20} rounded="full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton width="60%" height={12} />
+                    <Skeleton width="80%" height={12} />
+                    <Skeleton width="40%" height={12} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ChatThread
+              authStatus={chat.authStatus}
+              messages={chat.messages}
+              openFilePath={openFilePath}
+              pendingModelSwitch={chat.pendingModelSwitch}
+              acceptModelSwitch={chat.acceptModelSwitch}
+              rejectModelSwitch={chat.rejectModelSwitch}
+              handleSaveToStory={chat.handleSaveToStory}
+              model={chat.model}
+              setModel={chat.setModel}
+              availableModels={chat.availableModels}
+              showModelPicker={chat.showModelPicker}
+              setShowModelPicker={chat.setShowModelPicker}
+              isRepoActive={chat.isRepoActive}
+              isFlipped={chat.isFlipped}
+              isStreaming={chat.isStreaming}
+              invoke={chat.invoke}
+              contextUpdate={chat.contextUpdate}
+            />
+          )}
           {chat.showCompactionBanner && (
             <div className="mx-2 mb-2 p-2 bg-blue-900/20 border border-blue-700/50 rounded flex flex-col gap-2">
-              <div className="flex items-start gap-2 text-blue-400 text-[10px] uppercase font-bold tracking-wider leading-relaxed">
+              <div className="flex items-start gap-2 text-blue-400 text-[11px] uppercase font-bold tracking-wider leading-relaxed">
                 <span className="flex-shrink-0 mt-0.5">ℹ️</span>
                 <span>Context window nearly full — older messages have been compacted.</span>
               </div>
               <div className="flex justify-end">
-                <button 
+                <button
                   onClick={chat.dismissCompactionBanner}
-                  className="px-2 py-0.5 text-[9px] font-mono text-zinc-400 hover:text-zinc-300 transition-colors uppercase border border-zinc-700 hover:border-zinc-600 rounded"
+                  className="px-2 py-0.5 text-[11px] font-mono text-zinc-400 hover:text-zinc-300 transition-colors uppercase border border-zinc-700 hover:border-zinc-600 rounded"
                 >
                   Dismiss
                 </button>
@@ -59,20 +75,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ openFilePath = null, rootP
           )}
           {chat.lspWarning && (
             <div className="mx-2 mb-2 p-2 bg-yellow-900/20 border border-yellow-700/50 rounded flex flex-col gap-2">
-              <div className="flex items-start gap-2 text-yellow-400 text-[10px] uppercase font-bold tracking-wider leading-relaxed">
+              <div className="flex items-start gap-2 text-yellow-400 text-[11px] uppercase font-bold tracking-wider leading-relaxed">
                 <span className="flex-shrink-0 mt-0.5">⚠️</span>
                 <span>{chat.lspWarning}</span>
               </div>
               <div className="flex justify-end gap-2">
-                <button 
+                <button
                   onClick={chat.dismissLspWarning}
-                  className="px-2 py-0.5 text-[9px] font-mono text-zinc-400 hover:text-zinc-300 transition-colors uppercase border border-zinc-700 hover:border-zinc-600 rounded"
+                  className="px-2 py-0.5 text-[11px] font-mono text-zinc-400 hover:text-zinc-300 transition-colors uppercase border border-zinc-700 hover:border-zinc-600 rounded"
                 >
                   Dismiss
                 </button>
-                <button 
+                <button
                   onClick={() => { chat.dismissLspWarning(); setTimeout(() => chat.handleSendMessage(), 0) }}
-                  className="px-2 py-0.5 text-[9px] font-mono bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60 transition-colors uppercase border border-yellow-700/50 rounded"
+                  className="px-2 py-0.5 text-[11px] font-mono bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60 transition-colors uppercase border border-yellow-700/50 rounded"
                 >
                   Send anyway
                 </button>

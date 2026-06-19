@@ -1,7 +1,7 @@
 import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { Diff, Terminal, CheckCircle, RotateCcw, AlertTriangle } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import Editor from '@monaco-editor/react'
 
@@ -12,7 +12,7 @@ interface Story {
 }
 
 export const ReviewPanel: React.FC = () => {
-  const { pendingReview, setPendingReview, workingDir } = useLayoutStore()
+  const { pendingReview, setPendingReview, workingDir } = useWorkspaceStore()
   const invoke = useIpcError()
   
   const [selectedFile, setSelectedFile] = useState<string | null>(null)

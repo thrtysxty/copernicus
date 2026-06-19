@@ -1,5 +1,5 @@
 import React from 'react'
-import { useLayoutStore, PHOSPHOR_PRESETS, PhosphorColor } from '../../../store/layout'
+import { useWorkspaceStore, PHOSPHOR_PRESETS, PhosphorColor } from '../../../store/layout'
 import { Palette, Maximize, Type, Zap, Monitor } from 'lucide-react'
 
 const PRESET_ENTRIES = Object.entries(PHOSPHOR_PRESETS) as [PhosphorColor, { label: string; hex: string }][]
@@ -8,10 +8,10 @@ export const AppearanceSection: React.FC = () => {
   const { 
     uiDensity, fontSize, animationsEnabled, crtMode,
     setAppearance
-  } = useLayoutStore()
+  } = useWorkspaceStore()
 
-  const phosphorColor = useLayoutStore(s => s.phosphorColor)
-  const setPhosphorColor = useLayoutStore(s => s.setPhosphorColor)
+  const phosphorColor = useWorkspaceStore(s => s.phosphorColor)
+  const setPhosphorColor = useWorkspaceStore(s => s.setPhosphorColor)
 
   return (
     <div className="space-y-8">

@@ -9,6 +9,11 @@ interface MemorySettings {
   sprintGate: boolean
 }
 
+interface RetroSettings {
+  sprintGate?: boolean
+  [key: string]: unknown
+}
+
 export const MemorySection: React.FC = () => {
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
@@ -20,10 +25,12 @@ export const MemorySection: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const s = await invoke<SettingsLoadResponse>('settings:load')
+        const res = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+        const s = unwrapIpc<SettingsLoadResponse>(res)
         if (s && s.retro) {
+          const retro = s.retro as RetroSettings
           setMemorySettings({
-            sprintGate: (s.retro as any).sprintGate ?? false
+            sprintGate: retro.sprintGate ?? false
           })
         }
       } catch (e) {
@@ -37,8 +44,10 @@ export const MemorySection: React.FC = () => {
     const newSettings = { ...settings, ...patch }
     setMemorySettings(newSettings)
     try {
-      const s = await invoke<SettingsLoadResponse>('settings:load')
-      await invoke('settings:save', { ...s, retro: { ...(s?.retro as any || {}), sprintGate: newSettings.sprintGate } })
+      const res = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+      const s = unwrapIpc<SettingsLoadResponse>(res)
+      const retro = (s?.retro as RetroSettings) || {}
+      await invoke('settings:save', { ...s, retro: { ...retro, sprintGate: newSettings.sprintGate } })
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
       addToast(`Save failed: ${message}`, 'error')
@@ -52,7 +61,7 @@ export const MemorySection: React.FC = () => {
           <Brain size={16} className="text-copernicus-phosphor" />
           Memory & Retrospective
         </h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Configure project memory and sprint retrospective behaviour.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Configure project memory and sprint retrospective behaviour.</p>
       </div>
 
       <div className="space-y-6">
@@ -82,7 +91,7 @@ const MemoryToggle = ({ label, description, icon: Icon, enabled, onToggle }: {
       </div>
       <div>
         <div className="text-[11px] text-zinc-200 uppercase font-bold tracking-tight">{label}</div>
-        <div className="text-[10px] text-zinc-500 mt-0.5">{description}</div>
+        <div className="text-[11px] text-zinc-500 mt-0.5">{description}</div>
       </div>
     </div>
     <button

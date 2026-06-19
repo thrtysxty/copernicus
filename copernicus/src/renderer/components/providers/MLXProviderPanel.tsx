@@ -160,13 +160,13 @@ export const MLXProviderPanel: React.FC = () => {
             <h3 className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest font-mono">
               MLX Native Inference
             </h3>
-            <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mt-0.5">
+            <p className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest mt-0.5">
               Apple Silicon Neural Engine — $0/token
             </p>
           </div>
         </div>
 
-        <span className={`text-[9px] px-2 py-0.5 rounded font-bold font-mono uppercase tracking-widest flex items-center gap-1.5 ${
+        <span className={`text-[11px] px-2 py-0.5 rounded font-bold font-mono uppercase tracking-widest flex items-center gap-1.5 ${
           isRunning
             ? 'bg-green-900/30 text-green-400'
             : 'bg-zinc-900/40 text-zinc-500'
@@ -183,23 +183,23 @@ export const MLXProviderPanel: React.FC = () => {
         {isRunning && currentModel ? (
           <div className="flex items-center justify-around gap-4">
             <div className="min-w-0">
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1">
+              <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest block mb-1">
                 Current Model
               </span>
               <div className="text-xs font-mono font-bold text-white truncate">{currentModel}</div>
             </div>
             <div className="h-8 w-px bg-zinc-800 shrink-0" />
             <div className="shrink-0">
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1">
+              <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest block mb-1">
                 Performance
               </span>
               <div className="text-xs font-mono font-bold text-white">
                 {tokensPerSec
-                  ? <>{tokensPerSec} <span className="text-[10px] text-zinc-500 font-normal">tok/s</span></>
+                  ? <>{tokensPerSec} <span className="text-[11px] text-zinc-500 font-normal">tok/s</span></>
                   : <span className="text-zinc-600">—</span>
                 }
               </div>
-              <div className="text-[9px] font-mono text-copernicus-phosphor/60 uppercase tracking-widest mt-0.5">
+              <div className="text-[11px] font-mono text-copernicus-phosphor/60 uppercase tracking-widest mt-0.5">
                 Neural Engine
               </div>
             </div>
@@ -207,14 +207,14 @@ export const MLXProviderPanel: React.FC = () => {
         ) : (
           <div className="flex items-center justify-between gap-4">
             <div>
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1">
+              <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest block mb-1">
                 Current Model
               </span>
               <div className="text-xs font-mono text-zinc-600">No model loaded</div>
             </div>
             <button
               disabled={prereqInstalled === false}
-              className="px-4 py-2 bg-copernicus-phosphor text-black text-[10px] font-bold font-mono uppercase tracking-widest rounded hover:shadow-[0_0_15px_rgba(163,255,18,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+              className="px-4 py-2 bg-copernicus-phosphor text-black text-[11px] font-bold font-mono uppercase tracking-widest rounded hover:shadow-[0_0_15px_rgba(163,255,18,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
             >
               Start Server
             </button>
@@ -227,11 +227,11 @@ export const MLXProviderPanel: React.FC = () => {
         <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <AlertTriangle size={11} className="text-red-400 shrink-0" />
-            <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest font-bold">
+            <span className="text-[11px] font-mono text-red-400 uppercase tracking-widest font-bold">
               MLX LM Not Installed
             </span>
           </div>
-          <code className="block bg-black/40 px-3 py-2 rounded font-mono text-[10px] text-zinc-400 border border-zinc-800/50">
+          <code className="block bg-black/40 px-3 py-2 rounded font-mono text-[11px] text-zinc-400 border border-zinc-800/50">
             pip install mlx-lm
           </code>
           <button
@@ -240,7 +240,7 @@ export const MLXProviderPanel: React.FC = () => {
                 .writeText('pip install mlx-lm')
                 .then(() => addToast('Copied!', 'success'))
             }
-            className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest hover:text-copernicus-phosphor transition-colors"
+            className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest hover:text-copernicus-phosphor transition-colors"
           >
             Copy Command
           </button>
@@ -249,11 +249,11 @@ export const MLXProviderPanel: React.FC = () => {
 
       {/* Installed Models */}
       <div className="bg-black/30 border border-zinc-800/50 rounded-xl p-4 space-y-3">
-        <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">
+        <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest block">
           Local Model Assets
         </span>
         {installedModels.length === 0 ? (
-          <p className="text-[10px] font-mono text-zinc-600">No models downloaded yet</p>
+          <p className="text-[11px] font-mono text-zinc-600">No models downloaded yet</p>
         ) : (
           <div className="space-y-1">
             {installedModels.map(model => (
@@ -268,7 +268,7 @@ export const MLXProviderPanel: React.FC = () => {
                   />
                   <div className="min-w-0">
                     <div className="font-mono text-xs text-zinc-300 truncate">{model.id}</div>
-                    <div className="text-[9px] font-mono text-zinc-600 uppercase">
+                    <div className="text-[11px] font-mono text-zinc-600 uppercase">
                       {model.size > 0 ? `${(model.size / 1e9).toFixed(1)} GB` : 'Unknown size'}
                       {model.id === currentModel && ' • Active'}
                     </div>
@@ -289,7 +289,7 @@ export const MLXProviderPanel: React.FC = () => {
 
       {/* Download New Model */}
       <div className="bg-black/30 border border-zinc-800/50 rounded-xl p-4 space-y-3">
-        <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">
+        <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest block">
           Download from MLX-Community
         </span>
         <div className="flex gap-2">
@@ -305,7 +305,7 @@ export const MLXProviderPanel: React.FC = () => {
           <button
             onClick={handleDownload}
             disabled={isDownloading || !downloadInput.trim() || prereqInstalled === false}
-            className="px-4 py-2 bg-copernicus-phosphor text-black font-mono text-[10px] font-bold uppercase tracking-widest rounded hover:shadow-[0_0_15px_rgba(163,255,18,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
+            className="px-4 py-2 bg-copernicus-phosphor text-black font-mono text-[11px] font-bold uppercase tracking-widest rounded hover:shadow-[0_0_15px_rgba(163,255,18,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
           >
             {isDownloading
               ? <Activity size={10} className="animate-spin" />
@@ -315,7 +315,7 @@ export const MLXProviderPanel: React.FC = () => {
           </button>
         </div>
         {downloadOutput && (
-          <pre className="bg-black/40 border border-zinc-800/50 rounded p-3 font-mono text-[10px] text-zinc-500 overflow-x-auto max-h-32 overflow-y-auto whitespace-pre-wrap">
+          <pre className="bg-black/40 border border-zinc-800/50 rounded p-3 font-mono text-[11px] text-zinc-500 overflow-x-auto max-h-32 overflow-y-auto whitespace-pre-wrap">
             {downloadOutput}
           </pre>
         )}
@@ -323,7 +323,7 @@ export const MLXProviderPanel: React.FC = () => {
 
       {/* Switch Active Model */}
       <div className="bg-black/30 border border-zinc-800/50 rounded-xl p-4 space-y-3">
-        <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">
+        <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest block">
           Switch Active Model
         </span>
         <div className="flex gap-2">
@@ -344,7 +344,7 @@ export const MLXProviderPanel: React.FC = () => {
           <button
             onClick={handleSwitch}
             disabled={!selectedModel || installedModels.length === 0 || prereqInstalled === false}
-            className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[10px] uppercase tracking-widest rounded hover:text-copernicus-phosphor hover:border-copernicus-phosphor/40 transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] uppercase tracking-widest rounded hover:text-copernicus-phosphor hover:border-copernicus-phosphor/40 transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             <RefreshCcw size={10} />
             Switch

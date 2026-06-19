@@ -3,7 +3,9 @@ import { motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useIpcCache } from '../../hooks/useIpcCache'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/workspace'
+import { useKanbanStore } from '../../store/kanban'
+import { KanbanColumn } from '../../types/layout'
 import { useToastStore } from '../../store/toastStore'
 import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap, Glasses } from 'lucide-react'
 import log from '../../utils/logger'
@@ -11,25 +13,12 @@ import { unwrapIpc } from '../../types/ipc'
 import { StoryInspector } from '../planning/StoryInspector'
 import { stripStoryPrefix } from '../../utils/storyTitle'
 import { TEMPLATE_MANIFEST } from '../../templates'
+import { Story } from '../../types/story'
 import { RetroCard } from './RetroCard'
 import { RetroReviewPanel } from './RetroReviewPanel'
 import { SkillOnboardingModal } from '../skills/SkillOnboardingModal'
 import { CardSpotlight } from './CardSpotlight'
-
-interface Story {
-  id: string
-  title: string
-  status: string
-  path: string
-  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'UNKNOWN'
-  type: string
-  epic: string | null
-  model: string | null
-  workflowId?: string | null
-  flagged?: boolean
-  date: string
-  blocked: boolean
-}
+import { Skeleton } from '../common/Skeleton'
 
 type CreationPhase =
   | { phase: 'idle' }
@@ -93,7 +82,7 @@ const StoryCard = React.memo(({
       tabIndex={activeStoryId === story.id || (idx === 0 && !colStories.some(s => s.id === activeStoryId)) ? 0 : -1}
       aria-label={`${story.title} — ${story.status}`}
       draggable
-      onDragStart={e => (e as any).dataTransfer.setData('text/plain', story.id)}
+      onDragStart={e => e.dataTransfer.setData('text/plain', story.id)}
       className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor overflow-hidden ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
       onClick={(e) => {
         e.stopPropagation()
@@ -189,26 +178,26 @@ interface KanbanBoardProps {
 
 export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => {
   const invoke = useIpcError()
-  const { data: storiesIpcResult, invalidate: invalidateStories } = useIpcCache('stories:list', [], 3000)
+  const { data: storiesIpcResult, loading: storiesLoading, invalidate: invalidateStories } = useIpcCache('stories:list', [], 3000)
   const [stories, setStories] = useState<Story[]>([])
   const [isRepoTargeted, setIsRepoTargeted] = useState<boolean | null>(null)
 
   // Selective subscriptions
-  const activeStoryId = useLayoutStore(s => s.activeStoryId)
-  const spotlightLane = useLayoutStore(s => s.spotlightLane)
-  const columns = useLayoutStore(useShallow(s => s.columns))
-  const showArchive = useLayoutStore(s => s.showArchive)
-  const toggleArchive = useLayoutStore(s => s.toggleArchive)
-  const terminalOpen = useLayoutStore(s => s.terminalOpen)
-  const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen)
+  const activeStoryId = useWorkspaceStore(s => s.activeStoryId)
+  const spotlightLane = useWorkspaceStore(s => s.spotlightLane)
+  const columns = useKanbanStore(useShallow(s => s.columns))
+  const showArchive = useWorkspaceStore(s => s.showArchive)
+  const toggleArchive = useWorkspaceStore(s => s.toggleArchive)
+  const terminalOpen = useWorkspaceStore(s => s.terminalOpen)
+  const setTerminalOpen = useWorkspaceStore(s => s.setTerminalOpen)
   
-  const setActiveStoryId = useLayoutStore(s => s.setActiveStoryId)
-  const setSpotlightLane = useLayoutStore(s => s.setSpotlightLane)
-  const drawerStoryId = useLayoutStore(s => s.drawerStoryId)
-  const setDrawerStory = useLayoutStore(s => s.setDrawerStory)
-  const setSpotlight = useLayoutStore(s => s.setSpotlight)
-  const setActiveRetroId = useLayoutStore(s => s.setActiveRetroId)
-  const activeRetroId = useLayoutStore(s => s.activeRetroId)
+  const setActiveStoryId = useWorkspaceStore(s => s.setActiveStoryId)
+  const setSpotlightLane = useWorkspaceStore(s => s.setSpotlightLane)
+  const drawerStoryId = useWorkspaceStore(s => s.drawerStoryId)
+  const setDrawerStory = useWorkspaceStore(s => s.setDrawerStory)
+  const setSpotlight = useWorkspaceStore(s => s.setSpotlight)
+  const setActiveRetroId = useWorkspaceStore(s => s.setActiveRetroId)
+  const activeRetroId = useWorkspaceStore(s => s.activeRetroId)
 
   const [showEpics, setShowEpics] = useState(false)
   const [creation, setCreation] = useState<CreationPhase>({ phase: 'idle' })
@@ -220,7 +209,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   
   const [activeRetroCard, setActiveRetroCard] = useState<any | null>(null)
   const [additionalPendingCount, setAdditionalPendingCount] = useState(0)
-  const setView = useLayoutStore(s => s.setView)
+  const setView = useWorkspaceStore(s => s.setView)
   const [onboardingStackProfile, setOnboardingStackProfile] = useState<any | null>(null)
   const [showSkillModal, setShowSkillModal] = useState(false)
   const [isSkillOnboardingDismissed, setIsSkillOnboardingDismissed] = useState(false)
@@ -228,7 +217,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
   // Sync cache data to stories state when cache resolves (AC5)
   useEffect(() => {
-    const list = unwrapIpc<Story[]>(storiesIpcResult as any)
+    const list = unwrapIpc<Story[]>(storiesIpcResult)
     if (list && Array.isArray(list)) setStories(list)
   }, [storiesIpcResult])
 
@@ -259,7 +248,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       const _rawCols = await invoke<any>('kanban:get-columns')
       const cols = unwrapIpc<any>(_rawCols)
       if (cols && Array.isArray(cols)) {
-        useLayoutStore.getState().setColumns(cols.map((c: any) => ({ ...c, label: LABELS[c.id] ?? c.id })))
+        useKanbanStore.getState().setColumns(cols.map((c: any) => ({ ...c, label: LABELS[c.id] ?? c.id })))
       }
     } catch (e) {
       log.warn('Failed to fetch stories or columns', e)
@@ -393,7 +382,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
   const epics = stories.filter(s => s.type === 'Epic')
 
   if (drawerStoryId) {
-    return <StoryInspector storyId={drawerStoryId} stories={stories as any} />
+    return <StoryInspector storyId={drawerStoryId} stories={stories} />
   }
 
   return (
@@ -688,22 +677,39 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                       </div>
                     )}
 
-                    {colStories.map((story, idx) => (
-                      <StoryCard 
-                        key={story.id}
-                        story={story}
-                        idx={idx}
-                        colId={col.id}
-                        colStories={colStories}
-                        activeStoryId={activeStoryId}
-                        spotlightLane={spotlightLane}
-                        setActiveStoryId={setActiveStoryId}
-                        setSpotlightLane={setSpotlightLane}
-                        setDrawerStory={setDrawerStory}
-                        setSpotlight={setSpotlight}
-                        workflowStatus={workflowStatus}
-                      />
-                    ))}
+                    {storiesLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="p-3 bg-zinc-900/50 border border-white/5 rounded space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Skeleton width={12} height={12} rounded="full" />
+                            <Skeleton width="60%" height={12} />
+                          </div>
+                          <Skeleton width="90%" height={12} />
+                          <Skeleton width="70%" height={12} />
+                          <div className="flex justify-between pt-2 border-t border-white/5">
+                            <Skeleton width={40} height={10} />
+                            <Skeleton width={30} height={10} />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      colStories.map((story, idx) => (
+                        <StoryCard
+                          key={story.id}
+                          story={story}
+                          idx={idx}
+                          colId={col.id}
+                          colStories={colStories}
+                          activeStoryId={activeStoryId}
+                          spotlightLane={spotlightLane}
+                          setActiveStoryId={setActiveStoryId}
+                          setSpotlightLane={setSpotlightLane}
+                          setDrawerStory={setDrawerStory}
+                          setSpotlight={setSpotlight}
+                          workflowStatus={workflowStatus}
+                        />
+                      ))
+                    )}
                     
                     {hasStoriesBeforeFilter && colStories.length === 0 && filterQuery && (
                       <div className="flex justify-center p-4">

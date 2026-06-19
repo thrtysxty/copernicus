@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useWorktreeStore } from '../../store/worktreeStore'
 import { GitBranch, Trash2 } from 'lucide-react'
 import { AgentWorktree } from '../../types/worktree'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { unwrapIpc } from '../../types/ipc'
 import { useIpcError } from '../../hooks/useIpcError'
 
@@ -57,7 +57,7 @@ export const WorktreePanel: React.FC = () => {
   const handleReview = async (id: string) => {
     try {
       const { files, diff } = unwrapIpc<{ files: string[]; diff: string }>(await invoke<{ files: string[]; diff: string }>('worktree:diff', { id }))
-      useLayoutStore.getState().setReviewMode(
+      useWorkspaceStore.getState().setReviewMode(
         files.map((f: string) => ({ path: f, original: '', modified: diff, status: 'modified' as const }))
       )
     } catch { /* error toasted by invoke */ }

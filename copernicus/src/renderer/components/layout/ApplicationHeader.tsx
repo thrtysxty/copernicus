@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { ProjectSwitcher } from '../project/ProjectSwitcher'
 
 export const ApplicationHeader: React.FC = () => {
-  const { workingDir, activeStoryId } = useLayoutStore()
+  const { workingDir, activeStoryId } = useWorkspaceStore()
   const [showSwitcher, setShowSwitcher] = useState(false)
   
   // Extract repo name from workingDir

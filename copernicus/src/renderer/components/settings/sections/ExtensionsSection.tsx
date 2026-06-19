@@ -2,6 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { unwrapIpc } from '../../../types/ipc'
 
+interface Extension {
+  name: string
+  path: string
+  workflowNodes: any[]
+  tiles: any[]
+  providers: any[]
+}
+
 interface ExtensionSummary {
   name: string
   path: string
@@ -20,9 +28,9 @@ export const ExtensionsSection: React.FC = () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await invoke('extensions:list')
-      const data = unwrapIpc<any[]>(res as any) ?? []
-      setExtensions(data.map((ext: any) => ({
+      const res = await invoke<IpcResult<Extension[]>>('extensions:list')
+      const data = unwrapIpc<Extension[]>(res) ?? []
+      setExtensions(data.map((ext) => ({
         name: ext.name,
         path: ext.path,
         nodes: ext.workflowNodes.length,
@@ -54,7 +62,7 @@ export const ExtensionsSection: React.FC = () => {
   }, [])
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-[10px] text-zinc-300 font-mono">
+    <div className="flex flex-col h-full bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-[11px] text-zinc-300 font-mono">
       <h3 className="text-zinc-100 font-bold mb-4 uppercase tracking-wider">Extensions</h3>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">

@@ -4,7 +4,7 @@ import { useOrchestratorStore } from '../../store/orchestrator'
 import { ORCHESTRATOR_TILES } from './tiles'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { 
   GitBranch, 
   Search, 
@@ -27,7 +27,7 @@ const ICON_MAP: Record<string, any> = {
 
 export const TileInspector: React.FC = () => {
   const { selectedNodeId, canvasNodes, updateNode, setSelectedNodeId } = useOrchestratorStore()
-  const workingDir = useLayoutStore(s => s.workingDir)
+  const workingDir = useWorkspaceStore(s => s.workingDir)
   const invoke = useIpcError()
   
   const [repos, setRepos] = useState<string[]>([])

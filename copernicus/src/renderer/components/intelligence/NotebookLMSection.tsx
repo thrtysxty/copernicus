@@ -34,8 +34,8 @@ export const NotebookLMSection: React.FC<NotebookLMSectionProps> = ({ selectedNo
 
   const fetchNotebooks = async () => {
     try {
-      const res = await invoke<Notebook[]>('nlm:list-notebooks')
-      const data = unwrapIpc<Notebook[]>(res as any)
+      const res = await invoke<IpcResult<Notebook[]>>('nlm:list-notebooks')
+      const data = unwrapIpc<Notebook[]>(res)
       if (data) setNotebooks(data)
     } catch (e) {
       log.error(e)
@@ -46,8 +46,8 @@ export const NotebookLMSection: React.FC<NotebookLMSectionProps> = ({ selectedNo
     setStatus('checking')
     try {
       // Just do a dummy query to check bridge health
-      const res = await invoke<{ answer?: string, error?: string }>('nlm:query', { notebookId: 'dummy', question: 'ping' })
-      const data = unwrapIpc<{ answer?: string, error?: string }>(res as any)
+      const res = await invoke<IpcResult<{ answer?: string, error?: string }>>('nlm:query', { notebookId: 'dummy', question: 'ping' })
+      const data = unwrapIpc<{ answer?: string, error?: string }>(res)
       if (data?.error && data.error === 'NbLM bridge unavailable - notebooklm-py not installed') {
         setStatus('error')
       } else if (data?.error && data.error.includes('NbLM bridge unavailable')) {
@@ -97,9 +97,9 @@ export const NotebookLMSection: React.FC<NotebookLMSectionProps> = ({ selectedNo
           <h3 className="text-[11px] font-bold uppercase tracking-widest text-zinc-300">NotebookLM Bridge</h3>
         </div>
         <div className="flex items-center gap-2">
-          {status === 'checking' && <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-widest">Checking...</span>}
-          {status === 'healthy' && <div className="flex items-center gap-1"><CheckCircle2 size={12} className="text-green-500" /><span className="text-[9px] text-green-500 font-bold uppercase tracking-widest">Connected</span></div>}
-          {status === 'error' && <div className="flex items-center gap-1"><AlertCircle size={12} className="text-red-500" /><span className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Disconnected</span></div>}
+          {status === 'checking' && <span className="text-[11px] text-zinc-500 uppercase font-bold tracking-widest">Checking...</span>}
+          {status === 'healthy' && <div className="flex items-center gap-1"><CheckCircle2 size={12} className="text-green-500" /><span className="text-[11px] text-green-500 font-bold uppercase tracking-widest">Connected</span></div>}
+          {status === 'error' && <div className="flex items-center gap-1"><AlertCircle size={12} className="text-red-500" /><span className="text-[11px] text-red-500 font-bold uppercase tracking-widest">Disconnected</span></div>}
         </div>
       </div>
 
@@ -115,9 +115,9 @@ export const NotebookLMSection: React.FC<NotebookLMSectionProps> = ({ selectedNo
               <div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-bold ${active ? 'text-[#050505]' : 'text-zinc-200'}`}>{nb.name}</span>
-                  <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${active ? 'bg-[#050505]/20 text-[#050505]' : 'bg-blue-500/20 text-blue-400'}`}>{nb.domain}</span>
+                  <span className={`text-[11px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${active ? 'bg-[#050505]/20 text-[#050505]' : 'bg-blue-500/20 text-blue-400'}`}>{nb.domain}</span>
                 </div>
-                <div className={`text-[10px] mt-0.5 ${active ? 'text-[#050505]/70' : 'text-zinc-500'}`}>{nb.description}</div>
+                <div className={`text-[11px] mt-0.5 ${active ? 'text-[#050505]/70' : 'text-zinc-500'}`}>{nb.description}</div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); handleRemove(nb.id); }}
@@ -159,14 +159,14 @@ export const NotebookLMSection: React.FC<NotebookLMSectionProps> = ({ selectedNo
             onChange={e => setNewDesc(e.target.value)}
           />
           <div className="flex gap-2 justify-end mt-2">
-            <button onClick={() => setIsAdding(false)} className="text-[10px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider px-2 py-1">Cancel</button>
-            <button onClick={handleAdd} className="text-[10px] bg-blue-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider">Save</button>
+            <button onClick={() => setIsAdding(false)} className="text-[11px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider px-2 py-1">Cancel</button>
+            <button onClick={handleAdd} className="text-[11px] bg-blue-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider">Save</button>
           </div>
         </div>
       ) : (
         <button
           onClick={() => setIsAdding(true)}
-          className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 border border-dashed border-zinc-800 hover:border-blue-500/50 text-zinc-500 hover:text-blue-400 rounded text-[10px] font-bold uppercase tracking-wider transition-colors"
+          className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 border border-dashed border-zinc-800 hover:border-blue-500/50 text-zinc-500 hover:text-blue-400 rounded text-[11px] font-bold uppercase tracking-wider transition-colors"
         >
           <LinkIcon size={12} /> Register Notebook
         </button>

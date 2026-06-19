@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { Play, Square, FileText, CheckCircle, XCircle, Circle, RefreshCw } from 'lucide-react'
 import { useTestRunnerStore } from '../../store/testRunner'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 
@@ -14,8 +14,8 @@ export const TestExplorer: React.FC = () => {
 
   const invoke = useIpcError()
   const logRef = useRef<HTMLDivElement>(null)
-  const setCenterMode = useLayoutStore(s => s.setCenterMode)
-  const openFile = useLayoutStore(s => s.openFile)
+  const setCenterMode = useWorkspaceStore(s => s.setCenterMode)
+  const openFile = useWorkspaceStore(s => s.openFile)
 
   const isMounted = useRef(true)
   useEffect(() => {

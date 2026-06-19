@@ -2,12 +2,12 @@ import log from '../../utils/logger'
 import { useState, useEffect } from 'react'
 import { DiffEditor, useMonaco } from '@monaco-editor/react'
 import { Check, X, CheckCheck, Trash2, Sidebar, LayoutList } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 
 export default function DiffPanel() {
-  const { pendingDiff, clearReviewMode, setReviewMode } = useLayoutStore()
+  const { pendingDiff, clearReviewMode, setReviewMode } = useWorkspaceStore()
   const [activeFileIndex, setActiveFileIndex] = useState(0)
   const [isSideBySide, setIsSideBySide] = useState(true)
   const invoke = useIpcError()

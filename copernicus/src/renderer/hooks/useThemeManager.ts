@@ -1,16 +1,16 @@
 import { useEffect } from 'react'
-import { useLayoutStore, PHOSPHOR_PRESETS } from '../store/layout'
+import { useWorkspaceStore, PHOSPHOR_PRESETS } from '../store/layout'
 import log from '../utils/logger'
 import { useIpcError } from './useIpcError'
 import { unwrapIpc } from '../types/ipc'
 
 export function useThemeManager() {
   const invoke = useIpcError()
-  const phosphorColor = useLayoutStore((state) => state.phosphorColor)
-  const uiDensity = useLayoutStore((state) => state.uiDensity)
-  const fontSize = useLayoutStore((state) => state.fontSize)
-  const animationsEnabled = useLayoutStore((state) => state.animationsEnabled)
-  const crtMode = useLayoutStore((state) => state.crtMode)
+  const phosphorColor = useWorkspaceStore((state) => state.phosphorColor)
+  const uiDensity = useWorkspaceStore((state) => state.uiDensity)
+  const fontSize = useWorkspaceStore((state) => state.fontSize)
+  const animationsEnabled = useWorkspaceStore((state) => state.animationsEnabled)
+  const crtMode = useWorkspaceStore((state) => state.crtMode)
 
   useEffect(() => {
     const root = document.documentElement

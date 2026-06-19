@@ -2,26 +2,15 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Trash2, Archive, Check, X } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useToastStore } from '../../store/toastStore'
 import log from '../../utils/logger'
 import { unwrapIpc } from '../../types/ipc'
+import { Story } from '../../types/story'
 import { ChatPanel } from '../chat/ChatPanel'
 import { stripStoryPrefix } from '../../utils/storyTitle'
-
-interface Story {
-  id: string
-  title: string
-  status: string
-  path: string
-  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'UNKNOWN'
-  type: string
-  epic: string | null
-  model: string | null
-  workflowId: string | null
-  date: string
-  blocked: boolean
-}
+import { Skeleton } from '../common/Skeleton'
+import { ErrorBoundary } from '../ErrorBoundary'
 
 interface StoryInspectorProps {
   storyId: string
@@ -38,7 +27,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   const invoke = useIpcError()
-  const { setDrawerStory, spotlightPane, setSpotlight } = useLayoutStore()
+  const { setDrawerStory, spotlightPane, setSpotlight } = useWorkspaceStore()
   const addToast = useToastStore(s => s.addToast)
   const isSpotlit = spotlightPane === 'inspector'
 
@@ -55,7 +44,8 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showSavedIndicator, setShowSavedIndicator] = useState(false)
-  
+  const [isLoadingContent, setIsLoadingContent] = useState(false)
+
   const [modelOptions, setModelOptions] = useState<string[]>(['(unassigned)', 'human'])
   const [workflowTemplates, setWorkflowTemplates] = useState<{ id: string, name: string }[]>([])
   const [workflowStatus, setWorkflowStatus] = useState<string | null>(null)
@@ -81,7 +71,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
       const uniqueModelNames = new Set<string>();
       
       try {
-        const modelsResult = await invoke<any>('models:list');
+        const modelsResult = await invoke<IpcResult<Array<{ id: string; name: string }>>>('models:list');
         const models = unwrapIpc<Array<{ id: string; name: string }>>(modelsResult);
         if (Array.isArray(models)) {
           models.forEach(m => uniqueModelNames.add(m.name));
@@ -96,8 +86,8 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
 
     fetchModelOptions();
 
-    invoke<any>('workflow:list-templates').then(result => {
-      const data = unwrapIpc<any[]>(result)
+    invoke<IpcResult<{ id: string, name: string }[]>>('workflow:list-templates').then(result => {
+      const data = unwrapIpc<{ id: string, name: string }[]>(result)
       if (Array.isArray(data)) {
         setWorkflowTemplates(data)
       }
@@ -105,13 +95,20 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   }, [invoke])
 
   useEffect(() => {
-    invoke<any>('stories:get-content', storyId)
-      .then((r: any) => setContent(unwrapIpc<string>(r) ?? ''))
-      .catch(log.error)
+    setIsLoadingContent(true)
+    invoke<IpcResult<string>>('stories:get-content', storyId)
+      .then((r) => {
+        setContent(unwrapIpc<string>(r) ?? '')
+        setIsLoadingContent(false)
+      })
+      .catch(e => {
+        log.error(e)
+        setIsLoadingContent(false)
+      })
   }, [storyId, invoke])
 
   useEffect(() => {
-    invoke<any>('workflow:status').then(result => {
+    invoke<IpcResult<{ state: string, context: { storyId: string | null } }>>('workflow:status').then(result => {
       if (result?.ok && result.data?.context?.storyId === storyId) {
         setWorkflowStatus(result.data.state)
         if (result.data.state === 'RUNNING' && !workflowStartTime) {
@@ -121,7 +118,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
     }).catch(() => {})
 
     const removeListener = window.ipcRenderer.on('workflow:status-update', (_event, payload: any) => {
-      invoke<any>('workflow:status').then(result => {
+      invoke<IpcResult<{ state: string, context: { storyId: string | null } }>>('workflow:status').then(result => {
         if (result?.ok) {
           if (result.data?.context?.storyId === storyId) {
             setWorkflowStatus(result.data.state)
@@ -162,15 +159,15 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      const updates: Promise<any>[] = [
-        invoke('stories:set-field', { id: storyId, field: 'priority', value: localPriority }).then(unwrapIpc),
-        invoke('stories:set-field', { id: storyId, field: 'type', value: localType }).then(unwrapIpc),
-        invoke('stories:set-field', { id: storyId, field: 'model', value: localModel }).then(unwrapIpc),
-        invoke('stories:set-field', { id: storyId, field: 'workflowId', value: localWorkflowId }).then(unwrapIpc),
+      const updates: Promise<unknown>[] = [
+        invoke<IpcResult<boolean>>('stories:set-field', { id: storyId, field: 'priority', value: localPriority }).then(res => unwrapIpc<boolean>(res)),
+        invoke<IpcResult<boolean>>('stories:set-field', { id: storyId, field: 'type', value: localType }).then(res => unwrapIpc<boolean>(res)),
+        invoke<IpcResult<boolean>>('stories:set-field', { id: storyId, field: 'model', value: localModel }).then(res => unwrapIpc<boolean>(res)),
+        invoke<IpcResult<boolean>>('stories:set-field', { id: storyId, field: 'workflowId', value: localWorkflowId }).then(res => unwrapIpc<boolean>(res)),
       ]
 
       if (textareaRef.current) {
-        updates.push(invoke('stories:update-content', { id: storyId, content: textareaRef.current.value }).then(unwrapIpc))
+        updates.push(invoke<IpcResult<boolean>>('stories:update-content', { id: storyId, content: textareaRef.current.value }).then(res => unwrapIpc<boolean>(res)))
         setContent(textareaRef.current.value)
       }
 
@@ -203,7 +200,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
   const handleDelete = async () => {
     if (!confirm(`Permanently delete ${storyId}? This will remove the markdown file and database record.`)) return
     try {
-      await invoke('stories:delete', storyId).then(unwrapIpc)
+      await invoke<IpcResult<boolean>>('stories:delete', storyId).then(res => unwrapIpc<boolean>(res))
       setDrawerStory(null)
       setSpotlight(null)
     } catch (e) {
@@ -213,7 +210,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
 
   const handleArchive = async () => {
     try {
-      await invoke('stories:archive', storyId).then(unwrapIpc)
+      await invoke<IpcResult<boolean>>('stories:archive', storyId).then(res => unwrapIpc<boolean>(res))
       setDrawerStory(null)
       setSpotlight(null)
       addToast('Story archived', 'success')
@@ -494,7 +491,19 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
         >
           {stripStoryPrefix(story.title)}
         </h1>
-        {isEditing ? (
+        {isLoadingContent ? (
+          <div className="space-y-4">
+            <Skeleton width="100%" height={12} />
+            <Skeleton width="90%" height={12} />
+            <Skeleton width="95%" height={12} />
+            <Skeleton width="80%" height={12} />
+            <div className="pt-4 space-y-2">
+              <Skeleton width="100%" height={12} />
+              <Skeleton width="100%" height={12} />
+              <Skeleton width="70%" height={12} />
+            </div>
+          </div>
+        ) : isEditing ? (
           <textarea
             ref={textareaRef}
             data-testid="story-detail-content"
@@ -511,7 +520,9 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
 
       {/* ── Column 3: Chat ──────────────────────────────────────── */}
       <div className="border-l border-white/5 flex flex-col overflow-hidden min-w-0">
-        <ChatPanel panelId={`story:${storyId}`} />
+        <ErrorBoundary fallback={<div className="p-4 text-red-400 text-[10px] font-mono italic">Chat failed to load.</div>}>
+          <ChatPanel panelId={`story:${storyId}`} />
+        </ErrorBoundary>
       </div>
     </motion.div>
   )

@@ -20,7 +20,7 @@ export const RAGSettings: React.FC = () => {
     setResult(null)
 
     try {
-      const res = await invoke('codebase:run-benchmark') as any
+      const res = await invoke<IpcResult<BenchmarkResult>>('codebase:run-benchmark')
       if (res.ok) {
         setResult(res.data)
       } else {
@@ -41,7 +41,7 @@ export const RAGSettings: React.FC = () => {
         </div>
         <div>
           <h2 className="text-sm font-bold text-white uppercase tracking-widest">RAG Performance</h2>
-          <p className="text-[10px] text-zinc-500 font-mono mt-1">
+          <p className="text-[11px] text-zinc-500 font-mono mt-1">
             Benchmark Vector (Fast) vs Hybrid Vector+LSP (Deep) Retrieval Modes
           </p>
         </div>
@@ -51,7 +51,7 @@ export const RAGSettings: React.FC = () => {
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <h3 className="text-xs font-bold text-white tracking-widest">Run Validation Benchmark</h3>
-            <p className="text-[10px] text-zinc-500 font-mono max-w-md leading-relaxed">
+            <p className="text-[11px] text-zinc-500 font-mono max-w-md leading-relaxed">
               Executes the gold-standard test queries against the codebase index.
               Calculates Mean Reciprocal Rank (MRR) for semantic-only search (Fast)
               and Reciprocal Rank Fusion of semantic and LSP symbol search (Deep).
@@ -60,7 +60,7 @@ export const RAGSettings: React.FC = () => {
           <button
             onClick={handleRunBenchmark}
             disabled={isRunning}
-            className={`flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${
               isRunning
                 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                 : 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border border-indigo-500/20 hover:border-indigo-500'
@@ -113,7 +113,7 @@ export const RAGSettings: React.FC = () => {
               </table>
             </div>
 
-            <div className="mt-4 text-[10px] text-zinc-500 font-mono italic">
+            <div className="mt-4 text-[11px] text-zinc-500 font-mono italic">
               * MRR ranges from 0.0 to 1.0 (higher is better). A value of 1.0 means the target file was always the 1st result.
             </div>
           </div>

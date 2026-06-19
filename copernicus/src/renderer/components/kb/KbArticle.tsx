@@ -48,7 +48,7 @@ export const KbArticle: React.FC<KbArticleProps> = ({ articleId }) => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#050505]">
-        <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest animate-pulse">Loading Article...</span>
+        <span className="text-[11px] text-zinc-500 font-mono uppercase tracking-widest animate-pulse">Loading Article...</span>
       </div>
     )
   }
@@ -56,7 +56,7 @@ export const KbArticle: React.FC<KbArticleProps> = ({ articleId }) => {
   if (!article) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#050505]">
-        <span className="text-[10px] text-red-500 font-mono uppercase tracking-widest">Article not found</span>
+        <span className="text-[11px] text-red-500 font-mono uppercase tracking-widest">Article not found</span>
       </div>
     )
   }
@@ -66,7 +66,7 @@ export const KbArticle: React.FC<KbArticleProps> = ({ articleId }) => {
       {/* Article Header */}
       <header className="h-14 px-6 border-b border-white/5 shrink-0 flex items-center justify-between bg-[#080808]">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-zinc-600">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-zinc-600">
             <span>Knowledge Base</span>
             <ChevronRight size={10} />
             <span>{article.section || 'Uncategorized'}</span>

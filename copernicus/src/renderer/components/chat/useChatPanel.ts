@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { commandRegistry } from '../../commands/registry'
 import { useIpcError } from '../../hooks/useIpcError'
 import { useIpcCache } from '../../hooks/useIpcCache'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useUIBuilderStore } from '../../store/uiBuilderStore'
 import { matchKnowledge } from './CopernicusKnowledgeBase'
 import { unwrapIpc, IpcResult } from '../../types/ipc'
@@ -65,6 +65,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const invoke = useIpcError()
   const { data: modelsIpcResult } = useIpcCache('models:list', [], 30000)
   const [messages, setMessages] = useState<Message[]>([])
+  const [isLoadingSnapshot, setIsLoadingSnapshot] = useState(true)
   const [input, setInput] = useState('')
   const [modelInner, setModelInner] = useState('claude-3-5-sonnet-20240620')
   const model = modelInner
@@ -82,7 +83,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const [isRepoActive, setIsRepoActive] = useState(false)
   const [pendingImage, setPendingImage] = useState<PendingImage | null>(null)
   
-  const activeStoryId = useLayoutStore(s => s.activeStoryId)
+  const activeStoryId = useWorkspaceStore(s => s.activeStoryId)
 
   const messagesRef = useRef(messages)
   messagesRef.current = messages
@@ -94,7 +95,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   availableModelsRef.current = availableModels
 
   useEffect(() => {
-    invoke<any>('snapshot:restore', panelId).then(result => {
+    setIsLoadingSnapshot(true)
+    invoke<IpcResult<any>>('snapshot:restore', panelId).then(result => {
       const snap = unwrapIpc<any>(result)
       if (snap && snap.messages) {
         setMessages(snap.messages)
@@ -105,6 +107,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
         setMessages([])
       }
     }).catch(() => setMessages([]))
+      .finally(() => setIsLoadingSnapshot(false))
 
     return () => {
       const currentMessages = messagesRef.current.filter(msg => msg.role !== 'copernicus')
@@ -119,10 +122,10 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     }
   }, [panelId, invoke])
 
-  const toggleFlip = useLayoutStore(s => s.toggleFlip)
-  const centerMode = useLayoutStore(s => s.centerMode)
+  const toggleFlip = useWorkspaceStore(s => s.toggleFlip)
+  const centerMode = useWorkspaceStore(s => s.centerMode)
   const uiComponents = useUIBuilderStore(useShallow(s => s.uiComponents))
-  const flippedPanes = useLayoutStore(useShallow(s => s.flippedPanes))
+  const flippedPanes = useWorkspaceStore(useShallow(s => s.flippedPanes))
 
   const [slashSuggestions, setSlashSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -195,7 +198,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   const handleAskClaude = () => {
     toggleFlip('chat'); setInput(lastGuideQuestion); setShowClaudeFallback(false); setGuideMessages([])
-    setTimeout(() => { (document.querySelector('textarea[data-chat-input]') as any)?.focus() }, 100)
+    setTimeout(() => { (document.querySelector('textarea[data-chat-input]') as HTMLTextAreaElement)?.focus() }, 100)
   }
 
   const dismissLspWarning = () => {
@@ -220,7 +223,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   // Sync cached models:list result (TTL 30s) to availableModels, then augment with ollama
   useEffect(() => {
-    const staticModels = unwrapIpc<ModelInfo[]>(modelsIpcResult as any) ?? []
+    const staticModels = modelsIpcResult ? unwrapIpc<ModelInfo[]>(modelsIpcResult) : []
     if (staticModels.length === 0) return
     invoke<IpcResult<{ ok: boolean, models: ModelInfo[] }>>('models:list-ollama')
       .then((ollamaRes) => {
@@ -298,7 +301,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
     // Pre-flight LSP check
     if (!isLspWarningDismissed) {
-      const res = await invoke<any>('lsp:workspace-check')
+      const res = await invoke<IpcResult<{ errorCount: number }>>('lsp:workspace-check')
       if (res && res.errorCount > 0) {
         setLspWarning(`${res.errorCount} TypeScript error(s) in workspace — agent may produce incorrect fixes.`)
         return
@@ -336,12 +339,12 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
       isFirstCallAfterSwitch.current = false;
       try {
         const sinceTs = lastSeenTs.current.get(modelInner) ?? 0;
-        const res = await invoke<any>('memory:get-working-set', activeProjectId, 'chat', 10);
+        const res = await invoke<IpcResult<any[]>>('memory:get-working-set', activeProjectId, 'chat', 10);
         const rows = unwrapIpc<any[]>(res) ?? [];
         const deltaRows = rows.filter((r: any) => (r.ts * 1000) > sinceTs);
         
         if (deltaRows.length > 0) {
-          const compRes = await invoke<any>('chat:compress-delta', { rows: deltaRows, maxTokens: 150 });
+          const compRes = await invoke<IpcResult<{ summary: string }>>('chat:compress-delta', { rows: deltaRows, maxTokens: 150 });
           const compData = unwrapIpc<{ summary: string }>(compRes);
           if (compData && compData.summary) {
             enrichedContent = `[DELTA]\n${compData.summary}\n\n${enrichedContent}`;
@@ -406,8 +409,9 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
   const handleSaveToStory = async (content: string) => {
     if (!activeStoryId) return
     try {
-      const currentContent = await invoke<string>('stories:get-content', activeStoryId); 
-      let updatedContent = currentContent ?? ''; const implMarker = '## Implementation'
+      const res = await invoke<IpcResult<string>>('stories:get-content', activeStoryId);
+      const currentContent = unwrapIpc<string>(res) ?? '';
+      let updatedContent = currentContent; const implMarker = '## Implementation'
       if (updatedContent.includes(implMarker)) updatedContent = updatedContent.split(implMarker)[0] + `${implMarker}\n${content}\n`
       else updatedContent = `${updatedContent}\n\n${implMarker}\n${content}\n`
       await invoke('stories:update-content', { id: activeStoryId, content: updatedContent })
@@ -417,18 +421,19 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
 
   const handleFileAttach = async () => {
     try {
-      const filePathResult = await invoke<string | null>('dialog:open-file')
-      const filePath = unwrapIpc<string | null>(filePathResult)
+      const filePathRes = await invoke<IpcResult<string | null>>('dialog:open-file')
+      const filePath = unwrapIpc<string | null>(filePathRes)
       if (!filePath) return
-      const result = await invoke<any>('fs:read-file', filePath); const content = unwrapIpc<string>(result)
+      const res = await invoke<IpcResult<string>>('fs:read-file', filePath);
+      const content = unwrapIpc<string>(res)
       if (typeof content === 'string') setContext(prev => [...prev, { type: 'file', label: filePath.split(/[/\\]/).pop() ?? filePath, content: `\n// File: ${filePath}\n${content}\n` }])
     } catch (err) { log.warn("[ChatPanel] Non-critical error:", err) }
   }
 
   const triggerPicker = async (mode: any) => {
     setPickerMode(mode)
-    if (mode === 'file') { const result = await invoke<any>('fs:list-dir', rootPath ?? ''); const data = unwrapIpc<any[]>(result); if (Array.isArray(data)) setPickerResults(data.filter(n => !n.isDir).map(n => ({ label: n.name, value: n.path, payload: n.path }))) }
-    else if (mode === 'story') { const result = await invoke<any[]>('stories:list'); const data = unwrapIpc<any[]>(result); if (Array.isArray(data)) setPickerResults(data.map((s: any) => ({ label: s.title ?? s.id, value: s.id, payload: s.content ?? '' }))) }
+    if (mode === 'file') { const res = await invoke<IpcResult<any[]>>('fs:list-dir', rootPath ?? ''); const data = unwrapIpc<any[]>(res); if (Array.isArray(data)) setPickerResults(data.filter(n => !n.isDir).map(n => ({ label: n.name, value: n.path, payload: n.path }))) }
+    else if (mode === 'story') { const res = await invoke<IpcResult<any[]>>('stories:list'); const data = unwrapIpc<any[]>(res); if (Array.isArray(data)) setPickerResults(data.map((s: any) => ({ label: s.title ?? s.id, value: s.id, payload: s.content ?? '' }))) }
   }
 
   const acceptModelSwitch = (sw: any) => { setModel(sw.model); setPendingModelSwitch(null); invoke('chat:confirm-model-switch', { sessionId: sw.sessionId, accepted: true, model: sw.model }) }
@@ -475,6 +480,7 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     rejectModelSwitch,
     invoke,
     isFlipped,
+    isLoadingSnapshot,
     pendingImage,
     setPendingImage,
     lspWarning,

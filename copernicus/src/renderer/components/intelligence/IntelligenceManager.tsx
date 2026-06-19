@@ -131,14 +131,14 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
 
   const fetchDocs = useCallback(async () => {
     try {
-      const res = await invoke<IntelligenceDocument[]>('intel:list', { projectId: 'current' })
-      const docs = unwrapIpc<IntelligenceDocument[]>(res as any)
+      const res = await invoke<IpcResult<IntelligenceDocument[]>>('intel:list', { projectId: 'current' })
+      const docs = unwrapIpc<IntelligenceDocument[]>(res)
       if (docs) {
         setDocuments(docs)
         if (docs.length === 0) {
           try {
-            const suggRes = await invoke<IntelligenceDocSuggestion[]>('intel:suggest', { projectId: 'current' })
-            const suggs = unwrapIpc<IntelligenceDocSuggestion[]>(suggRes as any)
+            const suggRes = await invoke<IpcResult<IntelligenceDocSuggestion[]>>('intel:suggest', { projectId: 'current' })
+            const suggs = unwrapIpc<IntelligenceDocSuggestion[]>(suggRes)
             if (suggs && suggs.length > 0) {
               setSuggestions(suggs)
             }
@@ -219,8 +219,8 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
   const handleUpdate = async (docId: string, updates: Partial<IntelligenceDocument>) => {
     setSaveStatus('saving')
     try {
-      const res = await invoke<IntelligenceDocument>('intel:update', docId, updates)
-      const updatedDoc = unwrapIpc<IntelligenceDocument>(res as any)
+      const res = await invoke<IpcResult<IntelligenceDocument>>('intel:update', docId, updates)
+      const updatedDoc = unwrapIpc<IntelligenceDocument>(res)
       if (updatedDoc) {
         setDocuments(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d))
         setSaveStatus('syncing')
@@ -280,8 +280,8 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
         content: '',
         providers: []
       }
-      const res = await invoke<IntelligenceDocument>('intel:create', payload)
-      const newDoc = unwrapIpc<IntelligenceDocument>(res as any)
+      const res = await invoke<IpcResult<IntelligenceDocument>>('intel:create', payload)
+      const newDoc = unwrapIpc<IntelligenceDocument>(res)
       if (newDoc) {
         setDocuments(prev => [...prev, newDoc])
         setSelectedDocId(newDoc.id)
@@ -306,10 +306,10 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
   }
 
   const toggleProvider = (doc: IntelligenceDocument, provider: ProviderKey) => {
-    const isEnabled = doc.providers.some((p: any) => p.provider === provider)
+    const isEnabled = doc.providers.some((p: ProviderTarget) => p.provider === provider)
     let newProviders = [...doc.providers]
     if (isEnabled) {
-      newProviders = newProviders.filter((p: any) => p.provider !== provider)
+      newProviders = newProviders.filter((p: ProviderTarget) => p.provider !== provider)
     } else {
       newProviders.push({ provider })
     }
@@ -320,7 +320,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
     if (!doc.providers || doc.providers.length === 0) return null
     return (
       <div className="flex items-center gap-0.5 ml-auto">
-        {doc.providers.map((p: any) => {
+        {doc.providers.map((p: ProviderTarget) => {
           const status = doc.syncStatus?.[p.provider]
           let colorClass = 'bg-zinc-600'
           if (status === 'synced') colorClass = 'bg-green-500'
@@ -344,9 +344,9 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
   const [isInstructionLong, setIsInstructionLong] = useState(false)
   useEffect(() => {
     if (selectedDoc?.type === 'instruction' && selectedDocId) {
-      invoke<{ overThreshold: boolean }>('intel:audit-length', { id: selectedDocId })
+      invoke<IpcResult<{ overThreshold: boolean }>>('intel:audit-length', { id: selectedDocId })
         .then(res => {
-          const unwrapped = unwrapIpc<{ overThreshold: boolean }>(res as any)
+          const unwrapped = unwrapIpc<{ overThreshold: boolean }>(res)
           if (unwrapped) {
             setIsInstructionLong(unwrapped.overThreshold)
           }
@@ -422,8 +422,8 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
           pathScope: []
         }
         
-        const res = await invoke<IntelligenceDocument>('intel:create', payload)
-        const unwrapped = unwrapIpc<IntelligenceDocument>(res as any)
+        const res = await invoke<IpcResult<IntelligenceDocument>>('intel:create', payload)
+        const unwrapped = unwrapIpc<IntelligenceDocument>(res)
         if (unwrapped) {
           newDocs.push(unwrapped)
         }
@@ -623,7 +623,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
                 <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mr-2">Providers:</span>
                 {CANONICAL_PROVIDERS.map(p => {
-                  const isEnabled = selectedDoc.providers.some((prov: any) => prov.provider === p)
+                  const isEnabled = selectedDoc.providers.some((prov: ProviderTarget) => prov.provider === p)
                   const meta = PROVIDER_METADATA[p] || { displayName: p }
                   return (
                     <button
@@ -959,7 +959,7 @@ ${editorContent}`}
                 {selectedDoc.providers.length === 0 ? (
                   <span className="text-[10px] text-zinc-600">No providers enabled</span>
                 ) : (
-                  selectedDoc.providers.map((p: any) => {
+                  selectedDoc.providers.map((p: ProviderTarget) => {
                     const status = selectedDoc.syncStatus?.[p.provider]
                     let dotColor = 'bg-zinc-600'
                     if (status === 'synced') dotColor = 'bg-green-500'
@@ -994,7 +994,7 @@ ${editorContent}`}
   )
 }
 
-function Brain(props: any) {
+function Brain(props: React.ComponentProps<typeof Bot>) {
   return <Bot {...props} />
 }
 

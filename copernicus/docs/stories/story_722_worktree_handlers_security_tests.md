@@ -1,3 +1,17 @@
+---
+title: 'story_722: Worktree Handlers Security Tests'
+status: APPROVED FOR IMPLEMENTATION
+priority: UNKNOWN
+type: Unknown
+epic: null
+assigned_to: (unassigned)
+workflow_id: (none)
+date: ''
+flagged: false
+blocked_by: []
+blocks: []
+--- 
+
 # story_722: Worktree Handlers Security Tests
 
 **Status:** APPROVED FOR IMPLEMENTATION

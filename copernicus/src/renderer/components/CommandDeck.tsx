@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useIpcError } from '../hooks/useIpcError'
-import { useLayoutStore } from '../store/layout'
+import { useWorkspaceStore } from '../store/layout'
 import log from '../utils/logger'
 import { unwrapIpc } from '../types/ipc'
 import { RotateCcw, Maximize2, Minimize2, ChevronLeft } from 'lucide-react'
 
 export function CommandDeck() {
   const invoke = useIpcError()
-  const { spotlightPane, setSpotlight, toggleFlip, setSidebarOpen } = useLayoutStore()
+  const { spotlightPane, setSpotlight, toggleFlip, setSidebarOpen } = useWorkspaceStore()
   const [targets, setTargets] = useState<string[]>([])
   const [running, setRunning] = useState<string | null>(null)
 
@@ -40,11 +40,11 @@ export function CommandDeck() {
     <div className="flex flex-col h-full bg-copernicus-bg text-zinc-300">
       {/* Standard h-8 Header */}
       <div className="h-8 flex items-center px-3 bg-black/20 border-b border-copernicus-steel/30 justify-between shrink-0 group/cmd">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Command Deck</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Command Deck</span>
         
         <div className="flex items-center gap-1 opacity-0 group-hover/cmd:opacity-100 transition-all">
           {running && (
-            <span className="text-[9px] text-copernicus-phosphor font-mono animate-pulse uppercase tracking-tighter mr-2">
+            <span className="text-[11px] text-copernicus-phosphor font-mono animate-pulse uppercase tracking-tighter mr-2">
               Executing_{running}...
             </span>
           )}
@@ -82,7 +82,7 @@ export function CommandDeck() {
             onClick={() => runTarget(target)}
             disabled={!!running}
             className={`
-              h-9 px-2 text-[10px] font-mono border border-copernicus-steel/50 rounded hover:bg-copernicus-steel/20 hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-all text-left truncate uppercase tracking-tight
+              h-9 px-2 text-[11px] font-mono border border-copernicus-steel/50 rounded hover:bg-copernicus-steel/20 hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-all text-left truncate uppercase tracking-tight
               ${['test', 'test_e2e', 'backlog', 'git commit'].includes(target) ? 'col-span-2 border-l-2 border-l-copernicus-phosphor' : ''}
               ${running === target ? 'bg-copernicus-phosphor text-black border-copernicus-phosphor animate-pulse' : ''}
               disabled:opacity-50 disabled:cursor-not-allowed

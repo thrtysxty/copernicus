@@ -3,11 +3,11 @@ import { BookOpen } from 'lucide-react'
 import { KbTree } from './KbTree'
 import { KbArticle } from './KbArticle'
 import { ChatPanel } from '../chat/ChatPanel'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 
 export const KnowledgeBaseView: React.FC = () => {
-  const activeKbArticleId = useLayoutStore(s => s.activeKbArticleId)
-  const setActiveKbArticleId = useLayoutStore(s => s.setActiveKbArticleId)
+  const activeKbArticleId = useWorkspaceStore(s => s.activeKbArticleId)
+  const setActiveKbArticleId = useWorkspaceStore(s => s.setActiveKbArticleId)
 
   // 60/40 split defaults
   const [splitHeight, setSplitHeight] = useState<number>(60)

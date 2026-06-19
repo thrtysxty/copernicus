@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
-import { useLayoutStore } from '../../store/layout';
+import { useWorkspaceStore } from '../../store/layout';
 
 export const ContentPreview: React.FC = () => {
-  const { canvasContent, canvasUrl, setCanvasUrl, setCanvasContent } = useLayoutStore();
+  const { canvasContent, canvasUrl, setCanvasUrl, setCanvasContent } = useWorkspaceStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {

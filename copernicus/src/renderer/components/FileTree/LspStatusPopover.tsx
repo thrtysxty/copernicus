@@ -1,10 +1,10 @@
 import log from '../../utils/logger'
 import React, { useEffect, useRef } from 'react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 
-type LayoutStoreState = ReturnType<typeof useLayoutStore.getState>;
+type LayoutStoreState = ReturnType<typeof useWorkspaceStore.getState>;
 
 interface LspStatusPopoverProps {
   isOpen: boolean
@@ -23,7 +23,7 @@ interface LspStatus {
 export const LspStatusPopover: React.FC<LspStatusPopoverProps> = ({ isOpen, onClose, lspRunning, language }) => {
   const invoke = useIpcError()
   const popoverRef = useRef<HTMLDivElement>(null)
-  const diagnosticErrorCount = useLayoutStore((s: LayoutStoreState) => s.diagnosticErrorCount)
+  const diagnosticErrorCount = useWorkspaceStore((s: LayoutStoreState) => s.diagnosticErrorCount)
   const [lspDetailedStatus, setLspDetailedStatus] = React.useState<LspStatus | null>(null)
 
   useEffect(() => {

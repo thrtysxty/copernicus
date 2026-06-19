@@ -4,7 +4,9 @@ import {
   Activity, Settings, Wand2,
   Diff, GitBranch, Bug, Brain,
 } from 'lucide-react'
-import { useLayoutStore, StoryboardView } from '../../store/layout'
+import { useWorkspaceStore, StoryboardView } from '../../store/workspace'
+import { useTourStore } from '../../store/tour'
+import { useKanbanStore } from '../../store/kanban'
 
 interface NavItemProps {
   id?: StoryboardView
@@ -22,12 +24,13 @@ interface NavItemProps {
 export const ActivityBar: React.FC = () => {
   const {
     activeView, setView, setCenterMode,
-    tourHighlight,
-    inProgressCount,
     pendingReview,
     settingsOpen, setSettingsOpen,
     diagnosticErrorCount,
-  } = useLayoutStore()
+  } = useWorkspaceStore()
+
+  const tourHighlight = useTourStore(s => s.tourHighlight)
+  const inProgressCount = useKanbanStore(s => s.inProgressCount)
 
   const NavItem: React.FC<NavItemProps> = ({
     id, icon: Icon, label, onClick, shortcut, isActive, badge, hasDot, highlightId, testId,
@@ -53,7 +56,7 @@ export const ActivityBar: React.FC = () => {
         >
           <Icon size={18} strokeWidth={active ? 2.5 : 1.5} />
           {badge !== undefined && badge > 0 && (
-            <span className="absolute -top-1 -right-1 bg-copernicus-phosphor text-[#050505] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+            <span className="absolute -top-1 -right-1 bg-copernicus-phosphor text-[#050505] text-[11px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
               {badge > 9 ? '9+' : badge}
             </span>
           )}
@@ -61,7 +64,7 @@ export const ActivityBar: React.FC = () => {
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-copernicus-phosphor" />
           )}
         </button>
-        <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
+        <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[11px] font-mono px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
           {label}{shortcut && <span className="text-zinc-500 ml-1">{shortcut}</span>}
         </div>
       </div>
@@ -98,7 +101,7 @@ export const ActivityBar: React.FC = () => {
         style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       >
         <div className="w-5 h-5 bg-copernicus-phosphor/20 rounded-sm flex items-center justify-center phosphor-glow-border" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-          <span className="text-copernicus-phosphor font-black text-[9px]">C</span>
+          <span className="text-copernicus-phosphor font-black text-[11px]">C</span>
         </div>
       </div>
 
@@ -122,7 +125,7 @@ export const ActivityBar: React.FC = () => {
           onClick={() => {
             setView('designer')
             setCenterMode('canvas')
-            const { flippedPanes, toggleFlip } = useLayoutStore.getState()
+            const { flippedPanes, toggleFlip } = useWorkspaceStore.getState()
             if (flippedPanes.includes('center-panel')) toggleFlip('center-panel')
           }}
         />
@@ -168,7 +171,7 @@ export const ActivityBar: React.FC = () => {
           icon={Wand2}
           label="New Project"
           testId="nav-genesis"
-          onClick={() => useLayoutStore.getState().setShowGenesis(true)}
+          onClick={() => useWorkspaceStore.getState().setShowGenesis(true)}
         />
         <NavItem
           icon={Settings}

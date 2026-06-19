@@ -237,7 +237,7 @@ stitchTokens: { fonts: string[], colors: string[], spacing: string[] } | null
   setEditorFocusLine: (focus: { file: string, line: number, col?: number } | null) => void
 }
 
-export const useLayoutStore = create<LayoutState>()(
+export const useWorkspaceStore = create<LayoutState>()(
   persist(
     (set) => ({
       searchDrawerOpen: false,
@@ -473,7 +473,7 @@ stitchTokens: null,
       name: 'copernicus-layout-storage',
       partialize: (state) => {
         // Story 613: workingDir, isGitDirty, gitBranch are now sourced from main process
-        const { workingDir, isGitDirty, gitBranch, terminalOpen, ...persisted } = state as any
+        const { workingDir, isGitDirty, gitBranch, terminalOpen, ...persisted } = state
         return persisted
       },
       onRehydrateStorage: () => (state) => {

@@ -73,7 +73,7 @@ export const AuthSettings: React.FC = () => {
         <h2 className="text-sm font-bold text-copernicus-phosphor uppercase tracking-widest">Auth Manager</h2>
         <button
             onClick={() => setShowAddCustom(!showAddCustom)}
-            className="text-[10px] uppercase border border-copernicus-steel px-2 py-1 rounded hover:bg-copernicus-steel/20"
+            className="text-[11px] uppercase border border-copernicus-steel px-2 py-1 rounded hover:bg-copernicus-steel/20"
         >
             {showAddCustom ? 'Cancel' : '+ Custom Provider'}
         </button>
@@ -81,7 +81,7 @@ export const AuthSettings: React.FC = () => {
 
       {showAddCustom && (
           <div className="mb-4 p-2 border border-copernicus-steel/50 bg-zinc-900/50 rounded flex flex-col gap-2">
-              <span className="text-[10px] uppercase text-zinc-500">New Custom Provider</span>
+              <span className="text-[11px] uppercase text-zinc-500">New Custom Provider</span>
               <input
                   className="bg-zinc-950 border border-zinc-700 text-xs px-2 py-1 text-white focus:outline-none focus:border-copernicus-phosphor"
                   placeholder="Provider Name (e.g. local-llm)"
@@ -103,7 +103,7 @@ export const AuthSettings: React.FC = () => {
               />
               <button
                   onClick={handleAddCustom}
-                  className="bg-copernicus-phosphor text-black text-[10px] px-2 py-1 font-bold uppercase hover:bg-green-400 self-end"
+                  className="bg-copernicus-phosphor text-black text-[11px] px-2 py-1 font-bold uppercase hover:bg-green-400 self-end"
               >
                   Add Provider
               </button>
@@ -116,13 +116,13 @@ export const AuthSettings: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
                   <span className="text-xs uppercase text-zinc-500 font-mono w-32 truncate" title={s.provider}>{s.provider}</span>
-                  {s.baseUrl && <span className="text-[9px] text-zinc-600 truncate max-w-[150px]" title={s.baseUrl}>{s.baseUrl}</span>}
+                  {s.baseUrl && <span className="text-[11px] text-zinc-600 truncate max-w-[150px]" title={s.baseUrl}>{s.baseUrl}</span>}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] px-1 rounded ${s.hasKey ? 'bg-copernicus-phosphor text-black' : 'bg-red-900/20 text-red-400'}`}>
+                <span className={`text-[11px] px-1 rounded ${s.hasKey ? 'bg-copernicus-phosphor text-black' : 'bg-red-900/20 text-red-400'}`}>
                   {s.hasKey ? 'ACTIVE' : 'MISSING'}
                 </span>
-                <span className="text-[9px] text-zinc-600 uppercase w-12 text-center">[{s.source}]</span>
+                <span className="text-[11px] text-zinc-600 uppercase w-12 text-center">[{s.source}]</span>
                 <button
                   onClick={() => {
                     if (editingProvider === s.provider) {
@@ -133,7 +133,7 @@ export const AuthSettings: React.FC = () => {
                       setBaseUrl(s.baseUrl || '');
                     }
                   }}
-                  className="text-[10px] text-zinc-400 hover:text-white underline ml-2"
+                  className="text-[11px] text-zinc-400 hover:text-white underline ml-2"
                 >
                   {editingProvider === s.provider ? 'Cancel' : 'Edit'}
                 </button>
@@ -161,7 +161,7 @@ export const AuthSettings: React.FC = () => {
                     />
                     <button
                       onClick={() => handleSave(s.provider)}
-                      className="bg-copernicus-phosphor text-black text-[10px] px-2 py-1 font-bold uppercase hover:bg-green-400"
+                      className="bg-copernicus-phosphor text-black text-[11px] px-2 py-1 font-bold uppercase hover:bg-green-400"
                     >
                       Save
                     </button>

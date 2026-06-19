@@ -87,6 +87,8 @@ let ipcCleanupFns: {
 } | null = null
 
 let collectorProcess: ChildProcess | null = null;
+let exportInterval: NodeJS.Timeout | null = null;
+let storyWatcher: NodeJS.Timeout | null = null;
 
 function updateClaudeTelemetrySettings(write: boolean): boolean {
   try {
@@ -226,14 +228,20 @@ function createWindow() {
           try {
             execFileSync('systemctl', ['--user', 'is-enabled', 'jules-daemon'], { stdio: 'ignore' })
             daemonRegistered = true
-          } catch { /* ignore */ }
+          } catch (e) {
+            log.warn('[Main] Failed to check jules-daemon status on linux:', e);
+          }
         } else if (process.platform === 'win32') {
           try {
             execFileSync('powershell.exe', ['-Command', 'Get-ScheduledTask -TaskName CopernicusJulesDaemon -ErrorAction Stop'], { stdio: 'ignore' })
             daemonRegistered = true
-          } catch { /* ignore */ }
+          } catch (e) {
+            log.warn('[Main] Failed to check jules-daemon status on win32:', e);
+          }
         }
-      } catch { /* not registered */ }
+      } catch (e) {
+        log.warn('[Main] Error during daemon registration check:', e);
+      }
       if (!daemonRegistered) {
         setTimeout(() => win?.webContents.send('daemon:prompt-install'), 3000)
       }
@@ -575,8 +583,8 @@ app.whenReady().then(async () => {
       await jsonlExporter.export(projectId)
       const exportDir = path.join(app.getPath('userData'), 'memory', jsonlExporter.hashProjectId(projectId))
       lspManager.watchMemoryDir(exportDir)
-      
-      setInterval(async () => {
+
+      exportInterval = setInterval(async () => {
         try {
           const pid = fsManager.getRootPath() || 'default'
           await jsonlExporter.export(pid)
@@ -590,23 +598,28 @@ app.whenReady().then(async () => {
   }, 30 * 1000)
 
   // Story 335: Watch for story status files from Python orchestrator
-  setInterval(() => {
-    try {
-      const files = fs.readdirSync('/tmp').filter(f => f.startsWith('copernicus_story_') && f.endsWith('_status.txt'))
-      for (const file of files) {
-        const match = file.match(/copernicus_story_(\d+)_status\.txt/)
-        if (match && match[1]) {
-          const num = parseInt(match[1], 10)
-          const filePath = path.join('/tmp', file)
-          const status = fs.readFileSync(filePath, 'utf-8').trim()
-          storiesManager.setStoryStatus(num, status).then(() => {
-            win?.webContents.send('stories:status-changed', { storyNumber: num, status })
-          }).catch(err => log.error('[Main] Failed to set story status from watcher:', err))
-          fs.unlinkSync(filePath)
+  const startStoryWatcher = () => {
+    storyWatcher = setInterval(() => {
+      try {
+        const files = fs.readdirSync('/tmp').filter(f => f.startsWith('copernicus_story_') && f.endsWith('_status.txt'))
+        for (const file of files) {
+          const match = file.match(/copernicus_story_(\d+)_status\.txt/)
+          if (match && match[1]) {
+            const num = parseInt(match[1], 10)
+            const filePath = path.join('/tmp', file)
+            const status = fs.readFileSync(filePath, 'utf-8').trim()
+            storiesManager.setStoryStatus(num, status).then(() => {
+              win?.webContents.send('stories:status-changed', { storyNumber: num, status })
+            }).catch(err => log.error('[Main] Failed to set story status from watcher:', err))
+            fs.unlinkSync(filePath)
+          }
         }
+      } catch (e) {
+        log.warn('[Main] Story status watcher encountered an error:', e);
       }
-    } catch (e) { /* ignore */ }
-  }, 2000)
+    }, 2000)
+  }
+  startStoryWatcher();
 })
 
 

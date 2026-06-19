@@ -25,7 +25,7 @@ export const HelpPanel: React.FC = () => {
       <div className="h-8 flex items-center justify-between px-3 bg-copernicus-bg border-b border-hairline border-copernicus-steel">
         <div className="flex items-center gap-2 text-copernicus-phosphor">
           <Book size={14} />
-          <span className="text-[10px] font-bold uppercase tracking-widest">Help // User Guide</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest">Help // User Guide</span>
         </div>
       </div>
 
@@ -45,8 +45,8 @@ export const HelpPanel: React.FC = () => {
       </div>
 
       <div className="h-6 bg-copernicus-bg border-t border-hairline border-copernicus-steel flex items-center px-2 justify-between">
-        <span className="text-[9px] text-zinc-600 uppercase">Copernicus Guide v0.1.0</span>
-        <span className="text-[9px] text-copernicus-phosphor/50">Industrial Agentic Standard</span>
+        <span className="text-[11px] text-zinc-600 uppercase">Copernicus Guide v0.1.0</span>
+        <span className="text-[11px] text-copernicus-phosphor/50">Industrial Agentic Standard</span>
       </div>
     </div>
   )

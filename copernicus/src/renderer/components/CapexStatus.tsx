@@ -34,7 +34,7 @@ export function CapexStatus() {
   }, [invoke]);
 
   if (!status || !status.session) return (
-    <div className="flex items-center gap-2 text-[9px] text-zinc-700 font-mono italic">
+    <div className="flex items-center gap-2 text-[11px] text-zinc-700 font-mono italic">
         <span>[NO_SESSION_ACTIVE]</span>
     </div>
   );
@@ -44,7 +44,7 @@ export function CapexStatus() {
   const currentTotal = status.total + status.session.value;
 
   return (
-    <div className="flex items-center gap-4 text-[9px] text-zinc-500 border-l border-hairline border-copernicus-steel pl-4 ml-4 font-mono">
+    <div className="flex items-center gap-4 text-[11px] text-zinc-500 border-l border-hairline border-copernicus-steel pl-4 ml-4 font-mono">
       <span className="flex items-center gap-1">
         <span className="text-zinc-600 font-bold">TIM:</span> {hours}h {minutes}m
       </span>

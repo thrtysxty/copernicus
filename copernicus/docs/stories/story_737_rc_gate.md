@@ -1,3 +1,22 @@
+---
+title: 'story_737: RC Gate — `make rc-check`'
+status: READY
+priority: P0
+type: Unknown
+epic: null
+assigned_to: (unassigned)
+workflow_id: (none)
+date: ''
+flagged: false
+blocked_by:
+  - story_721
+  - story_733
+  - story_734
+  - story_735
+  - story_736
+blocks: []
+--- 
+
 # story_737: RC Gate — `make rc-check`
 
 **Status:** READY

@@ -2,13 +2,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import { KanbanBoard } from './KanbanBoard'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcCache } from '../../hooks/useIpcCache'
 import { useIpcError } from '../../hooks/useIpcError'
 import '@testing-library/jest-dom'
 
 vi.mock('../../store/layout', () => ({
-  useLayoutStore: vi.fn(),
+  useWorkspaceStore: vi.fn(),
 }))
 
 vi.mock('../../hooks/useIpcCache', () => ({
@@ -59,7 +59,7 @@ describe('KanbanBoard Filter', () => {
       invalidate: vi.fn(),
     })
 
-    ;(useLayoutStore as any).mockImplementation((selector: any) => {
+    ;(useWorkspaceStore as any).mockImplementation((selector: any) => {
       const state = {
         columns: [
           { id: 'todo', status: 'TODO', label: 'TODO' },
@@ -83,7 +83,7 @@ describe('KanbanBoard Filter', () => {
       return selector(state)
     })
 
-    ;(useLayoutStore as any).getState = () => ({
+    ;(useWorkspaceStore as any).getState = () => ({
         setColumns: vi.fn()
     })
   })

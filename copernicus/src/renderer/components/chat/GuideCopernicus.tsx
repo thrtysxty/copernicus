@@ -1,6 +1,6 @@
 import React from 'react'
 import { Send } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { Message } from './useChatPanel'
 
 interface GuideCopernicusProps {
@@ -24,7 +24,7 @@ export const GuideCopernicus: React.FC<GuideCopernicusProps> = ({
   setShowClaudeFallback,
   guideScrollRef,
 }) => {
-  const { retakeTour } = useLayoutStore()
+  const { retakeTour } = useWorkspaceStore()
 
   return (
     <div className="flex flex-col h-full bg-[#0a0a0a] border border-copernicus-steel/20 rounded overflow-hidden">
@@ -36,13 +36,13 @@ export const GuideCopernicus: React.FC<GuideCopernicusProps> = ({
         {guideMessages.length === 0 ? (
            <div className="h-full flex flex-col items-center justify-center p-8 text-center opacity-40">
               <div className="text-copernicus-phosphor font-mono text-lg mb-2 glow-sm tracking-tighter uppercase">© Copernicus</div>
-              <div className="text-zinc-500 text-[10px] font-mono uppercase tracking-[0.2em]">Ready_To_Assist</div>
+              <div className="text-zinc-500 text-[11px] font-mono uppercase tracking-[0.2em]">Ready_To_Assist</div>
            </div>
         ) : (
           guideMessages.map(m => (
             <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end ml-auto' : 'items-start mr-auto'} max-w-[90%]`}>
               <div className="flex items-center gap-1.5 mb-1 px-1">
-                {m.role === 'copernicus' && <span className="text-copernicus-phosphor font-mono text-[10px] font-bold">CP</span>}
+                {m.role === 'copernicus' && <span className="text-copernicus-phosphor font-mono text-[11px] font-bold">CP</span>}
                 <span className={`text-[8px] uppercase font-bold tracking-widest font-mono ${m.role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'}`}>
                   {m.role === 'user' ? 'DEVELOPER' : 'COPERNICUS'}
                 </span>
@@ -56,7 +56,7 @@ export const GuideCopernicus: React.FC<GuideCopernicusProps> = ({
                 {m.showTourButton && (
                   <button
                     onClick={() => retakeTour()}
-                    className="mt-3 w-full py-1.5 bg-copernicus-phosphor text-[#050505] font-bold text-[9px] uppercase tracking-widest hover:opacity-90 transition-opacity"
+                    className="mt-3 w-full py-1.5 bg-copernicus-phosphor text-[#050505] font-bold text-[11px] uppercase tracking-widest hover:opacity-90 transition-opacity"
                   >
                     Start Tour
                   </button>
@@ -75,13 +75,13 @@ export const GuideCopernicus: React.FC<GuideCopernicusProps> = ({
             <div className="flex gap-2">
               <button 
                 onClick={handleAskClaude}
-                className="flex-1 bg-copernicus-phosphor text-[#050505] text-[9px] font-bold py-2 uppercase tracking-wider"
+                className="flex-1 bg-copernicus-phosphor text-[#050505] text-[11px] font-bold py-2 uppercase tracking-wider"
               >
                 Yes, ask Claude
               </button>
               <button 
                 onClick={() => setShowClaudeFallback(false)}
-                className="flex-1 border border-zinc-700 text-zinc-400 text-[9px] font-bold py-2 uppercase tracking-wider hover:bg-white/5 transition-colors"
+                className="flex-1 border border-zinc-700 text-zinc-400 text-[11px] font-bold py-2 uppercase tracking-wider hover:bg-white/5 transition-colors"
               >
                 Never mind
               </button>

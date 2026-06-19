@@ -64,7 +64,7 @@ const SubTabButton: React.FC<{ id: SubTab, label: string, icon: any, active: Sub
   return (
     <button
       onClick={() => onClick(id)}
-      className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+      className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${isActive ? 'text-copernicus-phosphor bg-copernicus-phosphor/10' : 'text-zinc-500 hover:text-zinc-300'}`}
     >
       {icon} {label}
     </button>
@@ -81,9 +81,9 @@ const RolesContent: React.FC<{ roles: any[] }> = ({ roles }) => {
         <div key={i} className="bg-zinc-900/50 border border-zinc-800 rounded p-3 flex items-center justify-between">
           <div>
             <div className="text-xs font-bold text-zinc-200">{role.name ?? role.role ?? `Role ${i + 1}`}</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">{role.authority ?? role.type ?? 'Standard'}</div>
+            <div className="text-[11px] text-zinc-500 mt-0.5">{role.authority ?? role.type ?? 'Standard'}</div>
           </div>
-          <div className="text-[10px] text-zinc-600 font-mono">{role.activeTokens ?? 0} tokens</div>
+          <div className="text-[11px] text-zinc-600 font-mono">{role.activeTokens ?? 0} tokens</div>
         </div>
       ))}
     </div>
@@ -100,11 +100,11 @@ const ProposalsContent: React.FC<{ proposals: any[] }> = ({ proposals }) => {
         <div key={i} className="bg-zinc-900/50 border border-zinc-800 rounded p-3">
           <div className="flex items-center justify-between">
             <div className="text-xs font-bold text-zinc-200">{p.role ?? p.name ?? `Proposal ${i + 1}`}</div>
-            <span className={`text-[9px] font-bold uppercase tracking-widest ${p.status === 'PENDING' ? 'text-amber-400' : p.status === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-widest ${p.status === 'PENDING' ? 'text-amber-400' : p.status === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
               {p.status ?? 'PENDING'}
             </span>
           </div>
-          <div className="text-[10px] text-zinc-500 mt-1">{p.rationale ?? ''}</div>
+          <div className="text-[11px] text-zinc-500 mt-1">{p.rationale ?? ''}</div>
         </div>
       ))}
     </div>

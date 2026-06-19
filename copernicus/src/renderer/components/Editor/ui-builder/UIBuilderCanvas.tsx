@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { useUIBuilderStore } from '../../../store/uiBuilderStore'
-import { useLayoutStore } from '../../../store/layout'
+import { useWorkspaceStore } from '../../../store/layout'
 import { UIComponent, UIComponentType } from './types'
 import { renderComponentTree } from './render'
 import { unwrapIpc } from '../../../types/ipc'
@@ -70,7 +70,7 @@ export const UIBuilderCanvas: React.FC = () => {
     activeFilePath,
     stitchScreenId,
     setStitchScreenId
-  } = useLayoutStore()
+  } = useWorkspaceStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
 
@@ -128,7 +128,7 @@ export const UIBuilderCanvas: React.FC = () => {
         if (configData) {
           setProjectId(configData.projectId)
           if (configData.deviceType) {
-            setDeviceType(configData.deviceType as any)
+            setDeviceType(configData.deviceType as 'MOBILE' | 'DESKTOP' | 'TABLET' | 'AGNOSTIC')
           }
         }
       } catch (err) {
@@ -222,8 +222,8 @@ export const UIBuilderCanvas: React.FC = () => {
   }
 
   // Expose these to satisfy React warnings if needed, though they were handled in headers
-  ;(window as any)._ui_export_jsx = handleExportJSX
-  ;(window as any)._ui_export_html = handleExportHTML
+  window._ui_export_jsx = handleExportJSX
+  window._ui_export_html = handleExportHTML
 
   const StitchImportModal = () => {
     const [projectId, setProjectId] = useState('')

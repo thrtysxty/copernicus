@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { DiffEditor } from '@monaco-editor/react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { ReviewPanel, Verdict } from './ReviewPanel'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
@@ -21,7 +21,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   onCancel,
 }) => {
   const invoke = useIpcError()
-  const { reviewEnabled } = useLayoutStore()
+  const { reviewEnabled } = useWorkspaceStore()
   const [reviewState, setReviewState] = useState<'idle' | 'reviewing' | 'done'>('idle')
   const [sessionIds, setSessionIds] = useState<{ a: string; b: string } | null>(null)
   const [verdicts, setVerdicts] = useState<{ a: Verdict; b: Verdict } | null>(null)

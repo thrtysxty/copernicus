@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 
 interface FlippablePanelProps {
   id: string
@@ -17,7 +17,7 @@ export const FlippablePanel: React.FC<FlippablePanelProps> = ({
   className = '',
   mode = 'flip'
 }) => {
-  const { flippedPanes } = useLayoutStore()
+  const { flippedPanes } = useWorkspaceStore()
   const isFlipped = flippedPanes.includes(id)
 
   if (mode === 'slide') {

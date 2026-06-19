@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { FolderOpen, Clock } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { unwrapIpc } from '../../types/ipc'
 
 interface RecentProject {
@@ -16,7 +16,7 @@ interface Props {
 
 export const ProjectSwitcher: React.FC<Props> = ({ onClose }) => {
   const invoke = useIpcError()
-  const setWorkingDir = useLayoutStore(s => s.setWorkingDir)
+  const setWorkingDir = useWorkspaceStore(s => s.setWorkingDir)
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
 

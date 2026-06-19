@@ -13,8 +13,9 @@ export const HardwareSection: React.FC = () => {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    invoke<SettingsLoadResponse>('settings:load').then(result => {
-      if (result?.touchBar) setConfig({ ...DEFAULT_TOUCH_BAR_CONFIG, ...(result.touchBar as any) })
+    invoke<IpcResult<SettingsLoadResponse>>('settings:load').then(res => {
+      const result = unwrapIpc<SettingsLoadResponse>(res)
+      if (result?.touchBar) setConfig({ ...DEFAULT_TOUCH_BAR_CONFIG, ...(result.touchBar as TouchBarConfig) })
     }).catch(err => log.error('Failed to load settings', err))
   }, [invoke])
 

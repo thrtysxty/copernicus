@@ -1,5 +1,6 @@
 import { ipcMain, app } from 'electron';
 import { handleIpc } from '../utils/handle-ipc';
+import log from '../utils/logger';
 // @ts-ignore
 import { syncUserAction, getOrgChart, updateRole, listActiveTokens, approveProposal, rejectProposal } from '../../../scripts/agent-daemon/lib/hub.mjs';
 import { createClient } from '@libsql/client';
@@ -192,7 +193,9 @@ export function registerHubHandlers() {
         let budgetObj = { current_cost_usd: 0, max_cost_usd: 0 };
         try {
           if (t.budget) budgetObj = JSON.parse(t.budget);
-        } catch (e) {}
+        } catch (e) {
+          log.warn(`[Hub] Failed to parse budget for token ${t.token_id}:`, e);
+        }
 
         const cost = budgetObj.current_cost_usd || 0;
 
@@ -242,7 +245,9 @@ export function registerHubHandlers() {
                  dailyEntry.role_spend[role] = (dailyEntry.role_spend[role] || 0) + actionObj.cost_usd;
              }
            }
-         } catch(e) {}
+         } catch(e) {
+           log.warn(`[Hub] Failed to parse event action for token ${ev.token_id}:`, e);
+         }
       }
 
       const daily = Object.values(daily_map).map(d => {

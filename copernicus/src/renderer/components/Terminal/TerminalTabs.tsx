@@ -1,6 +1,6 @@
 import React from 'react';
 import { Terminal } from './Terminal';
-import { useLayoutStore } from '../../store/layout';
+import { useWorkspaceStore } from '../../store/layout';
 import { X, Loader2, Square, Plus, RotateCcw, Maximize2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { IpcResult } from '../../types/ipc';
@@ -10,12 +10,12 @@ interface TerminalTabsProps {
 }
 
 export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
-  const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy, addTerminal } = useLayoutStore();
-  const setSpotlight = useLayoutStore(s => s.setSpotlight);
-  const spotlightPane = useLayoutStore(s => s.spotlightPane);
-  const terminalOpen = useLayoutStore(s => s.terminalOpen);
-  const setTerminalOpen = useLayoutStore(s => s.setTerminalOpen);
-  const toggleArchive = useLayoutStore(s => s.toggleArchive);
+  const { terminals, activeTerminalId, setActiveTerminal, removeTerminal, setTerminalBusy, addTerminal } = useWorkspaceStore();
+  const setSpotlight = useWorkspaceStore(s => s.setSpotlight);
+  const spotlightPane = useWorkspaceStore(s => s.spotlightPane);
+  const terminalOpen = useWorkspaceStore(s => s.terminalOpen);
+  const setTerminalOpen = useWorkspaceStore(s => s.setTerminalOpen);
+  const toggleArchive = useWorkspaceStore(s => s.toggleArchive);
   const invoke = useIpcError();
 
   const activeTerminal = terminals.find((t) => t.id === activeTerminalId);

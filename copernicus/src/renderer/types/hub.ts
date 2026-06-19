@@ -25,5 +25,5 @@ export interface HubAttribution {
 export interface HubCostSummary {
   by_role: Array<{ role_name: string; total_usd: number; token_count: number }>;
   active_tokens: Array<{ token_id: string; role_name: string; cost_usd: number; max_cost_usd: number }>;
-  daily: Array<{ date: string; total_usd: number; token_count: number }>;
+  daily: Array<{ date: string; total_usd: number; token_count: number; top_role?: string }>;
 }

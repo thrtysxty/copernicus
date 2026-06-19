@@ -108,14 +108,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Navigation */}
           <div role="tablist" aria-label="Settings categories" className="w-56 border-r border-zinc-800 bg-black/40 py-6 flex flex-col overflow-y-auto scrollbar-none">
-            <div className="px-4 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Intelligence</div>
+            <div className="px-4 mb-4 text-[11px] font-bold text-zinc-600 uppercase tracking-widest">Intelligence</div>
             <TabButton id="providers" label="Providers" icon={<Key size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="models" label="Model Defaults" icon={<Cpu size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="context" label="Context" icon={<Zap size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="local-ai" label="Local AI" icon={<Zap size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="personas" label="Personas" icon={<User size={14} />} active={activeTab} onClick={setActiveTab} />
 
-            <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Workspace</div>
+            <div className="px-4 mt-6 mb-4 text-[11px] font-bold text-zinc-600 uppercase tracking-widest">Workspace</div>
             <TabButton id="appearance" label="Appearance" icon={<Layout size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="git" label="Git & GitHub" icon={<GitBranch size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="workflow" label="Workflow" icon={<Workflow size={14} />} active={activeTab} onClick={setActiveTab} />
@@ -126,7 +126,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <TabButton id="billing" label="Billing" icon={<DollarSign size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="device" label="Device" icon={<Monitor size={14} />} active={activeTab} onClick={setActiveTab} />
 
-            <div className="px-4 mt-6 mb-4 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
+            <div className="px-4 mt-6 mb-4 text-[11px] font-bold text-zinc-600 uppercase tracking-widest">System</div>
             <TabButton id="security" label="Security" icon={<Shield size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="governance" label="Governance" icon={<Users size={14} />} active={activeTab} onClick={setActiveTab} />
             <TabButton id="extensions" label="Extensions" icon={<Puzzle size={14} />} active={activeTab} onClick={setActiveTab} />
@@ -152,13 +152,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
         {/* Footer */}
         <div className="h-10 px-6 border-t border-zinc-800 bg-black/40 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-[9px] text-zinc-600">
+            <div className="flex items-center gap-2 text-[11px] text-zinc-600">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></span>
               SYSTEM_READY
             </div>
-            <div className="text-[9px] text-zinc-700 font-mono">v0.1.0-STABLE</div>
+            <div className="text-[11px] text-zinc-700 font-mono">v0.1.0-STABLE</div>
           </div>
-          <div className="text-[9px] text-zinc-600 italic font-mono">
+          <div className="text-[11px] text-zinc-600 italic font-mono">
             Configuration persistent in ~/.copernicus/preferences.json
           </div>
         </div>

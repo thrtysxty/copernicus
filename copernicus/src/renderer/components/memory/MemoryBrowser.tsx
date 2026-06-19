@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc, IpcResult } from '../../types/ipc'
 import { MemoryRow } from '../../types/memory'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { RefreshCw, Brain, File as FileIcon } from 'lucide-react'
 
 const importanceBadgeColor = (n: number) =>
@@ -38,7 +38,7 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
   const [selectedBankId, setSelectedBankId] = useState<string>('')
   const [expandedFileMenu, setExpandedFileMenu] = useState<string | null>(null)
   
-  const activeFilePath = useLayoutStore(s => s.activeFilePath)
+  const activeFilePath = useWorkspaceStore(s => s.activeFilePath)
   const [fileHistoryMode, setFileHistoryMode] = useState(false)
 
   const handleOpenFile = async (path: string) => {
@@ -100,7 +100,7 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
         <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
           <div className="flex items-center gap-2">
             <Brain size={11} className="text-copernicus-phosphor" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Agent Memory</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Agent Memory</span>
           </div>
           <button onClick={fetchMemories} className="text-zinc-600 hover:text-zinc-300 transition-colors opacity-60 hover:opacity-100" title="Refresh">
             <RefreshCw size={11} />
@@ -113,7 +113,7 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
           <select
             value={selectedBankId}
             onChange={(e) => setSelectedBankId(e.target.value)}
-            className="bg-zinc-900 border border-white/10 text-[10px] text-zinc-300 rounded px-2 py-1 outline-none focus:border-copernicus-phosphor w-full"
+            className="bg-zinc-900 border border-white/10 text-[11px] text-zinc-300 rounded px-2 py-1 outline-none focus:border-copernicus-phosphor w-full"
           >
             <option value="">All</option>
             <option value="chat">chat</option>
@@ -126,7 +126,7 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
           <div className="flex items-center gap-2 pt-1 border-t border-white/5">
             <button
               onClick={() => setFileHistoryMode(!fileHistoryMode)}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded text-[9px] font-bold tracking-wide transition-colors ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold tracking-wide transition-colors ${
                 fileHistoryMode 
                   ? 'bg-copernicus-phosphor text-[#050505] rounded-none' 
                   : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
@@ -137,7 +137,7 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
               HISTORY FOR THIS FILE
             </button>
             {fileHistoryMode && (
-              <span className="text-[8px] text-zinc-500 truncate max-w-[150px]" title={activeFilePath}>
+              <span className="text-[11px] text-zinc-500 truncate max-w-[150px]" title={activeFilePath}>
                 {activeFilePath.split('/').pop()}
               </span>
             )}
@@ -146,9 +146,9 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
       </div>
       
       <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-zinc-800">
-        {loading && <p className="text-[9px] text-zinc-700 italic">Loading...</p>}
+        {loading && <p className="text-[11px] text-zinc-700 italic">Loading...</p>}
         {!loading && memories.length === 0 && (
-          <p className="text-[9px] text-zinc-700 italic">No memories yet. Save insights from chat sessions using the "Save to Memory" button.</p>
+          <p className="text-[11px] text-zinc-700 italic">No memories yet. Save insights from chat sessions using the "Save to Memory" button.</p>
         )}
         {memories.map(m => (
           <div 
@@ -157,20 +157,20 @@ export const MemoryBrowser: React.FC<{ hideHeader?: boolean }> = ({ hideHeader =
             onClick={(e) => handleRowClick(m, e)}
           >
             <div className="flex items-center gap-2">
-              <span className={`px-1 py-0.5 rounded text-[7px] font-bold ${importanceBadgeColor(m.importance)}`}>{m.importance}</span>
-              <span className="text-[8px] text-zinc-400 bg-black/20 px-1 py-0.5 rounded border border-white/5 truncate max-w-[80px]" title={m.bankId}>{m.bankId}</span>
-              <span className="ml-auto text-[8px] text-zinc-700">{relativeTime(m.ts)}</span>
+              <span className={`px-1 py-0.5 rounded text-[11px] font-bold ${importanceBadgeColor(m.importance)}`}>{m.importance}</span>
+              <span className="text-[11px] text-zinc-400 bg-black/20 px-1 py-0.5 rounded border border-white/5 truncate max-w-[80px]" title={m.bankId}>{m.bankId}</span>
+              <span className="ml-auto text-[11px] text-zinc-700">{relativeTime(m.ts)}</span>
             </div>
-            <p className="text-[9px] text-zinc-300 leading-relaxed break-words" title={m.content}>
+            <p className="text-[11px] text-zinc-300 leading-relaxed break-words" title={m.content}>
               {m.content.length > 120 ? `${m.content.substring(0, 120)}...` : m.content}
             </p>
             {expandedFileMenu === m.id && m.eventType === 'git_commit' && m.meta?.files && (
               <div className="file-menu mt-2 pt-2 border-t border-white/5 space-y-1">
-                <span className="text-[8px] text-zinc-500 uppercase font-bold tracking-widest mb-1 block">Files Changed</span>
+                <span className="text-[11px] text-zinc-500 uppercase font-bold tracking-widest mb-1 block">Files Changed</span>
                 {m.meta.files.map((f: string, i: number) => (
                   <div 
                     key={i} 
-                    className="flex items-center gap-2 text-[9px] text-zinc-400 hover:text-zinc-200 hover:bg-white/5 px-2 py-1 rounded cursor-pointer transition-colors"
+                    className="flex items-center gap-2 text-[11px] text-zinc-400 hover:text-zinc-200 hover:bg-white/5 px-2 py-1 rounded cursor-pointer transition-colors"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleOpenFile(f)

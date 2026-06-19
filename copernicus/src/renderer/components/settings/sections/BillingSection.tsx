@@ -27,11 +27,10 @@ export const BillingSection: React.FC = () => {
 
     const load = async () => {
       try {
-        const pathRes = await invoke<{ path: string } | string | null>('app:get-root-path')
-        // We know invoke returns the envelope { ok, data } because of useIpcError wrapper
-        if (!(pathRes as any).ok) return
+        const pathRes = await invoke<IpcResult<string>>('app:get-root-path')
+        if (!pathRes.ok) return
 
-        let currentPath = unwrapIpc<any>(pathRes)
+        let currentPath = unwrapIpc<string>(pathRes)
         if (!currentPath) return
 
         if (typeof currentPath === 'object' && currentPath.path) {
@@ -41,8 +40,8 @@ export const BillingSection: React.FC = () => {
         if (typeof currentPath === 'string') {
           if (active) setRootPath(currentPath)
 
-          const billingRes = await invoke<ProjectRecord | null>('project:get-billing', currentPath)
-          if ((billingRes as any).ok) {
+          const billingRes = await invoke<IpcResult<ProjectRecord | null>>('project:get-billing', currentPath)
+          if (billingRes.ok) {
             const data = unwrapIpc<ProjectRecord | null>(billingRes)
             if (active) {
               setRecord(data)
@@ -74,7 +73,7 @@ export const BillingSection: React.FC = () => {
     if (!rootPath) return
     setSaving(true)
     try {
-      const res = await invoke<any>('project:save-billing', {
+      const res = await invoke<IpcResult<any>>('project:save-billing', {
         id: record?.id ?? `local/${rootPath.split('/').pop() || 'project'}`,
         path: rootPath,
         billing_mode: billingMode,

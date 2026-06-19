@@ -2,7 +2,7 @@ import React from 'react';
 import Editor, { useMonaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useIpcError } from '../../hooks/useIpcError';
-import { useLayoutStore } from '../../store/layout';
+import { useWorkspaceStore } from '../../store/layout';
 import { useTestRunnerStore } from '../../store/testRunner';
 import { useDebugStore } from '../../store/debug';
 import log from '../../utils/logger'
@@ -14,11 +14,20 @@ import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { unwrapIpc } from '../../types/ipc'
+import { LspCompletionResponse, LspHoverResponse, LspDiagnostic, AgentCodeStreamPayload } from '../../types/lsp'
+
+declare global {
+  interface Window {
+    MonacoEnvironment: {
+      getWorker(id: any, label: string): any;
+    };
+  }
+}
+
 
 // Handle Environment workers
-// @ts-ignore
 window.MonacoEnvironment = {
-  getWorker(_: any, label: string) {
+  getWorker(_: unknown, label: string) {
     if (label === 'json') {
       return new jsonWorker();
     }
@@ -49,6 +58,10 @@ interface MonacoEditorProps {
 
 const LSP_LANGUAGES = ['typescript', 'javascript', 'typescriptreact', 'javascriptreact']
 
+interface IEditorWithDecorations extends monaco.editor.IEditor {
+  deltaDecorations(old: string[], newDecs: monaco.editor.IModelDeltaDecoration[]): string[];
+}
+
 export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   value,
   language,
@@ -58,9 +71,9 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   ghostAction,
 }) => {
   const monacoInstance = useMonaco();
-  const editorRef = React.useRef<any>(null);
+  const editorRef = React.useRef<IEditorWithDecorations | null>(null);
   const invoke = useIpcError();
-  const { setFileDirty, editorFocusLine, setEditorFocusLine } = useLayoutStore()
+  const { setFileDirty, editorFocusLine, setEditorFocusLine } = useWorkspaceStore()
   const [, setGhostDecorations] = React.useState<string[]>([])
   const [, setCoverageDecorations] = React.useState<string[]>([])
   const coverageData = useTestRunnerStore(s => s.coverage)
@@ -92,7 +105,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
   // Listen for agent:code-stream
   React.useEffect(() => {
-    const remove = window.ipcRenderer.on('agent:code-stream', (_e: any, payload: any) => {
+    const remove = window.ipcRenderer.on('agent:code-stream', (_e: Electron.IpcRendererEvent, payload: AgentCodeStreamPayload) => {
       if (!ghostMode || payload.filePath !== filePath) return
       setPendingDiff(payload.proposedDiff)
     })
@@ -211,8 +224,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     }));
 
     setBpDecorations(prev => {
-      // @ts-ignore - deltaDecorations exists
-      return editorRef.current!.deltaDecorations(prev, newDecorations)
+      return editorRef.current?.deltaDecorations(prev, newDecorations) ?? prev;
     });
 
     // Send to DAP
@@ -328,7 +340,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
       monacoInstance.languages.registerCompletionItemProvider(LSP_LANGUAGES, {
         triggerCharacters: ['.', '"', "'", '/', '@', '<'],
         provideCompletionItems: async (model, position) => {
-          const raw = await invoke<any>('lsp:request', {
+          const raw = await invoke<IpcResult<LspCompletionResponse>>('lsp:request', {
             method: 'textDocument/completion',
             params: {
               textDocument: { uri: model.uri.toString() },
@@ -337,20 +349,20 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
           }).catch(() => null)
 
 
-          const data = raw ? unwrapIpc<any>(raw) : null
-          const items: any[] = Array.isArray(data)
+          const data = raw ? unwrapIpc<LspCompletionResponse>(raw) : null
+          const items: LspCompletionItem[] = Array.isArray(data)
             ? data
             : Array.isArray(data?.items) ? data.items
             : []
           return {
-            suggestions: items.map((item: any) => ({
+            suggestions: items.map((item) => ({
               label: item.label,
               kind: item.kind ?? 1,
               insertText: item.insertText ?? item.label,
               documentation: typeof item.documentation === 'string'
                 ? item.documentation
                 : item.documentation?.value,
-              range: undefined as any,
+              range: undefined,
             })),
           }
         },
@@ -360,14 +372,14 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     disposables.push(
       monacoInstance.languages.registerHoverProvider(LSP_LANGUAGES, {
         provideHover: async (model, position) => {
-          const raw = await invoke<any>('lsp:request', {
+          const raw = await invoke<IpcResult<LspHoverResponse>>('lsp:request', {
             method: 'textDocument/hover',
             params: {
               textDocument: { uri: model.uri.toString() },
               position: { line: position.lineNumber - 1, character: position.column - 1 },
             },
           }).catch(() => null)
-          const hover = unwrapIpc<any>(raw)
+          const hover = raw ? unwrapIpc<LspHoverResponse>(raw) : null
           if (!hover?.contents) return null
           const value = typeof hover.contents === 'string'
             ? hover.contents
@@ -380,10 +392,10 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     // Diagnostics push → Monaco markers
     const removeDiag = window.ipcRenderer.on(
       'lsp:diagnostics-update',
-      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: any[] }) => {
+      (_e: Electron.IpcRendererEvent, { uri, diagnostics }: { uri: string; diagnostics: LspDiagnostic[] }) => {
         const model = monacoInstance.editor.getModels().find(m => m.uri.toString() === uri)
         if (!model) return
-        monacoInstance.editor.setModelMarkers(model, 'lsp', diagnostics.map((d: any) => ({
+        monacoInstance.editor.setModelMarkers(model, 'lsp', diagnostics.map((d) => ({
           startLineNumber: (d.range?.start?.line ?? 0) + 1,
           startColumn: (d.range?.start?.character ?? 0) + 1,
           endLineNumber: (d.range?.end?.line ?? 0) + 1,
@@ -460,28 +472,24 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     const editor = editorRef.current;
     if (!editor || !filePath || !monacoInstance) return;
 
-    const disposable = editor.addCommand(
-      monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS,
-      async () => {
-        const content = editor.getValue();
-        try {
-          const result = await invoke<any>('fs:save-file', { filePath, content });
-          const data = unwrapIpc<any>(result);
-          if (data && data.ok !== false) {
-            log.info(`[Monaco] Saved: ${filePath}`);
-            if (filePath) setFileDirty(filePath, false);
-          } else if (data && data.ok === false) {
-            log.error('[Monaco] Save failed:', data.error);
-          } else {
-             // In case unwrapped data doesn't have an explicit 'ok' flag but save didn't throw
-             log.info(`[Monaco] Saved: ${filePath}`);
-             if (filePath) setFileDirty(filePath, false);
+        disposable = editor.addCommand(
+          monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS,
+          async () => {
+            const content = editor.getValue();
+            try {
+              const result = await invoke<IpcResult<boolean>>('fs:save-file', { filePath, content });
+              const data = unwrapIpc<boolean>(result);
+              if (data) {
+                log.info(`[Monaco] Saved: ${filePath}`);
+                if (filePath) setFileDirty(filePath, false);
+              } else {
+                log.error('[Monaco] Save failed');
+              }
+            } catch (err) {
+              log.error('[Monaco] Save failed:', err);
+            }
           }
-        } catch (err) {
-          log.error('[Monaco] Save failed:', err);
-        }
-      }
-    );
+        );
 
     return () => disposable?.dispose();
   }, [filePath, monacoInstance, invoke, setFileDirty]);

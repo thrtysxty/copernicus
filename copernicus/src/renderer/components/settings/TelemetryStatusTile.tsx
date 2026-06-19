@@ -16,9 +16,9 @@ export const TelemetryStatusTile: React.FC = () => {
     let mounted = true
     const checkStatus = async () => {
       try {
-        const res = await invoke<TelemetryStatus>('telemetry:status')
-        if (mounted && (res as any).ok) {
-          setStatus(unwrapIpc<TelemetryStatus>(res as any))
+        const res = await invoke<IpcResult<TelemetryStatus>>('telemetry:status')
+        if (mounted && res.ok) {
+          setStatus(unwrapIpc<TelemetryStatus>(res))
         }
       } catch (e) {
         // useIpcError already handles throwing via toast or we can ignore
@@ -52,11 +52,11 @@ export const TelemetryStatusTile: React.FC = () => {
         </div>
         <div>
           <div className="text-[11px] font-bold text-zinc-200 uppercase font-mono">Claude Code Telemetry</div>
-          <div className="text-[9px] text-zinc-500 font-mono">OpenTelemetry Collector Integration</div>
+          <div className="text-[11px] text-zinc-500 font-mono">OpenTelemetry Collector Integration</div>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-mono text-zinc-400 uppercase">{labelText}</span>
+        <span className="text-[11px] font-mono text-zinc-400 uppercase">{labelText}</span>
         <span className={`w-2 h-2 rounded-full ${dotColor}`}></span>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
-import { useLayoutStore } from '../../store/layout';
+import { useWorkspaceStore } from '../../store/layout';
 import { Play, Square, FileText, RefreshCw, ChevronLeft } from 'lucide-react';
 
 export interface Container {
@@ -19,7 +19,7 @@ export const ContainerViewer: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [dockerAvailable, setDockerAvailable] = useState<boolean | null>(null);
   const invoke = useIpcError();
-  const toggleFlip = useLayoutStore(s => s.toggleFlip);
+  const toggleFlip = useWorkspaceStore(s => s.toggleFlip);
 
   const fetchContainers = async () => {
     setLoading(true);

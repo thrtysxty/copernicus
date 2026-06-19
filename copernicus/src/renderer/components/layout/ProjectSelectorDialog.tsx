@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { FolderOpen, Plus, X, Loader2 } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc, type IpcResult } from '../../types/ipc'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 
 interface FileNode {
   name: string
@@ -19,7 +19,7 @@ const PROJECTS_ROOT = '~/Projects'
 
 export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
   const invoke = useIpcError()
-  const { setWorkingDir } = useLayoutStore()
+  const { setWorkingDir } = useWorkspaceStore()
   const [tab, setTab] = useState<'workspace' | 'new'>('workspace')
   const [dirs, setDirs] = useState<FileNode[]>([])
   const [loading, setLoading] = useState(false)

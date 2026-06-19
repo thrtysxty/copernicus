@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { unwrapIpc } from '../../types/ipc';
-import { useLayoutStore } from '../../store/layout';
+import { useWorkspaceStore } from '../../store/workspace'
+import { useTourStore } from '../../store/tour';
 import { WorkflowGraph, WFNode, WFEdge, NodeType, NodeStatus, WorkflowNodeData } from '../../../../electron/workflow/types';
 import { NodeInspector } from './NodeInspector';
 import { DispatchQueue } from './DispatchQueue';
@@ -163,12 +164,15 @@ export default function WorkflowCanvas() {
     activeStoryId,
     setActiveWorkflowTemplate,
     activeWorkflowTemplate,
+    activeView,
+  } = useWorkspaceStore();
+
+  const {
     tourStep,
     setTourStep,
     setTourHighlight,
     setHasCompletedTour,
-    activeView,
-  } = useLayoutStore();
+  } = useTourStore();
 
   const {
     selectedNodeId: storeSelectedNodeId,

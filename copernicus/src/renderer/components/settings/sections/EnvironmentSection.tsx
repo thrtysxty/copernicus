@@ -90,7 +90,7 @@ export const EnvironmentSection: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono">Environment & Toolchain</h2>
-          <p className="text-[10px] text-zinc-500 font-mono mt-1">Manage system binaries and IDE extensions.</p>
+          <p className="text-[11px] text-zinc-500 font-mono mt-1">Manage system binaries and IDE extensions.</p>
         </div>
         <button 
           onClick={scan}
@@ -107,7 +107,7 @@ export const EnvironmentSection: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-zinc-400">
             <Info size={14} />
-            <h3 className="text-[10px] uppercase font-bold tracking-wider">Runtime Versions</h3>
+            <h3 className="text-[11px] uppercase font-bold tracking-wider">Runtime Versions</h3>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -117,8 +117,8 @@ export const EnvironmentSection: React.FC = () => {
               { label: 'Platform', value: versions.platform },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between p-3 bg-zinc-900/30 border border-zinc-800 rounded-lg">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase font-mono">{label}</span>
-                <span className="text-[10px] font-mono text-copernicus-phosphor/80">{value || '—'}</span>
+                <span className="text-[11px] font-bold text-zinc-400 uppercase font-mono">{label}</span>
+                <span className="text-[11px] font-mono text-copernicus-phosphor/80">{value || '—'}</span>
               </div>
             ))}
           </div>
@@ -129,7 +129,7 @@ export const EnvironmentSection: React.FC = () => {
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-zinc-400">
           <Terminal size={14} />
-          <h3 className="text-[10px] uppercase font-bold tracking-wider">Core Toolchain</h3>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider">Core Toolchain</h3>
         </div>
         <div className="grid grid-cols-1 gap-2">
           {data && Object.entries(data.toolchain ?? {}).map(([bin, status]) => (
@@ -140,13 +140,13 @@ export const EnvironmentSection: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-[11px] font-bold text-zinc-200 uppercase font-mono">{bin}</div>
-                  <div className="text-[9px] text-zinc-500 font-mono">{status.version || 'Binary not found in PATH'}</div>
+                  <div className="text-[11px] text-zinc-500 font-mono">{status.version || 'Binary not found in PATH'}</div>
                 </div>
               </div>
               {!status.found && (
                 <button 
                   onClick={() => addToast(`Manual installation required for ${bin}`, 'info')}
-                  className="px-2 py-1 text-[8px] font-bold uppercase border border-zinc-700 rounded text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="px-2 py-1 text-[11px] font-bold uppercase border border-zinc-700 rounded text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
                   Manual Fix
                 </button>
@@ -160,7 +160,7 @@ export const EnvironmentSection: React.FC = () => {
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-zinc-400">
           <Package size={14} />
-          <h3 className="text-[10px] uppercase font-bold tracking-wider">IDE Capabilities</h3>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider">IDE Capabilities</h3>
         </div>
         <div className="grid grid-cols-1 gap-3">
           <ExtensionCard 
@@ -214,19 +214,19 @@ const ExtensionCard = ({ id, name, description, status, installCmd, busy, onInst
         <div className="flex items-center gap-2">
           <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono">{name}</h4>
           {status?.installed ? (
-            <span className="text-[8px] px-1 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase font-mono">Active</span>
+            <span className="text-[11px] px-1 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase font-mono">Active</span>
           ) : (
-            <span className="text-[8px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-500 font-bold uppercase font-mono">Optional</span>
+            <span className="text-[11px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-500 font-bold uppercase font-mono">Optional</span>
           )}
         </div>
-        <p className="text-[10px] text-zinc-500 mt-0.5">{description}</p>
+        <p className="text-[11px] text-zinc-500 mt-0.5">{description}</p>
       </div>
     </div>
     
     <button
       onClick={() => onInstall(id, name, installCmd)}
       disabled={status?.installed || busy}
-      className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase transition-all flex items-center gap-2 ${
+      className={`px-3 py-1.5 rounded text-[11px] font-bold uppercase transition-all flex items-center gap-2 ${
         status?.installed 
           ? 'bg-transparent text-zinc-600 cursor-default' 
           : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:border-copernicus-phosphor hover:text-copernicus-phosphor font-mono'

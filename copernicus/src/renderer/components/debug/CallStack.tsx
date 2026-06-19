@@ -1,14 +1,14 @@
 import { useDebugStore } from '../../store/debug'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 
 export function CallStack() {
   const callStack = useDebugStore(s => s.callStack)
   const isPaused = useDebugStore(s => s.isPaused)
-  const setActiveFile = useLayoutStore(s => s.setActiveFile)
-  const openFile = useLayoutStore(s => s.openFile)
-  const setEditorFocusLine = useLayoutStore(s => s.setEditorFocusLine)
+  const setActiveFile = useWorkspaceStore(s => s.setActiveFile)
+  const openFile = useWorkspaceStore(s => s.openFile)
+  const setEditorFocusLine = useWorkspaceStore(s => s.setEditorFocusLine)
   const invoke = useIpcError()
   const setScopes = useDebugStore(s => s.setScopes)
   const clearVariables = useDebugStore(s => s.clearVariables)

@@ -38,11 +38,12 @@ export const RagSection: React.FC = () => {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const settings = await invoke<any>('settings:load')
+        const res = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+        const settings = unwrapIpc<SettingsLoadResponse>(res)
         if (settings) {
-          if (settings.ragBudget) setBudget(settings.ragBudget)
-          if (settings.ragChunkLimit) setChunkLimit(settings.ragChunkLimit)
-          if (settings.ragSummariseEnabled !== undefined) setSummariseEnabled(settings.ragSummariseEnabled)
+          if (typeof settings.ragBudget === 'number') setBudget(settings.ragBudget)
+          if (typeof settings.ragChunkLimit === 'number') setChunkLimit(settings.ragChunkLimit)
+          if (typeof settings.ragSummariseEnabled === 'boolean') setSummariseEnabled(settings.ragSummariseEnabled)
         }
       } catch (err) {
         log.error('Failed to load RAG settings', err)
@@ -72,7 +73,7 @@ export const RagSection: React.FC = () => {
     setBenchmarkResult(null)
 
     try {
-      const res = await invoke('codebase:run-benchmark') as any
+      const res = await invoke<IpcResult<BenchmarkResult>>('codebase:run-benchmark')
       const data = unwrapIpc<BenchmarkResult>(res)
       if (data) {
         setBenchmarkResult(data)
@@ -84,7 +85,7 @@ export const RagSection: React.FC = () => {
     }
   }
 
-  if (loading) return <div className="text-[10px] font-mono text-zinc-500 animate-pulse">LOADING_RAG_CONFIG...</div>
+  if (loading) return <div className="text-[11px] font-mono text-zinc-500 animate-pulse">LOADING_RAG_CONFIG...</div>
 
   return (
     <div className="space-y-10 animate-in fade-in duration-300">
@@ -94,7 +95,7 @@ export const RagSection: React.FC = () => {
             <Search size={16} className="text-copernicus-phosphor" />
             RAG Tuning
           </h2>
-          <p className="text-[10px] text-zinc-500 font-mono mt-1">Configure how codebase context is retrieved and injected.</p>
+          <p className="text-[11px] text-zinc-500 font-mono mt-1">Configure how codebase context is retrieved and injected.</p>
         </div>
 
         <div className="space-y-4">
@@ -110,12 +111,12 @@ export const RagSection: React.FC = () => {
                   type="number"
                   value={budget}
                   onChange={(e) => setBudget(parseInt(e.target.value, 10))}
-                  className="w-20 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[10px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
+                  className="w-20 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[11px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
                 />
-                <span className="text-[9px] font-mono text-zinc-600 uppercase">tokens</span>
+                <span className="text-[11px] font-mono text-zinc-600 uppercase">tokens</span>
               </div>
             </div>
-            <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
+            <p className="text-[11px] text-zinc-500 font-mono leading-relaxed">
               Maximum total tokens allowed for RAG context injection. Results exceeding this budget will be dropped based on relevance.
             </p>
           </div>
@@ -132,12 +133,12 @@ export const RagSection: React.FC = () => {
                   type="number"
                   value={chunkLimit}
                   onChange={(e) => setChunkLimit(parseInt(e.target.value, 10))}
-                  className="w-20 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[10px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
+                  className="w-20 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[11px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
                 />
-                <span className="text-[9px] font-mono text-zinc-600 uppercase">tokens</span>
+                <span className="text-[11px] font-mono text-zinc-600 uppercase">tokens</span>
               </div>
             </div>
-            <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
+            <p className="text-[11px] text-zinc-500 font-mono leading-relaxed">
               Chunks larger than this will be automatically summarized before injection to preserve budget.
             </p>
           </div>
@@ -149,7 +150,7 @@ export const RagSection: React.FC = () => {
                 <Zap size={14} className="text-zinc-500" />
                 <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">JIT Summarisation</label>
               </div>
-              <p className="text-[10px] text-zinc-500 font-mono">Enable automatic summarization for oversized codebase snippets.</p>
+              <p className="text-[11px] text-zinc-500 font-mono">Enable automatic summarization for oversized codebase snippets.</p>
             </div>
             <button
               onClick={() => setSummariseEnabled(!summariseEnabled)}
@@ -161,7 +162,7 @@ export const RagSection: React.FC = () => {
 
           <button
             onClick={handleSave}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-copernicus-phosphor text-[#050505] rounded-none text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-90 transition-opacity"
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-copernicus-phosphor text-[#050505] rounded-none text-[11px] font-bold uppercase tracking-[0.2em] hover:opacity-90 transition-opacity"
           >
             <Save size={14} />
             Save RAG Configuration
@@ -177,12 +178,12 @@ export const RagSection: React.FC = () => {
               <BarChart2 size={14} className="text-copernicus-phosphor" />
               Performance Benchmark
             </h3>
-            <p className="text-[10px] text-zinc-500 font-mono">Verify RAG quality across different retrieval modes.</p>
+            <p className="text-[11px] text-zinc-500 font-mono">Verify RAG quality across different retrieval modes.</p>
           </div>
           <button
             onClick={handleRunBenchmark}
             disabled={isBenchmarking}
-            className={`flex items-center gap-2 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+            className={`flex items-center gap-2 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
               isBenchmarking
                 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                 : 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border border-indigo-500/20 hover:border-indigo-500'

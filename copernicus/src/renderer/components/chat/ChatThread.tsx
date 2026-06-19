@@ -7,7 +7,7 @@ import { ChatMessage } from './ChatMessage'
 import { UIUpdateChip } from './UIUpdateChip'
 import { DiffViewer } from '../Editor/DiffViewer'
 import { useIpcError } from '../../hooks/useIpcError'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useUIBuilderStore } from '../../store/uiBuilderStore'
 
 
@@ -47,7 +47,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
   const [applied, setApplied] = useState(false)
   const [showDiff, setShowDiff] = useState(false)
   const [existingContent, setExistingContent] = useState('')
-  const { setCanvasContent } = useLayoutStore()
+  const { setCanvasContent } = useWorkspaceStore()
   const { setUIComponents } = useUIBuilderStore()
 
   useEffect(() => {
@@ -110,19 +110,19 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
   return (
     <div className="relative group my-2">
       <div className="flex items-center justify-between bg-[#1a1a1a] border border-copernicus-steel/50 rounded-t px-3 py-1">
-        <span className="text-[9px] text-zinc-500 uppercase">{language || 'code'}</span>
+        <span className="text-[11px] text-zinc-500 uppercase">{language || 'code'}</span>
         <div className="flex gap-2">
           {isWebCode && (
             <button
               onClick={handlePreview}
-              className="text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 transition-colors"
+              className="text-[11px] px-2 py-0.5 rounded font-mono uppercase tracking-wider bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 transition-colors"
             >
               Preview
             </button>
           )}
           <button
             onClick={handleApply}
-            className={`text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider transition-colors
+            className={`text-[11px] px-2 py-0.5 rounded font-mono uppercase tracking-wider transition-colors
               ${applied
                 ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor'
                 : 'bg-zinc-700 text-zinc-300 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor'
@@ -136,7 +136,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code, openFilePath, onA
         <code>{code}</code>
       </pre>
       {applyError && (
-        <div className="text-[10px] text-red-400 mt-1">{applyError}</div>
+        <div className="text-[11px] text-red-400 mt-1">{applyError}</div>
       )}
       {showDiff && (
         <DiffViewer
@@ -183,7 +183,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
     pendingSystemMessage, // Changed from pendingReviewSummary
     clearPendingSystemMessage, // Added
     setView, // Added
-  } = useLayoutStore()
+  } = useWorkspaceStore()
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -204,19 +204,19 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
     }
 
     return (
-      <div className="mx-4 mb-6 bg-zinc-900/50 border border-zinc-700/30 rounded p-3 text-[10px] font-mono">
+      <div className="mx-4 mb-6 bg-zinc-900/50 border border-zinc-700/30 rounded p-3 text-[11px] font-mono">
         <div className="text-zinc-300">✓ {summary}</div>
         <div className="text-zinc-500 mt-1">What changed: {changedFiles.join(', ')}</div>
         <div className="flex gap-2 mt-3">
           <button 
             onClick={() => setView('review')} 
-            className="px-2 py-0.5 text-[9px] border border-zinc-700 rounded hover:border-copernicus-phosphor text-zinc-400 hover:text-copernicus-phosphor"
+            className="px-2 py-0.5 text-[11px] border border-zinc-700 rounded hover:border-copernicus-phosphor text-zinc-400 hover:text-copernicus-phosphor"
           >
             View Diff →
           </button>
           <button 
             onClick={handleApprove} 
-            className="px-2 py-0.5 text-[9px] border border-zinc-700 rounded hover:border-copernicus-phosphor text-zinc-400 hover:text-copernicus-phosphor"
+            className="px-2 py-0.5 text-[11px] border border-zinc-700 rounded hover:border-copernicus-phosphor text-zinc-400 hover:text-copernicus-phosphor"
           >
             Approve →
           </button>
@@ -284,12 +284,12 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
                       // Dispatch to open article
                       window.dispatchEvent(new CustomEvent('kb:open-article', { detail: id }))
 
-                      useLayoutStore.getState().setView('knowledge-base')
+                      useWorkspaceStore.getState().setView('knowledge-base')
                       if (id) {
-                        useLayoutStore.getState().setActiveKbArticleId(id)
+                        useWorkspaceStore.getState().setActiveKbArticleId(id)
                       }
                     }}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-1 bg-transparent text-copernicus-phosphor hover:bg-copernicus-phosphor hover:text-[#050505] rounded-none border border-copernicus-phosphor transition-colors align-middle text-[10px] font-bold"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-1 bg-transparent text-copernicus-phosphor hover:bg-copernicus-phosphor hover:text-[#050505] rounded-none border border-copernicus-phosphor transition-colors align-middle text-[11px] font-bold"
                   >
                     <BookOpen size={10} />
                     {title}
@@ -303,7 +303,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
         {activeStoryId && msg?.role === 'assistant' && (
           <button
             onClick={() => handleSaveToStory(content)}
-            className="mt-2 flex items-center gap-1.5 text-[9px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase font-bold tracking-wider"
+            className="mt-2 flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase font-bold tracking-wider"
           >
             <Save size={10} /> Save to active story
           </button>
@@ -311,7 +311,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
         {msg?.showTourButton && (
           <button
             onClick={() => retakeTour()}
-            className="mt-3 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 bg-copernicus-phosphor text-[#050505] rounded-none hover:opacity-90 transition-opacity"
+            className="mt-3 text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 bg-copernicus-phosphor text-[#050505] rounded-none hover:opacity-90 transition-opacity"
           >
             Start Tour
           </button>
@@ -341,7 +341,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowModelPicker(!showModelPicker)}
-              className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 hover:text-white transition-colors uppercase tracking-wider"
+              className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-400 hover:text-white transition-colors uppercase tracking-wider"
             >
               <div className="w-1.5 h-1.5 rounded-full bg-copernicus-phosphor animate-pulse shadow-[0_0_5px_rgba(74,222,128,0.5)]" />
               {availableModels.find(m => m.id === model)?.name || 'Model'}
@@ -358,18 +358,18 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
                   
                   return (
                     <div key={provider}>
-                      <div className="px-3 py-1 text-[8px] uppercase tracking-widest text-zinc-500 bg-black/40 border-y border-copernicus-steel/50 mt-1 first:mt-0">
+                      <div className="px-3 py-1 text-[11px] uppercase tracking-widest text-zinc-500 bg-black/40 border-y border-copernicus-steel/50 mt-1 first:mt-0">
                         {provider}
                       </div>
                       {!isActive ? (
-                        <div className="px-3 py-1 text-[9px] text-zinc-600 italic">
+                        <div className="px-3 py-1 text-[11px] text-zinc-600 italic">
                           Configure in Settings
                         </div>
                       ) : (
                         pModels.map(m => (
                           <button
                             key={m.id}
-                            className={`w-full text-left px-3 py-1.5 text-[10px] hover:text-zinc-300 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor text-[#050505] rounded-none border-l-2 border-copernicus-phosphor' : 'border-l-2 border-transparent'}`}
+                            className={`w-full text-left px-3 py-1.5 text-[11px] hover:text-zinc-300 transition-colors flex flex-col ${model === m.id ? 'bg-copernicus-phosphor text-[#050505] rounded-none border-l-2 border-copernicus-phosphor' : 'border-l-2 border-transparent'}`}
                             onClick={() => {
                                 if (model !== m.id) {
                                   invoke('snapshot:save', { panel_id: 'chat', model_id: m.id, provider: m.provider, messages: messages.filter(msg => msg.role !== 'copernicus') }).catch(() => {})
@@ -379,7 +379,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
                             }}
                           >
                             <span className={model === m.id ? 'text-copernicus-phosphor' : 'text-zinc-300'}>{m.name}</span>
-                            <span className="text-[8px] text-zinc-600 uppercase">{m.contextWindow > 0 ? `${m.contextWindow.toLocaleString()} tokens` : '—'}</span>
+                            <span className="text-[11px] text-zinc-600 uppercase">{m.contextWindow > 0 ? `${m.contextWindow.toLocaleString()} tokens` : '—'}</span>
                           </button>
                         ))
                       )}
@@ -391,7 +391,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
           </div>
 
           {contextUpdate && (
-            <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-500 uppercase tracking-tight">
+            <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-500 uppercase tracking-tight">
               <span>{contextUpdate.usedTokens.toLocaleString()} / {contextUpdate.maxTokens.toLocaleString()} tokens</span>
             </div>
           )}
@@ -440,7 +440,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center opacity-20 grayscale grayscale-100">
             <Hash size={48} className="text-copernicus-phosphor mb-4" />
-            <div className="text-[10px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
+            <div className="text-[11px] uppercase tracking-[0.2em]">Awaiting_Strategic_Input</div>
           </div>
         ) : (
           <>
@@ -455,19 +455,19 @@ export const ChatThread: React.FC<ChatThreadProps> = ({
             ))}
             <ReviewSummaryCard />
             {pendingModelSwitch && (
-              <div className="mx-4 mb-2 p-2 bg-zinc-900 border border-amber-500/30 rounded text-[10px]">
+              <div className="mx-4 mb-2 p-2 bg-zinc-900 border border-amber-500/30 rounded text-[11px]">
                 <span className="text-amber-400 font-mono">Orchestrator → </span>
                 <span className="text-zinc-300">Use <strong>{pendingModelSwitch.model}</strong> for {pendingModelSwitch.reason}</span>
                 <div className="flex gap-2 mt-1.5">
                   <button
                     onClick={() => acceptModelSwitch(pendingModelSwitch)}
-                    className="px-2 py-0.5 bg-copernicus-phosphor text-[#050505] rounded-none text-[9px] font-bold"
+                    className="px-2 py-0.5 bg-copernicus-phosphor text-[#050505] rounded-none text-[11px] font-bold"
                   >
                     Accept
                   </button>
                   <button
                     onClick={() => rejectModelSwitch()}
-                    className="px-2 py-0.5 border border-zinc-700 text-zinc-500 rounded text-[9px]"
+                    className="px-2 py-0.5 border border-zinc-700 text-zinc-500 rounded text-[11px]"
                   >
                     Reject
                   </button>

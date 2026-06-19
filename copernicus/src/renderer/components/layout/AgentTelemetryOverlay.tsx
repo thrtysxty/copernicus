@@ -42,8 +42,8 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
   useEffect(() => {
     if (activeTab !== 'models') return
     setLoading(true)
-    invoke<ModelConfig[]>('models:list')
-      .then(r => setModels(unwrapIpc<ModelConfig[]>(r as any) ?? []))
+    invoke<IpcResult<ModelConfig[]>>('models:list')
+      .then(r => setModels(unwrapIpc<ModelConfig[]>(r) ?? []))
       .catch(() => setModels([]))
       .finally(() => setLoading(false))
   }, [activeTab, invoke])
@@ -139,12 +139,12 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
             ) : activityEntries.map(([agent, data]) => (
               <div key={agent} className="flex items-center justify-between px-2 py-1.5 hover:bg-white/5 rounded">
                 <div className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full ${(data as any).cost > 0 ? 'bg-copernicus-phosphor' : 'bg-zinc-600'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${data.cost > 0 ? 'bg-copernicus-phosphor' : 'bg-zinc-600'}`} />
                   <span className="text-[10px] text-zinc-300 capitalize">{agent}</span>
                 </div>
                 <div className="flex items-center gap-3 text-[9px] text-zinc-600 tabular-nums">
-                  <span>{((data as any).tokensIn + (data as any).tokensOut).toLocaleString()}t</span>
-                  <span className="text-copernicus-phosphor">${((data as any).cost ?? 0).toFixed(4)}</span>
+                  <span>{(data.tokensIn + data.tokensOut).toLocaleString()}t</span>
+                  <span className="text-copernicus-phosphor">${(data.cost ?? 0).toFixed(4)}</span>
                 </div>
               </div>
             ))}

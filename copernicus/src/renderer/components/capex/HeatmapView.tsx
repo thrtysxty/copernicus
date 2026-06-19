@@ -1,7 +1,7 @@
 import log from '../../utils/logger'
 import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { unwrapIpc } from '../../types/ipc'
 
 interface FileData {
@@ -14,7 +14,7 @@ interface FileData {
 
 export const HeatmapView: React.FC = () => {
   const invoke = useIpcError()
-  const openFile = useLayoutStore(s => s.openFile)
+  const openFile = useWorkspaceStore(s => s.openFile)
   const [files, setFiles] = useState<FileData[]>([])
   const [showErrors, setShowErrors] = useState(true)
   const [showChurn, setShowChurn] = useState(true)

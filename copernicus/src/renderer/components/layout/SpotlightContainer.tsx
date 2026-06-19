@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { Sidebar, Terminal, Layout } from 'lucide-react'
 
 interface SpotlightContainerProps {
@@ -10,7 +10,7 @@ interface SpotlightContainerProps {
 }
 
 export const SpotlightContainer: React.FC<SpotlightContainerProps> = ({ sidebar, center, right }) => {
-  const { spotlightPane, setSpotlight } = useLayoutStore()
+  const { spotlightPane, setSpotlight } = useWorkspaceStore()
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -98,7 +98,7 @@ const CollapsedPaneIcon = ({ icon, label, onClick }: { icon: React.ReactNode, la
   >
     <div className="text-copernicus-phosphor mb-2">{icon}</div>
     <div
-      className="text-[10px] text-zinc-500 uppercase tracking-widest whitespace-nowrap"
+      className="text-[11px] text-zinc-500 uppercase tracking-widest whitespace-nowrap"
       style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
     >
       {label}

@@ -1,3 +1,18 @@
+---
+title: 'story_736: DMG Build Gate'
+status: READY
+priority: P1
+type: Unknown
+epic: null
+assigned_to: (unassigned)
+workflow_id: (none)
+date: ''
+flagged: false
+blocked_by: []
+blocks:
+  - story_737
+--- 
+
 # story_736: DMG Build Gate
 
 **Status:** READY

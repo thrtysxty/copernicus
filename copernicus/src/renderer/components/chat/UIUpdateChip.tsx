@@ -8,11 +8,11 @@ export const UIUpdateChip: React.FC = () => {
         <Layout size={14} />
       </div>
       <div>
-        <div className="text-[10px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-1.5">
+        <div className="text-[11px] font-bold text-green-400 uppercase tracking-widest flex items-center gap-1.5">
           UI Component Tree Updated
           <CheckCircle2 size={10} />
         </div>
-        <p className="text-[9px] text-zinc-500 font-mono">The visual builder has been synchronised with agent suggestions.</p>
+        <p className="text-[11px] text-zinc-500 font-mono">The visual builder has been synchronised with agent suggestions.</p>
       </div>
     </div>
   )

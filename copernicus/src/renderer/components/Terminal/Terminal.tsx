@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import { useLayoutStore } from '../../store/layout';
+import { useWorkspaceStore } from '../../store/layout';
 import { useIpcError } from '../../hooks/useIpcError';
 
 const ipcRenderer = window.ipcRenderer;
@@ -18,8 +18,8 @@ export const Terminal: React.FC<TerminalProps> = ({ id, className, active = true
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const setTerminalBusy = useLayoutStore(s => s.setTerminalBusy);
-  const setTerminalCwd = useLayoutStore(s => s.setTerminalCwd);
+  const setTerminalBusy = useWorkspaceStore(s => s.setTerminalBusy);
+  const setTerminalCwd = useWorkspaceStore(s => s.setTerminalCwd);
   const busyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const openedRef = useRef(false);
   const tryOpenRef = useRef<(() => void) | null>(null);

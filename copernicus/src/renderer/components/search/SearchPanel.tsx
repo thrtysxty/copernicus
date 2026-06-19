@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, CaseSensitive, WholeWord, Regex, FileCode, SearchCode } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { IpcResult, unwrapIpc } from '../../types/ipc'
 
@@ -29,7 +29,7 @@ export const SearchPanel: React.FC = () => {
   const [replace, setReplace] = useState('')
   
   const invoke = useIpcError()
-  const openFile = useLayoutStore(s => s.openFile)
+  const openFile = useWorkspaceStore(s => s.openFile)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {

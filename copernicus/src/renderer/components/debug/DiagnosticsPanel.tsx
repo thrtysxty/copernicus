@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { AlertCircle, AlertTriangle, Info, Play, Loader2, FileText, ShieldAlert } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { unwrapIpc } from '../../types/ipc'
 import { useDiagnosticsStore, DiagnosticsIssue } from '../../store/diagnostics'
@@ -14,9 +14,9 @@ export const DiagnosticsPanel: React.FC = () => {
   const setDiagnostics = useDiagnosticsStore(s => s.setDiagnostics)
   
   const invoke = useIpcError()
-  const openFile = useLayoutStore(s => s.openFile)
-  const setDiagnosticErrorCount = useLayoutStore(s => s.setDiagnosticErrorCount)
-  const pendingReview = useLayoutStore(s => s.pendingReview)
+  const openFile = useWorkspaceStore(s => s.openFile)
+  const setDiagnosticErrorCount = useWorkspaceStore(s => s.setDiagnosticErrorCount)
+  const pendingReview = useWorkspaceStore(s => s.pendingReview)
 
   // Combined error count for badge (from layout store)
   useEffect(() => {

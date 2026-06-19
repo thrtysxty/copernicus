@@ -3,12 +3,13 @@ import React, { useEffect, useState, useRef } from 'react'
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen,
          Image as ImageIcon, Database, Maximize2, Minimize2, RotateCcw, ChevronLeft, BookOpen } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
 import { unwrapIpc } from '../../types/ipc'
 import { FileTreeContextMenu, ContextMenuProps } from './FileTreeContextMenu'
 import { LspStatusPopover } from './LspStatusPopover'
 import { NbLmTreeView } from './NbLmTreeView'
+import { Skeleton } from '../common/Skeleton'
 
 const LANGUAGE_MAP: Record<string, string> = {
   ts: 'typescript', tsx: 'typescript',
@@ -52,7 +53,7 @@ interface FileTreeNodeProps {
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu, onRefreshNeeded }) => {
   const invoke = useIpcError()
-  const { setCenterMode, openFile, setActiveFileContent, setActiveFileLanguage } = useLayoutStore()
+  const { setCenterMode, openFile, setActiveFileContent, setActiveFileLanguage } = useWorkspaceStore()
   const [expanded, setExpanded] = useState(false)
   const [children, setChildren] = useState<FileNode[]>([])
   const [isEditing, setIsEditing] = useState(false)
@@ -95,7 +96,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu,
     openFile(node.path)
 
     if (classification === 'canvas' || classification === 'svg') {
-      const { setView } = useLayoutStore.getState()
+      const { setView } = useWorkspaceStore.getState()
       setView('designer')
       setCenterMode('canvas')
       setActiveFileContent('')
@@ -107,7 +108,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu,
     } else {
       setCenterMode('code')
       // Un-flip center-panel if it's showing the canvas back face
-      const { flippedPanes, toggleFlip } = useLayoutStore.getState()
+      const { flippedPanes, toggleFlip } = useWorkspaceStore.getState()
       if (flippedPanes.includes('center-panel')) toggleFlip('center-panel')
       try {
         const result = await invoke<any>('fs:read-file', node.path)
@@ -157,7 +158,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({ node, depth, onContextMenu,
       onRefreshNeeded()
       
       // If we just renamed an open file, we should update the openFilePath
-      const layoutState = useLayoutStore.getState();
+      const layoutState = useWorkspaceStore.getState();
       if (layoutState.activeFilePath === node.path) {
          layoutState.openFile(newPath)
       }
@@ -233,14 +234,15 @@ interface FileTreeProps {
 
 export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   const invoke = useIpcError()
-  const { spotlightPane, setSpotlight, toggleFlip, setSidebarOpen, openFile, setCenterMode, setActiveFileContent, setActiveFileLanguage } = useLayoutStore()
+  const { spotlightPane, setSpotlight, toggleFlip, setSidebarOpen, openFile, setCenterMode, setActiveFileContent, setActiveFileLanguage } = useWorkspaceStore()
   const [rootChildren, setRootChildren] = useState<FileNode[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [lspRunning, setLspRunning] = useState(false)
   const [lspPopoverOpen, setLspPopoverOpen] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuProps | null>(null)
   const [nbLmOpen, setNbLmOpen] = useState(false)
   
-  const activeFileLanguage = useLayoutStore(s => s.activeFileLanguage)
+  const activeFileLanguage = useWorkspaceStore(s => s.activeFileLanguage)
   const [activeModelIdState, setActiveModelIdState] = useState<string | null>(null)
 
   const [creatingItem, setCreatingItem] = useState<{type: 'file' | 'folder', path: string} | null>(null)
@@ -278,6 +280,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
 
   const loadRoot = async () => {
     if (!rootPath) return
+    setIsLoading(true)
     try {
       const result = await invoke<any>('fs:list-dir', rootPath)
       const data = unwrapIpc<FileNode[]>(result)
@@ -286,6 +289,8 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
       }
     } catch (err) {
       log.error(err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -401,7 +406,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
   }
 
   if (!rootPath) {
-    return <div className="text-zinc-600 text-xs p-2 italic">Loading...</div>
+    return <div className="text-zinc-600 text-xs p-2 italic">No root path provided.</div>
   }
 
   return (
@@ -411,7 +416,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
     >
       <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/tree">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Explorer</span>
           <div className="relative">
             <button
               onClick={() => setLspPopoverOpen(v => !v)}
@@ -486,15 +491,26 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
               </div>
             )}
 
-            {rootChildren.map(node => (
-              <FileTreeNode
-                key={node.path}
-                node={node}
-                depth={0}
-                onContextMenu={handleContextMenu}
-                onRefreshNeeded={loadRoot}
-              />
-            ))}
+            {isLoading ? (
+              <div className="p-1 space-y-1">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-1 px-1 py-[2px] ml-[4px]">
+                    <Skeleton width={14} height={14} rounded="sm" />
+                    <Skeleton width={`${Math.floor(Math.random() * 60) + 40}%`} height={12} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              rootChildren.map(node => (
+                <FileTreeNode
+                  key={node.path}
+                  node={node}
+                  depth={0}
+                  onContextMenu={handleContextMenu}
+                  onRefreshNeeded={loadRoot}
+                />
+              ))
+            )}
           </div>
 
           {/* Right Slot: NbLm Context Tree */}

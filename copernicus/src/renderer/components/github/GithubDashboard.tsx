@@ -53,18 +53,18 @@ export const GithubDashboard: React.FC = () => {
     setLoading(true);
     try {
       const [_rawUser, _rawRepos, _rawTrust, _rawTarget] = await Promise.all([
-        invoke<any>('github:user'),
-        invoke<any>('github:list-repos'),
-        invoke<any>('github:get-trust-list'),
-        invoke<any>('github:get-target-repo'),
+        invoke<IpcResult<User>>('github:user'),
+        invoke<IpcResult<Repo[]>>('github:list-repos'),
+        invoke<IpcResult<TrustList>>('github:get-trust-list'),
+        invoke<IpcResult<string>>('github:get-target-repo'),
       ]);
-      const userData: User = unwrapIpc<any>(_rawUser);
-      const reposData: Repo[] = unwrapIpc<any>(_rawRepos);
-      const trustData: TrustList = unwrapIpc<any>(_rawTrust);
+      const userData: User = unwrapIpc<User>(_rawUser);
+      const reposData: Repo[] = unwrapIpc<Repo[]>(_rawRepos);
+      const trustData: TrustList = unwrapIpc<TrustList>(_rawTrust);
       setUser(userData);
       setRepos(Array.isArray(reposData) ? reposData : []);
       setTrustList(trustData ?? { trusted: [], tracked: [] });
-      setTargetRepo(unwrapIpc<any>(_rawTarget));
+      setTargetRepo(unwrapIpc<string>(_rawTarget));
     } catch (error) {
       log.error('Failed to fetch GitHub data:', error);
     } finally {
@@ -105,8 +105,8 @@ export const GithubDashboard: React.FC = () => {
   const handleAddRepo = async () => {
     if (!addRepoInput.trim()) return;
     try {
-      const _rawAdd = await invoke<any>('github:add-repo', addRepoInput.trim());
-      const result: { tracked: string[] } = unwrapIpc<any>(_rawAdd);
+      const _rawAdd = await invoke<IpcResult<{ tracked: string[] }>>('github:add-repo', addRepoInput.trim());
+      const result = unwrapIpc<{ tracked: string[] }>(_rawAdd);
       setTrustList(prev => ({ ...prev, tracked: result?.tracked ?? [...prev.tracked, addRepoInput.trim()] }));
       setAddRepoInput('');
       addToast(`${addRepoInput.trim()} added to tracked repos`, 'success');
@@ -131,8 +131,8 @@ export const GithubDashboard: React.FC = () => {
   
   const handleSetTarget = async (repoFullName: string) => {
     try {
-      const result = await invoke<any>('github:set-target-repo', repoFullName);
-      if (result && (result as any).ok) {
+      const result = await invoke<IpcResult<boolean>>('github:set-target-repo', repoFullName);
+      if (unwrapIpc<boolean>(result)) {
         setTargetRepo(repoFullName);
         addToast(`Target set to ${repoFullName}`, 'success');
       }

@@ -105,8 +105,8 @@ export const useQueueStore = create<QueueState>()(
 
 // AC3: Auto-dispatch notification
 // We need to subscribe to 'stories:status-changed'
-if (typeof window !== 'undefined' && (window as any).ipcRenderer) {
-  (window as any).ipcRenderer.on('stories:status-changed', (_e: any, data: { storyNumber: number, status: string }) => {
+if (typeof window !== 'undefined' && window.ipcRenderer) {
+  window.ipcRenderer.on('stories:status-changed', (_e: Electron.IpcRendererEvent, data: { storyNumber: number, status: string }) => {
     if (data.status === 'COMPLETE') {
       useQueueStore.getState().markDone(data.storyNumber)
     }

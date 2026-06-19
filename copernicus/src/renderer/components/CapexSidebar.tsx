@@ -26,13 +26,13 @@ export function CapexSidebar() {
   return (
     <div className="flex flex-col h-full bg-copernicus-bg text-zinc-400 p-2 text-xs font-mono">
         <div className="mb-4 border-b border-copernicus-steel pb-2">
-            <h3 className="text-[10px] uppercase text-copernicus-phosphor tracking-widest mb-2 font-bold italic">CapEx_Analytics</h3>
+            <h3 className="text-[11px] uppercase text-copernicus-phosphor tracking-widest mb-2 font-bold italic">CapEx_Analytics</h3>
             <div className="flex justify-between items-center mb-2">
                 <input
                     type="month"
                     value={month}
                     onChange={e => setMonth(e.target.value)}
-                    className="bg-[#080808] border border-zinc-800 text-zinc-300 p-1 text-[10px] focus:border-copernicus-phosphor focus:outline-none"
+                    className="bg-[#080808] border border-zinc-800 text-zinc-300 p-1 text-[11px] focus:border-copernicus-phosphor focus:outline-none"
                 />
                 <span className="text-copernicus-phosphor font-bold">${totalValue.toFixed(2)}</span>
             </div>
@@ -42,23 +42,23 @@ export function CapexSidebar() {
             {report.map(session => (
                 <div key={session.id} className="p-2 border border-zinc-800 bg-[#080808] transition-colors hover:border-copernicus-phosphor/30">
                     <div className="flex justify-between mb-1">
-                        <span className="text-zinc-300 text-[10px]">{session.start_time.slice(0, 10)}</span>
-                        <span className="text-zinc-600 text-[9px]">{new Date(session.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <span className="text-zinc-300 text-[11px]">{session.start_time.slice(0, 10)}</span>
+                        <span className="text-zinc-600 text-[11px]">{new Date(session.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <div className="flex justify-between text-[10px] mb-1">
+                    <div className="flex justify-between text-[11px] mb-1">
                         <span className="text-zinc-500">{session.component}</span>
                         <span className={session.capitalizable ? 'text-copernicus-phosphor' : 'text-zinc-600'}>
                              {session.capitalizable ? 'CAP' : 'EXP'}
                         </span>
                     </div>
-                    <div className="text-[10px] text-zinc-500 truncate italic">{session.description || 'No description'}</div>
-                     <div className="text-[10px] text-right font-mono text-copernicus-phosphor/80 mt-1">
+                    <div className="text-[11px] text-zinc-500 truncate italic">{session.description || 'No description'}</div>
+                     <div className="text-[11px] text-right font-mono text-copernicus-phosphor/80 mt-1">
                         +${session.value.toFixed(2)}
                     </div>
                 </div>
             ))}
             {report.length === 0 && (
-                <div className="text-center py-8 text-zinc-700 italic text-[10px]">No industrial records found</div>
+                <div className="text-center py-8 text-zinc-700 italic text-[11px]">No industrial records found</div>
             )}
         </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Check, ExternalLink } from 'lucide-react'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { useIpcError } from '../../hooks/useIpcError'
 import { IpcResult, unwrapIpc } from '../../types/ipc'
 import { BranchSelector } from './BranchSelector'
@@ -27,7 +27,7 @@ export const GitPanel: React.FC = () => {
   const [loading, setLoading] = useState(false)
   
   const invoke = useIpcError()
-  const openFile = useLayoutStore(s => s.openFile)
+  const openFile = useWorkspaceStore(s => s.openFile)
 
   const refresh = async () => {
     setLoading(true)
@@ -35,7 +35,7 @@ export const GitPanel: React.FC = () => {
       const s = await invoke<IpcResult<GitFile[]>>('git:status')
       const statusFiles = unwrapIpc(s) as GitFile[] ?? []
       setStatus(statusFiles)
-      useLayoutStore.getState().setGitDirty(statusFiles.length > 0)
+      useWorkspaceStore.getState().setGitDirty(statusFiles.length > 0)
       
       const p = await invoke<IpcResult<PullRequest[]>>('github:list-prs')
       setPrs(unwrapIpc(p) ?? [])

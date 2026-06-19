@@ -37,12 +37,13 @@ const EMBEDDING_PROVIDERS = [
   { provider: 'deepinfra',  model: 'BAAI/bge-large-en-v1.5', note: '' },
 ]
 
-interface PanelDefaults {
+interface ModelDefaults {
   chat: string
   workflow: string
   code: string
   embeddingProvider?: string
   embeddingPriority: string[]
+  [key: string]: unknown
 }
 
 export const ModelsSection: React.FC = () => {
@@ -50,7 +51,7 @@ export const ModelsSection: React.FC = () => {
   const addToast = useToastStore(s => s.addToast)
   const [options, setOptions] = useState<ModelOption[]>([])
   const [authStatus, setAuthStatus] = useState<AuthStatus[]>([])
-  const [defaults, setDefaults] = useState<PanelDefaults>({
+  const [defaults, setDefaults] = useState<ModelDefaults>({
     chat: '',
     workflow: '',
     code: '',
@@ -72,30 +73,34 @@ export const ModelsSection: React.FC = () => {
     setLoading(true)
     setError(false)
     try {
-      const [mCloud, mOllama, s, auth, providersRes] = await Promise.all([
-        invoke<Model[]>('models:list'),
-        invoke<{ ok: boolean, models: Model[] }>('models:list-ollama'),
-        invoke<SettingsLoadResponse>('settings:load'),
-        invoke<AuthStatus[]>('auth:status'),
-        invoke<{ ok: boolean, data?: any[] }>('providers:list')
+      const [mCloudRes, mOllamaRes, settingsRes, authRes, providersRes] = await Promise.all([
+        invoke<IpcResult<Model[]>>('models:list'),
+        invoke<IpcResult<{ ok: boolean, models: Model[] }>>('models:list-ollama'),
+        invoke<IpcResult<SettingsLoadResponse>>('settings:load'),
+        invoke<IpcResult<AuthStatus[]>>('auth:status'),
+        invoke<IpcResult<{ ok: boolean, data?: any[] }>>('providers:list')
       ])
 
+      const auth = unwrapIpc<AuthStatus[]>(authRes)
       if (Array.isArray(auth)) setAuthStatus(auth)
 
       const allModels: Model[] = []
 
-      // Load static models first
+      const mCloud = unwrapIpc<Model[]>(mCloudRes)
       if (Array.isArray(mCloud)) allModels.push(...mCloud)
+
+      const mOllama = unwrapIpc<{ ok: boolean, models: Model[] }>(mOllamaRes)
       if (mOllama?.ok && Array.isArray(mOllama.models)) allModels.push(...mOllama.models)
 
-      // Dynamic models from registry
-      if (providersRes.ok && Array.isArray(providersRes.data)) {
-        for (const provider of providersRes.data) {
+      const providers = unwrapIpc<{ ok: boolean, data?: any[] }>(providersRes)
+      if (providers.ok && Array.isArray(providers.data)) {
+        for (const provider of providers.data) {
           if (provider.hasKey && provider.supportsToolCalling) {
             try {
-              const res = await invoke<{ ok: boolean, data?: any[] }>('providers:list-models', provider.id)
-              if (res.ok && Array.isArray(res.data)) {
-                allModels.push(...res.data.map(m => ({
+              const res = await invoke<IpcResult<{ ok: boolean, data?: any[] }>>('providers:list-models', provider.id)
+              const modelData = unwrapIpc<{ ok: boolean, data?: any[] }>(res)
+              if (modelData.ok && Array.isArray(modelData.data)) {
+                allModels.push(...modelData.data.map(m => ({
                   id: m.id,
                   name: m.name,
                   provider: provider.id,
@@ -109,7 +114,6 @@ export const ModelsSection: React.FC = () => {
         }
       }
 
-      // Deduplicate options by value (provider:id) to prevent duplicate renders
       const optsMap = new Map<string, ModelOption>()
       for (const m of allModels) {
         const value = `${m.provider}:${m.id}`
@@ -120,17 +124,18 @@ export const ModelsSection: React.FC = () => {
       }
       setOptions(Array.from(optsMap.values()))
 
-      if (s?.modelDefaults) {
+      const settings = unwrapIpc<SettingsLoadResponse>(settingsRes)
+      if (settings?.modelDefaults) {
         setDefaults(prev => ({
           ...prev,
-          ...(s.modelDefaults as any)
+          ...(settings.modelDefaults as ModelDefaults)
         }))
       }
 
       const hasOpenRouter = auth?.find(a => a.provider === 'openrouter')?.hasKey
       if (hasOpenRouter) {
         setLoadingOpenRouter(true)
-        invoke('openrouter:list-models')
+        invoke<IpcResult<OpenRouterModel[]>>('openrouter:list-models')
           .then(raw => {
             const models = unwrapIpc<OpenRouterModel[]>(raw)
             setOpenRouterModels(models)
@@ -220,7 +225,7 @@ export const ModelsSection: React.FC = () => {
     <div className="space-y-8">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono">Model Configuration</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Set default intelligence engines for different IDE functions.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Set default intelligence engines for different IDE functions.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -249,8 +254,8 @@ export const ModelsSection: React.FC = () => {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-          <h3 className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Embedding Engine</h3>
-          <span className="text-[9px] text-zinc-600 font-mono italic">Source for codebase semantic indexing</span>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider text-zinc-500">Embedding Engine</h3>
+          <span className="text-[11px] text-zinc-600 font-mono italic">Source for codebase semantic indexing</span>
         </div>
         
         <div className="flex items-center justify-between p-4 bg-[#0F0F0F] border border-zinc-800 rounded-lg">
@@ -263,7 +268,7 @@ export const ModelsSection: React.FC = () => {
               {defaults.embeddingProvider?.startsWith('openai') && (
                 <div className="flex items-center gap-1 mt-0.5 text-zinc-500">
                   <Info size={10} />
-                  <span className="text-[9px]">Multiple models available via OpenAI</span>
+                  <span className="text-[11px]">Multiple models available via OpenAI</span>
                 </div>
               )}
             </div>
@@ -286,8 +291,8 @@ export const ModelsSection: React.FC = () => {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-          <h3 className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Embedding Priority</h3>
-          <span className="text-[9px] text-zinc-600 font-mono italic">Used for semantic search & indexing</span>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider text-zinc-500">Embedding Priority</h3>
+          <span className="text-[11px] text-zinc-600 font-mono italic">Used for semantic search & indexing</span>
         </div>
         <div className="space-y-2">
           {defaults.embeddingPriority.map((p, i) => (
@@ -316,8 +321,8 @@ export const ModelsSection: React.FC = () => {
       {authStatus.find(a => a.provider === 'openrouter')?.hasKey && (
         <section className="space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <h3 className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">OpenRouter Models</h3>
-            <span className="text-[9px] text-zinc-600 font-mono italic">Browse and copy model IDs</span>
+            <h3 className="text-[11px] uppercase font-bold tracking-wider text-zinc-500">OpenRouter Models</h3>
+            <span className="text-[11px] text-zinc-600 font-mono italic">Browse and copy model IDs</span>
           </div>
 
           <div className="bg-[#0F0F0F] border border-zinc-800 rounded-lg overflow-hidden flex flex-col">
@@ -338,7 +343,7 @@ export const ModelsSection: React.FC = () => {
                   <div className="w-5 h-5 border-2 border-copernicus-phosphor border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : errorOpenRouter ? (
-                <div className="p-4 text-center text-[10px] text-red-400 font-mono">Could not fetch models</div>
+                <div className="p-4 text-center text-[11px] text-red-400 font-mono">Could not fetch models</div>
               ) : (
                 <div className="divide-y divide-zinc-800/50">
                   {openRouterModels
@@ -348,11 +353,11 @@ export const ModelsSection: React.FC = () => {
                         <div className="min-w-0 pr-4">
                           <div className="text-xs font-bold text-zinc-300 truncate">{m.name}</div>
                           <div className="flex items-center gap-3 mt-1">
-                            <div className="text-[9px] text-zinc-500 font-mono truncate">{m.id}</div>
-                            <div className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400 flex-shrink-0">
+                            <div className="text-[11px] text-zinc-500 font-mono truncate">{m.id}</div>
+                            <div className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400 flex-shrink-0">
                               {Math.round(m.contextLength / 1000)}K
                             </div>
-                            <div className="text-[9px] text-zinc-600 flex-shrink-0">
+                            <div className="text-[11px] text-zinc-600 flex-shrink-0">
                               ${(m.pricing?.prompt * 1000000 || 0).toFixed(2)} / ${(m.pricing?.completion * 1000000 || 0).toFixed(2)} per 1M
                             </div>
                           </div>
@@ -370,7 +375,7 @@ export const ModelsSection: React.FC = () => {
                       </div>
                     ))}
                   {openRouterModels.length > 0 && openRouterModels.filter(m => m.name.toLowerCase().includes(openRouterSearch.toLowerCase()) || m.id.toLowerCase().includes(openRouterSearch.toLowerCase())).length === 0 && (
-                    <div className="p-4 text-center text-[10px] text-zinc-500 font-mono">No models matching search</div>
+                    <div className="p-4 text-center text-[11px] text-zinc-500 font-mono">No models matching search</div>
                   )}
                 </div>
               )}

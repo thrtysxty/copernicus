@@ -538,7 +538,12 @@ export class WorkflowEngine {
         const projectId = rootPath ? (this.services.stateLedger.getProjectByPath(rootPath)?.id ?? 'default') : 'default';
         const bankId = `workflow:node:${node.id}`;
         let inputArgs = {};
-        try { inputArgs = JSON.parse(toolCall.function.arguments); } catch (e) {}
+        try {
+          inputArgs = JSON.parse(toolCall.function.arguments);
+        } catch (e) {
+          log.warn(`[WorkflowEngine] Failed to parse tool arguments for node ${node.id}:`, e);
+          inputArgs = {};
+        }
         const toolResult = await executor.execute(toolCall.function.name, inputArgs, { projectId, bankId });
         
         const followUpBody = {

@@ -35,25 +35,32 @@ export const TemplatesSection: React.FC = () => {
   const [body, setBody] = useState('')
 
   useEffect(() => {
-    invoke<SettingsLoadResponse>('settings:load').then(result => {
-      const s = result as any
-      if (s?.storyTemplates && s.storyTemplates.length > 0) {
-        setTemplates(s.storyTemplates)
-      } else {
-        // Seed from DEFAULT_TEMPLATES so all types are present
-        const initial: StoryTemplate[] = TEMPLATE_MANIFEST.map(t => {
-          const defaultTpl = DEFAULT_TEMPLATES.find(dt => dt.id === t.id)
-          return {
-            id: t.id,
-            name: t.label,
-            body: defaultTpl ? defaultTpl.body : DEFAULT_TEMPLATE,
-          }
-        })
-        setTemplates(initial)
-        invoke('settings:save', { storyTemplates: initial })
+    const init = async () => {
+      try {
+        const res = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+        const s = unwrapIpc<SettingsLoadResponse>(res)
+        if (s?.storyTemplates && Array.isArray(s.storyTemplates) && s.storyTemplates.length > 0) {
+          setTemplates(s.storyTemplates as StoryTemplate[])
+        } else {
+          // Seed from DEFAULT_TEMPLATES so all types are present
+          const initial: StoryTemplate[] = TEMPLATE_MANIFEST.map(t => {
+            const defaultTpl = DEFAULT_TEMPLATES.find(dt => dt.id === t.id)
+            return {
+              id: t.id,
+              name: t.label,
+              body: defaultTpl ? defaultTpl.body : DEFAULT_TEMPLATE,
+            }
+          })
+          setTemplates(initial)
+          await invoke('settings:save', { storyTemplates: initial })
+        }
+      } catch (e) {
+        log.error('Failed to load templates', e)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+    init()
   }, [invoke])
 
   const handleSave = async (newTemplates: StoryTemplate[]) => {

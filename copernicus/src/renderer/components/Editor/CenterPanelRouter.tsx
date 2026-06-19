@@ -7,7 +7,7 @@ import { BinaryBlocker } from './BinaryBlocker'
 import { UIBuilderCanvas } from './ui-builder/UIBuilderCanvas'
 import DiffPanel from './DiffPanel'
 import { ContentPreview } from './ContentPreview'
-import { useLayoutStore } from '../../store/layout'
+import { useWorkspaceStore } from '../../store/layout'
 import { classifyFile } from '../../utils/fileUtils'
 import { useIpcError } from '../../hooks/useIpcError'
 import { SharedPanelHeader } from '../layout/SharedPanelHeader'
@@ -84,7 +84,7 @@ function CenterPanelHeader({
     setActiveFileContent, setActiveFileLanguage, setCenterMode,
     spotlightPane, setSpotlight, toggleFlip, activeView, activeStoryId,
     setStitchImportOpen, setStitchVerifyOpen
-  } = useLayoutStore()
+  } = useWorkspaceStore()
   const invoke = useIpcError()
   const monacoInstance = useMonaco()
 
@@ -258,7 +258,7 @@ export function CenterPanelRouter({
   const [hasGhost, setHasGhost] = useState(false)
   const [ghostAction, setGhostAction] = useState<'accept' | 'reject' | null>(null)
 
-  const activeFilePathForReset = useLayoutStore(s => s.activeFilePath)
+  const activeFilePathForReset = useWorkspaceStore(s => s.activeFilePath)
   useEffect(() => {
     setGhostMode(false)
     setHasGhost(false)
@@ -286,7 +286,7 @@ export function CenterPanelRouter({
 
   const inputRef = useRef<HTMLInputElement>(null)
   const invoke = useIpcError()
-  const openFile = useLayoutStore(s => s.openFile)
+  const openFile = useWorkspaceStore(s => s.openFile)
 
 
   const handleSearch = useCallback(async () => {
@@ -331,7 +331,7 @@ export function CenterPanelRouter({
     activeFilePath, activeFileContent, activeFileLanguage,
     setActiveFileContent, browserSessionActive,
     reviewMode,
-  } = useLayoutStore()
+  } = useWorkspaceStore()
 
   const filePath = activeFilePath ?? propFilePath ?? null
   const language = activeFilePath ? activeFileLanguage : (propLanguage ?? 'typescript')

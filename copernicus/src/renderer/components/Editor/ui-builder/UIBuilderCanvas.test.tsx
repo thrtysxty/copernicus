@@ -2,11 +2,11 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { UIBuilderCanvas } from './UIBuilderCanvas'
-import { useLayoutStore } from '../../../store/layout'
+import { useWorkspaceStore } from '../../../store/layout'
 
 // Mock zustand stores
 vi.mock('../../../store/layout', () => ({
-  useLayoutStore: vi.fn(),
+  useWorkspaceStore: vi.fn(),
 }))
 vi.mock('../../../store/uiBuilderStore', () => ({
   useUIBuilderStore: vi.fn(),
@@ -30,8 +30,8 @@ describe('UIBuilderCanvas', () => {
     })
 
     // Setup basic store state
-    const useLayoutStoreMock = vi.mocked(useLayoutStore)
-    useLayoutStoreMock.mockReturnValue({
+    const useWorkspaceStoreMock = vi.mocked(useWorkspaceStore)
+    useWorkspaceStoreMock.mockReturnValue({
       stitchScreenId: null,
       setStitchScreenId: vi.fn(),
       activeFilePath: null,
@@ -59,8 +59,8 @@ describe('UIBuilderCanvas', () => {
       return { ok: true }
     })
 
-    const useLayoutStoreMock = vi.mocked(useLayoutStore)
-    useLayoutStoreMock.mockReturnValue({
+    const useWorkspaceStoreMock = vi.mocked(useWorkspaceStore)
+    useWorkspaceStoreMock.mockReturnValue({
       stitchScreenId: null,
       setStitchScreenId: vi.fn(),
       activeFilePath: null,
@@ -81,8 +81,8 @@ describe('UIBuilderCanvas', () => {
       return { ok: true }
     })
 
-    const useLayoutStoreMock = vi.mocked(useLayoutStore)
-    useLayoutStoreMock.mockReturnValue({
+    const useWorkspaceStoreMock = vi.mocked(useWorkspaceStore)
+    useWorkspaceStoreMock.mockReturnValue({
       stitchScreenId: 'screen-123',
       setStitchScreenId: vi.fn(),
       activeFilePath: null,

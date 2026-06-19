@@ -56,7 +56,7 @@ export function ContractProposalPanel() {
     fetchData();
 
     // Listen for live proposal events
-    const remove = (window as any).ipcRenderer.on('contract:proposal_ready', () => {
+    const remove = window.ipcRenderer.on('contract:proposal_ready', () => {
       fetchData();
     });
 

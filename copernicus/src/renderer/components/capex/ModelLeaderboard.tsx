@@ -25,8 +25,8 @@ export function ModelLeaderboard({ days }: { days: number | 'all' }) {
   useEffect(() => {
     let active = true
     invoke<IpcResult<LeaderboardRow[]>>('ledger:leaderboard', days).then(res => {
-      if (active && (res as any).ok && (res as any).data) {
-        setData(unwrapIpc<LeaderboardRow[]>(res as any))
+      if (active && res.ok && res.data) {
+        setData(unwrapIpc<LeaderboardRow[]>(res))
       }
     })
     return () => { active = false }

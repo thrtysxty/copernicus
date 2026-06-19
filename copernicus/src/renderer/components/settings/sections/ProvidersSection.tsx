@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { useLayoutStore } from '../../../store/layout'
+import { useWorkspaceStore } from '../../../store/layout'
 import { unwrapIpc } from '../../../types/ipc'
 import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
@@ -27,7 +27,7 @@ interface AuthStatus {
 export const ProvidersSection: React.FC = () => {
   const invoke = useIpcError()
   const addToast = useToastStore(s => s.addToast)
-  const setNotebooklmEnabled = useLayoutStore(s => s.setNotebooklmEnabled)
+  const setNotebooklmEnabled = useWorkspaceStore(s => s.setNotebooklmEnabled)
   const [status, setStatus] = useState<AuthStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [authInProgress, setAuthInProgress] = useState<string | null>(null)
@@ -57,7 +57,7 @@ export const ProvidersSection: React.FC = () => {
   const fetchStatus = async () => {
     try {
       // Reload providers.json
-      const reloadRes = await invoke<{ ok: boolean, count?: number, error?: string }>('providers:reload')
+      const reloadRes = await invoke<IpcResult<{ ok: boolean, count?: number, error?: string }>>('providers:reload')
       if (!reloadRes.ok) {
         // The envelope or IPC call itself failed
         setConfigError(reloadRes.error || 'Failed to reload config')
@@ -73,11 +73,12 @@ export const ProvidersSection: React.FC = () => {
         }
       }
 
-      const data = await invoke<AuthStatus[]>('auth:status')
-      if (Array.isArray(data)) {
-        setStatus(data)
+      const dataRes = await invoke<IpcResult<AuthStatus[]>>('auth:status')
+      const authData = unwrapIpc<AuthStatus[]>(dataRes)
+      if (Array.isArray(authData)) {
+        setStatus(authData)
         const urls: Record<string, string> = {}
-        data.forEach((s: AuthStatus) => {
+        authData.forEach((s: AuthStatus) => {
           if (s.baseUrl) urls[s.provider] = s.baseUrl
 
           if (s.type === 'cli') {
@@ -100,13 +101,14 @@ export const ProvidersSection: React.FC = () => {
 
       // The single source of truth for standard UI is CANONICAL_PROVIDERS.
       // We still support custom user-added providers from the API.
-      const providerListRes = await invoke<{ ok: boolean; data?: any[] }>('providers:list')
+      const providerListRes = await invoke<IpcResult<{ ok: boolean; data?: any[] }>>('providers:list')
       const dynamicProviders = providerListRes.ok && Array.isArray(providerListRes.data)
         ? providerListRes.data.map(p => p.id)
         : []
 
-      const settings = await invoke<any>('settings:load')
-      const savedOrder = (settings as any)?.providerOrder
+      const settingsRes = await invoke<IpcResult<SettingsLoadResponse>>('settings:load')
+      const settings = unwrapIpc<SettingsLoadResponse>(settingsRes)
+      const savedOrder = settings?.providerOrder as string[] | undefined
 
       // The full set is the canonical set + any custom providers that exist in DB
       const allProvidersSet = new Set([...CANONICAL_PROVIDERS, ...dynamicProviders])
@@ -121,7 +123,8 @@ export const ProvidersSection: React.FC = () => {
       }
 
       setNbChecking(true)
-      const nbStatus = await invoke<{ credentialsCached: boolean }>('notebooklm:status')
+      const nbStatusRes = await invoke<IpcResult<{ credentialsCached: boolean }>>('notebooklm:status')
+      const nbStatus = unwrapIpc<{ credentialsCached: boolean }>(nbStatusRes)
       if (nbStatus && typeof nbStatus === 'object') {
         setNbConnected(nbStatus.credentialsCached)
         setNotebooklmEnabled(nbStatus.credentialsCached)
@@ -149,9 +152,9 @@ export const ProvidersSection: React.FC = () => {
   const handleNotebookLMAction = async () => {
     if (nbConnected) {
       try {
-        const res = await invoke<{ ok: boolean, error?: string }>('notebooklm:list-notebooks')
+        const res = await invoke<IpcResult<{ ok: boolean, error?: string }>>('notebooklm:list-notebooks')
         if (!res.ok) throw new Error(res.error)
-        const modelsRes = await invoke<{ ok: boolean, error?: string }>('models:list')
+        const modelsRes = await invoke<IpcResult<{ ok: boolean, error?: string }>>('models:list')
         if (!modelsRes.ok) throw new Error(modelsRes.error)
         addToast('NotebookLM notebooks refreshed', 'success')
       } catch (e: unknown) {
@@ -160,13 +163,13 @@ export const ProvidersSection: React.FC = () => {
       }
     } else {
       try {
-        const setupRes = await invoke<{ ok: boolean, error?: string }>('notebooklm:setup')
+        const setupRes = await invoke<IpcResult<{ ok: boolean, error?: string }>>('notebooklm:setup')
         if (!setupRes.ok) throw new Error(setupRes.error)
         fetchStatus()
         addToast('NotebookLM setup complete', 'success')
-        const res = await invoke<{ ok: boolean, error?: string }>('notebooklm:list-notebooks')
+        const res = await invoke<IpcResult<{ ok: boolean, error?: string }>>('notebooklm:list-notebooks')
         if (!res.ok) throw new Error(res.error)
-        const modelsRes = await invoke<{ ok: boolean, error?: string }>('models:list')
+        const modelsRes = await invoke<IpcResult<{ ok: boolean, error?: string }>>('models:list')
         if (!modelsRes.ok) throw new Error(modelsRes.error)
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : String(e)
@@ -223,7 +226,7 @@ export const ProvidersSection: React.FC = () => {
   const handleOAuth = async (provider: string) => {
     setAuthInProgress(provider)
     try {
-      const data = await invoke<{ ok: boolean; error?: string }>(`oauth:start-${provider}`)
+      const data = await invoke<IpcResult<{ ok: boolean; error?: string }>>(`oauth:start-${provider}`)
       if (!data.ok) {
         setAuthInProgress(null)
         addToast(data.error || 'Auth failed', 'error')
@@ -290,7 +293,7 @@ export const ProvidersSection: React.FC = () => {
   }
 
   if (loading) return (
-    <div className="flex items-center gap-2 text-zinc-500 font-mono text-[10px] animate-pulse">
+    <div className="flex items-center gap-2 text-zinc-500 font-mono text-[11px] animate-pulse">
       <Loader2 size={12} className="animate-spin" />
       LOADING_AUTH_REGISTRY...
     </div>
@@ -303,17 +306,17 @@ export const ProvidersSection: React.FC = () => {
           <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono flex items-center gap-2">
             AI Provider Registry
             {configError && (
-              <span className="text-[10px] bg-red-950/50 text-red-400 px-2 py-0.5 rounded border border-red-900/50 flex items-center gap-1 font-sans capitalize tracking-normal">
+              <span className="text-[11px] bg-red-950/50 text-red-400 px-2 py-0.5 rounded border border-red-900/50 flex items-center gap-1 font-sans capitalize tracking-normal">
                 <ShieldCheck size={10} className="text-red-500" />
                 Config Error: {configError}
               </span>
             )}
           </h2>
-          <p className="text-[10px] text-zinc-500 font-mono mt-1">Manage API keys and local inference connectivity.</p>
+          <p className="text-[11px] text-zinc-500 font-mono mt-1">Manage API keys and local inference connectivity.</p>
         </div>
         <button 
           onClick={() => setShowAddCustom(!showAddCustom)}
-          className={`flex items-center gap-2 px-3 py-1.5 border rounded text-[10px] font-bold uppercase transition-colors ${
+          className={`flex items-center gap-2 px-3 py-1.5 border rounded text-[11px] font-bold uppercase transition-colors ${
             showAddCustom ? 'border-copernicus-phosphor text-copernicus-phosphor bg-copernicus-phosphor/5' : 'border-zinc-800 text-zinc-500 hover:border-zinc-600'
           }`}
         >
@@ -325,7 +328,7 @@ export const ProvidersSection: React.FC = () => {
         <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg space-y-4 animate-in fade-in slide-in-from-top-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Provider Name</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Provider Name</label>
               <input 
                 value={customName}
                 onChange={e => setCustomName(e.target.value)}
@@ -334,7 +337,7 @@ export const ProvidersSection: React.FC = () => {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Base URL (Optional)</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Base URL (Optional)</label>
               <input 
                 value={customUrl}
                 onChange={e => setCustomUrl(e.target.value)}
@@ -344,7 +347,7 @@ export const ProvidersSection: React.FC = () => {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[9px] text-zinc-500 uppercase font-bold">API Key</label>
+            <label className="text-[11px] text-zinc-500 uppercase font-bold">API Key</label>
             <input 
               type="password"
               value={customKey}
@@ -354,7 +357,7 @@ export const ProvidersSection: React.FC = () => {
           </div>
           <button 
             onClick={handleAddCustom}
-            className="w-full py-2 bg-copernicus-phosphor text-black rounded text-[10px] font-bold uppercase hover:bg-green-400 transition-colors"
+            className="w-full py-2 bg-copernicus-phosphor text-black rounded text-[11px] font-bold uppercase hover:bg-green-400 transition-colors"
           >
             Add Custom Provider
           </button>
@@ -399,13 +402,13 @@ export const ProvidersSection: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">{id}</h3>
                       {s?.hasKey && (
-                        <span className="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <span className="text-[11px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded flex items-center gap-1">
                           <ShieldCheck size={8} className="text-copernicus-phosphor" />
                           {s.source.toUpperCase()}
                         </span>
                       )}
                       {id === 'openrouter' && s?.hasKey && (
-                        <span className="text-[10px] text-zinc-500 font-mono ml-2">
+                        <span className="text-[11px] text-zinc-500 font-mono ml-2">
                           {openRouterCredits !== null ? `$${openRouterCredits.toFixed(2)} remaining` : '—'}
                         </span>
                       )}
@@ -418,7 +421,7 @@ export const ProvidersSection: React.FC = () => {
                     <button
                       onClick={() => handleOAuth(id)}
                       disabled={authInProgress === id}
-                      className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2"
+                      className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[11px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2"
                     >
                       {authInProgress === id ? <Loader2 size={10} className="animate-spin" /> : <RefreshCcw size={10} />}
                       Login with Browser
@@ -428,7 +431,7 @@ export const ProvidersSection: React.FC = () => {
                   {s?.hasKey && (
                     <button
                       onClick={() => handleRevoke(id)}
-                      className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase text-red-400/60 hover:text-red-400 hover:border-red-900/30 transition-all flex items-center gap-2"
+                      className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[11px] font-bold uppercase text-red-400/60 hover:text-red-400 hover:border-red-900/30 transition-all flex items-center gap-2"
                     >
                       <LogOut size={10} />
                       Revoke
@@ -436,7 +439,7 @@ export const ProvidersSection: React.FC = () => {
                   )}
 
                   {isOllama && (
-                    <div className={`px-2 py-0.5 rounded text-[9px] font-bold ${s?.hasKey ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>
+                    <div className={`px-2 py-0.5 rounded text-[11px] font-bold ${s?.hasKey ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>
                       {s?.hasKey ? 'DETECTED' : 'NOT_FOUND'}
                     </div>
                   )}
@@ -446,14 +449,14 @@ export const ProvidersSection: React.FC = () => {
               {/* Dynamic CLI Config Toggle */}
               {AUTH_CLI_CONFIGS[id] && (
                 <div className="mt-3 pt-3 border-t border-zinc-800/50 space-y-2">
-                  <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Connection Method</p>
+                  <p className="text-[11px] text-zinc-500 uppercase tracking-wider font-bold">Connection Method</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setProviderMethod(prev => ({ ...prev, [id]: 'cli' }))
                         setActiveCliWidget(id)
                       }}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase border transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold uppercase border transition-all ${
                         providerMethod[id] === 'cli'
                           ? 'border-copernicus-phosphor bg-copernicus-phosphor text-[#050505] rounded-none'
                           : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 rounded'
@@ -468,7 +471,7 @@ export const ProvidersSection: React.FC = () => {
                         setProviderMethod(prev => ({ ...prev, [id]: 'apikey' }))
                         setActiveCliWidget(null)
                       }}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-bold uppercase border transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold uppercase border transition-all ${
                         providerMethod[id] === 'apikey'
                           ? 'border-copernicus-phosphor bg-copernicus-phosphor text-[#050505] rounded-none'
                           : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 rounded'
@@ -512,7 +515,7 @@ export const ProvidersSection: React.FC = () => {
                     }}
                     onBlur={() => saveKey(id)}
                     placeholder={s?.hasKey ? 'API key stored — paste to replace' : (isOllamaCloud ? 'Bearer Token…' : 'Paste API key…')}
-                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[10px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
+                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[11px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
                   />
                 )}
                 {(isOllama || id === 'openrouter' || isOllamaCloud) && (
@@ -522,7 +525,7 @@ export const ProvidersSection: React.FC = () => {
                     onChange={e => setBaseUrlDraft(prev => ({ ...prev, [id]: e.target.value }))}
                     onBlur={() => saveBaseUrl(id)}
                     placeholder={isOllama ? 'http://localhost:11434' : (isOllamaCloud ? 'https://ollama.com' : 'https://openrouter.ai/api/v1')}
-                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[10px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
+                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-[11px] font-mono focus:border-copernicus-phosphor focus:outline-none w-full"
                   />
                 )}
               </div>
@@ -551,7 +554,7 @@ export const ProvidersSection: React.FC = () => {
             <button
               onClick={handleNotebookLMAction}
               disabled={nbChecking}
-              className={`px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-bold uppercase transition-all flex items-center gap-2 ${
+              className={`px-3 py-1 bg-zinc-900 border border-zinc-800 rounded text-[11px] font-bold uppercase transition-all flex items-center gap-2 ${
                 nbConnected ? 'text-zinc-400 hover:text-white hover:border-zinc-600' : 'text-zinc-400 hover:text-white hover:border-zinc-600'
               }`}
             >
@@ -570,7 +573,7 @@ export const ProvidersSection: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">{s.provider}</h3>
-                <p className="text-[10px] text-zinc-500 font-mono mt-0.5 truncate max-w-[300px]">
+                <p className="text-[11px] text-zinc-500 font-mono mt-0.5 truncate max-w-[300px]">
                   {s.baseUrl || 'No base URL'}
                 </p>
               </div>

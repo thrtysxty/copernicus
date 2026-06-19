@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import React from 'react'
 import App from './App'
-import { useLayoutStore } from './store/layout'
+import { useWorkspaceStore } from './store/layout'
 import * as useIpcErrorModule from './hooks/useIpcError'
 
 vi.mock('./store/layout', () => ({
-  useLayoutStore: vi.fn(),
+  useWorkspaceStore: vi.fn(),
   StoryboardView: {}
 }))
 
@@ -133,17 +133,17 @@ describe('App - Escape Key Handling', () => {
       setColumns: vi.fn()
     }
 
-    vi.mocked(useLayoutStore).mockImplementation((selector: any) => {
+    vi.mocked(useWorkspaceStore).mockImplementation((selector: any) => {
       return selector(defaultStoreState)
     })
-    ;(useLayoutStore as any).getState = vi.fn(() => defaultStoreState)
+    ;(useWorkspaceStore as any).getState = vi.fn(() => defaultStoreState)
   })
 
   it('closes intelligence view on escape', () => {
     // Override store state for this test
     const setViewMock = vi.fn()
-    vi.mocked(useLayoutStore).mockImplementation((selector: any) => {
-      return selector({ ...vi.mocked(useLayoutStore).getState(), activeView: 'intelligence', setView: setViewMock })
+    vi.mocked(useWorkspaceStore).mockImplementation((selector: any) => {
+      return selector({ ...vi.mocked(useWorkspaceStore).getState(), activeView: 'intelligence', setView: setViewMock })
     })
 
     render(<App />)
