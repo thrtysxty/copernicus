@@ -138,10 +138,23 @@
 
 ## Coverage Status
 
-**Frontend (vitest):** Running — result pending  
+**Frontend (vitest):** 
+- 38 test files executed
+- 2 files with 0 tests (memoryService.test.ts, fs-manager.test.ts - import/init issues)
+- 1 file failing (KanbanBoard.test.tsx - 5 tests, mock data not rendering)
+- Coverage output generated in `coverage/.tmp/` (52 files)
+
 **Backend (pytest):** Configured for 65% threshold — `make ci-coverage` fails (python not in PATH)
 
-**Action:** Need to run `make ci-coverage` with python available and record percentage.
+**Test Stability:**
+- 11 agent-driven view tests passing (Jun 19 run)
+- Critical path tests defined, pending full run
+- Screenshot tests: 23 tests for 48 screenshots (9 new views added)
+
+**Known Issues:**
+- `KanbanBoard.test.tsx`: Mock setup doesn't render story cards - test needs fixing
+- `memoryService.test.ts`: 0 tests - likely import issue
+- `fs-manager.test.ts`: 0 tests - likely import issue
 
 ---
 
