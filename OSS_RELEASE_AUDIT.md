@@ -69,7 +69,7 @@
 
 ## Screenshot Inventory
 
-**Total PNGs:** 39
+**Total PNGs:** 39 (48 expected after next `npm run docs:screenshots` run)
 
 | Category | Count | Files |
 |----------|-------|-------|
@@ -88,18 +88,24 @@
 | Studio/Engine | 2 | `studio-view.png`, `engine-room.png` |
 | Designer | 1 | `designer-canvas.png` |
 
-**Missing key views:**
-- [ ] Memory Browser (list view)
-- [ ] Intelligence Manager (NotebookLM section)
-- [ ] Hub (Org Chart, Contract Proposal, Ledger)
-- [ ] Test Explorer
-- [ ] Dependency Graph (Queue Panel)
+**New tests added (pending capture):**
+- `org-chart.png` (Hub)
+- `contract-proposal.png` (Hub)
+- `intelligence-manager.png`
+- `extensions-panel.png`
+- `output-view.png` (Diagnostics)
+- `knowledge-base.png`
+- `database-view.png`
+- `browser-panel.png`
+- `search-panel.png`
+
+**All views in ViewRouter now have screenshot tests.**
 
 ---
 
 ## E2E Test Inventory
 
-**Total test files:** 27
+**Total test files:** 28 (17 deterministic + 11 agent-driven)
 
 | File | Coverage | Status |
 |------|----------|--------|
@@ -117,7 +123,8 @@
 | `debug.test.ts` | Debug panel | ✅ |
 | `smoke.test.ts` | Smoke tests | ✅ |
 | `hub-ipc.test.ts` | Hub IPC handlers | ✅ |
-| `views/*.agent.test.ts` | 13 view-specific agent tests | ✅ Added in story/763 |
+| `screenshots.test.ts` | 23 screenshot captures | ✅ Added 9 new views |
+| `views/*.agent.test.ts` | 11 view-specific agent tests | ✅ Added in story/763 |
 
 **Missing tests:**
 - [ ] Semantic search E2E
