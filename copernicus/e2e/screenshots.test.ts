@@ -346,6 +346,69 @@ test.describe('Missing Views', () => {
     await window.waitForTimeout(SETTLE)
     await window.screenshot({ path: screenshotPath('intel-overlay'), fullPage: false })
   })
+
+  test('org-chart @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('org-chart')) return
+    await setView(app, 'hub:org-chart')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('org-chart'), fullPage: false })
+  })
+
+  test('contract-proposal @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('contract-proposal')) return
+    await setView(app, 'hub:contract-proposals')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('contract-proposal'), fullPage: false })
+  })
+
+  test('intelligence-manager @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('intelligence-manager')) return
+    await setView(app, 'intelligence')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('intelligence-manager'), fullPage: false })
+  })
+
+  test('extensions-panel @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('extensions-panel')) return
+    await setView(app, 'extensions')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('extensions-panel'), fullPage: false })
+  })
+
+  test('output-view @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('output-view')) return
+    await setView(app, 'diagnostics')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('output-view'), fullPage: false })
+  })
+
+  test('knowledge-base @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('knowledge-base')) return
+    await setView(app, 'knowledge-base')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('knowledge-base'), fullPage: false })
+  })
+
+  test('database-view @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('database-view')) return
+    await setView(app, 'database')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('database-view'), fullPage: false })
+  })
+
+  test('browser-panel @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('browser-panel')) return
+    await setView(app, 'browser')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('browser-panel'), fullPage: false })
+  })
+
+  test('search-panel @screenshot', async ({ app, window }) => {
+    if (!shouldCapture('search-panel')) return
+    await setView(app, 'search')
+    await window.waitForTimeout(SETTLE)
+    await window.screenshot({ path: screenshotPath('search-panel'), fullPage: false })
+  })
 })
 
 // ─── Status Bar ──────────────────────────────────────────────────────────────
