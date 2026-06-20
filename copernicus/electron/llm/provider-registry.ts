@@ -1,5 +1,4 @@
 // Story 626 — Provider Registry Abstraction
-// STUB: Full implementation delivered by Jules
 
 export interface ProviderDefinition {
   id: string;

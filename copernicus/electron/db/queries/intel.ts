@@ -1,4 +1,5 @@
 import type { Database } from 'libsql';
+import { randomUUID } from 'node:crypto';
 
 interface IntelDocRow {
   id: string;
@@ -82,7 +83,7 @@ export function createIntelDoc(db: Database, data: {
   pathScope?: string[];
   providers?: any[];
 }): any {
-  const id = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  const id = `doc_${Date.now()}_${randomUUID().replace(/-/g, '').substring(0, 11)}`;
   const ts = Date.now();
   const syncStatus = {};
 

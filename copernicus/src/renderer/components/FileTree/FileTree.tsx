@@ -496,7 +496,7 @@ export const FileTree: React.FC<FileTreeProps> = ({ rootPath }) => {
                 {Array.from({ length: 10 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-1 px-1 py-[2px] ml-[4px]">
                     <Skeleton width={14} height={14} rounded="sm" />
-                    <Skeleton width={`${Math.floor(Math.random() * 60) + 40}%`} height={12} />
+                    <Skeleton width={`${40 + ((i * 7) % 60)}%`} height={12} />
                   </div>
                 ))}
               </div>

@@ -1,4 +1,5 @@
 import type { Database } from 'libsql';
+import { randomUUID } from 'node:crypto';
 
 export function listRetroReports(db: Database, projectId: string): any[] {
   return db.prepare(`
@@ -35,7 +36,7 @@ export function createRetroReport(db: Database, data: {
     ts: number
   }[]
 }): string {
-  const id = `retro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const id = `retro_${Date.now()}_${randomUUID().replace(/-/g, '').substring(0, 9)}`;
 
   db.transaction(() => {
     db.prepare(`
@@ -60,7 +61,7 @@ export function createRetroReport(db: Database, data: {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       for (const item of data.items) {
-        const itemId = `ritem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const itemId = `ritem_${Date.now()}_${randomUUID().replace(/-/g, '').substring(0, 9)}`;
         insertItem.run(
           itemId,
           id,

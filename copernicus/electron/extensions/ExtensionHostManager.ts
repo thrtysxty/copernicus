@@ -8,6 +8,7 @@ import { CopernicusManifest, WorkflowNodeDefinition, TileDefinition, ProviderDef
 import { BrowserWindow } from 'electron'
 import { ExtensionRegistry } from './ExtensionRegistry'
 import { ApiCallRequestMessage, ApiCallResultMessage } from './ExtensionHostProtocol'
+import { randomUUID } from 'node:crypto'
 
 export class ExtensionHostManager extends EventEmitter {
   private child: ChildProcess | null = null
@@ -64,7 +65,7 @@ export class ExtensionHostManager extends EventEmitter {
         return
       }
 
-      const requestId = Math.random().toString(36).substring(7)
+      const requestId = randomUUID()
 
       const approved = await new Promise<boolean>((resolve) => {
         this.pendingApprovals.set(requestId, resolve)
