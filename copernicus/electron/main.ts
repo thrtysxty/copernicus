@@ -2,7 +2,7 @@ import { config } from './config'
 import { app, BrowserWindow, ipcMain, session, globalShortcut, Menu, MenuItemConstructorOptions } from 'electron'
 
 import path from 'node:path'
-import { spawn, ChildProcess, execFileSync } from 'node:child_process'
+import { spawn, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import log from 'electron-log'
@@ -47,9 +47,9 @@ import { registerTelemetryHandlers, registerSkillsHandlers } from './ipc/telemet
 
 import { registerAllIpcHandlers } from './ipc/register-all-handlers'
 import { ensureCopernicusDirectory, LOG_DIR } from './utils/app-setup'
-import { jsonlExporter } from './memory/jsonl-exporter'
 import { ExtensionHostManager } from './extensions/ExtensionHostManager'
 import { ExtensionRegistry } from './extensions/ExtensionRegistry'
+import { collectorProcess, startCollector, killCollector } from './telemetry'
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, '../public')
@@ -85,60 +85,6 @@ let ipcCleanupFns: {
   cleanupDebugHandlers: () => void
   cleanupWorktreeHandlers: () => void
 } | null = null
-
-let collectorProcess: ChildProcess | null = null;
-let exportInterval: NodeJS.Timeout | null = null;
-let storyWatcher: NodeJS.Timeout | null = null;
-
-function updateClaudeTelemetrySettings(write: boolean): boolean {
-  try {
-    const rootPath = fsManager.getRootPath();
-    if (!rootPath) return false;
-
-    const settingsPath = path.join(rootPath, '.claude', 'settings.json');
-    if (!write && !fs.existsSync(settingsPath)) return false;
-
-    if (write) {
-      if (!fs.existsSync(path.dirname(settingsPath))) {
-        fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-      }
-    }
-
-    let content = '';
-    if (fs.existsSync(settingsPath)) {
-      content = fs.readFileSync(settingsPath, 'utf-8');
-    }
-
-    // Remove existing managed block using regex
-    const startMarker = '// --- Copernicus Managed: OTel ---';
-    const endMarker = '// --- End Copernicus Managed: OTel ---';
-    const regex = new RegExp(startMarker + '[\\s\\S]*?' + endMarker + '\\n?', 'g');
-    content = content.replace(regex, '').trim();
-
-    if (write) {
-      const managedBlock = [
-        startMarker,
-        'CLAUDE_CODE_ENABLE_TELEMETRY=1',
-        'OTEL_METRICS_EXPORTER=otlp',
-        'OTEL_LOGS_EXPORTER=otlp',
-        `OTEL_EXPORTER_OTLP_ENDPOINT=${config.otel.endpoint}`,
-        'OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative',
-        'OTEL_LOG_TOOL_DETAILS=1',
-        endMarker
-      ].join('\n');
-
-      content = content.length > 0 ? content + '\n\n' + managedBlock + '\n' : managedBlock + '\n';
-    } else {
-      content = content.length > 0 ? content + '\n' : content;
-    }
-
-    fs.writeFileSync(settingsPath, content, 'utf-8');
-    return true;
-  } catch (err) {
-    log.error('[Main] Failed to update Claude telemetry settings:', err);
-    return false;
-  }
-}
 
 const VITE_DEV_SERVER_URL = process.env.NODE_ENV === 'development' ? process.env['VITE_DEV_SERVER_URL'] : undefined
 if (process.env.NODE_ENV === 'production' && process.env['VITE_DEV_SERVER_URL']) {
@@ -295,10 +241,7 @@ app.on('window-all-closed', () => { ptyManager.killAll(); if (process.platform !
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 app.on('will-quit', () => { globalShortcut.unregisterAll() })
 app.on('before-quit', async () => {
-  if (collectorProcess && !collectorProcess.killed) {
-    log.info('[Main] Killing OTel collector process');
-    collectorProcess.kill();
-  }
+  killCollector()
   await codebaseIndexer.stop()
   localModelManager.stop();
   lspManager.stop();
@@ -314,40 +257,7 @@ app.whenReady().then(async () => {
   const collectorScript = path.join(__dirname, '../../collector/sqlite_exporter.py');
 
   if (settingsStore.getAll().enableOtelCollector) {
-    if (fs.existsSync(collectorScript)) {
-      log.info('[Main] Spawning OTel collector sidecar...');
-      // We wrap it in a try-catch so that if the process fails to start, we degrade gracefully
-      try {
-        collectorProcess = spawn('python3', [collectorScript], {
-          env: { ...process.env, COPERNICUS_DB_PATH: dbPath },
-          stdio: 'ignore'
-        });
-
-        log.info(`[Main] OTel collector spawned with PID: ${collectorProcess.pid}`);
-        updateClaudeTelemetrySettings(true);
-
-        collectorProcess.on('error', (err) => {
-          log.warn(`[Main] Failed to start OTel collector: ${err.message}`);
-          updateClaudeTelemetrySettings(false);
-        });
-
-        collectorProcess.on('exit', (code) => {
-          if (code !== 0 && code !== null) {
-            log.warn(`[Main] OTel collector exited with non-zero code: ${code}`);
-          } else {
-            log.info(`[Main] OTel collector exited gracefully`);
-          }
-          collectorProcess = null;
-          updateClaudeTelemetrySettings(false);
-        });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        log.warn(`[Main] Failed to spawn OTel collector: ${msg}`);
-        updateClaudeTelemetrySettings(false);
-      }
-    } else {
-      log.warn('[Main] OTel collector script not found at:', collectorScript);
-    }
+    startCollector(dbPath, collectorScript)
   }
 
   try {
@@ -531,7 +441,6 @@ app.whenReady().then(async () => {
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 
-
   // Story 652: initialize MLX Provider
   mlxProvider.initializeWithSettings(settingsStore);
 
@@ -576,52 +485,7 @@ app.whenReady().then(async () => {
       localModelManager.start().catch(log.error);
     });
 
-  // Story 496: JSONL Export Cycle and LSP Index for Agent Memory
-  setTimeout(async () => {
-    try {
-      const projectId = fsManager.getRootPath() || 'default'
-      await jsonlExporter.export(projectId)
-      const exportDir = path.join(app.getPath('userData'), 'memory', jsonlExporter.hashProjectId(projectId))
-      lspManager.watchMemoryDir(exportDir)
-
-      exportInterval = setInterval(async () => {
-        try {
-          const pid = fsManager.getRootPath() || 'default'
-          await jsonlExporter.export(pid)
-        } catch (err) {
-          log.error('[Memory Export] Interval export failed:', err)
-        }
-      }, 5 * 60 * 1000)
-    } catch (err) {
-      log.error('[Memory Export] Initial export failed:', err)
-    }
-  }, 30 * 1000)
-
-  // Story 335: Watch for story status files from Python orchestrator
-  const startStoryWatcher = () => {
-    storyWatcher = setInterval(() => {
-      try {
-        const files = fs.readdirSync('/tmp').filter(f => f.startsWith('copernicus_story_') && f.endsWith('_status.txt'))
-        for (const file of files) {
-          const match = file.match(/copernicus_story_(\d+)_status\.txt/)
-          if (match && match[1]) {
-            const num = parseInt(match[1], 10)
-            const filePath = path.join('/tmp', file)
-            const status = fs.readFileSync(filePath, 'utf-8').trim()
-            storiesManager.setStoryStatus(num, status).then(() => {
-              win?.webContents.send('stories:status-changed', { storyNumber: num, status })
-            }).catch(err => log.error('[Main] Failed to set story status from watcher:', err))
-            fs.unlinkSync(filePath)
-          }
-        }
-      } catch (e) {
-        log.warn('[Main] Story status watcher encountered an error:', e);
-      }
-    }, 2000)
-  }
-  startStoryWatcher();
 })
-
 
 app.on('browser-window-focus', () => {
   const synced = storiesManager.syncFromDisk()
