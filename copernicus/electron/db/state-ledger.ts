@@ -1,4 +1,3 @@
-import log from '../utils/logger'
 import * as crypto from 'crypto';
 import type { Database } from 'libsql';
 import DatabaseConstructor from 'libsql';
@@ -7,6 +6,18 @@ import fs from 'fs';
 import { app } from 'electron';
 import { SCHEMA } from './schema';
 import { runMigrations, validateSchemaVersion, MIGRATION_VERSION } from './migrations';
+
+import * as storyQueries from './queries/stories';
+import * as modelQueries from './queries/model-calls';
+import * as workflowQueries from './queries/workflows';
+import * as memoryQueries from './queries/memory';
+import * as kanbanQueries from './queries/kanban';
+import * as templateQueries from './queries/templates';
+import * as txQueries from './queries/transactions';
+import * as projectQueries from './queries/projects';
+import * as testQueries from './queries/tests';
+import * as julesQueries from './queries/jules';
+import * as retroQueries from './queries/retros';
 
 export interface Intent {
   id?: number;
@@ -283,152 +294,59 @@ export class StateLedger {
   }
 
   insertWorkflowWave(id: string, workflowId: string, waveIndex: number, storyIds: string[], startedAt: number): void {
-    this.db.prepare(`
-      INSERT INTO workflow_waves (id, workflow_id, wave_index, story_ids, status, started_at)
-      VALUES (?, ?, ?, ?, 'pending', ?)
-    `).run(id, workflowId, waveIndex, JSON.stringify(storyIds), startedAt);
+    workflowQueries.insertWorkflowWave(this.db, id, workflowId, waveIndex, storyIds, startedAt);
   }
 
   updateWorkflowWaveStatus(id: string, status: string, completedAt?: number): void {
-    if (completedAt) {
-      this.db.prepare(`
-        UPDATE workflow_waves SET status = ?, completed_at = ? WHERE id = ?
-      `).run(status, completedAt, id);
-    } else {
-      this.db.prepare(`
-        UPDATE workflow_waves SET status = ? WHERE id = ?
-      `).run(status, id);
-    }
+    workflowQueries.updateWorkflowWaveStatus(this.db, id, status, completedAt);
   }
 
   getWorkflowWaves(workflowId: string): WorkflowWave[] {
-    const rows = this.queryAll<{
-      id: string;
-      workflowId: string;
-      waveIndex: number;
-      storyIds: string;
-      status: string;
-      startedAt: number;
-      completedAt: number | null;
-    }>(`
-      SELECT id, workflow_id as workflowId, wave_index as waveIndex, story_ids as storyIds, status, started_at as startedAt, completed_at as completedAt
-      FROM workflow_waves
-      WHERE workflow_id = ?
-      ORDER BY wave_index ASC
-    `, workflowId);
-
-    return rows.map(r => ({
-      ...r,
-      storyIds: JSON.parse(r.storyIds || '[]')
-    }));
+    return workflowQueries.getWorkflowWaves(this.db, workflowId);
   }
 
   addAgentMemory(params: { id: string, projectId: string, bankId: string, eventType: string, content: string, importance: number, tags: string | null, entities: string | null, meta: string | null, ts: number }): void {
-    this.db.prepare(`
-      INSERT INTO agent_memory (id, project_id, bank_id, event_type, content, importance, tags, entities, meta, ts)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      params.id,
-      params.projectId,
-      params.bankId,
-      params.eventType,
-      params.content,
-      params.importance,
-      params.tags,
-      params.entities,
-      params.meta,
-      params.ts
-    );
+    memoryQueries.addAgentMemory(this.db, params);
   }
 
   getAllAgentMemoryForProject(projectId: string): MemoryFragment[] {
-    return this.queryAll<MemoryFragment>('SELECT * FROM agent_memory WHERE project_id = ?', projectId);
+    return memoryQueries.getAllAgentMemoryForProject(this.db, projectId);
   }
 
   getMemoryWorkingSet(projectId: string, bankId: string, limit: number): any[] {
-    return this.queryAll<any>(`
-      SELECT * FROM memory_working_set
-      WHERE project_id = ? AND bank_id = ?
-      ORDER BY score DESC
-      LIMIT ?
-    `, projectId, bankId, limit);
+    return memoryQueries.getMemoryWorkingSet(this.db, projectId, bankId, limit);
   }
 
   getMemoryWorkingSetForProject(projectId: string, limit: number, bankId?: string): any[] {
-    if (bankId) {
-      return this.queryAll<any>(`
-        SELECT * FROM memory_working_set
-        WHERE project_id = ? AND bank_id = ?
-        ORDER BY score DESC
-        LIMIT ?
-      `, projectId, bankId, limit);
-    } else {
-      return this.queryAll<any>(`
-        SELECT * FROM memory_working_set
-        WHERE project_id = ?
-        ORDER BY score DESC
-        LIMIT ?
-      `, projectId, limit);
-    }
+    return memoryQueries.getMemoryWorkingSetForProject(this.db, projectId, limit, bankId);
   }
 
   getAgentMemoryTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): MemoryFragment[] {
-    return this.queryAll<MemoryFragment>(`
-      SELECT * FROM agent_memory
-      WHERE project_id = ? AND ts BETWEEN ? AND ?
-      ORDER BY ts ASC LIMIT ?
-    `, projectId, fromTs, toTs, limit);
+    return memoryQueries.getAgentMemoryTimeRange(this.db, projectId, fromTs, toTs, limit);
   }
 
   getAgentWorkLogTimeRange(projectId: string, fromTs: number, toTs: number, limit: number): any[] {
-    return this.queryAll<any>(`
-      SELECT * FROM agent_work_log
-      WHERE project_id = ? AND ts BETWEEN ? AND ?
-      ORDER BY ts ASC LIMIT ?
-    `, projectId, fromTs, toTs, limit);
+    return memoryQueries.getAgentWorkLogTimeRange(this.db, projectId, fromTs, toTs, limit);
   }
 
   recallAgentMemory(projectId: string, bankId: string, query: string, limit: number): MemoryFragment[] {
-    return this.queryAll<MemoryFragment>(`
-      SELECT * FROM memory_working_set
-      WHERE project_id = ? AND bank_id = ? AND content LIKE ?
-      ORDER BY score DESC
-      LIMIT ?
-    `, projectId, bankId, `%${query}%`, limit);
+    return memoryQueries.recallAgentMemory(this.db, projectId, bankId, query, limit);
   }
 
   supersedeMemory(oldId: string, newId: string): void {
-    this.db.transaction(() => {
-      this.db.prepare(`
-        UPDATE agent_memory SET importance = 1 WHERE id = ?
-      `).run(oldId);
-
-      this.db.prepare(`
-        UPDATE agent_memory SET supersedes_id = ? WHERE id = ?
-      `).run(newId, oldId);
-    })();
+    memoryQueries.supersedeMemory(this.db, oldId, newId);
   }
 
   demoteMemoryImportance(id: string): void {
-    this.db.prepare(`
-      UPDATE agent_memory SET importance = 1 WHERE id = ?
-    `).run(id);
+    memoryQueries.demoteMemoryImportance(this.db, id);
   }
 
   logAgentWork(params: { id: string, projectId: string, bankId: string, eventType: string, meta: string, ts: number }): void {
-    this.db.prepare(`
-      INSERT INTO agent_work_log (id, project_id, bank_id, event_type, meta, ts)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(params.id, params.projectId, params.bankId, params.eventType, params.meta, params.ts);
+    memoryQueries.logAgentWork(this.db, params);
   }
 
   getAgentWorkLog(projectId: string, bankId: string, limit: number): any[] {
-    return this.queryAll<any>(`
-      SELECT * FROM agent_work_log
-      WHERE project_id = ? AND bank_id = ?
-      ORDER BY ts DESC
-      LIMIT ?
-    `, projectId, bankId, limit);
+    return memoryQueries.getAgentWorkLog(this.db, projectId, bankId, limit);
   }
 
   // ── Kanban Columns (Story 428) ──────────────────────────────────────────
@@ -462,123 +380,49 @@ export class StateLedger {
   }
 
   getKanbanColumns(): KanbanColumnRecord[] {
-    return this.queryAll<KanbanColumnRecord>('SELECT * FROM kanban_columns ORDER BY sort_order ASC');
+    return kanbanQueries.getKanbanColumns(this.db);
   }
 
   setKanbanColumn(id: string, updates: Partial<KanbanColumnRecord>): void {
-    const existing = this.queryGet<KanbanColumnRecord>('SELECT * FROM kanban_columns WHERE id = ?', id);
-    if (!existing) {
-      throw new Error('column not found');
-    }
-
-    const sets: string[] = [];
-    const vals: unknown[] = [];
-
-    for (const [key, value] of Object.entries(updates)) {
-      if (['status', 'color', 'accent', 'minimized', 'sort_order'].includes(key)) {
-        sets.push(`${key} = ?`);
-        vals.push(value);
-      }
-    }
-
-    if (sets.length > 0) {
-      vals.push(id);
-      this.db.prepare(`UPDATE kanban_columns SET ${sets.join(', ')} WHERE id = ?`).run(...vals);
-    }
+    kanbanQueries.setKanbanColumn(this.db, id, updates);
   }
 
   // ── Template Overrides (Story 330) ────────────────────────────────────────
 
   getTemplateOverride(id: string): { content: string } | null {
-    const row = this.queryGet<{ content: string }>('SELECT content FROM template_overrides WHERE template_id = ?', id);
-    return row ? { content: row.content } : null
+    return templateQueries.getTemplateOverride(this.db, id);
   }
 
   saveTemplateOverride(id: string, content: string): void {
-    this.db.prepare(`
-      INSERT INTO template_overrides (template_id, content, updated_at)
-      VALUES (?, ?, (datetime('now')))
-      ON CONFLICT(template_id) DO UPDATE SET
-        content = excluded.content,
-        updated_at = excluded.updated_at
-    `).run(id, content)
+    templateQueries.saveTemplateOverride(this.db, id, content);
   }
 
   deleteTemplateOverride(id: string): void {
-    this.db.prepare('DELETE FROM template_overrides WHERE template_id = ?').run(id)
+    templateQueries.deleteTemplateOverride(this.db, id);
   }
 
   // ── File Transactions (Story 220) ──────────────────────────────────────────
 
   logTransaction(tx: { id: string, status: string, description?: string, files: { path: string, beforeHash?: string, afterHash?: string, originalDataPath?: string }[] }): void {
-    this.db.prepare(`
-      INSERT INTO file_transactions (id, status, description)
-      VALUES (?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        status = excluded.status,
-        updated_at = CURRENT_TIMESTAMP
-    `).run(tx.id, tx.status, tx.description ?? null)
-
-    // Clear existing entries if we're updating
-    this.db.prepare('DELETE FROM file_transaction_entries WHERE transaction_id = ?').run(tx.id)
-
-    for (const f of tx.files) {
-      this.db.prepare(`
-        INSERT INTO file_transaction_entries (transaction_id, file_path, before_hash, after_hash, original_data_path)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(tx.id, f.path, f.beforeHash, f.afterHash, f.originalDataPath ?? null)
-    }
+    txQueries.logTransaction(this.db, tx);
   }
 
   getLastTransaction(): { id: string, files: { path: string, beforeHash?: string, afterHash?: string, originalDataPath?: string }[] } | null {
-    const row = this.queryGet<{ id: string; created_at: string; status: string; description: string | null }>(`
-      SELECT * FROM file_transactions
-      WHERE status = 'COMMITTED'
-      ORDER BY created_at DESC LIMIT 1
-    `);
-    if (!row) return null
-
-    const entries = this.queryAll<{ file_path: string; before_hash: string | null; after_hash: string | null; original_data_path: string | null }>(`
-      SELECT * FROM file_transaction_entries WHERE transaction_id = ?
-    `, row.id);
-
-    return {
-      id: row.id,
-      files: entries.map(e => ({
-        path: e.file_path,
-        beforeHash: e.before_hash ?? undefined,
-        afterHash: e.after_hash ?? undefined,
-        originalDataPath: e.original_data_path ?? undefined
-      }))
-    }
+    return txQueries.getLastTransaction(this.db);
   }
 
   // ── Projects & Epics (Story 211) ──────────────────────────────────────────
 
   upsertProject(p: ProjectRecord): void {
-    this.db.prepare(`
-      INSERT INTO projects (id, path, billing_mode, billing_details, target_device, updated_at)
-      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(path) DO UPDATE SET
-        id = excluded.id,
-        billing_mode = excluded.billing_mode,
-        billing_details = excluded.billing_details,
-        target_device = excluded.target_device,
-        updated_at = CURRENT_TIMESTAMP
-    `).run(p.id, p.path, p.billing_mode, p.billing_details ?? null, p.target_device ?? 'AGNOSTIC')
+    projectQueries.upsertProject(this.db, p);
   }
 
   updateProjectTargetDevice(path: string, targetDevice: string): void {
-    this.db.prepare(`
-      UPDATE projects
-      SET target_device = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE path = ?
-    `).run(targetDevice, path)
+    projectQueries.updateProjectTargetDevice(this.db, path, targetDevice);
   }
 
   getProjectByPath(path: string): ProjectRecord | null {
-    const row = this.queryGet<ProjectRecord>('SELECT * FROM projects WHERE path = ?', path);
-    return row ?? null
+    return projectQueries.getProjectByPath(this.db, path);
   }
 
   getActiveProject(): ProjectRecord | null {
@@ -588,201 +432,69 @@ export class StateLedger {
   }
 
   getProjectById(id: string): ProjectRecord | null {
-    const row = this.queryGet<ProjectRecord>('SELECT * FROM projects WHERE id = ?', id);
-    return row ?? null
+    return projectQueries.getProjectById(this.db, id);
   }
 
   // ── Test Runs (Story 162) ────────────────────────────────────────────────
 
   upsertTestRun(data: Omit<TestRunRecord, 'id' | 'run_at'>): number {
-    const info = this.db.prepare(`
-      INSERT INTO test_runs (total_tests, passed, failed, skipped, coverage_pct, duration_ms)
-      VALUES (@total_tests, @passed, @failed, @skipped, @coverage_pct, @duration_ms)
-    `).run(data)
-    return info.lastInsertRowid as number
+    return testQueries.upsertTestRun(this.db, data);
   }
 
   getTestRunHistory(limit = 20): TestRunRecord[] {
-    return this.queryAll<TestRunRecord>(
-      'SELECT * FROM test_runs ORDER BY run_at DESC LIMIT ?', limit
-    )
+    return testQueries.getTestRunHistory(this.db, limit);
   }
 
   // ── Model Call Ledger (Story 156) ────────────────────────────────────────
 
   logModelCall(record: Omit<ModelCallRecord, 'id' | 'created_at'>): number {
-    const info = this.db.prepare(`
-      INSERT INTO model_calls
-        (session_id, panel_id, model_id, provider, persona_role, tokens_in, tokens_out,
-         cost_usd, latency_ms, reasoning, workflow_run_id, parent_call_id,
-         prompt_text, response_text, context_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      record.session_id, record.panel_id, record.model_id, record.provider,
-      record.persona_role ?? 'unknown',
-      record.tokens_in, record.tokens_out, record.cost_usd,
-      record.latency_ms ?? null, record.reasoning ?? null,
-      record.workflow_run_id ?? null,
-      record.parent_call_id ?? null,
-      record.prompt_text ?? null,
-      record.response_text ?? null,
-      record.context_json ?? null
-    )
-    return info.lastInsertRowid as number
+    return modelQueries.logModelCall(this.db, record);
   }
 
   getSessionStats(session_id: string): ModelCallStats {
-    const total = this.queryGet<{
-      total_calls: number;
-      total_tokens_in: number;
-      total_tokens_out: number;
-      total_cost_usd: number;
-    }>(`
-      SELECT COUNT(*) as total_calls,
-             SUM(tokens_in) as total_tokens_in,
-             SUM(tokens_out) as total_tokens_out,
-             SUM(cost_usd) as total_cost_usd
-      FROM model_calls WHERE session_id = ?
-    `, session_id) ?? { total_calls: 0, total_tokens_in: 0, total_tokens_out: 0, total_cost_usd: 0 };
-
-    const byModel = this.queryAll<{ model_id: string; provider: string; calls: number; tokens_in: number; tokens_out: number; cost_usd: number }>(`
-      SELECT model_id, provider,
-             COUNT(*) as calls,
-             SUM(tokens_in) as tokens_in,
-             SUM(tokens_out) as tokens_out,
-             SUM(cost_usd) as cost_usd
-      FROM model_calls WHERE session_id = ?
-      GROUP BY model_id, provider ORDER BY calls DESC
-    `, session_id);
-
-    return {
-      total_calls:      total.total_calls      ?? 0,
-      total_tokens_in:  total.total_tokens_in  ?? 0,
-      total_tokens_out: total.total_tokens_out ?? 0,
-      total_cost_usd:   total.total_cost_usd   ?? 0,
-      by_model: byModel,
-    }
+    return modelQueries.getSessionStats(this.db, session_id);
   }
 
   getRecentCalls(limit = 100, panel_id?: string): ModelCallRecord[] {
-    if (panel_id) {
-      return this.queryAll<ModelCallRecord>(
-        'SELECT * FROM model_calls WHERE panel_id = ? ORDER BY created_at DESC LIMIT ?', panel_id, limit
-      )
-    }
-    return this.queryAll<ModelCallRecord>(
-      'SELECT * FROM model_calls ORDER BY created_at DESC LIMIT ?', limit
-    )
+    return modelQueries.getRecentCalls(this.db, limit, panel_id);
   }
 
   getEditDecisionsCounts(promptId: string): { accept: number, reject: number, abort: number } {
-    try {
-      const rows = this.queryAll<{ decision: string, count: number }>('SELECT decision, COUNT(*) as count FROM edit_decisions WHERE prompt_id = ? GROUP BY decision', promptId);
-      const result = { accept: 0, reject: 0, abort: 0 };
-      for (const row of rows) {
-        if (row.decision === 'accept') result.accept = row.count;
-        if (row.decision === 'reject') result.reject = row.count;
-        if (row.decision === 'abort') result.abort = row.count;
-      }
-      return result;
-    } catch (e) {
-      log.error('Failed to get edit decisions counts', e);
-      return { accept: 0, reject: 0, abort: 0 };
-    }
+    return modelQueries.getEditDecisionsCounts(this.db, promptId);
   }
 
   getAllTimeCost(): number {
-    const row = this.queryGet<{ total: number }>('SELECT SUM(cost_usd) as total FROM model_calls');
-    return row?.total ?? 0
+    return modelQueries.getAllTimeCost(this.db);
   }
 
   getSessionStatsByRole(sessionId: string): { role: string, tokens: number, cost: number }[] {
-    return this.queryAll<{ role: string, tokens: number, cost: number }>(`
-      SELECT COALESCE(persona_role, 'unknown') as role,
-             SUM(tokens_in + tokens_out) as tokens, SUM(cost_usd) as cost
-      FROM model_calls WHERE session_id = ?
-      GROUP BY role ORDER BY cost DESC
-    `, sessionId);
+    return modelQueries.getSessionStatsByRole(this.db, sessionId);
   }
 
   getAllTimeStatsByRole(): { role: string, tokens: number, cost: number }[] {
-    return this.queryAll<{ role: string, tokens: number, cost: number }>(`
-      SELECT COALESCE(persona_role, 'unknown') as role,
-             SUM(tokens_in + tokens_out) as tokens, SUM(cost_usd) as cost
-      FROM model_calls GROUP BY role ORDER BY cost DESC
-    `);
+    return modelQueries.getAllTimeStatsByRole(this.db);
   }
 
   queryModelCallsSprint(since: number): object[] {
-    return this.queryAll<object>(`
-      SELECT model_id, provider,
-             COUNT(*) as calls,
-             SUM(tokens_in) as tokens_in,
-             SUM(tokens_out) as tokens_out,
-             SUM(cost_usd) as cost_usd,
-             AVG(latency_ms) as avg_latency_ms
-      FROM model_calls
-      WHERE created_at > datetime(? / 1000, 'unixepoch')
-      GROUP BY model_id, provider
-      ORDER BY calls DESC
-    `, since);
+    return modelQueries.queryModelCallsSprint(this.db, since);
   }
 
   queryModelPerformanceSprint(since: number): object[] {
-    return this.queryAll<object>(`
-      SELECT model_id, provider, task_type,
-             COUNT(*) as observations,
-             AVG(speed_score) as avg_speed,
-             AVG(cost_score) as avg_cost,
-             AVG(accuracy_score) as avg_accuracy,
-             AVG(adherence_score) as avg_adherence,
-             AVG(composite_qs) as avg_composite_qs,
-             MIN(adherence_score) as min_adherence
-      FROM model_performance
-      WHERE timestamp > datetime(? / 1000, 'unixepoch')
-      GROUP BY model_id, provider, task_type
-      ORDER BY avg_composite_qs DESC
-    `, since);
+    return modelQueries.queryModelPerformanceSprint(this.db, since);
   }
 
   // ── Jules Sessions (Story 161) ──────────────────────────────────────────
 
   upsertJulesSession(s: JulesSession): void {
-    this.db.prepare(`
-      INSERT INTO jules_sessions
-        (id, story_id, repo, branch, prompt_hash, status, pr_url, pr_number,
-         activities_json, last_search_context, started_at, completed_at, error_message)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        status              = excluded.status,
-        pr_url              = excluded.pr_url,
-        pr_number           = excluded.pr_number,
-        activities_json     = excluded.activities_json,
-        last_search_context = excluded.last_search_context,
-        completed_at        = excluded.completed_at,
-        error_message       = excluded.error_message
-    `).run(
-      s.id, s.story_id, s.repo, s.branch, s.prompt_hash ?? null, s.status,
-      s.pr_url ?? null, s.pr_number ?? null, s.activities_json ?? null,
-      s.last_search_context ?? null, s.started_at ?? null, s.completed_at ?? null, s.error_message ?? null
-    )
+    julesQueries.upsertJulesSession(this.db, s);
   }
 
   getJulesSessionsByStory(story_id: string): JulesSession[] {
-    return this.queryAll<JulesSession>(
-      'SELECT * FROM jules_sessions WHERE story_id = ? ORDER BY started_at DESC', story_id
-    )
+    return julesQueries.getJulesSessionsByStory(this.db, story_id);
   }
 
   listJulesSessions(status?: string): JulesSession[] {
-    if (status) {
-      return this.queryAll<JulesSession>(
-        'SELECT * FROM jules_sessions WHERE status = ? ORDER BY started_at DESC LIMIT 50', status
-      )
-    }
-    return this.queryAll<JulesSession>(
-      'SELECT * FROM jules_sessions ORDER BY started_at DESC LIMIT 50'
-    )
+    return julesQueries.listJulesSessions(this.db, status);
   }
 
   private migrateStories(): void {
@@ -923,100 +635,33 @@ export class StateLedger {
   // ── Stories (Story 160) ─────────────────────────────────────────────────
 
   upsertStory(s: Omit<StoryRecord, 'updated_at' | 'last_synced_at'>): void {
-    this.db.prepare(`
-      INSERT INTO stories
-        (id, slug, title, project_id, status, priority, type, epic, assigned_to,
-         blocked_by, blocks, workflow_id, body_md, file_path, date, flagged,
-         updated_at, last_synced_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      ON CONFLICT(id) DO UPDATE SET
-        slug           = excluded.slug,
-        title          = excluded.title,
-        project_id     = excluded.project_id,
-        status         = excluded.status,
-        priority       = excluded.priority,
-        type           = excluded.type,
-        epic           = excluded.epic,
-        assigned_to    = excluded.assigned_to,
-        blocked_by     = excluded.blocked_by,
-        blocks         = excluded.blocks,
-        workflow_id    = excluded.workflow_id,
-        body_md        = excluded.body_md,
-        file_path      = excluded.file_path,
-        date           = excluded.date,
-        flagged        = excluded.flagged,
-        updated_at     = CURRENT_TIMESTAMP,
-        last_synced_at = CURRENT_TIMESTAMP
-    `).run(
-      s.id, s.slug ?? null, s.title, s.project_id, s.status,
-      s.priority ?? null, s.type ?? null, s.epic ?? null, s.assigned_to ?? null,
-      JSON.stringify(s.blocked_by ?? []), JSON.stringify(s.blocks ?? []),
-      s.workflow_id ?? null,
-      s.body_md, s.file_path, s.date ?? null,
-      s.flagged ? 1 : 0
-    )
+    storyQueries.upsertStory(this.db, s as StoryRecord);
   }
 
   listStoriesFromDb(projectId?: string): StoryRecord[] {
-    let rows: any[];
-    if (projectId !== undefined) {
-      rows = this.queryAll<any>('SELECT * FROM stories WHERE project_id = ? ORDER BY id DESC', projectId);
-    } else {
-      rows = this.queryAll<any>('SELECT * FROM stories ORDER BY id DESC');
-    }
-    return rows.map(r => this._deserializeStory(r))
+    return storyQueries.listStoriesFromDb(this.db, projectId);
   }
 
   deleteOrphanedStories(projectId: string, validFilePaths: string[]): void {
-    if (validFilePaths.length === 0) {
-      this.db.prepare('DELETE FROM stories WHERE project_id = ?').run(projectId)
-      return
-    }
-
-    // SQLite limits parameters, but usually up to 999. In this simple case we map them dynamically.
-    const placeholders = validFilePaths.map(() => '?').join(',')
-    const sql = `DELETE FROM stories WHERE project_id = ? AND file_path NOT IN (${placeholders})`
-    this.db.prepare(sql).run(projectId, ...validFilePaths)
+    storyQueries.deleteOrphanedStories(this.db, projectId, validFilePaths);
   }
 
   getStoryById(id: string): StoryRecord | null {
-    const row = this.queryGet<StoryRecord>('SELECT * FROM stories WHERE id = ?', id);
-    return row ? this._deserializeStory(row) : null
+    return storyQueries.getStoryById(this.db, id);
   }
 
   updateStoryFields(id: string, fields: Partial<Pick<StoryRecord,
     'status' | 'priority' | 'type' | 'epic' | 'assigned_to' | 'workflow_id' | 'body_md' | 'file_path' | 'flagged'
   >>): void {
-    const allowed = ['status','priority','type','epic','assigned_to','workflow_id','body_md','file_path','flagged']
-    const sets: string[] = []
-    const vals: any[] = []
-    for (const [k, v] of Object.entries(fields)) {
-      if (allowed.includes(k)) {
-        sets.push(`${k} = ?`);
-        vals.push(k === 'flagged' ? (v ? 1 : 0) : v)
-      }
-    }
-    if (!sets.length) return
-    sets.push('updated_at = CURRENT_TIMESTAMP')
-    vals.push(id)
-    this.db.prepare(`UPDATE stories SET ${sets.join(', ')} WHERE id = ?`).run(...vals)
+    storyQueries.updateStoryFields(this.db, id, fields);
   }
 
   deleteStory(id: string): void {
-    this.db.prepare('DELETE FROM stories WHERE id = ?').run(id)
+    storyQueries.deleteStory(this.db, id);
   }
 
   vacuum(): void {
     this.db.exec('VACUUM')
-  }
-
-  private _deserializeStory(row: any): StoryRecord {
-    return {
-      ...row,
-      blocked_by: row.blocked_by ? JSON.parse(row.blocked_by) : [],
-      blocks:     row.blocks     ? JSON.parse(row.blocks)     : [],
-      flagged:    row.flagged === 1,
-    }
   }
 
   saveSnapshot(payload: any): void {
@@ -1071,19 +716,11 @@ export class StateLedger {
   }
 
   listRetroReports(projectId: string): any[] {
-    return this.queryAll<any>(`
-      SELECT * FROM retro_reports
-      WHERE project_id = ?
-      ORDER BY ts_generated DESC
-    `, projectId);
+    return retroQueries.listRetroReports(this.db, projectId);
   }
 
   getRetroReport(id: string): any {
-    const report = this.queryGet<any>('SELECT * FROM retro_reports WHERE id = ?', id);
-    if (!report) return null;
-
-    const items = this.queryAll<any>('SELECT * FROM retro_items WHERE retro_id = ?', id);
-    return { ...report, items };
+    return retroQueries.getRetroReport(this.db, id);
   }
 
   createRetroReport(data: {
@@ -1105,76 +742,19 @@ export class StateLedger {
       ts: number
     }[]
   }): string {
-    const id = `retro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    this.db.transaction(() => {
-      this.db.prepare(`
-        INSERT INTO retro_reports (
-          id, project_id, scope, status, ts_generated, ts_approved, sessions_range, inflection_ids
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        id,
-        data.project_id,
-        data.scope,
-        data.status,
-        data.ts_generated,
-        data.ts_approved || null,
-        data.sessions_range,
-        data.inflection_ids || null
-      );
-
-      if (data.items && data.items.length > 0) {
-        const insertItem = this.db.prepare(`
-          INSERT INTO retro_items (
-            id, retro_id, item_type, content, target, importance, supersedes_memory_id, status, edited_content, ts
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        for (const item of data.items) {
-          const itemId = `ritem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          insertItem.run(
-            itemId,
-            id,
-            item.item_type,
-            item.content,
-            item.target || null,
-            item.importance || null,
-            item.supersedes_memory_id || null,
-            item.status,
-            item.edited_content || null,
-            item.ts
-          );
-        }
-      }
-    })();
-
-    return id;
+    return retroQueries.createRetroReport(this.db, data);
   }
 
   updateRetroItem(id: string, data: { status: string; edited_content?: string }): boolean {
-    this.db.prepare(`
-      UPDATE retro_items
-      SET status = ?, edited_content = COALESCE(?, edited_content)
-      WHERE id = ?
-    `).run(data.status, data.edited_content || null, id);
-    return true;
+    return retroQueries.updateRetroItem(this.db, id, data);
   }
 
   approveRetroReport(id: string, originatedStories: string[]): boolean {
-    this.db.prepare(`
-      UPDATE retro_reports
-      SET status = 'approved', ts_approved = ?, retro_originated_stories = ?
-      WHERE id = ?
-    `).run(Date.now(), JSON.stringify(originatedStories), id)
-    return true;
+    return retroQueries.approveRetroReport(this.db, id, originatedStories);
   }
 
   pushRetroReady(id: string): boolean {
-    this.db.prepare(`
-      UPDATE retro_reports
-      SET status = 'pending_review'
-      WHERE id = ?
-    `).run(id);
-    return true;
+    return retroQueries.pushRetroReady(this.db, id);
   }
 
   // ── Knowledge Base (Story 566) ────────────────────────────────────────────
