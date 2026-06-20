@@ -343,7 +343,7 @@ describe('app-handlers', () => {
       expect(mockDeps.lspManager.start).toHaveBeenCalledWith(newPath)
 
       // Verify renderer notification
-      expect(mockWin.webContents.send).toHaveBeenCalledWith('app:workspace-changed', expect.objectContaining({
+      expect(mockWin.webContents!.send).toHaveBeenCalledWith('app:workspace-changed', expect.objectContaining({
         path: newPath
       }))
     })

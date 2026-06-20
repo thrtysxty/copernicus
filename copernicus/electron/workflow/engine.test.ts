@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WorkflowEngine } from './engine'
-import { WorkflowGraph, WFNode } from './types'
+import { WorkflowGraph } from './types'
 import type { EngineServices } from './engine'
 
 vi.mock('../memory/memoryService', () => ({
@@ -30,7 +30,7 @@ vi.mock('../codebase-indexer', () => ({
 describe('WorkflowEngine', () => {
   let engine: WorkflowEngine
   let mockWin: any
-  let mockServices: Partial<EngineServices>
+  let mockServices: EngineServices
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -60,21 +60,21 @@ describe('WorkflowEngine', () => {
       } as any,
       authManager: {
         getApiKey: vi.fn(),
-      },
+      } as any,
       lspManager: {
         stop: vi.fn(),
         start: vi.fn(),
-        workspaceCheck: vi.fn(() => ({ errorCount: 0 })),
-      },
+        workspaceCheck: vi.fn().mockResolvedValue({ errorCount: 0, diagnostics: [] }),
+      } as any,
       worktreeManager: {
         stop: vi.fn(),
         setRepoRoot: vi.fn(),
         isPollingStopped: true,
-      },
+      } as any,
       storiesManager: {
         setProjectRoot: vi.fn(),
-      },
-    }
+      } as any,
+    } as EngineServices
 
     engine = new WorkflowEngine()
     engine.setServices(mockServices as EngineServices)
@@ -84,11 +84,12 @@ describe('WorkflowEngine', () => {
     it('executes a simple linear workflow and updates context', async () => {
       const graph: WorkflowGraph = {
         id: 'wf1',
+        name: 'wf1',
         nodes: [
-          { id: '1', type: 'trigger', label: 'T', data: { variant: 'manual' } },
-          { id: '2', type: 'tool', label: 'L', data: { variant: 'log-event', message: 'Hello' } },
+          { id: '1', type: 'trigger', label: 'T', x: 0, y: 0, data: { variant: 'manual' } },
+          { id: '2', type: 'tool', label: 'L', x: 0, y: 0, data: { variant: 'log-event', message: 'Hello' } },
         ],
-        edges: [{ source: '1', target: '2' }],
+        edges: [{ id: 'e1', source: '1', target: '2' }],
       }
 
       await engine.runGraph(graph)
@@ -99,16 +100,17 @@ describe('WorkflowEngine', () => {
     it('handles decision branches correctly', async () => {
       const graph: WorkflowGraph = {
         id: 'wf2',
+        name: 'wf2',
         nodes: [
-          { id: '1', type: 'tool', label: 'T', data: { variant: 'log-event', message: 'match' } },
-          { id: '2', type: 'decision', label: 'D', data: { variant: 'output-match', pattern: 'match' } },
-          { id: '3', type: 'tool', label: 'Yes', data: { variant: 'log-event', message: 'Yes' } },
-          { id: '4', type: 'tool', label: 'No', data: { variant: 'log-event', message: 'No' } },
+          { id: '1', type: 'tool', label: 'T', x: 0, y: 0, data: { variant: 'log-event', message: 'match' } },
+          { id: '2', type: 'decision', label: 'D', x: 0, y: 0, data: { variant: 'output-match', pattern: 'match' } },
+          { id: '3', type: 'tool', label: 'Yes', x: 0, y: 0, data: { variant: 'log-event', message: 'Yes' } },
+          { id: '4', type: 'tool', label: 'No', x: 0, y: 0, data: { variant: 'log-event', message: 'No' } },
         ],
         edges: [
-          { source: '1', target: '2' },
-          { source: '2', target: '3', label: 'Yes' },
-          { source: '2', target: '4', label: 'No' },
+          { id: 'e1', source: '1', target: '2' },
+          { id: 'e2', source: '2', target: '3', label: 'Yes' },
+          { id: 'e3', source: '2', target: '4', label: 'No' },
         ],
       }
 
@@ -120,11 +122,12 @@ describe('WorkflowEngine', () => {
     it('pauses workflow on verification failure', async () => {
       const graph: WorkflowGraph = {
         id: 'wf3',
+        name: 'wf3',
         nodes: [
-          { id: '1', type: 'trigger', label: 'T', data: { variant: 'manual' } },
-          { id: '2', type: 'verification', label: 'V', data: { checklist: ['AC1'] } },
+          { id: '1', type: 'trigger', label: 'T', x: 0, y: 0, data: { variant: 'manual' } },
+          { id: '2', type: 'verification', label: 'V', x: 0, y: 0, data: { variant: 'verification', checklist: ['AC1'] } },
         ],
-        edges: [{ source: '1', target: '2' }],
+        edges: [{ id: 'e1', source: '1', target: '2' }],
       }
 
       await expect(engine.runGraph(graph)).rejects.toThrow(/Verification failed/)
@@ -140,7 +143,7 @@ describe('WorkflowEngine', () => {
     })
 
     it('verifies auth check before agent dispatch', async () => {
-      mockServices.authManager.getApiKey.mockReturnValue(null)
+      ;(mockServices.authManager.getApiKey as any).mockReturnValue(null)
       const node = { id: 'a1', type: 'agent', label: 'A1', data: { provider: 'anthropic', modelId: 'claude-3' } } as any
       await expect(engine.executeNode(node)).rejects.toThrow('AUTH_MISSING:anthropic')
     })
@@ -148,7 +151,7 @@ describe('WorkflowEngine', () => {
 
   describe('Tool Dispatch', () => {
     it('executes file-read tool', async () => {
-      mockServices.fsManager.readFile.mockReturnValue('file content')
+      ;(mockServices.fsManager.readFile as any).mockReturnValue('file content')
       const node = { id: 't1', type: 'tool', label: 'Read', data: { variant: 'file-read', filePath: 'test.txt' } } as any
       await engine.executeNode(node)
       expect(engine.getContext()['t1']).toBe('file content')
