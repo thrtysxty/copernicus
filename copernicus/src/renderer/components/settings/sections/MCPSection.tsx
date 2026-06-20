@@ -2,7 +2,7 @@ import log from '../../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { Trash2, AlertCircle, Plus, X, Server } from 'lucide-react'
 import { useIpcError } from '../../../hooks/useIpcError'
-import { SettingsLoadResponse } from '../../../types/ipc'
+import { SettingsLoadResponse , IpcResult, unwrapIpc} from '../../../types/ipc'
 
 interface McpServer {
   name: string;

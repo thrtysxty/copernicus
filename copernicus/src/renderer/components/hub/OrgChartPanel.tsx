@@ -1,14 +1,15 @@
 import log from '../../utils/logger'
 import { useEffect, useState } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
+import { IpcResult } from '../../types/ipc';
 import { RoleCard } from './RoleCard';
 import { RoleConfig, ActiveToken } from './RoleCard';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Skeleton } from '../common/Skeleton';
 
 export function OrgChartPanel() {
   const invoke = useIpcError();
-  const [config, setConfig] = useState<Record<string, RoleConfig> | null>(null);
+  const [config, setConfig] = useState<{ roles: Record<string, RoleConfig> } | null>(null);
   const [activeTokens, setActiveTokens] = useState<ActiveToken[]>([]);
   const [isHubRunning, setIsHubRunning] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ export function OrgChartPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const configResult = await invoke<IpcResult<Record<string, RoleConfig>>>('org-chart:get-config');
+      const configResult = await invoke<IpcResult<{ roles: Record<string, RoleConfig> }>>('org-chart:get-config');
       if (configResult && configResult.ok && configResult.data) {
         setConfig(configResult.data);
         setIsHubRunning(true);

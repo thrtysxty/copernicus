@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
 import { Activity } from 'lucide-react'
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc , IpcResult} from '../../types/ipc'
 
 interface TelemetryStatus {
   collectorRunning: boolean

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { TouchBarConfig, DEFAULT_TOUCH_BAR_CONFIG } from '../../../types/touch-bar'
-import { SettingsLoadResponse } from '../../../types/ipc'
+import { SettingsLoadResponse , IpcResult, unwrapIpc} from '../../../types/ipc'
 import log from '../../../utils/logger'
 import { TelemetryStatusTile } from '../TelemetryStatusTile'
 

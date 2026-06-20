@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Maximize2, RotateCcw, ChevronDown, Archive } from 'lucide-react'
-import { useWorkspaceStore } from '../store/layout'
-import { useIpcError } from '../hooks/useIpcError'
-import { unwrapIpc } from '../types/ipc'
+import { useWorkspaceStore } from '../../store/workspace'
+import { useIpcError } from '../../hooks/useIpcError'
+import { unwrapIpc } from '../../types/ipc'
 
 export const ArchiveDrawer: React.FC = () => {
   const invoke = useIpcError()

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { Brain, Shield } from 'lucide-react'
-import { SettingsLoadResponse } from '../../../types/ipc'
+import { SettingsLoadResponse , IpcResult, unwrapIpc} from '../../../types/ipc'
 import log from '../../../utils/logger'
 
 interface MemorySettings {

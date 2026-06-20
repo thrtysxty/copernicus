@@ -3,7 +3,7 @@ import { Github, Lock, Globe, Plus, Link, Shield, ShieldOff, Trash2, Copy, Check
 import { useIpcError } from '../../hooks/useIpcError';
 import { useToastStore } from '../../store/toastStore';
 import log from '../../utils/logger'
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc , IpcResult} from '../../types/ipc'
 
 type Tab = 'repos' | 'access' | 'invite';
 

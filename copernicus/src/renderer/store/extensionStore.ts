@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
-interface ExtensionWorkflowNode { type: string; label: string; description?: string; defaultData?: Record<string, unknown> }
-interface ExtensionTile { id: string; category: string; label: string; icon: string; defaultConfig: Record<string, string>; configSchema: Array<{ key: string; label: string; type: 'text' | 'select'; options?: string[] }> }
+export interface ExtensionWorkflowNode { type: string; label: string; description?: string; defaultData?: Record<string, unknown> }
+export interface ExtensionTile { id: string; category: string; label: string; icon: string; defaultConfig: Record<string, string>; configSchema: Array<{ key: string; label: string; type: 'text' | 'select'; options?: string[] }> }
 export interface ExtensionProvider { id: string; name: string; baseUrl: string }
 
 interface ExtensionState {

@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Check, Key, Zap, ArrowRight } from 'lucide-react';
 import AuthCliWidget from '../AuthCliWidget';
 import { AUTH_CLI_CONFIGS, PROVIDER_METADATA, getProviderIcon } from '../providerRegistry';
-import { WizardState } from '../../hooks/useWizardFlow';
-import { unwrapIpc, IpcResult } from '../../types/ipc';
+import { WizardState } from '../../../hooks/useWizardFlow';
+import { unwrapIpc, IpcResult } from '../../../types/ipc';
 
 interface AuthStepProps {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
-  invoke: any;
+  invoke: <T = unknown>(channel: string, ...args: unknown[]) => Promise<T>;
 }
 
 export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }) => {

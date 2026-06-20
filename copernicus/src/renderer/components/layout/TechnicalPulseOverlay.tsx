@@ -1,7 +1,7 @@
 import log from '../../utils/logger'
 import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../hooks/useIpcError'
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc , IpcResult} from '../../types/ipc'
 
 interface HealthCheck {
   name: string

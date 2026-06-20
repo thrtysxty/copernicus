@@ -5,7 +5,6 @@ import { useIpcError } from '../../hooks/useIpcError'
 import { useIpcCache } from '../../hooks/useIpcCache'
 import { useWorkspaceStore } from '../../store/workspace'
 import { useKanbanStore } from '../../store/kanban'
-import { KanbanColumn } from '../../types/layout'
 import { useToastStore } from '../../store/toastStore'
 import { Crown, Lock, ChevronDown, ChevronUp, Archive, Brain, Bug, Plus, Zap, Glasses } from 'lucide-react'
 import log from '../../utils/logger'
@@ -82,7 +81,7 @@ const StoryCard = React.memo(({
       tabIndex={activeStoryId === story.id || (idx === 0 && !colStories.some(s => s.id === activeStoryId)) ? 0 : -1}
       aria-label={`${story.title} — ${story.status}`}
       draggable
-      onDragStart={e => e.dataTransfer.setData('text/plain', story.id)}
+      onDragStart={e => ((e as unknown) as React.DragEvent).dataTransfer.setData('text/plain', story.id)}
       className={`p-3 bg-zinc-900/50 border rounded cursor-pointer transition-all hover:border-copernicus-phosphor/30 focus:outline-none focus:ring-2 focus:ring-copernicus-phosphor overflow-hidden ${activeStoryId === story.id ? 'border-copernicus-phosphor/50 bg-zinc-900 shadow-lg' : 'border-white/5'} ${story.flagged ? 'border-l-4 border-l-amber-400' : ''}`}
       onClick={(e) => {
         e.stopPropagation()

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Bot, Plus, X, ShieldAlert, FileText, Wrench, Terminal, Sparkles } from 'lucide-react';
 import { IntelligenceDocSuggestion, IntelligenceDocType, IntelligenceDocument } from '../../../../electron/intelligence/types';
 import { useIpcError } from '../../hooks/useIpcError';
-import { unwrapIpc } from '../../types/ipc';
+import { unwrapIpc , IpcResult} from '../../types/ipc';
 
 interface IntelligenceSuggestBannerProps {
   suggestions: IntelligenceDocSuggestion[];

@@ -4,7 +4,8 @@ import {
   Activity, Settings, Wand2,
   Diff, GitBranch, Bug, Brain,
 } from 'lucide-react'
-import { useWorkspaceStore, StoryboardView } from '../../store/workspace'
+import { useWorkspaceStore } from '../../store/workspace'
+import { StoryboardView } from '../../types/layout'
 import { useTourStore } from '../../store/tour'
 import { useKanbanStore } from '../../store/kanban'
 

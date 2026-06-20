@@ -14,7 +14,7 @@ import {
   Loader2,
   BarChart2
 } from 'lucide-react'
-import { unwrapIpc } from '../../../types/ipc'
+import { unwrapIpc , IpcResult, SettingsLoadResponse } from '../../../types/ipc'
 
 interface BenchmarkResult {
   fastMRR: number

@@ -1,6 +1,6 @@
 import React from 'react';
 import { DollarSign, Monitor, Loader2 } from 'lucide-react';
-import { useWizardFlow, WizardState } from '../../hooks/useWizardFlow';
+import { WizardState } from '../../../hooks/useWizardFlow';
 
 interface BillingStepProps {
   state: WizardState;

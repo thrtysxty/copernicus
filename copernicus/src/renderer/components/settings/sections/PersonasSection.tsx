@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { User, Plus, Trash2, Edit3, Lock, Copy } from 'lucide-react'
-import { SettingsLoadResponse } from '../../../types/ipc'
+import { SettingsLoadResponse , IpcResult, unwrapIpc} from '../../../types/ipc'
 import { DEFAULT_PERSONAS } from '../../../../../electron/data/default-personas'
 
 interface Persona {

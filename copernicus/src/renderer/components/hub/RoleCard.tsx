@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useIpcError } from '../../hooks/useIpcError';
 import { Lock, FileText } from 'lucide-react';
 
-interface RoleConfig {
+export interface RoleConfig {
   name: string;
   class: 'regulatory' | 'operational';
   authority_level: number;
@@ -14,7 +14,7 @@ interface RoleConfig {
   contract: string;
 }
 
-interface ActiveToken {
+export interface ActiveToken {
   token_id: string;
   role: string;
   expires_at: number;

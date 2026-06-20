@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
-import { unwrapIpc } from '../../../types/ipc'
+import { unwrapIpc , IpcResult} from '../../../types/ipc'
 
 interface Extension {
   name: string

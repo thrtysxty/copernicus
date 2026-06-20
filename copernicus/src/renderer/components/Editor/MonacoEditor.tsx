@@ -2,7 +2,7 @@ import React from 'react';
 import Editor, { useMonaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useIpcError } from '../../hooks/useIpcError';
-import { useWorkspaceStore } from '../../store/layout';
+import { useWorkspaceStore } from '../../store/workspace';
 import { useTestRunnerStore } from '../../store/testRunner';
 import { useDebugStore } from '../../store/debug';
 import log from '../../utils/logger'
@@ -13,8 +13,8 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-import { unwrapIpc } from '../../types/ipc'
-import { LspCompletionResponse, LspHoverResponse, LspDiagnostic, AgentCodeStreamPayload } from '../../types/lsp'
+import { unwrapIpc , IpcResult} from '../../types/ipc'
+import { LspCompletionResponse, LspCompletionItem, LspHoverResponse, LspDiagnostic, AgentCodeStreamPayload } from '../../types/lsp'
 
 declare global {
   interface Window {
@@ -58,7 +58,7 @@ interface MonacoEditorProps {
 
 const LSP_LANGUAGES = ['typescript', 'javascript', 'typescriptreact', 'javascriptreact']
 
-interface IEditorWithDecorations extends monaco.editor.IEditor {
+interface IEditorWithDecorations extends monaco.editor.IStandaloneCodeEditor {
   deltaDecorations(old: string[], newDecs: monaco.editor.IModelDeltaDecoration[]): string[];
 }
 
@@ -114,10 +114,11 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
   // Apply decorations
   React.useEffect(() => {
-    if (!monacoInstance || !editorRef.current || !filePath) return
-    
+    const editor = editorRef.current;
+    if (!monacoInstance || !editor || !filePath) return
+
     if (!pendingDiff || !ghostMode) {
-      setGhostDecorations(prev => editorRef.current.deltaDecorations(prev, []))
+      setGhostDecorations(prev => editor.deltaDecorations(prev, []))
       window.dispatchEvent(new CustomEvent('editor:ghost-status', { detail: { filePath, hasGhost: false } }))
       return
     }
@@ -147,7 +148,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
       }
     }
 
-    setGhostDecorations(prev => editorRef.current.deltaDecorations(prev, newDecorations))
+    setGhostDecorations(prev => editor.deltaDecorations(prev, newDecorations))
     window.dispatchEvent(new CustomEvent('editor:ghost-status', { detail: { filePath, hasGhost: true } }))
   }, [pendingDiff, ghostMode, monacoInstance, filePath])
 
@@ -168,8 +169,9 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
   // Clear decorations when ghost mode toggled off
   React.useEffect(() => {
-    if (!ghostMode && editorRef.current) {
-      setGhostDecorations(prev => editorRef.current.deltaDecorations(prev, []))
+    const editor = editorRef.current;
+    if (!ghostMode && editor) {
+      setGhostDecorations(prev => editor.deltaDecorations(prev, []))
       setPendingDiff(null)
       window.dispatchEvent(new CustomEvent('editor:ghost-status', { detail: { filePath, hasGhost: false } }))
     }
@@ -177,11 +179,12 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
   // Apply coverage decorations
   React.useEffect(() => {
-    if (!monacoInstance || !editorRef.current || !filePath) return
+    const editor = editorRef.current;
+    if (!monacoInstance || !editor || !filePath) return
 
     const fileCoverage = coverageData[filePath]
     if (!fileCoverage) {
-      setCoverageDecorations(prev => editorRef.current.deltaDecorations(prev, []))
+      setCoverageDecorations(prev => editor.deltaDecorations(prev, []))
       return
     }
 
@@ -206,7 +209,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
       }
     })
 
-    setCoverageDecorations(prev => editorRef.current.deltaDecorations(prev, newDecorations))
+    setCoverageDecorations(prev => editor.deltaDecorations(prev, newDecorations))
   }, [coverageData, filePath, monacoInstance])
 
   // Sync breakpoints to editor decorations
@@ -339,7 +342,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     disposables.push(
       monacoInstance.languages.registerCompletionItemProvider(LSP_LANGUAGES, {
         triggerCharacters: ['.', '"', "'", '/', '@', '<'],
-        provideCompletionItems: async (model, position) => {
+        provideCompletionItems: async (model, position, _context, _token) => {
           const raw = await invoke<IpcResult<LspCompletionResponse>>('lsp:request', {
             method: 'textDocument/completion',
             params: {
@@ -362,7 +365,12 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
               documentation: typeof item.documentation === 'string'
                 ? item.documentation
                 : item.documentation?.value,
-              range: undefined,
+              range: {
+                startLineNumber: position.lineNumber,
+                startColumn: position.column,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column,
+              },
             })),
           }
         },
@@ -381,9 +389,12 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
           }).catch(() => null)
           const hover = raw ? unwrapIpc<LspHoverResponse>(raw) : null
           if (!hover?.contents) return null
-          const value = typeof hover.contents === 'string'
-            ? hover.contents
-            : hover.contents?.value ?? hover.contents?.[0]?.value ?? ''
+          const contents = hover.contents;
+          const value = typeof contents === 'string'
+            ? contents
+            : Array.isArray(contents)
+              ? contents[0]?.value ?? ''
+              : contents.value ?? ''
           return { contents: [{ value }] }
         },
       })
@@ -472,7 +483,8 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     const editor = editorRef.current;
     if (!editor || !filePath || !monacoInstance) return;
 
-        disposable = editor.addCommand(
+    let disposable: monaco.IDisposable | string | null | undefined;
+    disposable = editor.addCommand(
           monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS,
           async () => {
             const content = editor.getValue();
@@ -491,7 +503,13 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
           }
         );
 
-    return () => disposable?.dispose();
+    return () => {
+      if (typeof disposable === 'string' && editor) {
+        (editor as any).removeCommand(disposable);
+      } else if (disposable && typeof disposable !== 'string') {
+        (disposable as any).dispose();
+      }
+    };
   }, [filePath, monacoInstance, invoke, setFileDirty]);
 
   React.useEffect(() => {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { DollarSign } from 'lucide-react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
-import { unwrapIpc } from '../../../types/ipc'
+import { unwrapIpc , IpcResult} from '../../../types/ipc'
 
 interface ProjectRecord {
   id: string
@@ -33,8 +33,8 @@ export const BillingSection: React.FC = () => {
         let currentPath = unwrapIpc<string>(pathRes)
         if (!currentPath) return
 
-        if (typeof currentPath === 'object' && currentPath.path) {
-          currentPath = currentPath.path
+        if (typeof currentPath === 'object' && (currentPath as any).path) {
+          currentPath = (currentPath as any).path
         }
 
         if (typeof currentPath === 'string') {

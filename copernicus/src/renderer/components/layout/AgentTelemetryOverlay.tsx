@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTelemetryStore } from '../../store/telemetryStore'
 import { useIpcError } from '../../hooks/useIpcError'
-import { unwrapIpc } from '../../types/ipc'
+import { unwrapIpc , IpcResult} from '../../types/ipc'
 
 const PERSONA_ORDER = ['architect', 'product-owner', 'dev-orchestrator', 'senior-dev', 'junior-dev', 'sentinel']
 

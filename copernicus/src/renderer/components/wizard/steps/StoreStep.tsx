@@ -1,11 +1,12 @@
 import React from 'react';
 import { FolderOpen, ShieldCheck, AlertTriangle } from 'lucide-react';
-import { WizardState } from '../../hooks/useWizardFlow';
+import { WizardState } from '../../../hooks/useWizardFlow';
 
 interface StoreStepProps {
   state: WizardState;
   updateState: (updates: Partial<WizardState>) => void;
   handlers: any;
+  invoke: <T = unknown>(channel: string, ...args: unknown[]) => Promise<T>;
 }
 
 export const StoreStep: React.FC<StoreStepProps> = ({ state, updateState, handlers }) => {

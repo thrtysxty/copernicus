@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { MessageSquare, Code, Workflow, GripVertical, Info, Search, Copy } from 'lucide-react'
-import { SettingsLoadResponse, unwrapIpc } from '../../../types/ipc'
+import { SettingsLoadResponse, unwrapIpc , IpcResult} from '../../../types/ipc'
 import log from '../../../utils/logger'
 
 interface Model {

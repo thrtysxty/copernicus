@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Search, Loader2, Play, BarChart2 } from 'lucide-react'
 import { useIpcError } from '../../hooks/useIpcError'
+import { IpcResult } from '../../types/ipc'
 
 interface BenchmarkResult {
   fastMRR: number
@@ -22,7 +23,7 @@ export const RAGSettings: React.FC = () => {
     try {
       const res = await invoke<IpcResult<BenchmarkResult>>('codebase:run-benchmark')
       if (res.ok) {
-        setResult(res.data)
+        setResult(res.data ?? null)
       } else {
         setError(res.error || 'Failed to run benchmark.')
       }

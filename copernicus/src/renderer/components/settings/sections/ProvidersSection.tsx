@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useIpcError } from '../../../hooks/useIpcError'
 import { useToastStore } from '../../../store/toastStore'
 import { useWorkspaceStore } from '../../../store/layout'
-import { unwrapIpc } from '../../../types/ipc'
+import { unwrapIpc , IpcResult, SettingsLoadResponse } from '../../../types/ipc'
 import {
   Key, Globe, Cpu, RefreshCcw, LogOut, Plus, Trash2,
   ShieldCheck, Loader2, GripVertical, Zap, Check

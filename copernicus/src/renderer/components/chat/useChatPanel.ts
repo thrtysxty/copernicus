@@ -302,8 +302,8 @@ export function useChatPanel(openFilePath: string | null | undefined, rootPath: 
     // Pre-flight LSP check
     if (!isLspWarningDismissed) {
       const res = await invoke<IpcResult<{ errorCount: number }>>('lsp:workspace-check')
-      if (res && res.errorCount > 0) {
-        setLspWarning(`${res.errorCount} TypeScript error(s) in workspace — agent may produce incorrect fixes.`)
+      if (res && res.data && res.data.errorCount > 0) {
+        setLspWarning(`${res.data.errorCount} TypeScript error(s) in workspace — agent may produce incorrect fixes.`)
         return
       }
     }

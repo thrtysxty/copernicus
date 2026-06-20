@@ -177,7 +177,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function DebouncedInput({ initialValue, onCommit, className, placeholder, type = 'text', min, max, step }: { initialValue: string | number, onCommit: (val: string | number) => void, className?: string, placeholder?: string, type?: string, min?: number, max?: number, step?: number }) {
+function DebouncedInput({ initialValue, onCommit, className, placeholder, type = 'text', min, max, step, autoFocus }: { initialValue: string | number, onCommit: (val: string | number) => void, className?: string, placeholder?: string, type?: string, min?: number, max?: number, step?: number, autoFocus?: boolean }) {
   const [val, setVal] = useState(initialValue);
   
   useEffect(() => {
@@ -186,6 +186,7 @@ function DebouncedInput({ initialValue, onCommit, className, placeholder, type =
 
   return (
     <input
+      autoFocus={autoFocus}
       type={type}
       min={min}
       max={max}
