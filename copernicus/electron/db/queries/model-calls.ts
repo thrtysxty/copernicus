@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { ModelCallRecord, ModelCallStats } from '../state-ledger';
+import type { ModelCallRecord, ModelCallStats } from '../types';
 
 interface TotalStatsRow {
   total_calls: number;

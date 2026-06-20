@@ -1,4 +1,5 @@
 import type { Database } from 'libsql';
+import { randomUUID } from 'node:crypto';
 
 interface SnapshotRow {
   id: string;
@@ -14,7 +15,7 @@ export function saveSnapshot(db: Database, payload: any): void {
     INSERT OR REPLACE INTO context_snapshots (id, panel_id, model_id, provider, messages, created_at)
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(
-    payload.id || crypto.randomUUID(),
+    payload.id || randomUUID(),
     payload.panel_id,
     payload.model_id,
     payload.provider,
@@ -28,7 +29,7 @@ export function getLatestSnapshot(db: Database, panelId: string): any | null {
   if (!row) return null;
   try {
     return { ...row, messages: JSON.parse(row.messages) };
-  } catch {
+  } catch (_err) {
     return row;
   }
 }

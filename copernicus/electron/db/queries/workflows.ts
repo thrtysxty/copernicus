@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { WorkflowWave } from '../state-ledger';
+import type { WorkflowWave } from '../types';
 
 interface WorkflowWaveRow {
   id: string;

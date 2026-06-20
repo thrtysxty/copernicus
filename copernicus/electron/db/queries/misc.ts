@@ -1,6 +1,6 @@
 import type { Database } from 'libsql';
 import * as crypto from 'crypto';
-import type { MemoryFragment } from '../state-ledger';
+import type { MemoryFragment } from '../types';
 
 export function insertAgentWorkLog(
   db: Database,

@@ -95,3 +95,24 @@ export function getCapexLeaderboard(db: Database, days: number | 'all'): any[] {
   query += ` GROUP BY provider, model_id`;
   return db.prepare(query).all(...params);
 }
+
+export function getStoriesThroughput(db: Database): any[] {
+  return db.prepare(`
+    SELECT strftime('%Y-W%W', updated_at) as week, COUNT(*) as completed
+    FROM stories WHERE status = 'COMPLETE' AND updated_at >= date('now', '-84 days')
+    GROUP BY week ORDER BY week ASC
+  `).all();
+}
+
+export function getStoriesStatusDistribution(db: Database): any[] {
+  return db.prepare(`
+    SELECT status, COUNT(*) as count FROM stories GROUP BY status ORDER BY count DESC
+  `).all();
+}
+
+export function getStoriesBugsByAssignee(db: Database): any[] {
+  return db.prepare(`
+    SELECT COALESCE(assigned_to, 'unassigned') as assignee, COUNT(*) as bug_count
+    FROM stories WHERE type = 'bug' GROUP BY assigned_to ORDER BY bug_count DESC
+  `).all();
+}

@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { MemoryFragment } from '../state-ledger';
+import type { MemoryFragment } from '../types';
 
 export function addAgentMemory(db: Database, params: { id: string, projectId: string, bankId: string, eventType: string, content: string, importance: number, tags: string | null, entities: string | null, meta: string | null, ts: number }): void {
   db.prepare(`

@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { StoryRecord } from '../state-ledger';
+import type { StoryRecord } from '../types';
 
 export function upsertStory(db: Database, story: StoryRecord): void {
   db.prepare(`

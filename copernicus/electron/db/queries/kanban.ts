@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { KanbanColumnRecord } from '../state-ledger';
+import type { KanbanColumnRecord } from '../types';
 
 export function initKanbanColumns(db: Database): void {
   const existing = db.prepare('SELECT COUNT(*) as count FROM kanban_columns').get() as { count: number } | undefined;

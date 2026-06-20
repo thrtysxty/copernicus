@@ -41,7 +41,7 @@ export function migrateKnowledgeBase(db: Database): void {
     'ALTER TABLE intelligence_documents ADD COLUMN agent_tools TEXT'
   ];
   for (const sql of newCols) {
-    try { db.exec(sql); } catch { /* column already exists */ }
+    try { db.exec(sql); } catch (_err) { /* column already exists */ }
   }
 }
 

@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { TestRunRecord } from '../state-ledger';
+import type { TestRunRecord } from '../types';
 
 export function upsertTestRun(db: Database, data: Omit<TestRunRecord, 'id' | 'run_at'>): number {
   const info = db.prepare(`

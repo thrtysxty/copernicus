@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { JulesSession } from '../state-ledger';
+import type { JulesSession } from '../types';
 
 export function upsertJulesSession(db: Database, s: JulesSession): void {
   db.prepare(`

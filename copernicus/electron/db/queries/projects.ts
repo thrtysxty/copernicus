@@ -1,5 +1,5 @@
 import type { Database } from 'libsql';
-import type { ProjectRecord } from '../state-ledger';
+import type { ProjectRecord } from '../types';
 
 export function upsertProject(db: Database, p: ProjectRecord): void {
   db.prepare(`
