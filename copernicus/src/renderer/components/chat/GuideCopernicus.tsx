@@ -43,7 +43,7 @@ export const GuideCopernicus: React.FC<GuideCopernicusProps> = ({
             <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end ml-auto' : 'items-start mr-auto'} max-w-[90%]`}>
               <div className="flex items-center gap-1.5 mb-1 px-1">
                 {m.role === 'copernicus' && <span className="text-copernicus-phosphor font-mono text-[11px] font-bold">CP</span>}
-                <span className={`text-[8px] uppercase font-bold tracking-widest font-mono ${m.role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'}`}>
+                <span className={`text-[11px] uppercase font-bold tracking-widest font-mono ${m.role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'}`}>
                   {m.role === 'user' ? 'DEVELOPER' : 'COPERNICUS'}
                 </span>
               </div>

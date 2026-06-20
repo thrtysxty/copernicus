@@ -140,9 +140,9 @@ export const DiagnosticsPanel: React.FC = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-zinc-300 font-bold truncate">{d.file.split(/[/\\]/).pop()}</span>
-            <span className="text-zinc-600 text-[8px] bg-zinc-900 px-1 rounded">L{d.line}:{d.col}</span>
-            <span className="text-zinc-500 text-[8px] uppercase border border-zinc-700 px-1 rounded">{d.source}</span>
-            <span className="text-zinc-500 text-[8px] uppercase">{d.code}</span>
+            <span className="text-zinc-600 text-[11px] bg-zinc-900 px-1 rounded">L{d.line}:{d.col}</span>
+            <span className="text-zinc-500 text-[11px] uppercase border border-zinc-700 px-1 rounded">{d.source}</span>
+            <span className="text-zinc-500 text-[11px] uppercase">{d.code}</span>
           </div>
           <div className="text-zinc-400 leading-relaxed break-words">{d.message}</div>
         </div>
@@ -153,21 +153,21 @@ export const DiagnosticsPanel: React.FC = () => {
   const tabs: ('All' | 'LSP' | 'ESLint' | 'Ruff' | 'Audit')[] = ['All', 'LSP', 'ESLint', 'Ruff', 'Audit']
 
   return (
-    <div data-testid="panel-diagnostics" className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
+    <div data-testid="panel-diagnostics" className="flex flex-col h-full bg-[#050505] font-mono text-[11px] text-zinc-300">
       <div className="p-4 border-b border-zinc-800 flex flex-col gap-3 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="font-bold tracking-widest uppercase">Diagnostics</span>
             <div className="flex items-center gap-1">
-              {errors.length > 0 && <span className="bg-red-500 text-[#050505] px-1.5 py-0.5 rounded-none text-[8px] font-bold">{errors.length}</span>}
-              {warnings.length > 0 && <span className="bg-amber-500 text-[#050505] px-1.5 py-0.5 rounded-none text-[8px] font-bold">{warnings.length}</span>}
+              {errors.length > 0 && <span className="bg-red-500 text-[#050505] px-1.5 py-0.5 rounded-none text-[11px] font-bold">{errors.length}</span>}
+              {warnings.length > 0 && <span className="bg-amber-500 text-[#050505] px-1.5 py-0.5 rounded-none text-[11px] font-bold">{warnings.length}</span>}
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={() => runAudit('npm')} 
               disabled={running}
-              className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded hover:bg-zinc-800 flex items-center gap-2 disabled:opacity-50 text-[9px] font-bold"
+              className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded hover:bg-zinc-800 flex items-center gap-2 disabled:opacity-50 text-[11px] font-bold"
               title="Run npm audit"
             >
               <ShieldAlert size={10} />
@@ -176,7 +176,7 @@ export const DiagnosticsPanel: React.FC = () => {
             <button 
               onClick={() => runAudit('pip')} 
               disabled={running}
-              className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded hover:bg-zinc-800 flex items-center gap-2 disabled:opacity-50 text-[9px] font-bold"
+              className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded hover:bg-zinc-800 flex items-center gap-2 disabled:opacity-50 text-[11px] font-bold"
               title="Run pip-audit"
             >
               <ShieldAlert size={10} />
@@ -185,7 +185,7 @@ export const DiagnosticsPanel: React.FC = () => {
             <button 
               onClick={runTsc} 
               disabled={running}
-              className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded hover:bg-zinc-800 flex items-center gap-2 disabled:opacity-50 text-[9px] font-bold"
+              className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded hover:bg-zinc-800 flex items-center gap-2 disabled:opacity-50 text-[11px] font-bold"
             >
               {running ? <Loader2 size={12} className="animate-spin" /> : <Play size={10} />}
               RUN TSC
@@ -198,7 +198,7 @@ export const DiagnosticsPanel: React.FC = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1 uppercase font-bold text-[9px] border ${
+              className={`px-3 py-1 uppercase font-bold text-[11px] border ${
                 activeTab === tab 
                 ? 'bg-copernicus-phosphor text-[#050505] rounded-none border-transparent' 
                 : 'text-zinc-500 border-transparent hover:text-zinc-300'
@@ -213,7 +213,7 @@ export const DiagnosticsPanel: React.FC = () => {
       {running && (
         <div className="px-4 py-2 bg-copernicus-phosphor/5 border-b border-copernicus-phosphor/10 flex items-center gap-3 shrink-0">
           <Loader2 size={12} className="animate-spin text-copernicus-phosphor" />
-          <span className="text-copernicus-phosphor text-[8px] truncate">{progress || 'Running diagnostics...'}</span>
+          <span className="text-copernicus-phosphor text-[11px] truncate">{progress || 'Running diagnostics...'}</span>
         </div>
       )}
 
@@ -223,14 +223,14 @@ export const DiagnosticsPanel: React.FC = () => {
             <FileText size={48} strokeWidth={1} />
             <div className="text-center">
               <div className="font-bold uppercase tracking-widest mb-1 text-zinc-500">No problems detected</div>
-              <div className="text-[8px]">Run TSC, ESLint, Ruff, or Audit to check for errors</div>
+              <div className="text-[11px]">Run TSC, ESLint, Ruff, or Audit to check for errors</div>
             </div>
           </div>
         )}
 
         {errors.length > 0 && (
           <div className="border-b border-zinc-800">
-            <div className="px-4 py-1.5 bg-red-400/5 text-red-400 font-bold uppercase tracking-widest text-[8px] flex items-center justify-between">
+            <div className="px-4 py-1.5 bg-red-400/5 text-red-400 font-bold uppercase tracking-widest text-[11px] flex items-center justify-between">
               <span>Errors</span>
               <span>{errors.length}</span>
             </div>
@@ -240,7 +240,7 @@ export const DiagnosticsPanel: React.FC = () => {
 
         {warnings.length > 0 && (
           <div className="border-b border-zinc-800">
-            <div className="px-4 py-1.5 bg-amber-400/5 text-amber-400 font-bold uppercase tracking-widest text-[8px] flex items-center justify-between">
+            <div className="px-4 py-1.5 bg-amber-400/5 text-amber-400 font-bold uppercase tracking-widest text-[11px] flex items-center justify-between">
               <span>Warnings</span>
               <span>{warnings.length}</span>
             </div>
@@ -250,7 +250,7 @@ export const DiagnosticsPanel: React.FC = () => {
 
         {infos.length > 0 && (
           <div>
-            <div className="px-4 py-1.5 bg-blue-400/5 text-blue-400 font-bold uppercase tracking-widest text-[8px] flex items-center justify-between">
+            <div className="px-4 py-1.5 bg-blue-400/5 text-blue-400 font-bold uppercase tracking-widest text-[11px] flex items-center justify-between">
               <span>Info</span>
               <span>{infos.length}</span>
             </div>
@@ -259,7 +259,7 @@ export const DiagnosticsPanel: React.FC = () => {
         )}
       </div>
 
-      <div className="p-2 border-t border-zinc-800 text-[8px] text-zinc-600 flex justify-between shrink-0">
+      <div className="p-2 border-t border-zinc-800 text-[11px] text-zinc-600 flex justify-between shrink-0">
         <span>DIAGNOSTICS</span>
         <span>{filteredDiagnostics.length} PROBLEMS SHOWN</span>
       </div>

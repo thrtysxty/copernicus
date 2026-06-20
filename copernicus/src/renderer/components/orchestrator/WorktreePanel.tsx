@@ -80,11 +80,11 @@ export const WorktreePanel: React.FC = () => {
     <div data-testid="panel-worktree" className="bg-zinc-950 border-t border-zinc-800">
       <div className="h-9 bg-[#080808] border-t border-zinc-800 flex items-center px-2">
         <GitBranch size={12} className="text-copernicus-phosphor mr-1" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] font-black text-copernicus-phosphor mr-2">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] font-black text-copernicus-phosphor mr-2">
           Worktrees
         </span>
         {nonMergedWorktrees.length > 0 && (
-          <span className="bg-copernicus-phosphor text-[#050505] rounded-full px-1.5 py-0.5 text-[8px] font-bold mr-2">
+          <span className="bg-copernicus-phosphor text-[#050505] rounded-full px-1.5 py-0.5 text-[11px] font-bold mr-2">
             {nonMergedWorktrees.length}
           </span>
         )}
@@ -96,11 +96,11 @@ export const WorktreePanel: React.FC = () => {
             onChange={(e) => setAlwaysUseWorktrees(e.target.checked)}
             className="accent-copernicus-phosphor w-2.5 h-2.5"
           />
-          <span className="text-[9px] font-mono text-zinc-500">Always</span>
+          <span className="text-[11px] font-mono text-zinc-500">Always</span>
         </label>
 
         <select
-          className="inspector-input bg-zinc-900 border border-zinc-700 text-[9px] text-zinc-300 px-1 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-copernicus-phosphor"
+          className="inspector-input bg-zinc-900 border border-zinc-700 text-[11px] text-zinc-300 px-1 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-copernicus-phosphor"
           value={defaultMergeMode}
           onChange={(e) => setDefaultMergeMode(e.target.value as 'gated' | 'yolo')}
         >
@@ -112,7 +112,7 @@ export const WorktreePanel: React.FC = () => {
 
       <div className="max-h-40 overflow-y-auto custom-scrollbar">
         {worktrees.length === 0 ? (
-          <p className="text-zinc-600 text-[10px] p-2 text-center">No worktrees active.</p>
+          <p className="text-zinc-600 text-[11px] p-2 text-center">No worktrees active.</p>
         ) : (
           worktrees.map((wt) => (
               <div key={wt.id} className="flex items-center p-2 border-b border-zinc-800 last:border-b-0">
@@ -125,16 +125,16 @@ export const WorktreePanel: React.FC = () => {
                   {wt.status === 'merged' && '✓'}
                   {wt.status === 'failed' && '✗'}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-300 truncate mr-2 flex-1">
+                <span className="font-mono text-[11px] text-zinc-300 truncate mr-2 flex-1">
                   {wt.branch}
                 </span>
                 {wt.storyId && (
-                  <span className="text-[9px] text-zinc-600 mr-2">#{wt.storyId}</span>
+                  <span className="text-[11px] text-zinc-600 mr-2">#{wt.storyId}</span>
                 )}
                 {wt.commitCount > 0 && (
-                  <span className="text-[9px] font-mono text-zinc-500 mr-2">{wt.commitCount} commits</span>
+                  <span className="text-[11px] font-mono text-zinc-500 mr-2">{wt.commitCount} commits</span>
                 )}
-                <span className="text-[9px] font-mono text-zinc-500 mr-2">
+                <span className="text-[11px] font-mono text-zinc-500 mr-2">
                   {timeAgo(wt.createdAt)} ago
                 </span>
 
@@ -142,13 +142,13 @@ export const WorktreePanel: React.FC = () => {
                   <>
                     <button
                       onClick={() => handleReview(wt.id)}
-                      className="text-[9px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:text-zinc-300 mr-2"
+                      className="text-[11px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:text-zinc-300 mr-2"
                     >
                       Review
                     </button>
                     <button
                       onClick={() => handleMerge(wt.id)}
-                      className="text-[9px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:text-zinc-300 mr-2"
+                      className="text-[11px] font-mono text-copernicus-phosphor border border-copernicus-phosphor/30 px-2 py-0.5 rounded hover:text-zinc-300 mr-2"
                     >
                       Merge
                     </button>

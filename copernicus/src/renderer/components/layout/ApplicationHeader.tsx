@@ -28,15 +28,15 @@ export const ApplicationHeader: React.FC = () => {
       <div className="flex items-center relative overflow-hidden max-w-[40%]" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
         <button
           onClick={() => setShowSwitcher(!showSwitcher)}
-          className="text-[10px] font-mono text-copernicus-phosphor font-bold uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity outline-none truncate max-w-[180px]"
+          className="text-[11px] font-mono text-copernicus-phosphor font-bold uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity outline-none truncate max-w-[180px]"
         >
           {repoName}
         </button>
         {showSwitcher && (
           <ProjectSwitcher onClose={() => setShowSwitcher(false)} />
         )}
-        <span className="text-zinc-600 mx-1.5 font-mono text-[10px]">//</span>
-        <span className="text-[10px] font-mono text-copernicus-phosphor font-bold uppercase tracking-wider">
+        <span className="text-zinc-600 mx-1.5 font-mono text-[11px]">//</span>
+        <span className="text-[11px] font-mono text-copernicus-phosphor font-bold uppercase tracking-wider">
           {activeStoryId ? `#${activeStoryId.match(/\d+/)?.[0] ?? activeStoryId}` : 'UNASSIGNED'}
         </span>
       </div>

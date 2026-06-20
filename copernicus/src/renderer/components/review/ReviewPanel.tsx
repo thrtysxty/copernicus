@@ -141,7 +141,7 @@ export const ReviewPanel: React.FC = () => {
         <div className="flex items-center gap-3">
           <Diff size={16} className="text-copernicus-phosphor" />
           <h2 className="text-[11px] uppercase tracking-widest font-bold text-zinc-200">Review Session</h2>
-          <span className="text-[10px] px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-zinc-500">
+          <span className="text-[11px] px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-zinc-500">
             {pendingReview.sessionId}
           </span>
         </div>
@@ -150,7 +150,7 @@ export const ReviewPanel: React.FC = () => {
           <button 
             onClick={runTsc}
             disabled={tscStatus === 'running'}
-            className="flex items-center gap-2 px-3 py-1 text-[10px] uppercase tracking-wider border border-copernicus-steel/40 hover:border-copernicus-phosphor/50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1 text-[11px] uppercase tracking-wider border border-copernicus-steel/40 hover:border-copernicus-phosphor/50 transition-colors disabled:opacity-50"
           >
             <Terminal size={12} />
             Run TSC
@@ -162,7 +162,7 @@ export const ReviewPanel: React.FC = () => {
 
           <button 
             onClick={handleApprove}
-            className="flex items-center gap-2 px-3 py-1 bg-copernicus-phosphor text-[#050505] rounded-none border border-copernicus-phosphor/30 hover:opacity-90 text-[10px] uppercase tracking-wider transition-opacity"
+            className="flex items-center gap-2 px-3 py-1 bg-copernicus-phosphor text-[#050505] rounded-none border border-copernicus-phosphor/30 hover:opacity-90 text-[11px] uppercase tracking-wider transition-opacity"
           >
             <CheckCircle size={12} />
             Approve & Close
@@ -170,7 +170,7 @@ export const ReviewPanel: React.FC = () => {
 
           <button 
             onClick={() => setShowReworkInput(!showReworkInput)}
-            className="flex items-center gap-2 px-3 py-1 border border-orange-500/30 text-orange-500/80 hover:bg-orange-500/5 text-[10px] uppercase tracking-wider transition-colors"
+            className="flex items-center gap-2 px-3 py-1 border border-orange-500/30 text-orange-500/80 hover:bg-orange-500/5 text-[11px] uppercase tracking-wider transition-colors"
           >
             <RotateCcw size={12} />
             Request Rework
@@ -180,7 +180,7 @@ export const ReviewPanel: React.FC = () => {
 
       {showReworkInput && (
         <div className="p-4 bg-orange-500/5 border-b border-orange-500/20">
-          <p className="text-[10px] uppercase mb-2 text-orange-500/70">Rework Instructions</p>
+          <p className="text-[11px] uppercase mb-2 text-orange-500/70">Rework Instructions</p>
           <textarea 
             value={reworkNote}
             onChange={(e) => setReworkNote(e.target.value)}
@@ -190,13 +190,13 @@ export const ReviewPanel: React.FC = () => {
           <div className="flex justify-end gap-2">
             <button 
               onClick={() => setShowReworkInput(false)}
-              className="px-2 py-1 text-[9px] uppercase border border-zinc-800 hover:border-zinc-700"
+              className="px-2 py-1 text-[11px] uppercase border border-zinc-800 hover:border-zinc-700"
             >
               Cancel
             </button>
             <button 
               onClick={handleRework}
-              className="px-2 py-1 text-[9px] uppercase bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30"
+              className="px-2 py-1 text-[11px] uppercase bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30"
             >
               Submit Feedback
             </button>
@@ -207,7 +207,7 @@ export const ReviewPanel: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         <div className="w-[240px] border-r border-copernicus-steel/30 flex flex-col shrink-0">
           <div className="p-2 border-b border-copernicus-steel/20 bg-zinc-950/50">
-            <span className="text-[9px] uppercase tracking-widest text-zinc-500">Changed Files</span>
+            <span className="text-[11px] uppercase tracking-widest text-zinc-500">Changed Files</span>
           </div>
           <div className="flex-1 overflow-y-auto">
             {pendingReview.changedFiles.map(file => {
@@ -230,13 +230,13 @@ export const ReviewPanel: React.FC = () => {
                       {basename}
                     </span>
                     {outOfScope && (
-                      <span className="flex items-center gap-1 text-[8px] px-1 py-0.5 bg-orange-500/10 text-orange-500 border border-orange-500/20 rounded-sm">
+                      <span className="flex items-center gap-1 text-[11px] px-1 py-0.5 bg-orange-500/10 text-orange-500 border border-orange-500/20 rounded-sm">
                         <AlertTriangle size={8} />
                         OUT OF SCOPE
                       </span>
                     )}
                   </div>
-                  <div className="text-[9px] text-zinc-600 truncate">
+                  <div className="text-[11px] text-zinc-600 truncate">
                     {dirname === '' ? '.' : dirname}
                   </div>
                 </button>
@@ -247,10 +247,10 @@ export const ReviewPanel: React.FC = () => {
           {tscOutput.length > 0 && (
             <div className="h-48 border-t border-copernicus-steel/30 bg-[#020202] flex flex-col">
               <div className="p-1 px-2 border-b border-copernicus-steel/20 flex justify-between items-center">
-                <span className="text-[9px] uppercase text-zinc-500">TSC Output</span>
-                <button onClick={() => setTscOutput([])} className="text-[9px] text-zinc-700 hover:text-zinc-500">Clear</button>
+                <span className="text-[11px] uppercase text-zinc-500">TSC Output</span>
+                <button onClick={() => setTscOutput([])} className="text-[11px] text-zinc-700 hover:text-zinc-500">Clear</button>
               </div>
-              <div className="flex-1 overflow-y-auto p-2 font-mono text-[9px] whitespace-pre-wrap leading-tight text-zinc-500">
+              <div className="flex-1 overflow-y-auto p-2 font-mono text-[11px] whitespace-pre-wrap leading-tight text-zinc-500">
                 {tscOutput.map((line, i) => (
                   <div key={i} className={line.includes('error TS') ? 'text-red-500/80' : ''}>
                     {line}

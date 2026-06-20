@@ -171,7 +171,7 @@ export function ContractProposalPanel() {
                   <div>
                     <h3 className="text-white font-mono font-bold flex items-center gap-2">
                       {p.role_name}
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${p.state === 'APPROVED' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                      <span className={`text-[11px] px-1.5 py-0.5 rounded ${p.state === 'APPROVED' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                         {p.state}
                       </span>
                     </h3>

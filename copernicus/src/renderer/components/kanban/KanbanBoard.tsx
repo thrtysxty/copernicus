@@ -142,7 +142,7 @@ const StoryCard = React.memo(({
       )}
 
       {workflowStatus?.storyId === story.id && workflowStatus.state !== 'IDLE' && story.status !== 'COMPLETE' && (
-        <div className={`mt-1 flex items-center gap-1 text-[8px] font-mono ${
+        <div className={`mt-1 flex items-center gap-1 text-[11px] font-mono ${
           workflowStatus.state === 'RUNNING' ? 'text-amber-400' :
           workflowStatus.state === 'COMPLETE' ? 'text-green-400' : 'text-red-400'
         }`}>
@@ -153,7 +153,7 @@ const StoryCard = React.memo(({
       )}
 
       <div className="mt-2 flex items-center gap-1.5 border-t border-white/5 pt-2 overflow-hidden">
-        <span className="text-[8px] font-mono text-zinc-300 shrink-0">#{story.id.match(/\d+/)?.[0] ?? story.id}</span>
+        <span className="text-[11px] font-mono text-zinc-300 shrink-0">#{story.id.match(/\d+/)?.[0] ?? story.id}</span>
         {story.workflowId && story.workflowId !== '— none —' && (
           <span className="text-[7px] font-mono text-zinc-300 truncate">{story.workflowId}</span>
         )}
@@ -392,7 +392,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
         {/* Left: Epics toggle */}
         <button
           onClick={() => setShowEpics(v => !v)}
-          className={`flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest transition-colors ${showEpics ? 'text-amber-400' : 'text-zinc-600 hover:text-amber-400'}`}
+          className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${showEpics ? 'text-amber-400' : 'text-zinc-600 hover:text-amber-400'}`}
         >
           <Crown size={10} />
           Epics
@@ -411,21 +411,21 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                 setTerminalOpen(true)
               }
             }}
-            className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
           >
             <Archive size={10} />
             {showArchive && terminalOpen ? 'Hide Archive' : 'View Archive'}
           </button>
           <button
             onClick={() => invoke('workflow:run', { templateId: 'release-retrospective' })}
-            className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
           >
             <Brain size={10} />
             Run Retrospective
           </button>
           <button
             onClick={() => setView('intelligence')}
-            className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
+            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor transition-colors"
           >
             <Glasses size={10} />
             Intel
@@ -437,7 +437,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
       {showEpics && (
         <div className="border-b border-amber-500/20 bg-amber-950/10 shrink-0 overflow-x-auto scrollbar-thin scrollbar-thumb-amber-900/40">
           {epics.length === 0 ? (
-            <p className="text-[9px] text-zinc-700 italic px-4 py-3">No epics yet — create one from the Planning lane.</p>
+            <p className="text-[11px] text-zinc-700 italic px-4 py-3">No epics yet — create one from the Planning lane.</p>
           ) : (
             <div className="flex gap-2 px-3 py-2">
               {epics.map(epic => {
@@ -455,7 +455,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                   >
                     <div className="flex items-center gap-2">
                       <Crown size={9} className={`shrink-0 ${isActive ? 'text-amber-300' : 'text-amber-600'}`} />
-                      <span className={`text-[9px] font-mono font-bold uppercase tracking-wide max-w-[140px] truncate ${isActive ? 'text-amber-200' : 'text-amber-500'}`}>{stripStoryPrefix(epic.title)}</span>
+                      <span className={`text-[11px] font-mono font-bold uppercase tracking-wide max-w-[140px] truncate ${isActive ? 'text-amber-200' : 'text-amber-500'}`}>{stripStoryPrefix(epic.title)}</span>
                     </div>
                     {isActive && (
                       <span className="text-[7px] font-mono text-amber-600 pl-[17px]">#{epic.id.match(/\d+/)?.[0] ?? epic.id} · {epicStoryCount} {epicStoryCount === 1 ? 'story' : 'stories'} · dbl-click to open</span>
@@ -481,7 +481,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
             onKeyDown={(e) => {
               if (e.key === 'Escape') setFilterQuery('')
             }}
-            className="w-full bg-zinc-900 border border-white/10 rounded px-2.5 py-1 text-[10px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-copernicus-phosphor/50 transition-colors"
+            className="w-full bg-zinc-900 border border-white/10 rounded px-2.5 py-1 text-[11px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-copernicus-phosphor/50 transition-colors"
           />
           {filterQuery && (
             <button
@@ -551,7 +551,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
 
               {isCollapsed ? (
                 <div className="flex-1 flex items-center justify-center">
-                  <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest origin-center whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                  <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest origin-center whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
                     {col.label}
                   </span>
                 </div>
@@ -559,12 +559,12 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                 <>
                   {/* Column Header */}
                   <div className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0">
-                    <span className="font-bold text-[9px] text-zinc-100 uppercase tracking-widest truncate">{col.label}</span>
+                    <span className="font-bold text-[11px] text-zinc-100 uppercase tracking-widest truncate">{col.label}</span>
                     <div className="flex items-center gap-2">
                       {col.id === 'planning' && colStories.length > 0 ? (
-                        <span className="bg-indigo-600 text-white text-[10px] rounded-full px-1.5 min-w-[18px] text-center font-bold">{colStories.length}</span>
+                        <span className="bg-indigo-600 text-white text-[11px] rounded-full px-1.5 min-w-[18px] text-center font-bold">{colStories.length}</span>
                       ) : (
-                        <span className="text-[9px] text-zinc-700 font-mono">{colStories.length}</span>
+                        <span className="text-[11px] text-zinc-700 font-mono">{colStories.length}</span>
                       )}
                     </div>
                   </div>
@@ -575,7 +575,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                         <button
                           data-testid="add-story-button"
                           onClick={() => setShowCreateDropdown(v => !v)}
-                          className="w-full flex items-center justify-center gap-1 py-1 text-[8px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor border border-dashed border-zinc-800 hover:border-copernicus-phosphor/40 rounded transition-colors"
+                          className="w-full flex items-center justify-center gap-1 py-1 text-[11px] font-bold uppercase tracking-widest text-zinc-600 hover:text-copernicus-phosphor border border-dashed border-zinc-800 hover:border-copernicus-phosphor/40 rounded transition-colors"
                         >
                           <Plus size={10} /> New
                         </button>
@@ -586,7 +586,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                                 key={t.id}
                                 data-testid={`template-${t.label.toLowerCase()}`}
                                 onClick={() => { setNewTitle(''); setNewEpic(''); setCreation({ phase: 'form', type: t.label }); setShowCreateDropdown(false) }}
-                                className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 flex items-center gap-2"
+                                className="w-full text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 flex items-center gap-2"
                               >
                                 {t.label === 'Epic' ? <Crown size={10} className="text-amber-400" /> :
                                  t.label === 'Bug' ? <Bug size={10} className="text-red-400" /> :
@@ -626,24 +626,24 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                     {col.id === 'planning' && creation.phase === 'form' && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-zinc-900 border border-copernicus-phosphor/30 rounded shadow-xl space-y-2 mb-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500">New {creation.type}</span>
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">New {creation.type}</span>
                           <button onClick={() => setShowCreateDropdown(!showCreateDropdown)} className="text-zinc-600 hover:text-white"><ChevronDown size={12} /></button>
                         </div>
                         <input 
                           autoFocus 
                           data-testid="new-story-title"
-                          className="w-full bg-black/40 border border-zinc-800 rounded p-1.5 text-[10px] focus:border-copernicus-phosphor outline-none" 
+                          className="w-full bg-black/40 border border-zinc-800 rounded p-1.5 text-[11px] focus:border-copernicus-phosphor outline-none" 
                           placeholder="Title..." 
                           value={newTitle} 
                           onChange={e => setNewTitle(e.target.value)} 
                           onKeyDown={e => e.key === 'Enter' && handleCreate()} 
                         />
                         <div className="flex justify-between gap-2">
-                          <button onClick={() => setCreation({ phase: 'idle' })} className="text-[8px] uppercase font-bold text-zinc-600 hover:text-zinc-400">Cancel</button>
+                          <button onClick={() => setCreation({ phase: 'idle' })} className="text-[11px] uppercase font-bold text-zinc-600 hover:text-zinc-400">Cancel</button>
                           <button 
                             onClick={handleCreate} 
                             data-testid="create-story-confirm"
-                            className="px-3 py-1 bg-copernicus-phosphor text-black rounded text-[8px] font-bold uppercase"
+                            className="px-3 py-1 bg-copernicus-phosphor text-black rounded text-[11px] font-bold uppercase"
                           >
                             Create
                           </button>
@@ -658,7 +658,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                           <Brain size={12} className="text-indigo-400 shrink-0" />
                           <h4 className="text-[11px] font-bold text-indigo-300">Set up project skills</h4>
                         </div>
-                        <p className="text-[9px] text-zinc-400 mb-3 leading-relaxed">
+                        <p className="text-[11px] text-zinc-400 mb-3 leading-relaxed">
                           Detected: {[
                             onboardingStackProfile.hasElectron && 'Electron',
                             onboardingStackProfile.hasReact && 'React',
@@ -670,7 +670,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                         </p>
                         <button
                           onClick={() => setShowSkillModal(true)}
-                          className="w-full py-1.5 text-[9px] font-bold uppercase tracking-widest bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 border border-indigo-500/30 rounded transition-colors"
+                          className="w-full py-1.5 text-[11px] font-bold uppercase tracking-widest bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 border border-indigo-500/30 rounded transition-colors"
                         >
                           Configure Skills →
                         </button>
@@ -713,7 +713,7 @@ export const KanbanBoard = React.memo(({ onStartSession }: KanbanBoardProps) => 
                     
                     {hasStoriesBeforeFilter && colStories.length === 0 && filterQuery && (
                       <div className="flex justify-center p-4">
-                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">No matches</span>
+                        <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">No matches</span>
                       </div>
                     )}
                   </div>

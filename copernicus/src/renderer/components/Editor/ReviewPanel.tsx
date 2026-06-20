@@ -33,7 +33,7 @@ const VerdictBadge: React.FC<{ verdict: Verdict }> = ({ verdict }) => {
   }
 
   return (
-    <span className={`text-[10px] px-2 py-0.5 rounded border ${colors[verdict]} uppercase tracking-wider font-mono`}>
+    <span className={`text-[11px] px-2 py-0.5 rounded border ${colors[verdict]} uppercase tracking-wider font-mono`}>
       {verdict}
     </span>
   )
@@ -115,18 +115,18 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
     <div className="h-64 border-t border-copernicus-steel bg-[#0D0D0D] flex flex-col">
       <div className="flex items-center justify-between px-3 py-2 border-b border-copernicus-steel bg-[#111]">
         <div className="flex items-center gap-4">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+            <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
                 Agent Review Panel
             </span>
             {agentAStatus === 'done' && agentBStatus === 'done' && (
-                <span className="text-[10px] text-zinc-400 animate-pulse">
+                <span className="text-[11px] text-zinc-400 animate-pulse">
                     Consensus Reached
                 </span>
             )}
         </div>
         <div className="flex gap-2">
             {(agentAStatus !== 'done' || agentBStatus !== 'done') && (
-                <span className="text-[10px] text-copernicus-phosphor animate-pulse">
+                <span className="text-[11px] text-copernicus-phosphor animate-pulse">
                     Reviewing...
                 </span>
             )}

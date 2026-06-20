@@ -50,7 +50,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
             <div
               key={tab.id}
               className={`
-                flex items-center group px-3 text-[10px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative min-w-[100px] h-8
+                flex items-center group px-3 text-[11px] font-mono border-r border-copernicus-steel hover:bg-copernicus-steel/20 transition-colors uppercase cursor-pointer relative min-w-[100px] h-8
                 ${activeTerminalId === tab.id ? 'text-copernicus-phosphor bg-copernicus-steel/10' : 'text-zinc-500'}
               `}
               onClick={() => setActiveTerminal(tab.id)}
@@ -62,7 +62,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
               <span className={`truncate ${tab.isBusy ? 'phosphor-glow font-bold' : ''}`}>
                 {tab.label}
                 {tab.ephemeral && (
-                  <span className="ml-1 text-[8px] text-zinc-600" title="Auto-closes on completion">◌</span>
+                  <span className="ml-1 text-[11px] text-zinc-600" title="Auto-closes on completion">◌</span>
                 )}
               </span>
 
@@ -103,7 +103,7 @@ export const TerminalTabs: React.FC<TerminalTabsProps> = ({ cwd }) => {
         {/* Panel Controls & CWD */}
         <div className="flex items-center gap-2 px-3 shrink-0">
           <div
-            className="text-[10px] font-mono text-zinc-500 mr-2 cursor-help hidden sm:block"
+            className="text-[11px] font-mono text-zinc-500 mr-2 cursor-help hidden sm:block"
             title={activeCwd}
           >
             {formatCwd(activeCwd)}

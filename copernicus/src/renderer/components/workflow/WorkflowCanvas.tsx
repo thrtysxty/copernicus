@@ -122,7 +122,7 @@ function NodePaletteSection({
 }) {
   return (
     <div>
-      <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1 px-1">
+      <p className="text-[11px] uppercase tracking-widest text-zinc-600 mb-1 px-1">
         {title}
       </p>
       <div className="flex flex-col gap-1">
@@ -131,7 +131,7 @@ function NodePaletteSection({
             key={tile.label}
             draggable
             onDragStart={() => onDragStart && onDragStart(tile)}
-            className="px-2 py-1.5 rounded text-[10px] font-mono cursor-grab
+            className="px-2 py-1.5 rounded text-[11px] font-mono cursor-grab
                        select-none bg-zinc-900 border hover:bg-zinc-800 transition-colors"
             style={{ borderColor: tile.color, color: tile.color }}
           >
@@ -146,7 +146,7 @@ function NodePaletteSection({
               e.dataTransfer.setData('tile-id', tile.id);
               e.dataTransfer.effectAllowed = 'copy';
             }}
-            className="px-2 py-1.5 rounded text-[10px] font-mono cursor-grab
+            className="px-2 py-1.5 rounded text-[11px] font-mono cursor-grab
                        select-none bg-zinc-900 border hover:bg-zinc-800 transition-colors"
             style={{ borderColor: '#FFD700', color: '#FFD700' }} // A distinct color for orchestrator tiles
           >
@@ -591,13 +591,13 @@ export default function WorkflowCanvas() {
   return (
     <div className="flex flex-col w-full h-full flex-1 bg-[#050505] text-white overflow-hidden relative pt-1">
       {detachedHead && (
-        <div className="bg-yellow-900/40 border-b border-yellow-600/40 text-yellow-300 text-[10px] font-mono px-3 py-1.5 flex-shrink-0 z-50 flex items-center gap-2">
+        <div className="bg-yellow-900/40 border-b border-yellow-600/40 text-yellow-300 text-[11px] font-mono px-3 py-1.5 flex-shrink-0 z-50 flex items-center gap-2">
           <span>⚠ Detached HEAD — create a branch before committing: git checkout -b my-branch</span>
           <button onClick={() => setDetachedHead(false)} className="ml-auto text-yellow-400 hover:text-white leading-none">×</button>
         </div>
       )}
       {rewindError && (
-        <div className="bg-red-900/40 border-b border-red-600/40 text-red-400 text-[10px] font-mono px-3 py-1.5 flex-shrink-0 z-50 flex items-center gap-2">
+        <div className="bg-red-900/40 border-b border-red-600/40 text-red-400 text-[11px] font-mono px-3 py-1.5 flex-shrink-0 z-50 flex items-center gap-2">
           <span>{rewindError}</span>
           <button onClick={() => setRewindError(null)} className="ml-auto text-red-400 hover:text-white leading-none">×</button>
         </div>
@@ -629,7 +629,7 @@ export default function WorkflowCanvas() {
                   className="text-left p-3 rounded bg-zinc-800 border border-transparent hover:border-copernicus-phosphor/50 hover:bg-zinc-700 transition-all group"
                 >
                   <p className="text-xs font-bold text-zinc-200 group-hover:text-copernicus-phosphor transition-colors">{t.name}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5">{t.description}</p>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">{t.description}</p>
                 </button>
               ))}
               <button
@@ -679,7 +679,7 @@ export default function WorkflowCanvas() {
           <div className="mt-auto pt-4 border-t border-zinc-800">
             <button 
               onClick={() => setShowQueue(!showQueue)}
-              className={`w-full py-2 text-[10px] font-mono uppercase tracking-widest rounded border transition-all ${
+              className={`w-full py-2 text-[11px] font-mono uppercase tracking-widest rounded border transition-all ${
                 showQueue 
                   ? 'bg-copernicus-phosphor text-[#050505] border-copernicus-phosphor' 
                   : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700'
@@ -791,7 +791,7 @@ export default function WorkflowCanvas() {
                             }
                           }
                         }}
-                        className="w-4 h-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded flex items-center justify-center text-[10px]"
+                        className="w-4 h-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded flex items-center justify-center text-[11px]"
                       >
                         ⟳
                       </button>
@@ -912,7 +912,7 @@ export default function WorkflowCanvas() {
         {showQueue && <DispatchQueue />}
       </div>
 
-      <div className="absolute bottom-4 left-44 text-[10px] text-zinc-600 font-mono uppercase tracking-widest">
+      <div className="absolute bottom-4 left-44 text-[11px] text-zinc-600 font-mono uppercase tracking-widest">
         Shift+Drag to connect • Drag to move
       </div>
 
@@ -934,7 +934,7 @@ export default function WorkflowCanvas() {
                   </div>
                 )}
                 {tourStep === 2 && (
-                   <div className="p-4 font-mono text-[9px] text-zinc-600">
+                   <div className="p-4 font-mono text-[11px] text-zinc-600">
                       <div className="flex gap-2 mb-1 opacity-50"><span className="text-zinc-800">1 |</span> <span className="text-blue-400">import</span> React <span className="text-blue-400">from</span> <span className="text-green-400">&apos;react&apos;</span></div>
                       <div className="flex gap-2 mb-1 animate-pulse"><span className="text-zinc-800">2 |</span> <span className="text-purple-400">export default function</span> <span className="text-yellow-400">App</span>() {'{'}</div>
                       <div className="flex gap-2 mb-1 animate-pulse delay-75"><span className="text-zinc-800">3 |</span>   <span className="text-blue-400">return</span> &lt;<span className="text-red-400">div</span>&gt;Hello World&lt;/<span className="text-red-400">div</span>&gt;</div>
@@ -973,7 +973,7 @@ export default function WorkflowCanvas() {
 
              <div className="flex justify-between items-end">
                 <div className="space-y-1">
-                   <div className="text-[10px] text-zinc-600 font-mono uppercase tracking-[0.2em] font-bold">AREA {tourStep} OF 5</div>
+                   <div className="text-[11px] text-zinc-600 font-mono uppercase tracking-[0.2em] font-bold">AREA {tourStep} OF 5</div>
                    <div className="text-lg font-bold text-copernicus-phosphor uppercase tracking-widest drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]">
                       {tourStep === 1 && "PLANNER"}
                       {tourStep === 2 && "EDITOR"}
@@ -988,7 +988,7 @@ export default function WorkflowCanvas() {
                         setHasCompletedTour()
                         setTourHighlight(null)
                      }}
-                     className="text-[9px] text-zinc-500 hover:text-zinc-300 uppercase underline decoration-zinc-700 underline-offset-4 font-bold"
+                     className="text-[11px] text-zinc-500 hover:text-zinc-300 uppercase underline decoration-zinc-700 underline-offset-4 font-bold"
                    >
                      Skip
                    </button>
@@ -1002,7 +1002,7 @@ export default function WorkflowCanvas() {
                        else if (nextStep === 5) setTourHighlight('reporter')
                        else if (nextStep === 6) setTourHighlight(null)
                      }}
-                     className="px-6 py-2 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold uppercase tracking-wider rounded-sm hover:bg-copernicus-phosphor/90 transition-all hover:scale-105 active:scale-95 shadow-[0_4px_10px_rgba(74,222,128,0.2)]"
+                     className="px-6 py-2 bg-copernicus-phosphor text-[#050505] text-[11px] font-bold uppercase tracking-wider rounded-sm hover:bg-copernicus-phosphor/90 transition-all hover:scale-105 active:scale-95 shadow-[0_4px_10px_rgba(74,222,128,0.2)]"
                    >
                      Next →
                    </button>

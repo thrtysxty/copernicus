@@ -127,14 +127,14 @@ export const SkillOnboardingModal: React.FC<SkillOnboardingModalProps> = ({ stac
           <button
             onClick={onDismiss}
             disabled={isGenerating}
-            className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50"
+            className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50"
           >
             Skip
           </button>
           <button
             onClick={handleGenerate}
             disabled={isGenerating || selectedCategories.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900 disabled:text-indigo-400 text-white text-[10px] font-bold uppercase tracking-widest rounded transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900 disabled:text-indigo-400 text-white text-[11px] font-bold uppercase tracking-widest rounded transition-colors"
           >
             {isGenerating ? (
               <>

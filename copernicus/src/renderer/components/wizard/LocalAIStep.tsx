@@ -83,7 +83,7 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
         </div>
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-white uppercase tracking-tighter">AI is ready</h2>
-          <p className="text-zinc-500 uppercase tracking-[0.2em] text-[10px]">Active Model: <span className="text-copernicus-phosphor">{activeModelName}</span></p>
+          <p className="text-zinc-500 uppercase tracking-[0.2em] text-[11px]">Active Model: <span className="text-copernicus-phosphor">{activeModelName}</span></p>
         </div>
         <button
           onClick={onNext}
@@ -101,7 +101,7 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
         <h2 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-3">
           <Zap size={18} className="text-copernicus-phosphor" /> Local Intelligence Setup
         </h2>
-        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">No API keys detected. Configuring local fallback.</p>
+        <p className="text-[11px] text-zinc-500 font-mono uppercase tracking-widest">No API keys detected. Configuring local fallback.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
@@ -113,13 +113,13 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
               <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">External Ollama</span>
             </div>
             {ollamaReachable
-              ? <span className="text-[9px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded font-bold">REACHABLE</span>
-              : <span className="text-[9px] bg-zinc-900/40 text-zinc-500 px-2 py-0.5 rounded font-bold">NOT DETECTED</span>
+              ? <span className="text-[11px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded font-bold">REACHABLE</span>
+              : <span className="text-[11px] bg-zinc-900/40 text-zinc-500 px-2 py-0.5 rounded font-bold">NOT DETECTED</span>
             }
           </div>
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Select Model</label>
+              <label className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">Select Model</label>
               <select
                 className="w-full bg-black/60 border border-zinc-800 rounded-lg p-3 text-xs text-white outline-none focus:border-copernicus-phosphor transition-colors"
                 value={selectedModel}
@@ -135,7 +135,7 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
             <button
               onClick={handleUseOllama}
               disabled={!selectedModel || !ollamaReachable}
-              className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 disabled:opacity-50"
+              className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all hover:brightness-110 disabled:opacity-50"
             >
               Use Ollama
             </button>
@@ -149,19 +149,19 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
               <Cpu size={18} className="text-copernicus-phosphor" />
               <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">Bundled Model</span>
             </div>
-            <span className="text-[9px] text-zinc-500 font-mono uppercase">Zero Dependency</span>
+            <span className="text-[11px] text-zinc-500 font-mono uppercase">Zero Dependency</span>
           </div>
           <div className="space-y-4">
             <div className="p-4 bg-zinc-900/30 border border-zinc-800 rounded-lg">
               <h4 className="text-xs font-bold text-white uppercase mb-1">Gemma 4 e4b (MLX)</h4>
-              <p className="text-[10px] text-zinc-500 leading-relaxed font-mono italic">
+              <p className="text-[11px] text-zinc-500 leading-relaxed font-mono italic">
                 Google Gemma 4 (8B, 128K context). GPU-accelerated via Metal on Apple Silicon. Downloaded once, runs offline.
               </p>
             </div>
             <button
               onClick={handleUseBundled}
               disabled={isStartingBundled}
-              className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 flex items-center justify-center gap-2"
+              className="w-full bg-copernicus-phosphor text-black py-3 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all hover:brightness-110 flex items-center justify-center gap-2"
             >
               {isStartingBundled ? <Activity size={14} className="animate-spin" /> : (!isCached ? null : <PlayIcon />)}
               {isStartingBundled
@@ -174,7 +174,7 @@ export const LocalAIStep: React.FC<LocalAIStepProps> = ({ onNext }) => {
         <div className="pt-4 flex justify-center">
           <button
             onClick={onNext}
-            className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-[0.2em] font-bold transition-colors"
+            className="text-[11px] text-zinc-500 hover:text-white uppercase tracking-[0.2em] font-bold transition-colors"
           >
             Skip for now
           </button>

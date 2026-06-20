@@ -88,7 +88,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({ onBranchChange }
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 w-64 bg-zinc-950 border border-copernicus-steel/30 rounded shadow-xl z-50 py-1">
-          <div className="px-3 py-2 border-b border-copernicus-steel/20 text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex justify-between items-center">
+          <div className="px-3 py-2 border-b border-copernicus-steel/20 text-[11px] uppercase tracking-widest text-zinc-500 font-bold flex justify-between items-center">
             <span>Local Branches</span>
             {loading && <span className="animate-pulse">...</span>}
           </div>

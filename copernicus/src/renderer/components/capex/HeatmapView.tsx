@@ -65,7 +65,7 @@ export const HeatmapView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-600 font-mono text-[10px] animate-pulse uppercase tracking-widest">
+      <div className="flex items-center justify-center h-full text-zinc-600 font-mono text-[11px] animate-pulse uppercase tracking-widest">
         Synthesizing_Heatmap_Telemetry...
       </div>
     )
@@ -76,19 +76,19 @@ export const HeatmapView: React.FC = () => {
       <header className="flex gap-2 mb-4 shrink-0">
         <button 
           onClick={() => setShowErrors(!showErrors)}
-          className={`px-3 py-1 rounded-[2px] text-[9px] font-bold border transition-all uppercase tracking-wider ${showErrors ? 'bg-red-900/30 border-red-500/40 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}
+          className={`px-3 py-1 rounded-[2px] text-[11px] font-bold border transition-all uppercase tracking-wider ${showErrors ? 'bg-red-900/30 border-red-500/40 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}
         >
           Errors
         </button>
         <button 
           onClick={() => setShowChurn(!showChurn)}
-          className={`px-3 py-1 rounded-[2px] text-[9px] font-bold border transition-all uppercase tracking-wider ${showChurn ? 'bg-orange-900/30 border-orange-500/40 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}
+          className={`px-3 py-1 rounded-[2px] text-[11px] font-bold border transition-all uppercase tracking-wider ${showChurn ? 'bg-orange-900/30 border-orange-500/40 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}
         >
           Churn
         </button>
         <button 
           onClick={() => setShowCost(!showCost)}
-          className={`px-3 py-1 rounded-[2px] text-[9px] font-bold border transition-all uppercase tracking-wider ${showCost ? 'bg-purple-900/30 border-purple-500/40 text-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}
+          className={`px-3 py-1 rounded-[2px] text-[11px] font-bold border transition-all uppercase tracking-wider ${showCost ? 'bg-purple-900/30 border-purple-500/40 text-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}
         >
           Cost
         </button>
@@ -124,7 +124,7 @@ export const HeatmapView: React.FC = () => {
               )}
               
               <div className="z-10 flex flex-col h-full justify-between">
-                <span className="text-[9px] font-mono text-zinc-400 group-hover:text-white transition-colors truncate">
+                <span className="text-[11px] font-mono text-zinc-400 group-hover:text-white transition-colors truncate">
                   {f.path.split('/').pop()}
                 </span>
                 <div className="flex justify-between items-end">

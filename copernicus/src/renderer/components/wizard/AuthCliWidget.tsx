@@ -141,7 +141,7 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
           ) : (
              <TerminalSquare size={12} className="text-copernicus-phosphor" />
           )}
-          <span className="text-[10px] font-mono text-zinc-300 uppercase tracking-widest">
+          <span className="text-[11px] font-mono text-zinc-300 uppercase tracking-widest">
             {stage === 'detecting_again' || stage === 'manual_auth' ? config.breadcrumbs['authenticating'] : config.breadcrumbs[stage]}
           </span>
         </div>
@@ -154,7 +154,7 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
         </button>
       </div>
 
-      <div className="p-3 bg-black min-h-[4.5rem] max-h-[4.5rem] overflow-y-auto font-mono text-[9px] leading-tight text-zinc-400 scrollbar-thin scrollbar-thumb-zinc-800 break-all">
+      <div className="p-3 bg-black min-h-[4.5rem] max-h-[4.5rem] overflow-y-auto font-mono text-[11px] leading-tight text-zinc-400 scrollbar-thin scrollbar-thumb-zinc-800 break-all">
         {output.map((line, i) => (
           <div key={i} className="whitespace-pre-wrap">{line}</div>
         ))}
@@ -164,8 +164,8 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
 
       {stage === 'manual_auth' && (
         <div className="p-3 bg-zinc-900/50 border-t border-zinc-800 flex flex-col gap-2">
-          <p className="text-[10px] text-zinc-400">Please authenticate in your terminal:</p>
-          <div className="bg-black border border-zinc-800 rounded p-2 text-copernicus-phosphor font-mono text-[10px]">
+          <p className="text-[11px] text-zinc-400">Please authenticate in your terminal:</p>
+          <div className="bg-black border border-zinc-800 rounded p-2 text-copernicus-phosphor font-mono text-[11px]">
             {config.authCmd}
           </div>
           <button
@@ -174,7 +174,7 @@ const AuthCliWidget: React.FC<AuthCliWidgetProps> = ({ config, onComplete, onCan
               invoke('auth:store-api-key', config.providerId, '__cli__', undefined, 'cli').catch(() => {});
               onComplete();
             }}
-            className="mt-2 w-full bg-copernicus-phosphor text-black py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-all hover:brightness-110 active:scale-95"
+            className="mt-2 w-full bg-copernicus-phosphor text-black py-1.5 rounded text-[11px] font-bold uppercase tracking-widest transition-all hover:brightness-110 active:scale-95"
           >
             Done — I've logged in
           </button>

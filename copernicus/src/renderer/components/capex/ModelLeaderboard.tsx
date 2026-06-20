@@ -85,7 +85,7 @@ export function ModelLeaderboard({ days }: { days: number | 'all' }) {
               ] as const).map(col => (
                 <th 
                   key={col.id} 
-                  className="p-3 text-[10px] tracking-widest text-zinc-500 font-bold uppercase cursor-pointer hover:bg-zinc-900/50 transition-colors whitespace-nowrap"
+                  className="p-3 text-[11px] tracking-widest text-zinc-500 font-bold uppercase cursor-pointer hover:bg-zinc-900/50 transition-colors whitespace-nowrap"
                   onClick={() => handleSort(col.id as SortField)}
                 >
                   <div className="flex items-center gap-1">

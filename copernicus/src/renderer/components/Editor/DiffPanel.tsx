@@ -156,8 +156,8 @@ export default function DiffPanel() {
       {/* Sidebar */}
       <div className="w-64 border-r border-copernicus-steel flex flex-col shrink-0">
         <div className="h-10 border-b border-copernicus-steel flex items-center px-4 justify-between bg-[#0A0A0A]">
-          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Modified Files</span>
-          <span className="text-[10px] font-mono text-black bg-copernicus-phosphor px-1.5 py-0.5 rounded">
+          <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">Modified Files</span>
+          <span className="text-[11px] font-mono text-black bg-copernicus-phosphor px-1.5 py-0.5 rounded">
             {files.length}
           </span>
         </div>
@@ -178,7 +178,7 @@ export default function DiffPanel() {
                 <div className={`text-[11px] font-mono truncate ${activeFileIndex === idx ? 'text-copernicus-phosphor' : 'text-zinc-400'}`}>
                   {file.path.split('/').pop()}
                 </div>
-                <div className="text-[9px] text-zinc-600 truncate">{file.path}</div>
+                <div className="text-[11px] text-zinc-600 truncate">{file.path}</div>
               </div>
             </button>
           ))}
@@ -186,13 +186,13 @@ export default function DiffPanel() {
         <div className="p-2 border-t border-copernicus-steel bg-[#0A0A0A] flex gap-2">
           <button 
             onClick={handleAcceptAll}
-            className="flex-1 h-8 flex items-center justify-center gap-2 bg-copernicus-phosphor text-[#050505] rounded text-[10px] font-mono font-bold hover:brightness-110 transition-all"
+            className="flex-1 h-8 flex items-center justify-center gap-2 bg-copernicus-phosphor text-[#050505] rounded text-[11px] font-mono font-bold hover:brightness-110 transition-all"
           >
             <CheckCheck size={14} /> ACCEPT_ALL
           </button>
           <button 
             onClick={handleRejectAll}
-            className="flex-1 h-8 flex items-center justify-center gap-2 bg-zinc-800 text-zinc-400 rounded text-[10px] font-mono hover:bg-zinc-700 transition-all"
+            className="flex-1 h-8 flex items-center justify-center gap-2 bg-zinc-800 text-zinc-400 rounded text-[11px] font-mono hover:bg-zinc-700 transition-all"
           >
             <Trash2 size={14} /> REJECT_ALL
           </button>
@@ -203,10 +203,10 @@ export default function DiffPanel() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="h-10 border-b border-copernicus-steel flex items-center px-4 justify-between bg-[#0A0A0A]">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+            <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
               Reviewing: <span className="text-zinc-300">{currentFile?.path}</span>
             </span>
-            <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded border ${
+            <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded border ${
               currentFile?.status === 'added' ? 'border-green-500/30 text-green-500 bg-green-500/5' :
               currentFile?.status === 'deleted' ? 'border-red-500/30 text-red-500 bg-red-500/5' :
               'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
@@ -225,13 +225,13 @@ export default function DiffPanel() {
             <div className="w-px h-4 bg-copernicus-steel mx-1" />
             <button
               onClick={() => handleAccept(activeFileIndex)}
-              className="h-7 px-3 flex items-center gap-2 bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/30 rounded text-[10px] font-mono hover:bg-copernicus-phosphor/30 transition-all"
+              className="h-7 px-3 flex items-center gap-2 bg-copernicus-phosphor/20 text-copernicus-phosphor border border-copernicus-phosphor/30 rounded text-[11px] font-mono hover:bg-copernicus-phosphor/30 transition-all"
             >
               <Check size={14} /> ACCEPT
             </button>
             <button
               onClick={() => handleReject(activeFileIndex)}
-              className="h-7 px-3 flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/30 rounded text-[10px] font-mono hover:bg-red-500/20 transition-all"
+              className="h-7 px-3 flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/30 rounded text-[11px] font-mono hover:bg-red-500/20 transition-all"
             >
               <X size={14} /> REJECT
             </button>

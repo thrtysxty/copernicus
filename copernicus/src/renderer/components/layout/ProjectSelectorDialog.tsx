@@ -125,7 +125,7 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
       <div className="bg-zinc-900 border border-copernicus-steel rounded shadow-2xl w-[420px] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="h-10 flex items-center justify-between px-4 border-b border-copernicus-steel shrink-0">
-          <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-[0.25em]">SELECT PROJECT</span>
+          <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-[0.25em]">SELECT PROJECT</span>
           <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors">
             <X size={14} />
           </button>
@@ -137,7 +137,7 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 h-8 text-[10px] font-mono uppercase tracking-widest transition-all
+              className={`flex-1 h-8 text-[11px] font-mono uppercase tracking-widest transition-all
                 ${tab === t
                   ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
                   : 'text-zinc-500 hover:text-zinc-300'
@@ -158,7 +158,7 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
                 </div>
               )}
               {usingFallback && (
-                <div className="px-4 py-2 bg-yellow-500/10 text-yellow-500 text-[10px] font-mono border-b border-yellow-500/20">
+                <div className="px-4 py-2 bg-yellow-500/10 text-yellow-500 text-[11px] font-mono border-b border-yellow-500/20">
                   No workspace configured in settings. Using fallback ~/Projects.
                 </div>
               )}
@@ -182,7 +182,7 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
 
           {tab === 'new' && (
             <div className="p-4 space-y-3">
-              <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
+              <div className="text-[11px] font-mono text-zinc-600 uppercase tracking-widest">
                 ~/Projects/
               </div>
               <input
@@ -207,7 +207,7 @@ export const ProjectSelectorDialog: React.FC<Props> = ({ open, onClose }) => {
 
         {/* Error */}
         {error && (
-          <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/20 text-[10px] font-mono text-red-400">
+          <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/20 text-[11px] font-mono text-red-400">
             {error}
           </div>
         )}

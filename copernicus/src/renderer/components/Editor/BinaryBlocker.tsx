@@ -16,7 +16,7 @@ export function BinaryBlocker({ filePath }: { filePath: string | null }) {
         The file <span className="text-zinc-300">"{name}"</span> is a {ext} binary. 
         Copernicus Editor does not support direct binary manipulation to prevent accidental corruption.
       </p>
-      <div className="px-3 py-1 rounded border border-zinc-800 bg-zinc-900/50 text-[9px] text-zinc-600 font-mono uppercase tracking-tighter">
+      <div className="px-3 py-1 rounded border border-zinc-800 bg-zinc-900/50 text-[11px] text-zinc-600 font-mono uppercase tracking-tighter">
         Security_Protocol_Alpha_Active
       </div>
     </div>

@@ -265,7 +265,7 @@ export function CapexModal({ type, isOpen, onClose, session }: CapexModalProps) 
                         <option value="">-- No Story Linked --</option>
                         {stories.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <p className="text-[8px] text-zinc-600 mt-1 uppercase italic">Selection based on kanban stories in {formData.repo_name || 'repo'}</p>
+                    <p className="text-[11px] text-zinc-600 mt-1 uppercase italic">Selection based on kanban stories in {formData.repo_name || 'repo'}</p>
                  </div>
               </div>
             ) : (

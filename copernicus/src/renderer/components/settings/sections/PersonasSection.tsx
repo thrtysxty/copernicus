@@ -131,12 +131,12 @@ export const PersonasSection: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest">Agent Personas</h2>
-          <p className="text-[10px] text-zinc-500 font-mono mt-1">Define specialised system prompts for model contexts.</p>
+          <p className="text-[11px] text-zinc-500 font-mono mt-1">Define specialised system prompts for model contexts.</p>
         </div>
         {!editingId && (
           <button 
             onClick={() => { setEditingId('new'); resetForm() }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded text-[10px] font-bold uppercase hover:border-copernicus-phosphor transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded text-[11px] font-bold uppercase hover:border-copernicus-phosphor transition-colors"
           >
             <Plus size={12} /> New Persona
           </button>
@@ -147,7 +147,7 @@ export const PersonasSection: React.FC = () => {
         <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg space-y-4 animate-in fade-in slide-in-from-top-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Persona Name</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Persona Name</label>
               <input 
                 type="text" 
                 value={name}
@@ -157,7 +157,7 @@ export const PersonasSection: React.FC = () => {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Role Selector</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Role Selector</label>
               <select 
                 value={role}
                 onChange={e => setRole(e.target.value as Persona['role'])}
@@ -172,7 +172,7 @@ export const PersonasSection: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[9px] text-zinc-500 uppercase font-bold">Description</label>
+            <label className="text-[11px] text-zinc-500 uppercase font-bold">Description</label>
             <textarea 
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -183,7 +183,7 @@ export const PersonasSection: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[9px] text-zinc-500 uppercase font-bold">System Prompt</label>
+            <label className="text-[11px] text-zinc-500 uppercase font-bold">System Prompt</label>
             <textarea 
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
@@ -194,7 +194,7 @@ export const PersonasSection: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[9px] text-zinc-500 uppercase font-bold">Model Affinity (Optional)</label>
+            <label className="text-[11px] text-zinc-500 uppercase font-bold">Model Affinity (Optional)</label>
             <input 
               type="text" 
               value={modelAffinity}
@@ -207,13 +207,13 @@ export const PersonasSection: React.FC = () => {
           <div className="flex gap-2 pt-2">
             <button 
               onClick={editingId === 'new' ? handleAdd : handleUpdate}
-              className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[10px] font-bold uppercase hover:bg-green-400 transition-colors"
+              className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[11px] font-bold uppercase hover:bg-green-400 transition-colors"
             >
               {editingId === 'new' ? 'Create Persona' : 'Update Persona'}
             </button>
             <button 
               onClick={resetForm}
-              className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold uppercase hover:bg-zinc-700 transition-colors text-zinc-400"
+              className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-[11px] font-bold uppercase hover:bg-zinc-700 transition-colors text-zinc-400"
             >
               Cancel
             </button>
@@ -223,7 +223,7 @@ export const PersonasSection: React.FC = () => {
 
       {/* System Personas */}
       <div className="space-y-2">
-        <p className="text-[9px] text-zinc-600 uppercase font-bold tracking-widest flex items-center gap-1.5">
+        <p className="text-[11px] text-zinc-600 uppercase font-bold tracking-widest flex items-center gap-1.5">
           <Lock size={9} /> System Personas
         </p>
         {SYSTEM_PERSONAS.map(p => {
@@ -236,10 +236,10 @@ export const PersonasSection: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className={`text-[10px] font-bold uppercase truncate tracking-tight ${enabled ? 'text-zinc-300' : 'text-zinc-600'}`}>{p.name}</h3>
-                    <span className="text-[8px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-600 font-bold uppercase">{p.role}</span>
+                    <h3 className={`text-[11px] font-bold uppercase truncate tracking-tight ${enabled ? 'text-zinc-300' : 'text-zinc-600'}`}>{p.name}</h3>
+                    <span className="text-[11px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-600 font-bold uppercase">{p.role}</span>
                   </div>
-                  <p className="text-[9px] text-zinc-600 mt-0.5 truncate font-mono italic">
+                  <p className="text-[11px] text-zinc-600 mt-0.5 truncate font-mono italic">
                     {p.description}
                   </p>
                 </div>
@@ -263,7 +263,7 @@ export const PersonasSection: React.FC = () => {
 
       {/* User Personas */}
       <div className="space-y-3">
-        <p className="text-[9px] text-zinc-600 uppercase font-bold tracking-widest">Custom Personas</p>
+        <p className="text-[11px] text-zinc-600 uppercase font-bold tracking-widest">Custom Personas</p>
         {customPersonas.map(p => {
           const enabled = !disabledPersonas.includes(p.id)
           return (
@@ -276,9 +276,9 @@ export const PersonasSection: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className={`text-xs font-bold uppercase truncate tracking-tight ${enabled ? 'text-zinc-200' : 'text-zinc-600'}`}>{p.name}</h3>
-                      <span className="text-[8px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-600 font-bold uppercase">{p.role}</span>
+                      <span className="text-[11px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-600 font-bold uppercase">{p.role}</span>
                     </div>
-                    <p className="text-[10px] text-zinc-500 mt-0.5 truncate font-mono italic opacity-60">
+                    <p className="text-[11px] text-zinc-500 mt-0.5 truncate font-mono italic opacity-60">
                       {p.description || p.systemPrompt.substring(0, 80)}
                     </p>
                   </div>
@@ -317,7 +317,7 @@ export const PersonasSection: React.FC = () => {
         {customPersonas.length === 0 && !editingId && (
           <div className="p-8 text-center border-2 border-dashed border-zinc-900 rounded-xl">
             <User className="mx-auto text-zinc-800 mb-3" size={28} />
-            <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-widest font-mono">No custom personas defined</p>
+            <p className="text-[11px] text-zinc-600 uppercase font-bold tracking-widest font-mono">No custom personas defined</p>
           </div>
         )}
       </div>

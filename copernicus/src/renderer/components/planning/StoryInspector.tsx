@@ -301,7 +301,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
                 }, 0)
               }}
               aria-label="Close story drawer"
-              className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
+              className="flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-copernicus-phosphor transition-colors uppercase tracking-wider"
             >
               <ArrowLeft size={11} /> Board
             </button>
@@ -339,16 +339,16 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">Story Identifier</p>
-            <p className="text-[10px] font-mono text-copernicus-phosphor font-bold">#{story.id.match(/\d+/)?.[0] ?? story.id}</p>
+            <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">Story Identifier</p>
+            <p className="text-[11px] font-mono text-copernicus-phosphor font-bold">#{story.id.match(/\d+/)?.[0] ?? story.id}</p>
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Priority</p>
+            <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Priority</p>
             <select
               value={localPriority}
               onChange={e => setLocalPriority(e.target.value)}
-              className={`text-[10px] font-bold border rounded px-1.5 py-0.5 focus:outline-none bg-transparent w-full ${PRIORITY_COLORS[localPriority] ?? PRIORITY_COLORS.UNKNOWN}`}
+              className={`text-[11px] font-bold border rounded px-1.5 py-0.5 focus:outline-none bg-transparent w-full ${PRIORITY_COLORS[localPriority] ?? PRIORITY_COLORS.UNKNOWN}`}
             >
               <option value="P0">P0 — Critical</option>
               <option value="P1">P1 — High</option>
@@ -358,11 +358,11 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Type</p>
+            <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Type</p>
             <select
               value={localType}
               onChange={e => setLocalType(e.target.value)}
-              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
+              className="text-[11px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
             >
               {['Feature', 'Bug Fix', 'Epic', 'Chore', 'Security', 'Infrastructure'].map(t => (
                 <option key={t} value={t}>{t}</option>
@@ -371,11 +371,11 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Assignee</p>
+            <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Assignee</p>
             <select
               value={localModel}
               onChange={e => setLocalModel(e.target.value)}
-              className="text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
+              className="text-[11px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50 w-full"
             >
               {modelOptions.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -384,22 +384,22 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Epic Context</p>
+            <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-1">Epic Context</p>
             {story.epic ? (
               <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] font-mono text-blue-400 font-bold text-left">#{story.epic.match(/\d+/)?.[0] ?? story.epic}</span>
-                <span className="text-[10px] text-zinc-300 truncate text-left" title={epics.find(e => e.id === story.epic)?.title ?? story.epic}>
+                <span className="text-[11px] font-mono text-blue-400 font-bold text-left">#{story.epic.match(/\d+/)?.[0] ?? story.epic}</span>
+                <span className="text-[11px] text-zinc-300 truncate text-left" title={epics.find(e => e.id === story.epic)?.title ?? story.epic}>
                   {epics.find(e => e.id === story.epic) ? stripStoryPrefix(epics.find(e => e.id === story.epic)!.title) : story.epic}
                 </span>
               </div>
             ) : (
-              <span className="text-[10px] text-zinc-500 italic text-left block">(No Epic)</span>
+              <span className="text-[11px] text-zinc-500 italic text-left block">(No Epic)</span>
             )}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-0.5">
-              <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full">Workflow</p>
+              <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full">Workflow</p>
               <button
                 onClick={() => {
                   if (workflowStatus === 'RUNNING') {
@@ -414,7 +414,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
                   }
                 }}
                 disabled={!localWorkflowId || localWorkflowId === '— none —'}
-                className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold border transition-all ${
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold border transition-all ${
                   !localWorkflowId || localWorkflowId === '— none —'
                     ? 'opacity-40 cursor-not-allowed border-zinc-800 text-zinc-600'
                     : workflowStatus === 'RUNNING'
@@ -428,7 +428,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
             <select
               value={localWorkflowId}
               onChange={e => setLocalWorkflowId(e.target.value)}
-              className="w-full text-[10px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
+              className="w-full text-[11px] bg-black/40 border border-zinc-800 rounded px-1.5 py-0.5 text-zinc-300 focus:outline-none focus:border-copernicus-phosphor/50"
             >
               <option value="— none —">— none —</option>
               {workflowTemplates.map(t => (
@@ -437,7 +437,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
             </select>
 
             {workflowStatus && workflowStatus !== 'IDLE' && (
-              <div className={`mt-2 flex items-center justify-center gap-1.5 text-[9px] font-mono px-2 py-1 rounded border ${
+              <div className={`mt-2 flex items-center justify-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border ${
                 workflowStatus === 'RUNNING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' : 
                 workflowStatus === 'COMPLETE' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
                 'bg-red-500/10 text-red-400 border-red-500/20'
@@ -449,13 +449,13 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
           </div>
 
           <div className="pt-2 border-t border-white/5">
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">Deployment Date</p>
-            <p className="text-[10px] text-zinc-500 font-mono">{story.date || '—'}</p>
+            <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">Deployment Date</p>
+            <p className="text-[11px] text-zinc-500 font-mono">{story.date || '—'}</p>
           </div>
 
           <div>
-            <p className="text-[8px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">System Status</p>
-            <span className="text-[9px] font-bold text-zinc-400 border border-zinc-700 rounded px-2 py-0.5 inline-block uppercase tracking-tighter">
+            <p className="text-[11px] text-zinc-600 uppercase tracking-widest text-left break-words w-full mb-0.5">System Status</p>
+            <span className="text-[11px] font-bold text-zinc-400 border border-zinc-700 rounded px-2 py-0.5 inline-block uppercase tracking-tighter">
               {story.status}
             </span>
           </div>
@@ -472,7 +472,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
                      initial={{ opacity: 0, y: 5 }} 
                      animate={{ opacity: 1, y: 0 }} 
                      exit={{ opacity: 0 }} 
-                     className="text-[9px] text-green-400 font-mono tracking-widest uppercase"
+                     className="text-[11px] text-green-400 font-mono tracking-widest uppercase"
                    >
                      ● SAVED
                    </motion.span>
@@ -520,7 +520,7 @@ export function StoryInspector({ storyId, stories }: StoryInspectorProps) {
 
       {/* ── Column 3: Chat ──────────────────────────────────────── */}
       <div className="border-l border-white/5 flex flex-col overflow-hidden min-w-0">
-        <ErrorBoundary fallback={<div className="p-4 text-red-400 text-[10px] font-mono italic">Chat failed to load.</div>}>
+        <ErrorBoundary fallback={<div className="p-4 text-red-400 text-[11px] font-mono italic">Chat failed to load.</div>}>
           <ChatPanel panelId={`story:${storyId}`} />
         </ErrorBoundary>
       </div>

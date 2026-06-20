@@ -22,7 +22,7 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
       <div className="h-9 flex items-center justify-between px-3 bg-zinc-900 border-b border-zinc-800">
         <div className="flex items-center gap-2">
           <SettingsIcon type={type} />
-          {!collapsed && <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Inspector</span>}
+          {!collapsed && <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">Inspector</span>}
         </div>
         <div className="flex items-center gap-2">
           <button 
@@ -47,7 +47,7 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
           {/* Core fields */}
           <section className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Component Label</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Component Label</label>
               <input 
                 type="text" 
                 value={label}
@@ -59,11 +59,11 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
 
           {/* Content fields */}
           <section className="space-y-3 border-t border-zinc-900 pt-4">
-            <h4 className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Content</h4>
+            <h4 className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">Content</h4>
             
             {(['heading', 'paragraph', 'button', 'badge', 'alert', 'label'].includes(type)) && (
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Text Content</label>
+                <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Text Content</label>
                 <textarea 
                   value={props.text || ''}
                   onChange={e => updateProps({ text: e.target.value })}
@@ -75,7 +75,7 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
 
             {(['input', 'textarea'].includes(type)) && (
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Placeholder</label>
+                <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Placeholder</label>
                 <input 
                   type="text" 
                   value={props.placeholder || ''}
@@ -87,7 +87,7 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
 
             {type === 'image' && (
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Image Source URL</label>
+                <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Image Source URL</label>
                 <input 
                   type="text" 
                   value={props.src || ''}
@@ -101,11 +101,11 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
 
           {/* Styling fields */}
           <section className="space-y-3 border-t border-zinc-900 pt-4">
-            <h4 className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Styling & Layout</h4>
+            <h4 className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">Styling & Layout</h4>
             
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Text Color</label>
+                <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Text Color</label>
                 <input 
                   type="text" 
                   value={props.color || ''}
@@ -115,7 +115,7 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">BG Color</label>
+                <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">BG Color</label>
                 <input 
                   type="text" 
                   value={props.bgColor || ''}
@@ -127,7 +127,7 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Padding (Tailwind)</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Padding (Tailwind)</label>
               <input 
                 type="text" 
                 value={props.padding || ''}
@@ -140,11 +140,11 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
             {type === 'button' && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Variant</label>
+                  <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Variant</label>
                   <select 
                     value={props.variant || 'primary'}
                     onChange={e => updateProps({ variant: e.target.value })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[10px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
                   >
                     <option value="primary">Primary</option>
                     <option value="secondary">Secondary</option>
@@ -153,11 +153,11 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Size</label>
+                  <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Size</label>
                   <select 
                     value={props.size || 'md'}
                     onChange={e => updateProps({ size: e.target.value })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[10px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] font-mono text-zinc-300 focus:border-copernicus-phosphor focus:outline-none"
                   >
                     <option value="sm">Small</option>
                     <option value="md">Medium</option>
@@ -175,7 +175,7 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
                   onChange={e => updateProps({ rounded: e.target.checked })}
                   className="w-3 h-3 rounded border-zinc-800 bg-zinc-900 text-copernicus-phosphor focus:ring-0 focus:ring-offset-0"
                 />
-                <span className="text-[9px] text-zinc-500 uppercase font-bold group-hover:text-zinc-300 transition-colors tracking-tighter">Rounded</span>
+                <span className="text-[11px] text-zinc-500 uppercase font-bold group-hover:text-zinc-300 transition-colors tracking-tighter">Rounded</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input 
@@ -184,12 +184,12 @@ export const UIComponentInspector: React.FC<UIComponentInspectorProps> = ({ comp
                   onChange={e => updateProps({ shadow: e.target.checked })}
                   className="w-3 h-3 rounded border-zinc-800 bg-zinc-900 text-copernicus-phosphor focus:ring-0 focus:ring-offset-0"
                 />
-                <span className="text-[9px] text-zinc-500 uppercase font-bold group-hover:text-zinc-300 transition-colors tracking-tighter">Shadow</span>
+                <span className="text-[11px] text-zinc-500 uppercase font-bold group-hover:text-zinc-300 transition-colors tracking-tighter">Shadow</span>
               </label>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-tighter">Extra Tailwind Classes</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold tracking-tighter">Extra Tailwind Classes</label>
               <input 
                 type="text" 
                 value={props.extraClasses || ''}

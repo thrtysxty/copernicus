@@ -12,7 +12,7 @@ export function SourceControlView() {
   }
 
   const renderHeader = (title: string, id: string) => (
-    <h3 className="text-[10px] uppercase font-mono tracking-widest text-zinc-400 p-2 border-b border-copernicus-steel border-l-2 border-l-copernicus-phosphor bg-zinc-900 shrink-0 flex items-center justify-between">
+    <h3 className="text-[11px] uppercase font-mono tracking-widest text-zinc-400 p-2 border-b border-copernicus-steel border-l-2 border-l-copernicus-phosphor bg-zinc-900 shrink-0 flex items-center justify-between">
       <span>{title}</span>
       <button
         onClick={() => toggleSpotlight(id)}
@@ -32,7 +32,7 @@ export function SourceControlView() {
     >
       <div className="flex flex-col items-center pt-2 pb-2 h-full gap-2">
         <Maximize2 size={10} className="text-zinc-500 shrink-0" />
-        <span className="flex-1 flex items-center [writing-mode:vertical-rl] rotate-180 text-[10px] uppercase font-mono tracking-widest text-zinc-500 select-none">
+        <span className="flex-1 flex items-center [writing-mode:vertical-rl] rotate-180 text-[11px] uppercase font-mono tracking-widest text-zinc-500 select-none">
           {title}
         </span>
       </div>
@@ -42,7 +42,7 @@ export function SourceControlView() {
   return (
     <div data-testid="panel-source-control" className="flex flex-col h-full w-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
       <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 shrink-0 bg-black/20">
-        <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+        <h2 className="text-[11px] uppercase tracking-widest text-zinc-500 font-bold">
           Source Control
         </h2>
       </header>

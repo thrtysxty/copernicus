@@ -168,7 +168,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       <div className="p-2 bg-copernicus-bg border-t border-hairline border-copernicus-steel">
         {imageError && (
-          <div className="text-[10px] text-red-400 mb-1 px-1 font-mono">{imageError}</div>
+          <div className="text-[11px] text-red-400 mb-1 px-1 font-mono">{imageError}</div>
         )}
         <div 
           onDragOver={(e) => e.preventDefault()}
@@ -189,7 +189,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   }}
                 >
                   <span className="text-copernicus-phosphor font-mono">{cmd.name}</span>
-                  <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">{cmd.description}</span>
+                  <span className="text-[11px] text-zinc-500 uppercase tracking-tighter">{cmd.description}</span>
                 </button>
               ))}
             </div>
@@ -199,7 +199,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           {pickerMode !== 'none' && pickerResults.length > 0 && (
             <div ref={pickerRef} className="absolute bottom-full left-0 right-0 mb-1 bg-[#111] border border-copernicus-steel rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
               <div className="flex justify-between items-center px-3 py-1 border-b border-copernicus-steel bg-black/40">
-                <span className="text-[9px] text-zinc-500 uppercase tracking-widest">
+                <span className="text-[11px] text-zinc-500 uppercase tracking-widest">
                   {pickerMode === 'file' ? '@ File Context' : pickerMode === 'codebase' ? '⌖ Semantic Results' : '# Story Context'}
                 </span>
                 <button
@@ -219,7 +219,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   onClick={() => handlePickerSelect(item)}
                 >
                   <span className="text-zinc-300 font-bold">{item.label}</span>
-                  <span className="text-[9px] text-zinc-600 truncate">{item.value}</span>
+                  <span className="text-[11px] text-zinc-600 truncate">{item.value}</span>
                 </button>
               ))}
             </div>

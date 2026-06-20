@@ -127,7 +127,7 @@ export const ExtensionsPanel: React.FC = () => {
           )}
         </form>
 
-        <div className="flex items-center gap-4 mt-4 text-[10px] font-mono uppercase tracking-widest">
+        <div className="flex items-center gap-4 mt-4 text-[11px] font-mono uppercase tracking-widest">
           <button
             onClick={() => setActiveTab('installed')}
             className={`px-2 py-1.5 transition-colors ${activeTab === 'installed' ? 'bg-copernicus-phosphor/10 text-zinc-200' : 'text-zinc-500 hover:text-zinc-400'}`}

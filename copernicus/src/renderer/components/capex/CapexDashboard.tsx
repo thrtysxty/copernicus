@@ -47,7 +47,7 @@ const TABS: { id: DashTab; label: string }[] = [
 function SummaryCard({ title, value, accent }: { title: string; value: string; accent?: boolean }) {
   return (
     <div className="bg-[#0A0A0A] border border-zinc-800 p-4 flex flex-col gap-1">
-      <span className="text-[10px] uppercase text-zinc-500 tracking-wider">{title}</span>
+      <span className="text-[11px] uppercase text-zinc-500 tracking-wider">{title}</span>
       <span className={`text-2xl font-mono font-bold ${accent ? 'text-copernicus-phosphor phosphor-glow' : 'text-zinc-200'}`}>{value}</span>
     </div>
   )
@@ -56,7 +56,7 @@ function SummaryCard({ title, value, accent }: { title: string; value: string; a
 function MiniStat({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[9px] uppercase text-zinc-600 tracking-wider">{label}</span>
+      <span className="text-[11px] uppercase text-zinc-600 tracking-wider">{label}</span>
       <span className="text-lg font-mono font-bold" style={{ color: color ?? CHART_THEME.text }}>{value}</span>
     </div>
   )
@@ -89,7 +89,7 @@ function DashboardPanel({
   return (
     <div className={`bg-[#0A0A0A] border border-zinc-800 flex flex-col overflow-hidden transition-all duration-300 ${isSpotlit ? 'flex-1' : ''}`}>
       <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 bg-black/20 shrink-0 group/dashpanel">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{title}</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{title}</span>
         <div className="flex items-center gap-2 opacity-0 group-hover/dashpanel:opacity-100 transition-opacity">
           {actions}
           <button 
@@ -264,7 +264,7 @@ export const CapexDashboard: React.FC = () => {
         <div className="flex h-full">
           {TABS.map(t => (
             <button key={t.id} onClick={() => activateTab(t.id)}
-              className={`flex items-center gap-1.5 px-3 text-[10px] font-bold tracking-widest transition-all h-full border-r border-zinc-800/50 ${
+              className={`flex items-center gap-1.5 px-3 text-[11px] font-bold tracking-widest transition-all h-full border-r border-zinc-800/50 ${
                 activeTab === t.id
                   ? 'text-copernicus-phosphor bg-copernicus-phosphor/5'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
@@ -278,11 +278,11 @@ export const CapexDashboard: React.FC = () => {
 
         <div className="flex items-center gap-4 pr-2">
           <div className="flex items-center gap-2 bg-black border border-zinc-800 rounded px-1.5 py-0.5">
-            <span className="text-[10px] text-zinc-500 font-mono">Range:</span>
+            <span className="text-[11px] text-zinc-500 font-mono">Range:</span>
             <select
               value={days}
               onChange={e => setDays(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="bg-transparent text-copernicus-phosphor text-[10px] uppercase font-bold tracking-widest outline-none border-none appearance-none cursor-pointer pr-1"
+              className="bg-transparent text-copernicus-phosphor text-[11px] uppercase font-bold tracking-widest outline-none border-none appearance-none cursor-pointer pr-1"
             >
               <option value={7}>7_DAYS</option>
               <option value={30}>30_DAYS</option>
@@ -290,11 +290,11 @@ export const CapexDashboard: React.FC = () => {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[9px] uppercase text-zinc-600 font-bold tracking-tighter">Rate_$/hr //</span>
+            <span className="text-[11px] uppercase text-zinc-600 font-bold tracking-tighter">Rate_$/hr //</span>
             <input
               type="number" value={rate}
               onChange={e => saveRate(Number(e.target.value))}
-              className="bg-black border border-zinc-800 text-right w-12 px-1 py-0.5 text-[10px] focus:border-copernicus-phosphor focus:outline-none text-zinc-400 font-mono"
+              className="bg-black border border-zinc-800 text-right w-12 px-1 py-0.5 text-[11px] focus:border-copernicus-phosphor focus:outline-none text-zinc-400 font-mono"
             />
           </div>
         </div>
@@ -307,7 +307,7 @@ export const CapexDashboard: React.FC = () => {
           {activeTab === 'financial' && (
             <>
               {finLoading ? (
-                <div className="text-copernicus-phosphor animate-pulse text-[10px] uppercase tracking-widest p-4">Loading_Financial_Stream...</div>
+                <div className="text-copernicus-phosphor animate-pulse text-[11px] uppercase tracking-widest p-4">Loading_Financial_Stream...</div>
               ) : (
                 <>
                   {!spotlightId && (
@@ -363,8 +363,8 @@ export const CapexDashboard: React.FC = () => {
                       }
                     >
                       <div className={`overflow-auto ${spotlightId === 'story-detail' ? 'h-full' : 'max-h-[300px]'}`}>
-                        <table className="w-full text-left text-[10px] border-collapse">
-                          <thead className="text-[9px] uppercase text-zinc-600 sticky top-0 bg-[#0A0A0A] z-10">
+                        <table className="w-full text-left text-[11px] border-collapse">
+                          <thead className="text-[11px] uppercase text-zinc-600 sticky top-0 bg-[#0A0A0A] z-10">
                             <tr className="border-b border-zinc-800">
                               {['Story','Component','Hours','Est. Cost','Category','Sessions','Last Active'].map(h => (
                                 <th key={h} className="p-2 font-black tracking-tight">{h}</th>
@@ -383,7 +383,7 @@ export const CapexDashboard: React.FC = () => {
                                   <td className="p-2 text-right font-mono">{r.total_hours.toFixed(2)}</td>
                                   <td className="p-2 text-right text-zinc-400 font-mono">${(r.total_hours * rate).toFixed(2)}</td>
                                   <td className="p-2">
-                                    <span className={`px-1.5 py-0.5 text-[8px] rounded font-black ${r.financial_category === 'CAPEX' ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor' : 'bg-zinc-800 text-zinc-500'}`}>
+                                    <span className={`px-1.5 py-0.5 text-[11px] rounded font-black ${r.financial_category === 'CAPEX' ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor' : 'bg-zinc-800 text-zinc-500'}`}>
                                       {r.financial_category}
                                     </span>
                                   </td>
@@ -413,11 +413,11 @@ export const CapexDashboard: React.FC = () => {
               {!spotlightId && (
                 <div className="flex items-center gap-4 mb-4">
                   <button onClick={runTests} disabled={testRunning}
-                    className="flex items-center gap-2 px-3 py-1.5 text-[10px] uppercase font-bold border border-copernicus-phosphor/30 text-copernicus-phosphor hover:text-zinc-300 transition-colors disabled:opacity-50">
+                    className="flex items-center gap-2 px-3 py-1.5 text-[11px] uppercase font-bold border border-copernicus-phosphor/30 text-copernicus-phosphor hover:text-zinc-300 transition-colors disabled:opacity-50">
                     {testRunning ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
                     {testRunning ? 'RUNNING...' : 'EXECUTE_SUITE'}
                   </button>
-                  {latestRun && <span className="text-[9px] text-zinc-600 font-mono uppercase">Last_Run: {new Date(latestRun.run_at).toLocaleString()}</span>}
+                  {latestRun && <span className="text-[11px] text-zinc-600 font-mono uppercase">Last_Run: {new Date(latestRun.run_at).toLocaleString()}</span>}
                 </div>
               )}
 
@@ -432,7 +432,7 @@ export const CapexDashboard: React.FC = () => {
                       </ResponsiveContainer>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-xl font-bold" style={{ color: gaugeColor }}>{coveragePct.toFixed(1)}%</span>
-                        <span className="text-[9px] text-zinc-600 uppercase font-black">Coverage</span>
+                        <span className="text-[11px] text-zinc-600 uppercase font-black">Coverage</span>
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-12 flex-1">
@@ -553,8 +553,8 @@ export const CapexDashboard: React.FC = () => {
                   }
                 >
                   <div className={`overflow-auto ${spotlightId === 'llm-attribution' ? 'h-full' : 'max-h-[300px]'}`}>
-                    <table className="w-full text-left text-[10px] border-collapse">
-                      <thead className="text-[9px] uppercase text-zinc-600 sticky top-0 bg-[#0A0A0A] z-10">
+                    <table className="w-full text-left text-[11px] border-collapse">
+                      <thead className="text-[11px] uppercase text-zinc-600 sticky top-0 bg-[#0A0A0A] z-10">
                         <tr className="border-b border-zinc-800">
                           {['Context','Calls','Tokens','Cost'].map(h => <th key={h} className="p-2 font-black">{h}</th>)}
                         </tr>

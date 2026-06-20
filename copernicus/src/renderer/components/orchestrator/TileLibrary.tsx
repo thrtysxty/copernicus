@@ -42,7 +42,7 @@ const CategorySection: React.FC<{
         className="w-full flex items-center px-3 py-1.5 bg-[#080808] border-b border-zinc-800 hover:bg-zinc-900 transition-colors group"
       >
         {expanded ? <ChevronDown size={10} className="mr-2 text-zinc-500" /> : <ChevronRight size={10} className="mr-2 text-zinc-500" />}
-        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-400 group-hover:text-zinc-200">
+        <span className="text-[11px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-400 group-hover:text-zinc-200">
           {CATEGORY_LABELS[category] || category}
         </span>
       </button>
@@ -98,7 +98,7 @@ export const TileLibrary: React.FC = () => {
     <aside className={`${collapsed ? 'w-8' : 'w-[220px]'} flex-shrink-0 bg-[#050505] border-r border-copernicus-steel flex flex-col h-full overflow-hidden select-none transition-all duration-200`}>
       <div className="h-9 flex items-center px-3 border-b border-copernicus-steel bg-[#080808] shrink-0">
         {!collapsed && (
-          <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor flex-1">
+          <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor flex-1">
             Tile Library
           </span>
         )}
@@ -120,7 +120,7 @@ export const TileLibrary: React.FC = () => {
       
       {!collapsed && (
         <div className="p-4 border-t border-zinc-800 bg-[#080808]/50 mt-auto">
-          <p className="text-[9px] font-mono text-zinc-600 leading-relaxed uppercase tracking-wider">
+          <p className="text-[11px] font-mono text-zinc-600 leading-relaxed uppercase tracking-wider">
             Drag tiles to canvas to add new operations to your workflow.
           </p>
         </div>

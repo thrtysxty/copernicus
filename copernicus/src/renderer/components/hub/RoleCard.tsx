@@ -95,7 +95,7 @@ export function RoleCard({ roleName, roleConfig, activeToken, isReadOnly, onUpda
     <div className="bg-zinc-900 border border-zinc-800 rounded p-4 flex flex-col gap-3 relative text-sm w-80 shrink-0">
       <div className="flex items-center justify-between">
         <h3 className="font-mono font-bold text-zinc-100">{roleName}</h3>
-        <div className={`text-[10px] font-mono px-1.5 py-0.5 rounded uppercase ${
+        <div className={`text-[11px] font-mono px-1.5 py-0.5 rounded uppercase ${
           roleConfig.class === 'regulatory' ? 'bg-amber-900/50 text-amber-500 border border-amber-900' : 'bg-blue-900/50 text-blue-500 border border-blue-900'
         }`}>
           {roleConfig.class}
@@ -117,7 +117,7 @@ export function RoleCard({ roleName, roleConfig, activeToken, isReadOnly, onUpda
         <div className="flex items-center gap-1 text-zinc-400 font-mono group cursor-help relative">
           <span>{roleConfig.authority_level}</span>
           <Lock size={12} className="text-zinc-600" />
-          <div className="hidden group-hover:block absolute bottom-full mb-1 left-0 bg-black text-zinc-300 text-[10px] p-2 rounded border border-zinc-800 w-48 z-10">
+          <div className="hidden group-hover:block absolute bottom-full mb-1 left-0 bg-black text-zinc-300 text-[11px] p-2 rounded border border-zinc-800 w-48 z-10">
             Constitutional field — edit `~/.copernicus/org.yaml` directly.
           </div>
         </div>

@@ -21,7 +21,7 @@ export function OutputView() {
   })()
 
   const renderHeader = (title: string, id: string) => (
-    <h3 className="text-[10px] uppercase font-mono tracking-widest text-zinc-400 p-2 border-b border-copernicus-steel border-l-2 border-l-copernicus-phosphor bg-zinc-900 shrink-0 flex items-center justify-between">
+    <h3 className="text-[11px] uppercase font-mono tracking-widest text-zinc-400 p-2 border-b border-copernicus-steel border-l-2 border-l-copernicus-phosphor bg-zinc-900 shrink-0 flex items-center justify-between">
       <span>{title}</span>
       <button
         onClick={() => toggleSpotlight(id)}
@@ -36,7 +36,7 @@ export function OutputView() {
   return (
     <div data-testid="panel-output" className="flex flex-col h-full w-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
       <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 shrink-0 bg-black/20">
-        <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
+        <h2 className="text-[11px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
           Output
           {diagnosticErrorCount > 0 && (
             <span className="text-copernicus-phosphor font-mono">{diagnosticErrorCount}</span>

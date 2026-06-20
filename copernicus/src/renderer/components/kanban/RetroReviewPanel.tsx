@@ -95,19 +95,19 @@ export const RetroReviewPanel: React.FC<RetroReviewPanelProps> = ({ retroId, onC
       <div className="flex items-center gap-2 mt-2">
         <button
           onClick={() => handleApprove(item.id)}
-          className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase ${item.status === 'approved' || item.status === 'edited' ? 'bg-copernicus-phosphor text-[#050505]' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+          className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold uppercase ${item.status === 'approved' || item.status === 'edited' ? 'bg-copernicus-phosphor text-[#050505]' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
         >
           <Check size={12} /> {item.status === 'approved' || item.status === 'edited' ? 'Approved' : approveLabel}
         </button>
         <button
           onClick={() => handleReject(item.id)}
-          className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase ${item.status === 'rejected' ? 'bg-red-500 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
+          className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold uppercase ${item.status === 'rejected' ? 'bg-red-500 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'}`}
         >
           <XCircle size={12} /> {item.status === 'rejected' ? 'Rejected' : 'Reject'}
         </button>
         <button
           onClick={() => startEdit(item.id, item.edited_content ?? item.content)}
-          className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700"
+          className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold uppercase bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700"
         >
           <Edit2 size={12} /> Edit
         </button>
@@ -128,13 +128,13 @@ export const RetroReviewPanel: React.FC<RetroReviewPanelProps> = ({ retroId, onC
         <div className="flex gap-2">
           <button
             onClick={() => handleEditSave(item.id)}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase bg-copernicus-phosphor text-[#050505] hover:opacity-90"
+            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold uppercase bg-copernicus-phosphor text-[#050505] hover:opacity-90"
           >
             <Save size={12} /> Save
           </button>
           <button
             onClick={() => setEditingId(null)}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase bg-zinc-800 text-zinc-400 hover:text-white"
+            className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold uppercase bg-zinc-800 text-zinc-400 hover:text-white"
           >
             Cancel
           </button>
@@ -152,25 +152,25 @@ export const RetroReviewPanel: React.FC<RetroReviewPanelProps> = ({ retroId, onC
         {type === 'memory_fact' && (
           <>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono text-zinc-400">Importance: {item.importance}</span>
-              <span className="text-[10px] font-mono text-zinc-400">Bank: {item.bank_id}</span>
+              <span className="text-[11px] font-mono text-zinc-400">Importance: {item.importance}</span>
+              <span className="text-[11px] font-mono text-zinc-400">Bank: {item.bank_id}</span>
             </div>
             {item.supersedes_memory_id && (
-              <div className="text-[10px] text-amber-500 mb-2 italic">Supersedes: {item.supersedes_memory_id}</div>
+              <div className="text-[11px] text-amber-500 mb-2 italic">Supersedes: {item.supersedes_memory_id}</div>
             )}
             {!isEditing && <p className="text-xs text-zinc-300 whitespace-pre-wrap">{displayContent}</p>}
           </>
         )}
         {type === 'file_patch' && (
           <>
-            <div className="text-[10px] font-mono text-zinc-400 mb-1">File: {item.target_file}</div>
-            <div className="text-[10px] font-mono text-zinc-400 mb-2">Section: {item.section}</div>
+            <div className="text-[11px] font-mono text-zinc-400 mb-1">File: {item.target_file}</div>
+            <div className="text-[11px] font-mono text-zinc-400 mb-2">Section: {item.section}</div>
             {!isEditing && (
-              <pre className="text-[10px] text-zinc-300 bg-black/50 p-2 rounded overflow-x-auto whitespace-pre-wrap">
+              <pre className="text-[11px] text-zinc-300 bg-black/50 p-2 rounded overflow-x-auto whitespace-pre-wrap">
                 {item.proposed_content || displayContent}
               </pre>
             )}
-            <div className="text-[10px] text-zinc-500 mt-2 italic">Rationale: {item.rationale}</div>
+            <div className="text-[11px] text-zinc-500 mt-2 italic">Rationale: {item.rationale}</div>
           </>
         )}
         {type === 'story_queue' && (
@@ -178,19 +178,19 @@ export const RetroReviewPanel: React.FC<RetroReviewPanelProps> = ({ retroId, onC
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-bold text-zinc-200">{item.title}</span>
               {item.priority && (
-                <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <span className="text-[11px] font-bold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   {item.priority}
                 </span>
               )}
             </div>
             {!isEditing && <p className="text-xs text-zinc-300">{displayContent}</p>}
-            <div className="text-[10px] text-zinc-500 mt-2 italic">Rationale: {item.rationale}</div>
+            <div className="text-[11px] text-zinc-500 mt-2 italic">Rationale: {item.rationale}</div>
           </>
         )}
         {type === 'convention' && (
           <>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono text-zinc-400">Scope: {item.scope}</span>
+              <span className="text-[11px] font-mono text-zinc-400">Scope: {item.scope}</span>
             </div>
             {!isEditing && <p className="text-xs text-zinc-300 whitespace-pre-wrap">{displayContent}</p>}
           </>
@@ -247,7 +247,7 @@ export const RetroReviewPanel: React.FC<RetroReviewPanelProps> = ({ retroId, onC
       className="absolute inset-y-0 left-0 w-[400px] bg-[#050505] border-r border-white/10 z-50 flex flex-col shadow-2xl"
     >
       <div className="h-8 flex items-center justify-between px-3 border-b border-white/10 shrink-0 bg-black/40">
-        <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">Retro Review</span>
+        <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-widest">Retro Review</span>
         <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
           <X size={14} />
         </button>
@@ -265,7 +265,7 @@ export const RetroReviewPanel: React.FC<RetroReviewPanelProps> = ({ retroId, onC
       </div>
 
       <div className="p-3 border-t border-white/10 bg-black/40 shrink-0">
-        <div className="flex items-center justify-between mb-3 text-[10px] font-mono">
+        <div className="flex items-center justify-between mb-3 text-[11px] font-mono">
           <span className="text-copernicus-phosphor">{approvedCount} approved</span>
           <span className="text-red-400">{rejectedCount} rejected</span>
           <span className="text-amber-400">{pendingCount} pending</span>
@@ -273,7 +273,7 @@ export const RetroReviewPanel: React.FC<RetroReviewPanelProps> = ({ retroId, onC
         <button
           onClick={handleCommit}
           disabled={!canCommit}
-          className={`w-full py-2 rounded text-[10px] font-bold uppercase tracking-widest transition-all ${canCommit ? 'bg-copernicus-phosphor text-[#050505] hover:opacity-90' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
+          className={`w-full py-2 rounded text-[11px] font-bold uppercase tracking-widest transition-all ${canCommit ? 'bg-copernicus-phosphor text-[#050505] hover:opacity-90' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
         >
           {canCommit ? 'Commit Approved' : 'Resolve Pending Items'}
         </button>

@@ -110,7 +110,7 @@ function CenterPanelHeader({
       >
         <button
           onClick={() => setStitchImportOpen(true)}
-          className="flex items-center gap-1.5 px-2 py-1 bg-[#0F0F0F] border border-zinc-800 rounded text-[9px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+          className="flex items-center gap-1.5 px-2 py-1 bg-[#0F0F0F] border border-zinc-800 rounded text-[11px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
         >
           <Download size={12} className="text-copernicus-phosphor" />
           <span className="translate-y-px">Import from Stitch</span>
@@ -118,7 +118,7 @@ function CenterPanelHeader({
         {activeFilePath && (
           <button
             onClick={() => setStitchVerifyOpen(true)}
-            className="flex items-center gap-1.5 px-2 py-1 bg-[#0F0F0F] border border-zinc-800 rounded text-[9px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 bg-[#0F0F0F] border border-zinc-800 rounded text-[11px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
           >
             <CheckSquare size={12} className="text-copernicus-phosphor" />
             <span className="translate-y-px">Verify with Stitch</span>
@@ -170,7 +170,7 @@ function CenterPanelHeader({
                 }}
                 className={`flex items-center gap-2 px-3 h-full border-r border-copernicus-steel cursor-pointer transition-all shrink-0 select-none group ${isActive ? 'bg-zinc-800 text-zinc-100 border-b border-copernicus-phosphor/70' : 'bg-[#0A0A0A] text-zinc-500 hover:text-zinc-300'}`}
               >
-                <span className="text-[10px] font-mono truncate max-w-[150px]">
+                <span className="text-[11px] font-mono truncate max-w-[150px]">
                   {fileName}{file.isDirty ? ' •' : ''}
                 </span>
                 <button
@@ -183,7 +183,7 @@ function CenterPanelHeader({
             )
           })
         ) : (
-          <span className="px-4 text-[10px] font-mono text-zinc-400 uppercase tracking-widest">{emptyTitle}</span>
+          <span className="px-4 text-[11px] font-mono text-zinc-400 uppercase tracking-widest">{emptyTitle}</span>
         )}
       </div>
 
@@ -201,21 +201,21 @@ function CenterPanelHeader({
               title="Toggle Ghost Mode (Shadow Coding)"
             >
               <Ghost size={12} />
-              <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline-block">Ghost</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider hidden sm:inline-block">Ghost</span>
             </button>
             
             {ghostMode && hasGhost && (
               <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2">
                 <button
                   onClick={handleAcceptAll}
-                  className="flex items-center gap-1 px-1.5 py-0.5 bg-copernicus-phosphor text-[#050505] rounded text-[9px] font-bold uppercase hover:opacity-90 transition-opacity"
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-copernicus-phosphor text-[#050505] rounded text-[11px] font-bold uppercase hover:opacity-90 transition-opacity"
                   title="Accept All Changes"
                 >
                   <Check size={10} /> <span className="hidden md:inline-block">Accept</span>
                 </button>
                 <button
                   onClick={handleRejectAll}
-                  className="flex items-center gap-1 px-1.5 py-0.5 bg-zinc-800 text-zinc-400 rounded text-[9px] font-bold uppercase hover:bg-zinc-700 transition-colors"
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-zinc-800 text-zinc-400 rounded text-[11px] font-bold uppercase hover:bg-zinc-700 transition-colors"
                   title="Reject All Changes"
                 >
                   <CloseIcon size={10} /> <span className="hidden md:inline-block">Reject</span>
@@ -396,7 +396,7 @@ export function CenterPanelRouter({
 
     if (!filePath) {
       return (
-        <div className="h-full w-full flex items-center justify-center bg-copernicus-bg font-mono text-[10px] text-zinc-600">
+        <div className="h-full w-full flex items-center justify-center bg-copernicus-bg font-mono text-[11px] text-zinc-600">
           NO_FILE_SELECTED
         </div>
       )
@@ -473,11 +473,11 @@ export function CenterPanelRouter({
         <div className="flex bg-zinc-900 rounded p-0.5 shrink-0">
           <button
             onClick={() => setMode('text')}
-            className={`px-2 py-0.5 rounded text-[9px] uppercase tracking-widest transition-colors ${mode === 'text' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-2 py-0.5 rounded text-[11px] uppercase tracking-widest transition-colors ${mode === 'text' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
           >Text</button>
           <button
             onClick={() => setMode('semantic')}
-            className={`px-2 py-0.5 rounded text-[9px] uppercase tracking-widest transition-colors ${mode === 'semantic' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-2 py-0.5 rounded text-[11px] uppercase tracking-widest transition-colors ${mode === 'semantic' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
           >Semantic</button>
         </div>
         {/* Search input */}
@@ -489,7 +489,7 @@ export function CenterPanelRouter({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={mode === 'text' ? 'Search text…' : 'Ask codebase…'}
-            className="w-full bg-zinc-950 border border-zinc-800 text-[10px] font-mono text-zinc-300 px-2 py-0.5 focus:outline-none focus:border-copernicus-phosphor placeholder-zinc-600"
+            className="w-full bg-zinc-950 border border-zinc-800 text-[11px] font-mono text-zinc-300 px-2 py-0.5 focus:outline-none focus:border-copernicus-phosphor placeholder-zinc-600"
           />
           {mode === 'text' && (
             <div className="absolute right-1 flex items-center gap-0.5">
@@ -499,13 +499,13 @@ export function CenterPanelRouter({
             </div>
           )}
         </div>
-        {loading && <span className="text-[8px] text-zinc-600 animate-pulse shrink-0">searching…</span>}
+        {loading && <span className="text-[11px] text-zinc-600 animate-pulse shrink-0">searching…</span>}
         {query && <button onClick={() => { setQuery(''); setResults([]); setSemanticResults([]) }} className="text-zinc-600 hover:text-zinc-400 shrink-0"><X size={10} /></button>}
       </div>
 
       {query && (results.length > 0 || semanticResults.length > 0 || loading) && (
         <div 
-          className="border-t border-copernicus-steel bg-[#080808] font-mono text-[10px] text-zinc-300 overflow-y-auto"
+          className="border-t border-copernicus-steel bg-[#080808] font-mono text-[11px] text-zinc-300 overflow-y-auto"
           style={{ maxHeight: '260px' }}
         >
           <div className="flex-1 overflow-y-auto p-2">
@@ -519,7 +519,7 @@ export function CenterPanelRouter({
                     <div className="flex items-center gap-2 text-zinc-400 font-bold px-2 py-1 bg-zinc-900/50 rounded sticky top-0">
                       <FileCode size={12} className="text-copernicus-phosphor/60" />
                       <span className="truncate">{file}</span>
-                      <span className="text-[8px] bg-zinc-800 px-1 rounded text-zinc-500">{matches.length}</span>
+                      <span className="text-[11px] bg-zinc-800 px-1 rounded text-zinc-500">{matches.length}</span>
                     </div>
                     {matches.map((m, i) => (
                       <div 
@@ -528,7 +528,7 @@ export function CenterPanelRouter({
                         onClick={() => openFile(m.file)}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-zinc-600 text-[8px] w-6 group-hover:text-copernicus-phosphor/70">L{m.line}</span>
+                          <span className="text-zinc-600 text-[11px] w-6 group-hover:text-copernicus-phosphor/70">L{m.line}</span>
                           <span className="text-zinc-300 truncate font-mono">{m.text}</span>
                         </div>
                       </div>
@@ -551,11 +551,11 @@ export function CenterPanelRouter({
                       <div className="flex items-center gap-2">
                         <SearchCode size={12} className="text-copernicus-phosphor" />
                         <span className="text-zinc-300 font-bold">{r.path.split('/').pop()}</span>
-                        <span className="text-[8px] text-zinc-600 truncate">{r.path}</span>
+                        <span className="text-[11px] text-zinc-600 truncate">{r.path}</span>
                       </div>
-                      <span className="text-[8px] text-zinc-500 uppercase tracking-tighter">Similarity: {Math.round(r.score * 100)}%</span>
+                      <span className="text-[11px] text-zinc-500 uppercase tracking-tighter">Similarity: {Math.round(r.score * 100)}%</span>
                     </div>
-                    <div className="text-zinc-400 text-[9px] line-clamp-2 pl-5">
+                    <div className="text-zinc-400 text-[11px] line-clamp-2 pl-5">
                       {r.content}
                     </div>
                   </div>
@@ -563,7 +563,7 @@ export function CenterPanelRouter({
               </div>
             )}
           </div>
-          <div className="px-3 py-1 border-t border-copernicus-steel/20 text-[8px] text-zinc-600 flex justify-between shrink-0 bg-[#050505]">
+          <div className="px-3 py-1 border-t border-copernicus-steel/20 text-[11px] text-zinc-600 flex justify-between shrink-0 bg-[#050505]">
             <span>MODE: {mode.toUpperCase()}</span>
             <span>{mode === 'text' ? results.length : semanticResults.length} RESULTS</span>
           </div>

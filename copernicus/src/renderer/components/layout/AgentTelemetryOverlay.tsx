@@ -89,7 +89,7 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 text-[9px] uppercase tracking-wider font-bold transition-colors ${
+            className={`px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold transition-colors ${
               activeTab === tab ? 'text-copernicus-phosphor border-b border-copernicus-phosphor' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
@@ -101,14 +101,14 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
       <div className="p-2 flex-1 overflow-y-auto max-h-[340px]">
         {activeTab === 'models' && onModelSelected ? (
           loading ? (
-            <div className="px-2 py-3 text-[10px] text-zinc-600 animate-pulse">Loading models…</div>
+            <div className="px-2 py-3 text-[11px] text-zinc-600 animate-pulse">Loading models…</div>
           ) : models.length === 0 ? (
-            <div className="px-2 py-3 text-[10px] text-zinc-600 italic">No models registered</div>
+            <div className="px-2 py-3 text-[11px] text-zinc-600 italic">No models registered</div>
           ) : (
             <div className="flex flex-col gap-3">
               {Object.entries(modelsByProvider).map(([provider, providerModels]) => (
                 <div key={provider}>
-                  <div className="px-2 pb-1 text-[8px] text-zinc-600 uppercase tracking-widest font-bold border-b border-white/5">
+                  <div className="px-2 pb-1 text-[11px] text-zinc-600 uppercase tracking-widest font-bold border-b border-white/5">
                     {PROVIDER_LABEL[provider] ?? provider}
                   </div>
                   {providerModels.map(model => (
@@ -122,9 +122,9 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
                         activeModelId === model.id ? 'text-copernicus-phosphor' : 'text-zinc-400'
                       }`}
                     >
-                      <span className="text-[10px] font-mono">{model.name}</span>
+                      <span className="text-[11px] font-mono">{model.name}</span>
                       {activeModelId === model.id && (
-                        <span className="text-[8px] text-copernicus-phosphor font-bold uppercase tracking-widest">active</span>
+                        <span className="text-[11px] text-copernicus-phosphor font-bold uppercase tracking-widest">active</span>
                       )}
                     </button>
                   ))}
@@ -135,14 +135,14 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
         ) : activeTab === 'activity' ? (
           <>
             {activityEntries.length === 0 ? (
-              <div className="px-2 py-3 text-[10px] text-zinc-600 italic">No active agents</div>
+              <div className="px-2 py-3 text-[11px] text-zinc-600 italic">No active agents</div>
             ) : activityEntries.map(([agent, data]) => (
               <div key={agent} className="flex items-center justify-between px-2 py-1.5 hover:bg-white/5 rounded">
                 <div className="flex items-center gap-2">
                   <span className={`w-1.5 h-1.5 rounded-full ${data.cost > 0 ? 'bg-copernicus-phosphor' : 'bg-zinc-600'}`} />
-                  <span className="text-[10px] text-zinc-300 capitalize">{agent}</span>
+                  <span className="text-[11px] text-zinc-300 capitalize">{agent}</span>
                 </div>
-                <div className="flex items-center gap-3 text-[9px] text-zinc-600 tabular-nums">
+                <div className="flex items-center gap-3 text-[11px] text-zinc-600 tabular-nums">
                   <span>{(data.tokensIn + data.tokensOut).toLocaleString()}t</span>
                   <span className="text-copernicus-phosphor">${(data.cost ?? 0).toFixed(4)}</span>
                 </div>
@@ -152,12 +152,12 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
         ) : (
           <div className="flex flex-col gap-1">
             {loading ? (
-              <div className="px-2 py-3 text-[10px] text-zinc-600 animate-pulse">Loading stats…</div>
+              <div className="px-2 py-3 text-[11px] text-zinc-600 animate-pulse">Loading stats…</div>
             ) : roleStats.length === 0 ? (
-              <div className="px-2 py-3 text-[10px] text-zinc-600 italic">No data available</div>
+              <div className="px-2 py-3 text-[11px] text-zinc-600 italic">No data available</div>
             ) : (
               <>
-                <div className="flex items-center justify-between px-2 py-1 text-[8px] text-zinc-500 uppercase font-bold border-b border-copernicus-steel/10">
+                <div className="flex items-center justify-between px-2 py-1 text-[11px] text-zinc-500 uppercase font-bold border-b border-copernicus-steel/10">
                   <span>Role</span>
                   <div className="flex gap-4">
                     <span className="w-16 text-right">Tokens</span>
@@ -166,16 +166,16 @@ export const AgentTelemetryOverlay: React.FC<Props> = ({ onModelSelected, active
                 </div>
                 {roleStats.map(stat => (
                   <div key={stat.role} className="flex items-center justify-between px-2 py-1.5 hover:bg-white/5 rounded">
-                    <span className="text-[10px] text-zinc-300 capitalize">{stat.role}</span>
-                    <div className="flex gap-4 text-[9px] text-zinc-600 tabular-nums">
+                    <span className="text-[11px] text-zinc-300 capitalize">{stat.role}</span>
+                    <div className="flex gap-4 text-[11px] text-zinc-600 tabular-nums">
                       <span className="w-16 text-right">{stat.tokens.toLocaleString()}t</span>
                       <span className="w-12 text-right text-copernicus-phosphor">${stat.cost.toFixed(4)}</span>
                     </div>
                   </div>
                 ))}
                 <div className="flex items-center justify-between px-2 py-2 mt-1 border-t border-copernicus-steel/30 bg-white/5 font-bold">
-                  <span className="text-[10px] text-zinc-400">TOTAL</span>
-                  <div className="flex gap-4 text-[9px] text-zinc-400 tabular-nums">
+                  <span className="text-[11px] text-zinc-400">TOTAL</span>
+                  <div className="flex gap-4 text-[11px] text-zinc-400 tabular-nums">
                     <span className="w-16 text-right">{totalTokens.toLocaleString()}t</span>
                     <span className="w-12 text-right text-copernicus-phosphor">${totalCost.toFixed(4)}</span>
                   </div>

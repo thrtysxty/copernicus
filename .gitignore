@@ -50,6 +50,10 @@ copernicus/out/
 .continue/
 .playwright-mcp/
 
+# Python tooling caches
+.pytest_cache/
+.ruff_cache/
+
 # Compiled native binaries (platform-specific)
 copernicus/better_sqlite3.node
 

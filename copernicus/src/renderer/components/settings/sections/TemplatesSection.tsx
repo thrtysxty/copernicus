@@ -120,12 +120,12 @@ export const TemplatesSection: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest">Story Templates</h2>
-            <p className="text-[10px] text-zinc-500 font-mono mt-1">Configure boilerplate for new Kanban stories.</p>
+            <p className="text-[11px] text-zinc-500 font-mono mt-1">Configure boilerplate for new Kanban stories.</p>
           </div>
           {!editingId && (
             <button 
               onClick={() => { setEditingId('new'); setName(''); setBody(DEFAULT_TEMPLATE) }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded text-[10px] font-bold uppercase hover:border-copernicus-phosphor transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded text-[11px] font-bold uppercase hover:border-copernicus-phosphor transition-colors"
             >
               <Plus size={12} /> New Template
             </button>
@@ -135,7 +135,7 @@ export const TemplatesSection: React.FC = () => {
         {editingId === 'new' && (
           <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg space-y-4 animate-in fade-in slide-in-from-top-2">
             <div className="space-y-1.5">
-              <label className="text-[9px] text-zinc-500 uppercase font-bold">Template Name</label>
+              <label className="text-[11px] text-zinc-500 uppercase font-bold">Template Name</label>
               <input 
                 type="text" 
                 value={name}
@@ -146,8 +146,8 @@ export const TemplatesSection: React.FC = () => {
             </div>
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="text-[9px] text-zinc-500 uppercase font-bold">Markdown Content</label>
-                <span className="text-[8px] text-zinc-600 font-mono italic">Supports &#123;&#123;storyTitle&#125;&#125; variable</span>
+                <label className="text-[11px] text-zinc-500 uppercase font-bold">Markdown Content</label>
+                <span className="text-[11px] text-zinc-600 font-mono italic">Supports &#123;&#123;storyTitle&#125;&#125; variable</span>
               </div>
               <textarea 
                 value={body}
@@ -159,13 +159,13 @@ export const TemplatesSection: React.FC = () => {
             <div className="flex gap-2">
               <button 
                 onClick={handleAdd}
-                className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[10px] font-bold uppercase hover:bg-green-400 transition-colors"
+                className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[11px] font-bold uppercase hover:bg-green-400 transition-colors"
               >
                 Create Template
               </button>
               <button 
                 onClick={() => { setEditingId(null); setName(''); setBody('') }}
-                className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold uppercase hover:bg-zinc-700 transition-colors text-zinc-400"
+                className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-[11px] font-bold uppercase hover:bg-zinc-700 transition-colors text-zinc-400"
               >
                 Cancel
               </button>
@@ -179,7 +179,7 @@ export const TemplatesSection: React.FC = () => {
               {editingId === t.id ? (
                 <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg space-y-4 animate-in fade-in">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] text-zinc-500 uppercase font-bold">Template Name</label>
+                    <label className="text-[11px] text-zinc-500 uppercase font-bold">Template Name</label>
                     <input
                       type="text"
                       value={name}
@@ -190,8 +190,8 @@ export const TemplatesSection: React.FC = () => {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <label className="text-[9px] text-zinc-500 uppercase font-bold">Markdown Content</label>
-                      <span className="text-[8px] text-zinc-600 font-mono italic">Supports &#123;&#123;storyTitle&#125;&#125; variable</span>
+                      <label className="text-[11px] text-zinc-500 uppercase font-bold">Markdown Content</label>
+                      <span className="text-[11px] text-zinc-600 font-mono italic">Supports &#123;&#123;storyTitle&#125;&#125; variable</span>
                     </div>
                     <textarea
                       value={body}
@@ -203,13 +203,13 @@ export const TemplatesSection: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={handleUpdate}
-                      className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[10px] font-bold uppercase hover:bg-green-400 transition-colors"
+                      className="flex-1 py-2 bg-copernicus-phosphor text-black rounded text-[11px] font-bold uppercase hover:bg-green-400 transition-colors"
                     >
                       Update Template
                     </button>
                     <button
                       onClick={() => { setEditingId(null); setName(''); setBody('') }}
-                      className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-[10px] font-bold uppercase hover:bg-zinc-700 transition-colors text-zinc-400"
+                      className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-[11px] font-bold uppercase hover:bg-zinc-700 transition-colors text-zinc-400"
                     >
                       Cancel
                     </button>
@@ -224,7 +224,7 @@ export const TemplatesSection: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-xs font-bold text-zinc-200 uppercase">{t.name}</h3>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{t.body.split('\n').length} lines</p>
+                        <p className="text-[11px] text-zinc-500 mt-0.5 font-mono">{t.body.split('\n').length} lines</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

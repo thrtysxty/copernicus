@@ -39,7 +39,7 @@ export const QueuePanel: React.FC = () => {
           </span>
           <button 
             onClick={clearPendingReady}
-            className="text-[10px] uppercase tracking-wider bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded"
+            className="text-[11px] uppercase tracking-wider bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded"
           >
             Dismiss
           </button>
@@ -49,16 +49,16 @@ export const QueuePanel: React.FC = () => {
       <div className="flex-1 overflow-y-auto space-y-2">
         {queue.map((entry) => (
           <div key={entry.storyNumber} className="bg-zinc-900/50 border border-zinc-800 p-3 rounded flex items-center gap-3">
-            <div className="bg-zinc-800 text-[10px] font-mono px-1.5 py-0.5 rounded text-zinc-400">
+            <div className="bg-zinc-800 text-[11px] font-mono px-1.5 py-0.5 rounded text-zinc-400">
               #{entry.storyNumber}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">{entry.title}</div>
               {entry.blockedBy.length > 0 && entry.status === 'waiting' && (
                 <div className="flex flex-wrap gap-1 mt-1">
-                  <span className="text-[10px] text-zinc-500">Blocked by:</span>
+                  <span className="text-[11px] text-zinc-500">Blocked by:</span>
                   {entry.blockedBy.map(dep => (
-                    <span key={dep} className="text-[9px] bg-zinc-800 px-1 rounded text-zinc-500">
+                    <span key={dep} className="text-[11px] bg-zinc-800 px-1 rounded text-zinc-500">
                       #{dep}
                     </span>
                   ))}
@@ -72,13 +72,13 @@ export const QueuePanel: React.FC = () => {
                 <div className="flex gap-1">
                   <button 
                     onClick={() => markDone(entry.storyNumber)}
-                    className="text-[10px] bg-green-900/30 hover:bg-green-900/50 text-green-400 px-2 py-1 rounded border border-green-900/50"
+                    className="text-[11px] bg-green-900/30 hover:bg-green-900/50 text-green-400 px-2 py-1 rounded border border-green-900/50"
                   >
                     Done
                   </button>
                   <button 
                     onClick={() => markFailed(entry.storyNumber)}
-                    className="text-[10px] bg-red-900/30 hover:bg-red-900/50 text-red-400 px-2 py-1 rounded border border-red-900/50"
+                    className="text-[11px] bg-red-900/30 hover:bg-red-900/50 text-red-400 px-2 py-1 rounded border border-red-900/50"
                   >
                     Fail
                   </button>

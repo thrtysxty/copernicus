@@ -87,7 +87,7 @@ export const LogViewer: React.FC = () => {
             <button
               key={src}
               onClick={() => toggleSource(src)}
-              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider transition-colors ${
+              className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider transition-colors ${
                 enabledSources.has(src) ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-600 hover:text-zinc-400'
               }`}
             >
@@ -101,7 +101,7 @@ export const LogViewer: React.FC = () => {
             <button
               key={lvl}
               onClick={() => setLevel(level === lvl ? null : lvl)}
-              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider transition-colors ${
+              className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider transition-colors ${
                 level === lvl ? 'bg-copernicus-phosphor text-[#050505] rounded-none' : 'text-zinc-600 hover:text-zinc-400'
               }`}
             >

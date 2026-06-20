@@ -72,12 +72,12 @@ export const TileInspector: React.FC = () => {
         {node && tile ? (
           <>
             <Icon size={14} className="text-copernicus-phosphor" />
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor flex-1 truncate ml-2">
+            <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor flex-1 truncate ml-2">
               {tile.label}
             </span>
           </>
         ) : (
-          <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor flex-1">
+          <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-black text-copernicus-phosphor flex-1">
             TILE INSPECTOR
           </span>
         )}
@@ -104,13 +104,13 @@ export const TileInspector: React.FC = () => {
             {/* Repo Selector for VCS/Container */}
             {(tile.category === 'vcs' || tile.category === 'container') && (
               <div className="space-y-2">
-                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                   <Database size={10} /> Workspace Repo
                 </label>
                 <select
                   value={node.config.repo || ''}
                   onChange={(e) => handleConfigChange('repo', e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-300 p-1.5 outline-none focus:border-copernicus-phosphor/50"
+                  className="w-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-300 p-1.5 outline-none focus:border-copernicus-phosphor/50"
                 >
                   <option value="">Select repo...</option>
                   {repos.map(r => <option key={r} value={r}>{r}</option>)}
@@ -121,14 +121,14 @@ export const TileInspector: React.FC = () => {
             {/* Dynamic Config Fields */}
             {tile.configSchema.map(field => (
               <div key={field.key} className="space-y-2">
-                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                <label className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
                   {field.label}
                 </label>
                 {field.type === 'select' ? (
                   <select
                     value={node.config[field.key] || ''}
                     onChange={(e) => handleConfigChange(field.key, e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-300 p-1.5 outline-none focus:border-copernicus-phosphor/50"
+                    className="w-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-300 p-1.5 outline-none focus:border-copernicus-phosphor/50"
                   >
                     {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
@@ -137,7 +137,7 @@ export const TileInspector: React.FC = () => {
                     type="text"
                     value={node.config[field.key] || ''}
                     onChange={(e) => handleConfigChange(field.key, e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-300 p-1.5 outline-none focus:border-copernicus-phosphor/50"
+                    className="w-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-300 p-1.5 outline-none focus:border-copernicus-phosphor/50"
                   />
                 )}
               </div>
@@ -147,7 +147,7 @@ export const TileInspector: React.FC = () => {
             {showScriptEditor && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                  <label className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                     <Code size={10} /> Script Command
                   </label>
                   <div className="flex items-center gap-1">
@@ -159,7 +159,7 @@ export const TileInspector: React.FC = () => {
                           e.target.value = ''
                         }
                       }}
-                      className="bg-transparent border-none text-[8px] font-mono text-zinc-500 uppercase outline-none cursor-pointer hover:text-copernicus-phosphor"
+                      className="bg-transparent border-none text-[11px] font-mono text-zinc-500 uppercase outline-none cursor-pointer hover:text-copernicus-phosphor"
                     >
                       <option value="">Insert variable</option>
                       <option value="{{storyId}}">storyId</option>
@@ -196,7 +196,7 @@ export const TileInspector: React.FC = () => {
           </div>
 
           <div className="p-4 border-t border-zinc-800 bg-[#080808]/50 mt-auto">
-            <p className="text-[9px] font-mono text-zinc-600 leading-relaxed uppercase tracking-wider">
+            <p className="text-[11px] font-mono text-zinc-600 leading-relaxed uppercase tracking-wider">
               Node ID: <span className="text-zinc-500">{node.id}</span>
             </p>
           </div>

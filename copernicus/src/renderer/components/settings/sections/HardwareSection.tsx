@@ -43,7 +43,7 @@ export const HardwareSection: React.FC = () => {
   return (
     <div className="space-y-6 font-mono text-xs text-zinc-300">
       <div>
-        <h3 className="text-[10px] uppercase text-zinc-500 tracking-widest mb-4">Touch Bar</h3>
+        <h3 className="text-[11px] uppercase text-zinc-500 tracking-widest mb-4">Touch Bar</h3>
 
         {/* Enable toggle */}
         <label className="flex items-center gap-3 mb-6 cursor-pointer group">
@@ -58,13 +58,13 @@ export const HardwareSection: React.FC = () => {
 
         {/* Telemetry mode */}
         <div className="mb-6">
-          <span className="text-[10px] uppercase text-zinc-500 tracking-widest block mb-2">Telemetry Display</span>
+          <span className="text-[11px] uppercase text-zinc-500 tracking-widest block mb-2">Telemetry Display</span>
           <div className="flex gap-2">
             {(['story-timer', 'branch-cost'] as const).map(mode => (
               <button
                 key={mode}
                 onClick={() => setConfig(p => ({ ...p, telemetryMode: mode }))}
-                className={`px-3 py-1 text-[10px] uppercase border transition-colors ${
+                className={`px-3 py-1 text-[11px] uppercase border transition-colors ${
                   config.telemetryMode === mode
                     ? 'border-copernicus-phosphor text-black bg-copernicus-phosphor'
                     : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'
@@ -78,7 +78,7 @@ export const HardwareSection: React.FC = () => {
 
         {/* Command tray */}
         <div className="mb-6">
-          <span className="text-[10px] uppercase text-zinc-500 tracking-widest block mb-2">Command Tray (3 slots)</span>
+          <span className="text-[11px] uppercase text-zinc-500 tracking-widest block mb-2">Command Tray (3 slots)</span>
           <div className="space-y-2 overflow-y-auto max-h-[180px] min-h-[40px]">
             {config.commands.map((cmd, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export const HardwareSection: React.FC = () => {
                 <select
                   value={cmd.target}
                   onChange={e => updateCommand(i, { target: e.target.value })}
-                  className="bg-zinc-950 border border-zinc-700 text-zinc-300 px-2 py-1 text-[10px] focus:border-copernicus-phosphor focus:outline-none rounded"
+                  className="bg-zinc-950 border border-zinc-700 text-zinc-300 px-2 py-1 text-[11px] focus:border-copernicus-phosphor focus:outline-none rounded"
                 >
                   {ALLOWED_TARGETS.map(t => (
                     <option key={t} value={t}>{t}</option>
@@ -97,9 +97,9 @@ export const HardwareSection: React.FC = () => {
                   onChange={e => updateCommand(i, { label: e.target.value.toUpperCase().slice(0, 8) })}
                   maxLength={8}
                   placeholder="LABEL"
-                  className="bg-zinc-950 border border-zinc-700 text-zinc-300 px-2 py-1 text-[10px] w-20 focus:border-copernicus-phosphor focus:outline-none rounded uppercase"
+                  className="bg-zinc-950 border border-zinc-700 text-zinc-300 px-2 py-1 text-[11px] w-20 focus:border-copernicus-phosphor focus:outline-none rounded uppercase"
                 />
-                <span className="text-zinc-600 text-[9px] italic">→ make {cmd.target}</span>
+                <span className="text-zinc-600 text-[11px] italic">→ make {cmd.target}</span>
               </div>
             ))}
           </div>
@@ -108,14 +108,14 @@ export const HardwareSection: React.FC = () => {
         <button
           onClick={save}
           disabled={saving}
-          className="px-4 py-1.5 bg-copernicus-phosphor text-black font-bold uppercase hover:bg-white transition-colors text-[10px] disabled:opacity-50 rounded"
+          className="px-4 py-1.5 bg-copernicus-phosphor text-black font-bold uppercase hover:bg-white transition-colors text-[11px] disabled:opacity-50 rounded"
         >
           {saving ? 'Applying…' : 'Apply to Touch Bar'}
         </button>
       </div>
 
       <div className="pt-6 border-t border-zinc-800">
-        <h3 className="text-[10px] uppercase text-zinc-500 tracking-widest mb-4">Telemetry Integration</h3>
+        <h3 className="text-[11px] uppercase text-zinc-500 tracking-widest mb-4">Telemetry Integration</h3>
         <TelemetryStatusTile />
       </div>
     </div>

@@ -455,7 +455,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
           {onClose && (
             <button
               onClick={onClose}
-              className="flex items-center gap-1 text-[10px] text-zinc-300 hover:text-white uppercase tracking-wider font-bold transition-colors"
+              className="flex items-center gap-1 text-[11px] text-zinc-300 hover:text-white uppercase tracking-wider font-bold transition-colors"
               title="Close"
             >
               <X size={14} /> Close
@@ -467,10 +467,10 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
           {isCreating ? (
             <div className="bg-zinc-900 border border-copernicus-phosphor/30 rounded p-2 space-y-2">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest">New Document</span>
+                <span className="text-[11px] font-bold uppercase text-zinc-500 tracking-widest">New Document</span>
               </div>
               <select
-                className="w-full bg-black/50 border border-zinc-800 rounded p-1 text-[10px] text-zinc-300 outline-none focus:border-copernicus-phosphor"
+                className="w-full bg-black/50 border border-zinc-800 rounded p-1 text-[11px] text-zinc-300 outline-none focus:border-copernicus-phosphor"
                 value={newDocType}
                 onChange={e => setNewDocType(e.target.value as IntelligenceDocType)}
               >
@@ -479,25 +479,25 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               <input
                 autoFocus
                 placeholder="Title..."
-                className="w-full bg-black/50 border border-zinc-800 rounded p-1 text-[10px] text-zinc-300 outline-none focus:border-copernicus-phosphor"
+                className="w-full bg-black/50 border border-zinc-800 rounded p-1 text-[11px] text-zinc-300 outline-none focus:border-copernicus-phosphor"
                 value={newDocTitle}
                 onChange={e => setNewDocTitle(e.target.value)}
               />
               <input
                 placeholder="Description..."
-                className="w-full bg-black/50 border border-zinc-800 rounded p-1 text-[10px] text-zinc-300 outline-none focus:border-copernicus-phosphor"
+                className="w-full bg-black/50 border border-zinc-800 rounded p-1 text-[11px] text-zinc-300 outline-none focus:border-copernicus-phosphor"
                 value={newDocDesc}
                 onChange={e => setNewDocDesc(e.target.value)}
               />
               <div className="flex gap-2 justify-end mt-2">
-                <button onClick={() => setIsCreating(false)} className="text-[9px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider">Cancel</button>
-                <button onClick={handleCreateSubmit} className="text-[9px] bg-copernicus-phosphor text-[#050505] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">Create</button>
+                <button onClick={() => setIsCreating(false)} className="text-[11px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider">Cancel</button>
+                <button onClick={handleCreateSubmit} className="text-[11px] bg-copernicus-phosphor text-[#050505] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">Create</button>
               </div>
             </div>
           ) : (
             <button
               onClick={() => setIsCreating(true)}
-              className="w-full flex items-center justify-center gap-1.5 py-1.5 border border-dashed border-zinc-800 hover:border-copernicus-phosphor/50 text-zinc-500 hover:text-copernicus-phosphor rounded text-[10px] font-bold uppercase tracking-wider transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 border border-dashed border-zinc-800 hover:border-copernicus-phosphor/50 text-zinc-500 hover:text-copernicus-phosphor rounded text-[11px] font-bold uppercase tracking-wider transition-colors"
             >
               <Plus size={12} /> New Document
             </button>
@@ -512,7 +512,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               return (
                 <div key={type} className="mb-4 mt-2">
                   <div className="px-3 py-1.5 flex items-center gap-1.5 sticky top-0 bg-zinc-950/90 backdrop-blur z-10 border-b border-white/5">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">{type}s</span>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{type}s</span>
                   </div>
                   <div>
                     {docs.map(doc => (
@@ -529,7 +529,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[11px] font-medium text-zinc-200 truncate">{doc.title}</div>
-                          <div className="text-[9px] text-zinc-500 truncate">{doc.description}</div>
+                          <div className="text-[11px] text-zinc-500 truncate">{doc.description}</div>
                         </div>
                         {renderStatusDots(doc)}
                         <button
@@ -602,7 +602,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
           <>
             <div className="p-4 border-b border-white/5 space-y-3 shrink-0">
               <div className="flex items-center gap-3">
-                <div className={`px-2 py-0.5 rounded-[2px] text-[9px] font-bold uppercase tracking-widest border border-white/10 ${TYPE_COLORS[selectedDoc.type].bg} ${TYPE_COLORS[selectedDoc.type].text}`}>
+                <div className={`px-2 py-0.5 rounded-[2px] text-[11px] font-bold uppercase tracking-widest border border-white/10 ${TYPE_COLORS[selectedDoc.type].bg} ${TYPE_COLORS[selectedDoc.type].text}`}>
                   {selectedDoc.type}
                 </div>
                 <input
@@ -621,7 +621,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                 placeholder="Description"
               />
               <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
-                <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mr-2">Providers:</span>
+                <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest mr-2">Providers:</span>
                 {CANONICAL_PROVIDERS.map(p => {
                   const isEnabled = selectedDoc.providers.some((prov: ProviderTarget) => prov.provider === p)
                   const meta = PROVIDER_METADATA[p] || { displayName: p }
@@ -630,7 +630,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                       key={p}
                       onClick={() => toggleProvider(selectedDoc, p)}
                       title={meta.displayName}
-                      className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-colors border ${isEnabled ? 'bg-copernicus-phosphor text-[#050505] border-copernicus-phosphor rounded-none' : 'bg-zinc-900 text-zinc-600 border-zinc-800 hover:border-zinc-600'}`}
+                      className={`px-2 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors border ${isEnabled ? 'bg-copernicus-phosphor text-[#050505] border-copernicus-phosphor rounded-none' : 'bg-zinc-900 text-zinc-600 border-zinc-800 hover:border-zinc-600'}`}
                     >
                       {p}
                     </button>
@@ -647,7 +647,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                   <span>This instruction document exceeds 200 lines. Consider splitting into rule documents for better scoping.</span>
                 </div>
                 <div>
-                  <button onClick={handleOpenSplitModal} className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors rounded text-[10px] font-bold uppercase tracking-wider">
+                  <button onClick={handleOpenSplitModal} className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors rounded text-[11px] font-bold uppercase tracking-wider">
                     <SplitSquareHorizontal size={12} />
                     Split into rules
                   </button>
@@ -669,15 +669,15 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                 <div className="px-4 py-2 border-b border-white/5 flex items-center justify-between bg-zinc-900 sticky top-0 z-10">
                   <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Proposed Split</span>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setIsSplitModalOpen(false)} className="text-[10px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider">Cancel</button>
-                    <button onClick={handleCreateAllSplit} className="text-[10px] bg-copernicus-phosphor text-[#050505] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">Create all</button>
+                    <button onClick={() => setIsSplitModalOpen(false)} className="text-[11px] text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider">Cancel</button>
+                    <button onClick={handleCreateAllSplit} className="text-[11px] bg-copernicus-phosphor text-[#050505] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">Create all</button>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-zinc-800">
                   {splitProposals.map((proposal, idx) => (
                     <div key={idx} className="bg-black/50 border border-white/5 rounded flex flex-col">
                       <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2 bg-zinc-900/50">
-                        <div className={`px-2 py-0.5 rounded-[2px] text-[9px] font-bold uppercase tracking-widest border border-white/10 ${idx === 0 ? TYPE_COLORS['instruction'].bg + ' ' + TYPE_COLORS['instruction'].text : TYPE_COLORS['rule'].bg + ' ' + TYPE_COLORS['rule'].text}`}>
+                        <div className={`px-2 py-0.5 rounded-[2px] text-[11px] font-bold uppercase tracking-widest border border-white/10 ${idx === 0 ? TYPE_COLORS['instruction'].bg + ' ' + TYPE_COLORS['instruction'].text : TYPE_COLORS['rule'].bg + ' ' + TYPE_COLORS['rule'].text}`}>
                           {idx === 0 ? 'instruction' : 'rule'}
                         </div>
                         <input
@@ -691,7 +691,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                         />
                       </div>
                       <textarea
-                        className="w-full h-32 bg-transparent text-zinc-400 font-mono text-[10px] p-3 outline-none resize-y scrollbar-thin scrollbar-thumb-zinc-800"
+                        className="w-full h-32 bg-transparent text-zinc-400 font-mono text-[11px] p-3 outline-none resize-y scrollbar-thin scrollbar-thumb-zinc-800"
                         value={proposal.content}
                         onChange={e => {
                           const newProposals = [...splitProposals]
@@ -709,7 +709,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
               <div className="shrink-0 p-4 border-b border-white/5 bg-zinc-900/50 flex flex-col gap-4">
                 <div className="flex gap-4">
                   <div className="flex-1 flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Model</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Model</label>
                     <select
                       className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
                       value={selectedDoc.agentModel || ''}
@@ -730,7 +730,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                     </select>
                   </div>
                   <div className="flex-1 flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Max Tokens</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Max Tokens</label>
                     <input
                       type="number"
                       placeholder="e.g. 4096"
@@ -748,7 +748,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                     />
                   </div>
                   <div className="flex-1 flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Temperature</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Temperature</label>
                     <input
                       type="number"
                       step="0.1"
@@ -771,7 +771,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-1 flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Skills (comma-separated)</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Skills (comma-separated)</label>
                     <input
                       type="text"
                       placeholder="e.g. typescript, python, react"
@@ -789,7 +789,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                     />
                   </div>
                   <div className="flex-1 flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Tools (comma-separated)</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Tools (comma-separated)</label>
                     <input
                       type="text"
                       placeholder="e.g. browser, terminal, fs"
@@ -821,7 +821,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                   <>
                     <div className="flex gap-4">
                       <div className="flex-1 flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Agent Name</label>
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Agent Name</label>
                         <input
                           type="text"
                           className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
@@ -830,7 +830,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                         />
                       </div>
                       <div className="flex-1 flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Description</label>
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Description</label>
                         <input
                           type="text"
                           className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors"
@@ -840,7 +840,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Communication Style</label>
+                      <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Communication Style</label>
                       <textarea
                         className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors resize-y h-20"
                         value={instructionFields.communicationStyle}
@@ -849,7 +849,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                     </div>
                     <div className="flex gap-4">
                       <div className="flex-1 flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Core Values (one per line)</label>
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Core Values (one per line)</label>
                         <textarea
                           className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors resize-y h-24"
                           value={instructionFields.coreValues.join('\n')}
@@ -857,7 +857,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                         />
                       </div>
                       <div className="flex-1 flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Expertise Areas (comma-separated)</label>
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Expertise Areas (comma-separated)</label>
                         <textarea
                           className="bg-black/40 border border-white/10 text-xs text-zinc-300 rounded px-2 py-1 outline-none focus:border-cyan-500/50 transition-colors resize-y h-24"
                           value={instructionFields.expertiseAreas.join(', ')}
@@ -877,7 +877,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
             {(!selectedDoc || (selectedDoc.type === 'instruction' && instructionFields.isParsed)) ? null : (
               <div className="flex-1 p-4 relative flex flex-col gap-2">
                 {selectedDoc.type === 'agent' && (
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Description / System Prompt</label>
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Description / System Prompt</label>
                 )}
                 <textarea
                   className="w-full h-full bg-transparent text-zinc-300 font-mono text-xs outline-none resize-none scrollbar-thin scrollbar-thumb-zinc-800"
@@ -910,7 +910,7 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                     className="flex items-center gap-1.5 px-4 py-2 w-full text-left hover:bg-zinc-800/50 transition-colors"
                   >
                     {isPreviewOpen ? <ChevronDown size={14} className="text-zinc-500" /> : <ChevronRight size={14} className="text-zinc-500" />}
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Frontmatter preview</span>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">Frontmatter preview</span>
                   </button>
                   {isPreviewOpen && (
                     <div className="px-4 pb-4 space-y-3">
@@ -918,8 +918,8 @@ export const IntelligenceManager: React.FC<IntelligenceManagerProps> = ({ onClos
                         <>
                           {selectedDoc.providers.some(p => p.provider === 'claude') && (
                             <div className="space-y-1">
-                              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Claude</span>
-                              <pre className="p-2 bg-black/50 border border-white/5 rounded text-[10px] text-zinc-300 font-mono overflow-x-auto">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Claude</span>
+                              <pre className="p-2 bg-black/50 border border-white/5 rounded text-[11px] text-zinc-300 font-mono overflow-x-auto">
 {`--- (paths:)
 paths:
 ${(selectedDoc.pathScope || []).length > 0 ? (selectedDoc.pathScope || []).map(p => `  - ${p}`).join('\n') : ''}
@@ -930,8 +930,8 @@ ${editorContent}`}
                           )}
                           {selectedDoc.providers.some(p => p.provider === 'cursor') && (
                             <div className="space-y-1">
-                              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Cursor</span>
-                              <pre className="p-2 bg-black/50 border border-white/5 rounded text-[10px] text-zinc-300 font-mono overflow-x-auto">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Cursor</span>
+                              <pre className="p-2 bg-black/50 border border-white/5 rounded text-[11px] text-zinc-300 font-mono overflow-x-auto">
 {`---
 globs:
 ${(selectedDoc.pathScope || []).length > 0 ? (selectedDoc.pathScope || []).map(p => `  - ${p}`).join('\n') : ''}
@@ -943,7 +943,7 @@ ${editorContent}`}
                         </>
                       ) : null}
                       {selectedDoc.providers.some(p => p.provider !== 'claude' && p.provider !== 'cursor') && (
-                        <div className="text-[10px] text-zinc-500">
+                        <div className="text-[11px] text-zinc-500">
                           Path scoping not supported — content will be appended to the provider's instruction file.
                         </div>
                       )}
@@ -957,7 +957,7 @@ ${editorContent}`}
             <div className="h-8 border-t border-white/5 bg-zinc-950 flex items-center justify-between px-4 shrink-0">
               <div className="flex items-center gap-4">
                 {selectedDoc.providers.length === 0 ? (
-                  <span className="text-[10px] text-zinc-600">No providers enabled</span>
+                  <span className="text-[11px] text-zinc-600">No providers enabled</span>
                 ) : (
                   selectedDoc.providers.map((p: ProviderTarget) => {
                     const status = selectedDoc.syncStatus?.[p.provider]
@@ -969,13 +969,13 @@ ${editorContent}`}
                     return (
                       <div key={p.provider} className="flex items-center gap-1.5">
                         <div className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{p.provider}</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">{p.provider}</span>
                       </div>
                     )
                   })
                 )}
               </div>
-              <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest">
                 {saveStatus === 'saving' && <><Clock size={10} className="text-amber-400" /><span className="text-amber-400">Saving...</span></>}
                 {saveStatus === 'syncing' && <><Save size={10} className="text-copernicus-phosphor animate-pulse" /><span className="text-copernicus-phosphor">Syncing...</span></>}
                 {saveStatus === 'saved' && <><CheckCircle2 size={10} className="text-zinc-500" /><span className="text-zinc-500">Saved</span></>}
@@ -1027,10 +1027,10 @@ function PathScopeEditor({ pathScope, onChange }: PathScopeEditorProps) {
 
   return (
     <div className="px-4 py-3">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">Path scope (glob patterns)</div>
+      <div className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 mb-2">Path scope (glob patterns)</div>
       <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-black/50 border border-zinc-800 rounded min-h-[34px] focus-within:border-copernicus-phosphor transition-colors">
         {pathScope.map(tag => (
-          <div key={tag} className="flex items-center gap-1 bg-zinc-800 text-zinc-300 text-[10px] font-mono px-2 py-0.5 rounded-sm">
+          <div key={tag} className="flex items-center gap-1 bg-zinc-800 text-zinc-300 text-[11px] font-mono px-2 py-0.5 rounded-sm">
             <span>{tag}</span>
             <button onClick={() => removeTag(tag)} className="text-zinc-500 hover:text-white transition-colors">
               <X size={10} />

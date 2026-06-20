@@ -53,7 +53,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
 
   appendLog: (agentId, content, source = 'stdout') => set((state) => {
     const newLog: AgentLog = {
-      id: Math.random().toString(36).substring(7),
+      id: crypto.randomUUID(),
       timestamp: Date.now(),
       content,
       source

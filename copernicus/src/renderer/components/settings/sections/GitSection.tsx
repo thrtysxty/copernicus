@@ -118,7 +118,7 @@ export const GitSection: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-zinc-200 uppercase font-mono">{githubStatus.login}</span>
-                    <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase">
+                    <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase">
                       Connected
                     </span>
                   </div>

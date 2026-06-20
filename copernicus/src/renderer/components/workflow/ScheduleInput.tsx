@@ -98,7 +98,7 @@ export const ScheduleInput: React.FC<ScheduleInputProps> = ({
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+      <label className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider">
         Schedule (Natural Language)
       </label>
       <input
@@ -108,8 +108,8 @@ export const ScheduleInput: React.FC<ScheduleInputProps> = ({
         placeholder="e.g. every weekday at 9am"
         className="bg-zinc-900 border border-zinc-800 p-2 text-xs rounded outline-none focus:border-copernicus-phosphor/50 text-zinc-200"
       />
-      {preview && <div className="text-[10px] text-copernicus-phosphor font-mono">{preview}</div>}
-      {error && <div className="text-[10px] text-red-400 font-mono">{error}</div>}
+      {preview && <div className="text-[11px] text-copernicus-phosphor font-mono">{preview}</div>}
+      {error && <div className="text-[11px] text-red-400 font-mono">{error}</div>}
     </div>
   );
 };

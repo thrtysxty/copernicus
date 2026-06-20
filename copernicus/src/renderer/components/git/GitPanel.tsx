@@ -84,7 +84,7 @@ export const GitPanel: React.FC = () => {
   }
 
   return (
-    <div data-testid="panel-git" className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
+    <div data-testid="panel-git" className="flex flex-col h-full bg-[#050505] font-mono text-[11px] text-zinc-300">
       <div className="p-4 border-b border-copernicus-steel/20 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <BranchSelector onBranchChange={refresh} />
@@ -138,7 +138,7 @@ export const GitPanel: React.FC = () => {
               <span>Diff: {selectedFile.split('/').pop()}</span>
               <button onClick={() => setSelectedFile(null)} className="hover:text-zinc-300">CLOSE</button>
             </div>
-            <pre className="bg-zinc-950 p-2 rounded overflow-x-auto text-[9px] leading-relaxed max-h-96">
+            <pre className="bg-zinc-950 p-2 rounded overflow-x-auto text-[11px] leading-relaxed max-h-96">
               {renderDiff(diff)}
             </pre>
           </div>
@@ -156,7 +156,7 @@ export const GitPanel: React.FC = () => {
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-copernicus-phosphor">#{pr.number}</span>
-                  <span className="text-zinc-500 text-[8px]">{pr.author}</span>
+                  <span className="text-zinc-500 text-[11px]">{pr.author}</span>
                 </div>
                 <div className="text-zinc-300 line-clamp-2">{pr.title}</div>
               </div>

@@ -195,7 +195,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
             </div>
             <div>
               <h2 className="text-sm font-bold text-zinc-100 uppercase tracking-widest">Genesis</h2>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">New Project Protocol</p>
+              <p className="text-[11px] text-zinc-500 uppercase tracking-tighter">New Project Protocol</p>
             </div>
           </div>
 
@@ -206,7 +206,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
               return (
                 <div 
                   key={s.id}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${isActive ? 'bg-indigo-500 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]' : isCompleted ? 'bg-indigo-950 text-indigo-400 border border-indigo-500/30' : 'bg-zinc-800 text-zinc-500'}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${isActive ? 'bg-indigo-500 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]' : isCompleted ? 'bg-indigo-950 text-indigo-400 border border-indigo-500/30' : 'bg-zinc-800 text-zinc-500'}`}
                 >
                   {idx + 1}
                 </div>
@@ -237,7 +237,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                 <div className="max-w-2xl mx-auto space-y-6">
                   <div className="space-y-4">
                     <label className="block">
-                      <span className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                      <span className="flex items-center gap-2 text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
                         <Sparkles size={12} className="text-indigo-500" /> What are you building?
                       </span>
                       <textarea
@@ -252,7 +252,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                     </label>
 
                     <label className="block">
-                      <span className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                      <span className="flex items-center gap-2 text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
                         <User size={12} className="text-indigo-500" /> Who is it for?
                       </span>
                       <input
@@ -268,7 +268,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                     </label>
 
                     <label className="block">
-                      <span className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                      <span className="flex items-center gap-2 text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
                         <Target size={12} className="text-indigo-500" /> What's the core value?
                       </span>
                       <textarea
@@ -283,7 +283,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                     </label>
 
                     <label className="block">
-                      <span className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                      <span className="flex items-center gap-2 text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
                         Project name (Optional)
                       </span>
                       <input
@@ -304,7 +304,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                 <div className="max-w-3xl mx-auto space-y-6">
                   <div className="text-center mb-8">
                     <h3 className="text-lg font-bold text-white uppercase tracking-tight">Select your stack</h3>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Base architecture for project generation</p>
+                    <p className="text-[11px] text-zinc-500 uppercase tracking-widest">Base architecture for project generation</p>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {STACKS.map(stack => {
@@ -318,7 +318,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                         >
                           <Icon size={24} className={selected ? 'text-indigo-400' : 'text-zinc-600'} />
                           <span className={`text-xs font-bold mt-4 ${selected ? 'text-white' : 'text-zinc-400'}`}>{stack.label}</span>
-                          <span className="text-[9px] text-zinc-600 uppercase tracking-tighter mt-1">{stack.desc}</span>
+                          <span className="text-[11px] text-zinc-600 uppercase tracking-tighter mt-1">{stack.desc}</span>
                         </button>
                       );
                     })}
@@ -353,7 +353,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
 
                   <div className="space-y-3">
                     <label className="block">
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Path</span>
+                      <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Path</span>
                       <input
                         type="text"
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-xs text-zinc-300 font-mono mt-2"
@@ -361,7 +361,7 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                         onChange={e => setFormData({ ...formData, repoPath: e.target.value })}
                       />
                     </label>
-                    <p className="text-[10px] text-zinc-600 font-mono italic">
+                    <p className="text-[11px] text-zinc-600 font-mono italic">
                       {formData.isNewRepo ? "New repo: directory will be created." : "Existing repo: config files will be added."}
                     </p>
                   </div>
@@ -373,22 +373,22 @@ const GenesisWizard: React.FC<GenesisWizardProps> = ({ onComplete, repoPath, pro
                   <div className="text-center">
                     <CheckCircle2 size={48} className="text-indigo-500 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Ready for genesis</h3>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Confirm your project specifications</p>
+                    <p className="text-[11px] text-zinc-500 uppercase tracking-widest">Confirm your project specifications</p>
                   </div>
 
                   <div className="bg-zinc-950/50 border border-zinc-800 rounded-xl p-6 space-y-4">
                     <div className="grid grid-cols-2 gap-8">
                       <div>
-                        <span className="text-[9px] text-zinc-600 uppercase font-bold block mb-1">Project Name</span>
+                        <span className="text-[11px] text-zinc-600 uppercase font-bold block mb-1">Project Name</span>
                         <span className="text-sm text-zinc-100 font-mono">{formData.projectName}</span>
                       </div>
                       <div>
-                        <span className="text-[9px] text-zinc-600 uppercase font-bold block mb-1">Stack</span>
+                        <span className="text-[11px] text-zinc-600 uppercase font-bold block mb-1">Stack</span>
                         <span className="text-sm text-zinc-100 font-mono uppercase">{formData.stack}</span>
                       </div>
                     </div>
                     <div>
-                      <span className="text-[9px] text-zinc-600 uppercase font-bold block mb-1">Target Directory</span>
+                      <span className="text-[11px] text-zinc-600 uppercase font-bold block mb-1">Target Directory</span>
                       <span className="text-[11px] text-zinc-400 font-mono">{formData.repoPath}/{formData.isNewRepo ? formData.projectName : ''}</span>
                     </div>
                     <div className="pt-4 border-t border-zinc-800/50">

@@ -6,9 +6,10 @@ import { IntelligenceDocument, IntelligenceDocSuggestion } from '../intelligence
 import { providerSyncEngine } from '../intelligence/provider-sync-engine';
 import { fsManager } from '../fs-manager';
 import { detectStack } from '../skills/stack-detector';
+import { randomUUID } from 'node:crypto';
 
 function generateId(): string {
-  return `suggestion_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  return `suggestion_${Date.now()}_${randomUUID().replace(/-/g, '').substring(0, 7)}`;
 }
 
 export function registerIntelHandlers() {

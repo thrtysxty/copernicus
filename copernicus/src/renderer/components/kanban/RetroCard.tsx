@@ -48,27 +48,27 @@ export const RetroCard = React.memo(({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 text-indigo-400">
             <Brain size={12} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Retrospective Ready</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest">Retrospective Ready</span>
           </div>
           {pendingCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-[2px] bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[8px] font-bold uppercase">
+            <span className="px-1.5 py-0.5 rounded-[2px] bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[11px] font-bold uppercase">
               {pendingCount} more pending
             </span>
           )}
         </div>
 
         <div className="space-y-1.5">
-          <div className="text-[10px] text-zinc-300 font-medium">
+          <div className="text-[11px] text-zinc-300 font-medium">
             {dateStr}
           </div>
-          <div className="text-[9px] text-zinc-500">
+          <div className="text-[11px] text-zinc-500">
             {itemCounts.memory_facts} memory {itemCounts.memory_facts === 1 ? 'fact' : 'facts'} ·{' '}
             {itemCounts.file_patches} file {itemCounts.file_patches === 1 ? 'patch' : 'patches'} ·{' '}
             {itemCounts.story_queues} {itemCounts.story_queues === 1 ? 'story' : 'stories'} ·{' '}
             {itemCounts.conventions} {itemCounts.conventions === 1 ? 'convention' : 'conventions'}
           </div>
           {priorInflectionCount > 0 && (
-            <div className="text-[8px] text-indigo-500/70 uppercase font-bold tracking-wider">
+            <div className="text-[11px] text-indigo-500/70 uppercase font-bold tracking-wider">
               Built on {priorInflectionCount} prior {priorInflectionCount === 1 ? 'retro' : 'retros'}
             </div>
           )}
@@ -77,7 +77,7 @@ export const RetroCard = React.memo(({
 
       <button
         onClick={() => onReview(retroId)}
-        className="mt-auto w-full py-1.5 flex items-center justify-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 rounded transition-colors text-[9px] font-bold uppercase tracking-widest"
+        className="mt-auto w-full py-1.5 flex items-center justify-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 rounded transition-colors text-[11px] font-bold uppercase tracking-widest"
       >
         Review <ArrowRight size={10} />
       </button>

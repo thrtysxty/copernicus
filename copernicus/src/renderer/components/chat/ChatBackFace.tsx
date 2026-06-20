@@ -107,7 +107,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveBackTab(tab.id)}
-            className={`flex-1 py-2 text-[9px] uppercase font-bold tracking-widest transition-colors ${
+            className={`flex-1 py-2 text-[11px] uppercase font-bold tracking-widest transition-colors ${
               activeBackTab === tab.id
                 ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
                 : 'text-zinc-500 hover:text-zinc-300'
@@ -130,7 +130,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
         {activeBackTab === 'context' && (
           <div className="space-y-6">
             <div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Model Context Usage</div>
+              <div className="text-[11px] text-zinc-500 uppercase tracking-widest mb-1">Model Context Usage</div>
               <div className="text-xs flex items-center justify-between">
                 <span>{model} • {availableModels.find(m => m.id === model)?.provider || '—'}</span>
               </div>
@@ -141,24 +141,24 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
                     style={{ width: `${contextMaxTokens ? Math.min(100, (totalTokens / contextMaxTokens) * 100) : 0}%` }}
                   />
                 </div>
-                <div className="text-[10px] text-zinc-500">
+                <div className="text-[11px] text-zinc-500">
                   {totalTokens} / {contextMaxTokens || '—'}
                 </div>
               </div>
             </div>
 
             <div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">LSP Status</div>
+              <div className="text-[11px] text-zinc-500 uppercase tracking-widest mb-1">LSP Status</div>
               <div className="text-xs text-zinc-400">LSP: connecting…</div>
             </div>
 
             <div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 flex justify-between items-center">
+              <div className="text-[11px] text-zinc-500 uppercase tracking-widest mb-1 flex justify-between items-center">
                 <span>Attached Files ({context.length})</span>
                 {context.length > 0 && (
                   <button 
                     onClick={handleClearContext} 
-                    className="text-[9px] hover:text-copernicus-phosphor transition-colors border border-zinc-800 px-1.5 py-0.5 rounded"
+                    className="text-[11px] hover:text-copernicus-phosphor transition-colors border border-zinc-800 px-1.5 py-0.5 rounded"
                   >
                     Clear Context
                   </button>
@@ -184,13 +184,13 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
         {activeBackTab === 'persona' && (
           <div className="space-y-6">
             <div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Current Persona</div>
+              <div className="text-[11px] text-zinc-500 uppercase tracking-widest mb-1">Current Persona</div>
               <div className="flex items-center justify-between bg-zinc-900 border border-copernicus-steel/30 p-3 rounded">
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-bold text-copernicus-phosphor">
                     {availableModels.find(m => m.id === model)?.name || model}
                   </span>
-                  <span className="text-[9px] text-zinc-500 uppercase">
+                  <span className="text-[11px] text-zinc-500 uppercase">
                     {availableModels.find(m => m.id === model)?.provider || '—'} • {model}
                   </span>
                 </div>
@@ -203,7 +203,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
             </div>
 
             <div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2">Switch Model</div>
+              <div className="text-[11px] text-zinc-500 uppercase tracking-widest mb-2">Switch Model</div>
               <select
                 className="w-full bg-zinc-900 border border-copernicus-steel rounded px-2 py-2 text-xs text-zinc-300 focus:border-copernicus-phosphor outline-none appearance-none"
                 value={model}
@@ -221,7 +221,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
                   <option key={m.id} value={m.id}>{m.name} ({m.provider})</option>
                 ))}
               </select>
-              <div className="mt-2 text-[9px] text-zinc-600 text-center italic">
+              <div className="mt-2 text-[11px] text-zinc-600 text-center italic">
                 Select a model to switch the global active persona.
               </div>
             </div>
@@ -233,7 +233,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
           <div className="space-y-4 flex flex-col h-full">
             {isSavingPrompt ? (
               <div className="bg-zinc-900 border border-copernicus-phosphor p-3 rounded space-y-3">
-                <div className="text-[10px] text-copernicus-phosphor uppercase font-bold">New Saved Prompt</div>
+                <div className="text-[11px] text-copernicus-phosphor uppercase font-bold">New Saved Prompt</div>
                 <input
                   autoFocus
                   placeholder="Enter short name..."
@@ -248,13 +248,13 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
                 <div className="flex gap-2">
                   <button 
                     onClick={confirmSavePrompt}
-                    className="flex-1 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold py-1 uppercase"
+                    className="flex-1 bg-copernicus-phosphor text-[#050505] text-[11px] font-bold py-1 uppercase"
                   >
                     Confirm Save
                   </button>
                   <button 
                     onClick={() => setIsSavingPrompt(false)}
-                    className="flex-1 border border-zinc-700 text-zinc-400 text-[10px] font-bold py-1 uppercase"
+                    className="flex-1 border border-zinc-700 text-zinc-400 text-[11px] font-bold py-1 uppercase"
                   >
                     Cancel
                   </button>
@@ -264,7 +264,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
               <button
                 onClick={() => setIsSavingPrompt(true)}
                 disabled={!input.trim()}
-                className="w-full bg-zinc-900 hover:text-zinc-300 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-50"
+                className="w-full bg-zinc-900 hover:text-zinc-300 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[11px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-50"
               >
                 + Save Current Input
               </button>
@@ -279,17 +279,17 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
                 savedPrompts.map(p => (
                   <div key={p.id} className="bg-zinc-900 border border-copernicus-steel/50 rounded p-2 hover:border-zinc-700 transition-colors">
                     <div className="text-xs font-bold text-copernicus-phosphor mb-1 uppercase tracking-tight">{p.name}</div>
-                    <div className="text-[10px] text-zinc-500 truncate mb-2 italic">"{p.text}"</div>
+                    <div className="text-[11px] text-zinc-500 truncate mb-2 italic">"{p.text}"</div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => usePrompt(p.text)}
-                        className="flex-1 text-[9px] uppercase font-bold py-1 bg-zinc-800 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor transition-colors rounded"
+                        className="flex-1 text-[11px] uppercase font-bold py-1 bg-zinc-800 hover:bg-copernicus-phosphor/20 hover:text-copernicus-phosphor transition-colors rounded"
                       >
                         Use
                       </button>
                       <button
                         onClick={() => deletePrompt(p.id)}
-                        className="px-2 text-[9px] uppercase font-bold py-1 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 transition-colors rounded"
+                        className="px-2 text-[11px] uppercase font-bold py-1 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 transition-colors rounded"
                       >
                         Delete
                       </button>
@@ -307,7 +307,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
             <div className="flex flex-col gap-2">
               <button
                 onClick={exportChat}
-                className="w-full bg-zinc-900 hover:text-zinc-300 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider"
+                className="w-full bg-zinc-900 hover:text-zinc-300 border border-copernicus-steel hover:border-copernicus-phosphor text-zinc-300 transition-colors text-[11px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 Export Chat (.txt)
               </button>
@@ -315,7 +315,7 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
               <button
                 onClick={handleSaveToMemory}
                 disabled={!lastAssistantMsg}
-                className={`w-full bg-zinc-900 border border-copernicus-steel text-zinc-300 transition-colors text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider ${!lastAssistantMsg ? 'opacity-40 cursor-not-allowed' : 'hover:text-zinc-300 hover:border-copernicus-phosphor'}`}
+                className={`w-full bg-zinc-900 border border-copernicus-steel text-zinc-300 transition-colors text-[11px] font-bold py-2 rounded flex items-center justify-center gap-2 uppercase tracking-wider ${!lastAssistantMsg ? 'opacity-40 cursor-not-allowed' : 'hover:text-zinc-300 hover:border-copernicus-phosphor'}`}
               >
                 <Brain size={12} className={lastAssistantMsg ? 'text-copernicus-phosphor' : ''} />
                 {showSaved ? 'Saved ✓' : 'Save to Memory'}
@@ -331,10 +331,10 @@ export const ChatBackFace: React.FC<ChatBackFaceProps> = ({
                 messages.slice(-20).map((m, i) => (
                   <div key={i} className="bg-zinc-900 border border-copernicus-steel/30 rounded p-2">
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`text-[9px] font-bold uppercase ${m.role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'}`}>
+                      <span className={`text-[11px] font-bold uppercase ${m.role === 'user' ? 'text-zinc-500' : 'text-copernicus-phosphor'}`}>
                         {m.role === 'user' ? 'You' : (availableModels.find(x => x.id === model)?.name || model)}
                       </span>
-                      {m.tokens && <span className="text-[8px] text-zinc-700">{m.tokens} tokens</span>}
+                      {m.tokens && <span className="text-[11px] text-zinc-700">{m.tokens} tokens</span>}
                     </div>
                     <div className="text-xs text-zinc-400 line-clamp-2 italic">
                       {m.content.substring(0, 120)}{m.content.length > 120 ? '...' : ''}

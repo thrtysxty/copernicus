@@ -16,7 +16,7 @@ export const ImageTile: React.FC<{ props: UIComponentProps }> = ({ props }) => {
 
       <ImageIcon size={28} className="text-zinc-700 relative z-10" />
 
-      <span className="text-[9px] text-zinc-600 font-mono absolute bottom-1.5 left-2 z-10 truncate max-w-[90%]">
+      <span className="text-[11px] text-zinc-600 font-mono absolute bottom-1.5 left-2 z-10 truncate max-w-[90%]">
         {label}
       </span>
     </div>

@@ -17,13 +17,13 @@ export const AppearanceSection: React.FC = () => {
     <div className="space-y-8">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest">Appearance</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Customise the visual interface and ergonomics of the IDE.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Customise the visual interface and ergonomics of the IDE.</p>
       </div>
 
       <fieldset className="space-y-4 border-none p-0 m-0">
         <legend className="flex items-center gap-2 text-zinc-400">
           <Palette size={14} />
-          <h3 className="text-[10px] uppercase font-bold tracking-wider">System Phosphor</h3>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider">System Phosphor</h3>
         </legend>
         <div className="grid grid-cols-4 gap-3 bg-zinc-900/30 p-4 rounded-lg border border-zinc-800/50">
           {PRESET_ENTRIES.map(([key, preset]) => (
@@ -45,7 +45,7 @@ export const AppearanceSection: React.FC = () => {
                   boxShadow: phosphorColor === key ? `0 0 12px ${preset.hex}` : 'none'
                 }}
               />
-              <span className={`text-[9px] font-bold uppercase ${phosphorColor === key ? 'text-white' : 'text-zinc-500'}`}>
+              <span className={`text-[11px] font-bold uppercase ${phosphorColor === key ? 'text-white' : 'text-zinc-500'}`}>
                 {preset.label}
               </span>
             </button>
@@ -57,7 +57,7 @@ export const AppearanceSection: React.FC = () => {
         <fieldset className="space-y-4 border-none p-0 m-0">
           <legend className="flex items-center gap-2 text-zinc-400">
             <Maximize size={14} />
-            <h3 className="text-[10px] uppercase font-bold tracking-wider">UI Density</h3>
+            <h3 className="text-[11px] uppercase font-bold tracking-wider">UI Density</h3>
           </legend>
           <div className="flex bg-zinc-900/50 p-1 rounded-md border border-zinc-800">
             {(['compact', 'normal', 'comfortable'] as const).map((d) => (
@@ -65,7 +65,7 @@ export const AppearanceSection: React.FC = () => {
                 key={d}
                 aria-pressed={uiDensity === d}
                 onClick={() => setAppearance({ uiDensity: d })}
-                className={`flex-1 py-1.5 text-[9px] font-bold uppercase rounded transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${
+                className={`flex-1 py-1.5 text-[11px] font-bold uppercase rounded transition-all focus-visible:ring-2 focus-visible:ring-copernicus-phosphor focus-visible:outline-none ${
                   uiDensity === d 
                     ? 'bg-zinc-800 text-copernicus-phosphor shadow-inner' 
                     : 'text-zinc-500 hover:text-zinc-300'
@@ -80,7 +80,7 @@ export const AppearanceSection: React.FC = () => {
         <fieldset className="space-y-4 border-none p-0 m-0">
           <legend className="flex items-center gap-2 text-zinc-400">
             <Type size={14} />
-            <h3 className="text-[10px] uppercase font-bold tracking-wider">Editor Font Size</h3>
+            <h3 className="text-[11px] uppercase font-bold tracking-wider">Editor Font Size</h3>
           </legend>
           <div className="flex items-center gap-4 bg-zinc-900/30 p-4 rounded-lg border border-zinc-800/50">
             <input 
@@ -106,8 +106,8 @@ export const AppearanceSection: React.FC = () => {
               <Zap size={14} />
             </div>
             <div>
-              <div className="text-[10px] text-zinc-200 uppercase font-bold tracking-wider">Interface Animations</div>
-              <div className="text-[9px] text-zinc-500 font-mono">Enable smooth transitions and glow effects</div>
+              <div className="text-[11px] text-zinc-200 uppercase font-bold tracking-wider">Interface Animations</div>
+              <div className="text-[11px] text-zinc-500 font-mono">Enable smooth transitions and glow effects</div>
             </div>
           </div>
           <button
@@ -132,8 +132,8 @@ export const AppearanceSection: React.FC = () => {
               <Monitor size={14} />
             </div>
             <div>
-              <div className="text-[10px] text-zinc-200 uppercase font-bold tracking-wider">CRT Pulse Shaders</div>
-              <div className="text-[9px] text-zinc-500 font-mono">Enable scanlines and retro phosphor effects</div>
+              <div className="text-[11px] text-zinc-200 uppercase font-bold tracking-wider">CRT Pulse Shaders</div>
+              <div className="text-[11px] text-zinc-500 font-mono">Enable scanlines and retro phosphor effects</div>
             </div>
           </div>
           <button

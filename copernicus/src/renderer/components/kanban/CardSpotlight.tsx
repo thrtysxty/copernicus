@@ -47,17 +47,17 @@ export const CardSpotlight: React.FC<CardSpotlightProps> = ({ promptId }) => {
   return (
     <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2">
       {stats.accept > 0 && (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-green-500/10 text-green-400 border border-green-500/20">
           <Check size={10} /> {stats.accept} accepted
         </span>
       )}
       {stats.reject > 0 && (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
           <X size={10} /> {stats.reject} rejected
         </span>
       )}
       {stats.abort > 0 && (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">
           <CircleSlash size={10} /> {stats.abort} aborted
         </span>
       )}

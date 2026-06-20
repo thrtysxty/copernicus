@@ -80,13 +80,13 @@ export const LocalModelSection: React.FC = () => {
     <div className="space-y-10">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono">Local AI</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Manage bundled inference for zero-dependency AI features.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Manage bundled inference for zero-dependency AI features.</p>
       </div>
 
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-zinc-400">
           <Cpu size={14} />
-          <h3 className="text-[10px] uppercase font-bold tracking-wider">Bundled Model</h3>
+          <h3 className="text-[11px] uppercase font-bold tracking-wider">Bundled Model</h3>
         </div>
         
         <div className="bg-[#0F0F0F] border border-zinc-800 rounded-lg overflow-hidden">
@@ -99,7 +99,7 @@ export const LocalModelSection: React.FC = () => {
                 <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-tight">Gemma 4 e4b (MLX)</h4>
                 <div className="flex items-center gap-2 mt-1">
                   <div className={`w-1.5 h-1.5 rounded-full ${status.running ? 'bg-copernicus-phosphor shadow-[0_0_5px_rgba(74,222,128,0.5)]' : 'bg-red-500'}`} />
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-500">
                     {status.running ? `Running on port ${status.port}` : 'Stopped'}
                   </span>
                 </div>
@@ -109,7 +109,7 @@ export const LocalModelSection: React.FC = () => {
             <button 
               onClick={status.running ? handleStop : handleStart}
               disabled={loading}
-              className={`px-6 py-2 rounded text-[10px] font-bold uppercase transition-all flex items-center gap-2 border ${
+              className={`px-6 py-2 rounded text-[11px] font-bold uppercase transition-all flex items-center gap-2 border ${
                 status.running 
                   ? 'bg-red-950/20 border-red-900/30 text-red-400 hover:bg-red-900/30' 
                   : 'bg-copernicus-phosphor text-[#050505] rounded-none hover:brightness-110 border-copernicus-phosphor/30'
@@ -125,7 +125,7 @@ export const LocalModelSection: React.FC = () => {
           </div>
 
           <div className="px-6 py-3 bg-zinc-900/30 border-t border-zinc-800/50">
-            <p className="text-[9px] text-zinc-500 font-mono italic leading-relaxed">
+            <p className="text-[11px] text-zinc-500 font-mono italic leading-relaxed">
               Google Gemma 4 (8B, 128K context). GPU-accelerated via Metal on Apple Silicon. Downloaded once, runs offline.
             </p>
           </div>

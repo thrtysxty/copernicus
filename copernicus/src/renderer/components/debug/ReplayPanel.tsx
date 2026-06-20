@@ -91,11 +91,11 @@ export const ReplayPanel: React.FC = () => {
             >
               <div className="flex justify-between items-start mb-1">
                 <span className="truncate font-bold">{run.run_id.substring(0, 8)}...</span>
-                <span className={clsx("text-[10px]", selectedRunId === run.run_id ? "text-[#050505]/70" : "text-zinc-500")}>
+                <span className={clsx("text-[11px]", selectedRunId === run.run_id ? "text-[#050505]/70" : "text-zinc-500")}>
                   {formatTime(run.started_at)}
                 </span>
               </div>
-              <div className="flex justify-between text-[10px] opacity-80">
+              <div className="flex justify-between text-[11px] opacity-80">
                 <span className="truncate mr-2">{run.model_id}</span>
                 <span className="whitespace-nowrap">{run.step_count} steps</span>
               </div>
@@ -129,7 +129,7 @@ export const ReplayPanel: React.FC = () => {
             >
               <div className="flex flex-col overflow-hidden">
                 <span className="font-bold">Step {idx + 1}</span>
-                <span className={clsx("text-[10px] truncate", selectedStepId === step.id ? "text-[#050505]/70" : "text-zinc-500")}>
+                <span className={clsx("text-[11px] truncate", selectedStepId === step.id ? "text-[#050505]/70" : "text-zinc-500")}>
                   {step.model_id}
                 </span>
               </div>
@@ -152,7 +152,7 @@ export const ReplayPanel: React.FC = () => {
               else setActiveTab('prompt')
             }}
             title={`Switch to ${activeTab === 'prompt' ? 'Context' : activeTab === 'context' ? 'Response' : 'Prompt'}`}
-            className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-copernicus-phosphor hover:text-copernicus-phosphor transition-colors"
+            className="shrink-0 text-[11px] font-mono uppercase tracking-widest text-copernicus-phosphor hover:text-copernicus-phosphor transition-colors"
           >
             {activeTab}
           </button>

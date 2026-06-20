@@ -66,7 +66,7 @@ export const WorkflowSection: React.FC = () => {
     <div className="space-y-10">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono">Workflow Engine</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Customise agentic execution behaviour and safety gates.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Customise agentic execution behaviour and safety gates.</p>
       </div>
 
       <div className="space-y-6">
@@ -81,7 +81,7 @@ export const WorkflowSection: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-zinc-400">
             <Workflow size={14} />
-            <h3 className="text-[10px] uppercase font-bold tracking-wider">Execution Defaults</h3>
+            <h3 className="text-[11px] uppercase font-bold tracking-wider">Execution Defaults</h3>
           </div>
           <div className="grid grid-cols-1 gap-4 bg-zinc-900/30 border border-zinc-800 p-4 rounded-lg">
             <div className="flex items-center justify-between">
@@ -109,7 +109,7 @@ export const WorkflowSection: React.FC = () => {
                   onChange={e => handleSave({ maxExecutionTime: parseInt(e.target.value) })}
                   className="w-16 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-center font-mono text-copernicus-phosphor focus:outline-none"
                 />
-                <span className="text-[10px] text-zinc-500 uppercase font-bold">Minutes</span>
+                <span className="text-[11px] text-zinc-500 uppercase font-bold">Minutes</span>
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ const WorkflowToggle = ({ label, description, icon: Icon, enabled, onToggle }: {
       </div>
       <div>
         <div className="text-[11px] text-zinc-200 uppercase font-bold tracking-tight">{label}</div>
-        <div className="text-[10px] text-zinc-500 mt-0.5">{description}</div>
+        <div className="text-[11px] text-zinc-500 mt-0.5">{description}</div>
       </div>
     </div>
     <button

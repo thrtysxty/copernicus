@@ -37,12 +37,12 @@ function RetroItemRow({ item }: { item: RetroItem }) {
   const content = item.edited_content || item.content
 
   return (
-    <div className={`p-2 border-b border-zinc-800/40 last:border-b-0 text-[10px] ${isRejected ? 'opacity-50' : ''}`}>
+    <div className={`p-2 border-b border-zinc-800/40 last:border-b-0 text-[11px] ${isRejected ? 'opacity-50' : ''}`}>
       <div className="flex items-center gap-2 mb-1">
-        <span className="uppercase text-[9px] font-bold text-zinc-500 tracking-wider">
+        <span className="uppercase text-[11px] font-bold text-zinc-500 tracking-wider">
           {item.item_type.replace('_', ' ')}
         </span>
-        <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase ${
+        <span className={`px-1.5 py-0.5 rounded-full text-[11px] font-bold uppercase ${
           isRejected ? 'bg-zinc-800 text-zinc-400 line-through' : 
           isApprovedOrEdited ? 'bg-copernicus-phosphor/20 text-copernicus-phosphor' : 
           'bg-zinc-800 text-zinc-300'
@@ -103,17 +103,17 @@ function RetroReportCard({ report }: { report: RetroReport }) {
           <div className="text-zinc-200 font-bold mb-1">
             {fromDate} &ndash; {toDate}
           </div>
-          <div className="text-[10px] text-zinc-500 flex items-center gap-2">
+          <div className="text-[11px] text-zinc-500 flex items-center gap-2">
             <span>across {range.session_count} sessions</span>
           </div>
           
           {inflections.length > 0 && (
-            <div className="mt-2 text-[10px] text-zinc-500 flex items-center gap-2 flex-wrap">
+            <div className="mt-2 text-[11px] text-zinc-500 flex items-center gap-2 flex-wrap">
               <span>Built on:</span>
               {inflections.map((inflectionId, idx) => (
                 <React.Fragment key={inflectionId}>
                   {idx > 0 && <span>&rarr;</span>}
-                  <span className="px-1.5 py-0.5 bg-zinc-800 text-zinc-300 rounded font-mono text-[9px]" title={inflectionId}>
+                  <span className="px-1.5 py-0.5 bg-zinc-800 text-zinc-300 rounded font-mono text-[11px]" title={inflectionId}>
                     {inflectionId.replace('retro_', '').slice(0, 8)}...
                   </span>
                 </React.Fragment>
@@ -126,7 +126,7 @@ function RetroReportCard({ report }: { report: RetroReport }) {
           <button 
             onClick={handleExpand}
             disabled={loading}
-            className="px-3 py-1 bg-white/5 hover:bg-white/10 text-zinc-300 text-[10px] font-bold tracking-widest uppercase transition-colors rounded"
+            className="px-3 py-1 bg-white/5 hover:bg-white/10 text-zinc-300 text-[11px] font-bold tracking-widest uppercase transition-colors rounded"
           >
             {loading ? 'Loading...' : expanded ? 'Hide' : 'View'}
           </button>
@@ -135,7 +135,7 @@ function RetroReportCard({ report }: { report: RetroReport }) {
 
       {expanded && (
         <div className="border-t border-zinc-800 bg-black/40 p-4">
-          <div className="mb-4 text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+          <div className="mb-4 text-[11px] text-zinc-500 uppercase tracking-widest font-bold">
             {items.length} items &middot; {items.filter(i => i.status === 'approved' || i.status === 'edited').length} approved
           </div>
           
@@ -146,7 +146,7 @@ function RetroReportCard({ report }: { report: RetroReport }) {
               
               return (
                 <div key={type} className="border border-zinc-800/50 rounded bg-[#0A0A0A]">
-                  <div className="bg-zinc-900/50 px-3 py-2 border-b border-zinc-800/50 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  <div className="bg-zinc-900/50 px-3 py-2 border-b border-zinc-800/50 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
                     {type.replace('_', ' ')}s
                   </div>
                   <div>
@@ -159,7 +159,7 @@ function RetroReportCard({ report }: { report: RetroReport }) {
             })}
             
             {items.length === 0 && (
-              <div className="text-center p-4 text-[10px] text-zinc-500 italic">
+              <div className="text-center p-4 text-[11px] text-zinc-500 italic">
                 No items in this retrospective.
               </div>
             )}
@@ -225,7 +225,7 @@ export const RetroArchiveView: React.FC = () => {
         <button
           onClick={handleGenerate}
           disabled={generating}
-          className="px-4 py-2 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-copernicus-phosphor/90 transition-colors"
+          className="px-4 py-2 bg-copernicus-phosphor text-[#050505] text-[11px] font-bold uppercase tracking-widest rounded-none hover:bg-copernicus-phosphor/90 transition-colors"
         >
           {generating ? 'Generating...' : 'Generate Now'}
         </button>

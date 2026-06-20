@@ -62,12 +62,12 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
             <Check size={18} className="text-copernicus-phosphor" />
             <div>
               <p className="text-xs font-bold text-copernicus-phosphor uppercase tracking-wide">Providers Ready</p>
-              <p className="text-[10px] text-zinc-400 font-mono">Your providers are set up. Continue to workspace setup or review below.</p>
+              <p className="text-[11px] text-zinc-400 font-mono">Your providers are set up. Continue to workspace setup or review below.</p>
             </div>
           </div>
           <button
             onClick={() => updateState({ step: 2 })}
-            className="bg-copernicus-phosphor text-black px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 flex items-center gap-2"
+            className="bg-copernicus-phosphor text-black px-4 py-2 rounded text-[11px] font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 flex items-center gap-2"
           >
             Continue <ArrowRight size={14} />
           </button>
@@ -78,24 +78,24 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         <h2 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-3">
           <Key size={18} className="text-copernicus-phosphor" /> Intelligence Bus Connectivity
         </h2>
-        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Provisioning secure access to primary model orchestrators</p>
+        <p className="text-[11px] text-zinc-500 font-mono uppercase tracking-widest">Provisioning secure access to primary model orchestrators</p>
       </div>
 
       <div className="space-y-4">
         {/* Anthropic / Claude */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('anthropic'), { size: 12 })}
               {PROVIDER_METADATA['anthropic']?.displayName || 'Anthropic'}
             </span>
             {isAnthropicConfigured && !editAnthropic ? (
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {state.anthropicMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
-                <button onClick={() => { setEditAnthropic(true); setActiveAnthropicWidget(false); }} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                <span className="flex items-center gap-1.5 text-[11px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {state.anthropicMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
+                <button onClick={() => { setEditAnthropic(true); setActiveAnthropicWidget(false); }} className="text-[11px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
               </div>
             ) : state.anthropicMethod && (
-              <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> Selected</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> Selected</span>
             )}
           </div>
 
@@ -108,9 +108,9 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Zap size={12} /> Use Claude Code (CLI)</span>
-                  {claudeDetected ? <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">DETECTED</span> : <span className="text-[9px] text-zinc-600">NOT FOUND</span>}
+                  {claudeDetected ? <span className="text-[11px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">DETECTED</span> : <span className="text-[11px] text-zinc-600">NOT FOUND</span>}
                 </div>
-                <p className="text-[10px] text-zinc-500 leading-tight">Leverages existing <code className="text-zinc-400">claude login</code> credentials.</p>
+                <p className="text-[11px] text-zinc-500 leading-tight">Leverages existing <code className="text-zinc-400">claude login</code> credentials.</p>
               </button>
 
               {state.anthropicMethod === 'cli' && activeAnthropicWidget && AUTH_CLI_CONFIGS['anthropic'] ? (
@@ -123,7 +123,7 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
                 <div className={`p-3 rounded border transition-all ${state.anthropicMethod === 'apikey' ? 'border-copernicus-phosphor bg-copernicus-phosphor text-black' : 'border-zinc-800 opacity-60'}`}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-2"><Key size={12} /> Direct API Access</span>
-                    <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[9px] text-zinc-500 hover:text-white underline">Manage Keys</button>
+                    <button onClick={() => invoke('app:open-external', 'https://console.anthropic.com/')} className="text-[11px] text-zinc-500 hover:text-white underline">Manage Keys</button>
                   </div>
                   <input
                     type="password"
@@ -142,17 +142,17 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* GitHub Connection */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('github'), { size: 12 })}
               {PROVIDER_METADATA['github']?.displayName || 'GitHub'}
             </span>
             {isGithubConfigured && !editGithub ? (
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {state.githubMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
-                <button onClick={() => { setEditGithub(true); setActiveGithubWidget(false); }} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                <span className="flex items-center gap-1.5 text-[11px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {state.githubMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
+                <button onClick={() => { setEditGithub(true); setActiveGithubWidget(false); }} className="text-[11px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
               </div>
             ) : state.githubUser && (
-              <span className="flex items-center gap-1.5 text-[10px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> {state.githubUser.login}</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-copernicus-phosphor font-bold uppercase"><Check size={11} /> {state.githubUser.login}</span>
             )}
           </div>
 
@@ -222,11 +222,11 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* Local Ollama */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('ollama'), { size: 12 })}
               {PROVIDER_METADATA['ollama']?.displayName || 'Local Inference (Ollama)'}
             </span>
-            {state.localOllamaKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+            {state.localOllamaKey === 'saved' && <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span>}
           </div>
           <input
             type="text"
@@ -240,17 +240,17 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* Ollama Cloud */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 transition-all duration-300">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2 mb-3">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('ollama-cloud'), { size: 12 })}
               {PROVIDER_METADATA['ollama-cloud']?.displayName || 'High-Intelligence Tier (Ollama Cloud)'}
             </span>
             {isOllamaConfigured && !editOllama ? (
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
-                <button onClick={() => setEditOllama(true)} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                <span className="flex items-center gap-1.5 text-[11px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY</span>
+                <button onClick={() => setEditOllama(true)} className="text-[11px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
               </div>
             ) : state.ollamaKey === 'saved' && (
-              <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">AUTHENTICATED</span>
+              <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">AUTHENTICATED</span>
             )}
           </div>
 
@@ -268,19 +268,19 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* Google / Gemini */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3 transition-all duration-300">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('google'), { size: 12 })}
               {PROVIDER_METADATA['google']?.displayName || 'Google / Gemini'}
             </span>
             {isGoogleConfigured && !editGoogle ? (
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 text-[10px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {state.googleMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
-                <button onClick={() => { setEditGoogle(true); setActiveGoogleWidget(false); }} className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
+                <span className="flex items-center gap-1.5 text-[11px] text-black font-bold uppercase bg-copernicus-phosphor px-2 py-0.5 rounded"><Check size={11} /> READY · {state.googleMethod === 'cli' ? 'CLI' : 'API KEY'}</span>
+                <button onClick={() => { setEditGoogle(true); setActiveGoogleWidget(false); }} className="text-[11px] text-zinc-500 hover:text-white uppercase tracking-wider underline">Change</button>
               </div>
             ) : (state.googleKey === 'saved' || state.googleKey === 'oauth') ? (
-              <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SESSION ACTIVE</span>
+              <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">SESSION ACTIVE</span>
             ) : (
-              <button onClick={handleGoogleOAuth} className="text-[10px] text-copernicus-phosphor font-bold uppercase hover:underline">Start OAuth Flow</button>
+              <button onClick={handleGoogleOAuth} className="text-[11px] text-copernicus-phosphor font-bold uppercase hover:underline">Start OAuth Flow</button>
             )}
           </div>
 
@@ -316,12 +316,12 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* Google Jules */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('jules'), { size: 12 })}
               {PROVIDER_METADATA['jules']?.displayName || 'Google Jules'}
-              <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span>
+              <span className="text-[11px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span>
             </span>
-            {state.julesKey === 'saved' ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span> : (state.googleKey === 'saved' || state.googleKey === 'oauth' || state.googleKey === 'cli') ? <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">SAME ACCOUNT AS GEMINI — INHERITED</span> : null}
+            {state.julesKey === 'saved' ? <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span> : (state.googleKey === 'saved' || state.googleKey === 'oauth' || state.googleKey === 'cli') ? <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">SAME ACCOUNT AS GEMINI — INHERITED</span> : null}
           </div>
           <input
             type="password"
@@ -336,12 +336,12 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* Google Stitch */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('stitch'), { size: 12 })}
               {PROVIDER_METADATA['stitch']?.displayName || 'Google Stitch'}
-              <span className="text-[9px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span>
+              <span className="text-[11px] bg-copernicus-phosphor/20 text-copernicus-phosphor px-1.5 rounded">Same CLI as Gemini</span>
             </span>
-            {state.stitchKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+            {state.stitchKey === 'saved' && <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span>}
           </div>
           <input
             type="password"
@@ -355,11 +355,11 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* OpenAI */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('openai'), { size: 12 })}
               {PROVIDER_METADATA['openai']?.displayName || 'OpenAI'}
             </span>
-            {state.openaiKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+            {state.openaiKey === 'saved' && <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span>}
           </div>
           <input
             type="password"
@@ -373,11 +373,11 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* OpenRouter */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('openrouter'), { size: 12 })}
               {PROVIDER_METADATA['openrouter']?.displayName || 'OpenRouter'}
             </span>
-            {state.openrouterKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+            {state.openrouterKey === 'saved' && <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span>}
           </div>
           <input
             type="password"
@@ -391,11 +391,11 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* DeepInfra */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('deepinfra'), { size: 12 })}
               {PROVIDER_METADATA['deepinfra']?.displayName || 'DeepInfra'}
             </span>
-            {state.deepinfraKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+            {state.deepinfraKey === 'saved' && <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span>}
           </div>
           <input
             type="password"
@@ -409,11 +409,11 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* Tavily */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('tavily'), { size: 12 })}
               {PROVIDER_METADATA['tavily']?.displayName || 'Tavily'}
             </span>
-            {state.tavilyKey === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+            {state.tavilyKey === 'saved' && <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span>}
           </div>
           <input
             type="password"
@@ -427,11 +427,11 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         {/* Context7 */}
         <div className="bg-black/30 border border-copernicus-steel/20 rounded p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               {React.createElement(getProviderIcon('context7'), { size: 12 })}
               {PROVIDER_METADATA['context7']?.displayName || 'Context7'}
             </span>
-            {state.context7Key === 'saved' && <span className="text-[10px] text-copernicus-phosphor font-bold uppercase">READY</span>}
+            {state.context7Key === 'saved' && <span className="text-[11px] text-copernicus-phosphor font-bold uppercase">READY</span>}
           </div>
           <input
             type="password"
@@ -443,7 +443,7 @@ export const AuthStep: React.FC<AuthStepProps> = ({ state, updateState, invoke }
         </div>
       </div>
 
-      <div className="mt-8 text-center opacity-50 text-[10px] text-zinc-500">
+      <div className="mt-8 text-center opacity-50 text-[11px] text-zinc-500">
         BitNet embedded agent: active by default
       </div>
     </div>

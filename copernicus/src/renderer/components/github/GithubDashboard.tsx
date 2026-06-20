@@ -217,7 +217,7 @@ export const GithubDashboard: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-wide transition-colors border-r border-copernicus-steel last:border-r-0
+            className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wide transition-colors border-r border-copernicus-steel last:border-r-0
               ${activeTab === tab.id
                 ? 'text-copernicus-phosphor bg-copernicus-phosphor/5'
                 : 'text-zinc-500 hover:text-zinc-300'}`}
@@ -234,7 +234,7 @@ export const GithubDashboard: React.FC = () => {
         {activeTab === 'repos' && (
           <div className="p-2 space-y-2">
             <div className="px-2 py-1 flex items-center justify-between">
-              <span className="text-[9px] uppercase text-zinc-600 font-bold tracking-widest">
+              <span className="text-[11px] uppercase text-zinc-600 font-bold tracking-widest">
                 Repositories ({filteredRepos.length})
               </span>
               <div className="relative">
@@ -244,7 +244,7 @@ export const GithubDashboard: React.FC = () => {
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="bg-black border border-zinc-800 text-[10px] pl-6 pr-2 py-0.5 text-white focus:border-copernicus-phosphor focus:outline-none placeholder:text-zinc-700 font-mono rounded w-32 transition-all focus:w-48"
+                  className="bg-black border border-zinc-800 text-[11px] pl-6 pr-2 py-0.5 text-white focus:border-copernicus-phosphor focus:outline-none placeholder:text-zinc-700 font-mono rounded w-32 transition-all focus:w-48"
                 />
               </div>
             </div>
@@ -270,18 +270,18 @@ export const GithubDashboard: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-zinc-300 truncate">{repo.name}</span>
                         {isTarget && (
-                          <span className="text-[8px] font-bold uppercase tracking-wider bg-copernicus-phosphor text-black px-1 rounded-sm">
+                          <span className="text-[11px] font-bold uppercase tracking-wider bg-copernicus-phosphor text-black px-1 rounded-sm">
                             ACTIVE
                           </span>
                         )}
-                        <span className="ml-auto text-[9px] text-zinc-600 flex items-center gap-1">
+                        <span className="ml-auto text-[11px] text-zinc-600 flex items-center gap-1">
                           <span className="text-yellow-500/80">★</span> {repo.stargazers_count || 0}
                         </span>
                       </div>
-                      <div className="text-[10px] text-zinc-500 truncate mb-1">
+                      <div className="text-[11px] text-zinc-500 truncate mb-1">
                         {repo.description || 'No description provided.'}
                       </div>
-                      <span className="text-[9px] text-zinc-600 font-mono">
+                      <span className="text-[11px] text-zinc-600 font-mono">
                         {new Date(repo.updated_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -289,7 +289,7 @@ export const GithubDashboard: React.FC = () => {
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleSetTarget(repo.full_name)}
-                        className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
+                        className={`flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded transition-colors
                           ${isTarget
                             ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
                             : 'text-zinc-600 hover:text-zinc-300'}`}
@@ -299,7 +299,7 @@ export const GithubDashboard: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleSetTrust(repo.name, !isTrusted)}
-                        className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded transition-colors
+                        className={`flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded transition-colors
                           ${isTrusted
                             ? 'bg-copernicus-phosphor text-[#050505] rounded-none'
                             : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800'}`}
@@ -341,7 +341,7 @@ export const GithubDashboard: React.FC = () => {
         {activeTab === 'access' && (
           <div className="p-3 space-y-4">
             <div>
-              <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-2">Track a Repository</p>
+              <p className="text-[11px] uppercase tracking-widest text-zinc-600 mb-2">Track a Repository</p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -354,7 +354,7 @@ export const GithubDashboard: React.FC = () => {
                 <button
                   onClick={handleAddRepo}
                   disabled={!addRepoInput.trim()}
-                  className="px-3 py-1.5 bg-zinc-900 hover:text-zinc-300 text-copernicus-phosphor border border-copernicus-phosphor/40 text-[10px] font-mono uppercase rounded transition-colors disabled:opacity-40"
+                  className="px-3 py-1.5 bg-zinc-900 hover:text-zinc-300 text-copernicus-phosphor border border-copernicus-phosphor/40 text-[11px] font-mono uppercase rounded transition-colors disabled:opacity-40"
                 >
                   Add
                 </button>
@@ -362,11 +362,11 @@ export const GithubDashboard: React.FC = () => {
             </div>
 
             <div>
-              <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-2">
+              <p className="text-[11px] uppercase tracking-widest text-zinc-600 mb-2">
                 Tracked Repos ({trustList.tracked.length})
               </p>
               {trustList.tracked.length === 0 ? (
-                <p className="text-[10px] text-zinc-600 font-mono">No repos tracked yet.</p>
+                <p className="text-[11px] text-zinc-600 font-mono">No repos tracked yet.</p>
               ) : (
                 <div className="space-y-1">
                   {trustList.tracked.map(name => (
@@ -396,7 +396,7 @@ export const GithubDashboard: React.FC = () => {
         {activeTab === 'invite' && (
           <div className="p-4 space-y-4">
             <div>
-              <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-2">Your GitHub Profile</p>
+              <p className="text-[11px] uppercase tracking-widest text-zinc-600 mb-2">Your GitHub Profile</p>
               {user ? (
                 <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded font-mono text-xs text-zinc-300">
                   <span className="flex-1 truncate">{user.html_url ?? `https://github.com/${user.login}`}</span>
@@ -409,12 +409,12 @@ export const GithubDashboard: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <p className="text-[10px] text-zinc-600 font-mono">Connect GitHub to see your profile URL.</p>
+                <p className="text-[11px] text-zinc-600 font-mono">Connect GitHub to see your profile URL.</p>
               )}
             </div>
             <div>
-              <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Share this Project</p>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">
+              <p className="text-[11px] uppercase tracking-widest text-zinc-600 mb-1">Share this Project</p>
+              <p className="text-[11px] text-zinc-500 leading-relaxed">
                 Share your GitHub profile URL with collaborators to invite them to your repositories.
                 Trusted repos are accessible to all configured providers in COPERNICUS.
               </p>
@@ -432,7 +432,7 @@ export const GithubDashboard: React.FC = () => {
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] text-zinc-500 mb-1">Repository Name</label>
+                <label className="block text-[11px] text-zinc-500 mb-1">Repository Name</label>
                 <input
                   type="text"
                   value={newRepoName}

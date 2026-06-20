@@ -70,7 +70,7 @@ export const ContentPreview: React.FC = () => {
       </div>
       {canvasUrl && (
         <div className="h-4 px-2 border-t border-hairline border-copernicus-steel flex items-center bg-[#0A0A0A]">
-          <span className="text-[8px] text-zinc-600 font-mono truncate">{canvasUrl}</span>
+          <span className="text-[11px] text-zinc-600 font-mono truncate">{canvasUrl}</span>
         </div>
       )}
     </div>

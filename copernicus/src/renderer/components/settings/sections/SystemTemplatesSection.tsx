@@ -55,7 +55,7 @@ export const SystemTemplatesSection: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest">System Templates</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Override system workflow and story templates with custom JSON definitions.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Override system workflow and story templates with custom JSON definitions.</p>
       </div>
 
       <div className="space-y-2">
@@ -73,9 +73,9 @@ export const SystemTemplatesSection: React.FC = () => {
             >
               <div className="flex items-center gap-3">
                 <span className="text-[11px] font-bold text-zinc-300 font-mono">{t.name}</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 font-mono uppercase">{t.type}</span>
+                <span className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 font-mono uppercase">{t.type}</span>
                 {t.isOverridden && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-copernicus-phosphor/20 text-copernicus-phosphor font-bold uppercase tracking-tighter">Overridden</span>
+                  <span className="text-[11px] px-1.5 py-0.5 rounded bg-copernicus-phosphor/20 text-copernicus-phosphor font-bold uppercase tracking-tighter">Overridden</span>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -100,13 +100,13 @@ export const SystemTemplatesSection: React.FC = () => {
                       <>
                         <button
                           onClick={() => handleSave(t.id)}
-                          className="flex items-center gap-1.5 px-3 py-1 bg-copernicus-phosphor text-[#050505] rounded text-[10px] font-bold uppercase hover:opacity-90 transition-opacity"
+                          className="flex items-center gap-1.5 px-3 py-1 bg-copernicus-phosphor text-[#050505] rounded text-[11px] font-bold uppercase hover:opacity-90 transition-opacity"
                         >
                           <Check size={12} /> Save Override
                         </button>
                         <button
                           onClick={() => setEditId(null)}
-                          className="px-3 py-1 bg-zinc-800 text-zinc-400 rounded text-[10px] font-bold uppercase hover:bg-zinc-700 transition-colors"
+                          className="px-3 py-1 bg-zinc-800 text-zinc-400 rounded text-[11px] font-bold uppercase hover:bg-zinc-700 transition-colors"
                         >
                           Cancel
                         </button>
@@ -114,7 +114,7 @@ export const SystemTemplatesSection: React.FC = () => {
                     ) : (
                       <button
                         onClick={() => handleEdit(t)}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 text-zinc-300 rounded text-[10px] font-bold uppercase hover:bg-zinc-700 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 text-zinc-300 rounded text-[11px] font-bold uppercase hover:bg-zinc-700 transition-colors"
                       >
                         <Edit2 size={12} /> Edit Template
                       </button>
@@ -124,7 +124,7 @@ export const SystemTemplatesSection: React.FC = () => {
                   {t.isOverridden && (
                     <button
                       onClick={() => handleReset(t.id)}
-                      className="flex items-center gap-1.5 text-red-400/60 hover:text-red-400 transition-colors text-[9px] font-bold uppercase tracking-wider"
+                      className="flex items-center gap-1.5 text-red-400/60 hover:text-red-400 transition-colors text-[11px] font-bold uppercase tracking-wider"
                     >
                       <RotateCcw size={12} /> Reset to Default
                     </button>

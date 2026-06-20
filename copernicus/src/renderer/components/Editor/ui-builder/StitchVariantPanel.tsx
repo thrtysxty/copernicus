@@ -93,7 +93,7 @@ export const StitchVariantPanel: React.FC<{
                 title={`Variant ${v.screenId}`}
                 className="w-full h-full border-none pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 text-[10px] text-zinc-400 font-mono">
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 text-[11px] text-zinc-400 font-mono">
                 {v.screenId}
               </div>
             </div>

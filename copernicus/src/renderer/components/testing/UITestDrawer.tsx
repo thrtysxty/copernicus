@@ -59,7 +59,7 @@ export const UITestDrawer: React.FC = () => {
   return (
     <div className="absolute top-10 right-0 h-[calc(100%-2.5rem)] w-[200px] bg-[#0A0A0A] border-l border-zinc-800 z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
       <div className="h-10 border-b border-zinc-800 flex justify-between items-center px-3 shrink-0">
-        <h2 className="text-[10px] font-mono font-bold text-zinc-400 flex items-center gap-2 tracking-widest uppercase">
+        <h2 className="text-[11px] font-mono font-bold text-zinc-400 flex items-center gap-2 tracking-widest uppercase">
           <PlaySquare size={12} className="text-emerald-500" />
           UI TESTING
         </h2>
@@ -75,7 +75,7 @@ export const UITestDrawer: React.FC = () => {
         <button
           onClick={() => runTests()}
           disabled={isRunning}
-          className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-[10px] font-bold rounded transition-colors flex items-center justify-center gap-2 uppercase tracking-wider"
+          className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-[11px] font-bold rounded transition-colors flex items-center justify-center gap-2 uppercase tracking-wider"
         >
           {isRunning && runningFile === 'all' ? (
             <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -86,11 +86,11 @@ export const UITestDrawer: React.FC = () => {
         </button>
 
         <div className="space-y-1.5">
-          <h3 className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Test Files</h3>
-          {testFiles.length === 0 && <div className="text-[10px] text-zinc-700 italic">No tests found in /e2e</div>}
+          <h3 className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">Test Files</h3>
+          {testFiles.length === 0 && <div className="text-[11px] text-zinc-700 italic">No tests found in /e2e</div>}
           {testFiles.map(file => (
             <div key={file} className="flex items-center justify-between p-1.5 bg-zinc-900/50 rounded border border-zinc-800 group">
-              <span className="text-[10px] text-zinc-400 truncate mr-2 font-mono" title={file}>{file}</span>
+              <span className="text-[11px] text-zinc-400 truncate mr-2 font-mono" title={file}>{file}</span>
               <button
                 onClick={() => runTests(file)}
                 disabled={isRunning}
@@ -108,7 +108,7 @@ export const UITestDrawer: React.FC = () => {
 
         {results.length > 0 && (
           <div className="mt-2 space-y-1.5">
-            <h3 className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Results</h3>
+            <h3 className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">Results</h3>
             <div className="bg-black rounded border border-zinc-800 divide-y divide-zinc-900 overflow-hidden">
               {results.map((res, i) => (
                 <div key={i} className="p-1.5 flex items-center justify-between gap-2">
@@ -118,11 +118,11 @@ export const UITestDrawer: React.FC = () => {
                     ) : (
                       <XCircle size={10} className="text-rose-500 shrink-0" />
                     )}
-                    <span className="text-[9px] text-zinc-400 truncate font-mono" title={res.title}>{res.title}</span>
+                    <span className="text-[11px] text-zinc-400 truncate font-mono" title={res.title}>{res.title}</span>
                   </div>
                   <div className="flex items-center gap-1 text-zinc-600 shrink-0">
                     <Clock size={8} />
-                    <span className="text-[8px] font-mono">{res.duration}ms</span>
+                    <span className="text-[11px] font-mono">{res.duration}ms</span>
                   </div>
                 </div>
               ))}

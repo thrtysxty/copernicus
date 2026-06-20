@@ -508,7 +508,7 @@ Identify visual discrepancies, missing tokens, and suggest the minimum changes n
               <div key={sec.section} className="p-3 border-b border-zinc-900">
                 <div className="flex items-center gap-2 mb-3 text-zinc-600">
                   <sec.icon size={10} />
-                  <h4 className="text-[9px] font-bold uppercase tracking-[0.2em]">{sec.section}</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-[0.2em]">{sec.section}</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {sec.items.map(item => (
@@ -519,7 +519,7 @@ Identify visual discrepancies, missing tokens, and suggest the minimum changes n
                       className="flex flex-col items-center gap-1.5 p-2 bg-zinc-900/50 border border-zinc-800 rounded-lg cursor-grab hover:border-copernicus-phosphor hover:bg-zinc-900 transition-all group"
                     >
                       <item.icon size={14} className="text-zinc-500 group-hover:text-copernicus-phosphor" />
-                      <span className="text-[8px] font-bold text-zinc-400 group-hover:text-zinc-200 uppercase tracking-tighter text-center leading-none">
+                      <span className="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-200 uppercase tracking-tighter text-center leading-none">
                         {item.label}
                       </span>
                     </div>
@@ -565,7 +565,7 @@ Identify visual discrepancies, missing tokens, and suggest the minimum changes n
                 style={{ zIndex: selectedId === comp.id ? 20 : 10 }}
               >
                 <div className="absolute top-0 left-0 z-30 pointer-events-none">
-                  <span className="text-[9px] font-mono text-zinc-500 bg-[#0a0a0a]/80 px-1 py-0.5 rounded-br uppercase tracking-wider leading-none">
+                  <span className="text-[11px] font-mono text-zinc-500 bg-[#0a0a0a]/80 px-1 py-0.5 rounded-br uppercase tracking-wider leading-none">
                     {comp.type}
                   </span>
                 </div>

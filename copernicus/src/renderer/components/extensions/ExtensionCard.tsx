@@ -36,7 +36,7 @@ export const ExtensionCard: React.FC<ExtensionCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-zinc-200 font-medium truncate" title={displayName}>{displayName}</h3>
-            <span className="text-[10px] font-mono text-zinc-500 px-1.5 py-0.5 bg-zinc-900 rounded-sm">v{version}</span>
+            <span className="text-[11px] font-mono text-zinc-500 px-1.5 py-0.5 bg-zinc-900 rounded-sm">v{version}</span>
           </div>
           <div className="text-xs text-zinc-500 font-mono truncate mb-2">{publisher ? `${publisher} • ` : ''}{name}</div>
           <p className="text-sm text-zinc-400 line-clamp-2" title={description}>{description || 'No description provided'}</p>
@@ -47,7 +47,7 @@ export const ExtensionCard: React.FC<ExtensionCardProps> = ({
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900 rounded-sm border border-zinc-800">
                 <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-zinc-600'}`} />
-                <span className="text-[10px] font-mono text-zinc-400 uppercase">{isActive ? 'Active' : 'Inactive'}</span>
+                <span className="text-[11px] font-mono text-zinc-400 uppercase">{isActive ? 'Active' : 'Inactive'}</span>
               </div>
               <button
                 onClick={onUninstall}
@@ -62,7 +62,7 @@ export const ExtensionCard: React.FC<ExtensionCardProps> = ({
             <button
               onClick={onInstall}
               disabled={isBusy}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-copernicus-phosphor text-[#050505] font-mono text-[10px] uppercase font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-copernicus-phosphor text-[#050505] font-mono text-[11px] uppercase font-bold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
             >
               {isBusy ? (
                 <span className="animate-pulse">Installing...</span>
@@ -78,7 +78,7 @@ export const ExtensionCard: React.FC<ExtensionCardProps> = ({
       </div>
 
       {hasCapabilities && (
-        <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-500/80 mt-1">
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-amber-500/80 mt-1">
           <ShieldAlert size={12} />
           <span>Requires permissions</span>
         </div>

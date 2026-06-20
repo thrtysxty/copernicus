@@ -75,7 +75,7 @@ export const ContainerViewer: React.FC = () => {
   return (
     <div data-testid="panel-runtime" className="flex flex-col h-full bg-[#080808] text-zinc-300 font-mono text-xs">
       <div className="h-8 flex items-center justify-between px-3 border-b border-copernicus-steel shrink-0">
-        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">CONTAINERS</span>
+        <span className="text-[11px] text-zinc-500 uppercase tracking-widest">CONTAINERS</span>
         <div className="flex items-center gap-1">
           <button
             onClick={fetchContainers}
@@ -119,7 +119,7 @@ export const ContainerViewer: React.FC = () => {
                       {c.Names}
                     </span>
                     <span
-                      className={`text-[9px] uppercase px-1.5 py-0.5 rounded-sm ${
+                      className={`text-[11px] uppercase px-1.5 py-0.5 rounded-sm ${
                         isRunning
                           ? isActive ? 'bg-[#050505] text-copernicus-phosphor' : 'bg-green-500/20 text-green-400'
                           : isActive ? 'bg-red-900 text-red-100' : 'bg-red-500/20 text-red-400'
@@ -129,11 +129,11 @@ export const ContainerViewer: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className={`text-[10px] truncate mb-2 ${isActive ? 'text-[#050505]/70' : 'text-zinc-500'}`} title={c.Image}>
+                  <div className={`text-[11px] truncate mb-2 ${isActive ? 'text-[#050505]/70' : 'text-zinc-500'}`} title={c.Image}>
                     {c.Image}
                   </div>
 
-                  <div className={`text-[9px] mb-3 ${isActive ? 'text-[#050505]/70' : 'text-zinc-600'}`}>
+                  <div className={`text-[11px] mb-3 ${isActive ? 'text-[#050505]/70' : 'text-zinc-600'}`}>
                     {c.Ports || 'No ports mapped'}
                   </div>
 
@@ -141,7 +141,7 @@ export const ContainerViewer: React.FC = () => {
                     {!isRunning ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); manageContainer(c.ID, 'start'); }}
-                        className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-colors ${
+                        className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors ${
                           isActive
                             ? 'bg-[#050505] text-copernicus-phosphor hover:bg-[#050505]/80'
                             : 'bg-zinc-800 text-zinc-300 hover:text-copernicus-phosphor hover:bg-zinc-700'
@@ -152,7 +152,7 @@ export const ContainerViewer: React.FC = () => {
                     ) : (
                       <button
                         onClick={(e) => { e.stopPropagation(); manageContainer(c.ID, 'stop'); }}
-                        className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-colors ${
+                        className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors ${
                           isActive
                             ? 'bg-red-900 text-red-100 hover:bg-red-800'
                             : 'bg-zinc-800 text-red-400 hover:text-red-300 hover:bg-zinc-700'
@@ -163,7 +163,7 @@ export const ContainerViewer: React.FC = () => {
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); manageContainer(c.ID, 'logs'); }}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-colors ${
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors ${
                         isActive
                           ? 'bg-[#050505]/20 hover:bg-[#050505]/30'
                           : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'

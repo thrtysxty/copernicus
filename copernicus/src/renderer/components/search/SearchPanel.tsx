@@ -70,19 +70,19 @@ export const SearchPanel: React.FC = () => {
   }, {} as Record<string, SearchResult[]>)
 
   return (
-    <div data-testid="panel-search" className="flex flex-col h-full bg-[#050505] font-mono text-[10px] text-zinc-300">
+    <div data-testid="panel-search" className="flex flex-col h-full bg-[#050505] font-mono text-[11px] text-zinc-300">
       <div className="p-4 border-b border-copernicus-steel/20 shrink-0">
         <div className="flex items-center gap-2 mb-4">
           <div className="flex bg-zinc-900 rounded p-0.5">
             <button
               onClick={() => setMode('text')}
-              className={`px-3 py-1 rounded text-[9px] uppercase tracking-widest transition-colors ${mode === 'text' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+              className={`px-3 py-1 rounded text-[11px] uppercase tracking-widest transition-colors ${mode === 'text' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
             >
               Text
             </button>
             <button
               onClick={() => setMode('semantic')}
-              className={`px-3 py-1 rounded text-[9px] uppercase tracking-widest transition-colors ${mode === 'semantic' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+              className={`px-3 py-1 rounded text-[11px] uppercase tracking-widest transition-colors ${mode === 'semantic' ? 'bg-copernicus-phosphor text-[#050505] font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
             >
               Semantic
             </button>
@@ -156,7 +156,7 @@ export const SearchPanel: React.FC = () => {
                 <div className="flex items-center gap-2 text-zinc-400 font-bold mb-1">
                   <FileCode size={12} className="text-copernicus-phosphor/60" />
                   <span className="truncate">{file}</span>
-                  <span className="text-[8px] bg-zinc-900 px-1 rounded text-zinc-600">{matches.length}</span>
+                  <span className="text-[11px] bg-zinc-900 px-1 rounded text-zinc-600">{matches.length}</span>
                 </div>
                 {matches.map((m, i) => (
                   <div 
@@ -165,7 +165,7 @@ export const SearchPanel: React.FC = () => {
                     onClick={() => openFile(m.file)}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-zinc-600 text-[8px] w-6">L{m.line}</span>
+                      <span className="text-zinc-600 text-[11px] w-6">L{m.line}</span>
                       <span className="text-zinc-300 truncate">{m.text}</span>
                     </div>
                   </div>
@@ -189,19 +189,19 @@ export const SearchPanel: React.FC = () => {
                     <SearchCode size={12} className="text-copernicus-phosphor" />
                     <span className="text-zinc-300 font-bold">{r.path.split('/').pop()}</span>
                   </div>
-                  <span className="text-[8px] text-zinc-600 uppercase tracking-tighter">Similarity: {Math.round(r.score * 100)}%</span>
+                  <span className="text-[11px] text-zinc-600 uppercase tracking-tighter">Similarity: {Math.round(r.score * 100)}%</span>
                 </div>
-                <div className="text-zinc-500 text-[9px] line-clamp-3 bg-zinc-950 p-2 rounded group-hover:text-zinc-400">
+                <div className="text-zinc-500 text-[11px] line-clamp-3 bg-zinc-950 p-2 rounded group-hover:text-zinc-400">
                   {r.content}
                 </div>
-                <div className="text-[8px] text-zinc-700 mt-2 truncate">{r.path}</div>
+                <div className="text-[11px] text-zinc-700 mt-2 truncate">{r.path}</div>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="p-2 border-t border-copernicus-steel/20 text-[8px] text-zinc-600 flex justify-between shrink-0">
+      <div className="p-2 border-t border-copernicus-steel/20 text-[11px] text-zinc-600 flex justify-between shrink-0">
         <span>MODE: {mode.toUpperCase()}</span>
         <span>{mode === 'text' ? results.length : semanticResults.length} RESULTS</span>
       </div>

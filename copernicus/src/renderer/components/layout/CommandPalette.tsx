@@ -85,7 +85,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                   <span>{res.command.label}</span>
                 </div>
                 {res.command.shortcut && (
-                  <span className="text-[9px] text-zinc-600 font-mono">{res.command.shortcut}</span>
+                  <span className="text-[11px] text-zinc-600 font-mono">{res.command.shortcut}</span>
                 )}
               </div>
             ))

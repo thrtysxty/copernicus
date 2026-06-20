@@ -21,7 +21,7 @@ export function ImageViewer({ filePath, isSvg, onEditSource }: ImageViewerProps)
   return (
     <div className="flex flex-col h-full bg-copernicus-bg select-none">
       {/* Toolbar */}
-      <div className="h-7 flex items-center gap-3 px-3 border-b border-copernicus-steel bg-copernicus-bg text-[9px] font-mono text-zinc-500 flex-shrink-0">
+      <div className="h-7 flex items-center gap-3 px-3 border-b border-copernicus-steel bg-copernicus-bg text-[11px] font-mono text-zinc-500 flex-shrink-0">
         <span className="truncate max-w-[200px]">{filePath?.split('/').pop()}</span>
         {naturalSize && (
           <span className="text-zinc-600 flex-shrink-0">{naturalSize.w}×{naturalSize.h}</span>
@@ -73,7 +73,7 @@ export function ImageViewer({ filePath, isSvg, onEditSource }: ImageViewerProps)
         {isSvg && onEditSource && (
           <button
             onClick={onEditSource}
-            className="absolute bottom-3 right-3 px-3 py-1 rounded text-[9px] font-mono uppercase 
+            className="absolute bottom-3 right-3 px-3 py-1 rounded text-[11px] font-mono uppercase 
                        tracking-wider bg-zinc-900 border border-copernicus-steel text-zinc-400
                        hover:text-copernicus-phosphor hover:border-copernicus-phosphor/40 transition-colors"
           >

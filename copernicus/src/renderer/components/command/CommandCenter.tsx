@@ -52,7 +52,7 @@ export function CommandCenter() {
       STALLED: 'text-amber-400',
       ERROR: 'text-red-400'
     }
-    return <span className={`text-[10px] font-mono ${colors[status]}`}>{status}</span>
+    return <span className={`text-[11px] font-mono ${colors[status]}`}>{status}</span>
   }
 
   const renderTaskStatusBadge = (status: ActiveTaskEntry['status']) => {
@@ -62,7 +62,7 @@ export function CommandCenter() {
       COMPLETE: 'text-blue-400',
       FAILED: 'text-red-400'
     }
-    return <span className={`text-[10px] font-mono ${colors[status]}`}>{status}</span>
+    return <span className={`text-[11px] font-mono ${colors[status]}`}>{status}</span>
   }
 
   const toggleSpotlight = (id: string) => {
@@ -72,7 +72,7 @@ export function CommandCenter() {
   const isVisible = (id: string) => spotlightedSection === null || spotlightedSection === id
 
   const renderHeader = (title: string, id: string) => (
-    <h3 className="text-[10px] uppercase font-mono tracking-widest text-zinc-400 p-2 border-b border-copernicus-steel border-l-2 border-l-copernicus-phosphor bg-zinc-900 shrink-0 flex items-center justify-between">
+    <h3 className="text-[11px] uppercase font-mono tracking-widest text-zinc-400 p-2 border-b border-copernicus-steel border-l-2 border-l-copernicus-phosphor bg-zinc-900 shrink-0 flex items-center justify-between">
       <span>{title}</span>
       <button 
         onClick={() => toggleSpotlight(id)}
@@ -87,7 +87,7 @@ export function CommandCenter() {
   return (
     <div data-testid="panel-command-center" className="flex flex-col h-full w-full bg-[#050505] text-zinc-300 overflow-hidden font-sans">
       <header className="h-8 flex items-center justify-between px-3 border-b border-white/5 shrink-0 bg-black/20">
-        <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
+        <h2 className="text-[11px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
           Telemetry
         </h2>
         <button
@@ -141,7 +141,7 @@ export function CommandCenter() {
                         <span className="font-bold text-zinc-300 truncate" title={task.label}>{task.label}</span>
                         {renderTaskStatusBadge(task.status)}
                       </div>
-                      <div className="flex items-center justify-between font-mono text-[10px] text-zinc-500">
+                      <div className="flex items-center justify-between font-mono text-[11px] text-zinc-500">
                         <span>{task.currentNode || 'N/A'}</span>
                         <span>{formatElapsed(task.elapsedMs)}</span>
                       </div>
@@ -166,20 +166,20 @@ export function CommandCenter() {
                     <span className="font-bold">{store.lspState.serverName}</span>
                     <div className="flex items-center gap-1">
                       <div className={`w-2 h-2 rounded-full ${store.lspState.running ? 'bg-green-500' : 'bg-red-500'}`} />
-                      <span className="font-mono text-[10px] text-zinc-500">{store.lspState.running ? 'Running' : 'Stopped'}</span>
+                      <span className="font-mono text-[11px] text-zinc-500">{store.lspState.running ? 'Running' : 'Stopped'}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="p-2 bg-zinc-900/50 rounded border border-zinc-800 flex flex-col items-center">
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase">Files</span>
+                      <span className="text-[11px] font-mono text-zinc-500 uppercase">Files</span>
                       <span className="font-bold text-sm">{store.lspState.openFiles}</span>
                     </div>
                     <div className="p-2 bg-zinc-900/50 rounded border border-zinc-800 flex flex-col items-center">
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase">Errors</span>
+                      <span className="text-[11px] font-mono text-zinc-500 uppercase">Errors</span>
                       <span className="font-bold text-sm text-red-400">{store.lspState.errorCount}</span>
                     </div>
                     <div className="p-2 bg-zinc-900/50 rounded border border-zinc-800 flex flex-col items-center">
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase">Warnings</span>
+                      <span className="text-[11px] font-mono text-zinc-500 uppercase">Warnings</span>
                       <span className="font-bold text-sm text-amber-400">{store.lspState.warningCount}</span>
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export function CommandCenter() {
                         <span className="font-bold">{agent.name}</span>
                         {renderAgentStatusBadge(agent.status)}
                       </div>
-                      <button className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded border border-zinc-700 hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-colors">
+                      <button className="text-[11px] font-mono uppercase tracking-widest px-2 py-1 rounded border border-zinc-700 hover:border-copernicus-phosphor hover:text-copernicus-phosphor transition-colors">
                         [Resume]
                       </button>
                     </li>

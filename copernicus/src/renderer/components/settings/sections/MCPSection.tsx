@@ -134,7 +134,7 @@ export const MCPSection: React.FC = () => {
   const allDisconnected = mcpServers.length > 0 && Object.values(mcpStatus ?? {}).every(s => s === 'disconnected')
 
   if (isLoading) {
-    return <div className="text-[10px] text-zinc-500 font-mono animate-pulse">Initializing MCP Configuration...</div>
+    return <div className="text-[11px] text-zinc-500 font-mono animate-pulse">Initializing MCP Configuration...</div>
   }
 
   return (
@@ -147,7 +147,7 @@ export const MCPSection: React.FC = () => {
         {!showAddForm && (
           <button 
             onClick={() => setShowAddForm(true)} 
-            className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-copernicus-phosphor hover:text-zinc-300 px-2 py-1 rounded border border-copernicus-phosphor/20 transition-all"
+            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-copernicus-phosphor hover:text-zinc-300 px-2 py-1 rounded border border-copernicus-phosphor/20 transition-all"
           >
             <Plus size={12} />
             Add Server
@@ -159,7 +159,7 @@ export const MCPSection: React.FC = () => {
         {mcpServers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 border border-dashed border-zinc-800 rounded-lg bg-zinc-900/10">
             <Server size={24} className="text-zinc-700 mb-2 opacity-20" />
-            <p className="text-[10px] text-zinc-500 font-mono">No MCP servers configured.</p>
+            <p className="text-[11px] text-zinc-500 font-mono">No MCP servers configured.</p>
           </div>
         ) : (
           mcpServers.map((s, i) => (
@@ -178,11 +178,11 @@ export const MCPSection: React.FC = () => {
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-bold text-zinc-200 font-mono tracking-tight">{s.name}</span>
-                    <span className="text-[9px] px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded-sm text-zinc-400 font-mono uppercase">
+                    <span className="text-[11px] px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded-sm text-zinc-400 font-mono uppercase">
                       {s.transport}
                     </span>
                   </div>
-                  <div className="text-[9px] text-zinc-500 font-mono truncate max-w-[400px]">
+                  <div className="text-[11px] text-zinc-500 font-mono truncate max-w-[400px]">
                     {s.transport === 'stdio' ? `${s.command} ${(s.args || []).join(' ')}` : s.url}
                   </div>
                 </div>
@@ -205,8 +205,8 @@ export const MCPSection: React.FC = () => {
         <div className="flex items-start gap-3 p-3 bg-amber-500/5 border border-amber-500/20 rounded-none animate-in fade-in slide-in-from-top-1 duration-300">
           <AlertCircle size={14} className="text-amber-500 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <p className="text-[10px] text-amber-200/80 font-mono uppercase tracking-wider font-bold">Connection status unavailable</p>
-            <p className="text-[9px] text-amber-500/60 leading-relaxed font-mono">The MCP runtime is currently initializing or unavailable. Status indicators may not reflect real-time connectivity.</p>
+            <p className="text-[11px] text-amber-200/80 font-mono uppercase tracking-wider font-bold">Connection status unavailable</p>
+            <p className="text-[11px] text-amber-500/60 leading-relaxed font-mono">The MCP runtime is currently initializing or unavailable. Status indicators may not reflect real-time connectivity.</p>
           </div>
         </div>
       )}
@@ -234,22 +234,22 @@ export const MCPSection: React.FC = () => {
             } />
             <div className="flex-1 space-y-3">
               <div>
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Google Cloud Project ID</label>
+                <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Google Cloud Project ID</label>
                 <input
                   placeholder="e.g. my-design-project-123"
                   value={stitchProjectId}
                   onChange={e => saveStitchProject(e.target.value)}
-                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
+                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[11px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
                 />
               </div>
               <div>
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Stitch API Key <span className="normal-case text-zinc-600">(optional — skips gcloud auth)</span></label>
+                <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 block mb-1">Stitch API Key <span className="normal-case text-zinc-600">(optional — skips gcloud auth)</span></label>
                 <input
                   type="password"
                   placeholder="Paste key from stitch.withgoogle.com → Settings"
                   value={stitchApiKey}
                   onChange={e => saveStitchApiKey(e.target.value)}
-                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
+                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[11px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors"
                 />
               </div>
             </div>
@@ -257,7 +257,7 @@ export const MCPSection: React.FC = () => {
               <button
                 onClick={testStitchConnection}
                 disabled={isStitchTesting || !stitchProjectId}
-                className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-none text-[9px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+                className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-none text-[11px] font-bold uppercase text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
               >
                 {isStitchTesting ? 'Testing...' : 'Test Connection'}
               </button>
@@ -271,7 +271,7 @@ export const MCPSection: React.FC = () => {
       {showAddForm && (
         <div className="space-y-4 p-4 bg-zinc-900/50 border border-zinc-700 rounded-none animate-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Configure New Server</div>
+            <div className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest">Configure New Server</div>
             <button onClick={() => setShowAddForm(false)} className="text-zinc-500 hover:text-white">
               <X size={14} />
             </button>
@@ -279,20 +279,20 @@ export const MCPSection: React.FC = () => {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Server Name</label>
+              <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Server Name</label>
               <input 
                 placeholder="e.g. Memory Server" 
                 value={newServer.name} 
                 onChange={e => setNewServer(p => ({...p, name: e.target.value}))} 
-                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
+                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[11px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Transport Type</label>
+              <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Transport Type</label>
               <select 
                 value={newServer.transport} 
                 onChange={e => setNewServer(p => ({...p, transport: e.target.value as 'stdio' | 'sse' | 'http'}))} 
-                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 appearance-none transition-colors cursor-pointer"
+                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[11px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 appearance-none transition-colors cursor-pointer"
               >
                 <option value="stdio">stdio (Local Process)</option>
                 <option value="sse">sse (Server-Sent Events)</option>
@@ -304,32 +304,32 @@ export const MCPSection: React.FC = () => {
           {newServer.transport === 'stdio' ? (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Executable Command</label>
+                <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Executable Command</label>
                 <input 
                   placeholder="e.g. node, python, /usr/bin/custom-server" 
                   value={newServer.command || ''} 
                   onChange={e => setNewServer(p => ({...p, command: e.target.value}))} 
-                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
+                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[11px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Arguments</label>
+                <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Arguments</label>
                 <input 
                   placeholder="e.g. ./path/to/server.js --option value" 
                   value={(newServer.args || []).join(' ')} 
                   onChange={e => setNewServer(p => ({...p, args: e.target.value.split(' ').filter(Boolean)}))} 
-                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
+                  className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[11px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
                 />
               </div>
             </div>
           ) : (
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Server URL</label>
+              <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Server URL</label>
               <input 
                 placeholder="e.g. http://localhost:3001/mcp" 
                 value={newServer.url || ''} 
                 onChange={e => setNewServer(p => ({...p, url: e.target.value}))} 
-                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[10px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
+                className="w-full bg-black/40 border border-zinc-800 rounded-none px-3 py-2 text-[11px] text-zinc-200 outline-none focus:border-copernicus-phosphor/50 transition-colors" 
               />
             </div>
           )}
@@ -338,13 +338,13 @@ export const MCPSection: React.FC = () => {
             <button 
               onClick={addMcpServer} 
               disabled={!newServer.name || (newServer.transport === 'stdio' ? !newServer.command : !newServer.url)}
-              className="text-[10px] font-bold uppercase tracking-widest px-6 py-2 bg-copernicus-phosphor text-[#050505] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-copernicus-phosphor/90 transition-all rounded-none"
+              className="text-[11px] font-bold uppercase tracking-widest px-6 py-2 bg-copernicus-phosphor text-[#050505] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-copernicus-phosphor/90 transition-all rounded-none"
             >
               Add Server
             </button>
             <button 
               onClick={() => setShowAddForm(false)} 
-              className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-zinc-500 hover:text-white transition-colors"
+              className="text-[11px] font-bold uppercase tracking-widest px-4 py-2 text-zinc-500 hover:text-white transition-colors"
             >
               Cancel
             </button>

@@ -32,7 +32,7 @@ export const DispatchQueue: React.FC = () => {
         <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-copernicus-phosphor">Dispatch Queue</h2>
         <button 
           onClick={() => setShowAdd(!showAdd)}
-          className="text-[10px] uppercase font-bold bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded transition-colors"
+          className="text-[11px] uppercase font-bold bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded transition-colors"
         >
           {showAdd ? 'Cancel' : '+ Schedule'}
         </button>
@@ -41,7 +41,7 @@ export const DispatchQueue: React.FC = () => {
       {showAdd && (
         <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded mb-6 space-y-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Workflow Name</label>
+            <label className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider">Workflow Name</label>
             <input 
               type="text" 
               value={newName}
@@ -62,7 +62,7 @@ export const DispatchQueue: React.FC = () => {
           <button 
             disabled={!newName.trim() || !newCron}
             onClick={handleAdd}
-            className="w-full py-2 bg-copernicus-phosphor text-[#050505] text-[10px] font-bold uppercase tracking-wider rounded disabled:opacity-50 transition-all hover:scale-[1.02]"
+            className="w-full py-2 bg-copernicus-phosphor text-[#050505] text-[11px] font-bold uppercase tracking-wider rounded disabled:opacity-50 transition-all hover:scale-[1.02]"
           >
             Confirm Schedule
           </button>
@@ -74,16 +74,16 @@ export const DispatchQueue: React.FC = () => {
           <div key={task.id} className="bg-zinc-900/30 border border-zinc-800 p-3 rounded group hover:border-copernicus-phosphor/30 transition-colors">
             <div className="flex justify-between items-start mb-1">
               <span className="text-xs font-bold text-zinc-200 truncate">{task.name}</span>
-              <button className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 text-[10px] transition-opacity">✕</button>
+              <button className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 text-[11px] transition-opacity">✕</button>
             </div>
-            <div className="text-[10px] text-zinc-500 font-mono mb-1">{task.scheduleNl}</div>
-            <div className="text-[9px] text-copernicus-phosphor font-mono bg-copernicus-phosphor/5 px-1.5 py-0.5 rounded inline-block">
+            <div className="text-[11px] text-zinc-500 font-mono mb-1">{task.scheduleNl}</div>
+            <div className="text-[11px] text-copernicus-phosphor font-mono bg-copernicus-phosphor/5 px-1.5 py-0.5 rounded inline-block">
               {task.scheduleCron}
             </div>
           </div>
         ))}
         {tasks.length === 0 && !showAdd && (
-          <div className="text-center py-12 text-zinc-600 italic text-[10px]">
+          <div className="text-center py-12 text-zinc-600 italic text-[11px]">
             No scheduled dispatches.
           </div>
         )}

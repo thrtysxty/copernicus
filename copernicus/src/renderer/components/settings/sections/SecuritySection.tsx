@@ -41,7 +41,7 @@ export const SecuritySection: React.FC = () => {
     <div className="space-y-10">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest font-mono">Active Defense</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Configure real-time safety gates and auditing systems.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Configure real-time safety gates and auditing systems.</p>
       </div>
 
       <div className="space-y-6">
@@ -78,13 +78,13 @@ export const SecuritySection: React.FC = () => {
         <p className="text-[11px] text-red-200/60 leading-relaxed font-mono">
           Disabling active defense mechanisms significantly increases the risk of:
         </p>
-        <ul className="space-y-2 text-[10px] text-red-200/40 font-mono list-disc ml-4">
+        <ul className="space-y-2 text-[11px] text-red-200/40 font-mono list-disc ml-4">
           <li>Accidental credential exposure via Git push</li>
           <li>Unintended destructive CLI execution by autonomous agents</li>
           <li>Loss of forensic logs for security incident response</li>
         </ul>
         <div className="pt-2">
-          <p className="text-[10px] text-zinc-500 italic">Recommended configuration: All safety gates ACTIVE.</p>
+          <p className="text-[11px] text-zinc-500 italic">Recommended configuration: All safety gates ACTIVE.</p>
         </div>
       </div>
     </div>
@@ -105,7 +105,7 @@ const SecurityToggle = ({ label, description, icon: Icon, enabled, onToggle }: {
       </div>
       <div>
         <div className="text-[11px] text-zinc-200 uppercase font-bold tracking-tight">{label}</div>
-        <div className="text-[10px] text-zinc-500 mt-0.5">{description}</div>
+        <div className="text-[11px] text-zinc-500 mt-0.5">{description}</div>
       </div>
     </div>
     <button

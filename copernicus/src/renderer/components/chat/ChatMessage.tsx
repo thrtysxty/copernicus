@@ -25,7 +25,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, tokens 
       {/* Role Label */}
       <div className="flex items-center gap-2 mb-1 px-1">
         <span className={clsx(
-          'text-[8px] uppercase tracking-widest font-bold',
+          'text-[11px] uppercase tracking-widest font-bold',
           role === 'user' ? 'text-zinc-500' : 
           role === 'copernicus' ? 'text-copernicus-phosphor' : 'text-blue-400'
         )}>
@@ -47,7 +47,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, tokens 
 
       {/* Token Telemetry & Actions (Assistant Only) */}
       {role === 'assistant' && (
-        <div className="mt-1 flex items-center justify-between w-full text-[8px] opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="mt-1 flex items-center justify-between w-full text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-2 text-zinc-600">
             {tokens && (
               <>

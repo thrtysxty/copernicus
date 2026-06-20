@@ -15,14 +15,14 @@ export const StoreStep: React.FC<StoreStepProps> = ({ state, updateState, handle
         <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center justify-center gap-4">
           <FolderOpen size={32} className="text-copernicus-phosphor" /> Repository Store
         </h2>
-        <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configuring project discovery root</p>
+        <p className="text-[11px] text-zinc-500 uppercase tracking-[0.4em] opacity-60">Configuring project discovery root</p>
       </div>
 
       <div className="bg-black/40 border border-copernicus-steel/20 rounded-2xl p-10 space-y-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-copernicus-phosphor/20 to-transparent" />
 
         <div className="flex flex-col gap-3">
-          <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest ml-1">Repository Store Root</label>
+          <label className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest ml-1">Repository Store Root</label>
           <div className="flex gap-3">
             <input
               type="text"
@@ -36,7 +36,7 @@ export const StoreStep: React.FC<StoreStepProps> = ({ state, updateState, handle
                 if (res && res.isGit) updateState({ repoWarning: true }); else updateState({ repoWarning: false });
               }}
               data-testid="wizard-select-folder"
-              className="bg-copernicus-phosphor text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-copernicus-phosphor/20"
+              className="bg-copernicus-phosphor text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-copernicus-phosphor/20"
             >
               Select Store
             </button>
@@ -48,7 +48,7 @@ export const StoreStep: React.FC<StoreStepProps> = ({ state, updateState, handle
             <ShieldCheck size={24} className="flex-none text-green-400" />
             <div className="space-y-1">
               <p className="text-xs font-bold text-green-400 uppercase tracking-wide">Path Synchronized</p>
-              <p className="text-[10px] font-mono opacity-70 leading-relaxed">Directory is now registered as the root for project discovery and indexing.</p>
+              <p className="text-[11px] font-mono opacity-70 leading-relaxed">Directory is now registered as the root for project discovery and indexing.</p>
             </div>
           </div>
         ) : (
@@ -64,7 +64,7 @@ export const StoreStep: React.FC<StoreStepProps> = ({ state, updateState, handle
             <p className="text-xs text-amber-400 font-bold uppercase tracking-wide flex items-center gap-2">
               <AlertTriangle size={14} /> Git Repository Detected
             </p>
-            <p className="text-[10px] text-zinc-400 mt-1">
+            <p className="text-[11px] text-zinc-400 mt-1">
               This directory contains a .git folder. COPERNICUS will use it as your workspace root —
               subdirectories will be individual projects. This is fine if this is your Projects folder.
             </p>

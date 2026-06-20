@@ -9,7 +9,7 @@ export const RowTile: React.FC<{ props: UIComponentProps }> = () => {
         <div className="rounded bg-zinc-800/60 border border-zinc-700/40 w-[28%] h-[60%]"></div>
         <div className="rounded bg-zinc-800/60 border border-zinc-700/40 w-[28%] h-[60%]"></div>
       </div>
-      <span className="absolute bottom-1 right-1 text-[8px] text-zinc-700 font-mono">ROW</span>
+      <span className="absolute bottom-1 right-1 text-[11px] text-zinc-700 font-mono">ROW</span>
     </div>
   )
 }

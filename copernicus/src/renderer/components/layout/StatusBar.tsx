@@ -15,7 +15,7 @@ interface ModelConfig { id: string; name: string; provider: string } // telemetr
 const Tooltip: React.FC<{ content: string; children: React.ReactNode }> = ({ content, children }) => (
   <div className="relative group/tip">
     {children}
-    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 border border-zinc-700 text-[9px] font-mono text-zinc-300 rounded whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity delay-300 z-50">
+    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 border border-zinc-700 text-[11px] font-mono text-zinc-300 rounded whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity delay-300 z-50">
       {content}
     </div>
   </div>
@@ -193,7 +193,7 @@ export const StatusBar: React.FC = () => {
   const totalTokens = Object.values(agentTelemetry ?? {}).reduce((acc, curr) => acc + curr.tokensIn + curr.tokensOut, 0)
 
   return (
-    <footer className="h-5 w-full bg-copernicus-bg border-t border-hairline border-copernicus-steel flex items-center justify-between px-2 text-[10px] text-zinc-600 select-none overflow-hidden">
+    <footer className="h-5 w-full bg-copernicus-bg border-t border-hairline border-copernicus-steel flex items-center justify-between px-2 text-[11px] text-zinc-600 select-none overflow-hidden">
       <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30 min-w-0 overflow-hidden">
 
         {/* Workspace Root */}
@@ -223,26 +223,26 @@ export const StatusBar: React.FC = () => {
       <div className="flex items-center gap-3 divide-x divide-copernicus-steel/30 flex-shrink-0">
         {/* Timer display */}
         <div className="flex items-center gap-1.5 px-2">
-          <span className="text-[10px] font-mono text-zinc-400 tabular-nums">
+          <span className="text-[11px] font-mono text-zinc-400 tabular-nums">
             {timerState === 'idle' && elapsedSeconds === 0 ? '--:--:--' : formatElapsed(elapsedSeconds)}
           </span>
           {timerState === 'idle' && (
-            <button onClick={startTimer} className="text-[9px] text-zinc-600 hover:text-copernicus-phosphor transition-colors uppercase">▶</button>
+            <button onClick={startTimer} className="text-[11px] text-zinc-600 hover:text-copernicus-phosphor transition-colors uppercase">▶</button>
           )}
           {timerState === 'running' && (<>
-            <button onClick={stopTimer} className="text-[9px] text-zinc-600 hover:text-yellow-400 transition-colors">⏸</button>
-            <button onClick={() => { endSession(); setSessionEnded(true) }} className="text-[9px] text-zinc-600 hover:text-red-400 transition-colors uppercase">■</button>
+            <button onClick={stopTimer} className="text-[11px] text-zinc-600 hover:text-yellow-400 transition-colors">⏸</button>
+            <button onClick={() => { endSession(); setSessionEnded(true) }} className="text-[11px] text-zinc-600 hover:text-red-400 transition-colors uppercase">■</button>
           </>)}
           {timerState === 'paused' && (<>
-            <button onClick={startTimer} className="text-[9px] text-zinc-600 hover:text-copernicus-phosphor transition-colors">▶</button>
-            <button onClick={() => { endSession(); setSessionEnded(true) }} className="text-[9px] text-zinc-600 hover:text-red-400 transition-colors uppercase">■</button>
+            <button onClick={startTimer} className="text-[11px] text-zinc-600 hover:text-copernicus-phosphor transition-colors">▶</button>
+            <button onClick={() => { endSession(); setSessionEnded(true) }} className="text-[11px] text-zinc-600 hover:text-red-400 transition-colors uppercase">■</button>
           </>)}
         </div>
 
         {/* Error Indicator */}
         {hasError && (
           <button
-            className="text-red-400 text-[8px] font-mono px-3 animate-pulse flex items-center gap-1 hover:text-red-300 transition-colors"
+            className="text-red-400 text-[11px] font-mono px-3 animate-pulse flex items-center gap-1 hover:text-red-300 transition-colors"
             onClick={() => invoke('app:open-log')}
             title="Critical error — click to open log"
           >
@@ -269,8 +269,8 @@ export const StatusBar: React.FC = () => {
               content={`${lsp.serverName ?? 'LSP'} — ${statusText}${attemptText}${reasonText} | ${lsp.openFiles} files | ${lsp.errorCount} errors | ${lsp.warningCount} warnings`}
             >
               <div className="flex items-center gap-1.5 px-3 cursor-help">
-                <span className={`text-[8px] ${color}`}>●</span>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                <span className={`text-[11px] ${color}`}>●</span>
+                <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
                   {(lsp.serverName ?? 'LS').substring(0, 2).toUpperCase()}
                   {lsp.errorCount > 0 && <span className="text-red-400"> {lsp.errorCount}e</span>}
                   {lsp.warningCount > 0 && <span className="text-amber-400"> {lsp.warningCount}w</span>}
@@ -287,7 +287,7 @@ export const StatusBar: React.FC = () => {
               className="flex items-center gap-1.5 px-3 cursor-pointer hover:text-zinc-400 transition-colors"
               onClick={() => useWorkspaceStore.getState().setView('reporter')}
             >
-              <span className={`text-[9px] font-mono font-bold ${securityScore.grade === 'A' ? 'text-green-400' : securityScore.grade === 'B' ? 'text-yellow-400' : 'text-red-400'}`}>
+              <span className={`text-[11px] font-mono font-bold ${securityScore.grade === 'A' ? 'text-green-400' : securityScore.grade === 'B' ? 'text-yellow-400' : 'text-red-400'}`}>
                 {securityScore.grade}
               </span>
             </div>
@@ -301,7 +301,7 @@ export const StatusBar: React.FC = () => {
             className="flex items-center gap-1.5 px-3 cursor-pointer hover:text-zinc-400 transition-colors"
             onClick={() => setModelOverlayOpen(v => !v)}
           >
-            <span className="text-copernicus-phosphor/70 uppercase font-bold text-[9px]">
+            <span className="text-copernicus-phosphor/70 uppercase font-bold text-[11px]">
               {activeModel ? activeModel.name : '—'}
             </span>
           </div>
@@ -310,7 +310,7 @@ export const StatusBar: React.FC = () => {
         {/* Token Counter */}
         <Tooltip content="Tokens used this session">
           <div className="flex items-center gap-1.5 px-3">
-            <span className="text-zinc-500 uppercase font-bold text-[9px]">Tokens</span>
+            <span className="text-zinc-500 uppercase font-bold text-[11px]">Tokens</span>
             <span>{formatTokens(totalTokens)}</span>
           </div>
         </Tooltip>
@@ -327,7 +327,7 @@ export const StatusBar: React.FC = () => {
 
         {/* LSP indicator */}
         <Tooltip content={(localLspState ?? lspState) ? `Language server: ${(localLspState ?? lspState)?.serverName ?? 'LSP'}` : "Language server — click for details"}>
-          <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer">
+          <div className="flex items-center gap-1.5 px-3 text-[11px] cursor-pointer">
             {(localLspState ?? lspState) && (() => {
               const lsp = (localLspState ?? lspState)!;
               let bgColor = 'bg-red-500';
@@ -360,7 +360,7 @@ export const StatusBar: React.FC = () => {
 
         {/* Technical Pulse */}
         <Tooltip content="Technical Pulse — click for health checks">
-          <div className="flex items-center gap-1.5 px-3 text-[10px] cursor-pointer" onClick={() => setPulseOpen(v => !v)}>
+          <div className="flex items-center gap-1.5 px-3 text-[11px] cursor-pointer" onClick={() => setPulseOpen(v => !v)}>
             <span className="text-copernicus-phosphor/60">⚡</span>
           </div>
         </Tooltip>

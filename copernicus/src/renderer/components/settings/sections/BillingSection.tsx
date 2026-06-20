@@ -95,7 +95,7 @@ export const BillingSection: React.FC = () => {
     <div className="space-y-8">
       <div>
         <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-widest">Workspace Billing</h2>
-        <p className="text-[10px] text-zinc-500 font-mono mt-1">Configure CapEx/OpEx billing designation and hourly rate for the current workspace.</p>
+        <p className="text-[11px] text-zinc-500 font-mono mt-1">Configure CapEx/OpEx billing designation and hourly rate for the current workspace.</p>
       </div>
 
       <div className="bg-black/40 border border-zinc-800/50 rounded-2xl p-6 space-y-6">
@@ -103,14 +103,14 @@ export const BillingSection: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-zinc-400">
               <DollarSign size={14} />
-              <span className="text-[10px] uppercase font-bold tracking-wider">Billing Mode</span>
+              <span className="text-[11px] uppercase font-bold tracking-wider">Billing Mode</span>
             </div>
             <div className="flex gap-2">
               {(['CAPEX', 'OPEX', 'NONE'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setBillingMode(mode)}
-                  className={`px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest transition-all border ${
+                  className={`px-3 py-1 rounded text-[11px] font-black uppercase tracking-widest transition-all border ${
                     billingMode === mode
                       ? 'border-copernicus-phosphor bg-copernicus-phosphor text-[#050505] rounded-none'
                       : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'
@@ -125,7 +125,7 @@ export const BillingSection: React.FC = () => {
           {(billingMode === 'CAPEX' || billingMode === 'OPEX') && (
             <div className="flex items-center justify-between border-t border-zinc-800/50 pt-4">
               <div className="flex items-center gap-2 text-zinc-400">
-                <span className="text-[10px] uppercase font-bold tracking-wider">Hourly Rate</span>
+                <span className="text-[11px] uppercase font-bold tracking-wider">Hourly Rate</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-zinc-500 text-lg font-extralight">$</span>
@@ -147,7 +147,7 @@ export const BillingSection: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={saving || !rootPath}
-          className="bg-copernicus-phosphor text-[#050505] hover:bg-green-400 px-6 py-2 rounded text-[10px] font-black uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="bg-copernicus-phosphor text-[#050505] hover:bg-green-400 px-6 py-2 rounded text-[11px] font-black uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {saving ? 'Saving...' : 'Save Settings'}
         </button>
