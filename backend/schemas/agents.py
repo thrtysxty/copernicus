@@ -39,6 +39,16 @@ class AgentRunRequest(BaseModel):
         return normalized
 
 
+class PinContextRequest(BaseModel):
+    session_id: str = Field(..., min_length=1)
+    item_id: str = Field(..., min_length=1)
+
+
+class ContextRelevanceRequest(BaseModel):
+    session_id: str = Field(..., min_length=1)
+    task_query: str = Field(default="")
+
+
 class ResetContextRequest(BaseModel):
     session_id: str
 

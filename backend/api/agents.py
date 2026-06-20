@@ -11,7 +11,7 @@ from flask import Blueprint, jsonify, request
 from backend.limiter import limiter
 from backend.middleware.auth import require_auth
 from backend.utils.validate import validate
-from backend.schemas.agents import ResetContextRequest, ContextHandoffRequest, ResearchRequest
+from backend.schemas.agents import ResetContextRequest, ContextHandoffRequest, ResearchRequest, PinContextRequest, ContextRelevanceRequest
 import subprocess
 import os
 import re
@@ -328,8 +328,8 @@ def get_context_status():
     session_id = request.args.get("session_id")
     model_name = request.args.get("model", None)
 
-    if not session_id:
-        raise AppError("session_id required", status=400)
+    if not session_id or not isinstance(session_id, str) or not session_id.strip():
+        raise AppError("session_id is required and must be a non-empty string", status=400)
 
     # Ensure session exists (if not, return empty status)
     context_manager.ensure_session(session_id, model_name)
@@ -340,13 +340,10 @@ def get_context_status():
 
 @agents_bp.route("/context/pin", methods=["POST"])
 @require_auth
-def pin_context_item():
-    data = request.get_json() or {}
-    session_id = data.get("session_id")
-    item_id = data.get("item_id")
-
-    if not session_id or not item_id:
-        raise AppError("session_id and item_id required", status=400)
+@validate(PinContextRequest)
+def pin_context_item(request_data: PinContextRequest):
+    session_id = request_data.session_id
+    item_id = request_data.item_id
 
     success = context_manager.pin_item(session_id, item_id)
     if not success:
@@ -357,17 +354,14 @@ def pin_context_item():
 
 @agents_bp.route("/context/relevance", methods=["POST"])
 @require_auth
-def get_context_relevance():
+@validate(ContextRelevanceRequest)
+def get_context_relevance(request_data: ContextRelevanceRequest):
     """
     GET relevance score for items in session, given a task query.
     Body: { session_id, task_query }
     """
-    data = request.get_json() or {}
-    session_id = data.get("session_id")
-    task_query = data.get("task_query", "")
-
-    if not session_id:
-        raise AppError("session_id required", status=400)
+    session_id = request_data.session_id
+    task_query = request_data.task_query
 
     context_manager.ensure_session(session_id)
 

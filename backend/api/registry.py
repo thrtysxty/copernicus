@@ -36,6 +36,8 @@ def get_models():
 
 @registry_bp.route('/models/<model_id>', methods=['GET'])
 def get_model(model_id):
+    if not model_id or not isinstance(model_id, str) or not model_id.strip():
+        return jsonify({"error": "Validation failed", "detail": ["model_id must be a non-empty string"]}), 422
     if _registry_data is None:
         return jsonify({"error": "Registry not loaded"}), 500
     models = _registry_data.get('models', [])
@@ -52,6 +54,8 @@ def get_personas():
 
 @registry_bp.route('/personas/<alias>', methods=['GET'])
 def get_persona(alias):
+    if not alias or not isinstance(alias, str) or not alias.strip():
+        return jsonify({"error": "Validation failed", "detail": ["alias must be a non-empty string"]}), 422
     if _registry_data is None:
         return jsonify({"error": "Registry not loaded"}), 500
     personas = _registry_data.get('personas', [])

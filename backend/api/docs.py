@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify
 from backend.utils.path_guard import assert_safe_path
 from backend.utils.validate import validate
-from backend.schemas.docs import GenerateDocsRequest
+from backend.schemas.docs import GenerateDocsRequest, VisualAuditRequest
 
 docs_bp = Blueprint('docs', __name__)
 
@@ -123,6 +123,7 @@ def generate_docs(request_data: GenerateDocsRequest):
     return jsonify({"error": "Invalid status for documentation generation"}), 400
 
 @docs_bp.route('/visual-audit', methods=['POST'])
-def visual_audit():
+@validate(VisualAuditRequest)
+def visual_audit(request_data: VisualAuditRequest):
     # Placeholder for Story 227 AC-5
     return jsonify({"queued": True})
